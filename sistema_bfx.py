@@ -18,7 +18,7 @@ import json
 # ==============================================================================
 # 1. CONFIGURAÇÃO VISUAL
 # ==============================================================================
-st.set_page_config(page_title="BFX Manager", layout="wide", page_icon="💎", initial_sidebar_state="expanded")
+st.set_page_config(page_title="BFX Manager", layout="wide", page_icon="💎", initial_sidebar_state="auto")
 
 st.markdown("""
 <style>
@@ -53,45 +53,20 @@ st.markdown("""
     .podio-rank { font-size: 13px; font-weight: 600; color: #334155; margin: 6px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
     .mural-aviso { background-color: #fefce8; border-left: 4px solid #facc15; color: #854d0e; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; line-height: 1.4; }
 
-    @media only screen and (max-width: 600px) { [data-testid="stSidebar"] { min-width: 100% !important; } h1 { font-size: 1.5rem !important; } }
+    @media only screen and (max-width: 600px) { h1 { font-size: 1.5rem !important; } }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 2. BANCO DE DADOS
+# 2. BANCO DE DADOS (COM AUTO-REPARO)
 # ==============================================================================
 @st.cache_resource
 def get_connection(): return sqlite3.connect('bfx_sistema.db', check_same_thread=False)
 conn = get_connection()
 
-def run_migrations():
-    # FUNÇÃO DE EMERGÊNCIA PARA CRIAR COLUNAS FALTANTES
-    c = conn.cursor()
-    columns_to_add = [
-        ('clientes', 'cnpj', 'TEXT'),
-        ('clientes', 'tipo', 'TEXT'),
-        ('clientes', 'matricula', 'TEXT'),
-        ('clientes', 'cpf', 'TEXT'),
-        ('clientes', 'empresa', 'TEXT'),
-        ('produtos', 'valor_venda', 'REAL DEFAULT 0'),
-        ('produtos', 'ncm', 'TEXT'),
-        ('produtos', 'imagem', 'TEXT'),
-        ('vendas', 'comprovante_pdf', 'TEXT'),
-        ('vendas', 'lucro_liquido', 'REAL DEFAULT 0')
-    ]
-    
-    log_msg = []
-    for table, col, dtype in columns_to_add:
-        try:
-            c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
-            log_msg.append(f"✅ Coluna '{col}' criada em '{table}'")
-        except:
-            pass # Coluna já existe
-    conn.commit()
-    return log_msg
-
 def init_db():
     c = conn.cursor()
+    # 1. Tabelas Base
     tables = [
         '''CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, renda REAL, empresa TEXT, matricula TEXT, telefone TEXT, cpf TEXT, cnpj TEXT, tipo TEXT, data_nascimento DATE, cep TEXT, endereco TEXT)''',
         '''CREATE TABLE IF NOT EXISTS produtos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, custo_padrao REAL, valor_venda REAL, marca TEXT, categoria TEXT, ncm TEXT, imagem TEXT, fornecedor_id INTEGER, qtd_estoque INTEGER DEFAULT 0)''',
@@ -106,21 +81,38 @@ def init_db():
         '''CREATE TABLE IF NOT EXISTS avisos (id INTEGER PRIMARY KEY AUTOINCREMENT, data_criacao DATETIME, mensagem TEXT, ativo INTEGER DEFAULT 1)'''
     ]
     for sql in tables: c.execute(sql)
+
+    # 2. Força Colunas Novas (Isso corrige o erro File line 675)
+    columns_to_force = [
+        ('produtos', 'valor_venda', 'REAL DEFAULT 0'),
+        ('produtos', 'ncm', 'TEXT'),
+        ('produtos', 'imagem', 'TEXT'),
+        ('clientes', 'cnpj', 'TEXT'),
+        ('clientes', 'tipo', 'TEXT'),
+        ('clientes', 'matricula', 'TEXT'),
+        ('clientes', 'cpf', 'TEXT'),
+        ('clientes', 'empresa', 'TEXT'),
+        ('vendas', 'comprovante_pdf', 'TEXT'),
+        ('vendas', 'lucro_liquido', 'REAL DEFAULT 0')
+    ]
     
-    # Cria usuários padrão se não existirem
+    for table, col, dtype in columns_to_force:
+        try:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
+        except: pass # Se já existe, ignora e segue a vida
+    
+    # 3. Dados Padrão
     if c.execute("SELECT count(*) FROM usuarios").fetchone()[0] == 0:
         c.executemany("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", [("admin", "admin", "admin", "Administrador"), ("bruno", "bruno123#", "vendedor", "Bruno"), ("jakeline", "jak123!", "vendedor", "Jakeline"), ("felipe", "123", "vendedor", "Felipe")])
-    
     for emp in ["Amazon Five", "Gimam"]:
         if c.execute("SELECT count(*) FROM empresas_parceiras WHERE nome=?", (emp,)).fetchone()[0] == 0:
             c.execute("INSERT INTO empresas_parceiras (nome, responsavel_rh, telefone_rh, email_rh) VALUES (?,?,?,?)", (emp, "RH "+emp, "", ""))
     if c.execute("SELECT COUNT(*) FROM config").fetchone()[0] == 0:
         c.execute("INSERT INTO config (modelo_contrato, logo_path) VALUES (?, ?)", ("Texto Padrão...", ""))
-    conn.commit()
     
-    # Tenta rodar migração silenciosa
-    run_migrations()
+    conn.commit()
 
+# Executa init_db na inicialização
 init_db()
 
 # ==============================================================================
@@ -290,8 +282,6 @@ def gerar_pdf(dados, tipo="recibo", texto_custom=None):
             pdf.cell(25,8,str(r['data_venda']),1); pdf.cell(50,8,str(r['nome'])[:25],1); pdf.cell(40,8,str(r['produto_nome'])[:20],1)
             pdf.cell(30,8,f"R$ {r['valor_venda']:.2f}",1); pdf.cell(20,8,"Antecipada" if r['antecipada'] else "Mensal",1); pdf.ln()
         pdf.ln(5); pdf.set_font("Arial",'B',12); pdf.cell(0,10,f"TOTAL: {format_brl(dados['total'])}",0,1,'R')
-    
-    # CATÁLOGO DE PRODUTOS
     elif tipo == "catalogo":
         pdf.set_font("Arial", 'B', 16); pdf.cell(0, 10, "CATÁLOGO DE PRODUTOS", 0, 1, 'C'); pdf.ln(10)
         df_prod = dados['df']
@@ -315,7 +305,6 @@ def gerar_pdf(dados, tipo="recibo", texto_custom=None):
             pdf.cell(0, 10, f"{format_brl(r['valor_venda'])}", 0, 1)
             pdf.set_text_color(0, 0, 0) 
             pdf.ln(25); pdf.ln(5)
-            
     return pdf.output(dest='S').encode('latin-1')
 
 # ==============================================================================
@@ -334,18 +323,14 @@ def login_screen():
         st.markdown("<br><div class='login-box'><h1>💎 BFX Manager</h1><p style='color:#64748b;'>Acesso Seguro</p>", unsafe_allow_html=True)
         with st.form("login"):
             user = st.text_input("Usuário").lower().strip()
-            # Visualização de Senha
             if 'show_pwd' not in st.session_state: st.session_state.show_pwd = False
-            
             pwd_type = "default" if st.session_state.show_pwd else "password"
             pwd = st.text_input("Senha", type=pwd_type)
-            
             if st.checkbox("Mostrar Senha"): st.session_state.show_pwd = True
             else: st.session_state.show_pwd = False
-            
             if st.form_submit_button("ENTRAR"):
                 res = conn.execute("SELECT id, password, role, nome_exibicao FROM usuarios WHERE username=?", (user,)).fetchone()
-                if res and res[1] == pwd.strip(): # REMOVENDO ESPAÇOS
+                if res and res[1] == pwd.strip():
                     st.session_state.update({'logged_in':True, 'username':user, 'user_id':res[0], 'role':res[2], 'nome_exibicao':res[3]})
                     registrar_log("LOGIN", "Entrou")
                     st.success(f"Bem-vindo, {res[3]}!"); time.sleep(0.5); st.rerun()
@@ -364,15 +349,6 @@ with st.sidebar:
     
     role = st.session_state['role']; nome_user = st.session_state['nome_exibicao']
     st.write(f"Olá, **{nome_user}**")
-    
-    # BOTÃO DE EMERGÊNCIA REPARAR DB
-    if st.button("🛠️ REPARAR BANCO DE DADOS", type="primary"):
-        logs = run_migrations()
-        if logs:
-            st.success("Banco de dados atualizado com sucesso!")
-            st.code("\n".join(logs))
-        else:
-            st.info("Banco de dados já está atualizado.")
     
     if st.button("Sair"): 
         st.session_state['logged_in'] = False; st.rerun()
@@ -421,7 +397,6 @@ if menu == "Dashboard" and role == 'admin':
     with t2:
         st.subheader("Inteligência Comercial")
         if not df_pod.empty:
-            # CHART SIMPLIFICADO COMPATIVEL COM PYTHON 3.14
             st.bar_chart(df_pod.set_index("vendedor")['total'])
         st.markdown("#### 💤 Clientes Inativos (Win-Back)")
         q_inat = """SELECT c.nome, c.telefone, MAX(v.data_venda) as ultima FROM clientes c JOIN vendas v ON c.id=v.cliente_id GROUP BY c.id HAVING ultima < date('now','-90 days')"""
@@ -441,7 +416,6 @@ if menu == "Dashboard" and role == 'admin':
 
 elif menu == "💰 Financeiro & DRE" and role == 'admin':
     st.subheader("💰 Gestão Financeira Completa"); t1, t2, t3 = st.tabs(["DRE Inteligente", "Fluxo de Caixa", "Lançamentos"])
-    
     with t1:
         mes = st.selectbox("Competência", [(datetime.now()-relativedelta(months=i)).strftime("%Y-%m") for i in range(12)])
         dre = calcular_dre_avancado(mes)
@@ -456,15 +430,12 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
         st.divider()
         st.markdown("##### 📉 Detalhes")
         st.text(f"(-) CMV: {format_brl(dre['Detalhe']['CMV'])}\n(-) Comissões: {format_brl(dre['Detalhe']['Comissões'])}\n(-) Frete Real: {format_brl(dre['Detalhe']['Frete Real'])}\n(-) Despesas Fixas: {format_brl(dre['(-) Custos Fixos'])}")
-
     with t2:
         st.markdown("##### 📅 Fluxo de Caixa Projetado (6 Meses)")
         st.info("Considera todas as parcelas a receber e despesas lançadas.")
         df_fluxo = calcular_fluxo_caixa()
-        # CHART NATIVO COMPATIVEL COM PYTHON 3.14
         st.bar_chart(df_fluxo.set_index("Mês")[["Entradas", "Saídas"]], color=["#10b981", "#ef4444"])
         st.dataframe(df_fluxo.style.format({'Entradas': 'R$ {:.2f}', 'Saídas': 'R$ {:.2f}', 'Saldo': 'R$ {:.2f}'}), use_container_width=True)
-
     with t3:
         with st.form("d"):
             dc = st.text_input("Descrição"); vl = st.number_input("Valor", value=None, placeholder="0.00")
@@ -531,45 +502,36 @@ elif menu == "Venda Rápida":
     dt = c1.date_input("Data Venda", datetime.now())
     vend = c2.selectbox("Vendedor Responsável", [nome_user] if role=='vendedor' else ["Bruno","Jakeline","Felipe"])
     dc = pd.read_sql("SELECT id, nome FROM clientes ORDER BY nome", conn); cli = st.selectbox("Selecione o Cliente", ["..."]+dc['nome'].tolist())
-    
     if cli != "...":
         dcli = pd.read_sql(f"SELECT * FROM clientes WHERE nome='{cli}'", conn).iloc[0]
         ok, disp, tom, teto = check_credito(dcli['id'], 0)
         st.markdown(f"<div class='credit-box'>DISP: <b>{format_brl(disp)}</b> | LIMITE: {format_brl(teto)}</div>", unsafe_allow_html=True)
-        
         c1, c2 = st.columns(2)
         dp = pd.read_sql("SELECT nome, custo_padrao FROM produtos", conn)
         prods = c1.multiselect("Produtos", dp['nome'].tolist())
         custo = 0.0
         if prods: custo = dp[dp['nome'].isin(prods)]['custo_padrao'].sum()
         if role == 'admin': custo = c1.number_input("Custo Total", value=custo)
-        
         st.markdown("---")
         k1, k2, k3 = st.columns(3)
         val = k1.number_input("Valor Produtos", value=None, placeholder="0.00", step=0.01)
         frete_cobrado = k2.number_input("Frete (Cobrado Cliente)", value=None, placeholder="0.00", step=0.01)
         custo_envio = k3.number_input("Custo Envio (Logística)", value=None, placeholder="0.00", step=0.01, help="Quanto você paga para enviar. Não aparece para o cliente.")
-        
         parc = st.selectbox("Qtd Parcelas", range(1,13))
-        
-        # Simulador
         v_safe = val or 0.0; f_safe = frete_cobrado or 0.0; c_safe = custo_envio or 0.0
         total_venda = v_safe + f_safe
         val_parc = total_venda / parc if parc > 0 else 0
         lucro_sim = total_venda - (custo + c_safe)
         margem_sim = (lucro_sim / total_venda * 100) if total_venda > 0 else 0
-        
         s1, s2, s3 = st.columns(3)
         s1.metric("Parcela", format_brl(val_parc))
         s2.metric("Lucro Estimado", format_brl(lucro_sim), f"{margem_sim:.1f}%")
         s3.metric("Faturamento Total", format_brl(total_venda))
-        
         if st.button("💾 FINALIZAR VENDA", type="primary"):
             conn.execute("INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada) VALUES (?,?,?,?,?,?,?,?,?,?,?)", 
                          (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 1))
             conn.commit(); st.success("Venda Realizada!"); st.session_state['vf'] = {'c':cli, 'v':v_safe, 'p':" + ".join(prods), 'vp':val_parc, 'pa':parc, 'frete':f_safe, 'e':dcli['empresa'], 'cpf':dcli.get('cpf') or dcli.get('cnpj'), 'm':dcli.get('matricula','')}
             time.sleep(0.5); st.rerun()
-            
         if 'vf' in st.session_state:
             st.divider(); c_pdf, c_zap = st.columns(2)
             pdf = gerar_pdf(st.session_state['vf'], "recibo")
@@ -580,24 +542,17 @@ elif menu == "Venda Rápida":
 
 elif menu == "Cadastros":
     st.subheader("📝 Cadastros (Clássico)"); t1, t2, t3 = st.tabs(["Clientes", "Produtos", "Empresas"])
-    
     with t1:
-        # BOTÃO FORA DO FORM
         with st.expander("➕ Novo Cliente"):
             tipo_p = st.radio("Tipo de Pessoa", ["Física", "Jurídica"], horizontal=True)
             with st.form("nc"):
                 c1, c2 = st.columns(2)
                 nm = c1.text_input("Nome/Razão Social")
                 if tipo_p == "Física":
-                    doc = c2.text_input("CPF")
-                    mat = c1.text_input("Matrícula")
-                    renda = c2.number_input("Renda Mensal", value=1550.0)
+                    doc = c2.text_input("CPF"); mat = c1.text_input("Matrícula"); renda = c2.number_input("Renda Mensal", value=1550.0)
                 else:
-                    doc = c2.text_input("CNPJ")
-                    mat = ""
-                    renda = c2.number_input("Faturamento Mensal", value=10000.0)
-                tel = c1.text_input("WhatsApp")
-                cep = c2.text_input("CEP")
+                    doc = c2.text_input("CNPJ"); mat = ""; renda = c2.number_input("Faturamento Mensal", value=10000.0)
+                tel = c1.text_input("WhatsApp"); cep = c2.text_input("CEP")
                 emp = st.selectbox("Empresa/Vínculo", ["Sem Vínculo"] + pd.read_sql("SELECT nome FROM empresas_parceiras", conn)['nome'].tolist())
                 if st.form_submit_button("Salvar"):
                     if tipo_p == "Física": conn.execute("INSERT INTO clientes (nome, cpf, telefone, cep, renda, empresa, matricula, tipo) VALUES (?,?,?,?,?,?,?,?)", (nm, clean_str(doc), clean_str(tel), clean_str(cep), renda, emp, mat, 'PF'))
@@ -613,10 +568,8 @@ elif menu == "Cadastros":
             with st.form(f"ed_c_{cid}"):
                 c1, c2 = st.columns(2)
                 enm = c1.text_input("Nome", d_cli['nome'])
-                if d_cli.get('tipo') == 'PJ' or d_cli.get('cnpj'):
-                    edoc = c2.text_input("CNPJ", mask_cpf(d_cli.get('cnpj','')))
-                else:
-                    edoc = c2.text_input("CPF", mask_cpf(d_cli.get('cpf','')))
+                if d_cli.get('tipo') == 'PJ' or d_cli.get('cnpj'): edoc = c2.text_input("CNPJ", mask_cpf(d_cli.get('cnpj','')))
+                else: edoc = c2.text_input("CPF", mask_cpf(d_cli.get('cpf','')))
                 etel = c1.text_input("Zap", mask_tel(d_cli['telefone'])); ecep = c2.text_input("CEP", mask_cep(d_cli['cep']))
                 eend = c1.text_input("Endereço", d_cli['endereco']); eren = c2.number_input("Renda/Faturamento", value=float(d_cli['renda'] or 0))
                 l_e = ["Sem Vínculo"] + pd.read_sql("SELECT nome FROM empresas_parceiras", conn)['nome'].tolist()
@@ -628,12 +581,10 @@ elif menu == "Cadastros":
                     conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
 
     with t2:
-        # BOTÃO FORA DO FORM
         with st.expander("➕ Novo Produto"):
             df_f = pd.read_sql("SELECT id, nome FROM fornecedores ORDER BY nome", conn)
             l_f = ["Novo Fornecedor..."] + df_f['nome'].tolist()
             f_sel = st.selectbox("Fornecedor", l_f)
-            
             with st.form("np"):
                 c1, c2 = st.columns(2)
                 nm = c1.text_input("Nome Produto"); sug = sugerir_ncm(nm)
@@ -641,26 +592,20 @@ elif menu == "Cadastros":
                 ncm = c1.text_input("NCM", value=sug if sug else "")
                 cst = c2.number_input("Custo", value=None, placeholder="0.00"); mk = c2.text_input("Marca")
                 val_v = c1.number_input("Valor de Venda (Catálogo)", value=None, placeholder="0.00")
-                
                 nf_n = ""; nf_t = ""
                 if f_sel == "Novo Fornecedor...":
                     st.divider(); st.caption("Cadastrando Novo Fornecedor:")
-                    nf_n = st.text_input("Nome Novo Fornecedor")
-                    nf_t = st.text_input("WhatsApp Fornecedor")
-                
+                    nf_n = st.text_input("Nome Novo Fornecedor"); nf_t = st.text_input("WhatsApp Fornecedor")
                 up_img = c2.file_uploader("Foto do Produto", type=['png','jpg'])
                 if st.form_submit_button("Salvar Produto"):
                     fid = None
                     if f_sel == "Novo Fornecedor..." and nf_n:
                         conn.execute("INSERT INTO fornecedores (nome, telefone) VALUES (?,?)", (nf_n, clean_str(nf_t)))
                         fid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-                    elif f_sel != "Novo Fornecedor...":
-                        fid = df_f[df_f['nome']==f_sel].iloc[0]['id']
+                    elif f_sel != "Novo Fornecedor...": fid = df_f[df_f['nome']==f_sel].iloc[0]['id']
                     b64_img = image_to_base64(up_img)
                     conn.execute("INSERT INTO produtos (nome, custo_padrao, marca, ncm, fornecedor_id, imagem, valor_venda) VALUES (?,?,?,?,?,?,?)", (nm, cst or 0.0, mk, ncm, fid, b64_img, val_v or 0.0))
                     conn.commit(); st.success("Salvo!"); st.rerun()
-        
-        # GERAR CATÁLOGO
         st.markdown("---")
         if st.button("📄 Gerar Catálogo de Produtos PDF"):
             df_cat = pd.read_sql("SELECT nome, marca, valor_venda, imagem FROM produtos ORDER BY nome", conn)
@@ -670,7 +615,6 @@ elif menu == "Cadastros":
                 st.info("Dica: Baixe o arquivo e arraste para o WhatsApp Web abaixo.")
                 st.markdown('<a href="https://web.whatsapp.com/" target="_blank" class="whatsapp-btn">🟢 Abrir WhatsApp Web</a>', unsafe_allow_html=True)
             else: st.warning("Cadastre produtos com 'Valor de Venda' primeiro.")
-        
         st.divider(); st.info("💡 Clique para editar:")
         df_prod = pd.read_sql("SELECT p.id, p.nome, p.custo_padrao, p.valor_venda, p.marca, f.nome as Fornecedor FROM produtos p LEFT JOIN fornecedores f ON p.fornecedor_id = f.id ORDER BY p.nome", conn)
         evt_prod = st.dataframe(df_prod, hide_index=True, use_container_width=True, on_select="rerun", selection_mode="single-row")
@@ -683,7 +627,6 @@ elif menu == "Cadastros":
                 pnm = c1.text_input("Nome", d_prod['nome']); pcst = c2.number_input("Custo", value=float(d_prod['custo_padrao'] or 0))
                 pmk = c1.text_input("Marca", d_prod['marca']); pncm = c2.text_input("NCM", value=d_prod.get('ncm',''))
                 pval = c1.number_input("Valor Venda (Catálogo)", value=float(d_prod.get('valor_venda', 0) or 0))
-                
                 l_forns = ["Sem Fornecedor"] + pd.read_sql("SELECT nome FROM fornecedores", conn)['nome'].tolist()
                 fname = "Sem Fornecedor"
                 if d_prod['fornecedor_id']:
@@ -719,64 +662,41 @@ elif menu == "Cadastros":
 
 elif menu == "Histórico (Editar)":
     st.subheader("📜 Histórico & Edição")
-    
-    # Filtros Avançados (CORRIGIDO)
     with st.expander("🔍 Filtros Avançados", expanded=True):
         c1, c2, c3, c4 = st.columns(4)
         f_ini = c1.date_input("De", datetime.now().replace(day=1))
         f_fim = c2.date_input("Até", datetime.now())
         f_cli = c3.text_input("Cliente")
         f_status = c4.selectbox("Status", ["Todos", "Antecipadas", "Mensais"])
-        
-        # Filtro de Vendedor (Admin)
         f_vend = "Todos"
         if role == 'admin':
             c5, c6 = st.columns(2)
             users = pd.read_sql("SELECT nome_exibicao FROM usuarios", conn)['nome_exibicao'].tolist()
             f_vend = c5.selectbox("Filtrar Vendedor", ["Todos"] + users)
-
-    # Construção da Query
     q = "SELECT v.id, v.data_venda, v.vendedor, c.nome, v.produto_nome, v.valor_venda, v.valor_frete, v.custo_envio, v.lucro_liquido, v.antecipada, v.parcelas, v.comprovante_pdf FROM vendas v JOIN clientes c ON v.cliente_id=c.id WHERE 1=1"
-    
     q += f" AND v.data_venda BETWEEN '{f_ini}' AND '{f_fim}'"
-    
-    if f_cli: 
-        q += f" AND c.nome LIKE '%{f_cli}%'"
-    
-    if f_status == "Antecipadas": 
-        q += " AND v.antecipada=1"
-    elif f_status == "Mensais": 
-        q += " AND v.antecipada=0"
-    
-    # Lógica de Vendedor
-    if role != 'admin':
-        q += f" AND v.vendedor = '{nome_user}'"
-    elif f_vend != "Todos":
-        q += f" AND v.vendedor = '{f_vend}'"
-    
+    if f_cli: q += f" AND c.nome LIKE '%{f_cli}%'"
+    if f_status == "Antecipadas": q += " AND v.antecipada=1"
+    elif f_status == "Mensais": q += " AND v.antecipada=0"
+    if role != 'admin': q += f" AND v.vendedor = '{nome_user}'"
+    elif f_vend != "Todos": q += f" AND v.vendedor = '{f_vend}'"
     q += " ORDER BY v.data_venda DESC LIMIT 100"
-    
     df = pd.read_sql(q, conn)
-    
     if not df.empty:
         cols_v = ['id','data_venda','vendedor','nome','produto_nome','valor_venda','antecipada']
         if role == 'admin': cols_v.append('lucro_liquido')
         df['Status'] = df['antecipada'].apply(lambda x: '⚡ Ant' if x==1 else '📅 Mes')
         df['Doc'] = df['comprovante_pdf'].apply(lambda x: '✅ OK' if x else '❌ Pend')
-        
         evt = st.dataframe(df[cols_v + ['Status','Doc']], use_container_width=True, on_select="rerun", selection_mode="single-row", hide_index=True)
-        
         if evt.selection.rows:
             v_sel = df.iloc[evt.selection.rows[0]]
             vid = int(v_sel['id'])
             st.markdown("---"); st.info(f"**Editando Venda #{vid} - {v_sel['nome']}**")
             t1, t2, t3 = st.tabs(["📄 Docs", "✏️ Dados", "🗑️ Excluir"])
-            
             with t1:
                 up = st.file_uploader("Subir PDF", type=['pdf','jpg'])
                 if up and st.button("Salvar Doc"):
                     b64 = image_to_base64(up); conn.execute("UPDATE vendas SET comprovante_pdf=? WHERE id=?", (b64, vid)); conn.commit(); st.success("Salvo!"); st.rerun()
-            
             with t2:
                 with st.form(f"fe_{vid}"):
                     c1, c2 = st.columns(2)
@@ -788,18 +708,15 @@ elif menu == "Histórico (Editar)":
                     ncusto_envio = c4.number_input("Custo Envio (Real)", value=float(v_sel.get('custo_envio',0) or 0), step=0.01)
                     nparc = c5.number_input("Parcelas", value=int(v_sel['parcelas']), min_value=1)
                     nant = st.checkbox("Antecipada?", value=(v_sel['antecipada']==1))
-                    
                     if st.form_submit_button("Salvar Alterações"):
                         new_vp = (nval + nfrete) / nparc if nparc > 0 else 0
                         conn.execute("UPDATE vendas SET data_venda=?, valor_venda=?, produto_nome=?, valor_frete=?, custo_envio=?, parcelas=?, antecipada=?, valor_parcela=? WHERE id=?", (ndt, nval, nprod, nfrete, ncusto_envio, nparc, 1 if nant else 0, new_vp, vid))
                         conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
-            
             with t3:
                 if role == 'admin':
                     if st.button("🗑️ EXCLUIR VENDA", type="primary"): conn.execute("DELETE FROM vendas WHERE id=?", (vid,)); conn.commit(); st.warning("Excluído."); time.sleep(1); st.rerun()
                 else: st.warning("Apenas admin.")
-    else:
-        st.warning("Nenhuma venda encontrada com esses filtros.")
+    else: st.warning("Nenhuma venda encontrada com esses filtros.")
 
 elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
     st.subheader("👥 Gestão de Time")
@@ -826,7 +743,7 @@ elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
                 if st.form_submit_button("Salvar Dados"):
                     q_up = "UPDATE usuarios SET nome_exibicao=?, username=?, email=?, telefone=?, endereco=?"
                     params = [unm, ulogin, uemail, utel, uend]
-                    if new_pass.strip(): # Se tiver senha nova (sem espacos)
+                    if new_pass.strip(): 
                         q_up += ", password=?"
                         params.append(new_pass.strip())
                     q_up += " WHERE id=?"
