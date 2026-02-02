@@ -58,18 +58,43 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 2. BANCO DE DADOS (COM AUTO-REPARO)
+# 2. BANCO DE DADOS
 # ==============================================================================
 @st.cache_resource
 def get_connection(): return sqlite3.connect('bfx_sistema.db', check_same_thread=False)
 conn = get_connection()
 
+def run_migrations():
+    # FUNÇÃO DE EMERGÊNCIA PARA CRIAR COLUNAS FALTANTES
+    c = conn.cursor()
+    columns_to_add = [
+        ('clientes', 'cnpj', 'TEXT'),
+        ('clientes', 'tipo', 'TEXT'),
+        ('clientes', 'matricula', 'TEXT'),
+        ('clientes', 'cpf', 'TEXT'),
+        ('clientes', 'empresa', 'TEXT'),
+        ('produtos', 'valor_venda', 'REAL DEFAULT 0'),
+        ('produtos', 'ncm', 'TEXT'),
+        ('produtos', 'imagem', 'TEXT'),
+        ('vendas', 'comprovante_pdf', 'TEXT'),
+        ('vendas', 'lucro_liquido', 'REAL DEFAULT 0')
+    ]
+    
+    log_msg = []
+    for table, col, dtype in columns_to_add:
+        try:
+            c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
+            log_msg.append(f"✅ Coluna '{col}' criada em '{table}'")
+        except:
+            pass # Coluna já existe
+    conn.commit()
+    return log_msg
+
 def init_db():
     c = conn.cursor()
-    # Criação inicial (se não existir)
     tables = [
         '''CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, renda REAL, empresa TEXT, matricula TEXT, telefone TEXT, cpf TEXT, cnpj TEXT, tipo TEXT, data_nascimento DATE, cep TEXT, endereco TEXT)''',
-        '''CREATE TABLE IF NOT EXISTS produtos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, custo_padrao REAL, marca TEXT, categoria TEXT, ncm TEXT, imagem TEXT, fornecedor_id INTEGER, qtd_estoque INTEGER DEFAULT 0)''',
+        '''CREATE TABLE IF NOT EXISTS produtos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, custo_padrao REAL, valor_venda REAL, marca TEXT, categoria TEXT, ncm TEXT, imagem TEXT, fornecedor_id INTEGER, qtd_estoque INTEGER DEFAULT 0)''',
         '''CREATE TABLE IF NOT EXISTS vendas (id INTEGER PRIMARY KEY AUTOINCREMENT, data_venda DATE, vendedor TEXT, cliente_id INTEGER, produto_nome TEXT, custo_produto REAL, valor_venda REAL, valor_frete REAL DEFAULT 0, custo_envio REAL DEFAULT 0, parcelas INTEGER, valor_parcela REAL, taxa_financeira_valor REAL, lucro_liquido REAL, antecipada INTEGER DEFAULT 1, excedeu_limite INTEGER DEFAULT 0, comprovante_pdf TEXT, FOREIGN KEY(cliente_id) REFERENCES clientes(id))''',
         '''CREATE TABLE IF NOT EXISTS config (id INTEGER PRIMARY KEY AUTOINCREMENT, modelo_contrato TEXT, logo_path TEXT)''',
         '''CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, role TEXT, nome_exibicao TEXT, email TEXT, telefone TEXT, data_nascimento DATE, endereco TEXT, cep TEXT, meta_mensal REAL DEFAULT 50000.0, comissao_pct REAL DEFAULT 2.0)''',
@@ -81,47 +106,21 @@ def init_db():
         '''CREATE TABLE IF NOT EXISTS avisos (id INTEGER PRIMARY KEY AUTOINCREMENT, data_criacao DATETIME, mensagem TEXT, ativo INTEGER DEFAULT 1)'''
     ]
     for sql in tables: c.execute(sql)
-
-    # FUNÇÃO DE REPARO DE COLUNAS (CRÍTICO PARA V100)
-    def force_add_column(table, col, dtype):
-        try:
-            # Verifica se coluna existe
-            existing_cols = [i[1] for i in c.execute(f"PRAGMA table_info({table})")]
-            if col not in existing_cols:
-                c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
-                print(f"Coluna {col} adicionada em {table}")
-        except Exception as e:
-            print(f"Erro ao adicionar coluna {col}: {e}")
-
-    # Força a criação das colunas novas
-    force_add_column('clientes', 'cnpj', 'TEXT')
-    force_add_column('clientes', 'tipo', 'TEXT')
-    force_add_column('clientes', 'matricula', 'TEXT')
-    force_add_column('clientes', 'cpf', 'TEXT')
-    force_add_column('clientes', 'empresa', 'TEXT')
     
-    force_add_column('produtos', 'valor_venda', 'REAL DEFAULT 0')
-    force_add_column('produtos', 'ncm', 'TEXT')
-    force_add_column('produtos', 'imagem', 'TEXT')
-    
-    force_add_column('vendas', 'comprovante_pdf', 'TEXT')
-    force_add_column('vendas', 'lucro_liquido', 'REAL DEFAULT 0')
-
-    # Usuários Padrão
+    # Cria usuários padrão se não existirem
     if c.execute("SELECT count(*) FROM usuarios").fetchone()[0] == 0:
         c.executemany("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", [("admin", "admin", "admin", "Administrador"), ("bruno", "bruno123#", "vendedor", "Bruno"), ("jakeline", "jak123!", "vendedor", "Jakeline"), ("felipe", "123", "vendedor", "Felipe")])
     
-    # Empresas Padrão
     for emp in ["Amazon Five", "Gimam"]:
         if c.execute("SELECT count(*) FROM empresas_parceiras WHERE nome=?", (emp,)).fetchone()[0] == 0:
             c.execute("INSERT INTO empresas_parceiras (nome, responsavel_rh, telefone_rh, email_rh) VALUES (?,?,?,?)", (emp, "RH "+emp, "", ""))
-    
     if c.execute("SELECT COUNT(*) FROM config").fetchone()[0] == 0:
         c.execute("INSERT INTO config (modelo_contrato, logo_path) VALUES (?, ?)", ("Texto Padrão...", ""))
-    
     conn.commit()
+    
+    # Tenta rodar migração silenciosa
+    run_migrations()
 
-# Executa init_db na inicialização
 init_db()
 
 # ==============================================================================
@@ -365,6 +364,15 @@ with st.sidebar:
     
     role = st.session_state['role']; nome_user = st.session_state['nome_exibicao']
     st.write(f"Olá, **{nome_user}**")
+    
+    # BOTÃO DE EMERGÊNCIA REPARAR DB
+    if st.button("🛠️ REPARAR BANCO DE DADOS", type="primary"):
+        logs = run_migrations()
+        if logs:
+            st.success("Banco de dados atualizado com sucesso!")
+            st.code("\n".join(logs))
+        else:
+            st.info("Banco de dados já está atualizado.")
     
     if st.button("Sair"): 
         st.session_state['logged_in'] = False; st.rerun()
