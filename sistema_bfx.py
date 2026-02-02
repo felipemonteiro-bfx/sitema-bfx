@@ -7,14 +7,12 @@ from fpdf import FPDF
 import os
 import math
 import time
-import altair as alt
 import base64
 import urllib.parse
 import re
 import io
 import requests
 import calendar
-import json
 
 # ==============================================================================
 # 1. CONFIGURAÇÃO VISUAL
@@ -90,9 +88,9 @@ def init_db():
 
     for col in ['antecipada', 'excedeu_limite', 'valor_frete', 'custo_envio', 'lucro_liquido']: ensure_col('vendas', col, 'REAL DEFAULT 0')
     ensure_col('vendas', 'comprovante_pdf', 'TEXT')
-    for col in ['qtd_estoque', 'custo_padrao', 'fornecedor_id']: ensure_col('produtos', col, 'REAL DEFAULT 0')
+    for col in ['qtd_estoque', 'custo_padrao', 'valor_venda', 'fornecedor_id']: ensure_col('produtos', col, 'REAL DEFAULT 0')
     for col in ['marca', 'imagem', 'ncm']: ensure_col('produtos', col, 'TEXT')
-    for col in ['matricula', 'empresa', 'telefone', 'cpf', 'data_nascimento', 'cep', 'endereco']: ensure_col('clientes', col, 'TEXT')
+    for col in ['matricula', 'empresa', 'telefone', 'cpf', 'cnpj', 'tipo', 'data_nascimento', 'cep', 'endereco']: ensure_col('clientes', col, 'TEXT')
     for col in ['email', 'telefone', 'endereco', 'cep', 'data_nascimento']: ensure_col('usuarios', col, 'TEXT')
 
     if c.execute("SELECT count(*) FROM usuarios").fetchone()[0] == 0:
@@ -111,6 +109,9 @@ init_db()
 def mask_cpf(val):
     v = re.sub(r'\D', '', str(val))
     return f"{v[:3]}.{v[3:6]}.{v[6:9]}-{v[9:]}" if len(v) == 11 else val
+def mask_cnpj(val):
+    v = re.sub(r'\D', '', str(val))
+    return f"{v[:2]}.{v[2:5]}.{v[5:8]}/{v[8:12]}-{v[12:]}" if len(v) == 14 else val
 def mask_tel(val):
     v = re.sub(r'\D', '', str(val))
     if len(v) == 11: return f"({v[:2]}) {v[2:7]}-{v[7:]}"
@@ -130,13 +131,6 @@ def sugerir_ncm(nome_prod):
     for k, v in ncms.items():
         if k in nome: return v
     return ""
-
-def buscar_cep(cep):
-    try:
-        r = requests.get(f"https://viacep.com.br/ws/{clean_str(cep)}/json/", timeout=2)
-        if r.status_code==200 and 'erro' not in r.json(): return f"{r.json()['logradouro']}, {r.json()['bairro']} - {r.json()['localidade']}/{r.json()['uf']}"
-    except: pass
-    return None
 
 def check_credito(cli_id, parc_nova):
     res = pd.read_sql(f"SELECT renda FROM clientes WHERE id={cli_id}", conn)
@@ -276,6 +270,30 @@ def gerar_pdf(dados, tipo="recibo", texto_custom=None):
             pdf.cell(25,8,str(r['data_venda']),1); pdf.cell(50,8,str(r['nome'])[:25],1); pdf.cell(40,8,str(r['produto_nome'])[:20],1)
             pdf.cell(30,8,f"R$ {r['valor_venda']:.2f}",1); pdf.cell(20,8,"Antecipada" if r['antecipada'] else "Mensal",1); pdf.ln()
         pdf.ln(5); pdf.set_font("Arial",'B',12); pdf.cell(0,10,f"TOTAL: {format_brl(dados['total'])}",0,1,'R')
+    elif tipo == "catalogo":
+        pdf.set_font("Arial", 'B', 16); pdf.cell(0, 10, "CATÁLOGO DE PRODUTOS", 0, 1, 'C'); pdf.ln(10)
+        df_prod = dados['df']
+        for i, r in df_prod.iterrows():
+            pdf.set_fill_color(248, 250, 252) # Cinza claro
+            pdf.rect(10, pdf.get_y(), 190, 50, 'F')
+            if r['imagem']:
+                try:
+                    img_data = base64.b64decode(r['imagem'])
+                    temp_img = f"temp_img_{i}.jpg"
+                    with open(temp_img, "wb") as f: f.write(img_data)
+                    pdf.image(temp_img, 15, pdf.get_y()+5, 40, 40)
+                    os.remove(temp_img)
+                except: pass
+            pdf.set_xy(60, pdf.get_y()+5)
+            pdf.set_font("Arial", 'B', 12); pdf.cell(0, 8, str(r['nome']), 0, 1)
+            pdf.set_x(60)
+            pdf.set_font("Arial", '', 10); pdf.cell(0, 6, f"Marca: {r['marca']}", 0, 1)
+            pdf.set_x(60)
+            pdf.set_font("Arial", 'B', 14); pdf.set_text_color(0, 100, 0)
+            pdf.cell(0, 10, f"{format_brl(r['valor_venda'])}", 0, 1)
+            pdf.set_text_color(0, 0, 0) 
+            pdf.ln(25); pdf.ln(5)
+            
     return pdf.output(dest='S').encode('latin-1')
 
 # ==============================================================================
@@ -288,29 +306,17 @@ def registrar_log(acao, detalhes):
     try: conn.execute("INSERT INTO audit_logs (data_hora, usuario, acao, detalhes) VALUES (?,?,?,?)", (datetime.now(), st.session_state.get('nome_exibicao','Sistema'), acao, detalhes)); conn.commit()
     except: pass
 
-if not st.session_state['logged_in'] and os.path.exists("session.json"):
-    try:
-        with open("session.json", "r") as f: sess = json.load(f)
-        res = conn.execute("SELECT id, role, nome_exibicao FROM usuarios WHERE username=?", (sess['user'],)).fetchone()
-        if res:
-            st.session_state.update({'logged_in':True, 'username':sess['user'], 'user_id':res[0], 'role':res[1], 'nome_exibicao':res[2]})
-            st.rerun()
-    except: pass
-
 def login_screen():
     c1, c2, c3 = st.columns([1,2,1])
     with c2:
         st.markdown("<br><div class='login-box'><h1>💎 BFX Manager</h1><p style='color:#64748b;'>Acesso Seguro</p>", unsafe_allow_html=True)
         with st.form("login"):
             user = st.text_input("Usuário").lower().strip(); pwd = st.text_input("Senha", type="password")
-            lembrar = st.checkbox("Manter conectado")
             if st.form_submit_button("ENTRAR"):
                 res = conn.execute("SELECT id, password, role, nome_exibicao FROM usuarios WHERE username=?", (user,)).fetchone()
                 if res and res[1] == pwd:
                     st.session_state.update({'logged_in':True, 'username':user, 'user_id':res[0], 'role':res[2], 'nome_exibicao':res[3]})
                     registrar_log("LOGIN", "Entrou")
-                    if lembrar:
-                        with open("session.json", "w") as f: json.dump({"user": user}, f)
                     st.success(f"Bem-vindo, {res[3]}!"); time.sleep(0.5); st.rerun()
                 else: st.error("Incorreto.")
         st.markdown("</div>", unsafe_allow_html=True)
@@ -329,7 +335,6 @@ with st.sidebar:
     st.write(f"Olá, **{nome_user}**")
     
     if st.button("Sair"): 
-        if os.path.exists("session.json"): os.remove("session.json")
         st.session_state['logged_in'] = False; st.rerun()
     
     st.markdown("---")
@@ -376,7 +381,8 @@ if menu == "Dashboard" and role == 'admin':
     with t2:
         st.subheader("Inteligência Comercial")
         if not df_pod.empty:
-            st.altair_chart(alt.Chart(df_pod).mark_bar().encode(x=alt.X('vendedor', sort='-y'), y='total', color='vendedor', tooltip=['vendedor', 'total']).properties(height=350), use_container_width=True)
+            # CHART SIMPLIFICADO COMPATIVEL COM PYTHON 3.14
+            st.bar_chart(df_pod.set_index("vendedor")['total'])
         st.markdown("#### 💤 Clientes Inativos (Win-Back)")
         q_inat = """SELECT c.nome, c.telefone, MAX(v.data_venda) as ultima FROM clientes c JOIN vendas v ON c.id=v.cliente_id GROUP BY c.id HAVING ultima < date('now','-90 days')"""
         df_inat = pd.read_sql(q_inat, conn)
@@ -415,10 +421,8 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
         st.markdown("##### 📅 Fluxo de Caixa Projetado (6 Meses)")
         st.info("Considera todas as parcelas a receber e despesas lançadas.")
         df_fluxo = calcular_fluxo_caixa()
-        base = alt.Chart(df_fluxo).encode(x='Mês')
-        bar_ent = base.mark_bar(color='#10b981', size=20).encode(y='Entradas', tooltip='Entradas').properties(title='Entradas')
-        bar_sai = base.mark_bar(color='#ef4444', size=20).encode(y='Saídas', tooltip='Saídas').properties(title='Saídas')
-        st.altair_chart(bar_ent + bar_sai, use_container_width=True)
+        # CHART NATIVO COMPATIVEL COM PYTHON 3.14
+        st.bar_chart(df_fluxo.set_index("Mês")[["Entradas", "Saídas"]], color=["#10b981", "#ef4444"])
         st.dataframe(df_fluxo.style.format({'Entradas': 'R$ {:.2f}', 'Saídas': 'R$ {:.2f}', 'Saldo': 'R$ {:.2f}'}), use_container_width=True)
 
     with t3:
@@ -596,6 +600,7 @@ elif menu == "Cadastros":
                 if sug: c1.caption(f"Sugestão NCM: {sug}")
                 ncm = c1.text_input("NCM", value=sug if sug else "")
                 cst = c2.number_input("Custo", value=None, placeholder="0.00"); mk = c2.text_input("Marca")
+                val_v = c1.number_input("Valor de Venda (Catálogo)", value=None, placeholder="0.00")
                 
                 nf_n = ""; nf_t = ""
                 if f_sel == "Novo Fornecedor...":
@@ -612,10 +617,22 @@ elif menu == "Cadastros":
                     elif f_sel != "Novo Fornecedor...":
                         fid = df_f[df_f['nome']==f_sel].iloc[0]['id']
                     b64_img = image_to_base64(up_img)
-                    conn.execute("INSERT INTO produtos (nome, custo_padrao, marca, ncm, fornecedor_id, imagem) VALUES (?,?,?,?,?,?)", (nm, cst or 0.0, mk, ncm, fid, b64_img))
+                    conn.execute("INSERT INTO produtos (nome, custo_padrao, marca, ncm, fornecedor_id, imagem, valor_venda) VALUES (?,?,?,?,?,?,?)", (nm, cst or 0.0, mk, ncm, fid, b64_img, val_v or 0.0))
                     conn.commit(); st.success("Salvo!"); st.rerun()
-        st.divider(); st.info("Clique para editar:")
-        df_prod = pd.read_sql("SELECT p.id, p.nome, p.custo_padrao, p.marca, f.nome as Fornecedor FROM produtos p LEFT JOIN fornecedores f ON p.fornecedor_id = f.id ORDER BY p.nome", conn)
+        
+        # GERAR CATÁLOGO
+        st.markdown("---")
+        if st.button("📄 Gerar Catálogo de Produtos PDF"):
+            df_cat = pd.read_sql("SELECT nome, marca, valor_venda, imagem FROM produtos ORDER BY nome", conn)
+            if not df_cat.empty:
+                pdf_cat = gerar_pdf({'df': df_cat}, "catalogo")
+                st.download_button("📥 Baixar Catálogo", data=pdf_cat, file_name="Catalogo_Produtos.pdf", mime="application/pdf")
+                st.info("Dica: Baixe o arquivo e arraste para o WhatsApp Web abaixo.")
+                st.markdown('<a href="https://web.whatsapp.com/" target="_blank" class="whatsapp-btn">🟢 Abrir WhatsApp Web</a>', unsafe_allow_html=True)
+            else: st.warning("Cadastre produtos com 'Valor de Venda' primeiro.")
+        
+        st.divider(); st.info("💡 Clique para editar:")
+        df_prod = pd.read_sql("SELECT p.id, p.nome, p.custo_padrao, p.valor_venda, p.marca, f.nome as Fornecedor FROM produtos p LEFT JOIN fornecedores f ON p.fornecedor_id = f.id ORDER BY p.nome", conn)
         evt_prod = st.dataframe(df_prod, hide_index=True, use_container_width=True, on_select="rerun", selection_mode="single-row")
         if evt_prod.selection.rows:
             pid = df_prod.iloc[evt_prod.selection.rows[0]]['id']
@@ -625,6 +642,8 @@ elif menu == "Cadastros":
                 c1, c2 = st.columns(2)
                 pnm = c1.text_input("Nome", d_prod['nome']); pcst = c2.number_input("Custo", value=float(d_prod['custo_padrao'] or 0))
                 pmk = c1.text_input("Marca", d_prod['marca']); pncm = c2.text_input("NCM", value=d_prod.get('ncm',''))
+                pval = c1.number_input("Valor Venda (Catálogo)", value=float(d_prod.get('valor_venda', 0) or 0))
+                
                 l_forns = ["Sem Fornecedor"] + pd.read_sql("SELECT nome FROM fornecedores", conn)['nome'].tolist()
                 fname = "Sem Fornecedor"
                 if d_prod['fornecedor_id']:
@@ -638,8 +657,8 @@ elif menu == "Cadastros":
                     fid_new = None
                     if pforn != "Sem Fornecedor":
                         fid_new = conn.execute(f"SELECT id FROM fornecedores WHERE nome='{pforn}'").fetchone()[0]
-                    q_up = "UPDATE produtos SET nome=?, custo_padrao=?, marca=?, ncm=?, fornecedor_id=?"
-                    params = [pnm, pcst, pmk, pncm, fid_new]
+                    q_up = "UPDATE produtos SET nome=?, custo_padrao=?, marca=?, ncm=?, fornecedor_id=?, valor_venda=?"
+                    params = [pnm, pcst, pmk, pncm, fid_new, pval]
                     if up_new:
                         q_up += ", imagem=?"; params.append(image_to_base64(up_new))
                     q_up += " WHERE id=?"; params.append(pid)
@@ -660,29 +679,65 @@ elif menu == "Cadastros":
 
 elif menu == "Histórico (Editar)":
     st.subheader("📜 Histórico & Edição")
-    c1, c2 = st.columns([3,1]); f_cli = c1.text_input("Buscar Cliente")
+    
+    # Filtros Avançados (CORRIGIDO)
+    with st.expander("🔍 Filtros Avançados", expanded=True):
+        c1, c2, c3, c4 = st.columns(4)
+        f_ini = c1.date_input("De", datetime.now().replace(day=1))
+        f_fim = c2.date_input("Até", datetime.now())
+        f_cli = c3.text_input("Cliente")
+        f_status = c4.selectbox("Status", ["Todos", "Antecipadas", "Mensais"])
+        
+        # Filtro de Vendedor (Admin)
+        f_vend = "Todos"
+        if role == 'admin':
+            c5, c6 = st.columns(2)
+            users = pd.read_sql("SELECT nome_exibicao FROM usuarios", conn)['nome_exibicao'].tolist()
+            f_vend = c5.selectbox("Filtrar Vendedor", ["Todos"] + users)
+
+    # Construção da Query
     q = "SELECT v.id, v.data_venda, v.vendedor, c.nome, v.produto_nome, v.valor_venda, v.valor_frete, v.custo_envio, v.lucro_liquido, v.antecipada, v.parcelas, v.comprovante_pdf FROM vendas v JOIN clientes c ON v.cliente_id=c.id WHERE 1=1"
-    if f_cli: q += f" AND c.nome LIKE '%{f_cli}%'"
-    if role != 'admin': q += f" AND v.vendedor = '{nome_user}'"
-    q += " ORDER BY v.data_venda DESC LIMIT 50"
+    
+    q += f" AND v.data_venda BETWEEN '{f_ini}' AND '{f_fim}'"
+    
+    if f_cli: 
+        q += f" AND c.nome LIKE '%{f_cli}%'"
+    
+    if f_status == "Antecipadas": 
+        q += " AND v.antecipada=1"
+    elif f_status == "Mensais": 
+        q += " AND v.antecipada=0"
+    
+    # Lógica de Vendedor
+    if role != 'admin':
+        q += f" AND v.vendedor = '{nome_user}'"
+    elif f_vend != "Todos":
+        q += f" AND v.vendedor = '{f_vend}'"
+    
+    q += " ORDER BY v.data_venda DESC LIMIT 100"
+    
     df = pd.read_sql(q, conn)
+    
     if not df.empty:
         cols_v = ['id','data_venda','vendedor','nome','produto_nome','valor_venda','antecipada']
         if role == 'admin': cols_v.append('lucro_liquido')
         df['Status'] = df['antecipada'].apply(lambda x: '⚡ Ant' if x==1 else '📅 Mes')
         df['Doc'] = df['comprovante_pdf'].apply(lambda x: '✅ OK' if x else '❌ Pend')
+        
         evt = st.dataframe(df[cols_v + ['Status','Doc']], use_container_width=True, on_select="rerun", selection_mode="single-row", hide_index=True)
+        
         if evt.selection.rows:
             v_sel = df.iloc[evt.selection.rows[0]]
             vid = int(v_sel['id'])
             st.markdown("---"); st.info(f"**Editando Venda #{vid} - {v_sel['nome']}**")
             t1, t2, t3 = st.tabs(["📄 Docs", "✏️ Dados", "🗑️ Excluir"])
+            
             with t1:
                 up = st.file_uploader("Subir PDF", type=['pdf','jpg'])
                 if up and st.button("Salvar Doc"):
                     b64 = image_to_base64(up); conn.execute("UPDATE vendas SET comprovante_pdf=? WHERE id=?", (b64, vid)); conn.commit(); st.success("Salvo!"); st.rerun()
+            
             with t2:
-                # EDICAO COM CAMPOS VAZIOS
                 with st.form(f"fe_{vid}"):
                     c1, c2 = st.columns(2)
                     ndt = c1.date_input("Data", datetime.strptime(v_sel['data_venda'], '%Y-%m-%d'))
@@ -693,14 +748,18 @@ elif menu == "Histórico (Editar)":
                     ncusto_envio = c4.number_input("Custo Envio (Real)", value=float(v_sel.get('custo_envio',0) or 0), step=0.01)
                     nparc = c5.number_input("Parcelas", value=int(v_sel['parcelas']), min_value=1)
                     nant = st.checkbox("Antecipada?", value=(v_sel['antecipada']==1))
+                    
                     if st.form_submit_button("Salvar Alterações"):
                         new_vp = (nval + nfrete) / nparc if nparc > 0 else 0
                         conn.execute("UPDATE vendas SET data_venda=?, valor_venda=?, produto_nome=?, valor_frete=?, custo_envio=?, parcelas=?, antecipada=?, valor_parcela=? WHERE id=?", (ndt, nval, nprod, nfrete, ncusto_envio, nparc, 1 if nant else 0, new_vp, vid))
                         conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
+            
             with t3:
                 if role == 'admin':
                     if st.button("🗑️ EXCLUIR VENDA", type="primary"): conn.execute("DELETE FROM vendas WHERE id=?", (vid,)); conn.commit(); st.warning("Excluído."); time.sleep(1); st.rerun()
                 else: st.warning("Apenas admin.")
+    else:
+        st.warning("Nenhuma venda encontrada com esses filtros.")
 
 elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
     st.subheader("👥 Gestão de Time")
