@@ -7,15 +7,17 @@ from fpdf import FPDF
 import os
 import math
 import time
+import altair as alt
 import base64
 import urllib.parse
 import re
 import io
 import requests
 import calendar
+import json
 
 # ==============================================================================
-# 1. CONFIGURAÇÃO VISUAL
+# 1. CONFIGURAÇÃO VISUAL (DESIGN PREMIUM)
 # ==============================================================================
 st.set_page_config(page_title="BFX Manager", layout="wide", page_icon="💎", initial_sidebar_state="expanded")
 
@@ -24,17 +26,23 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
+    /* LOGIN */
     .login-box { max-width: 420px; margin: 60px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; border: 1px solid #f1f5f9; }
+    
+    /* CARDS */
     div.css-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; }
     
+    /* FINANCEIRO CARDS */
     .fin-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e5e7eb; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .fin-label { font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase; }
     .fin-value { font-size: 24px; color: #111827; font-weight: 800; margin-top: 5px; }
     .fin-good { color: #059669; } .fin-bad { color: #dc2626; }
 
+    /* BOTÕES */
     .stButton button { width: 100%; border-radius: 10px; height: 3.2em; font-weight: 600; border: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; transition: all 0.2s; }
     .stButton button:hover { box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); opacity: 0.95; }
     
+    /* WHATSAPP */
     .whatsapp-btn { 
         display: inline-flex; align-items: center; justify-content: center; width: 100%; 
         background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); 
@@ -44,6 +52,7 @@ st.markdown("""
     }
     .whatsapp-btn:hover { transform: translateY(-2px); }
 
+    /* EXTRAS */
     .kpi-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
     .credit-box { background: linear-gradient(to right, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
     .cal-day-box { border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px; min-height: 70px; background: white; font-size: 12px; }
@@ -270,6 +279,8 @@ def gerar_pdf(dados, tipo="recibo", texto_custom=None):
             pdf.cell(25,8,str(r['data_venda']),1); pdf.cell(50,8,str(r['nome'])[:25],1); pdf.cell(40,8,str(r['produto_nome'])[:20],1)
             pdf.cell(30,8,f"R$ {r['valor_venda']:.2f}",1); pdf.cell(20,8,"Antecipada" if r['antecipada'] else "Mensal",1); pdf.ln()
         pdf.ln(5); pdf.set_font("Arial",'B',12); pdf.cell(0,10,f"TOTAL: {format_brl(dados['total'])}",0,1,'R')
+    
+    # CATÁLOGO DE PRODUTOS
     elif tipo == "catalogo":
         pdf.set_font("Arial", 'B', 16); pdf.cell(0, 10, "CATÁLOGO DE PRODUTOS", 0, 1, 'C'); pdf.ln(10)
         df_prod = dados['df']
@@ -311,10 +322,19 @@ def login_screen():
     with c2:
         st.markdown("<br><div class='login-box'><h1>💎 BFX Manager</h1><p style='color:#64748b;'>Acesso Seguro</p>", unsafe_allow_html=True)
         with st.form("login"):
-            user = st.text_input("Usuário").lower().strip(); pwd = st.text_input("Senha", type="password")
+            user = st.text_input("Usuário").lower().strip()
+            # Visualização de Senha
+            if 'show_pwd' not in st.session_state: st.session_state.show_pwd = False
+            
+            pwd_type = "default" if st.session_state.show_pwd else "password"
+            pwd = st.text_input("Senha", type=pwd_type)
+            
+            if st.checkbox("Mostrar Senha"): st.session_state.show_pwd = True
+            else: st.session_state.show_pwd = False
+            
             if st.form_submit_button("ENTRAR"):
                 res = conn.execute("SELECT id, password, role, nome_exibicao FROM usuarios WHERE username=?", (user,)).fetchone()
-                if res and res[1] == pwd:
+                if res and res[1] == pwd.strip(): # REMOVENDO ESPAÇOS
                     st.session_state.update({'logged_in':True, 'username':user, 'user_id':res[0], 'role':res[2], 'nome_exibicao':res[3]})
                     registrar_log("LOGIN", "Entrou")
                     st.success(f"Bem-vindo, {res[3]}!"); time.sleep(0.5); st.rerun()
@@ -786,8 +806,11 @@ elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
                 if st.form_submit_button("Salvar Dados"):
                     q_up = "UPDATE usuarios SET nome_exibicao=?, username=?, email=?, telefone=?, endereco=?"
                     params = [unm, ulogin, uemail, utel, uend]
-                    if new_pass: q_up += ", password=?"; params.append(new_pass)
-                    q_up += " WHERE id=?"; params.append(du['id'])
+                    if new_pass.strip(): # Se tiver senha nova (sem espacos)
+                        q_up += ", password=?"
+                        params.append(new_pass.strip())
+                    q_up += " WHERE id=?"
+                    params.append(int(du['id']))
                     conn.execute(q_up, params); conn.commit(); st.success("Dados Salvos!"); time.sleep(1); st.rerun()
             st.markdown("---")
             if st.button(f"🗑️ DEMITIR (Excluir {sel_u})", type="primary"):
