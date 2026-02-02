@@ -15,36 +15,32 @@ import requests
 import calendar
 import json
 
+# Tenta importar OpenAI
+try:
+    from openai import OpenAI
+    HAS_OPENAI = True
+except ImportError:
+    HAS_OPENAI = False
+
 # ==============================================================================
 # 1. CONFIGURAÇÃO VISUAL
 # ==============================================================================
-st.set_page_config(page_title="BFX Manager", layout="wide", page_icon="💎", initial_sidebar_state="auto")
+st.set_page_config(page_title="BFX Manager", layout="wide", page_icon="💎", initial_sidebar_state="expanded")
 
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    
     .login-box { max-width: 420px; margin: 60px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; border: 1px solid #f1f5f9; }
     div.css-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; }
-    
     .fin-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e5e7eb; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .fin-label { font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase; }
     .fin-value { font-size: 24px; color: #111827; font-weight: 800; margin-top: 5px; }
     .fin-good { color: #059669; } .fin-bad { color: #dc2626; }
-
     .stButton button { width: 100%; border-radius: 10px; height: 3.2em; font-weight: 600; border: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; transition: all 0.2s; }
     .stButton button:hover { box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); opacity: 0.95; }
-    
-    .whatsapp-btn { 
-        display: inline-flex; align-items: center; justify-content: center; width: 100%; 
-        background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); 
-        color: white !important; padding: 12px; border-radius: 10px; 
-        text-decoration: none; font-weight: bold; margin-top: 10px; 
-        box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2); border: 1px solid #1DA851;
-    }
+    .whatsapp-btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); color: white !important; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2); border: 1px solid #1DA851; }
     .whatsapp-btn:hover { transform: translateY(-2px); }
-
     .kpi-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
     .credit-box { background: linear-gradient(to right, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
     .cal-day-box { border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px; min-height: 70px; background: white; font-size: 12px; }
@@ -52,13 +48,14 @@ st.markdown("""
     .podio-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; margin-bottom: 20px; }
     .podio-rank { font-size: 13px; font-weight: 600; color: #334155; margin: 6px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
     .mural-aviso { background-color: #fefce8; border-left: 4px solid #facc15; color: #854d0e; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; line-height: 1.4; }
-
-    @media only screen and (max-width: 600px) { h1 { font-size: 1.5rem !important; } }
+    .chat-msg { padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+    .chat-user { background-color: #e0f2fe; text-align: right; }
+    .chat-bot { background-color: #f1f5f9; }
 </style>
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 2. BANCO DE DADOS (COM AUTO-REPARO)
+# 2. BANCO DE DADOS (COM BLINDAGEM)
 # ==============================================================================
 @st.cache_resource
 def get_connection(): return sqlite3.connect('bfx_sistema.db', check_same_thread=False)
@@ -66,12 +63,11 @@ conn = get_connection()
 
 def init_db():
     c = conn.cursor()
-    # 1. Tabelas Base
     tables = [
         '''CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, renda REAL, empresa TEXT, matricula TEXT, telefone TEXT, cpf TEXT, cnpj TEXT, tipo TEXT, data_nascimento DATE, cep TEXT, endereco TEXT)''',
-        '''CREATE TABLE IF NOT EXISTS produtos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, custo_padrao REAL, valor_venda REAL, marca TEXT, categoria TEXT, ncm TEXT, imagem TEXT, fornecedor_id INTEGER, qtd_estoque INTEGER DEFAULT 0)''',
+        '''CREATE TABLE IF NOT EXISTS produtos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, custo_padrao REAL, marca TEXT, categoria TEXT, ncm TEXT, imagem TEXT, fornecedor_id INTEGER, qtd_estoque INTEGER DEFAULT 0, valor_venda REAL DEFAULT 0)''',
         '''CREATE TABLE IF NOT EXISTS vendas (id INTEGER PRIMARY KEY AUTOINCREMENT, data_venda DATE, vendedor TEXT, cliente_id INTEGER, produto_nome TEXT, custo_produto REAL, valor_venda REAL, valor_frete REAL DEFAULT 0, custo_envio REAL DEFAULT 0, parcelas INTEGER, valor_parcela REAL, taxa_financeira_valor REAL, lucro_liquido REAL, antecipada INTEGER DEFAULT 1, excedeu_limite INTEGER DEFAULT 0, comprovante_pdf TEXT, FOREIGN KEY(cliente_id) REFERENCES clientes(id))''',
-        '''CREATE TABLE IF NOT EXISTS config (id INTEGER PRIMARY KEY AUTOINCREMENT, modelo_contrato TEXT, logo_path TEXT)''',
+        '''CREATE TABLE IF NOT EXISTS config (id INTEGER PRIMARY KEY AUTOINCREMENT, modelo_contrato TEXT, logo_path TEXT, openai_key TEXT)''',
         '''CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, role TEXT, nome_exibicao TEXT, email TEXT, telefone TEXT, data_nascimento DATE, endereco TEXT, cep TEXT, meta_mensal REAL DEFAULT 50000.0, comissao_pct REAL DEFAULT 2.0)''',
         '''CREATE TABLE IF NOT EXISTS fornecedores (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, telefone TEXT)''',
         '''CREATE TABLE IF NOT EXISTS empresas_parceiras (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, responsavel_rh TEXT, telefone_rh TEXT, email_rh TEXT)''',
@@ -82,56 +78,54 @@ def init_db():
     ]
     for sql in tables: c.execute(sql)
 
-    # 2. Força Colunas Novas (Isso corrige o erro File line 675)
-    columns_to_force = [
-        ('produtos', 'valor_venda', 'REAL DEFAULT 0'),
-        ('produtos', 'ncm', 'TEXT'),
-        ('produtos', 'imagem', 'TEXT'),
-        ('clientes', 'cnpj', 'TEXT'),
-        ('clientes', 'tipo', 'TEXT'),
-        ('clientes', 'matricula', 'TEXT'),
-        ('clientes', 'cpf', 'TEXT'),
-        ('clientes', 'empresa', 'TEXT'),
-        ('vendas', 'comprovante_pdf', 'TEXT'),
-        ('vendas', 'lucro_liquido', 'REAL DEFAULT 0')
-    ]
-    
-    for table, col, dtype in columns_to_force:
+    def force_add_column(table, col, dtype):
         try:
-            c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
-        except: pass # Se já existe, ignora e segue a vida
+            existing_cols = [i[1] for i in c.execute(f"PRAGMA table_info({table})")]
+            if col not in existing_cols:
+                c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
+        except: pass
+
+    # Garante colunas críticas
+    force_add_column('clientes', 'cnpj', 'TEXT')
+    force_add_column('clientes', 'tipo', 'TEXT')
+    force_add_column('produtos', 'valor_venda', 'REAL DEFAULT 0')
+    force_add_column('vendas', 'comprovante_pdf', 'TEXT')
+    force_add_column('config', 'openai_key', 'TEXT')
+
+    # Correção senha Bruno
+    try:
+        c.execute("UPDATE usuarios SET password = '123' WHERE username = 'bruno'")
+        if c.execute("SELECT count(*) FROM usuarios WHERE username='bruno'").fetchone()[0] == 0:
+             c.execute("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES ('bruno', '123', 'vendedor', 'Bruno')")
+    except: pass
+
+    if c.execute("SELECT count(*) FROM usuarios WHERE username='admin'").fetchone()[0] == 0:
+        c.execute("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES ('admin', 'admin', 'admin', 'Administrador')")
     
-    # 3. Dados Padrão
-    if c.execute("SELECT count(*) FROM usuarios").fetchone()[0] == 0:
-        c.executemany("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", [("admin", "admin", "admin", "Administrador"), ("bruno", "bruno123#", "vendedor", "Bruno"), ("jakeline", "jak123!", "vendedor", "Jakeline"), ("felipe", "123", "vendedor", "Felipe")])
     for emp in ["Amazon Five", "Gimam"]:
         if c.execute("SELECT count(*) FROM empresas_parceiras WHERE nome=?", (emp,)).fetchone()[0] == 0:
             c.execute("INSERT INTO empresas_parceiras (nome, responsavel_rh, telefone_rh, email_rh) VALUES (?,?,?,?)", (emp, "RH "+emp, "", ""))
+    
     if c.execute("SELECT COUNT(*) FROM config").fetchone()[0] == 0:
         c.execute("INSERT INTO config (modelo_contrato, logo_path) VALUES (?, ?)", ("Texto Padrão...", ""))
     
     conn.commit()
-
-# Executa init_db na inicialização
 init_db()
 
 # ==============================================================================
 # 3. MÁSCARAS & UTILITÁRIOS
 # ==============================================================================
 def mask_cpf(val):
-    v = re.sub(r'\D', '', str(val))
-    return f"{v[:3]}.{v[3:6]}.{v[6:9]}-{v[9:]}" if len(v) == 11 else val
+    v = re.sub(r'\D', '', str(val)); return f"{v[:3]}.{v[3:6]}.{v[6:9]}-{v[9:]}" if len(v) == 11 else val
 def mask_cnpj(val):
-    v = re.sub(r'\D', '', str(val))
-    return f"{v[:2]}.{v[2:5]}.{v[5:8]}/{v[8:12]}-{v[12:]}" if len(v) == 14 else val
+    v = re.sub(r'\D', '', str(val)); return f"{v[:2]}.{v[2:5]}.{v[5:8]}/{v[8:12]}-{v[12:]}" if len(v) == 14 else val
 def mask_tel(val):
     v = re.sub(r'\D', '', str(val))
     if len(v) == 11: return f"({v[:2]}) {v[2:7]}-{v[7:]}"
     if len(v) == 10: return f"({v[:2]}) {v[2:6]}-{v[6:]}"
     return val
 def mask_cep(val):
-    v = re.sub(r'\D', '', str(val))
-    return f"{v[:5]}-{v[5:]}" if len(v) == 8 else val
+    v = re.sub(r'\D', '', str(val)); return f"{v[:5]}-{v[5:]}" if len(v) == 8 else val
 def clean_str(val): return re.sub(r'\D', '', str(val)) if val else ""
 def format_brl(v): return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if v else "R$ 0,00"
 def gerar_link_zap(tel, msg): return f"https://wa.me/{clean_str(tel)}?text={urllib.parse.quote(msg)}" if tel else None
@@ -178,10 +172,8 @@ def calcular_dre_avancado(mes_ano):
     custos_var_totais = cmv + comissoes + desp_var + custo_frete_real
     margem_contrib = receita_bruta - custos_var_totais
     lucro_liquido = margem_contrib - custo_fixo
-    margem_pct = (margem_contrib / receita_bruta) if receita_bruta > 0 else 0
-    ponto_equilibrio = (custo_fixo / margem_pct) if margem_pct > 0 else 0
     meta_global = conn.execute("SELECT SUM(meta_mensal) FROM usuarios").fetchone()[0] or 100000.0
-    return {"Receita": receita_bruta, "(-) Custos Var.": custos_var_totais, "(=) Margem Contrib.": margem_contrib, "(-) Custos Fixos": custo_fixo, "(=) Lucro Líquido": lucro_liquido, "Ponto Equilíbrio": ponto_equilibrio, "Meta Global": meta_global, "Detalhe": {"CMV": cmv, "Comissões": comissoes, "Desp. Var": desp_var, "Frete Real": custo_frete_real}}
+    return {"Receita": receita_bruta, "(=) Margem Contrib.": margem_contrib, "(-) Custos Fixos": custo_fixo, "(=) Lucro Líquido": lucro_liquido, "Meta Global": meta_global, "Detalhe": {"CMV": cmv, "Comissões": comissoes, "Desp. Var": desp_var, "Frete Real": custo_frete_real}}
 
 def calcular_relatorio_parceiro(empresa, mes_ref):
     mes_str = mes_ref 
@@ -286,7 +278,7 @@ def gerar_pdf(dados, tipo="recibo", texto_custom=None):
         pdf.set_font("Arial", 'B', 16); pdf.cell(0, 10, "CATÁLOGO DE PRODUTOS", 0, 1, 'C'); pdf.ln(10)
         df_prod = dados['df']
         for i, r in df_prod.iterrows():
-            pdf.set_fill_color(248, 250, 252) # Cinza claro
+            pdf.set_fill_color(248, 250, 252)
             pdf.rect(10, pdf.get_y(), 190, 50, 'F')
             if r['imagem']:
                 try:
@@ -330,7 +322,7 @@ def login_screen():
             else: st.session_state.show_pwd = False
             if st.form_submit_button("ENTRAR"):
                 res = conn.execute("SELECT id, password, role, nome_exibicao FROM usuarios WHERE username=?", (user,)).fetchone()
-                if res and res[1] == pwd.strip():
+                if res and res[1] == pwd.strip(): 
                     st.session_state.update({'logged_in':True, 'username':user, 'user_id':res[0], 'role':res[2], 'nome_exibicao':res[3]})
                     registrar_log("LOGIN", "Entrou")
                     st.success(f"Bem-vindo, {res[3]}!"); time.sleep(0.5); st.rerun()
@@ -346,17 +338,12 @@ with st.sidebar:
     st.title("BFX 💎")
     aviso = pd.read_sql("SELECT mensagem FROM avisos WHERE ativo=1 ORDER BY id DESC LIMIT 1", conn)
     if not aviso.empty: st.markdown(f"<div class='mural-aviso'>📢 <b>Aviso:</b><br>{aviso.iloc[0]['mensagem']}</div>", unsafe_allow_html=True)
-    
     role = st.session_state['role']; nome_user = st.session_state['nome_exibicao']
     st.write(f"Olá, **{nome_user}**")
-    
-    if st.button("Sair"): 
-        st.session_state['logged_in'] = False; st.rerun()
-    
+    if st.button("Sair"): st.session_state['logged_in'] = False; st.rerun()
     st.markdown("---")
-    if role == 'admin': menu = st.radio("Menu", ["Dashboard", "💰 Financeiro & DRE", "🏦 Prudent (Antecipação)", "📥 Importação", "Venda Rápida", "Histórico (Editar)", "Cadastros", "👥 Gestão de RH (Equipe)", "🖨️ Relatórios", "Configurações"])
+    if role == 'admin': menu = st.radio("Menu", ["Dashboard", "💰 Financeiro & DRE", "🏦 Prudent (Antecipação)", "🤖 BFX Intelligence (IA)", "📥 Importação", "Venda Rápida", "Histórico (Editar)", "Cadastros", "👥 Gestão de RH (Equipe)", "🖨️ Relatórios", "Configurações"])
     else: menu = st.radio("Menu", ["Venda Rápida", "Minhas Comissões", "Histórico (Editar)", "Cadastros", "Relatórios PDF", "Meu Perfil"])
-    
     st.markdown("---")
     hj = datetime.now().date(); ini_mes = hj.replace(day=1)
     df_pod = pd.read_sql(f"SELECT vendedor, SUM(valor_venda+valor_frete) as total FROM vendas WHERE data_venda >= '{ini_mes}' GROUP BY vendedor ORDER BY total DESC", conn)
@@ -368,7 +355,25 @@ with st.sidebar:
         st.markdown(html_p + "</div>", unsafe_allow_html=True)
 
 # ==============================================================================
-# 6. CONTEÚDO PRINCIPAL
+# 6. FUNÇÕES IA
+# ==============================================================================
+def get_ai_context():
+    mes_atual = datetime.now().strftime("%Y-%m")
+    dre = calcular_dre_avancado(mes_atual)
+    return f"Resumo Financeiro: Receita {format_brl(dre['Receita'])}, Lucro {format_brl(dre['(=) Lucro Líquido'])}."
+
+def run_ai_chat(prompt):
+    if not HAS_OPENAI: return "Biblioteca OpenAI não instalada. Digite `pip install openai` no terminal."
+    api_key = conn.execute("SELECT openai_key FROM config").fetchone()
+    if not api_key or not api_key[0]: return "Por favor, adicione sua Chave de API da OpenAI (ou Groq) no menu Configurações."
+    client = OpenAI(api_key=api_key[0], base_url="https://api.groq.com/openai/v1") 
+    try:
+        completion = client.chat.completions.create(model="llama3-8b-8192", messages=[{"role": "system", "content": f"Contexto: {get_ai_context()}"}, {"role": "user", "content": prompt}])
+        return completion.choices[0].message.content
+    except Exception as e: return f"Erro na IA: {e}"
+
+# ==============================================================================
+# 7. CONTEÚDO PRINCIPAL
 # ==============================================================================
 
 if menu == "Dashboard" and role == 'admin':
@@ -393,17 +398,9 @@ if menu == "Dashboard" and role == 'admin':
                     if day!=0:
                         val = dados_cal.get(day, 0)
                         st.markdown(f"<div class='cal-day-box'>{day} {f'<br><span class=cal-val-green>+{format_brl(val)}</span>' if val>0 else ''}</div>", unsafe_allow_html=True)
-
     with t2:
         st.subheader("Inteligência Comercial")
-        if not df_pod.empty:
-            st.bar_chart(df_pod.set_index("vendedor")['total'])
-        st.markdown("#### 💤 Clientes Inativos (Win-Back)")
-        q_inat = """SELECT c.nome, c.telefone, MAX(v.data_venda) as ultima FROM clientes c JOIN vendas v ON c.id=v.cliente_id GROUP BY c.id HAVING ultima < date('now','-90 days')"""
-        df_inat = pd.read_sql(q_inat, conn)
-        if not df_inat.empty: st.dataframe(df_inat, use_container_width=True)
-        else: st.success("Nenhum cliente inativo.")
-
+        if not df_pod.empty: st.bar_chart(df_pod.set_index("vendedor")['total'])
     with t3:
         st.subheader("Fornecedores e Encomendas")
         df_forn = pd.read_sql("SELECT nome, telefone FROM fornecedores ORDER BY nome", conn)
@@ -413,6 +410,19 @@ if menu == "Dashboard" and role == 'admin':
                 with cols[i % 4]:
                     link = gerar_link_zap(row['telefone'], f"Olá {row['nome']}, preciso de uma encomenda.")
                     st.markdown(f"<div class='css-card' style='text-align:center'><b>{row['nome']}</b><br><a href='{link}' target='_blank' style='text-decoration:none; color:#2563eb;'>📞 Encomendar</a></div>", unsafe_allow_html=True)
+
+elif menu == "🤖 BFX Intelligence (IA)" and role == 'admin':
+    st.subheader("🤖 Assistente Virtual de Negócios")
+    st.info("Pergunte sobre estratégias, peça e-mails de cobrança ou tire dúvidas gerais. (Requer Chave API em Configurações)")
+    if "messages" not in st.session_state: st.session_state.messages = []
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]): st.markdown(message["content"])
+    if prompt := st.chat_input("Digite sua pergunta..."):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"): st.markdown(prompt)
+        with st.spinner("Pensando..."): response = run_ai_chat(prompt)
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        with st.chat_message("assistant"): st.markdown(response)
 
 elif menu == "💰 Financeiro & DRE" and role == 'admin':
     st.subheader("💰 Gestão Financeira Completa"); t1, t2, t3 = st.tabs(["DRE Inteligente", "Fluxo de Caixa", "Lançamentos"])
@@ -424,15 +434,8 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
         k2.markdown(f"<div class='fin-card'><div class='fin-label'>Ponto de Equilíbrio</div><div class='fin-value'>{format_brl(dre['Ponto Equilíbrio'])}</div></div>", unsafe_allow_html=True)
         cor = "fin-good" if dre['(=) Lucro Líquido'] >= 0 else "fin-bad"
         k3.markdown(f"<div class='fin-card'><div class='fin-label'>Lucro Líquido</div><div class='fin-value {cor}'>{format_brl(dre['(=) Lucro Líquido'])}</div></div>", unsafe_allow_html=True)
-        st.divider()
-        st.markdown(f"**Progresso Meta Global:** {format_brl(dre['Receita'])} / {format_brl(dre['Meta Global'])}")
-        st.progress(min(1.0, dre['Receita']/dre['Meta Global']) if dre['Meta Global']>0 else 0)
-        st.divider()
-        st.markdown("##### 📉 Detalhes")
-        st.text(f"(-) CMV: {format_brl(dre['Detalhe']['CMV'])}\n(-) Comissões: {format_brl(dre['Detalhe']['Comissões'])}\n(-) Frete Real: {format_brl(dre['Detalhe']['Frete Real'])}\n(-) Despesas Fixas: {format_brl(dre['(-) Custos Fixos'])}")
+        st.divider(); st.text(f"(-) CMV: {format_brl(dre['Detalhe']['CMV'])}\n(-) Comissões: {format_brl(dre['Detalhe']['Comissões'])}\n(-) Frete Real: {format_brl(dre['Detalhe']['Frete Real'])}\n(-) Despesas Fixas: {format_brl(dre['(-) Custos Fixos'])}")
     with t2:
-        st.markdown("##### 📅 Fluxo de Caixa Projetado (6 Meses)")
-        st.info("Considera todas as parcelas a receber e despesas lançadas.")
         df_fluxo = calcular_fluxo_caixa()
         st.bar_chart(df_fluxo.set_index("Mês")[["Entradas", "Saídas"]], color=["#10b981", "#ef4444"])
         st.dataframe(df_fluxo.style.format({'Entradas': 'R$ {:.2f}', 'Saídas': 'R$ {:.2f}', 'Saldo': 'R$ {:.2f}'}), use_container_width=True)
@@ -446,7 +449,6 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
 
 elif menu == "🏦 Prudent (Antecipação)" and role == 'admin':
     st.subheader("🏦 Central de Antecipação de Recebíveis")
-    st.info("Selecione as vendas que você deseja antecipar para converter o status de 'Mensal' para 'Antecipada'.")
     q_pend = """SELECT id, data_venda, produto_nome, valor_venda, parcelas, valor_parcela FROM vendas WHERE antecipada = 0"""
     df_pend = pd.read_sql(q_pend, conn)
     if not df_pend.empty:
@@ -454,31 +456,24 @@ elif menu == "🏦 Prudent (Antecipação)" and role == 'admin':
         edited_df = st.data_editor(df_pend, column_config={"Selecionar": st.column_config.CheckboxColumn(required=True)}, hide_index=True, use_container_width=True)
         sel_rows = edited_df[edited_df['Selecionar'] == True]
         total_ant = sel_rows['valor_venda'].sum()
-        st.divider()
-        c1, c2 = st.columns(2)
-        c1.metric("Total Selecionado", format_brl(total_ant))
+        st.divider(); c1, c2 = st.columns(2); c1.metric("Total Selecionado", format_brl(total_ant))
         if c2.button("💰 ANTECIPAR SELECIONADOS", type="primary"):
             ids = sel_rows['id'].tolist()
             if ids:
-                conn.execute(f"UPDATE vendas SET antecipada=1 WHERE id IN ({','.join(map(str, ids))})")
-                conn.commit()
+                conn.execute(f"UPDATE vendas SET antecipada=1 WHERE id IN ({','.join(map(str, ids))})"); conn.commit()
                 st.success(f"{len(ids)} vendas antecipadas com sucesso!"); time.sleep(1); st.rerun()
-            else: st.warning("Selecione pelo menos uma venda.")
     else: st.success("🎉 Nenhuma venda pendente de antecipação.")
 
 elif menu == "📥 Importação" and role == 'admin':
     st.subheader("📥 Importação de Vendas em Massa")
-    st.info("Use este módulo para subir vendas antigas. O sistema criará clientes automaticamente se não existirem.")
     def gerar_modelo_importacao():
         df = pd.DataFrame(columns=["Data (AAAA-MM-DD)", "Vendedor", "Cliente", "Produto", "Custo Produto", "Valor Venda", "Frete Cobrado", "Custo Envio", "Parcelas", "Antecipada (S/N)"])
         return df.to_csv(index=False).encode('utf-8')
-    st.download_button("📥 Baixar Modelo Planilha CSV", data=gerar_modelo_importacao(), file_name="modelo_importacao_bfx.csv", mime="text/csv")
-    st.divider()
-    up_file = st.file_uploader("Subir Planilha Preenchida (CSV)", type=['csv'])
+    st.download_button("📥 Baixar Modelo CSV", data=gerar_modelo_importacao(), file_name="modelo_importacao_bfx.csv", mime="text/csv")
+    up_file = st.file_uploader("Subir Planilha (CSV)", type=['csv'])
     if up_file:
         try:
             df_imp = pd.read_csv(up_file)
-            st.dataframe(df_imp.head())
             if st.button(f"Processar {len(df_imp)} Linhas"):
                 prog = st.progress(0); sucesso = 0
                 for i, row in df_imp.iterrows():
@@ -493,8 +488,8 @@ elif menu == "📥 Importação" and role == 'admin':
                     conn.execute("""INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada) VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                         (row['Data (AAAA-MM-DD)'], row['Vendedor'], c_id, row['Produto'], row['Custo Produto'], row['Valor Venda'], row['Frete Cobrado'], row['Custo Envio'], row['Parcelas'], vp, ant))
                     prog.progress((i + 1) / len(df_imp)); sucesso += 1
-                conn.commit(); st.success(f"Importação concluída! {sucesso} vendas processadas."); time.sleep(2); st.rerun()
-        except Exception as e: st.error(f"Erro na leitura do arquivo: {e}")
+                conn.commit(); st.success("Importação concluída!"); time.sleep(2); st.rerun()
+        except Exception as e: st.error(f"Erro: {e}")
 
 elif menu == "Venda Rápida":
     st.subheader("🛒 Terminal de Vendas (POS)")
@@ -528,10 +523,20 @@ elif menu == "Venda Rápida":
         s2.metric("Lucro Estimado", format_brl(lucro_sim), f"{margem_sim:.1f}%")
         s3.metric("Faturamento Total", format_brl(total_venda))
         if st.button("💾 FINALIZAR VENDA", type="primary"):
-            conn.execute("INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada) VALUES (?,?,?,?,?,?,?,?,?,?,?)", 
-                         (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 1))
-            conn.commit(); st.success("Venda Realizada!"); st.session_state['vf'] = {'c':cli, 'v':v_safe, 'p':" + ".join(prods), 'vp':val_parc, 'pa':parc, 'frete':f_safe, 'e':dcli['empresa'], 'cpf':dcli.get('cpf') or dcli.get('cnpj'), 'm':dcli.get('matricula','')}
-            time.sleep(0.5); st.rerun()
+            # TRY/CATCH BLINDADO V102 (CORREÇÃO DE ERRO)
+            try:
+                conn.execute("INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada) VALUES (?,?,?,?,?,?,?,?,?,?,?)", 
+                             (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 1))
+                conn.commit(); st.success("Venda Realizada!"); st.session_state['vf'] = {'c':cli, 'v':v_safe, 'p':" + ".join(prods), 'vp':val_parc, 'pa':parc, 'frete':f_safe, 'e':dcli['empresa'], 'cpf':dcli.get('cpf') or dcli.get('cnpj'), 'm':dcli.get('matricula','')}
+                time.sleep(0.5); st.rerun()
+            except Exception as e:
+                # SE DER ERRO DE COLUNA, CRIA E TENTA DE NOVO
+                if "no such column" in str(e):
+                    st.warning("Atualizando banco de dados... Tente novamente em 2 segundos.")
+                    try: conn.execute("ALTER TABLE vendas ADD COLUMN lucro_liquido REAL DEFAULT 0"); conn.commit()
+                    except: pass
+                    time.sleep(2); st.rerun()
+                else: st.error(f"Erro na venda: {e}")
         if 'vf' in st.session_state:
             st.divider(); c_pdf, c_zap = st.columns(2)
             pdf = gerar_pdf(st.session_state['vf'], "recibo")
@@ -548,10 +553,8 @@ elif menu == "Cadastros":
             with st.form("nc"):
                 c1, c2 = st.columns(2)
                 nm = c1.text_input("Nome/Razão Social")
-                if tipo_p == "Física":
-                    doc = c2.text_input("CPF"); mat = c1.text_input("Matrícula"); renda = c2.number_input("Renda Mensal", value=1550.0)
-                else:
-                    doc = c2.text_input("CNPJ"); mat = ""; renda = c2.number_input("Faturamento Mensal", value=10000.0)
+                if tipo_p == "Física": doc = c2.text_input("CPF"); mat = c1.text_input("Matrícula"); renda = c2.number_input("Renda Mensal", value=1550.0)
+                else: doc = c2.text_input("CNPJ"); mat = ""; renda = c2.number_input("Faturamento Mensal", value=10000.0)
                 tel = c1.text_input("WhatsApp"); cep = c2.text_input("CEP")
                 emp = st.selectbox("Empresa/Vínculo", ["Sem Vínculo"] + pd.read_sql("SELECT nome FROM empresas_parceiras", conn)['nome'].tolist())
                 if st.form_submit_button("Salvar"):
@@ -559,7 +562,12 @@ elif menu == "Cadastros":
                     else: conn.execute("INSERT INTO clientes (nome, cnpj, telefone, cep, renda, empresa, tipo) VALUES (?,?,?,?,?,?,?)", (nm, clean_str(doc), clean_str(tel), clean_str(cep), renda, emp, 'PJ'))
                     conn.commit(); st.success("Salvo!"); st.rerun()
         st.divider(); st.info("💡 Clique para editar:")
-        df_cli = pd.read_sql("SELECT id, nome, telefone, cpf, cnpj, empresa, renda FROM clientes ORDER BY nome", conn)
+        # BLINDAGEM DE LEITURA (V102)
+        try:
+            df_cli = pd.read_sql("SELECT id, nome, telefone, cpf, cnpj, empresa, renda FROM clientes ORDER BY nome", conn)
+        except:
+            st.warning("Atualizando tabela clientes..."); st.cache_resource.clear(); time.sleep(1); st.rerun()
+            
         evt_cli = st.dataframe(df_cli, hide_index=True, use_container_width=True, on_select="rerun", selection_mode="single-row")
         if evt_cli.selection.rows:
             cid = df_cli.iloc[evt_cli.selection.rows[0]]['id']
@@ -579,7 +587,6 @@ elif menu == "Cadastros":
                     if d_cli.get('tipo') == 'PJ': conn.execute("UPDATE clientes SET nome=?, cnpj=?, telefone=?, cep=?, endereco=?, renda=?, empresa=? WHERE id=?", (enm, clean_str(edoc), clean_str(etel), clean_str(ecep), eend, eren, eemp, cid))
                     else: conn.execute("UPDATE clientes SET nome=?, cpf=?, telefone=?, cep=?, endereco=?, renda=?, empresa=? WHERE id=?", (enm, clean_str(edoc), clean_str(etel), clean_str(ecep), eend, eren, eemp, cid))
                     conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
-
     with t2:
         with st.expander("➕ Novo Produto"):
             df_f = pd.read_sql("SELECT id, nome FROM fornecedores ORDER BY nome", conn)
@@ -593,9 +600,7 @@ elif menu == "Cadastros":
                 cst = c2.number_input("Custo", value=None, placeholder="0.00"); mk = c2.text_input("Marca")
                 val_v = c1.number_input("Valor de Venda (Catálogo)", value=None, placeholder="0.00")
                 nf_n = ""; nf_t = ""
-                if f_sel == "Novo Fornecedor...":
-                    st.divider(); st.caption("Cadastrando Novo Fornecedor:")
-                    nf_n = st.text_input("Nome Novo Fornecedor"); nf_t = st.text_input("WhatsApp Fornecedor")
+                if f_sel == "Novo Fornecedor...": st.divider(); st.caption("Cadastrando Novo Fornecedor:"); nf_n = st.text_input("Nome Novo Fornecedor"); nf_t = st.text_input("WhatsApp Fornecedor")
                 up_img = c2.file_uploader("Foto do Produto", type=['png','jpg'])
                 if st.form_submit_button("Salvar Produto"):
                     fid = None
@@ -608,45 +613,56 @@ elif menu == "Cadastros":
                     conn.commit(); st.success("Salvo!"); st.rerun()
         st.markdown("---")
         if st.button("📄 Gerar Catálogo de Produtos PDF"):
-            df_cat = pd.read_sql("SELECT nome, marca, valor_venda, imagem FROM produtos ORDER BY nome", conn)
-            if not df_cat.empty:
-                pdf_cat = gerar_pdf({'df': df_cat}, "catalogo")
-                st.download_button("📥 Baixar Catálogo", data=pdf_cat, file_name="Catalogo_Produtos.pdf", mime="application/pdf")
-                st.info("Dica: Baixe o arquivo e arraste para o WhatsApp Web abaixo.")
-                st.markdown('<a href="https://web.whatsapp.com/" target="_blank" class="whatsapp-btn">🟢 Abrir WhatsApp Web</a>', unsafe_allow_html=True)
-            else: st.warning("Cadastre produtos com 'Valor de Venda' primeiro.")
+            try:
+                df_cat = pd.read_sql("SELECT nome, marca, valor_venda, imagem FROM produtos ORDER BY nome", conn)
+                if not df_cat.empty:
+                    pdf_cat = gerar_pdf({'df': df_cat}, "catalogo")
+                    st.download_button("📥 Baixar Catálogo", data=pdf_cat, file_name="Catalogo_Produtos.pdf", mime="application/pdf")
+                    st.info("Dica: Baixe o arquivo e arraste para o WhatsApp Web abaixo.")
+                    st.markdown('<a href="https://web.whatsapp.com/" target="_blank" class="whatsapp-btn">🟢 Abrir WhatsApp Web</a>', unsafe_allow_html=True)
+                else: st.warning("Cadastre produtos com 'Valor de Venda' primeiro.")
+            except: st.error("Erro ao gerar catálogo. Verifique se a coluna 'valor_venda' existe.")
         st.divider(); st.info("💡 Clique para editar:")
-        df_prod = pd.read_sql("SELECT p.id, p.nome, p.custo_padrao, p.valor_venda, p.marca, f.nome as Fornecedor FROM produtos p LEFT JOIN fornecedores f ON p.fornecedor_id = f.id ORDER BY p.nome", conn)
-        evt_prod = st.dataframe(df_prod, hide_index=True, use_container_width=True, on_select="rerun", selection_mode="single-row")
-        if evt_prod.selection.rows:
-            pid = df_prod.iloc[evt_prod.selection.rows[0]]['id']
-            d_prod = pd.read_sql(f"SELECT * FROM produtos WHERE id={pid}", conn).iloc[0]
-            st.markdown(f"**✏️ Editando: {d_prod['nome']}**")
-            with st.form(f"ed_p_{pid}"):
-                c1, c2 = st.columns(2)
-                pnm = c1.text_input("Nome", d_prod['nome']); pcst = c2.number_input("Custo", value=float(d_prod['custo_padrao'] or 0))
-                pmk = c1.text_input("Marca", d_prod['marca']); pncm = c2.text_input("NCM", value=d_prod.get('ncm',''))
-                pval = c1.number_input("Valor Venda (Catálogo)", value=float(d_prod.get('valor_venda', 0) or 0))
-                l_forns = ["Sem Fornecedor"] + pd.read_sql("SELECT nome FROM fornecedores", conn)['nome'].tolist()
-                fname = "Sem Fornecedor"
-                if d_prod['fornecedor_id']:
-                    res = conn.execute(f"SELECT nome FROM fornecedores WHERE id={d_prod['fornecedor_id']}").fetchone()
-                    if res: fname = res[0]
-                idx_f = l_forns.index(fname) if fname in l_forns else 0
-                pforn = st.selectbox("Fornecedor", l_forns, index=idx_f)
-                if d_prod['imagem']: st.image(base64_to_image(d_prod['imagem']), width=100)
-                up_new = st.file_uploader("Trocar Foto", type=['png','jpg'])
-                if st.form_submit_button("Atualizar"):
-                    fid_new = None
-                    if pforn != "Sem Fornecedor":
-                        fid_new = conn.execute(f"SELECT id FROM fornecedores WHERE nome='{pforn}'").fetchone()[0]
-                    q_up = "UPDATE produtos SET nome=?, custo_padrao=?, marca=?, ncm=?, fornecedor_id=?, valor_venda=?"
-                    params = [pnm, pcst, pmk, pncm, fid_new, pval]
-                    if up_new:
-                        q_up += ", imagem=?"; params.append(image_to_base64(up_new))
-                    q_up += " WHERE id=?"; params.append(pid)
-                    conn.execute(q_up, params); conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
+        # BLINDAGEM LEITURA PRODUTOS (V102)
+        try:
+            df_prod = pd.read_sql("SELECT p.id, p.nome, p.custo_padrao, p.valor_venda, p.marca, f.nome as Fornecedor FROM produtos p LEFT JOIN fornecedores f ON p.fornecedor_id = f.id ORDER BY p.nome", conn)
+        except Exception as e:
+            # AUTO-REPARO DE EMERGÊNCIA
+            if "no such column" in str(e):
+                st.warning("⚠️ Reparando banco de dados... (Isso acontece só uma vez)")
+                try: conn.execute("ALTER TABLE produtos ADD COLUMN valor_venda REAL DEFAULT 0"); conn.commit()
+                except: pass
+                st.cache_resource.clear()
+                time.sleep(1); st.rerun()
+            else: st.error(f"Erro: {e}")
+            df_prod = pd.DataFrame()
 
+        if not df_prod.empty:
+            evt_prod = st.dataframe(df_prod, hide_index=True, use_container_width=True, on_select="rerun", selection_mode="single-row")
+            if evt_prod.selection.rows:
+                pid = df_prod.iloc[evt_prod.selection.rows[0]]['id']
+                d_prod = pd.read_sql(f"SELECT * FROM produtos WHERE id={pid}", conn).iloc[0]
+                st.markdown(f"**✏️ Editando: {d_prod['nome']}**")
+                with st.form(f"ed_p_{pid}"):
+                    c1, c2 = st.columns(2)
+                    pnm = c1.text_input("Nome", d_prod['nome']); pcst = c2.number_input("Custo", value=float(d_prod['custo_padrao'] or 0))
+                    pmk = c1.text_input("Marca", d_prod['marca']); pncm = c2.text_input("NCM", value=d_prod.get('ncm',''))
+                    pval = c1.number_input("Valor Venda (Catálogo)", value=float(d_prod.get('valor_venda', 0) or 0))
+                    l_forns = ["Sem Fornecedor"] + pd.read_sql("SELECT nome FROM fornecedores", conn)['nome'].tolist()
+                    fname = "Sem Fornecedor"
+                    if d_prod['fornecedor_id']:
+                        res = conn.execute(f"SELECT nome FROM fornecedores WHERE id={d_prod['fornecedor_id']}").fetchone(); fname = res[0] if res else "Sem Fornecedor"
+                    idx_f = l_forns.index(fname) if fname in l_forns else 0
+                    pforn = st.selectbox("Fornecedor", l_forns, index=idx_f)
+                    if d_prod['imagem']: st.image(base64_to_image(d_prod['imagem']), width=100)
+                    up_new = st.file_uploader("Trocar Foto", type=['png','jpg'])
+                    if st.form_submit_button("Atualizar"):
+                        fid_new = None
+                        if pforn != "Sem Fornecedor": fid_new = conn.execute(f"SELECT id FROM fornecedores WHERE nome='{pforn}'").fetchone()[0]
+                        q_up = "UPDATE produtos SET nome=?, custo_padrao=?, marca=?, ncm=?, fornecedor_id=?, valor_venda=?"; params = [pnm, pcst, pmk, pncm, fid_new, pval]
+                        if up_new: q_up += ", imagem=?"; params.append(image_to_base64(up_new))
+                        q_up += " WHERE id=?"; params.append(pid)
+                        conn.execute(q_up, params); conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
     with t3:
         with st.expander("➕ Nova Empresa"):
             with st.form("ne"):
@@ -743,11 +759,8 @@ elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
                 if st.form_submit_button("Salvar Dados"):
                     q_up = "UPDATE usuarios SET nome_exibicao=?, username=?, email=?, telefone=?, endereco=?"
                     params = [unm, ulogin, uemail, utel, uend]
-                    if new_pass.strip(): 
-                        q_up += ", password=?"
-                        params.append(new_pass.strip())
-                    q_up += " WHERE id=?"
-                    params.append(int(du['id']))
+                    if new_pass.strip(): q_up += ", password=?"; params.append(new_pass.strip())
+                    q_up += " WHERE id=?"; params.append(int(du['id']))
                     conn.execute(q_up, params); conn.commit(); st.success("Dados Salvos!"); time.sleep(1); st.rerun()
             st.markdown("---")
             if st.button(f"🗑️ DEMITIR (Excluir {sel_u})", type="primary"):
