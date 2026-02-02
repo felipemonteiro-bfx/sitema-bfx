@@ -7,7 +7,6 @@ from fpdf import FPDF
 import os
 import math
 import time
-import altair as alt
 import base64
 import urllib.parse
 import re
@@ -17,7 +16,7 @@ import calendar
 import json
 
 # ==============================================================================
-# 1. CONFIGURAÇÃO VISUAL (DESIGN PREMIUM)
+# 1. CONFIGURAÇÃO VISUAL
 # ==============================================================================
 st.set_page_config(page_title="BFX Manager", layout="wide", page_icon="💎", initial_sidebar_state="expanded")
 
@@ -26,23 +25,17 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
-    /* LOGIN */
     .login-box { max-width: 420px; margin: 60px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; border: 1px solid #f1f5f9; }
-    
-    /* CARDS */
     div.css-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; }
     
-    /* FINANCEIRO CARDS */
     .fin-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e5e7eb; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .fin-label { font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase; }
     .fin-value { font-size: 24px; color: #111827; font-weight: 800; margin-top: 5px; }
     .fin-good { color: #059669; } .fin-bad { color: #dc2626; }
 
-    /* BOTÕES */
     .stButton button { width: 100%; border-radius: 10px; height: 3.2em; font-weight: 600; border: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; transition: all 0.2s; }
     .stButton button:hover { box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); opacity: 0.95; }
     
-    /* WHATSAPP */
     .whatsapp-btn { 
         display: inline-flex; align-items: center; justify-content: center; width: 100%; 
         background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); 
@@ -52,7 +45,6 @@ st.markdown("""
     }
     .whatsapp-btn:hover { transform: translateY(-2px); }
 
-    /* EXTRAS */
     .kpi-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
     .credit-box { background: linear-gradient(to right, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
     .cal-day-box { border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px; min-height: 70px; background: white; font-size: 12px; }
@@ -66,7 +58,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 2. BANCO DE DADOS
+# 2. BANCO DE DADOS (COM AUTO-REPARO)
 # ==============================================================================
 @st.cache_resource
 def get_connection(): return sqlite3.connect('bfx_sistema.db', check_same_thread=False)
@@ -74,6 +66,7 @@ conn = get_connection()
 
 def init_db():
     c = conn.cursor()
+    # Criação inicial (se não existir)
     tables = [
         '''CREATE TABLE IF NOT EXISTS clientes (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, renda REAL, empresa TEXT, matricula TEXT, telefone TEXT, cpf TEXT, cnpj TEXT, tipo TEXT, data_nascimento DATE, cep TEXT, endereco TEXT)''',
         '''CREATE TABLE IF NOT EXISTS produtos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, custo_padrao REAL, marca TEXT, categoria TEXT, ncm TEXT, imagem TEXT, fornecedor_id INTEGER, qtd_estoque INTEGER DEFAULT 0)''',
@@ -89,27 +82,46 @@ def init_db():
     ]
     for sql in tables: c.execute(sql)
 
-    def ensure_col(table, col, dtype):
+    # FUNÇÃO DE REPARO DE COLUNAS (CRÍTICO PARA V100)
+    def force_add_column(table, col, dtype):
         try:
-            cols = [i[1] for i in c.execute(f"PRAGMA table_info({table})")]
-            if col not in cols: c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
-        except: pass
+            # Verifica se coluna existe
+            existing_cols = [i[1] for i in c.execute(f"PRAGMA table_info({table})")]
+            if col not in existing_cols:
+                c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
+                print(f"Coluna {col} adicionada em {table}")
+        except Exception as e:
+            print(f"Erro ao adicionar coluna {col}: {e}")
 
-    for col in ['antecipada', 'excedeu_limite', 'valor_frete', 'custo_envio', 'lucro_liquido']: ensure_col('vendas', col, 'REAL DEFAULT 0')
-    ensure_col('vendas', 'comprovante_pdf', 'TEXT')
-    for col in ['qtd_estoque', 'custo_padrao', 'valor_venda', 'fornecedor_id']: ensure_col('produtos', col, 'REAL DEFAULT 0')
-    for col in ['marca', 'imagem', 'ncm']: ensure_col('produtos', col, 'TEXT')
-    for col in ['matricula', 'empresa', 'telefone', 'cpf', 'cnpj', 'tipo', 'data_nascimento', 'cep', 'endereco']: ensure_col('clientes', col, 'TEXT')
-    for col in ['email', 'telefone', 'endereco', 'cep', 'data_nascimento']: ensure_col('usuarios', col, 'TEXT')
+    # Força a criação das colunas novas
+    force_add_column('clientes', 'cnpj', 'TEXT')
+    force_add_column('clientes', 'tipo', 'TEXT')
+    force_add_column('clientes', 'matricula', 'TEXT')
+    force_add_column('clientes', 'cpf', 'TEXT')
+    force_add_column('clientes', 'empresa', 'TEXT')
+    
+    force_add_column('produtos', 'valor_venda', 'REAL DEFAULT 0')
+    force_add_column('produtos', 'ncm', 'TEXT')
+    force_add_column('produtos', 'imagem', 'TEXT')
+    
+    force_add_column('vendas', 'comprovante_pdf', 'TEXT')
+    force_add_column('vendas', 'lucro_liquido', 'REAL DEFAULT 0')
 
+    # Usuários Padrão
     if c.execute("SELECT count(*) FROM usuarios").fetchone()[0] == 0:
         c.executemany("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", [("admin", "admin", "admin", "Administrador"), ("bruno", "bruno123#", "vendedor", "Bruno"), ("jakeline", "jak123!", "vendedor", "Jakeline"), ("felipe", "123", "vendedor", "Felipe")])
+    
+    # Empresas Padrão
     for emp in ["Amazon Five", "Gimam"]:
         if c.execute("SELECT count(*) FROM empresas_parceiras WHERE nome=?", (emp,)).fetchone()[0] == 0:
             c.execute("INSERT INTO empresas_parceiras (nome, responsavel_rh, telefone_rh, email_rh) VALUES (?,?,?,?)", (emp, "RH "+emp, "", ""))
+    
     if c.execute("SELECT COUNT(*) FROM config").fetchone()[0] == 0:
         c.execute("INSERT INTO config (modelo_contrato, logo_path) VALUES (?, ?)", ("Texto Padrão...", ""))
+    
     conn.commit()
+
+# Executa init_db na inicialização
 init_db()
 
 # ==============================================================================
