@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: bfx-ingress
   namespace: bfx
+  annotations:
+    argocd.argoproj.io/sync-options: SkipHealthCheck=true
 spec:
   ingressClassName: traefik
   rules:
