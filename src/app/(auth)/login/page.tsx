@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -41,29 +41,33 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-6 py-10">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-100 to-slate-50" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-100 via-slate-50 to-white" />
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle>BFX Manager</CardTitle>
-          <p className="text-sm text-muted-foreground">Acesso Seguro</p>
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="text-2xl">BFX Manager</CardTitle>
+          <p className="text-sm text-muted-foreground">Acesso seguro ao painel</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Usuário</Label>
+              <Label htmlFor="login-username">Usuário</Label>
               <Input
+                id="login-username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="admin"
+                autoComplete="username"
               />
             </div>
             <div className="space-y-2">
-              <Label>Senha</Label>
+              <Label htmlFor="login-password">Senha</Label>
               <Input
+                id="login-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="admin"
+                placeholder="••••••••"
+                autoComplete="current-password"
               />
             </div>
             {error && <div className="text-sm text-red-600">{error}</div>}

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,10 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Central de Antecipação</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Central de Antecipação</h1>
+        <p className="text-sm text-muted-foreground">Selecione vendas para antecipação.</p>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Pendentes</CardTitle>
@@ -35,11 +38,11 @@ export default async function Page() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead></TableHead>
+                  <TableHead className="w-10"></TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead>Produto</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Parcelas</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="text-right">Parcelas</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -53,12 +56,12 @@ export default async function Page() {
                   pend.map((v) => (
                     <TableRow key={v.id}>
                       <TableCell>
-                        <input type="checkbox" name="id" value={v.id} />
+                        <input type="checkbox" name="id" value={v.id} className="h-4 w-4" />
                       </TableCell>
                       <TableCell>{v.dataVenda.toISOString().slice(0, 10)}</TableCell>
                       <TableCell>{v.produtoNome}</TableCell>
-                      <TableCell>{formatBRL(v.valorVenda || 0)}</TableCell>
-                      <TableCell>{v.parcelas}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatBRL(v.valorVenda || 0)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{v.parcelas}</TableCell>
                     </TableRow>
                   ))
                 )}
@@ -66,7 +69,7 @@ export default async function Page() {
             </Table>
             <div className="mt-4 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">Total selecionável: {formatBRL(total)}</div>
-              <Button>Antecipar Selecionados</Button>
+              <Button>Antecipar selecionados</Button>
             </div>
           </form>
         </CardContent>

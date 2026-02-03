@@ -1,6 +1,5 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
-
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -67,11 +66,11 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: oklch(0.985 0.01 90);
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  --card: oklch(0.995 0.01 90);
   --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.995 0.01 90);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
@@ -101,11 +100,11 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.15 0.02 250);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.2 0.02 250);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.2 0.02 250);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -153,5 +152,23 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+    background-image:
+      radial-gradient(1200px 600px at 10% -10%, oklch(0.98 0.06 90 / 60%), transparent),
+      radial-gradient(900px 500px at 90% -20%, oklch(0.9 0.04 250 / 55%), transparent);
+    background-attachment: fixed;
   }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-space-grotesk), var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+}
+
+.dark body {
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, oklch(0.28 0.06 260 / 45%), transparent),
+    radial-gradient(900px 500px at 90% -20%, oklch(0.22 0.04 210 / 35%), transparent);
 }

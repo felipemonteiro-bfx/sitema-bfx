@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { requireAdmin } from "@/lib/guards";
@@ -10,15 +10,18 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Relatórios</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Relatórios</h1>
+        <p className="text-sm text-muted-foreground">Exportação rápida para CSV.</p>
+      </div>
       <Card>
         <CardHeader>
-          <CardTitle>Relatório de Vendas (CSV)</CardTitle>
+          <CardTitle>Relatório de vendas (CSV)</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <form action="/api/relatorios/vendas" method="get" className="flex flex-wrap items-center gap-2">
-            <Input type="date" name="from" defaultValue={today} />
-            <Input type="date" name="to" defaultValue={today} />
+          <form action="/api/relatorios/vendas" method="get" className="grid gap-3 sm:grid-cols-3">
+            <Input type="date" name="from" defaultValue={today} aria-label="Data inicial" />
+            <Input type="date" name="to" defaultValue={today} aria-label="Data final" />
             <Button type="submit">Baixar</Button>
           </form>
         </CardContent>

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { revalidatePath } from "next/cache";
+import { FormSelect } from "@/components/form-select";
 
 async function updateMeta(formData: FormData) {
   "use server";
@@ -115,7 +116,14 @@ export default async function Page() {
                     <input type="hidden" name="id" value={u.id} />
                     <Input name="nome" defaultValue={u.nomeExibicao || ""} />
                     <Input name="login" defaultValue={u.username} />
-                    <Input name="role" defaultValue={u.role || "vendedor"} />
+                    <FormSelect
+                      name="role"
+                      defaultValue={u.role || "vendedor"}
+                      options={[
+                        { value: "admin", label: "Admin" },
+                        { value: "vendedor", label: "Vendedor" },
+                      ]}
+                    />
                     <Input name="meta" type="number" defaultValue={u.metaMensal || 0} />
                     <Input name="comissao" type="number" defaultValue={u.comissaoPct || 2} />
                     <Button className="md:col-span-5">Salvar</Button>
@@ -136,7 +144,14 @@ export default async function Page() {
                 <Input name="nome" placeholder="Nome Completo" />
                 <Input name="login" placeholder="Login" />
                 <Input name="senha" placeholder="Senha" />
-                <Input name="role" placeholder="admin ou vendedor" />
+                <FormSelect
+                  name="role"
+                  defaultValue="vendedor"
+                  options={[
+                    { value: "admin", label: "Admin" },
+                    { value: "vendedor", label: "Vendedor" },
+                  ]}
+                />
                 <Button className="md:col-span-3">Cadastrar</Button>
               </form>
             </CardContent>

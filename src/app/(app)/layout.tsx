@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { LogoutButton } from "@/components/LogoutButton";
 import { Button } from "@/components/ui/button";
@@ -45,12 +45,12 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <div className="mx-auto flex min-h-screen w-full gap-6">
-        <aside className="hidden w-72 shrink-0 flex-col border-r bg-card px-4 py-6 text-card-foreground lg:flex">
+      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-3 py-4 lg:px-6">
+        <aside className="hidden w-72 shrink-0 flex-col rounded-2xl border bg-card/90 px-5 py-6 text-card-foreground shadow-sm lg:flex">
           <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
         </aside>
-        <main className="flex-1 min-w-0 px-6 py-6 lg:px-10">
-          <div className="mb-4 flex items-center gap-2 lg:hidden">
+        <main className="flex-1 min-w-0 rounded-2xl border bg-card/80 px-4 py-5 shadow-sm backdrop-blur lg:px-8 lg:py-7">
+          <div className="mb-6 flex items-center gap-3 lg:hidden">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" aria-label="Abrir menu">
@@ -87,7 +87,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div className="space-y-1">
-        <h1 className="text-lg font-semibold">BFX Manager</h1>
+        <h1 className="text-lg font-semibold tracking-tight">BFX Manager</h1>
         <div className="text-sm text-muted-foreground">{userLabel}</div>
       </div>
       <Separator className="my-4" />

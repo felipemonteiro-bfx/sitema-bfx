@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/session";
+﻿import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,16 +18,28 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Minhas Comissões</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Resumo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-1 text-sm">
-          <div>Total vendido: {formatBRL(total)}</div>
-          <div>Comissão ({pct}%): {formatBRL(comissao)}</div>
-        </CardContent>
-      </Card>
+      <div>
+        <h1 className="text-2xl font-semibold">Minhas Comissões</h1>
+        <p className="text-sm text-muted-foreground">Resumo das vendas e comissão estimada.</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total vendido</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-semibold">{formatBRL(total)}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Comissão ({pct}%)</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-semibold text-emerald-700">
+            {formatBRL(comissao)}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Vendas</CardTitle>
@@ -38,7 +50,7 @@ export default async function Page() {
               <TableRow>
                 <TableHead>Data</TableHead>
                 <TableHead>Produto</TableHead>
-                <TableHead>Valor</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -53,7 +65,9 @@ export default async function Page() {
                   <TableRow key={v.id}>
                     <TableCell>{v.dataVenda.toISOString().slice(0, 10)}</TableCell>
                     <TableCell>{v.produtoNome}</TableCell>
-                    <TableCell>{formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}
+                    </TableCell>
                   </TableRow>
                 ))
               )}

@@ -6,7 +6,19 @@ export default function Loading() {
     <div className="space-y-6">
       <div>
         <Skeleton className="h-7 w-48" />
-        <Skeleton className="mt-2 h-4 w-72" />
+        <Skeleton className="mt-2 h-4 w-64" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-4 w-28" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-7 w-32" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
       <Card>
         <CardHeader>

@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,14 +66,17 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Terminal de Vendas (POS)</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Terminal de Vendas (POS)</h1>
+        <p className="text-sm text-muted-foreground">Registro rápido com cálculo automático de margem.</p>
+      </div>
       <Card>
         <CardHeader>
-          <CardTitle>Nova Venda</CardTitle>
+          <CardTitle>Nova venda</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={criarVenda} className="grid gap-3 md:grid-cols-3">
-            <Input name="data" type="date" />
+            <Input name="data" type="date" aria-label="Data" />
             <FormSelect
               name="vendedor"
               options={vendedorOptions}
@@ -92,17 +95,12 @@ export default async function Page() {
               defaultValue={produtoOptions[0]?.value}
               placeholder="Produto"
             />
-            <Input name="custo" placeholder="Custo Produto" type="number" step="0.01" />
-            <Input name="valor" placeholder="Valor Venda" type="number" step="0.01" />
-            <Input name="frete" placeholder="Frete Cobrado" type="number" step="0.01" />
-            <Input name="envio" placeholder="Custo Envio" type="number" step="0.01" />
-            <FormSelect
-              name="parcelas"
-              options={parcelasOptions}
-              defaultValue="1"
-              placeholder="Parcelas"
-            />
-            <Button className="md:col-span-3">Finalizar Venda</Button>
+            <Input name="custo" placeholder="Custo do produto" type="number" step="0.01" aria-label="Custo" />
+            <Input name="valor" placeholder="Valor da venda" type="number" step="0.01" aria-label="Valor" />
+            <Input name="frete" placeholder="Frete cobrado" type="number" step="0.01" aria-label="Frete" />
+            <Input name="envio" placeholder="Custo de envio" type="number" step="0.01" aria-label="Envio" />
+            <FormSelect name="parcelas" options={parcelasOptions} defaultValue="1" placeholder="Parcelas" />
+            <Button className="md:col-span-3">Finalizar venda</Button>
           </form>
         </CardContent>
       </Card>
@@ -111,18 +109,18 @@ export default async function Page() {
         <CardHeader>
           <CardTitle>Resumo</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-slate-500">
+        <CardContent className="space-y-2 text-sm text-slate-600">
           {ultima ? (
             <>
               <div>
-                Última venda #{ultima.id} - {formatBRL((ultima.valorVenda || 0) + (ultima.valorFrete || 0))}
+                Última venda #{ultima.id} · {formatBRL((ultima.valorVenda || 0) + (ultima.valorFrete || 0))}
               </div>
               <a className="text-blue-600" href={`/api/recibo?id=${ultima.id}`}>
                 Baixar recibo PDF
               </a>
               <div>
                 <a
-                  className="text-green-700"
+                  className="text-emerald-700"
                   href={`https://wa.me/?text=${encodeURIComponent(
                     `Segue seu recibo: http://localhost:3000/api/recibo?id=${ultima.id}`
                   )}`}

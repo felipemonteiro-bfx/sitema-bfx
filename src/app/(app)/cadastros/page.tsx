@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -67,7 +67,10 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Cadastros</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Cadastros</h1>
+        <p className="text-sm text-muted-foreground">Base de clientes, produtos e empresas.</p>
+      </div>
       <Tabs defaultValue="clientes">
         <TabsList>
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
@@ -82,7 +85,7 @@ export default async function Page() {
             </CardHeader>
             <CardContent>
               <form action={addCliente} className="grid gap-3 md:grid-cols-3">
-                <Input name="nome" placeholder="Nome/Razão Social" />
+                <Input name="nome" placeholder="Nome/Razão Social" aria-label="Nome" />
                 <FormSelect
                   name="tipo"
                   options={[
@@ -91,12 +94,12 @@ export default async function Page() {
                   ]}
                   defaultValue="PF"
                 />
-                <Input name="doc" placeholder="CPF/CNPJ" />
-                <Input name="matricula" placeholder="Matrícula" />
-                <Input name="renda" placeholder="Renda/Faturamento" type="number" />
-                <Input name="telefone" placeholder="WhatsApp" />
-                <Input name="cep" placeholder="CEP" />
-                <Input name="empresa" placeholder="Empresa/Vínculo" />
+                <Input name="doc" placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
+                <Input name="matricula" placeholder="Matrícula" aria-label="Matrícula" />
+                <Input name="renda" placeholder="Renda/Faturamento" type="number" aria-label="Renda" />
+                <Input name="telefone" placeholder="WhatsApp" aria-label="WhatsApp" />
+                <Input name="cep" placeholder="CEP" aria-label="CEP" />
+                <Input name="empresa" placeholder="Empresa/Vínculo" aria-label="Empresa" />
                 <Button className="md:col-span-3">Salvar</Button>
               </form>
             </CardContent>
@@ -112,7 +115,7 @@ export default async function Page() {
                     <TableHead>Nome</TableHead>
                     <TableHead>Doc</TableHead>
                     <TableHead>Telefone</TableHead>
-                    <TableHead>Renda</TableHead>
+                    <TableHead className="text-right">Renda</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -128,7 +131,7 @@ export default async function Page() {
                         <TableCell>{c.nome}</TableCell>
                         <TableCell>{c.cpf || c.cnpj}</TableCell>
                         <TableCell>{c.telefone}</TableCell>
-                        <TableCell>{formatBRL(c.renda || 0)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(c.renda || 0)}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -145,11 +148,11 @@ export default async function Page() {
             </CardHeader>
             <CardContent>
               <form action={addProduto} className="grid gap-3 md:grid-cols-3">
-                <Input name="nome" placeholder="Nome Produto" />
-                <Input name="custo" placeholder="Custo" type="number" />
-                <Input name="marca" placeholder="Marca" />
-                <Input name="ncm" placeholder="NCM" />
-                <Input name="valor" placeholder="Valor de Venda" type="number" />
+                <Input name="nome" placeholder="Nome do produto" aria-label="Nome" />
+                <Input name="custo" placeholder="Custo" type="number" aria-label="Custo" />
+                <Input name="marca" placeholder="Marca" aria-label="Marca" />
+                <Input name="ncm" placeholder="NCM" aria-label="NCM" />
+                <Input name="valor" placeholder="Valor de venda" type="number" aria-label="Valor" />
                 <Button className="md:col-span-3">Salvar</Button>
               </form>
             </CardContent>
@@ -164,7 +167,7 @@ export default async function Page() {
                   <TableRow>
                     <TableHead>Nome</TableHead>
                     <TableHead>Marca</TableHead>
-                    <TableHead>Valor</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -179,7 +182,7 @@ export default async function Page() {
                       <TableRow key={p.id}>
                         <TableCell>{p.nome}</TableCell>
                         <TableCell>{p.marca}</TableCell>
-                        <TableCell>{formatBRL(p.valorVenda || 0)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(p.valorVenda || 0)}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -196,10 +199,10 @@ export default async function Page() {
             </CardHeader>
             <CardContent>
               <form action={addEmpresa} className="grid gap-3 md:grid-cols-3">
-                <Input name="nome" placeholder="Empresa" />
-                <Input name="rh" placeholder="Responsável RH" />
-                <Input name="tel" placeholder="Telefone RH" />
-                <Input name="email" placeholder="Email RH" />
+                <Input name="nome" placeholder="Empresa" aria-label="Empresa" />
+                <Input name="rh" placeholder="Responsável RH" aria-label="Responsável RH" />
+                <Input name="tel" placeholder="Telefone RH" aria-label="Telefone RH" />
+                <Input name="email" placeholder="Email RH" aria-label="Email RH" />
                 <Button className="md:col-span-3">Salvar</Button>
               </form>
             </CardContent>

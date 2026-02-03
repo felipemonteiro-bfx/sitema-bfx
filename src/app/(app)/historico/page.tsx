@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -45,13 +45,33 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Histórico (Editar)</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Histórico (Editar)</h1>
+        <p className="text-sm text-muted-foreground">Filtre e edite vendas do período.</p>
+      </div>
 
-      <form className="flex flex-wrap items-center gap-2">
-        <Input type="date" name="from" defaultValue={start.toISOString().slice(0, 10)} />
-        <Input type="date" name="to" defaultValue={end.toISOString().slice(0, 10)} />
-        <Button>Filtrar</Button>
-      </form>
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtro de período</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form className="grid gap-3 sm:grid-cols-3">
+            <Input
+              type="date"
+              name="from"
+              defaultValue={start.toISOString().slice(0, 10)}
+              aria-label="Data inicial"
+            />
+            <Input
+              type="date"
+              name="to"
+              defaultValue={end.toISOString().slice(0, 10)}
+              aria-label="Data final"
+            />
+            <Button>Filtrar</Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -64,7 +84,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead>Data</TableHead>
                 <TableHead>Vendedor</TableHead>
                 <TableHead>Produto</TableHead>
-                <TableHead>Valor</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -81,7 +101,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell>{v.dataVenda.toISOString().slice(0, 10)}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
                     <TableCell>{v.produtoNome}</TableCell>
-                    <TableCell>{formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}
+                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2 text-sm">
                         <Link
@@ -118,7 +140,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
               <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
               <Input name="parcelas" type="number" defaultValue={editVenda.parcelas || 1} />
-              <Button className="md:col-span-3">Salvar Alterações</Button>
+              <Button className="md:col-span-3">Salvar alterações</Button>
             </form>
           </CardContent>
         </Card>

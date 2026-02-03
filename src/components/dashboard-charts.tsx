@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Area,
@@ -45,12 +45,33 @@ export function DashboardCharts({
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={evoData} margin={{ left: 8, right: 8, top: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
                 <XAxis dataKey="mes" />
                 <YAxis tickFormatter={(v) => currency(Number(v))} />
-                <Tooltip formatter={(v) => currency(Number(v))} />
-                <Area type="monotone" dataKey="total" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.25} />
-                <Area type="monotone" dataKey="lucro" stroke="#10b981" fill="#10b981" fillOpacity={0.2} />
+                <Tooltip
+                  formatter={(v) => currency(Number(v))}
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid rgba(148, 163, 184, 0.2)",
+                    boxShadow: "0 10px 25px rgba(15, 23, 42, 0.08)",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke="var(--chart-1)"
+                  fill="var(--chart-1)"
+                  fillOpacity={0.2}
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="lucro"
+                  stroke="var(--chart-2)"
+                  fill="var(--chart-2)"
+                  fillOpacity={0.18}
+                  strokeWidth={2}
+                />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -69,11 +90,11 @@ export function DashboardCharts({
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topProdutos} layout="vertical" margin={{ left: 20, right: 8, top: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.25)" />
                 <XAxis type="number" />
                 <YAxis type="category" dataKey="label" width={120} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 4, 4]} />
+                <Bar dataKey="value" fill="var(--chart-3)" radius={[6, 6, 6, 6]} />
               </BarChart>
             </ResponsiveContainer>
           )}

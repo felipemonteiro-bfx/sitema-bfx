@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
@@ -55,14 +55,18 @@ export default async function Page() {
   const count = await prisma.venda.count();
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Importação de Vendas</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Importação de Vendas</h1>
+        <p className="text-sm text-muted-foreground">Envie um CSV para atualizar o histórico em lote.</p>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>Upload CSV</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Colunas: Data (AAAA-MM-DD), Vendedor, Cliente, Produto, Custo Produto, Valor Venda, Frete Cobrado, Custo Envio, Parcelas, Antecipada (S/N)
+            Colunas: Data (AAAA-MM-DD), Vendedor, Cliente, Produto, Custo Produto, Valor Venda, Frete Cobrado,
+            Custo Envio, Parcelas, Antecipada (S/N)
           </p>
           <form action={importar} className="space-y-3">
             <input

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
 import { runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
@@ -69,11 +69,7 @@ export default async function Page() {
             <CardTitle>Conversas</CardTitle>
           </CardHeader>
           <CardContent className="flex h-[70vh] flex-col gap-4">
-            <IntelligenceChatClient
-              history={history}
-              action={askAi}
-              providers={resolvedProviders}
-            />
+            <IntelligenceChatClient history={history} action={askAi} providers={resolvedProviders} />
           </CardContent>
         </Card>
       </div>

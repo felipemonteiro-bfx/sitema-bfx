@@ -16,7 +16,7 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="destructive" onClick={handleLogout} type="button">
+    <Button variant="destructive" onClick={handleLogout} type="button" className="w-full justify-start">
       <LogOut />
       Sair
     </Button>

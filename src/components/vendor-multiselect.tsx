@@ -12,13 +12,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function VendorMultiSelect({
+  id,
   name,
   vendors,
   defaultSelected,
+  className,
 }: {
+  id?: string;
   name: string;
   vendors: string[];
   defaultSelected: string[];
+  className?: string;
 }) {
   const [selected, setSelected] = useState<string[]>(defaultSelected);
   const value = useMemo(() => selected.join(","), [selected]);
@@ -42,7 +46,11 @@ export function VendorMultiSelect({
       <input type="hidden" name={name} value={value} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="justify-between">
+          <Button
+            id={id}
+            variant="outline"
+            className={["h-10 w-full justify-between", className].filter(Boolean).join(" ")}
+          >
             Vendedores
             <span className="ml-2 text-xs text-muted-foreground">
               {selected.length}/{vendors.length}

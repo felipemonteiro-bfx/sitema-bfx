@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -46,7 +46,10 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Financeiro & DRE</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Financeiro e DRE</h1>
+        <p className="text-sm text-muted-foreground">Visão consolidada de receitas, despesas e caixa.</p>
+      </div>
 
       <Tabs defaultValue="dre">
         <TabsList>
@@ -73,7 +76,9 @@ export default async function Page() {
               <CardHeader>
                 <CardTitle>Lucro Líquido</CardTitle>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold text-emerald-600">{formatBRL(dre.lucro)}</CardContent>
+              <CardContent className="text-2xl font-semibold text-emerald-600">
+                {formatBRL(dre.lucro)}
+              </CardContent>
             </Card>
           </div>
           <Card className="mt-4">
@@ -89,12 +94,16 @@ export default async function Page() {
                 </div>
                 <div className="rounded-lg border border-dashed p-3">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Comissões</div>
-                  <div className="mt-1 text-base font-semibold text-red-600">{formatBRL(dre.detalhe.comissoes)}</div>
+                  <div className="mt-1 text-base font-semibold text-red-600">
+                    {formatBRL(dre.detalhe.comissoes)}
+                  </div>
                   <div className="text-xs text-muted-foreground">Vendas da equipe</div>
                 </div>
                 <div className="rounded-lg border border-dashed p-3">
                   <div className="text-xs uppercase tracking-wide text-muted-foreground">Frete Real</div>
-                  <div className="mt-1 text-base font-semibold text-red-600">{formatBRL(dre.detalhe.freteReal)}</div>
+                  <div className="mt-1 text-base font-semibold text-red-600">
+                    {formatBRL(dre.detalhe.freteReal)}
+                  </div>
                   <div className="text-xs text-muted-foreground">Logística</div>
                 </div>
                 <div className="rounded-lg border border-dashed p-3">
@@ -119,9 +128,9 @@ export default async function Page() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Mês</TableHead>
-                    <TableHead>Entradas</TableHead>
-                    <TableHead>Saídas</TableHead>
-                    <TableHead>Saldo</TableHead>
+                    <TableHead className="text-right">Entradas</TableHead>
+                    <TableHead className="text-right">Saídas</TableHead>
+                    <TableHead className="text-right">Saldo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -135,9 +144,9 @@ export default async function Page() {
                     fluxo.map((r) => (
                       <TableRow key={r.mes}>
                         <TableCell>{r.mes}</TableCell>
-                        <TableCell>{formatBRL(r.entradas)}</TableCell>
-                        <TableCell>{formatBRL(r.saidas)}</TableCell>
-                        <TableCell>{formatBRL(r.saldo)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(r.entradas)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(r.saidas)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(r.saldo)}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -154,8 +163,8 @@ export default async function Page() {
             </CardHeader>
             <CardContent>
               <form action={addDespesa} className="grid gap-3 md:grid-cols-4">
-                <Input name="descricao" placeholder="Descrição" />
-                <Input name="valor" placeholder="Valor" type="number" step="0.01" />
+                <Input name="descricao" placeholder="Descrição" aria-label="Descrição" />
+                <Input name="valor" placeholder="Valor" type="number" step="0.01" aria-label="Valor" />
                 <FormSelect
                   name="tipo"
                   options={[
@@ -164,7 +173,7 @@ export default async function Page() {
                   ]}
                   defaultValue="Fixa"
                 />
-                <Input name="data" type="date" />
+                <Input name="data" type="date" aria-label="Data" />
                 <Button className="md:col-span-4">Lançar</Button>
               </form>
             </CardContent>
@@ -180,7 +189,7 @@ export default async function Page() {
                     <TableHead>Data</TableHead>
                     <TableHead>Descrição</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Valor</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -193,10 +202,10 @@ export default async function Page() {
                   ) : (
                     despesas.map((d) => (
                       <TableRow key={d.id}>
-                      <TableCell>{formatDate(d.dataDespesa)}</TableCell>
+                        <TableCell>{formatDate(d.dataDespesa)}</TableCell>
                         <TableCell>{d.descricao}</TableCell>
                         <TableCell>{d.tipo}</TableCell>
-                        <TableCell>{formatBRL(d.valor || 0)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(d.valor || 0)}</TableCell>
                       </TableRow>
                     ))
                   )}

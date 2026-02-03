@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
+import Link from "next/link";
 
 type Search = {
   from?: string;
@@ -101,26 +102,46 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="border bg-gradient-to-br from-white/90 to-slate-50/90 shadow-sm">
         <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold">Dashboard Executivo & Performance</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Dashboard Executivo e Performance</h1>
             <p className="text-sm text-muted-foreground">
               Período: {formatDate(start)} a {formatDate(end)}
             </p>
           </div>
-          <form className="flex flex-wrap items-center gap-2">
-            <Input type="date" name="from" defaultValue={start.toISOString().slice(0, 10)} />
-            <Input type="date" name="to" defaultValue={end.toISOString().slice(0, 10)} />
-            <VendorMultiSelect name="vendors" vendors={vendedorList} defaultSelected={vendorsFilter} />
-            <Button>Filtrar</Button>
+          <form className="grid w-full gap-2 sm:grid-cols-2 lg:w-auto lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end">
+            <div className="space-y-1">
+              <label htmlFor="filter-from" className="text-xs font-semibold text-muted-foreground">
+                Início
+              </label>
+              <Input id="filter-from" type="date" name="from" defaultValue={start.toISOString().slice(0, 10)} />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="filter-to" className="text-xs font-semibold text-muted-foreground">
+                Fim
+              </label>
+              <Input id="filter-to" type="date" name="to" defaultValue={end.toISOString().slice(0, 10)} />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="filter-vendors" className="text-xs font-semibold text-muted-foreground">
+                Vendedores
+              </label>
+              <VendorMultiSelect
+                id="filter-vendors"
+                name="vendors"
+                vendors={vendedorList}
+                defaultSelected={vendorsFilter}
+              />
+            </div>
+            <Button className="h-10 w-full lg:w-auto">Filtrar</Button>
           </form>
         </CardContent>
       </Card>
 
       {vendas.length === 0 ? (
         <Card>
-          <CardContent className="space-y-2 py-8 text-center">
+          <CardContent className="space-y-2 py-10 text-center">
             <div className="text-lg font-semibold">Nenhuma venda encontrada neste período.</div>
             <div className="text-sm text-muted-foreground">
               Tente ajustar o filtro de datas ou vendedores.
@@ -130,31 +151,37 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 opacity-70" />
+              <CardHeader className="relative pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Faturamento Total</CardTitle>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold">{formatBRL(fat + frete)}</CardContent>
-              <div className="px-6 pb-4 text-xs text-muted-foreground">{peds} vendas</div>
+              <CardContent className="relative text-2xl font-semibold">{formatBRL(fat + frete)}</CardContent>
+              <div className="relative px-6 pb-4 text-xs text-muted-foreground">{peds} vendas</div>
             </Card>
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-100 opacity-70" />
+              <CardHeader className="relative pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido Real</CardTitle>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold text-emerald-600">{formatBRL(lucro)}</CardContent>
-              <div className="px-6 pb-4 text-xs text-emerald-700">Margem: {margem.toFixed(1)}%</div>
+              <CardContent className="relative text-2xl font-semibold text-emerald-700">
+                {formatBRL(lucro)}
+              </CardContent>
+              <div className="relative px-6 pb-4 text-xs text-emerald-700">Margem: {margem.toFixed(1)}%</div>
             </Card>
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-indigo-100 opacity-70" />
+              <CardHeader className="relative pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Médio</CardTitle>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold">{formatBRL(tik)}</CardContent>
+              <CardContent className="relative text-2xl font-semibold">{formatBRL(tik)}</CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-2">
+            <Card className="relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-amber-100 opacity-70" />
+              <CardHeader className="relative pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Melhor Performance</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-1">
+              <CardContent className="relative space-y-1">
                 <div className="text-base font-semibold">{bestRev?.vendedor || "—"}</div>
                 <div className="text-sm text-muted-foreground">{formatBRL(bestRev?.total || 0)}</div>
               </CardContent>
@@ -176,11 +203,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHeader>
                   <TableRow>
                     <TableHead>Vendedor</TableHead>
-                    <TableHead>Vendas</TableHead>
-                    <TableHead>Faturamento</TableHead>
-                    <TableHead>Lucro</TableHead>
-                    <TableHead>Ticket</TableHead>
-                    <TableHead>Margem</TableHead>
+                    <TableHead className="text-right">Vendas</TableHead>
+                    <TableHead className="text-right">Faturamento</TableHead>
+                    <TableHead className="text-right">Lucro</TableHead>
+                    <TableHead className="text-right">Ticket</TableHead>
+                    <TableHead className="text-right">Margem</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -194,12 +221,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     teamRows.map((r) => (
                       <TableRow key={r.vendedor}>
                         <TableCell>{r.vendedor}</TableCell>
-                        <TableCell>{r.vendas}</TableCell>
-                        <TableCell>{formatBRL(r.total)}</TableCell>
-                        <TableCell>{formatBRL(r.lucro)}</TableCell>
-                        <TableCell>{formatBRL(r.ticket)}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{r.margem.toFixed(1)}%</Badge>
+                        <TableCell className="text-right tabular-nums">{r.vendas}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(r.total)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(r.lucro)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatBRL(r.ticket)}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+                            {r.margem.toFixed(1)}%
+                          </Badge>
                         </TableCell>
                       </TableRow>
                     ))
@@ -209,7 +238,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             </CardContent>
           </Card>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle>Hall da Fama</CardTitle>
@@ -231,6 +260,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
                 Receita: {formatBRL(fat + frete)} · Lucro: {formatBRL(lucro)} · Margem: {margem.toFixed(1)}%
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Atalhos</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                <Button asChild variant="outline">
+                  <Link href="/venda-rapida">Nova venda</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/financeiro">Financeiro</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/relatorios">Relatórios</Link>
+                </Button>
               </CardContent>
             </Card>
           </div>

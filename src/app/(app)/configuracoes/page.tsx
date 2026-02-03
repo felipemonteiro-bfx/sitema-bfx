@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +58,10 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Configurações</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Configurações</h1>
+        <p className="text-sm text-muted-foreground">Personalize comunicados, recibos e integrações.</p>
+      </div>
       <Tabs defaultValue="mural">
         <TabsList>
           <TabsTrigger value="mural">Mural</TabsTrigger>
@@ -69,11 +72,13 @@ export default async function Page() {
 
         <TabsContent value="mural">
           <Card>
-            <CardHeader><CardTitle>Mensagem para Vendedores</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Mensagem para vendedores</CardTitle>
+            </CardHeader>
             <CardContent>
               <form action={saveAviso} className="space-y-3">
                 <Textarea name="mensagem" defaultValue={aviso?.mensagem || ""} />
-                <Button>Publicar Aviso</Button>
+                <Button>Publicar aviso</Button>
               </form>
             </CardContent>
           </Card>
@@ -81,11 +86,13 @@ export default async function Page() {
 
         <TabsContent value="recibo">
           <Card>
-            <CardHeader><CardTitle>Texto do Recibo/Contrato</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Texto do recibo/contrato</CardTitle>
+            </CardHeader>
             <CardContent>
               <form action={saveContrato} className="space-y-3">
-                <Textarea name="texto" defaultValue={cfg?.modeloContrato || "Texto Padrão..."} />
-                <Button>Salvar Texto</Button>
+                <Textarea name="texto" defaultValue={cfg?.modeloContrato || "Texto padrão..."} />
+                <Button>Salvar texto</Button>
               </form>
             </CardContent>
           </Card>
@@ -93,12 +100,14 @@ export default async function Page() {
 
         <TabsContent value="ia">
           <Card>
-            <CardHeader><CardTitle>Chave de IA</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Chaves de IA</CardTitle>
+            </CardHeader>
             <CardContent>
               <form action={saveApiKey} className="space-y-3">
                 <Input name="key" placeholder="OpenAI API Key" defaultValue={cfg?.openaiKey || ""} />
                 <Input name="gkey" placeholder="Gemini API Key" defaultValue={cfg?.geminiKey || ""} />
-                <Button>Salvar API Key</Button>
+                <Button>Salvar</Button>
               </form>
             </CardContent>
           </Card>
@@ -106,11 +115,13 @@ export default async function Page() {
 
         <TabsContent value="tools">
           <Card>
-            <CardHeader><CardTitle>Correção de Vendedores</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Correção de vendedores</CardTitle>
+            </CardHeader>
             <CardContent className="space-y-2">
-              <div>Vendas com nome "Jaqueline": {countWrong}</div>
+              <div className="text-sm text-muted-foreground">Vendas com nome "Jaqueline": {countWrong}</div>
               <form action={corrigirVendedor}>
-                <Button variant="destructive">Corrigir Todas</Button>
+                <Button variant="destructive">Corrigir todas</Button>
               </form>
             </CardContent>
           </Card>
