@@ -194,7 +194,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
               <div className="md:col-span-3 flex flex-wrap items-center gap-3">
-                <Button>Salvar alteraÃ§Ãµes</Button>
+                <Button>Salvar alterações</Button>
                 <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
                   Baixar recibo PDF
                 </a>
@@ -206,5 +206,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     </div>
   );
 }
+
 
 

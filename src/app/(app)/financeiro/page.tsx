@@ -51,7 +51,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Financeiro e DRE</h1>
-        <p className="text-sm text-muted-foreground">VisÃ£o consolidada de receitas, despesas e caixa.</p>
+        <p className="text-sm text-muted-foreground">Visão consolidada de receitas, despesas e caixa.</p>
       </div>
 
       <QueryTabs
@@ -71,13 +71,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </Card>
                   <Card>
                     <CardHeader>
-                      <CardTitle>Ponto de EquilÃ­brio</CardTitle>
+                      <CardTitle>Ponto de Equilíbrio</CardTitle>
                     </CardHeader>
                     <CardContent className="text-2xl font-semibold">{formatBRL(dre.pontoEq)}</CardContent>
                   </Card>
                   <Card>
                     <CardHeader>
-                      <CardTitle>Lucro LÃ­quido</CardTitle>
+                      <CardTitle>Lucro Líquido</CardTitle>
                     </CardHeader>
                     <CardContent className="text-2xl font-semibold text-emerald-600">
                       {formatBRL(dre.lucro)}
@@ -96,7 +96,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <div className="text-xs text-muted-foreground">Custo de mercadorias</div>
                       </div>
                       <div className="rounded-lg border border-dashed p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">ComissÃµes</div>
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Comissões</div>
                         <div className="mt-1 text-base font-semibold text-red-600">
                           {formatBRL(dre.detalhe.comissoes)}
                         </div>
@@ -107,7 +107,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <div className="mt-1 text-base font-semibold text-red-600">
                           {formatBRL(dre.detalhe.freteReal)}
                         </div>
-                        <div className="text-xs text-muted-foreground">LogÃ­stica</div>
+                        <div className="text-xs text-muted-foreground">Logística</div>
                       </div>
                       <div className="rounded-lg border border-dashed p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Despesas Fixas</div>
@@ -233,7 +233,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           name="tipo"
                           options={[
                             { value: "Fixa", label: "Fixa" },
-                            { value: "VariÃ¡vel", label: "VariÃ¡vel" },
+                            { value: "Variável", label: "Variável" },
                           ]}
                           defaultValue="Fixa"
                         />
@@ -243,9 +243,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <Input name="data" type="date" aria-label="Data" />
                       </div>
                       <div className="md:col-span-4 flex flex-wrap items-center gap-3">
-                        <Button>LanÃ§ar despesa</Button>
+                        <Button>Lançar despesa</Button>
                         <span className="text-xs text-muted-foreground">
-                          Campos obrigatÃ³rios para cÃ¡lculo do fluxo.
+                          Campos obrigatórios para cálculo do fluxo.
                         </span>
                       </div>
                     </form>
@@ -294,5 +294,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     </div>
   );
 }
+
 
 
