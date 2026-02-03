@@ -1,3 +1,78 @@
+﻿apiVersion: v1
+kind: Service
+metadata:
+  name: bfx-db
+  labels:
+    app: bfx-db
+spec:
+  type: ClusterIP
+  selector:
+    app: bfx-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bfx-db
+  labels:
+    app: bfx-db
+spec:
+  serviceName: bfx-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bfx-db
+  template:
+    metadata:
+      labels:
+        app: bfx-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: bfx-db-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: microk8s-hostpath
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

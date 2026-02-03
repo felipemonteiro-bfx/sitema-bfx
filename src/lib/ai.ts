@@ -67,14 +67,51 @@ export async function runAiWithActions(
       ])
     );
 
-    const { text } = await generateText({
-      model: google("gemini-2.5-flash"),
-      messages: [
-        { role: "system", content: languageHint },
-        { role: "user", content: prompt },
-      ],
-      tools,
-    });
+    let text = "";
+    try {
+      const result = await generateText({
+        model: google("gemini-2.5-flash"),
+        messages: [
+          { role: "system", content: languageHint },
+          { role: "user", content: prompt },
+        ],
+        tools,
+      });
+      text = result.text ?? "";
+    } catch (err) {
+      // Fallback to OpenAI when Gemini hits quota or fails
+      if (cfg?.openaiKey) {
+        const openai = createOpenAI({ apiKey: cfg.openaiKey });
+        try {
+          const result = await generateText({
+            model: openai("gpt-4o-mini"),
+            messages: [
+              {
+                role: "system",
+                content:
+                  "Voce e um assistente do sistema BFX. Use as funcoes disponiveis para executar acoes. " +
+                  "Responda sempre em portugues do Brasil.",
+              },
+              { role: "user", content: prompt },
+            ],
+            tools,
+          });
+          text = result.text ?? "";
+        } catch {
+          return {
+            text:
+              "O provedor Gemini atingiu o limite de uso. Tente novamente em alguns minutos ou altere para OpenAI.",
+            actions: executed,
+          };
+        }
+      } else {
+        return {
+          text:
+            "O provedor Gemini atingiu o limite de uso. Tente novamente em alguns minutos ou configure a chave OpenAI.",
+          actions: executed,
+        };
+      }
+    }
 
     if (executed.length === 0 && isDespesasMes) {
       try {

@@ -1,4 +1,4 @@
-apiVersion: networking.k8s.io/v1
+﻿apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: bfx-shop-ingress
@@ -24,3 +24,27 @@ spec:
     - hosts:
         - bfx.softlive.dev
       secretName: bfx-shop-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bfx-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: bfx.softlive.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bfx-app
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - bfx.softlive.dev
+      secretName: bfx-ingress-tls
