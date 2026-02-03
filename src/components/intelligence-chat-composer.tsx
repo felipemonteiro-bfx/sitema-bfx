@@ -14,6 +14,7 @@ type IntelligenceChatComposerProps = {
 
 export function IntelligenceChatComposer({ action, providers = [] }: IntelligenceChatComposerProps) {
   const [prompt, setPrompt] = React.useState("");
+  const [attachment, setAttachment] = React.useState<File | null>(null);
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const fileRef = React.useRef<HTMLInputElement | null>(null);
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
@@ -23,6 +24,7 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
       event.preventDefault();
       submitRef.current?.click();
       setPrompt("");
+      setAttachment(null);
     }
   };
 
@@ -32,6 +34,7 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
       ref={formRef}
       onSubmit={() => {
         setPrompt("");
+        setAttachment(null);
       }}
     >
       <button ref={submitRef} type="submit" className="hidden" aria-hidden="true" />
@@ -61,7 +64,16 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
           </PopoverContent>
         </Popover>
 
-        <input ref={fileRef} type="file" className="hidden" />
+        <input
+          ref={fileRef}
+          type="file"
+          name="attachment"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            setAttachment(file);
+          }}
+        />
         <Button
           type="button"
           variant="ghost"
@@ -101,6 +113,23 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
           <Send className="h-4 w-4" />
         </Button>
       </div>
+      {attachment ? (
+        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5">
+            {attachment.name}
+          </span>
+          <button
+            type="button"
+            className="underline underline-offset-2"
+            onClick={() => {
+              setAttachment(null);
+              if (fileRef.current) fileRef.current.value = "";
+            }}
+          >
+            Remover
+          </button>
+        </div>
+      ) : null}
     </form>
   );
 }

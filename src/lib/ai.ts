@@ -34,6 +34,17 @@ export async function runAiWithActions(
   ctx: ActionContext
 ) {
   const languageHint = "Responda sempre em portugues do Brasil.";
+  const currency = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
+
+  const summarizeDespesas = (rows: any[]) => {
+    const total = rows.reduce((sum, item) => sum + Number(item?.valor ?? 0), 0);
+    return `Despesas encontradas: ${rows.length}. Total: ${currency.format(total)}.`;
+  };
+
+  const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.test(prompt);
 
   if (provider === "gemini") {
     const cfg = await prisma.config.findFirst();
@@ -65,7 +76,43 @@ export async function runAiWithActions(
       tools,
     });
 
-    return { text: text || "Sem resposta.", actions: executed };
+    if (executed.length === 0 && isDespesasMes) {
+      try {
+        const now = new Date();
+        const from = new Date(now.getFullYear(), now.getMonth(), 1);
+        const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const result = await executeAiAction(
+          "listar_despesas",
+          { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) },
+          ctx
+        );
+        if (Array.isArray(result)) {
+          return { text: summarizeDespesas(result), actions: [{ name: "listar_despesas", result }] };
+        }
+      } catch {
+        // fallback below
+      }
+    }
+
+    if (text && text.trim()) return { text, actions: executed };
+    if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
+
+    const fallbackText = executed
+      .map((a) => {
+        if (a.name === "listar_clientes" && Array.isArray(a.result)) {
+          const items = (a.result as any[]).slice(0, 3).map((c) => c.nome).filter(Boolean);
+          return items.length
+            ? `Clientes encontrados: ${items.join(", ")}.`
+            : "Nenhum cliente encontrado.";
+        }
+        if (a.name === "listar_despesas" && Array.isArray(a.result)) {
+          return summarizeDespesas(a.result as any[]);
+        }
+        return `Ação executada: ${a.name}.`;
+      })
+      .join("\n");
+
+    return { text: fallbackText, actions: executed };
   }
 
   const cfg = await prisma.config.findFirst();
@@ -103,5 +150,41 @@ export async function runAiWithActions(
     tools,
   });
 
-  return { text: text || "Sem resposta.", actions: executed };
+  if (executed.length === 0 && isDespesasMes) {
+    try {
+      const now = new Date();
+      const from = new Date(now.getFullYear(), now.getMonth(), 1);
+      const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      const result = await executeAiAction(
+        "listar_despesas",
+        { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) },
+        ctx
+      );
+      if (Array.isArray(result)) {
+        return { text: summarizeDespesas(result), actions: [{ name: "listar_despesas", result }] };
+      }
+    } catch {
+      // fallback below
+    }
+  }
+
+  if (text && text.trim()) return { text, actions: executed };
+  if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
+
+  const fallbackText = executed
+    .map((a) => {
+      if (a.name === "listar_clientes" && Array.isArray(a.result)) {
+        const items = (a.result as any[]).slice(0, 3).map((c) => c.nome).filter(Boolean);
+        return items.length
+          ? `Clientes encontrados: ${items.join(", ")}.`
+          : "Nenhum cliente encontrado.";
+      }
+      if (a.name === "listar_despesas" && Array.isArray(a.result)) {
+        return summarizeDespesas(a.result as any[]);
+      }
+      return `Ação executada: ${a.name}.`;
+    })
+    .join("\n");
+
+  return { text: fallbackText, actions: executed };
 }

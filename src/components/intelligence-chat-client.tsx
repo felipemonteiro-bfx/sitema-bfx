@@ -26,9 +26,21 @@ export function IntelligenceChatClient({ history, action, providers }: Intellige
   const handleSubmit = async (formData: FormData) => {
     const prompt = String(formData.get("prompt") || "").trim();
     const provider = String(formData.get("provider") || "openai");
-    if (prompt) {
+    const attachment = formData.get("attachment");
+    const file =
+      attachment &&
+      typeof attachment !== "string" &&
+      attachment instanceof File &&
+      attachment.size > 0 &&
+      attachment.name
+        ? (attachment as File)
+        : null;
+    const displayPrompt = file
+      ? `${prompt || "Arquivo anexado"}\n(Arquivo: ${file.name})`
+      : prompt;
+    if (displayPrompt.trim()) {
       addOptimistic({
-        prompt,
+        prompt: displayPrompt,
         response: "Enviando...",
         provider,
         at: new Date().toISOString(),

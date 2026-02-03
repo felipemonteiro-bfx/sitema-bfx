@@ -7,8 +7,22 @@ import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
 
 async function askAi(formData: FormData) {
   "use server";
-  const prompt = String(formData.get("prompt") || "");
+  const attachment = formData.get("attachment");
+  const file =
+    attachment &&
+    typeof attachment !== "string" &&
+    attachment instanceof File &&
+    attachment.size > 0 &&
+    attachment.name
+      ? (attachment as File)
+      : null;
+  let prompt = String(formData.get("prompt") || "");
   const provider = String(formData.get("provider") || "openai") as "openai" | "gemini";
+  if (!prompt && file) {
+    prompt = `Arquivo anexado: ${file.name}`;
+  } else if (file && file.name) {
+    prompt = `${prompt}\n\nArquivo anexado: ${file.name}`;
+  }
   if (!prompt) return;
   const session = await getSession();
   if (!session) return;
@@ -17,13 +31,7 @@ async function askAi(formData: FormData) {
     username: session.username,
     displayName: session.nomeExibicao || session.username,
   });
-  const actionsText =
-    response.actions.length > 0
-      ? `\n\nAções executadas:\n${response.actions
-          .map((a) => `- ${a.name}`)
-          .join("\n")}`
-      : "";
-  prismaMessageStore.add({ prompt, response: response.text + actionsText, provider });
+  prismaMessageStore.add({ prompt, response: response.text, provider });
   revalidatePath("/inteligencia");
 }
 
