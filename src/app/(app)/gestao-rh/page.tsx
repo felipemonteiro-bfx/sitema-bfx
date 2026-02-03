@@ -1,12 +1,15 @@
 ﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
+import { Badge } from "@/components/ui/badge";
+import { GestaoRhTabs } from "@/components/gestao-rh-tabs";
+
+type Search = { user?: string; tab?: string };
 
 async function updateMeta(formData: FormData) {
   "use server";
@@ -43,121 +46,231 @@ async function addUser(formData: FormData) {
   revalidatePath("/gestao-rh");
 }
 
-export default async function Page() {
+function formatMoney(v: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
+}
+
+export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
+  const sp = await searchParams;
   const users = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
+  const selectedUser = sp.user && sp.user !== "all" ? Number(sp.user) : 0;
+  const filteredUsers = selectedUser ? users.filter((u) => u.id === selectedUser) : users;
+  const initialTab = sp.tab || "metas";
+
+  const total = users.length;
+  const admins = users.filter((u) => u.role === "admin").length;
+  const metaMedia = total ? users.reduce((s, u) => s + (u.metaMensal || 0), 0) / total : 0;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Gestão de RH (Equipe)</h1>
-      <Tabs defaultValue="metas">
-        <TabsList>
-          <TabsTrigger value="metas">Metas & Comissões</TabsTrigger>
-          <TabsTrigger value="detalhes">Detalhes</TabsTrigger>
-          <TabsTrigger value="contratar">Contratar</TabsTrigger>
-        </TabsList>
+      <div>
+        <h1 className="text-2xl font-semibold">Gestão de RH (Equipe)</h1>
+        <p className="text-sm text-muted-foreground">
+          Gerencie metas, comissões e permissões do time em um só lugar.
+        </p>
+      </div>
 
-        <TabsContent value="metas">
-          <Card>
-            <CardHeader>
-              <CardTitle>Equipe</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Login</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Meta</TableHead>
-                    <TableHead>Comissão %</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        Sem dados.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    users.map((u) => (
-                      <TableRow key={u.id}>
-                        <TableCell>{u.nomeExibicao}</TableCell>
-                        <TableCell>{u.username}</TableCell>
-                        <TableCell>{u.role}</TableCell>
-                        <TableCell>{u.metaMensal}</TableCell>
-                        <TableCell>{u.comissaoPct}</TableCell>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total de usuários</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-semibold">{total}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Admins</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-semibold">{admins}</CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Meta média</CardTitle>
+          </CardHeader>
+          <CardContent className="text-2xl font-semibold">{formatMoney(metaMedia)}</CardContent>
+        </Card>
+      </div>
+
+      <GestaoRhTabs
+        defaultTab={initialTab}
+        tabs={[
+          {
+            value: "metas",
+            label: "Metas & Comissões",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Equipe</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Login</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead className="text-right">Meta</TableHead>
+                        <TableHead className="text-right">Comissão %</TableHead>
                       </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground">
+                            Sem dados.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        users.map((u) => (
+                          <TableRow key={u.id}>
+                            <TableCell>{u.nomeExibicao}</TableCell>
+                            <TableCell>{u.username}</TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="secondary"
+                                className={u.role === "admin" ? "bg-indigo-50 text-indigo-700" : ""}
+                              >
+                                {u.role}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">
+                              {formatMoney(u.metaMensal || 0)}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{u.comissaoPct}</TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: "detalhes",
+            label: "Detalhes",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Editar Funcionário</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form method="get" className="grid gap-2 md:grid-cols-[1fr_auto] items-end">
+                    <input type="hidden" name="tab" value="detalhes" />
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">Filtrar funcionário</div>
+                      <FormSelect
+                        name="user"
+                        defaultValue={selectedUser ? String(selectedUser) : "all"}
+                        options={[
+                          { value: "all", label: "Todos" },
+                          ...users.map((u) => ({
+                            value: String(u.id),
+                            label: u.nomeExibicao || u.username,
+                          })),
+                        ]}
+                      />
+                    </div>
+                    <Button type="submit" variant="outline">
+                      Aplicar
+                    </Button>
+                  </form>
+
+                  {filteredUsers.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">Sem dados.</div>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <form
+                        key={u.id}
+                        action={updateMeta}
+                        className="grid gap-3 rounded-xl border border-muted bg-muted/20 p-4 md:grid-cols-6"
+                      >
+                        <input type="hidden" name="id" value={u.id} />
+                        <div className="space-y-1 md:col-span-2">
+                          <div className="text-xs font-semibold text-muted-foreground">Nome</div>
+                          <Input name="nome" defaultValue={u.nomeExibicao || ""} aria-label="Nome" />
+                        </div>
+                        <div className="space-y-1 md:col-span-2">
+                          <div className="text-xs font-semibold text-muted-foreground">Login</div>
+                          <Input name="login" defaultValue={u.username} aria-label="Login" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Role</div>
+                          <FormSelect
+                            name="role"
+                            defaultValue={u.role || "vendedor"}
+                            options={[
+                              { value: "admin", label: "Admin" },
+                              { value: "vendedor", label: "Vendedor" },
+                            ]}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Meta</div>
+                          <Input name="meta" type="number" defaultValue={u.metaMensal || 0} aria-label="Meta" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Comissão %</div>
+                          <Input
+                            name="comissao"
+                            type="number"
+                            defaultValue={u.comissaoPct || 2}
+                            aria-label="Comissão"
+                          />
+                        </div>
+                        <div className="md:col-span-6 flex items-center justify-between gap-3">
+                          <div className="text-xs text-muted-foreground">
+                            Última atualização depende do salvamento.
+                          </div>
+                          <Button>Salvar</Button>
+                        </div>
+                      </form>
                     ))
                   )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="detalhes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Editar Funcionário</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {users.length === 0 ? (
-                <div className="text-sm text-muted-foreground">Sem dados.</div>
-              ) : (
-                users.map((u) => (
-                  <form
-                    key={u.id}
-                    action={updateMeta}
-                    className="grid gap-3 border-b border-muted pb-4 md:grid-cols-5"
-                  >
-                    <input type="hidden" name="id" value={u.id} />
-                    <Input name="nome" defaultValue={u.nomeExibicao || ""} />
-                    <Input name="login" defaultValue={u.username} />
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: "contratar",
+            label: "Contratar",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Novo Usuário</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form action={addUser} className="grid gap-3 md:grid-cols-3">
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">Nome completo</div>
+                      <Input name="nome" placeholder="Nome Completo" aria-label="Nome" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">Login</div>
+                      <Input name="login" placeholder="Login" aria-label="Login" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">Senha</div>
+                      <Input name="senha" placeholder="Senha" aria-label="Senha" />
+                    </div>
                     <FormSelect
                       name="role"
-                      defaultValue={u.role || "vendedor"}
+                      defaultValue="vendedor"
                       options={[
                         { value: "admin", label: "Admin" },
                         { value: "vendedor", label: "Vendedor" },
                       ]}
                     />
-                    <Input name="meta" type="number" defaultValue={u.metaMensal || 0} />
-                    <Input name="comissao" type="number" defaultValue={u.comissaoPct || 2} />
-                    <Button className="md:col-span-5">Salvar</Button>
+                    <Button className="md:col-span-3">Cadastrar</Button>
                   </form>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="contratar">
-          <Card>
-            <CardHeader>
-              <CardTitle>Novo Usuário</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form action={addUser} className="grid gap-3 md:grid-cols-3">
-                <Input name="nome" placeholder="Nome Completo" />
-                <Input name="login" placeholder="Login" />
-                <Input name="senha" placeholder="Senha" />
-                <FormSelect
-                  name="role"
-                  defaultValue="vendedor"
-                  options={[
-                    { value: "admin", label: "Admin" },
-                    { value: "vendedor", label: "Vendedor" },
-                  ]}
-                />
-                <Button className="md:col-span-3">Cadastrar</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                </CardContent>
+              </Card>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }

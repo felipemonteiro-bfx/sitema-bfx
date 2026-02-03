@@ -64,6 +64,8 @@ export default async function Page() {
     label: String(i + 1),
   }));
 
+  const totalUltima = ultima ? (ultima.valorVenda || 0) + (ultima.valorFrete || 0) : 0;
+
   return (
     <div className="space-y-6">
       <div>
@@ -109,30 +111,37 @@ export default async function Page() {
         <CardHeader>
           <CardTitle>Resumo</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-slate-600">
+        <CardContent>
           {ultima ? (
-            <>
-              <div>
-                Última venda #{ultima.id} · {formatBRL((ultima.valorVenda || 0) + (ultima.valorFrete || 0))}
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed bg-muted/20 px-4 py-3">
+                <div>
+                  <div className="text-sm text-muted-foreground">Última venda</div>
+                  <div className="text-lg font-semibold">#{ultima.id}</div>
+                </div>
+                <div className="text-2xl font-semibold text-emerald-700">
+                  {formatBRL(totalUltima)}
+                </div>
               </div>
-              <a className="text-blue-600" href={`/api/recibo?id=${ultima.id}`}>
-                Baixar recibo PDF
-              </a>
-              <div>
-                <a
-                  className="text-emerald-700"
-                  href={`https://wa.me/?text=${encodeURIComponent(
-                    `Segue seu recibo: http://localhost:3000/api/recibo?id=${ultima.id}`
-                  )}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Enviar no WhatsApp
-                </a>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button asChild variant="outline">
+                  <a href={`/api/recibo?id=${ultima.id}`}>Baixar recibo PDF</a>
+                </Button>
+                <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      `Segue seu recibo: http://localhost:3000/api/recibo?id=${ultima.id}`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Enviar no WhatsApp
+                  </a>
+                </Button>
               </div>
-            </>
+            </div>
           ) : (
-            <div>Sem vendas ainda.</div>
+            <div className="text-sm text-muted-foreground">Sem vendas ainda.</div>
           )}
         </CardContent>
       </Card>

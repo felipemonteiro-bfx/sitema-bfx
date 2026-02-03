@@ -1,11 +1,13 @@
 ﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { revalidatePath } from "next/cache";
+import { QueryTabs } from "@/components/query-tabs";
+
+type Search = { tab?: string };
 
 async function saveAviso(formData: FormData) {
   "use server";
@@ -49,9 +51,10 @@ async function corrigirVendedor() {
   revalidatePath("/configuracoes");
 }
 
-export default async function Page() {
+export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
+  const sp = await searchParams;
   const aviso = await prisma.aviso.findFirst({ where: { ativo: 1 }, orderBy: { id: "desc" } });
   const cfg = await prisma.config.findFirst();
   const countWrong = await prisma.venda.count({ where: { vendedor: "Jaqueline" } });
@@ -62,71 +65,80 @@ export default async function Page() {
         <h1 className="text-2xl font-semibold">Configurações</h1>
         <p className="text-sm text-muted-foreground">Personalize comunicados, recibos e integrações.</p>
       </div>
-      <Tabs defaultValue="mural">
-        <TabsList>
-          <TabsTrigger value="mural">Mural</TabsTrigger>
-          <TabsTrigger value="recibo">Recibo</TabsTrigger>
-          <TabsTrigger value="ia">IA</TabsTrigger>
-          <TabsTrigger value="tools">Manutenção</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="mural">
-          <Card>
-            <CardHeader>
-              <CardTitle>Mensagem para vendedores</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form action={saveAviso} className="space-y-3">
-                <Textarea name="mensagem" defaultValue={aviso?.mensagem || ""} />
-                <Button>Publicar aviso</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="recibo">
-          <Card>
-            <CardHeader>
-              <CardTitle>Texto do recibo/contrato</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form action={saveContrato} className="space-y-3">
-                <Textarea name="texto" defaultValue={cfg?.modeloContrato || "Texto padrão..."} />
-                <Button>Salvar texto</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ia">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chaves de IA</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form action={saveApiKey} className="space-y-3">
-                <Input name="key" placeholder="OpenAI API Key" defaultValue={cfg?.openaiKey || ""} />
-                <Input name="gkey" placeholder="Gemini API Key" defaultValue={cfg?.geminiKey || ""} />
-                <Button>Salvar</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tools">
-          <Card>
-            <CardHeader>
-              <CardTitle>Correção de vendedores</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="text-sm text-muted-foreground">Vendas com nome "Jaqueline": {countWrong}</div>
-              <form action={corrigirVendedor}>
-                <Button variant="destructive">Corrigir todas</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <QueryTabs
+        defaultTab={sp.tab || "mural"}
+        tabs={[
+          {
+            value: "mural",
+            label: "Mural",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Mensagem para vendedores</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveAviso} className="space-y-3">
+                    <Textarea name="mensagem" defaultValue={aviso?.mensagem || ""} />
+                    <Button>Publicar aviso</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: "recibo",
+            label: "Recibo",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Texto do recibo/contrato</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveContrato} className="space-y-3">
+                    <Textarea name="texto" defaultValue={cfg?.modeloContrato || "Texto padrão..."} />
+                    <Button>Salvar texto</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: "ia",
+            label: "IA",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Chaves de IA</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveApiKey} className="space-y-3">
+                    <Input name="key" placeholder="OpenAI API Key" defaultValue={cfg?.openaiKey || ""} />
+                    <Input name="gkey" placeholder="Gemini API Key" defaultValue={cfg?.geminiKey || ""} />
+                    <Button>Salvar</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: "tools",
+            label: "Manutenção",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Correção de vendedores</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="text-sm text-muted-foreground">Vendas com nome "Jaqueline": {countWrong}</div>
+                  <form action={corrigirVendedor}>
+                    <Button variant="destructive">Corrigir todas</Button>
+                  </form>
+                </CardContent>
+              </Card>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }

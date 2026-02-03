@@ -1,5 +1,35 @@
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+
+function formatBRL(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+function formatDate(d: Date) {
+  return new Intl.DateTimeFormat("pt-BR").format(d);
+}
+
+function wrapText(text: string, font: any, size: number, maxWidth: number) {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    const width = font.widthOfTextAtSize(test, size);
+    if (width <= maxWidth) {
+      line = test;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function fillTemplate(template: string, data: Record<string, string>) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? "");
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -17,24 +47,91 @@ export async function GET(req: Request) {
   const page = pdf.addPage([595, 842]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  let y = 780;
-  page.drawText("Recibo BFX", { x: 40, y, size: 20, font: fontBold, color: rgb(0.1, 0.1, 0.1) });
-  y -= 30;
-  const lines = [
-    `Data: ${venda.dataVenda.toISOString().slice(0, 10)}`,
+
+  const marginX = 40;
+  let y = 792;
+  const contentWidth = 515;
+
+  // Header
+  page.drawRectangle({ x: 0, y: 752, width: 595, height: 90, color: rgb(0.96, 0.97, 0.98) });
+  page.drawText("BFX Manager", { x: marginX, y: 805, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+  page.drawText("Recibo de Venda", { x: marginX, y: 783, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
+  page.drawText(`Recibo #${id}`, { x: 420, y: 805, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
+  page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: 785, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+  y = 730;
+
+  // Section: Customer & Sale
+  page.drawText("Detalhes da venda", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+  y -= 18;
+  const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
+  const details = [
     `Cliente: ${cliente?.nome || "N/D"}`,
-    `Produto: ${venda.produtoNome || ""}`,
-    `Valor: R$ ${(venda.valorVenda || 0).toFixed(2)}`,
-    `Frete: R$ ${(venda.valorFrete || 0).toFixed(2)}`,
-    `Parcelas: ${venda.parcelas || 1}`,
+    `Documento: ${clienteDoc}`,
+    `Vendedor: ${venda.vendedor || "N/D"}`,
+    `Produto: ${venda.produtoNome || "N/D"}`,
   ];
-  for (const line of lines) {
-    page.drawText(line, { x: 40, y, size: 12, font });
-    y -= 18;
+  for (const line of details) {
+    page.drawText(line, { x: marginX, y, size: 11, font, color: rgb(0.2, 0.2, 0.22) });
+    y -= 16;
   }
+
+  y -= 8;
+  page.drawRectangle({ x: marginX, y, width: contentWidth, height: 1, color: rgb(0.9, 0.92, 0.95) });
+  y -= 18;
+
+  // Section: Values
+  page.drawText("Valores", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+  y -= 18;
+  const valor = venda.valorVenda || 0;
+  const frete = venda.valorFrete || 0;
+  const total = valor + frete;
+  const parcelas = venda.parcelas || 1;
+  const parcela = venda.valorParcela || (parcelas > 0 ? total / parcelas : total);
+  const rows = [
+    ["Valor do produto", formatBRL(valor)],
+    ["Frete", formatBRL(frete)],
+    ["Total", formatBRL(total)],
+    [`Parcelas (${parcelas}x)`, formatBRL(parcela)],
+  ];
+  for (const [label, val] of rows) {
+    page.drawText(label, { x: marginX, y, size: 11, font, color: rgb(0.2, 0.2, 0.22) });
+    page.drawText(val, { x: 420, y, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+    y -= 16;
+  }
+
   y -= 10;
-  const contrato = cfg?.modeloContrato || "Obrigado pela preferência.";
-  page.drawText(contrato, { x: 40, y, size: 11, font, color: rgb(0.2, 0.2, 0.2), maxWidth: 520 });
+  page.drawRectangle({ x: marginX, y, width: contentWidth, height: 1, color: rgb(0.9, 0.92, 0.95) });
+  y -= 18;
+
+  // Section: Terms
+  const defaultTemplate =
+    "RECIBO Eu, {CLIENTE}, mat. {MATRICULA}, confirmo a compra de: {PRODUTO}. Valor: R$ {VALOR} em {PARCELAS}x Estou ciente de que esse valor será descontado parceladamente na minha remuneração do mês seguinte à data da compra. Entendo que este desconto será efetuado de acordo com as regras e políticas estabelecidas na parceria da BFXSHOP e empresa conveniada. Além disso, estou ciente de que, em caso de rescisão do meu contrato de trabalho com a minha empresa, o valor remanescente, se houver, será descontado integralmente do valor a que eu tiver direito em minha rescisão, conforme previsto na legislação vigente. Esta autorização é concedida de livre e espontânea vontade, sem qualquer forma de coação ou pressão por parte da empresa.";
+  const template = cfg?.modeloContrato || defaultTemplate;
+  const contrato = fillTemplate(template, {
+    CLIENTE: cliente?.nome || "N/D",
+    MATRICULA: cliente?.matricula || "N/D",
+    PRODUTO: venda.produtoNome || "N/D",
+    VALOR: formatBRL(total).replace("R$", "").trim(),
+    PARCELAS: String(parcelas),
+  });
+
+  page.drawText("Termos e condições", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+  y -= 16;
+  const lines = wrapText(contrato, font, 10.5, contentWidth);
+  for (const line of lines) {
+    page.drawText(line, { x: marginX, y, size: 10.5, font, color: rgb(0.25, 0.25, 0.28) });
+    y -= 14;
+  }
+
+  // Footer
+  page.drawText("Documento gerado automaticamente pelo BFX Manager.", {
+    x: marginX,
+    y: 36,
+    size: 9,
+    font,
+    color: rgb(0.45, 0.48, 0.52),
+  });
+
   const pdfBytes = await pdf.save();
 
   return new Response(Buffer.from(pdfBytes), {
