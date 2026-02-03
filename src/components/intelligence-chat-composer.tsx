@@ -40,7 +40,7 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
             variant="ghost"
             size="icon"
             className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
-            aria-label="Guia rapido"
+            aria-label="Guia rápido"
             aria-describedby="guia-rapida"
           >
             <Lightbulb className="h-4 w-4" />
@@ -51,12 +51,12 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
             className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-72 -translate-x-1/2 rounded-md border bg-popover p-3 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100"
           >
             <div className="space-y-2 text-muted-foreground">
-              <div>Gere mensagens de cobranca com tom profissional.</div>
-              <div>Peca resumos semanais de desempenho.</div>
+              <div>Gere mensagens de cobrança com tom profissional.</div>
+              <div>Peça resumos semanais de desempenho.</div>
               <div>Solicite planos para bater metas mensais.</div>
-              <div>Compare vendedores e recomende acoes.</div>
+              <div>Compare vendedores e recomende ações.</div>
               <div className="rounded-md border bg-muted/30 p-2 text-[11px]">
-                Dica: use perguntas com contexto e periodo para respostas mais precisas.
+                Dica: use perguntas com contexto e período para respostas mais precisas.
               </div>
             </div>
           </div>
@@ -86,5 +86,6 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
     </form>
   );
 }
+
 
 
