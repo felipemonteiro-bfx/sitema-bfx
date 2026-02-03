@@ -53,6 +53,11 @@ export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
   const count = await prisma.venda.count();
+  const csvModel = [
+    "Data (AAAA-MM-DD);Vendedor;Cliente;Produto;Custo Produto;Valor Venda;Frete Cobrado;Custo Envio;Parcelas;Antecipada (S/N)",
+    "2026-02-01;Maria;João da Silva;Notebook;2500;3200;120;80;6;S",
+  ].join("\n");
+  const csvHref = `data:text/csv;charset=utf-8,${encodeURIComponent(csvModel)}`;
   return (
     <div className="space-y-6">
       <div>
@@ -60,8 +65,14 @@ export default async function Page() {
         <p className="text-sm text-muted-foreground">Envie um CSV para atualizar o histórico em lote.</p>
       </div>
       <Card>
-        <CardHeader>
-          <CardTitle>Upload CSV</CardTitle>
+        <CardHeader className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle>Upload CSV</CardTitle>
+            <Button variant="outline" size="sm" asChild>
+              <a href={csvHref} download="modelo-importacao.csv">Baixar modelo CSV</a>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Use o modelo para evitar erros de coluna.</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
@@ -94,3 +105,4 @@ export default async function Page() {
     </div>
   );
 }
+

@@ -51,7 +51,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Financeiro e DRE</h1>
-        <p className="text-sm text-muted-foreground">Visão consolidada de receitas, despesas e caixa.</p>
+        <p className="text-sm text-muted-foreground">VisÃ£o consolidada de receitas, despesas e caixa.</p>
       </div>
 
       <QueryTabs
@@ -71,13 +71,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </Card>
                   <Card>
                     <CardHeader>
-                      <CardTitle>Ponto de Equilíbrio</CardTitle>
+                      <CardTitle>Ponto de EquilÃ­brio</CardTitle>
                     </CardHeader>
                     <CardContent className="text-2xl font-semibold">{formatBRL(dre.pontoEq)}</CardContent>
                   </Card>
                   <Card>
                     <CardHeader>
-                      <CardTitle>Lucro Líquido</CardTitle>
+                      <CardTitle>Lucro LÃ­quido</CardTitle>
                     </CardHeader>
                     <CardContent className="text-2xl font-semibold text-emerald-600">
                       {formatBRL(dre.lucro)}
@@ -96,7 +96,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <div className="text-xs text-muted-foreground">Custo de mercadorias</div>
                       </div>
                       <div className="rounded-lg border border-dashed p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Comissões</div>
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">ComissÃµes</div>
                         <div className="mt-1 text-base font-semibold text-red-600">
                           {formatBRL(dre.detalhe.comissoes)}
                         </div>
@@ -107,7 +107,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <div className="mt-1 text-base font-semibold text-red-600">
                           {formatBRL(dre.detalhe.freteReal)}
                         </div>
-                        <div className="text-xs text-muted-foreground">Logística</div>
+                        <div className="text-xs text-muted-foreground">LogÃ­stica</div>
                       </div>
                       <div className="rounded-lg border border-dashed p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Despesas Fixas</div>
@@ -125,11 +125,47 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             label: "Fluxo de Caixa",
             content: (
               <Card>
-                <CardHeader>
-                  <CardTitle>Fluxo de Caixa (6 meses)</CardTitle>
+                <CardHeader className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <CardTitle>Fluxo de Caixa (6 meses)</CardTitle>
+                    <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground">
+                      atualizado automaticamente
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Compare entradas, saídas e saldo mês a mês para identificar sazonalidade.
+                  </p>
                 </CardHeader>
                 <CardContent>
-                  <FluxoCharts rows={fluxo} />
+                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4 shadow-sm">
+                    <FluxoCharts rows={fluxo} />
+                  </div>
+                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+                      <div className="text-xs text-muted-foreground">Entrada média</div>
+                      <div className="mt-1 text-base font-semibold text-emerald-600">
+                        {formatBRL(
+                          fluxo.length ? fluxo.reduce((acc, r) => acc + r.entradas, 0) / fluxo.length : 0
+                        )}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+                      <div className="text-xs text-muted-foreground">Saída média</div>
+                      <div className="mt-1 text-base font-semibold text-rose-600">
+                        {formatBRL(
+                          fluxo.length ? fluxo.reduce((acc, r) => acc + r.saidas, 0) / fluxo.length : 0
+                        )}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+                      <div className="text-xs text-muted-foreground">Saldo médio</div>
+                      <div className="mt-1 text-base font-semibold text-slate-700">
+                        {formatBRL(
+                          fluxo.length ? fluxo.reduce((acc, r) => acc + r.saldo, 0) / fluxo.length : 0
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div className="mt-6" />
                   <Table>
                     <TableHeader>
@@ -151,9 +187,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         fluxo.map((r) => (
                           <TableRow key={r.mes}>
                             <TableCell>{r.mes}</TableCell>
-                            <TableCell className="text-right tabular-nums">{formatBRL(r.entradas)}</TableCell>
-                            <TableCell className="text-right tabular-nums">{formatBRL(r.saidas)}</TableCell>
-                            <TableCell className="text-right tabular-nums">{formatBRL(r.saldo)}</TableCell>
+                            <TableCell className="text-right tabular-nums text-emerald-700">
+                              {formatBRL(r.entradas)}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums text-rose-700">
+                              {formatBRL(r.saidas)}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums font-medium text-slate-800">
+                              {formatBRL(r.saldo)}
+                            </TableCell>
                           </TableRow>
                         ))
                       )}
@@ -169,23 +211,43 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             content: (
               <>
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="space-y-1">
                     <CardTitle>Nova Despesa</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Registre despesas fixas ou variáveis com data de competência.
+                    </p>
                   </CardHeader>
                   <CardContent>
-                    <form action={addDespesa} className="grid gap-3 md:grid-cols-4">
-                      <Input name="descricao" placeholder="Descrição" aria-label="Descrição" />
-                      <Input name="valor" placeholder="Valor" type="number" step="0.01" aria-label="Valor" />
-                      <FormSelect
-                        name="tipo"
-                        options={[
-                          { value: "Fixa", label: "Fixa" },
-                          { value: "Variável", label: "Variável" },
-                        ]}
-                        defaultValue="Fixa"
-                      />
-                      <Input name="data" type="date" aria-label="Data" />
-                      <Button className="md:col-span-4">Lançar</Button>
+                    <form action={addDespesa} className="grid gap-4 md:grid-cols-4">
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-xs font-medium text-muted-foreground">Descrição</label>
+                        <Input name="descricao" placeholder="Ex.: Aluguel, frete, comissão" aria-label="Descrição" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-muted-foreground">Valor</label>
+                        <Input name="valor" placeholder="0,00" type="number" step="0.01" aria-label="Valor" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+                        <FormSelect
+                          name="tipo"
+                          options={[
+                            { value: "Fixa", label: "Fixa" },
+                            { value: "VariÃ¡vel", label: "VariÃ¡vel" },
+                          ]}
+                          defaultValue="Fixa"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-muted-foreground">Data</label>
+                        <Input name="data" type="date" aria-label="Data" />
+                      </div>
+                      <div className="md:col-span-4 flex flex-wrap items-center gap-3">
+                        <Button>LanÃ§ar despesa</Button>
+                        <span className="text-xs text-muted-foreground">
+                          Campos obrigatÃ³rios para cÃ¡lculo do fluxo.
+                        </span>
+                      </div>
                     </form>
                   </CardContent>
                 </Card>
@@ -232,3 +294,5 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     </div>
   );
 }
+
+

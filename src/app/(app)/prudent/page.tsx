@@ -1,10 +1,13 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
+
+const formatDateBR = (value: Date) =>
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
 
 async function antecipar(formData: FormData) {
   "use server";
@@ -58,7 +61,7 @@ export default async function Page() {
                       <TableCell>
                         <input type="checkbox" name="id" value={v.id} className="h-4 w-4" />
                       </TableCell>
-                      <TableCell>{v.dataVenda.toISOString().slice(0, 10)}</TableCell>
+                      <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
                       <TableCell>{v.produtoNome}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatBRL(v.valorVenda || 0)}</TableCell>
                       <TableCell className="text-right tabular-nums">{v.parcelas}</TableCell>

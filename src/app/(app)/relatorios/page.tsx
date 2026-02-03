@@ -6,7 +6,9 @@ import { requireAdmin } from "@/lib/guards";
 export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = "2026-02-03";
+  const formatDateBR = (value: string) =>
+    new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value + "T00:00:00"));
 
   return (
     <div className="space-y-6">
@@ -36,7 +38,7 @@ export default async function Page() {
                 Baixar CSV
               </Button>
             </form>
-            <div className="text-xs text-muted-foreground">Período padrão: hoje ({today}).</div>
+            <div className="text-xs text-muted-foreground">Período padrão: hoje ({formatDateBR(today)}).</div>
           </CardContent>
         </Card>
 
@@ -57,3 +59,5 @@ export default async function Page() {
     </div>
   );
 }
+
+

@@ -8,6 +8,9 @@ import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 
+const formatDateBR = (value: Date) =>
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
+
 type Search = { from?: string; to?: string; edit?: string; vendedor?: string; produto?: string };
 
 async function updateVenda(formData: FormData) {
@@ -125,7 +128,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               ) : (
                 vendas.map((v) => (
                   <TableRow key={v.id}>
-                    <TableCell>{v.dataVenda.toISOString().slice(0, 10)}</TableCell>
+                    <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
                     <TableCell>{v.produtoNome}</TableCell>
                     <TableCell className="text-right tabular-nums">
@@ -157,7 +160,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         <Card id="editar-venda" className="scroll-mt-24">
           <CardHeader className="space-y-1">
             <CardTitle>Editando venda #{editVenda.id}</CardTitle>
-            <p className="text-sm text-muted-foreground">Ajuste os dados e salve para atualizar o histórico.</p>
+            <p className="text-sm text-muted-foreground">Ajuste os dados e salve para atualizar o Histórico.</p>
           </CardHeader>
           <CardContent>
             <form action={updateVenda} className="grid gap-4 md:grid-cols-3">
@@ -191,7 +194,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
               <div className="md:col-span-3 flex flex-wrap items-center gap-3">
-                <Button>Salvar alterações</Button>
+                <Button>Salvar alteraÃ§Ãµes</Button>
                 <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
                   Baixar recibo PDF
                 </a>
@@ -203,4 +206,5 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     </div>
   );
 }
+
 
