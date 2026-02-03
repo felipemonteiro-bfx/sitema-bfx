@@ -4,9 +4,14 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+type TextareaProps = Omit<React.ComponentProps<"textarea">, "onInput"> & {
+  autoResize?: boolean;
+  onInput?: React.FormEventHandler<HTMLTextAreaElement>;
+};
+
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
-  React.ComponentProps<"textarea"> & { autoResize?: boolean }
+  TextareaProps
 >(({ className, autoResize, onInput, ...props }, ref) => {
   const innerRef = React.useRef<HTMLTextAreaElement | null>(null)
 
