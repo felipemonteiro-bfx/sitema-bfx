@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  id             Int       @id @default(autoincrement())
+  nome           String    @unique
+  renda          Float?
+  empresa        String?
+  matricula      String?
+  telefone       String?
+  cpf            String?
+  cnpj           String?
+  tipo           String?
+  dataNascimento DateTime? @map("data_nascimento")
+  cep            String?
+  endereco       String?
+  vendas         Venda[]
+
+  @@map("clientes")
+}
+
+model Produto {
+  id         Int      @id @default(autoincrement())
+  nome       String   @unique
+  custoPadrao Float?  @map("custo_padrao")
+  marca      String?
+  categoria  String?
+  ncm        String?
+  imagem     String?
+  fornecedorId Int?   @map("fornecedor_id")
+  qtdEstoque Int?     @default(0) @map("qtd_estoque")
+  valorVenda Float?   @default(0) @map("valor_venda")
+
+  @@map("produtos")
+}
+
+model Venda {
+  id                 Int       @id @default(autoincrement())
+  dataVenda          DateTime  @map("data_venda")
+  vendedor           String?
+  clienteId          Int?      @map("cliente_id")
+  produtoNome        String?   @map("produto_nome")
+  custoProduto       Float?    @map("custo_produto")
+  valorVenda         Float?
+  valorFrete         Float?    @default(0) @map("valor_frete")
+  custoEnvio         Float?    @default(0) @map("custo_envio")
+  parcelas           Int?
+  valorParcela       Float?    @map("valor_parcela")
+  taxaFinanceiraValor Float?   @map("taxa_financeira_valor")
+  lucroLiquido       Float?    @map("lucro_liquido")
+  antecipada         Int?      @default(1)
+  excedeuLimite      Int?      @default(0) @map("excedeu_limite")
+  comprovantePdf     String?   @map("comprovante_pdf")
+  cliente            Cliente?  @relation(fields: [clienteId], references: [id])
+
+  @@map("vendas")
+}
+
+model Config {
+  id             Int     @id @default(autoincrement())
+  modeloContrato String? @map("modelo_contrato")
+  logoPath       String? @map("logo_path")
+  openaiKey      String? @map("openai_key")
+  geminiKey      String? @map("gemini_key")
+
+  @@map("config")
+}
+
+model Usuario {
+  id           Int     @id @default(autoincrement())
+  username     String  @unique
+  password     String
+  role         String?
+  nomeExibicao String? @map("nome_exibicao")
+  email        String?
+  telefone     String?
+  dataNascimento DateTime? @map("data_nascimento")
+  endereco     String?
+  cep          String?
+  metaMensal   Float?  @default(50000.0) @map("meta_mensal")
+  comissaoPct  Float?  @default(2.0) @map("comissao_pct")
+
+  @@map("usuarios")
+}
+
+model Fornecedor {
+  id       Int     @id @default(autoincrement())
+  nome     String  @unique
+  telefone String?
+
+  @@map("fornecedores")
+}
+
+model EmpresaParceira {
+  id            Int     @id @default(autoincrement())
+  nome          String  @unique
+  responsavelRh String? @map("responsavel_rh")
+  telefoneRh    String? @map("telefone_rh")
+  emailRh       String? @map("email_rh")
+
+  @@map("empresas_parceiras")
+}
+
+model Pagamento {
+  id           Int      @id @default(autoincrement())
+  dataPagamento DateTime @map("data_pagamento")
+  vendedor     String?
+  valor        Float?
+  obs          String?
+
+  @@map("pagamentos")
+}
+
+model AuditLog {
+  id       Int      @id @default(autoincrement())
+  dataHora DateTime @map("data_hora")
+  usuario  String?
+  acao     String?
+  detalhes String?
+
+  @@map("audit_logs")
+}
+
+model Despesa {
+  id         Int      @id @default(autoincrement())
+  dataDespesa DateTime @map("data_despesa")
+  descricao  String?
+  categoria  String?
+  valor      Float?
+  tipo       String?
+
+  @@map("despesas")
+}
+
+model Aviso {
+  id          Int      @id @default(autoincrement())
+  dataCriacao DateTime @default(now()) @map("data_criacao")
+  mensagem    String?
+  ativo       Int?     @default(1)
+
+  @@map("avisos")
+}

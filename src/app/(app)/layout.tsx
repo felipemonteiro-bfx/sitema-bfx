@@ -1,0 +1,99 @@
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/session";
+import { LogoutButton } from "@/components/LogoutButton";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { SidebarNav } from "@/components/sidebar-nav";
+
+export const dynamic = "force-dynamic";
+
+const adminMenu = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/financeiro", label: "Financeiro & DRE" },
+  { href: "/prudent", label: "Prudent (Antecipação)" },
+  { href: "/inteligencia", label: "BFX Intelligence" },
+  { href: "/importacao", label: "Importação" },
+  { href: "/venda-rapida", label: "Venda Rápida" },
+  { href: "/historico", label: "Histórico (Editar)" },
+  { href: "/cadastros", label: "Cadastros" },
+  { href: "/gestao-rh", label: "Gestão de RH" },
+  { href: "/relatorios", label: "Relatórios" },
+  { href: "/configuracoes", label: "Configurações" },
+  { href: "/streamlit", label: "Streamlit", external: true },
+];
+
+const sellerMenu = [
+  { href: "/venda-rapida", label: "Venda Rápida" },
+  { href: "/comissoes", label: "Minhas Comissões" },
+  { href: "/historico", label: "Histórico (Editar)" },
+  { href: "/cadastros", label: "Cadastros" },
+  { href: "/relatorios", label: "Relatórios PDF" },
+  { href: "/perfil", label: "Meu Perfil" },
+  { href: "/streamlit", label: "Streamlit", external: true },
+];
+
+export default async function AppLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
+  const menu = session.role === "admin" ? adminMenu : sellerMenu;
+
+  return (
+    <div className="min-h-screen bg-muted/40">
+      <div className="mx-auto flex min-h-screen w-full gap-6">
+        <aside className="hidden w-72 shrink-0 flex-col border-r bg-card px-4 py-6 text-card-foreground lg:flex">
+          <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
+        </aside>
+        <main className="flex-1 min-w-0 px-6 py-6 lg:px-10">
+          <div className="mb-4 flex items-center gap-2 lg:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Abrir menu">
+                  <span className="text-lg leading-none">≡</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 p-4">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4">
+                  <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
+                </div>
+              </SheetContent>
+            </Sheet>
+            <div className="text-sm text-muted-foreground">
+              {session.nomeExibicao || session.username}
+            </div>
+          </div>
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function SidebarContent({
+  menu,
+  userLabel,
+}: {
+  menu: { href: string; label: string; external?: boolean }[];
+  userLabel: string;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="space-y-1">
+        <h1 className="text-lg font-semibold">BFX Manager</h1>
+        <div className="text-sm text-muted-foreground">{userLabel}</div>
+      </div>
+      <Separator className="my-4" />
+      <SidebarNav menu={menu} />
+      <Separator className="my-4" />
+      <LogoutButton />
+    </div>
+  );
+}

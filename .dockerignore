@@ -1,28 +1,7 @@
-# Ignore virtualenv
-.venv
-venv
-ENV
-env
-
-# Ignore Python cache
-__pycache__/
-*.py[cod]
-*$py.class
-
-# Ignore OS-specific files
-.DS_Store
-Thumbs.db
-
-# Ignore IDE/editor files
-.vscode/
-.idea/
-*.swp
-
-# Ignore git files
-.git/
-.gitignore
-
-# Docker files
-Dockerfile
-docker-compose.yml
-.dockerignore
+node_modules
+.next
+.env
+.env.*
+*.log
+coverage
+dist

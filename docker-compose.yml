@@ -1,15 +1,65 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  bfx-app:
-    build: .
-    container_name: bfx_sistema
+  traefik:
+    image: traefik:v3.0
+    container_name: bfx_proxy
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:3000
     ports:
-      - "8501:8501"
+      - "3000:3000"
     volumes:
-      - bfx_data:/app
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  db:
+    image: postgres:16-alpine
+    container_name: bfx_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: bfx
+    ports:
+      - "5432:5432"
+    volumes:
+      - bfx_pg:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: bfx_app
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/bfx?schema=public
+      SESSION_SECRET: change-me
+    depends_on:
+      - db
+      - streamlit
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.app.rule=PathPrefix(`/`)
+      - traefik.http.routers.app.entrypoints=web
+      - traefik.http.services.app.loadbalancer.server.port=3000
+
+  streamlit:
+    build: ./streamlit
+    container_name: bfx_streamlit
+    volumes:
+      - ./streamlit:/app
     restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.streamlit.rule=PathPrefix(`/_streamlit/`)
+      - traefik.http.routers.streamlit.entrypoints=web
+      - traefik.http.routers.streamlit.priority=100
+      - traefik.http.services.streamlit.loadbalancer.server.port=8501
+      - traefik.http.routers.streamlit-redirect.rule=Path(`/_streamlit`)
+      - traefik.http.routers.streamlit-redirect.entrypoints=web
+      - traefik.http.routers.streamlit-redirect.priority=101
+      - traefik.http.routers.streamlit-redirect.middlewares=streamlit-redirect
+      - traefik.http.middlewares.streamlit-redirect.redirectregex.regex=^/(_streamlit)$$
+      - traefik.http.middlewares.streamlit-redirect.redirectregex.replacement=/_streamlit/
+      - traefik.http.middlewares.streamlit-redirect.redirectregex.permanent=true
 
 volumes:
-  bfx_data:
-    name: bfx_sistema_data
+  bfx_pg:
+    name: bfx_pg_data

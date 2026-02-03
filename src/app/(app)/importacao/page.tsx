@@ -1,0 +1,81 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
+import { revalidatePath } from "next/cache";
+import Papa from "papaparse";
+
+async function importar(formData: FormData) {
+  "use server";
+  const file = formData.get("file") as File | null;
+  if (!file) return;
+  const text = await file.text();
+  const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+  const rows = parsed.data as Record<string, string>[];
+
+  for (const row of rows) {
+    const clienteNome = String(row["Cliente"] || "").trim();
+    if (!clienteNome) continue;
+    let cliente = await prisma.cliente.findFirst({ where: { nome: clienteNome } });
+    if (!cliente) {
+      cliente = await prisma.cliente.create({ data: { nome: clienteNome, tipo: "PF" } });
+    }
+    const parcelas = Number(row["Parcelas"] || 1);
+    const valorVenda = Number(row["Valor Venda"] || 0);
+    const frete = Number(row["Frete Cobrado"] || 0);
+    const custoEnvio = Number(row["Custo Envio"] || 0);
+    const custoProduto = Number(row["Custo Produto"] || 0);
+    const total = valorVenda + frete;
+    const valorParcela = parcelas > 0 ? total / parcelas : 0;
+    const ant = String(row["Antecipada (S/N)"] || "").toUpperCase().startsWith("S") ? 1 : 0;
+
+    await prisma.venda.create({
+      data: {
+        dataVenda: new Date(row["Data (AAAA-MM-DD)"] || new Date().toISOString().slice(0, 10)),
+        vendedor: row["Vendedor"] || "",
+        clienteId: cliente.id,
+        produtoNome: row["Produto"] || "",
+        custoProduto,
+        valorVenda,
+        valorFrete: frete,
+        custoEnvio,
+        parcelas,
+        valorParcela,
+        antecipada: ant,
+      },
+    });
+  }
+
+  revalidatePath("/importacao");
+}
+
+export default async function Page() {
+  const ok = await requireAdmin();
+  if (!ok) return <div>Acesso restrito.</div>;
+  const count = await prisma.venda.count();
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">Importação de Vendas</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>Upload CSV</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            Colunas: Data (AAAA-MM-DD), Vendedor, Cliente, Produto, Custo Produto, Valor Venda, Frete Cobrado, Custo Envio, Parcelas, Antecipada (S/N)
+          </p>
+          <form action={importar} className="space-y-3">
+            <input
+              name="file"
+              type="file"
+              accept=".csv"
+              className="block w-full text-sm file:mr-4 file:rounded-md file:border file:border-input file:bg-background file:px-4 file:py-2 file:text-sm file:font-medium file:text-foreground hover:file:bg-accent"
+            />
+            <Button>Processar</Button>
+          </form>
+          <div className="text-xs text-muted-foreground">Vendas no banco: {count}</div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
