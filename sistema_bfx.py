@@ -747,12 +747,28 @@ elif menu == "Cadastros":
                 if st.form_submit_button("Salvar Produto"):
                     fid = None
                     if f_sel == "Novo Fornecedor..." and nf_n:
-                        conn.execute("INSERT INTO fornecedores (nome, telefone) VALUES (?,?)", (nf_n, clean_str(nf_t)))
-                        fid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                        # PROTEÇÃO CONTRA DUPLICIDADE DE FORNECEDOR (v114)
+                        try:
+                            conn.execute("INSERT INTO fornecedores (nome, telefone) VALUES (?,?)", (nf_n, clean_str(nf_t)))
+                            fid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                        except sqlite3.IntegrityError:
+                            # Se já existe, pega o ID do existente
+                            fid = conn.execute("SELECT id FROM fornecedores WHERE nome=?", (nf_n,)).fetchone()[0]
+                            st.toast(f"Fornecedor '{nf_n}' já existia e foi selecionado.")
+                            
                     elif f_sel != "Novo Fornecedor...": fid = df_f[df_f['nome']==f_sel].iloc[0]['id']
+                    
                     b64_img = image_to_base64(up_img)
-                    conn.execute("INSERT INTO produtos (nome, custo_padrao, marca, ncm, fornecedor_id, imagem, valor_venda) VALUES (?,?,?,?,?,?,?)", (nm, cst or 0.0, mk, ncm, fid, b64_img, val_v or 0.0))
-                    conn.commit(); st.success("Salvo!"); st.rerun()
+                    
+                    # PROTEÇÃO CONTRA PRODUTO DUPLICADO (v114)
+                    try:
+                        conn.execute("INSERT INTO produtos (nome, custo_padrao, marca, ncm, fornecedor_id, imagem, valor_venda) VALUES (?,?,?,?,?,?,?)", (nm, cst or 0.0, mk, ncm, fid, b64_img, val_v or 0.0))
+                        conn.commit(); st.success("Salvo!"); st.rerun()
+                    except sqlite3.IntegrityError:
+                        st.error(f"O produto '{nm}' já existe!")
+                    except Exception as e:
+                        st.error(f"Erro ao salvar: {e}")
+
         st.markdown("---")
         if st.button("📄 Gerar Catálogo de Produtos PDF"):
             try:
@@ -811,110 +827,6 @@ elif menu == "Cadastros":
             for i, r in edit_emp.iterrows():
                 conn.execute("UPDATE empresas_parceiras SET nome=?, responsavel_rh=?, telefone_rh=?, email_rh=? WHERE id=?", (r['nome'], r['responsavel_rh'], r['telefone_rh'], r['email_rh'], r['id']))
             conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
-
-elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
-    st.subheader("👥 Gestão de Time")
-    t1, t2, t3 = st.tabs(["📊 Metas & Comissões", "👤 Detalhes & Senha", "➕ Contratar"])
-    with t1:
-        st.info("Edite Metas e Comissões diretamente na tabela:")
-        df_u = pd.read_sql("SELECT id, nome_exibicao, username, role, meta_mensal, comissao_pct FROM usuarios", conn)
-        edit_u = st.data_editor(df_u, column_config={"id": st.column_config.NumberColumn(disabled=True), "role": st.column_config.SelectboxColumn("Cargo", options=["admin", "vendedor"])}, hide_index=True, use_container_width=True, key="ed_u")
-        if st.button("💾 SALVAR METAS"):
-            for i, r in edit_u.iterrows():
-                conn.execute("UPDATE usuarios SET nome_exibicao=?, username=?, role=?, meta_mensal=?, comissao_pct=? WHERE id=?", (r['nome_exibicao'], r['username'], r['role'], r['meta_mensal'], r['comissao_pct'], r['id']))
-            conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
-    with t2:
-        list_users = pd.read_sql("SELECT nome_exibicao FROM usuarios", conn)['nome_exibicao'].tolist()
-        sel_u = st.selectbox("Selecione o Funcionário:", list_users)
-        if sel_u:
-            du = pd.read_sql(f"SELECT * FROM usuarios WHERE nome_exibicao='{sel_u}'", conn).iloc[0]
-            with st.form("edit_u_det"):
-                c1, c2 = st.columns(2)
-                unm = c1.text_input("Nome", du['nome_exibicao']); ulogin = c2.text_input("Login", du['username'])
-                uemail = c1.text_input("Email", du.get('email','')); utel = c2.text_input("Telefone", du.get('telefone',''))
-                uend = st.text_input("Endereço", du.get('endereco',''))
-                new_pass = st.text_input("Nova Senha (Deixe em branco para manter)", type="password")
-                if st.form_submit_button("Salvar Dados"):
-                    q_up = "UPDATE usuarios SET nome_exibicao=?, username=?, email=?, telefone=?, endereco=?"
-                    params = [unm, ulogin, uemail, utel, uend]
-                    if new_pass.strip(): q_up += ", password=?"; params.append(new_pass.strip())
-                    q_up += " WHERE id=?"; params.append(int(du['id']))
-                    conn.execute(q_up, params); conn.commit(); st.success("Dados Salvos!"); time.sleep(1); st.rerun()
-            st.markdown("---")
-            if st.button(f"🗑️ DEMITIR (Excluir {sel_u})", type="primary"):
-                conn.execute("DELETE FROM usuarios WHERE id=?", (du['id'],)); conn.commit(); st.warning("Usuário removido."); time.sleep(1); st.rerun()
-    with t3:
-        with st.form("new_u"):
-            c1, c2 = st.columns(2)
-            nn = c1.text_input("Nome Completo"); nu = c2.text_input("Login Acesso")
-            np = c1.text_input("Senha Inicial", type="password"); nr = c2.selectbox("Cargo", ["vendedor", "admin"])
-            if st.form_submit_button("Cadastrar"):
-                if not nu or not nn or not np:
-                    st.error("Preencha todos os campos!")
-                else:
-                    try:
-                        conn.execute("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", (clean_str(nu).lower(), np, nr, nn))
-                        conn.commit()
-                        st.success(f"Usuário {nn} criado com sucesso!")
-                        time.sleep(1); st.rerun()
-                    except sqlite3.IntegrityError:
-                        st.error(f"O login '{nu}' já existe. Escolha outro.")
-                    except Exception as e:
-                        st.error(f"Erro: {e}")
-
-elif menu == "Configurações" and role == 'admin':
-    st.subheader("⚙️ Configurações do Sistema")
-    tab_mural, tab_doc, tab_api, tab_tools = st.tabs(["📢 Mural", "📄 Recibo", "🔑 IA", "🔧 Manutenção"])
-    with tab_mural:
-        st.markdown("##### Mensagem para os Vendedores")
-        try:
-            curr_msg = conn.execute("SELECT mensagem FROM avisos WHERE ativo=1 ORDER BY id DESC LIMIT 1").fetchone()
-            val_msg = curr_msg[0] if curr_msg else ""
-        except: val_msg = ""
-        new_msg = st.text_area("Digite o aviso aqui:", value=val_msg, height=100)
-        if st.button("📢 PUBLICAR AVISO"):
-            conn.execute("UPDATE avisos SET ativo=0"); conn.execute("INSERT INTO avisos (mensagem, ativo) VALUES (?, 1)", (new_msg,)); conn.commit(); st.success("Aviso atualizado!")
-    with tab_doc:
-        st.markdown("##### Personalizar Contrato/Recibo")
-        c_text, c_prev = st.columns(2)
-        with c_text:
-            try:
-                res = conn.execute("SELECT modelo_contrato FROM config").fetchone()
-                curr_text = res[0] if res else "Texto Padrão..."
-            except: curr_text = "Texto Padrão..."
-            new_text = st.text_area("Edite o texto:", value=curr_text, height=400)
-            if st.button("💾 SALVAR TEXTO"):
-                conn.execute("UPDATE config SET modelo_contrato=?", (new_text,)); conn.commit(); st.success("Texto salvo!")
-            st.divider()
-            up_logo = st.file_uploader("Trocar Logo (PNG/JPG)", type=['png','jpg'])
-            if up_logo: 
-                with open("logo.png","wb") as f: f.write(up_logo.getbuffer())
-                conn.execute("UPDATE config SET logo_path='logo.png'"); conn.commit(); st.success("Logo atualizada!")
-        with c_prev:
-            st.caption("Visualização em Tempo Real")
-            mock = {'c':'CLIENTE TESTE', 'v':1500.0, 'p':'PRODUTO X', 'vp':150.0, 'pa':10, 'frete':50.0, 'e':'EMPRESA Y', 'cpf':'000.000.000-00', 'm':'12345'}
-            pdf_prev = gerar_pdf(mock, "recibo"); b64_prev = base64.b64encode(pdf_prev).decode('latin-1')
-            st.markdown(f'<iframe src="data:application/pdf;base64,{b64_prev}" width="100%" height="600"></iframe>', unsafe_allow_html=True)
-    with tab_api:
-        st.markdown("##### Configuração da Inteligência Artificial")
-        st.info("Insira aqui sua chave da OpenAI ou Groq para ativar o assistente.")
-        curr_key = conn.execute("SELECT openai_key FROM config").fetchone()
-        val_key = curr_key[0] if curr_key and curr_key[0] else ""
-        new_key = st.text_input("API Key", value=val_key, type="password")
-        if st.button("💾 SALVAR API KEY"):
-            conn.execute("UPDATE config SET openai_key=?", (new_key,)); conn.commit(); st.success("Chave salva!")
-    with tab_tools:
-        st.markdown("##### 🔧 Ferramenta de Correção de Vendedores")
-        try:
-            count_wrong = conn.execute("SELECT COUNT(*) FROM vendas WHERE vendedor='Jaqueline'").fetchone()[0]
-            st.metric("Vendas com nome 'Jaqueline' (Errado)", count_wrong)
-            if count_wrong > 0:
-                if st.button("🛠️ Corrigir Todas para 'Jakeline'"):
-                    conn.execute("UPDATE vendas SET vendedor='Jakeline' WHERE vendedor='Jaqueline'")
-                    conn.commit()
-                    st.success(f"{count_wrong} vendas corrigidas com sucesso!"); time.sleep(1); st.rerun()
-            else: st.success("✅ Nenhuma venda com nome errado encontrada.")
-        except Exception as e: st.error(f"Erro: {e}")
 
 elif menu == "Minhas Comissões":
     st.info("Extrato disponível.")
