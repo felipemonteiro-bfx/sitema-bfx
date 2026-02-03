@@ -25,7 +25,8 @@ const Textarea = React.forwardRef<
       el.style.height = "auto"
       el.style.height = `${el.scrollHeight}px`
     }
-    onInput?.(e)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onInput?.(e as any)
   }
 
   return (
