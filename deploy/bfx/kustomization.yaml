@@ -1,4 +1,4 @@
-﻿apiVersion: kustomize.config.k8s.io/v1beta1
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: bfx
 
@@ -7,7 +7,5 @@ resources:
   - serviceaccount.yaml
   - secrets.yaml
   - postgres.yaml
-  - deployment.yaml
-  - service.yaml
   - app.yaml
   - ingress.yaml
