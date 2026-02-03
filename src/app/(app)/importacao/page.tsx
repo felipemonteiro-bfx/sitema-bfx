@@ -63,11 +63,22 @@ export default async function Page() {
         <CardHeader>
           <CardTitle>Upload CSV</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+        <CardContent className="space-y-4">
+          <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
+            <div className="font-semibold text-foreground">Checklist rápido</div>
+            <ul className="mt-2 list-disc pl-5">
+              <li>Arquivo .csv com cabeçalho.</li>
+              <li>Data no formato AAAA-MM-DD.</li>
+              <li>Colunas obrigatórias: Cliente, Produto, Valor Venda.</li>
+            </ul>
+          </div>
+          <div className="text-sm text-muted-foreground">
             Colunas: Data (AAAA-MM-DD), Vendedor, Cliente, Produto, Custo Produto, Valor Venda, Frete Cobrado,
             Custo Envio, Parcelas, Antecipada (S/N)
-          </p>
+          </div>
+          <div className="rounded-lg border bg-background p-3 text-xs text-muted-foreground">
+            Exemplo de linha: 2026-02-01;Maria;João da Silva;Notebook;2500;3200;120;80;6;S
+          </div>
           <form action={importar} className="space-y-3">
             <input
               name="file"

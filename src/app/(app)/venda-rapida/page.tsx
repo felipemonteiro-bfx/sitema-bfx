@@ -77,32 +77,73 @@ export default async function Page() {
           <CardTitle>Nova venda</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={criarVenda} className="grid gap-3 md:grid-cols-3">
-            <Input name="data" type="date" aria-label="Data" />
-            <FormSelect
-              name="vendedor"
-              options={vendedorOptions}
-              defaultValue={vendedorOptions[0]?.value}
-              placeholder="Vendedor"
-            />
-            <FormSelect
-              name="cliente"
-              options={clienteOptions}
-              defaultValue={clienteOptions[0]?.value}
-              placeholder="Cliente"
-            />
-            <FormSelect
-              name="produto"
-              options={produtoOptions}
-              defaultValue={produtoOptions[0]?.value}
-              placeholder="Produto"
-            />
-            <Input name="custo" placeholder="Custo do produto" type="number" step="0.01" aria-label="Custo" />
-            <Input name="valor" placeholder="Valor da venda" type="number" step="0.01" aria-label="Valor" />
-            <Input name="frete" placeholder="Frete cobrado" type="number" step="0.01" aria-label="Frete" />
-            <Input name="envio" placeholder="Custo de envio" type="number" step="0.01" aria-label="Envio" />
-            <FormSelect name="parcelas" options={parcelasOptions} defaultValue="1" placeholder="Parcelas" />
-            <Button className="md:col-span-3">Finalizar venda</Button>
+          <form action={criarVenda} className="grid gap-4">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Data da venda</div>
+                <Input name="data" type="date" aria-label="Data" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Vendedor</div>
+                <FormSelect
+                  name="vendedor"
+                  options={vendedorOptions}
+                  defaultValue={vendedorOptions[0]?.value}
+                  placeholder="Vendedor"
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Cliente</div>
+                <FormSelect
+                  name="cliente"
+                  options={clienteOptions}
+                  defaultValue={clienteOptions[0]?.value}
+                  placeholder="Cliente"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Produto</div>
+                <FormSelect
+                  name="produto"
+                  options={produtoOptions}
+                  defaultValue={produtoOptions[0]?.value}
+                  placeholder="Produto"
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Parcelas</div>
+                <FormSelect name="parcelas" options={parcelasOptions} defaultValue="1" placeholder="Parcelas" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Custo do produto</div>
+                <Input name="custo" placeholder="Custo do produto" type="number" step="0.01" aria-label="Custo" />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Valor da venda</div>
+                <Input name="valor" placeholder="Valor da venda" type="number" step="0.01" aria-label="Valor" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Frete cobrado</div>
+                <Input name="frete" placeholder="Frete cobrado" type="number" step="0.01" aria-label="Frete" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Custo de envio</div>
+                <Input name="envio" placeholder="Custo de envio" type="number" step="0.01" aria-label="Envio" />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed bg-muted/20 px-4 py-3">
+              <div className="text-sm text-muted-foreground">
+                Preencha os valores para calcular total, parcelas e lucro automaticamente.
+              </div>
+              <Button>Finalizar venda</Button>
+            </div>
           </form>
         </CardContent>
       </Card>

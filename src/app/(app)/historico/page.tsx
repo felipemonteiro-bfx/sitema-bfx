@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
+import { FormSelect } from "@/components/form-select";
 
-type Search = { from?: string; to?: string; edit?: string };
+type Search = { from?: string; to?: string; edit?: string; vendedor?: string; produto?: string };
 
 async function updateVenda(formData: FormData) {
   "use server";
@@ -36,8 +37,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const end = sp.to ? new Date(sp.to) : today;
   const editId = sp.edit ? Number(sp.edit) : 0;
 
+  const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
+  const produtos = await prisma.produto.findMany({ orderBy: { nome: "asc" } });
+
   const vendas = await prisma.venda.findMany({
-    where: { dataVenda: { gte: start, lte: end } },
+    where: {
+      dataVenda: { gte: start, lte: end },
+      vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
+      produtoNome: sp.produto && sp.produto !== "all" ? sp.produto : undefined,
+    },
     orderBy: { dataVenda: "desc" },
   });
 
@@ -52,10 +60,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
       <Card>
         <CardHeader>
-          <CardTitle>Filtro de período</CardTitle>
+          <CardTitle>Filtro avançado</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-3 sm:grid-cols-3">
+          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <Input
               type="date"
               name="from"
@@ -67,6 +75,25 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               name="to"
               defaultValue={end.toISOString().slice(0, 10)}
               aria-label="Data final"
+            />
+            <FormSelect
+              name="vendedor"
+              defaultValue={sp.vendedor || "all"}
+              options={[
+                { value: "all", label: "Todos os vendedores" },
+                ...vendedores.map((v) => ({
+                  value: String(v.nomeExibicao || v.username),
+                  label: String(v.nomeExibicao || v.username),
+                })),
+              ]}
+            />
+            <FormSelect
+              name="produto"
+              defaultValue={sp.produto || "all"}
+              options={[
+                { value: "all", label: "Todos os produtos" },
+                ...produtos.map((p) => ({ value: p.nome, label: p.nome })),
+              ]}
             />
             <Button>Filtrar</Button>
           </form>
@@ -108,7 +135,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <div className="flex gap-2 text-sm">
                         <Link
                           className="text-blue-600"
-                          href={`/historico?from=${start.toISOString().slice(0, 10)}&to=${end.toISOString().slice(0, 10)}&edit=${v.id}`}
+                          href={`/historico?from=${start.toISOString().slice(0, 10)}&to=${end.toISOString().slice(0, 10)}&vendedor=${sp.vendedor || "all"}&produto=${sp.produto || "all"}&edit=${v.id}`}
                         >
                           Editar
                         </Link>

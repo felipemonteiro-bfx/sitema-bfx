@@ -87,23 +87,55 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle>Novo Cliente</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form action={addCliente} className="grid gap-3 md:grid-cols-3">
-                      <Input name="nome" placeholder="Nome/Razão Social" aria-label="Nome" />
-                      <FormSelect
-                        name="tipo"
-                        options={[
-                          { value: "PF", label: "Pessoa Física" },
-                          { value: "PJ", label: "Pessoa Jurídica" },
-                        ]}
-                        defaultValue="PF"
-                      />
-                      <Input name="doc" placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
-                      <Input name="matricula" placeholder="Matrícula" aria-label="Matrícula" />
-                      <Input name="renda" placeholder="Renda/Faturamento" type="number" aria-label="Renda" />
-                      <Input name="telefone" placeholder="WhatsApp" aria-label="WhatsApp" />
-                      <Input name="cep" placeholder="CEP" aria-label="CEP" />
-                      <Input name="empresa" placeholder="Empresa/Vínculo" aria-label="Empresa" />
-                      <Button className="md:col-span-3">Salvar</Button>
+                    <form action={addCliente} className="grid gap-4">
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Nome/Razão Social</div>
+                          <Input name="nome" placeholder="Nome/Razão Social" aria-label="Nome" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Tipo</div>
+                          <FormSelect
+                            name="tipo"
+                            options={[
+                              { value: "PF", label: "Pessoa Física" },
+                              { value: "PJ", label: "Pessoa Jurídica" },
+                            ]}
+                            defaultValue="PF"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">CPF/CNPJ</div>
+                          <Input name="doc" placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
+                        </div>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-4">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Matrícula</div>
+                          <Input name="matricula" placeholder="Matrícula" aria-label="Matrícula" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Renda/Faturamento</div>
+                          <Input name="renda" placeholder="Renda/Faturamento" type="number" aria-label="Renda" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">WhatsApp</div>
+                          <Input name="telefone" placeholder="WhatsApp" aria-label="WhatsApp" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">CEP</div>
+                          <Input name="cep" placeholder="CEP" aria-label="CEP" />
+                        </div>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Empresa/Vínculo</div>
+                          <Input name="empresa" placeholder="Empresa/Vínculo" aria-label="Empresa" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end">
+                        <Button>Salvar</Button>
+                      </div>
                     </form>
                   </CardContent>
                 </Card>
@@ -155,13 +187,34 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle>Novo Produto</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form action={addProduto} className="grid gap-3 md:grid-cols-3">
-                      <Input name="nome" placeholder="Nome do produto" aria-label="Nome" />
-                      <Input name="custo" placeholder="Custo" type="number" aria-label="Custo" />
-                      <Input name="marca" placeholder="Marca" aria-label="Marca" />
-                      <Input name="ncm" placeholder="NCM" aria-label="NCM" />
-                      <Input name="valor" placeholder="Valor de venda" type="number" aria-label="Valor" />
-                      <Button className="md:col-span-3">Salvar</Button>
+                    <form action={addProduto} className="grid gap-4">
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Nome do produto</div>
+                          <Input name="nome" placeholder="Nome do produto" aria-label="Nome" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Custo</div>
+                          <Input name="custo" placeholder="Custo" type="number" aria-label="Custo" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Marca</div>
+                          <Input name="marca" placeholder="Marca" aria-label="Marca" />
+                        </div>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">NCM</div>
+                          <Input name="ncm" placeholder="NCM" aria-label="NCM" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Valor de venda</div>
+                          <Input name="valor" placeholder="Valor de venda" type="number" aria-label="Valor" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end">
+                        <Button>Salvar</Button>
+                      </div>
                     </form>
                   </CardContent>
                 </Card>
@@ -211,12 +264,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle>Nova Empresa</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form action={addEmpresa} className="grid gap-3 md:grid-cols-3">
-                      <Input name="nome" placeholder="Empresa" aria-label="Empresa" />
-                      <Input name="rh" placeholder="Responsável RH" aria-label="Responsável RH" />
-                      <Input name="tel" placeholder="Telefone RH" aria-label="Telefone RH" />
-                      <Input name="email" placeholder="Email RH" aria-label="Email RH" />
-                      <Button className="md:col-span-3">Salvar</Button>
+                    <form action={addEmpresa} className="grid gap-4">
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
+                          <Input name="nome" placeholder="Empresa" aria-label="Empresa" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Responsável RH</div>
+                          <Input name="rh" placeholder="Responsável RH" aria-label="Responsável RH" />
+                        </div>
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
+                          <Input name="tel" placeholder="Telefone RH" aria-label="Telefone RH" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
+                          <Input name="email" placeholder="Email RH" aria-label="Email RH" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end">
+                        <Button>Salvar</Button>
+                      </div>
                     </form>
                   </CardContent>
                 </Card>

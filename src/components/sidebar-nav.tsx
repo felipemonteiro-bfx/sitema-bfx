@@ -14,7 +14,6 @@ import {
   Users,
   ReceiptText,
   ClipboardList,
-  BriefcaseBusiness,
   User,
   History,
   Upload,
@@ -47,7 +46,6 @@ export function SidebarNav({ menu }: { menu: MenuItem[] }) {
     "/configuracoes": <Settings className="h-4 w-4" />,
     "/comissoes": <ClipboardList className="h-4 w-4" />,
     "/perfil": <User className="h-4 w-4" />,
-    "/streamlit": <BriefcaseBusiness className="h-4 w-4" />,
   };
 
   return (

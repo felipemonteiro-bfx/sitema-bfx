@@ -20,7 +20,6 @@ const adminMenu = [
   { href: "/gestao-rh", label: "Gestão de RH" },
   { href: "/relatorios", label: "Relatórios" },
   { href: "/configuracoes", label: "Configurações" },
-  { href: "/streamlit", label: "Streamlit", external: true },
 ];
 
 const sellerMenu = [
@@ -30,7 +29,6 @@ const sellerMenu = [
   { href: "/cadastros", label: "Cadastros" },
   { href: "/relatorios", label: "Relatórios PDF" },
   { href: "/perfil", label: "Meu Perfil" },
-  { href: "/streamlit", label: "Streamlit", external: true },
 ];
 
 export default async function AppLayout({
@@ -45,9 +43,11 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-muted/40">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-3 py-4 lg:px-6">
-        <aside className="hidden w-72 shrink-0 flex-col rounded-2xl border bg-card/90 px-5 py-6 text-card-foreground shadow-sm lg:flex">
-          <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
+      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-3 py-5 lg:px-6">
+        <aside className="hidden w-72 shrink-0 lg:flex">
+          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border bg-card/90 px-5 py-6 text-card-foreground shadow-sm">
+            <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
+          </div>
         </aside>
         <main className="flex-1 min-w-0 rounded-2xl border bg-card/80 px-4 py-5 shadow-sm backdrop-blur lg:px-8 lg:py-7">
           <div className="mb-6 flex items-center gap-3 lg:hidden">

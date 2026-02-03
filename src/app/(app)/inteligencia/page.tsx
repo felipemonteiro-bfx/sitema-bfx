@@ -1,9 +1,9 @@
 ﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { prisma } from "@/lib/db";
 import { runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
+import { prisma } from "@/lib/db";
 
 async function askAi(formData: FormData) {
   "use server";
@@ -67,6 +67,9 @@ export default async function Page() {
         <Card className="h-full">
           <CardHeader>
             <CardTitle>Conversas</CardTitle>
+            <div className="text-xs text-muted-foreground">
+              Provedor ativo: {resolvedProviders[0]?.label || "OpenAI"}
+            </div>
           </CardHeader>
           <CardContent className="flex h-[70vh] flex-col gap-4">
             <IntelligenceChatClient history={history} action={askAi} providers={resolvedProviders} />
