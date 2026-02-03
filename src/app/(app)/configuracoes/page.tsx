@@ -77,6 +77,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardTitle>Mensagem para vendedores</CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-3 text-sm text-muted-foreground">
+                    Esta mensagem aparece no painel dos vendedores.
+                  </div>
                   <form action={saveAviso} className="space-y-3">
                     <Textarea name="mensagem" defaultValue={aviso?.mensagem || ""} />
                     <Button>Publicar aviso</Button>
@@ -94,8 +97,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardTitle>Texto do recibo/contrato</CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <div className="mb-3 text-sm text-muted-foreground">
+                    Você pode usar os placeholders: {"{CLIENTE}"}, {"{MATRICULA}"}, {"{PRODUTO}"}, {"{VALOR}"}, {"{PARCELAS}"}.
+                  </div>
                   <form action={saveContrato} className="space-y-3">
-                    <Textarea name="texto" defaultValue={cfg?.modeloContrato || "Texto padrão..."} />
+                    <Textarea
+                      name="texto"
+                      defaultValue={cfg?.modeloContrato || "Texto padrão..."}
+                      autoResize
+                    />
                     <Button>Salvar texto</Button>
                   </form>
                 </CardContent>
@@ -112,8 +122,28 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </CardHeader>
                 <CardContent>
                   <form action={saveApiKey} className="space-y-3">
-                    <Input name="key" placeholder="OpenAI API Key" defaultValue={cfg?.openaiKey || ""} />
-                    <Input name="gkey" placeholder="Gemini API Key" defaultValue={cfg?.geminiKey || ""} />
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">OpenAI API Key</div>
+                      <Input
+                        name="key"
+                        type="password"
+                        placeholder={cfg?.openaiKey ? "•••••••• (salva)" : "OpenAI API Key"}
+                      />
+                      {cfg?.openaiKey && (
+                        <div className="text-xs text-muted-foreground">Chave OpenAI salva.</div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">Gemini API Key</div>
+                      <Input
+                        name="gkey"
+                        type="password"
+                        placeholder={cfg?.geminiKey ? "•••••••• (salva)" : "Gemini API Key"}
+                      />
+                      {cfg?.geminiKey && (
+                        <div className="text-xs text-muted-foreground">Chave Gemini salva.</div>
+                      )}
+                    </div>
                     <Button>Salvar</Button>
                   </form>
                 </CardContent>
