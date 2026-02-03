@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bfx-shop
+  namespace: bfx
+  labels:
+    app: bfx-shop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bfx-shop
+  template:
+    metadata:
+      labels:
+        app: bfx-shop
+    spec:
+      imagePullSecrets:
+        - name: ecr-creds
+      containers:
+        - name: bfx-shop
+          image: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5

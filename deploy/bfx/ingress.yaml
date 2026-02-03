@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bfx-shop-ingress
+  namespace: bfx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: bfx.softlive.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: bfx-shop-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - bfx.softlive.dev
+      secretName: bfx-shop-tls
