@@ -19,7 +19,7 @@ const Textarea = React.forwardRef<
     el.style.height = `${el.scrollHeight}px`
   }, [autoResize, props.value, props.defaultValue])
 
-  const handleInput = (e: React.FormEvent<HTMLTextAreaElement>) => {
+  const handleInput: React.FormEventHandler<HTMLTextAreaElement> = (e) => {
     if (autoResize) {
       const el = e.currentTarget
       el.style.height = "auto"
