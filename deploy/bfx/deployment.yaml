@@ -27,6 +27,13 @@ spec:
               value: "production"
             - name: PORT
               value: "3000"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:bfx-secure-password-2024@bfx-postgres:5432/bfx?schema=public"
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bfx-secrets
+                  key: session-secret
           resources:
             requests:
               memory: "256Mi"
@@ -38,11 +45,13 @@ spec:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             periodSeconds: 10
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /
               port: 3000
-            initialDelaySeconds: 5
+            initialDelaySeconds: 30
             periodSeconds: 5
+            failureThreshold: 10
