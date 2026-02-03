@@ -132,16 +132,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       {formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2 text-sm">
-                        <Link
-                          className="text-blue-600"
-                          href={`/historico?from=${start.toISOString().slice(0, 10)}&to=${end.toISOString().slice(0, 10)}&vendedor=${sp.vendedor || "all"}&produto=${sp.produto || "all"}&edit=${v.id}`}
-                        >
-                          Editar
-                        </Link>
-                        <a className="text-slate-600" href={`/api/recibo?id=${v.id}`}>
-                          PDF
-                        </a>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button size="sm" asChild>
+                          <Link
+                            href={`/historico?from=${start.toISOString().slice(0, 10)}&to=${end.toISOString().slice(0, 10)}&vendedor=${sp.vendedor || "all"}&produto=${sp.produto || "all"}&edit=${v.id}#editar-venda`}
+                          >
+                            Editar
+                          </Link>
+                        </Button>
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={`/api/recibo?id=${v.id}`}>PDF</a>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -153,21 +154,48 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       </Card>
 
       {editVenda && (
-        <Card>
-          <CardHeader>
+        <Card id="editar-venda" className="scroll-mt-24">
+          <CardHeader className="space-y-1">
             <CardTitle>Editando venda #{editVenda.id}</CardTitle>
+            <p className="text-sm text-muted-foreground">Ajuste os dados e salve para atualizar o histórico.</p>
           </CardHeader>
           <CardContent>
-            <form action={updateVenda} className="grid gap-3 md:grid-cols-3">
+            <form action={updateVenda} className="grid gap-4 md:grid-cols-3">
               <input type="hidden" name="id" value={editVenda.id} />
-              <Input name="data" type="date" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
-              <Input name="vendedor" defaultValue={editVenda.vendedor || ""} />
-              <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
-              <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
-              <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
-              <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
-              <Input name="parcelas" type="number" defaultValue={editVenda.parcelas || 1} />
-              <Button className="md:col-span-3">Salvar alterações</Button>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Data da venda</label>
+                <Input name="data" type="date" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Vendedor</label>
+                <Input name="vendedor" defaultValue={editVenda.vendedor || ""} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Produto</label>
+                <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Valor do produto</label>
+                <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Frete ao cliente</label>
+                <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Custo de envio</label>
+                <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
+              </div>
+              <div className="space-y-1 md:col-span-1">
+                <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
+                <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
+              </div>
+              <div className="md:col-span-3 flex flex-wrap items-center gap-3">
+                <Button>Salvar alterações</Button>
+                <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
+                  Baixar recibo PDF
+                </a>
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -175,3 +203,4 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     </div>
   );
 }
+
