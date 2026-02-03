@@ -33,6 +33,11 @@ st.markdown("""
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     .login-box { max-width: 420px; margin: 60px auto; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); text-align: center; border: 1px solid #f1f5f9; }
     div.css-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 15px; }
+    .kpi-card { background-color: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: left; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); height: 100%; }
+    .kpi-title { font-size: 13px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .kpi-metric { font-size: 28px; color: #0f172a; font-weight: 800; }
+    .kpi-sub { font-size: 14px; margin-top: 4px; font-weight: 600; }
+    .kpi-up { color: #10b981; } .kpi-down { color: #ef4444; } .kpi-neutral { color: #64748b; }
     .fin-card { background: white; padding: 15px; border-radius: 10px; border: 1px solid #e5e7eb; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .fin-label { font-size: 12px; color: #6b7280; font-weight: 700; text-transform: uppercase; }
     .fin-value { font-size: 24px; color: #111827; font-weight: 800; margin-top: 5px; }
@@ -41,13 +46,6 @@ st.markdown("""
     .stButton button:hover { box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); opacity: 0.95; }
     .whatsapp-btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; background: linear-gradient(90deg, #25D366 0%, #128C7E 100%); color: white !important; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2); border: 1px solid #1DA851; }
     .whatsapp-btn:hover { transform: translateY(-2px); }
-    .kpi-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
-    .credit-box { background: linear-gradient(to right, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
-    .cal-day-box { border: 1px solid #f1f5f9; border-radius: 8px; padding: 8px; min-height: 70px; background: white; font-size: 12px; }
-    .cal-val-green { background-color: #dcfce7; color: #166534; font-size: 10px; padding: 2px 4px; border-radius: 4px; display: block; margin-top: 4px; font-weight: bold; }
-    .podio-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; margin-bottom: 20px; }
-    .podio-rank { font-size: 13px; font-weight: 600; color: #334155; margin: 6px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
-    .mural-aviso { background-color: #fefce8; border-left: 4px solid #facc15; color: #854d0e; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; line-height: 1.4; }
     .chat-msg { padding: 10px; border-radius: 10px; margin-bottom: 10px; }
     .chat-user { background-color: #e0f2fe; text-align: right; }
     .chat-bot { background-color: #f1f5f9; }
@@ -55,7 +53,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==============================================================================
-# 2. BANCO DE DADOS (COM BLINDAGEM)
+# 2. BANCO DE DADOS
 # ==============================================================================
 @st.cache_resource
 def get_connection(): return sqlite3.connect('bfx_sistema.db', check_same_thread=False)
@@ -81,18 +79,15 @@ def init_db():
     def force_add_column(table, col, dtype):
         try:
             existing_cols = [i[1] for i in c.execute(f"PRAGMA table_info({table})")]
-            if col not in existing_cols:
-                c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
+            if col not in existing_cols: c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {dtype}")
         except: pass
 
-    # Garante colunas críticas
     force_add_column('clientes', 'cnpj', 'TEXT')
     force_add_column('clientes', 'tipo', 'TEXT')
     force_add_column('produtos', 'valor_venda', 'REAL DEFAULT 0')
     force_add_column('vendas', 'comprovante_pdf', 'TEXT')
     force_add_column('config', 'openai_key', 'TEXT')
 
-    # Correção senha Bruno
     try:
         c.execute("UPDATE usuarios SET password = '123' WHERE username = 'bruno'")
         if c.execute("SELECT count(*) FROM usuarios WHERE username='bruno'").fetchone()[0] == 0:
@@ -105,10 +100,8 @@ def init_db():
     for emp in ["Amazon Five", "Gimam"]:
         if c.execute("SELECT count(*) FROM empresas_parceiras WHERE nome=?", (emp,)).fetchone()[0] == 0:
             c.execute("INSERT INTO empresas_parceiras (nome, responsavel_rh, telefone_rh, email_rh) VALUES (?,?,?,?)", (emp, "RH "+emp, "", ""))
-    
     if c.execute("SELECT COUNT(*) FROM config").fetchone()[0] == 0:
         c.execute("INSERT INTO config (modelo_contrato, logo_path) VALUES (?, ?)", ("Texto Padrão...", ""))
-    
     conn.commit()
 init_db()
 
@@ -172,8 +165,24 @@ def calcular_dre_avancado(mes_ano):
     custos_var_totais = cmv + comissoes + desp_var + custo_frete_real
     margem_contrib = receita_bruta - custos_var_totais
     lucro_liquido = margem_contrib - custo_fixo
+    margem_pct = (margem_contrib / receita_bruta) if receita_bruta > 0 else 0
+    ponto_equilibrio = (custo_fixo / margem_pct) if margem_pct > 0 else 0
     meta_global = conn.execute("SELECT SUM(meta_mensal) FROM usuarios").fetchone()[0] or 100000.0
-    return {"Receita": receita_bruta, "(=) Margem Contrib.": margem_contrib, "(-) Custos Fixos": custo_fixo, "(=) Lucro Líquido": lucro_liquido, "Meta Global": meta_global, "Detalhe": {"CMV": cmv, "Comissões": comissoes, "Desp. Var": desp_var, "Frete Real": custo_frete_real}}
+    return {
+        "Receita": receita_bruta,
+        "(-) Custos Var.": custos_var_totais,
+        "(=) Margem Contrib.": margem_contrib,
+        "(-) Custos Fixos": custo_fixo,
+        "(=) Lucro Líquido": lucro_liquido,
+        "Ponto Equilíbrio": ponto_equilibrio,
+        "Meta Global": meta_global,
+        "Detalhe": {
+            "CMV": cmv,
+            "Comissões": comissoes,
+            "Desp. Var": desp_var,
+            "Frete Real": custo_frete_real
+        }
+    }
 
 def calcular_relatorio_parceiro(empresa, mes_ref):
     mes_str = mes_ref 
@@ -377,39 +386,137 @@ def run_ai_chat(prompt):
 # ==============================================================================
 
 if menu == "Dashboard" and role == 'admin':
-    t1, t2, t3 = st.tabs(["📊 Visão Executiva", "🤝 Comercial", "📦 Operacional"])
-    with t1:
-        st.subheader("Visão Geral")
-        c1, c2 = st.columns(2)
-        with c1: st.download_button("💾 BAIXAR BACKUP", data=baixar_backup(), file_name=f"bfx_bkp.db", use_container_width=True)
-        if not df_pod.empty:
-            total_mes = df_pod['total'].sum()
-            ticket = total_mes / pd.read_sql(f"SELECT COUNT(*) FROM vendas WHERE data_venda >= '{ini_mes}'", conn).iloc[0,0]
-            c2.metric("Total Vendido", format_brl(total_mes), f"Ticket: {format_brl(ticket)}")
+    st.subheader("📊 Dashboard Executivo & Performance")
+    
+    # 1. FILTROS GERAIS
+    with st.expander("🔍 Filtros do Dashboard", expanded=True):
+        c1, c2, c3 = st.columns(3)
+        d_ini = c1.date_input("De", datetime.now().replace(day=1))
+        d_fim = c2.date_input("Até", datetime.now())
+        vendedores = pd.read_sql("SELECT nome_exibicao FROM usuarios", conn)['nome_exibicao'].tolist()
+        sel_vend = c3.multiselect("Vendedores", vendedores, default=vendedores)
+    
+    if not sel_vend: sel_vend = vendedores
+    vends_str = "', '".join(sel_vend)
+    
+    # Query Principal (Filtrada)
+    q_dash = f"""
+    SELECT v.data_venda, v.vendedor, v.valor_venda, v.lucro_liquido, v.produto_nome, v.id
+    FROM vendas v 
+    WHERE v.data_venda BETWEEN '{d_ini}' AND '{d_fim}'
+    AND v.vendedor IN ('{vends_str}')
+    """
+    
+    # Query Evolução (Últimos 6 Meses - Independente do filtro)
+    date_6m = (datetime.now() - relativedelta(months=5)).replace(day=1).strftime("%Y-%m-%d")
+    q_evo = f"""
+    SELECT strftime('%Y-%m', data_venda) as mes, SUM(valor_venda) as total, SUM(lucro_liquido) as lucro
+    FROM vendas 
+    WHERE data_venda >= '{date_6m}'
+    GROUP BY mes ORDER BY mes
+    """
+    
+    try: 
+        df_dash = pd.read_sql(q_dash, conn)
+        df_evo = pd.read_sql(q_evo, conn)
+    except: 
+        df_dash = pd.DataFrame()
+        df_evo = pd.DataFrame()
+    
+    # 3. EXIBIÇÃO
+    if not df_dash.empty:
+        # Cálculos KPIs
+        fat = df_dash['valor_venda'].sum()
+        luc = df_dash['lucro_liquido'].sum() if 'lucro_liquido' in df_dash.columns else 0
+        peds = len(df_dash)
+        tik = fat / peds if peds > 0 else 0
+        margem = (luc / fat * 100) if fat > 0 else 0
+        
+        # Hall da Fama (Melhor Vendedor)
+        best_rev = df_dash.groupby('vendedor')['valor_venda'].sum().idxmax()
+        best_rev_val = df_dash.groupby('vendedor')['valor_venda'].sum().max()
+        
+        # Correção Hall da Fama
+        if 'lucro_liquido' in df_dash.columns and df_dash['lucro_liquido'].sum() != 0:
+             best_prof = df_dash.groupby('vendedor')['lucro_liquido'].sum().idxmax()
+             best_prof_val = df_dash.groupby('vendedor')['lucro_liquido'].sum().max()
+        else:
+             best_prof = best_rev
+             best_prof_val = 0
+
+        # KPIs Cards
+        k1, k2, k3, k4 = st.columns(4)
+        k1.markdown(f"<div class='kpi-card'><div class='kpi-title'>Faturamento Total</div><div class='kpi-metric'>{format_brl(fat)}</div><div class='kpi-sub kpi-neutral'>{peds} vendas</div></div>", unsafe_allow_html=True)
+        k2.markdown(f"<div class='kpi-card'><div class='kpi-title'>Lucro Líquido Real</div><div class='kpi-metric kpi-up'>{format_brl(luc)}</div><div class='kpi-sub kpi-up'>Margem: {margem:.1f}%</div></div>", unsafe_allow_html=True)
+        k3.markdown(f"<div class='kpi-card'><div class='kpi-title'>Ticket Médio</div><div class='kpi-metric'>{format_brl(tik)}</div></div>", unsafe_allow_html=True)
+        
+        # Card Dinâmico (Campeão)
+        k4.markdown(f"<div class='kpi-card'><div class='kpi-title'>🏆 Melhor Performance</div><div style='font-size:18px; font-weight:bold'>{best_rev}</div><div class='kpi-sub'>{format_brl(best_rev_val)}</div></div>", unsafe_allow_html=True)
+        
         st.markdown("---")
-        mes_cal = st.selectbox("Mês", range(1,13), index=hj.month-1)
-        dados_cal = get_calendario(hj.year, mes_cal); cal = calendar.monthcalendar(hj.year, mes_cal)
-        cols = st.columns(7)
-        for i, d in enumerate(["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"]): cols[i].markdown(f"**{d}**")
-        for week in cal:
-            cols = st.columns(7)
-            for i, day in enumerate(week):
-                with cols[i]:
-                    if day!=0:
-                        val = dados_cal.get(day, 0)
-                        st.markdown(f"<div class='cal-day-box'>{day} {f'<br><span class=cal-val-green>+{format_brl(val)}</span>' if val>0 else ''}</div>", unsafe_allow_html=True)
-    with t2:
-        st.subheader("Inteligência Comercial")
-        if not df_pod.empty: st.bar_chart(df_pod.set_index("vendedor")['total'])
-    with t3:
-        st.subheader("Fornecedores e Encomendas")
-        df_forn = pd.read_sql("SELECT nome, telefone FROM fornecedores ORDER BY nome", conn)
-        if not df_forn.empty:
-            cols = st.columns(4)
-            for i, row in df_forn.iterrows():
-                with cols[i % 4]:
-                    link = gerar_link_zap(row['telefone'], f"Olá {row['nome']}, preciso de uma encomenda.")
-                    st.markdown(f"<div class='css-card' style='text-align:center'><b>{row['nome']}</b><br><a href='{link}' target='_blank' style='text-decoration:none; color:#2563eb;'>📞 Encomendar</a></div>", unsafe_allow_html=True)
+        
+        # GRÁFICOS DE LINHA DO TEMPO
+        c_evo, c_rank = st.columns([2, 1])
+        with c_evo:
+            st.markdown("##### 📈 Evolução Mensal (Tendência últimos 6 meses)")
+            if not df_evo.empty:
+                st.area_chart(df_evo.set_index('mes')[['total', 'lucro']], color=["#3b82f6", "#10b981"])
+            else: st.info("Sem dados suficientes para histórico.")
+            
+        with c_rank:
+            st.markdown("##### 📦 Top 5 Produtos (Vol.)")
+            top_prod = df_dash['produto_nome'].value_counts().head(5)
+            st.bar_chart(top_prod, horizontal=True)
+
+        st.markdown("---")
+        st.markdown("##### 📊 Raio-X da Equipe (Performance Detalhada)")
+        
+        # Tabela Rica
+        team_kpi = df_dash.groupby('vendedor').agg(
+            Vendas=('id', 'count'),
+            Faturamento=('valor_venda', 'sum'),
+            Lucro=('lucro_liquido', 'sum'),
+            Ticket=('valor_venda', 'mean')
+        ).reset_index()
+        
+        team_kpi['Margem %'] = (team_kpi['Lucro'] / team_kpi['Faturamento'] * 100).fillna(0)
+        team_kpi = team_kpi.sort_values('Faturamento', ascending=False)
+        
+        # TABELA REFINADA (COM TRATAMENTO DE ERRO DE GRADIENTE)
+        try:
+            st.dataframe(
+                team_kpi.style.format({
+                    "Faturamento": "R$ {:,.2f}",
+                    "Lucro": "R$ {:,.2f}",
+                    "Ticket": "R$ {:,.2f}",
+                    "Margem %": "{:.1f}%"
+                }).background_gradient(subset=['Lucro'], cmap='Greens'),
+                use_container_width=True,
+                hide_index=True
+            )
+        except:
+            # Fallback para tabela simples se Matplotlib não estiver instalado
+            st.dataframe(
+                team_kpi.style.format({
+                    "Faturamento": "R$ {:,.2f}",
+                    "Lucro": "R$ {:,.2f}",
+                    "Ticket": "R$ {:,.2f}",
+                    "Margem %": "{:.1f}%"
+                }),
+                use_container_width=True,
+                hide_index=True
+            )
+
+    else:
+        st.warning("⚠️ Nenhuma venda encontrada neste período.")
+        st.subheader("🔍 Diagnóstico do Sistema")
+        try:
+            total_db = conn.execute("SELECT COUNT(*) FROM vendas").fetchone()[0]
+            if total_db == 0:
+                st.error("🚨 O BANCO DE DADOS ESTÁ VAZIO! Você provavelmente atualizou o código na nuvem e o arquivo .db resetou. Cadastre uma venda nova ou suba seu backup.")
+            else:
+                st.info(f"💡 Existem **{total_db}** vendas salvas no banco de dados, mas elas estão fora da data selecionada ({d_ini} a {d_fim}). Tente mudar o filtro de data.")
+        except: st.error("Erro ao ler banco de dados.")
 
 elif menu == "🤖 BFX Intelligence (IA)" and role == 'admin':
     st.subheader("🤖 Assistente Virtual de Negócios")
@@ -431,7 +538,12 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
         dre = calcular_dre_avancado(mes)
         k1, k2, k3 = st.columns(3)
         k1.markdown(f"<div class='fin-card'><div class='fin-label'>Receita Bruta</div><div class='fin-value'>{format_brl(dre['Receita'])}</div></div>", unsafe_allow_html=True)
-        k2.markdown(f"<div class='fin-card'><div class='fin-label'>Ponto de Equilíbrio</div><div class='fin-value'>{format_brl(dre['Ponto Equilíbrio'])}</div></div>", unsafe_allow_html=True)
+        # Proteção contra erros de cálculo (v103)
+        try:
+            peq = format_brl(dre.get('Ponto Equilíbrio', 0))
+        except: peq = "R$ 0,00"
+        
+        k2.markdown(f"<div class='fin-card'><div class='fin-label'>Ponto de Equilíbrio</div><div class='fin-value'>{peq}</div></div>", unsafe_allow_html=True)
         cor = "fin-good" if dre['(=) Lucro Líquido'] >= 0 else "fin-bad"
         k3.markdown(f"<div class='fin-card'><div class='fin-label'>Lucro Líquido</div><div class='fin-value {cor}'>{format_brl(dre['(=) Lucro Líquido'])}</div></div>", unsafe_allow_html=True)
         st.divider(); st.text(f"(-) CMV: {format_brl(dre['Detalhe']['CMV'])}\n(-) Comissões: {format_brl(dre['Detalhe']['Comissões'])}\n(-) Frete Real: {format_brl(dre['Detalhe']['Frete Real'])}\n(-) Despesas Fixas: {format_brl(dre['(-) Custos Fixos'])}")
@@ -440,12 +552,48 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
         st.bar_chart(df_fluxo.set_index("Mês")[["Entradas", "Saídas"]], color=["#10b981", "#ef4444"])
         st.dataframe(df_fluxo.style.format({'Entradas': 'R$ {:.2f}', 'Saídas': 'R$ {:.2f}', 'Saldo': 'R$ {:.2f}'}), use_container_width=True)
     with t3:
+        # NOVO: FORMULÁRIO DE ADIÇÃO (v104)
         with st.form("d"):
             dc = st.text_input("Descrição"); vl = st.number_input("Valor", value=None, placeholder="0.00")
             tp = st.selectbox("Tipo", ["Fixa", "Variável"]); dt = st.date_input("Vencimento")
+            is_rec = st.checkbox("🔄 Despesa Recorrente? (Repetir mensalmente)")
+            qtd_rec = st.number_input("Repetir por quantos meses?", min_value=2, value=12) if is_rec else 1
             if st.form_submit_button("Lançar Despesa"):
-                conn.execute("INSERT INTO despesas (data_despesa, descricao, valor, tipo) VALUES (?,?,?,?)", (dt, dc, vl or 0.0, tp)); conn.commit(); st.success("Lançado!"); st.rerun()
-        st.dataframe(pd.read_sql("SELECT data_despesa, descricao, tipo, valor FROM despesas ORDER BY data_despesa DESC", conn), use_container_width=True)
+                if is_rec:
+                    for i in range(qtd_rec):
+                        new_date = dt + relativedelta(months=i)
+                        new_desc = f"{dc} ({i+1}/{qtd_rec})"
+                        conn.execute("INSERT INTO despesas (data_despesa, descricao, valor, tipo) VALUES (?,?,?,?)", (new_date, new_desc, vl or 0.0, tp))
+                else: conn.execute("INSERT INTO despesas (data_despesa, descricao, valor, tipo) VALUES (?,?,?,?)", (dt, dc, vl or 0.0, tp))
+                conn.commit(); st.success("Lançado!"); st.rerun()
+        
+        st.divider()
+        st.markdown("##### ✏️ Gerenciar Despesas Existentes")
+        # NOVO: EDIÇÃO E EXCLUSÃO (v105)
+        df_desp = pd.read_sql("SELECT id, data_despesa, descricao, categoria, valor, tipo FROM despesas ORDER BY data_despesa DESC", conn)
+        evt_desp = st.dataframe(df_desp, selection_mode="single-row", on_select="rerun", use_container_width=True, hide_index=True)
+        
+        if evt_desp.selection.rows:
+            sel_idx = evt_desp.selection.rows[0]
+            d_id = df_desp.iloc[sel_idx]['id']
+            row = df_desp.iloc[sel_idx]
+            
+            with st.form(f"edit_d_{d_id}"):
+                st.info(f"Editando: {row['descricao']}")
+                c1, c2 = st.columns(2)
+                ndt = c1.date_input("Data", datetime.strptime(row['data_despesa'], '%Y-%m-%d'))
+                ndc = c2.text_input("Descrição", row['descricao'])
+                nvl = c1.number_input("Valor", value=float(row['valor']))
+                ntp = c2.selectbox("Tipo", ["Fixa", "Variável"], index=0 if row['tipo']=="Fixa" else 1)
+                
+                c_btn1, c_btn2 = st.columns(2)
+                if c_btn1.form_submit_button("💾 Salvar Alterações"):
+                    conn.execute("UPDATE despesas SET data_despesa=?, descricao=?, valor=?, tipo=? WHERE id=?", (ndt, ndc, nvl, ntp, int(d_id)))
+                    conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
+                
+                if c_btn2.form_submit_button("🗑️ EXCLUIR DESPESA", type="primary"):
+                    conn.execute("DELETE FROM despesas WHERE id=?", (int(d_id),))
+                    conn.commit(); st.warning("Apagado."); time.sleep(1); st.rerun()
 
 elif menu == "🏦 Prudent (Antecipação)" and role == 'admin':
     st.subheader("🏦 Central de Antecipação de Recebíveis")
@@ -523,14 +671,12 @@ elif menu == "Venda Rápida":
         s2.metric("Lucro Estimado", format_brl(lucro_sim), f"{margem_sim:.1f}%")
         s3.metric("Faturamento Total", format_brl(total_venda))
         if st.button("💾 FINALIZAR VENDA", type="primary"):
-            # TRY/CATCH BLINDADO V102 (CORREÇÃO DE ERRO)
             try:
                 conn.execute("INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada) VALUES (?,?,?,?,?,?,?,?,?,?,?)", 
                              (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 1))
                 conn.commit(); st.success("Venda Realizada!"); st.session_state['vf'] = {'c':cli, 'v':v_safe, 'p':" + ".join(prods), 'vp':val_parc, 'pa':parc, 'frete':f_safe, 'e':dcli['empresa'], 'cpf':dcli.get('cpf') or dcli.get('cnpj'), 'm':dcli.get('matricula','')}
                 time.sleep(0.5); st.rerun()
             except Exception as e:
-                # SE DER ERRO DE COLUNA, CRIA E TENTA DE NOVO
                 if "no such column" in str(e):
                     st.warning("Atualizando banco de dados... Tente novamente em 2 segundos.")
                     try: conn.execute("ALTER TABLE vendas ADD COLUMN lucro_liquido REAL DEFAULT 0"); conn.commit()
@@ -562,12 +708,8 @@ elif menu == "Cadastros":
                     else: conn.execute("INSERT INTO clientes (nome, cnpj, telefone, cep, renda, empresa, tipo) VALUES (?,?,?,?,?,?,?)", (nm, clean_str(doc), clean_str(tel), clean_str(cep), renda, emp, 'PJ'))
                     conn.commit(); st.success("Salvo!"); st.rerun()
         st.divider(); st.info("💡 Clique para editar:")
-        # BLINDAGEM DE LEITURA (V102)
-        try:
-            df_cli = pd.read_sql("SELECT id, nome, telefone, cpf, cnpj, empresa, renda FROM clientes ORDER BY nome", conn)
-        except:
-            st.warning("Atualizando tabela clientes..."); st.cache_resource.clear(); time.sleep(1); st.rerun()
-            
+        try: df_cli = pd.read_sql("SELECT id, nome, telefone, cpf, cnpj, empresa, renda FROM clientes ORDER BY nome", conn)
+        except: st.warning("Atualizando tabela clientes..."); st.cache_resource.clear(); time.sleep(1); st.rerun()
         evt_cli = st.dataframe(df_cli, hide_index=True, use_container_width=True, on_select="rerun", selection_mode="single-row")
         if evt_cli.selection.rows:
             cid = df_cli.iloc[evt_cli.selection.rows[0]]['id']
@@ -623,20 +765,14 @@ elif menu == "Cadastros":
                 else: st.warning("Cadastre produtos com 'Valor de Venda' primeiro.")
             except: st.error("Erro ao gerar catálogo. Verifique se a coluna 'valor_venda' existe.")
         st.divider(); st.info("💡 Clique para editar:")
-        # BLINDAGEM LEITURA PRODUTOS (V102)
-        try:
-            df_prod = pd.read_sql("SELECT p.id, p.nome, p.custo_padrao, p.valor_venda, p.marca, f.nome as Fornecedor FROM produtos p LEFT JOIN fornecedores f ON p.fornecedor_id = f.id ORDER BY p.nome", conn)
+        try: df_prod = pd.read_sql("SELECT p.id, p.nome, p.custo_padrao, p.valor_venda, p.marca, f.nome as Fornecedor FROM produtos p LEFT JOIN fornecedores f ON p.fornecedor_id = f.id ORDER BY p.nome", conn)
         except Exception as e:
-            # AUTO-REPARO DE EMERGÊNCIA
             if "no such column" in str(e):
-                st.warning("⚠️ Reparando banco de dados... (Isso acontece só uma vez)")
+                st.warning("⚠️ Reparando banco de dados..."); 
                 try: conn.execute("ALTER TABLE produtos ADD COLUMN valor_venda REAL DEFAULT 0"); conn.commit()
                 except: pass
-                st.cache_resource.clear()
-                time.sleep(1); st.rerun()
-            else: st.error(f"Erro: {e}")
-            df_prod = pd.DataFrame()
-
+                st.cache_resource.clear(); time.sleep(1); st.rerun()
+            else: st.error(f"Erro: {e}"); df_prod = pd.DataFrame()
         if not df_prod.empty:
             evt_prod = st.dataframe(df_prod, hide_index=True, use_container_width=True, on_select="rerun", selection_mode="single-row")
             if evt_prod.selection.rows:
@@ -676,64 +812,6 @@ elif menu == "Cadastros":
                 conn.execute("UPDATE empresas_parceiras SET nome=?, responsavel_rh=?, telefone_rh=?, email_rh=? WHERE id=?", (r['nome'], r['responsavel_rh'], r['telefone_rh'], r['email_rh'], r['id']))
             conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
 
-elif menu == "Histórico (Editar)":
-    st.subheader("📜 Histórico & Edição")
-    with st.expander("🔍 Filtros Avançados", expanded=True):
-        c1, c2, c3, c4 = st.columns(4)
-        f_ini = c1.date_input("De", datetime.now().replace(day=1))
-        f_fim = c2.date_input("Até", datetime.now())
-        f_cli = c3.text_input("Cliente")
-        f_status = c4.selectbox("Status", ["Todos", "Antecipadas", "Mensais"])
-        f_vend = "Todos"
-        if role == 'admin':
-            c5, c6 = st.columns(2)
-            users = pd.read_sql("SELECT nome_exibicao FROM usuarios", conn)['nome_exibicao'].tolist()
-            f_vend = c5.selectbox("Filtrar Vendedor", ["Todos"] + users)
-    q = "SELECT v.id, v.data_venda, v.vendedor, c.nome, v.produto_nome, v.valor_venda, v.valor_frete, v.custo_envio, v.lucro_liquido, v.antecipada, v.parcelas, v.comprovante_pdf FROM vendas v JOIN clientes c ON v.cliente_id=c.id WHERE 1=1"
-    q += f" AND v.data_venda BETWEEN '{f_ini}' AND '{f_fim}'"
-    if f_cli: q += f" AND c.nome LIKE '%{f_cli}%'"
-    if f_status == "Antecipadas": q += " AND v.antecipada=1"
-    elif f_status == "Mensais": q += " AND v.antecipada=0"
-    if role != 'admin': q += f" AND v.vendedor = '{nome_user}'"
-    elif f_vend != "Todos": q += f" AND v.vendedor = '{f_vend}'"
-    q += " ORDER BY v.data_venda DESC LIMIT 100"
-    df = pd.read_sql(q, conn)
-    if not df.empty:
-        cols_v = ['id','data_venda','vendedor','nome','produto_nome','valor_venda','antecipada']
-        if role == 'admin': cols_v.append('lucro_liquido')
-        df['Status'] = df['antecipada'].apply(lambda x: '⚡ Ant' if x==1 else '📅 Mes')
-        df['Doc'] = df['comprovante_pdf'].apply(lambda x: '✅ OK' if x else '❌ Pend')
-        evt = st.dataframe(df[cols_v + ['Status','Doc']], use_container_width=True, on_select="rerun", selection_mode="single-row", hide_index=True)
-        if evt.selection.rows:
-            v_sel = df.iloc[evt.selection.rows[0]]
-            vid = int(v_sel['id'])
-            st.markdown("---"); st.info(f"**Editando Venda #{vid} - {v_sel['nome']}**")
-            t1, t2, t3 = st.tabs(["📄 Docs", "✏️ Dados", "🗑️ Excluir"])
-            with t1:
-                up = st.file_uploader("Subir PDF", type=['pdf','jpg'])
-                if up and st.button("Salvar Doc"):
-                    b64 = image_to_base64(up); conn.execute("UPDATE vendas SET comprovante_pdf=? WHERE id=?", (b64, vid)); conn.commit(); st.success("Salvo!"); st.rerun()
-            with t2:
-                with st.form(f"fe_{vid}"):
-                    c1, c2 = st.columns(2)
-                    ndt = c1.date_input("Data", datetime.strptime(v_sel['data_venda'], '%Y-%m-%d'))
-                    nval = c2.number_input("Valor Venda", value=float(v_sel['valor_venda']), step=0.01)
-                    nprod = st.text_input("Produtos", value=v_sel['produto_nome'])
-                    c3, c4, c5 = st.columns(3)
-                    nfrete = c3.number_input("Frete Cobrado", value=float(v_sel['valor_frete'] or 0), step=0.01)
-                    ncusto_envio = c4.number_input("Custo Envio (Real)", value=float(v_sel.get('custo_envio',0) or 0), step=0.01)
-                    nparc = c5.number_input("Parcelas", value=int(v_sel['parcelas']), min_value=1)
-                    nant = st.checkbox("Antecipada?", value=(v_sel['antecipada']==1))
-                    if st.form_submit_button("Salvar Alterações"):
-                        new_vp = (nval + nfrete) / nparc if nparc > 0 else 0
-                        conn.execute("UPDATE vendas SET data_venda=?, valor_venda=?, produto_nome=?, valor_frete=?, custo_envio=?, parcelas=?, antecipada=?, valor_parcela=? WHERE id=?", (ndt, nval, nprod, nfrete, ncusto_envio, nparc, 1 if nant else 0, new_vp, vid))
-                        conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
-            with t3:
-                if role == 'admin':
-                    if st.button("🗑️ EXCLUIR VENDA", type="primary"): conn.execute("DELETE FROM vendas WHERE id=?", (vid,)); conn.commit(); st.warning("Excluído."); time.sleep(1); st.rerun()
-                else: st.warning("Apenas admin.")
-    else: st.warning("Nenhuma venda encontrada com esses filtros.")
-
 elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
     st.subheader("👥 Gestão de Time")
     t1, t2, t3 = st.tabs(["📊 Metas & Comissões", "👤 Detalhes & Senha", "➕ Contratar"])
@@ -771,42 +849,22 @@ elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
             nn = c1.text_input("Nome Completo"); nu = c2.text_input("Login Acesso")
             np = c1.text_input("Senha Inicial", type="password"); nr = c2.selectbox("Cargo", ["vendedor", "admin"])
             if st.form_submit_button("Cadastrar"):
-                conn.execute("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", (nu, np, nr, nn)); conn.commit(); st.success("Criado!"); st.rerun()
-
-elif menu == "🖨️ Relatórios" and role == 'admin':
-    st.subheader("🖨️ Central de Relatórios")
-    t1, t2 = st.tabs(["📄 Relatório Parceiros (Folha)", "📊 Relatório Geral Vendas"])
-    with t1:
-        st.info("Relatório para descontar em folha (Gimam/Amazon Five)")
-        col_comp, col_mes = st.columns(2)
-        empresa_sel = col_comp.selectbox("Selecione a Empresa", pd.read_sql("SELECT nome FROM empresas_parceiras", conn)['nome'].tolist())
-        mes_rel = col_mes.selectbox("Mês de Referência", [(datetime.now()-relativedelta(months=i)).strftime("%Y-%m") for i in range(12)])
-        if st.button("Gerar Relatório Folha"):
-            df_folha, total_folha = calcular_relatorio_parceiro(empresa_sel, mes_rel)
-            if not df_folha.empty:
-                st.success(f"Encontrados {len(df_folha)} funcionários.")
-                st.dataframe(df_folha, use_container_width=True)
-                st.markdown(f"**TOTAL: {format_brl(total_folha)}**")
-                pdf_bytes = gerar_pdf({'empresa': empresa_sel, 'mes': mes_rel, 'df': df_folha, 'total': total_folha}, "rh")
-                st.download_button(label="📥 Baixar PDF Folha", data=pdf_bytes, file_name=f"Relatorio_{empresa_sel}_{mes_rel}.pdf", mime="application/pdf")
-            else: st.warning("Sem dados.")
-    with t2:
-        st.info("Relatório completo de todas as vendas do período")
-        c_ini, c_fim = st.columns(2)
-        d_ini = c_ini.date_input("De", datetime.now().replace(day=1))
-        d_fim = c_fim.date_input("Até", datetime.now())
-        if st.button("Gerar Relatório Geral"):
-            q_geral = f"SELECT v.data_venda, c.nome, v.produto_nome, v.valor_venda, v.antecipada FROM vendas v JOIN clientes c ON v.cliente_id=c.id WHERE v.data_venda BETWEEN '{d_ini}' AND '{d_fim}'"
-            df_geral = pd.read_sql(q_geral, conn)
-            if not df_geral.empty:
-                st.dataframe(df_geral)
-                pdf_g = gerar_pdf({'periodo': f"{d_ini} a {d_fim}", 'df': df_geral, 'total': df_geral['valor_venda'].sum()}, "geral")
-                st.download_button(label="📥 Baixar Relatório Geral PDF", data=pdf_g, file_name="Relatorio_Geral.pdf", mime="application/pdf")
-            else: st.warning("Sem vendas no período.")
+                if not nu or not nn or not np:
+                    st.error("Preencha todos os campos!")
+                else:
+                    try:
+                        conn.execute("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", (clean_str(nu).lower(), np, nr, nn))
+                        conn.commit()
+                        st.success(f"Usuário {nn} criado com sucesso!")
+                        time.sleep(1); st.rerun()
+                    except sqlite3.IntegrityError:
+                        st.error(f"O login '{nu}' já existe. Escolha outro.")
+                    except Exception as e:
+                        st.error(f"Erro: {e}")
 
 elif menu == "Configurações" and role == 'admin':
     st.subheader("⚙️ Configurações do Sistema")
-    tab_mural, tab_doc = st.tabs(["📢 Mural de Avisos", "📄 Texto do Recibo/Contrato"])
+    tab_mural, tab_doc, tab_api, tab_tools = st.tabs(["📢 Mural", "📄 Recibo", "🔑 IA", "🔧 Manutenção"])
     with tab_mural:
         st.markdown("##### Mensagem para os Vendedores")
         try:
@@ -826,20 +884,37 @@ elif menu == "Configurações" and role == 'admin':
             except: curr_text = "Texto Padrão..."
             new_text = st.text_area("Edite o texto:", value=curr_text, height=400)
             if st.button("💾 SALVAR TEXTO"):
-                if not res: conn.execute("INSERT INTO config (modelo_contrato) VALUES (?)", (new_text,))
-                else: conn.execute("UPDATE config SET modelo_contrato=?", (new_text,))
-                conn.commit(); st.success("Texto salvo!")
+                conn.execute("UPDATE config SET modelo_contrato=?", (new_text,)); conn.commit(); st.success("Texto salvo!")
             st.divider()
             up_logo = st.file_uploader("Trocar Logo (PNG/JPG)", type=['png','jpg'])
             if up_logo: 
                 with open("logo.png","wb") as f: f.write(up_logo.getbuffer())
                 conn.execute("UPDATE config SET logo_path='logo.png'"); conn.commit(); st.success("Logo atualizada!")
         with c_prev:
-            st.caption("Visualização em Tempo Real (Dados Fictícios)")
+            st.caption("Visualização em Tempo Real")
             mock = {'c':'CLIENTE TESTE', 'v':1500.0, 'p':'PRODUTO X', 'vp':150.0, 'pa':10, 'frete':50.0, 'e':'EMPRESA Y', 'cpf':'000.000.000-00', 'm':'12345'}
-            pdf_prev = gerar_pdf(mock, "recibo") 
-            b64_prev = base64.b64encode(pdf_prev).decode('latin-1')
+            pdf_prev = gerar_pdf(mock, "recibo"); b64_prev = base64.b64encode(pdf_prev).decode('latin-1')
             st.markdown(f'<iframe src="data:application/pdf;base64,{b64_prev}" width="100%" height="600"></iframe>', unsafe_allow_html=True)
+    with tab_api:
+        st.markdown("##### Configuração da Inteligência Artificial")
+        st.info("Insira aqui sua chave da OpenAI ou Groq para ativar o assistente.")
+        curr_key = conn.execute("SELECT openai_key FROM config").fetchone()
+        val_key = curr_key[0] if curr_key and curr_key[0] else ""
+        new_key = st.text_input("API Key", value=val_key, type="password")
+        if st.button("💾 SALVAR API KEY"):
+            conn.execute("UPDATE config SET openai_key=?", (new_key,)); conn.commit(); st.success("Chave salva!")
+    with tab_tools:
+        st.markdown("##### 🔧 Ferramenta de Correção de Vendedores")
+        try:
+            count_wrong = conn.execute("SELECT COUNT(*) FROM vendas WHERE vendedor='Jaqueline'").fetchone()[0]
+            st.metric("Vendas com nome 'Jaqueline' (Errado)", count_wrong)
+            if count_wrong > 0:
+                if st.button("🛠️ Corrigir Todas para 'Jakeline'"):
+                    conn.execute("UPDATE vendas SET vendedor='Jakeline' WHERE vendedor='Jaqueline'")
+                    conn.commit()
+                    st.success(f"{count_wrong} vendas corrigidas com sucesso!"); time.sleep(1); st.rerun()
+            else: st.success("✅ Nenhuma venda com nome errado encontrada.")
+        except Exception as e: st.error(f"Erro: {e}")
 
 elif menu == "Minhas Comissões":
     st.info("Extrato disponível.")
