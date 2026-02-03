@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  bfx-app:
+    build: .
+    container_name: bfx_sistema
+    ports:
+      - "8501:8501"
+    volumes:
+      - bfx_data:/app
+    restart: unless-stopped
+
+volumes:
+  bfx_data:
+    name: bfx_sistema_data
