@@ -36,6 +36,7 @@ COPY --from=builder /app/prisma ./prisma
 # Prisma CLI + engines for migrate deploy
 COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
 COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=deps /app/node_modules/effect ./node_modules/effect
 
 EXPOSE 3000
 
