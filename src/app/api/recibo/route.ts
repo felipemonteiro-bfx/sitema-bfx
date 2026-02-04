@@ -87,24 +87,34 @@ export async function GET(req: Request) {
   // Header
   page.drawRectangle({ x: 0, y: 752, width: 595, height: 90, color: rgb(0.96, 0.97, 0.98) });
   
-  let logoX = marginX;
-  const headerTextY = 805; // Y-coordinate for "BFX Manager" and "Recibo de Venda"
-  const headerTitleX = marginX + (logoImage ? logoDims.width + 10 : 0); // Shift text if logo is present
+  const centerX = 595 / 2;
 
   if (logoImage) {
-    // Draw logo on the left side of the header
+    const logoX = centerX - logoDims.width / 2;
     page.drawImage(logoImage, {
-      x: marginX,
-      y: 752 + (90 - logoDims.height) / 2, // Center vertically
+      x: logoX,
+      y: 785, 
       width: logoDims.width,
       height: logoDims.height,
     });
-  }
 
-  page.drawText("BFX Manager", { x: headerTitleX, y: 805, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
-  page.drawText("Recibo de Venda", { x: headerTitleX, y: 783, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
-  page.drawText(`Recibo #${id}`, { x: 420, y: 805, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-  page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: 785, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+    const title = "BFX Manager";
+    const titleWidth = fontBold.widthOfTextAtSize(title, 14);
+    page.drawText(title, { x: centerX - titleWidth / 2, y: 768, size: 14, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+
+    const subtitle = "Recibo de Venda";
+    const subtitleWidth = font.widthOfTextAtSize(subtitle, 10);
+    page.drawText(subtitle, { x: centerX - subtitleWidth / 2, y: 756, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+
+    // Recibo info in the top right corner
+    page.drawText(`Recibo #${id}`, { x: 470, y: 820, size: 9, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
+    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 470, y: 808, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
+  } else {
+    page.drawText("BFX Manager", { x: marginX, y: 805, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+    page.drawText("Recibo de Venda", { x: marginX, y: 783, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Recibo #${id}`, { x: 420, y: 805, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
+    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: 785, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+  }
   
   y = 730;
 
