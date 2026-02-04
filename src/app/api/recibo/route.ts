@@ -1,5 +1,5 @@
 ﻿import { prisma } from "@/lib/db";
-import { PDFDocument, StandardFonts, rgb, PNG, JPG } from "pdf-lib"; // Added PNG, JPG
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises"; // Added readFile
 import path from "path"; // Added path
 
@@ -186,4 +186,3 @@ export async function GET(req: Request) {
     },
   });
 }
-
