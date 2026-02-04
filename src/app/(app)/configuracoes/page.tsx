@@ -101,11 +101,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col gap-6">
-                    <LogoUploadForm currentLogoPath={cfg?.logoPath} />
+                    <LogoUploadForm currentLogoPath={cfg?.logoPath ?? undefined} />
                     <Separator />
                     <ReceiptEditorClient
                       initialModeloContrato={cfg?.modeloContrato || "Texto padrão..."}
-                      logoPath={cfg?.logoPath}
+                      logoPath={cfg?.logoPath ?? undefined}
                       saveContrato={saveContrato}
                     />
                   </div>
