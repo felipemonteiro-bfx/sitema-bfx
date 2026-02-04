@@ -7,10 +7,18 @@ export type ActionContext = {
   displayName: string;
 };
 
-export const aiActions = [
+type AiActionDef = {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
+  readOnly?: boolean;
+};
+
+export const aiActions: AiActionDef[] = [
   {
     name: "listar_vendas",
-    description: "Lista vendas filtrando por período e vendedor.",
+    description: "Lista vendas filtrando por periodo e vendedor.",
+    readOnly: true,
     parameters: {
       type: "object",
       properties: {
@@ -44,6 +52,7 @@ export const aiActions = [
   {
     name: "listar_clientes",
     description: "Lista clientes.",
+    readOnly: true,
     parameters: {
       type: "object",
       properties: {
@@ -75,6 +84,7 @@ export const aiActions = [
   {
     name: "listar_produtos",
     description: "Lista produtos.",
+    readOnly: true,
     parameters: {
       type: "object",
       properties: {
@@ -101,6 +111,7 @@ export const aiActions = [
   {
     name: "listar_despesas",
     description: "Lista despesas (admin).",
+    readOnly: true,
     parameters: {
       type: "object",
       properties: {
@@ -128,6 +139,7 @@ export const aiActions = [
   {
     name: "listar_empresas",
     description: "Lista empresas parceiras (admin).",
+    readOnly: true,
     parameters: {
       type: "object",
       properties: { limit: { type: "number" } },
@@ -149,7 +161,8 @@ export const aiActions = [
   },
   {
     name: "listar_usuarios",
-    description: "Lista usuários (admin).",
+    description: "Lista usuarios (admin).",
+    readOnly: true,
     parameters: {
       type: "object",
       properties: { limit: { type: "number" } },
@@ -157,7 +170,7 @@ export const aiActions = [
   },
   {
     name: "criar_usuario",
-    description: "Cria usuário (admin).",
+    description: "Cria usuario (admin).",
     parameters: {
       type: "object",
       required: ["username", "password", "role"],
@@ -171,7 +184,7 @@ export const aiActions = [
   },
   {
     name: "atualizar_usuario",
-    description: "Atualiza usuário (admin).",
+    description: "Atualiza usuario (admin).",
     parameters: {
       type: "object",
       required: ["id"],
@@ -219,12 +232,49 @@ export const aiActions = [
       },
     },
   },
-] as const;
+  {
+    name: "gerar_catalogo_produtos",
+    description: "Gera catalogo de produtos em PDF.",
+    readOnly: true,
+    parameters: {
+      type: "object",
+      properties: {
+        search: { type: "string", description: "Filtro por nome do produto" },
+      },
+    },
+  },
+  {
+    name: "consulta_sql",
+    description: "Executa consulta SQL direta no banco (admin, apenas SELECT).",
+    parameters: {
+      type: "object",
+      required: ["sql"],
+      properties: {
+        sql: { type: "string", description: "Consulta SQL SELECT" },
+      },
+    },
+  },
+];
 
 function requireAdmin(ctx: ActionContext) {
-  if (ctx.role !== "admin") {
-    throw new Error("Ação permitida apenas para administradores.");
+  if (ctx.role != "admin") {
+    throw new Error("Acao permitida apenas para administradores.");
   }
+}
+
+function sanitizeSql(raw: string) {
+  const sql = raw.trim();
+  if (!/^select\s+/i.test(sql)) {
+    throw new Error("Apenas consultas SELECT sao permitidas.");
+  }
+  if (/[;]/.test(sql)) {
+    throw new Error("Nao use ponto e virgula.");
+  }
+  if (/(update|delete|insert|drop|alter|truncate|create|grant|revoke)/i.test(sql)) {
+    throw new Error("Comando SQL nao permitido.");
+  }
+  if (/limit/i.test(sql)) return sql;
+  return `${sql} LIMIT 200`;
 }
 
 export async function executeAiAction(name: string, params: any, ctx: ActionContext) {
@@ -376,8 +426,25 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           },
         });
         break;
+      case "gerar_catalogo_produtos": {
+        const count = await prisma.produto.count({
+          where: params?.search
+            ? { nome: { contains: params.search, mode: "insensitive" } }
+            : undefined,
+        });
+        result = { total: count, search: params?.search ?? "" };
+        break;
+      }
+      case "consulta_sql": {
+        requireAdmin(ctx);
+        const sql = sanitizeSql(String(params?.sql || ""));
+        const rows = await prisma.$queryRawUnsafe(sql);
+        const list = Array.isArray(rows) ? rows : [rows];
+        result = { rows: list, count: list.length, sql };
+        break;
+      }
       default:
-        throw new Error("Ação não suportada.");
+        throw new Error("Acao nao suportada.");
     }
 
     await logAction("success", { params, result });

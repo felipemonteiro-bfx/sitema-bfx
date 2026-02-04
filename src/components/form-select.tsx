@@ -81,7 +81,7 @@ export function FormSelect({
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2">
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2.5">
           {searchable && (
             <div className="mb-2 flex items-center gap-2 border-b border-border/60 pb-2">
               <Search className="h-4 w-4 text-muted-foreground" />
@@ -89,11 +89,11 @@ export function FormSelect({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="h-8 border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
           )}
-          <div className="max-h-64 overflow-y-auto pr-1">
+          <div className="max-h-72 overflow-y-auto overscroll-contain pr-1">
             {filtered.length === 0 ? (
               <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum resultado.</div>
             ) : (
@@ -103,7 +103,7 @@ export function FormSelect({
                     key={opt.value}
                     type="button"
                     className={cn(
-                      "flex w-full items-center justify-between rounded-md px-2 py-2 text-sm transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
+                      "flex w-full items-center justify-between rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
                       opt.value === value && "bg-muted"
                     )}
                     onClick={() => handleValueChange(opt.value)}

@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 skills/
+CUsersAdministradorDesktopSistema BFX/
 
 # debug
 npm-debug.log*

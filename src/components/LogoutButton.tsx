@@ -36,10 +36,10 @@ export function LogoutButton() {
         variant="outline"
         onClick={() => setOpen(true)}
         type="button"
-        className="w-full justify-between border-destructive/30 bg-destructive/5 text-destructive hover:border-destructive/40 hover:bg-destructive/10"
+        className="w-full justify-between rounded-lg border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10"
       >
-        <span className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-destructive/10">
+        <span className="flex items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive">
             <LogOut className="h-4 w-4" />
           </span>
           Sair

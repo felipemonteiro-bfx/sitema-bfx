@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { aiActions, executeAiAction, type ActionContext } from "@/lib/ai-actions";
+import { aiActions, type ActionContext } from "@/lib/ai-actions";
+import { callMcpTool } from "@/lib/mcp";
 import { generateText, tool } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
@@ -28,14 +29,36 @@ export async function runAi(prompt: string, provider: "openai" | "gemini") {
   return text || "Sem resposta.";
 }
 
-const readOnlyActions = new Set([
+export const readOnlyActions = new Set([
   "listar_vendas",
   "listar_clientes",
   "listar_produtos",
   "listar_despesas",
   "listar_empresas",
   "listar_usuarios",
+  "gerar_catalogo_produtos",
 ]);
+
+function inferReadOnlyActions(prompt: string) {
+  const p = prompt.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const rules: { name: string; re: RegExp }[] = [
+    { name: "listar_clientes", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(clientes?)/i },
+    { name: "listar_produtos", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(produtos?)/i },
+    { name: "listar_vendas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(vendas?)/i },
+    { name: "listar_despesas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(despesa|gasto|custos?)/i },
+    { name: "listar_empresas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(empresa|parceira)s?/i },
+    { name: "listar_usuarios", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(usuarios?|vendedores?)/i },
+    { name: "gerar_catalogo_produtos", re: /(catalogo|gerar catalogo)/i },
+  ];
+  const hasQuantos = /quantos|quantas|qtd/.test(p);
+  const limitMatch = p.match(/(\d{1,3})/);
+  const limit = !hasQuantos && limitMatch ? Number(limitMatch[1]) : undefined;
+  const params = limit ? { limit } : {};
+  const actions = rules
+    .filter((r) => r.re.test(p))
+    .map((r) => ({ name: r.name, params: r.name === "gerar_catalogo_produtos" ? {} : params }));
+  return actions.filter((a) => readOnlyActions.has(a.name));
+}
 
 export async function runAiWithActions(
   prompt: string,
@@ -60,38 +83,60 @@ export async function runAiWithActions(
     return `Despesas encontradas: ${rows.length}. Total: ${currency.format(total)}.`;
   };
 
-  
+  if (ctx.mode === "plan") {
+    const inferred = inferReadOnlyActions(prompt);
+    if (inferred.length) {
+      return { text: "", actions: inferred };
+    }
+  }
+
   const buildToolSummary = (executed: { name: string; result: unknown }[]) => {
     if (!executed.length) return "";
     const parts: string[] = [];
     for (const item of executed) {
       if (item.name === "listar_clientes" && Array.isArray(item.result)) {
-        const nomes = (item.result as any[]).slice(0, 5).map((c) => c.nome).filter(Boolean);
+        const rows = item.result as any[];
+        const nomes = rows.slice(0, 5).map((c) => c.nome).filter(Boolean);
         parts.push(
-          nomes.length
-            ? `Clientes encontrados: ${nomes.join(", ")}.`
+          rows.length
+            ? `Clientes encontrados: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
             : "Nenhum cliente encontrado."
         );
       } else if (item.name === "listar_produtos" && Array.isArray(item.result)) {
-        const nomes = (item.result as any[]).slice(0, 5).map((p) => p.nome).filter(Boolean);
+        const rows = item.result as any[];
+        const nomes = rows.slice(0, 5).map((p) => p.nome).filter(Boolean);
         parts.push(
-          nomes.length
-            ? `Produtos encontrados: ${nomes.join(", ")}.`
+          rows.length
+            ? `Produtos encontrados: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
             : "Nenhum produto encontrado."
         );
       } else if (item.name === "listar_vendas" && Array.isArray(item.result)) {
         parts.push(`Vendas encontradas: ${(item.result as any[]).length}.`);
       } else if (item.name === "listar_despesas" && Array.isArray(item.result)) {
         parts.push(summarizeDespesas(item.result as any[]));
+      } else if (item.name === "listar_empresas" && Array.isArray(item.result)) {
+        const rows = item.result as any[];
+        const nomes = rows.slice(0, 5).map((e) => e.nome).filter(Boolean);
+        parts.push(
+          rows.length
+            ? `Empresas encontradas: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
+            : "Nenhuma empresa encontrada."
+        );
       } else if (item.name === "listar_usuarios" && Array.isArray(item.result)) {
-        const nomes = (item.result as any[]).slice(0, 5).map((u) => u.nomeExibicao || u.username).filter(Boolean);
+        const nomes = (item.result as any[])
+          .slice(0, 5)
+          .map((u) => u.nomeExibicao || u.username)
+          .filter(Boolean);
         parts.push(
           nomes.length
-            ? `Usuários encontrados: ${nomes.join(", ")}.`
-            : "Nenhum usuário encontrado."
+            ? `Usuarios encontrados: ${nomes.join(", ")}.`
+            : "Nenhum usuario encontrado."
         );
+      } else if (item.name === "gerar_catalogo_produtos") {
+        const total = (item.result as any)?.total ?? 0;
+        parts.push(`Catalogo gerado com ${total} produtos.`);
       } else {
-        parts.push(`Ação executada: ${item.name}.`);
+        parts.push(`Acao executada: ${item.name}.`);
       }
     }
     return parts.join("\n");
@@ -99,21 +144,29 @@ export async function runAiWithActions(
 
   const shouldAppendSummary = (text: string) =>
     !text.trim() || /buscando|aguarde|processando|consultando/i.test(text);
-const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.test(prompt);
+  const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /mês|mes/i.test(prompt);
 
   if (ctx.mode === "execute" && ctx.executeAction) {
-    const execResult = await executeAiAction(ctx.executeAction.name, ctx.executeAction.params, ctx);
+    const execResult = await callMcpTool(ctx.executeAction.name, ctx.executeAction.params, ctx);
     const links: { label: string; url: string }[] = [];
     if (ctx.executeAction.name === "criar_venda" && execResult && typeof execResult === "object") {
       const venda = execResult as { uuid?: string; id?: number };
       const token = venda.uuid ?? String(venda.id ?? "");
       if (token) {
-        const baseUrl =
-          ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
         links.push({ label: "Recibo PDF", url: `${baseUrl}/api/recibo?id=${token}` });
       }
     }
-    return { text: "Ação executada com sucesso.", actions: [ctx.executeAction], links };
+    if (ctx.executeAction.name === "gerar_catalogo_produtos") {
+      const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const search = (ctx.executeAction.params?.search as string | undefined) || "";
+      const url = search
+        ? `${baseUrl}/api/catalogo?q=${encodeURIComponent(search)}`
+        : `${baseUrl}/api/catalogo`;
+      links.push({ label: "Catalogo de Produtos (PDF)", url });
+    }
+    const summary = buildToolSummary([{ name: ctx.executeAction.name, result: execResult }]);
+    return { text: summary || "Acao executada com sucesso.", actions: [ctx.executeAction], links };
   }
 
   if (provider === "gemini") {
@@ -131,7 +184,7 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
             description: action.description,
             inputSchema: toolSchema,
             execute: async (args) => {
-              const result = await executeAiAction(action.name, args ?? {}, ctx);
+              const result = await callMcpTool(action.name, args ?? {}, ctx);
               executed.push({ name: action.name, result });
               return result;
             },
@@ -150,8 +203,7 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
         tools,
       });
       text = result.text ?? "";
-    } catch (err) {
-      // Fallback to OpenAI when Gemini hits quota or fails
+    } catch {
       if (cfg?.openaiKey) {
         const openai = createOpenAI({ apiKey: cfg.openaiKey });
         try {
@@ -191,7 +243,7 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
         const now = new Date();
         const from = new Date(now.getFullYear(), now.getMonth(), 1);
         const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        const result = await executeAiAction(
+        const result = await callMcpTool(
           "listar_despesas",
           { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) },
           ctx
@@ -205,6 +257,10 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
     }
 
     if (ctx.mode === "plan") {
+      const inferred = inferReadOnlyActions(prompt);
+      if (inferred.length) {
+        return { text: stripActions(text), actions: inferred };
+      }
       const planned = extractActions(text);
       return { text: stripActions(text), actions: planned };
     }
@@ -231,7 +287,7 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
         if (a.name === "listar_despesas" && Array.isArray(a.result)) {
           return summarizeDespesas(a.result as any[]);
         }
-        return `Ação executada: ${a.name}.`;
+        return `Acao executada: ${a.name}.`;
       })
       .join("\n");
 
@@ -252,7 +308,7 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
           description: action.description,
           inputSchema: toolSchema,
           execute: async (args) => {
-            const result = await executeAiAction(action.name, args ?? {}, ctx);
+            const result = await callMcpTool(action.name, args ?? {}, ctx);
             executed.push({ name: action.name, result });
             return result;
           },
@@ -281,7 +337,7 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
       const now = new Date();
       const from = new Date(now.getFullYear(), now.getMonth(), 1);
       const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      const result = await executeAiAction(
+      const result = await callMcpTool(
         "listar_despesas",
         { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) },
         ctx
@@ -295,19 +351,23 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
   }
 
   if (ctx.mode === "plan") {
+    const inferred = inferReadOnlyActions(prompt);
+    if (inferred.length) {
+      return { text: stripActions(text), actions: inferred };
+    }
     const planned = extractActions(text);
     return { text: stripActions(text), actions: planned };
   }
   if (text && text.trim()) {
-      const summary = buildToolSummary(executed);
-      if (summary && shouldAppendSummary(text)) {
-        return { text: summary, actions: executed };
-      }
-      if (summary) {
-        return { text: `${text}\n\n${summary}`, actions: executed };
-      }
-      return { text, actions: executed };
+    const summary = buildToolSummary(executed);
+    if (summary && shouldAppendSummary(text)) {
+      return { text: summary, actions: executed };
     }
+    if (summary) {
+      return { text: `${text}\n\n${summary}`, actions: executed };
+    }
+    return { text, actions: executed };
+  }
   if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
   const fallbackText = executed
@@ -321,7 +381,7 @@ const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.t
       if (a.name === "listar_despesas" && Array.isArray(a.result)) {
         return summarizeDespesas(a.result as any[]);
       }
-      return `Ação executada: ${a.name}.`;
+      return `Acao executada: ${a.name}.`;
     })
     .join("\n");
 

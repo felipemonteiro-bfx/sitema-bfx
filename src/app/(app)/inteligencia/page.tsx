@@ -1,5 +1,5 @@
 ﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { runAiWithActions } from "@/lib/ai";
+import { readOnlyActions, runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
@@ -39,6 +39,40 @@ async function askAi(formData: FormData) {
         params: Record<string, unknown>;
       }[])
     : undefined;
+  const autoActions = plannedActions?.filter((a) => readOnlyActions.has(a.name)) ?? [];
+
+  if (autoActions.length > 0 && autoActions.length === (plannedActions?.length ?? 0)) {
+    const headerList = await headers();
+    const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+    const proto = headerList.get("x-forwarded-proto") ?? "http";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3000");
+
+    const results: string[] = [];
+    const links: { label: string; url: string }[] = [];
+    for (const action of autoActions) {
+      const result = await runAiWithActions("", provider, {
+        role: session.role as "admin" | "vendedor",
+        username: session.username,
+        displayName: session.nomeExibicao || session.username,
+        mode: "execute",
+        executeAction: action,
+        baseUrl,
+      });
+      if (result.text) results.push(result.text);
+      if (result.links?.length) links.push(...result.links);
+    }
+
+    prismaMessageStore.add({
+      prompt,
+      response: results.join("\n") || response.text,
+      provider,
+      status: "done",
+      links,
+    });
+    revalidatePath("/inteligencia");
+    return;
+  }
 
   prismaMessageStore.add({
     prompt,
