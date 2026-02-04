@@ -96,6 +96,7 @@ export default async function Page() {
                   options={vendedorOptions}
                   defaultValue={vendedorOptions[0]?.value}
                   placeholder="Vendedor"
+                  searchEndpoint="/api/search?type=usuarios"
                 />
               </div>
               <div className="space-y-1">
@@ -105,6 +106,7 @@ export default async function Page() {
                   options={clienteOptions}
                   defaultValue={clienteOptions[0]?.value}
                   placeholder="Cliente"
+                  searchEndpoint="/api/search?type=clientes"
                 />
               </div>
             </div>
@@ -117,6 +119,7 @@ export default async function Page() {
                   options={produtoOptions}
                   defaultValue={produtoOptions[0]?.value}
                   placeholder="Produto"
+                  searchEndpoint="/api/search?type=produtos"
                 />
               </div>
               <div className="space-y-1">

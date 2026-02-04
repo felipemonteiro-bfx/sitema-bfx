@@ -7,9 +7,9 @@
     "build": "cross-env NODE_ENV=production NEXT_DISABLE_TURBOPACK=1 next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
-    "prisma:generate": "prisma generate",
+    "db:migrate": "npx prisma migrate deploy",
+    "db:seed": "npx prisma db seed",
+    "prisma:generate": "npx prisma generate",
     "db:import-sqlite": "node prisma/import_sqlite.js"
   },
   "dependencies": {
