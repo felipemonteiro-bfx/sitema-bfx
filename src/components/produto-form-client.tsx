@@ -9,15 +9,17 @@ import Image from 'next/image';
 
 interface Props {
   onSuccess: (formData: FormData) => Promise<void>;
+  fornecedores: { id: number; nome: string }[];
 }
 
-export default function ProdutoFormClient({ onSuccess }: Props) {
+export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
   const [nome, setNome] = useState('');
   const [custo, setCusto] = useState('');
   const [marca, setMarca] = useState('');
   const [ncm, setNcm] = useState('');
   const [valor, setValor] = useState('');
   const [imagemPath, setImagemPath] = useState('');
+  const [fornecedorId, setFornecedorId] = useState('');
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -67,7 +69,7 @@ export default function ProdutoFormClient({ onSuccess }: Props) {
       if (data.suggestedNcm) {
         setNcm(data.suggestedNcm);
       } else {
-        alert("Não foi possível sugerir um NCM para este produto.");
+        alert("Não foi possível sugerir um NCM para este produto. Verifique suas configurações de IA.");
       }
     } catch (error) {
       alert("Erro ao sugerir NCM.");
@@ -113,11 +115,13 @@ export default function ProdutoFormClient({ onSuccess }: Props) {
     formData.append('ncm', ncm);
     formData.append('valor', valor);
     formData.append('imagem', imagemPath);
+    formData.append('fornecedorId', fornecedorId);
 
     try {
       await onSuccess(formData);
       // Reset form
       setNome(''); setCusto(''); setMarca(''); setNcm(''); setValor(''); setImagemPath('');
+      setFornecedorId('');
       setSuggestions([]); setIsDuplicate(false);
     } catch (error) {
       alert("Erro ao cadastrar produto.");
@@ -215,6 +219,22 @@ export default function ProdutoFormClient({ onSuccess }: Props) {
               <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" />
             </div>
 
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground">Fornecedor</Label>
+              <select 
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={fornecedorId}
+                onChange={(e) => setFornecedorId(e.target.value)}
+              >
+                <option value="">Selecione o Fornecedor</option>
+                {fornecedores.map(f => (
+                  <option key={f.id} value={f.id}>{f.nome}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">NCM</Label>
               <div className="flex gap-2">
