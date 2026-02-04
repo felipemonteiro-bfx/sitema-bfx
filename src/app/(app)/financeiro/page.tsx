@@ -10,8 +10,10 @@ import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { FluxoCharts } from "@/components/finance-charts";
 import { QueryTabs } from "@/components/query-tabs";
+import { MonthFilter } from "@/components/month-filter";
+import { format } from "date-fns";
 
-type Search = { tab?: string };
+type Search = { tab?: string; mes?: string };
 
 async function addDespesa(formData: FormData) {
   "use server";
@@ -36,22 +38,29 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   if (!ok) return <div>Acesso restrito.</div>;
   const sp = await searchParams;
   const formatDate = (d: Date) => new Intl.DateTimeFormat("pt-BR").format(d);
-  const mesList = Array.from({ length: 12 }).map((_, i) => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    return d.toISOString().slice(0, 7);
-  });
-  const mes = mesList[0];
+  
+  const currentMes = sp.mes || format(new Date(), "yyyy-MM");
 
-  const dre = await calcularDre(mes);
-  const fluxo = await calcularFluxoCaixa();
-  const despesas = await prisma.despesa.findMany({ orderBy: { dataDespesa: "desc" } });
+  const dre = await calcularDre(currentMes);
+  const fluxo = await calcularFluxoCaixa(currentMes);
+  
+  const [ano, mesNum] = currentMes.split("-").map(Number);
+  const ini = new Date(ano, mesNum - 1, 1);
+  const fim = new Date(ano, mesNum, 1);
+
+  const despesas = await prisma.despesa.findMany({ 
+    where: { dataDespesa: { gte: ini, lt: fim } },
+    orderBy: { dataDespesa: "desc" } 
+  });
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Financeiro e DRE</h1>
-        <p className="text-sm text-muted-foreground">Visão consolidada de receitas, despesas e caixa.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Financeiro e DRE</h1>
+          <p className="text-sm text-muted-foreground">Visão consolidada de receitas, despesas e caixa.</p>
+        </div>
+        <MonthFilter />
       </div>
 
       <QueryTabs

@@ -3,12 +3,23 @@ import { addMonths, format } from "date-fns";
 
 export async function calcularDre(mesAno: string) {
   const [ano, mes] = mesAno.split("-").map(Number);
-  const ini = new Date(ano, mes - 1, 1);
-  const fim = new Date(ano, mes, 1);
+  
+  // Criar datas em UTC para garantir consistência com o banco de dados
+  const ini = new Date(Date.UTC(ano, mes - 1, 1, 0, 0, 0));
+  const fim = new Date(Date.UTC(ano, mes, 1, 0, 0, 0));
+
+  console.log(`Buscando vendas para ${mesAno} entre ${ini.toISOString()} e ${fim.toISOString()}`);
 
   const vendas = await prisma.venda.findMany({
-    where: { dataVenda: { gte: ini, lt: fim } },
+    where: { 
+      dataVenda: { 
+        gte: ini, 
+        lt: fim 
+      } 
+    },
   });
+
+  console.log(`Vendas encontradas: ${vendas.length}`);
 
   const receita = vendas.reduce((s, v) => s + (v.valorVenda || 0) + (v.valorFrete || 0), 0);
   const cmv = vendas.reduce((s, v) => s + (v.custoProduto || 0), 0);
@@ -55,28 +66,34 @@ export async function calcularDre(mesAno: string) {
   };
 }
 
-export async function calcularFluxoCaixa() {
-  const hoje = new Date();
+export async function calcularFluxoCaixa(mesAno?: string) {
+  let referenceDate = new Date();
+  if (mesAno) {
+    const [ano, mes] = mesAno.split("-").map(Number);
+    referenceDate = new Date(Date.UTC(ano, mes - 1, 1, 0, 0, 0));
+  }
+
   const rows: { mes: string; entradas: number; saidas: number; saldo: number }[] = [];
   const vendas = await prisma.venda.findMany();
   const despesas = await prisma.despesa.findMany();
 
   for (let i = 0; i < 6; i++) {
-    const ref = addMonths(hoje, i);
+    const ref = addMonths(referenceDate, i);
     const mesStr = format(ref, "yyyy-MM");
     const mesNome = format(ref, "MM/yyyy");
     let entradas = 0;
 
     for (const v of vendas) {
       const dv = v.dataVenda;
+      // Usar a representação ISO/UTC para comparação de mês
       const dvStr = format(dv, "yyyy-MM");
       if (v.antecipada === 1) {
         if (dvStr === mesStr) {
           entradas += (v.valorParcela || 0) * (v.parcelas || 0);
         }
       } else {
-        const dia = dv.getDate();
-        const base = new Date(dv.getFullYear(), dv.getMonth(), 1);
+        const dia = dv.getUTCDate();
+        const base = new Date(Date.UTC(dv.getUTCFullYear(), dv.getUTCMonth(), 1));
         const inicio = addMonths(base, dia <= 20 ? 1 : 2);
         for (let p = 0; p < (v.parcelas || 0); p++) {
           const venc = addMonths(inicio, p);

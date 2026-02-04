@@ -1,5 +1,7 @@
 ﻿import { prisma } from "@/lib/db";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PNG, JPG } from "pdf-lib"; // Added PNG, JPG
+import { readFile } from "fs/promises"; // Added readFile
+import path from "path"; // Added path
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -52,12 +54,55 @@ export async function GET(req: Request) {
   let y = 792;
   const contentWidth = 515;
 
+  let logoImage = null;
+  let logoDims = { width: 0, height: 0 };
+  const logoHeight = 50; // Desired logo height
+
+  if (cfg?.logoPath) {
+    try {
+      const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath);
+      const logoBytes = await readFile(logoFullPath);
+      const imageType = path.extname(cfg.logoPath).toLowerCase();
+
+      if (imageType === ".png") {
+        logoImage = await pdf.embedPng(logoBytes);
+      } else if (imageType === ".jpg" || imageType === ".jpeg") {
+        logoImage = await pdf.embedJpg(logoBytes);
+      }
+
+      if (logoImage) {
+        const aspectRatio = logoImage.width / logoImage.height;
+        logoDims.height = logoHeight;
+        logoDims.width = logoHeight * aspectRatio;
+      }
+    } catch (error) {
+      console.error("Failed to load or embed logo:", error);
+      // Continue without logo if there's an error
+    }
+  }
+
   // Header
   page.drawRectangle({ x: 0, y: 752, width: 595, height: 90, color: rgb(0.96, 0.97, 0.98) });
-  page.drawText("BFX Manager", { x: marginX, y: 805, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
-  page.drawText("Recibo de Venda", { x: marginX, y: 783, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
+  
+  let logoX = marginX;
+  const headerTextY = 805; // Y-coordinate for "BFX Manager" and "Recibo de Venda"
+  const headerTitleX = marginX + (logoImage ? logoDims.width + 10 : 0); // Shift text if logo is present
+
+  if (logoImage) {
+    // Draw logo on the left side of the header
+    page.drawImage(logoImage, {
+      x: marginX,
+      y: 752 + (90 - logoDims.height) / 2, // Center vertically
+      width: logoDims.width,
+      height: logoDims.height,
+    });
+  }
+
+  page.drawText("BFX Manager", { x: headerTitleX, y: 805, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+  page.drawText("Recibo de Venda", { x: headerTitleX, y: 783, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
   page.drawText(`Recibo #${id}`, { x: 420, y: 805, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
   page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: 785, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+  
   y = 730;
 
   // Section: Customer & Sale
@@ -141,3 +186,4 @@ export async function GET(req: Request) {
     },
   });
 }
+

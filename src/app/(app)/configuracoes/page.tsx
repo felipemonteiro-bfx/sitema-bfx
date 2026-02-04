@@ -6,6 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { revalidatePath } from "next/cache";
 import { QueryTabs } from "@/components/query-tabs";
+import { Separator } from "@/components/ui/separator";
+import { LogoUploadForm } from "@/components/logo-upload-form";
+import { ReceiptEditorClient } from "@/components/receipt-editor-client";
 
 type Search = { tab?: string };
 
@@ -94,20 +97,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             content: (
               <Card>
                 <CardHeader>
-                  <CardTitle>Texto do recibo/contrato</CardTitle>
+                  <CardTitle>Texto do recibo/contrato e Logo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-3 text-sm text-muted-foreground">
-                    Você pode usar os placeholders: {"{CLIENTE}"}, {"{MATRICULA}"}, {"{PRODUTO}"}, {"{VALOR}"}, {"{PARCELAS}"}.
-                  </div>
-                  <form action={saveContrato} className="space-y-3">
-                    <Textarea
-                      name="texto"
-                      defaultValue={cfg?.modeloContrato || "Texto padrão..."}
-                      autoResize
+                  <div className="flex flex-col gap-6">
+                    <LogoUploadForm currentLogoPath={cfg?.logoPath} />
+                    <Separator />
+                    <ReceiptEditorClient
+                      initialModeloContrato={cfg?.modeloContrato || "Texto padrão..."}
+                      logoPath={cfg?.logoPath}
+                      saveContrato={saveContrato}
                     />
-                    <Button>Salvar texto</Button>
-                  </form>
+                  </div>
                 </CardContent>
               </Card>
             ),
