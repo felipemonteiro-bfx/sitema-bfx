@@ -93,27 +93,74 @@ export async function GET(req: Request) {
     const logoX = centerX - logoDims.width / 2;
     page.drawImage(logoImage, {
       x: logoX,
-      y: 785, 
+      y: 785,
       width: logoDims.width,
       height: logoDims.height,
     });
 
     const title = "BFX Manager";
     const titleWidth = fontBold.widthOfTextAtSize(title, 14);
-    page.drawText(title, { x: centerX - titleWidth / 2, y: 768, size: 14, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+    page.drawText(title, {
+      x: centerX - titleWidth / 2,
+      y: 768,
+      size: 14,
+      font: fontBold,
+      color: rgb(0.1, 0.1, 0.12),
+    });
 
     const subtitle = "Recibo de Venda";
     const subtitleWidth = font.widthOfTextAtSize(subtitle, 10);
-    page.drawText(subtitle, { x: centerX - subtitleWidth / 2, y: 756, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(subtitle, {
+      x: centerX - subtitleWidth / 2,
+      y: 756,
+      size: 10,
+      font,
+      color: rgb(0.35, 0.38, 0.42),
+    });
 
-    // Recibo info in the top right corner
-    page.drawText(`Recibo #${id}`, { x: 470, y: 820, size: 9, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 470, y: 808, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Recibo #${venda.id}`, {
+      x: 470,
+      y: 820,
+      size: 9,
+      font: fontBold,
+      color: rgb(0.2, 0.24, 0.3),
+    });
+    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, {
+      x: 470,
+      y: 808,
+      size: 8,
+      font,
+      color: rgb(0.35, 0.38, 0.42),
+    });
   } else {
-    page.drawText("BFX Manager", { x: marginX, y: 805, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
-    page.drawText("Recibo de Venda", { x: marginX, y: 783, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
-    page.drawText(`Recibo #${id}`, { x: 420, y: 805, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: 785, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText("BFX Manager", {
+      x: marginX,
+      y: 805,
+      size: 16,
+      font: fontBold,
+      color: rgb(0.1, 0.1, 0.12),
+    });
+    page.drawText("Recibo de Venda", {
+      x: marginX,
+      y: 783,
+      size: 12,
+      font,
+      color: rgb(0.35, 0.38, 0.42),
+    });
+    page.drawText(`Recibo #${venda.id}`, {
+      x: 420,
+      y: 805,
+      size: 11,
+      font: fontBold,
+      color: rgb(0.2, 0.24, 0.3),
+    });
+    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, {
+      x: 420,
+      y: 785,
+      size: 10,
+      font,
+      color: rgb(0.35, 0.38, 0.42),
+    });
   }
   
   y = 730;
@@ -195,7 +242,7 @@ export async function GET(req: Request) {
   return new Response(Buffer.from(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="recibo_${id}.pdf"`,
+      "Content-Disposition": `attachment; filename="recibo_${venda.id}.pdf"`,
     },
   });
 }

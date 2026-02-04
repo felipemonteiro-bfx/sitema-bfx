@@ -9,15 +9,24 @@ type Message = {
   response: string;
   provider: string;
   at: string;
+  actions?: { name: string; params: Record<string, unknown> }[];
+  status?: "pending" | "done";
+  links?: { label: string; url: string }[];
 };
 
 type IntelligenceChatClientProps = {
   history: Message[];
   action: (formData: FormData) => Promise<void> | void;
+  confirmAction: (formData: FormData) => Promise<void> | void;
   providers: { value: "openai" | "gemini"; label: string }[];
 };
 
-export function IntelligenceChatClient({ history, action, providers }: IntelligenceChatClientProps) {
+export function IntelligenceChatClient({
+  history,
+  action,
+  confirmAction,
+  providers,
+}: IntelligenceChatClientProps) {
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
     history,
     (state: Message[], next: Message) => [next, ...state]
@@ -49,6 +58,13 @@ export function IntelligenceChatClient({ history, action, providers }: Intellige
     await action(formData);
   };
 
+  const handleConfirm = async (actions: Message["actions"]) => {
+    if (!actions || actions.length === 0) return;
+    const data = new FormData();
+    data.set("actions", JSON.stringify(actions));
+    await confirmAction(data);
+  };
+
   return (
     <>
       <div className="flex-1 flex flex-col-reverse gap-6 overflow-auto rounded-lg border bg-background p-4">
@@ -76,7 +92,41 @@ export function IntelligenceChatClient({ history, action, providers }: Intellige
                   <div className="text-xs font-semibold text-muted-foreground">
                     Assistente
                   </div>
-                  <div>{m.response}</div>
+                  <div className="whitespace-pre-wrap">{m.response}</div>
+                  {m.links && m.links.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {m.links.map((link, idx) => (
+                        <a
+                          key={`${link.url}-${idx}`}
+                          href={link.url}
+                          className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                  {m.status === "pending" && m.actions && m.actions.length > 0 && (
+                    <div className="mt-3 space-y-2 rounded-lg border bg-background/60 p-3">
+                      <div className="text-xs font-semibold text-muted-foreground">
+                        Ações sugeridas pela IA (confirmação necessária)
+                      </div>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        {m.actions.map((a, idx) => (
+                          <li key={`${a.name}-${idx}`}>
+                            {a.name} — {JSON.stringify(a.params)}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        className="mt-2 inline-flex items-center rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
+                        onClick={() => handleConfirm(m.actions)}
+                      >
+                        Confirmar ações
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { v7 as uuidv7 } from "uuid";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -227,127 +228,162 @@ function requireAdmin(ctx: ActionContext) {
 }
 
 export async function executeAiAction(name: string, params: any, ctx: ActionContext) {
-  switch (name) {
-    case "listar_vendas": {
-      const from = params?.from ? new Date(params.from) : undefined;
-      const to = params?.to ? new Date(params.to) : undefined;
-      const vendedor = ctx.role === "admin" ? params?.vendedor : ctx.displayName;
-      return prisma.venda.findMany({
-        where: {
-          dataVenda: from && to ? { gte: from, lte: to } : undefined,
-          vendedor: vendedor ? { equals: vendedor } : undefined,
-        },
-        orderBy: { dataVenda: "desc" },
-        take: Math.min(Number(params?.limit || 20), 100),
-      });
+  const logAction = async (status: "success" | "error", details: unknown) => {
+    await prisma.auditLog.create({
+      data: {
+        dataHora: new Date(),
+        usuario: ctx.username,
+        acao: `ai:${name}:${status}`,
+        detalhes: JSON.stringify(details ?? {}),
+      },
+    });
+  };
+
+  try {
+    let result: unknown;
+    switch (name) {
+      case "listar_vendas": {
+        const from = params?.from ? new Date(params.from) : undefined;
+        const to = params?.to ? new Date(params.to) : undefined;
+        const vendedor = ctx.role === "admin" ? params?.vendedor : ctx.displayName;
+        result = await prisma.venda.findMany({
+          where: {
+            dataVenda: from && to ? { gte: from, lte: to } : undefined,
+            vendedor: vendedor ? { equals: vendedor } : undefined,
+          },
+          orderBy: { dataVenda: "desc" },
+          take: Math.min(Number(params?.limit || 20), 100),
+        });
+        break;
+      }
+      case "criar_venda": {
+        const vendedor = ctx.role === "admin" ? params?.vendedor : ctx.displayName;
+        result = await prisma.venda.create({
+          data: {
+            uuid: uuidv7(),
+            dataVenda: new Date(params.dataVenda),
+            vendedor,
+            clienteId: Number(params.clienteId),
+            produtoNome: params.produtoNome,
+            custoProduto: params.custoProduto || 0,
+            valorVenda: params.valorVenda || 0,
+            valorFrete: params.valorFrete || 0,
+            custoEnvio: params.custoEnvio || 0,
+            parcelas: params.parcelas || 1,
+            valorParcela: (params.valorVenda || 0) / (params.parcelas || 1),
+            antecipada: params.antecipada ?? 1,
+          },
+        });
+        break;
+      }
+      case "listar_clientes":
+        result = await prisma.cliente.findMany({
+          where: params?.search ? { nome: { contains: params.search, mode: "insensitive" } } : undefined,
+          take: Math.min(Number(params?.limit || 50), 200),
+          orderBy: { nome: "asc" },
+        });
+        break;
+      case "criar_cliente":
+        result = await prisma.cliente.create({ data: params });
+        break;
+      case "listar_produtos":
+        result = await prisma.produto.findMany({
+          where: params?.search ? { nome: { contains: params.search, mode: "insensitive" } } : undefined,
+          take: Math.min(Number(params?.limit || 50), 200),
+          orderBy: { nome: "asc" },
+        });
+        break;
+      case "criar_produto":
+        requireAdmin(ctx);
+        result = await prisma.produto.create({ data: params });
+        break;
+      case "listar_despesas":
+        requireAdmin(ctx);
+        result = await prisma.despesa.findMany({
+          where:
+            params?.from && params?.to
+              ? { dataDespesa: { gte: new Date(params.from), lte: new Date(params.to) } }
+              : undefined,
+          orderBy: { dataDespesa: "desc" },
+          take: Math.min(Number(params?.limit || 50), 200),
+        });
+        break;
+      case "criar_despesa":
+        requireAdmin(ctx);
+        result = await prisma.despesa.create({
+          data: {
+            descricao: params.descricao,
+            valor: params.valor,
+            dataDespesa: new Date(params.dataDespesa),
+            tipo: params.tipo,
+            categoria: params.categoria,
+          },
+        });
+        break;
+      case "listar_empresas":
+        requireAdmin(ctx);
+        result = await prisma.empresaParceira.findMany({
+          take: Math.min(Number(params?.limit || 50), 200),
+          orderBy: { nome: "asc" },
+        });
+        break;
+      case "criar_empresa":
+        requireAdmin(ctx);
+        result = await prisma.empresaParceira.create({ data: params });
+        break;
+      case "listar_usuarios":
+        requireAdmin(ctx);
+        result = await prisma.usuario.findMany({
+          take: Math.min(Number(params?.limit || 50), 200),
+          orderBy: { nomeExibicao: "asc" },
+        });
+        break;
+      case "criar_usuario":
+        requireAdmin(ctx);
+        result = await prisma.usuario.create({ data: params });
+        break;
+      case "atualizar_usuario":
+        requireAdmin(ctx);
+        result = await prisma.usuario.update({
+          where: { id: Number(params.id) },
+          data: params,
+        });
+        break;
+      case "atualizar_venda":
+        requireAdmin(ctx);
+        result = await prisma.venda.update({
+          where: { id: Number(params.id) },
+          data: {
+            dataVenda: params.dataVenda ? new Date(params.dataVenda) : undefined,
+            vendedor: params.vendedor ?? undefined,
+            produtoNome: params.produtoNome ?? undefined,
+            valorVenda: params.valorVenda ?? undefined,
+            valorFrete: params.valorFrete ?? undefined,
+            custoEnvio: params.custoEnvio ?? undefined,
+            parcelas: params.parcelas ?? undefined,
+          },
+        });
+        break;
+      case "atualizar_despesa":
+        requireAdmin(ctx);
+        result = await prisma.despesa.update({
+          where: { id: Number(params.id) },
+          data: {
+            dataDespesa: params.dataDespesa ? new Date(params.dataDespesa) : undefined,
+            descricao: params.descricao ?? undefined,
+            valor: params.valor ?? undefined,
+            tipo: params.tipo ?? undefined,
+          },
+        });
+        break;
+      default:
+        throw new Error("A��o n�o suportada.");
     }
-    case "criar_venda": {
-      const vendedor = ctx.role === "admin" ? params?.vendedor : ctx.displayName;
-      return prisma.venda.create({
-        data: {
-          dataVenda: new Date(params.dataVenda),
-          vendedor,
-          clienteId: Number(params.clienteId),
-          produtoNome: params.produtoNome,
-          custoProduto: params.custoProduto || 0,
-          valorVenda: params.valorVenda || 0,
-          valorFrete: params.valorFrete || 0,
-          custoEnvio: params.custoEnvio || 0,
-          parcelas: params.parcelas || 1,
-          valorParcela:
-            (params.valorVenda || 0) / (params.parcelas || 1),
-          antecipada: params.antecipada ?? 1,
-        },
-      });
-    }
-    case "listar_clientes":
-      return prisma.cliente.findMany({
-        where: params?.search ? { nome: { contains: params.search, mode: "insensitive" } } : undefined,
-        take: Math.min(Number(params?.limit || 50), 200),
-        orderBy: { nome: "asc" },
-      });
-    case "criar_cliente":
-      return prisma.cliente.create({ data: params });
-    case "listar_produtos":
-      return prisma.produto.findMany({
-        where: params?.search ? { nome: { contains: params.search, mode: "insensitive" } } : undefined,
-        take: Math.min(Number(params?.limit || 50), 200),
-        orderBy: { nome: "asc" },
-      });
-    case "criar_produto":
-      requireAdmin(ctx);
-      return prisma.produto.create({ data: params });
-    case "listar_despesas":
-      requireAdmin(ctx);
-      return prisma.despesa.findMany({
-        where:
-          params?.from && params?.to
-            ? { dataDespesa: { gte: new Date(params.from), lte: new Date(params.to) } }
-            : undefined,
-        orderBy: { dataDespesa: "desc" },
-        take: Math.min(Number(params?.limit || 50), 200),
-      });
-    case "criar_despesa":
-      requireAdmin(ctx);
-      return prisma.despesa.create({
-        data: {
-          descricao: params.descricao,
-          valor: params.valor,
-          dataDespesa: new Date(params.dataDespesa),
-          tipo: params.tipo,
-          categoria: params.categoria,
-        },
-      });
-    case "listar_empresas":
-      requireAdmin(ctx);
-      return prisma.empresaParceira.findMany({
-        take: Math.min(Number(params?.limit || 50), 200),
-        orderBy: { nome: "asc" },
-      });
-    case "criar_empresa":
-      requireAdmin(ctx);
-      return prisma.empresaParceira.create({ data: params });
-    case "listar_usuarios":
-      requireAdmin(ctx);
-      return prisma.usuario.findMany({
-        take: Math.min(Number(params?.limit || 50), 200),
-        orderBy: { nomeExibicao: "asc" },
-      });
-    case "criar_usuario":
-      requireAdmin(ctx);
-      return prisma.usuario.create({ data: params });
-    case "atualizar_usuario":
-      requireAdmin(ctx);
-      return prisma.usuario.update({
-        where: { id: Number(params.id) },
-        data: params,
-      });
-    case "atualizar_venda":
-      requireAdmin(ctx);
-      return prisma.venda.update({
-        where: { id: Number(params.id) },
-        data: {
-          dataVenda: params.dataVenda ? new Date(params.dataVenda) : undefined,
-          vendedor: params.vendedor,
-          produtoNome: params.produtoNome,
-          valorVenda: params.valorVenda,
-          valorFrete: params.valorFrete,
-          custoEnvio: params.custoEnvio,
-          parcelas: params.parcelas,
-        },
-      });
-    case "atualizar_despesa":
-      requireAdmin(ctx);
-      return prisma.despesa.update({
-        where: { id: Number(params.id) },
-        data: {
-          dataDespesa: params.dataDespesa ? new Date(params.dataDespesa) : undefined,
-          descricao: params.descricao,
-          valor: params.valor,
-          tipo: params.tipo,
-        },
-      });
-    default:
-      throw new Error("Ação não suportada.");
+
+    await logAction("success", { params, result });
+    return result;
+  } catch (error) {
+    await logAction("error", { params, error: error instanceof Error ? error.message : String(error) });
+    throw error;
   }
 }

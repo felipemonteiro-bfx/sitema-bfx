@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
 import { prisma } from "@/lib/db";
+import { headers } from "next/headers";
 
 async function askAi(formData: FormData) {
   "use server";
@@ -30,14 +31,95 @@ async function askAi(formData: FormData) {
     role: session.role as "admin" | "vendedor",
     username: session.username,
     displayName: session.nomeExibicao || session.username,
+    mode: "plan",
   });
-  prismaMessageStore.add({ prompt, response: response.text, provider });
+  const plannedActions = Array.isArray(response.actions)
+    ? (response.actions.filter((a) => "params" in (a as any)) as {
+        name: string;
+        params: Record<string, unknown>;
+      }[])
+    : undefined;
+
+  prismaMessageStore.add({
+    prompt,
+    response: response.text,
+    provider,
+    actions: plannedActions,
+    status: plannedActions && plannedActions.length > 0 ? "pending" : "done",
+  });
+  revalidatePath("/inteligencia");
+}
+
+async function confirmAi(formData: FormData) {
+  "use server";
+  const raw = String(formData.get("actions") || "");
+  if (!raw) return;
+  const session = await getSession();
+  if (!session) return;
+
+  let actions: { name: string; params: Record<string, unknown> }[] = [];
+  try {
+    actions = JSON.parse(raw);
+  } catch {
+    return;
+  }
+  if (!Array.isArray(actions) || actions.length === 0) return;
+
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") ?? "http";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3000");
+
+  const results: string[] = [];
+  const links: { label: string; url: string }[] = [];
+  for (const action of actions) {
+    try {
+      const result = await runAiWithActions("", "openai", {
+        role: session.role as "admin" | "vendedor",
+        username: session.username,
+        displayName: session.nomeExibicao || session.username,
+        mode: "execute",
+        executeAction: action,
+        baseUrl,
+      });
+      if (result.text) results.push(result.text);
+      if (result.links?.length) links.push(...result.links);
+    } catch (error) {
+      results.push(
+        `Falha ao executar ${action.name}: ${error instanceof Error ? error.message : String(error)}.`
+      );
+    }
+  }
+
+  prismaMessageStore.add({
+    prompt: "Confirmação de ações",
+    response: results.join("\n"),
+    provider: "openai",
+    status: "done",
+    links,
+  });
   revalidatePath("/inteligencia");
 }
 
 const prismaMessageStore = {
-  data: [] as { prompt: string; response: string; provider: string; at: string }[],
-  add(msg: { prompt: string; response: string; provider: string }) {
+  data: [] as {
+    prompt: string;
+    response: string;
+    provider: string;
+    at: string;
+    actions?: { name: string; params: Record<string, unknown> }[];
+    status?: "pending" | "done";
+    links?: { label: string; url: string }[];
+  }[],
+  add(msg: {
+    prompt: string;
+    response: string;
+    provider: string;
+    actions?: { name: string; params: Record<string, unknown> }[];
+    status?: "pending" | "done";
+    links?: { label: string; url: string }[];
+  }) {
     this.data.unshift({ ...msg, at: new Date().toISOString() });
   },
 };
@@ -72,7 +154,12 @@ export default async function Page() {
             </div>
           </CardHeader>
           <CardContent className="flex h-[70vh] flex-col gap-4">
-            <IntelligenceChatClient history={history} action={askAi} providers={resolvedProviders} />
+            <IntelligenceChatClient
+              history={history}
+              action={askAi}
+              confirmAction={confirmAi}
+              providers={resolvedProviders}
+            />
           </CardContent>
         </Card>
       </div>

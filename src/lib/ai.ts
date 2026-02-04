@@ -28,12 +28,28 @@ export async function runAi(prompt: string, provider: "openai" | "gemini") {
   return text || "Sem resposta.";
 }
 
+const readOnlyActions = new Set([
+  "listar_vendas",
+  "listar_clientes",
+  "listar_produtos",
+  "listar_despesas",
+  "listar_empresas",
+  "listar_usuarios",
+]);
+
 export async function runAiWithActions(
   prompt: string,
   provider: "openai" | "gemini",
-  ctx: ActionContext
+  ctx: ActionContext & {
+    mode?: "plan" | "execute";
+    executeAction?: { name: string; params: Record<string, unknown> };
+    baseUrl?: string;
+  }
 ) {
-  const languageHint = "Responda sempre em portugues do Brasil.";
+  const languageHint =
+    "Responda sempre em portugues do Brasil. " +
+    "Quando precisar criar/atualizar algo, descreva o que pretende fazer e " +
+    "inclua uma linha no final com ACTIONS: [ {\"name\":\"...\",\"params\":{...}} ].";
   const currency = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -46,6 +62,21 @@ export async function runAiWithActions(
 
   const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.test(prompt);
 
+  if (ctx.mode === "execute" && ctx.executeAction) {
+    const execResult = await executeAiAction(ctx.executeAction.name, ctx.executeAction.params, ctx);
+    const links: { label: string; url: string }[] = [];
+    if (ctx.executeAction.name === "criar_venda" && execResult && typeof execResult === "object") {
+      const venda = execResult as { uuid?: string; id?: number };
+      const token = venda.uuid ?? String(venda.id ?? "");
+      if (token) {
+        const baseUrl =
+          ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        links.push({ label: "Recibo PDF", url: `${baseUrl}/api/recibo?id=${token}` });
+      }
+    }
+    return { text: "Ação executada com sucesso.", actions: [ctx.executeAction], links };
+  }
+
   if (provider === "gemini") {
     const cfg = await prisma.config.findFirst();
     if (!cfg?.geminiKey) return { text: "Chave Gemini nao configurada.", actions: [] };
@@ -53,18 +84,20 @@ export async function runAiWithActions(
     const google = createGoogleGenerativeAI({ apiKey: cfg.geminiKey });
     const executed: { name: string; result: unknown }[] = [];
     const tools = Object.fromEntries(
-      aiActions.map((action) => [
-        action.name,
-        tool({
-          description: action.description,
-          inputSchema: toolSchema,
-          execute: async (args) => {
-            const result = await executeAiAction(action.name, args ?? {}, ctx);
-            executed.push({ name: action.name, result });
-            return result;
-          },
-        }),
-      ])
+      aiActions
+        .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
+        .map((action) => [
+          action.name,
+          tool({
+            description: action.description,
+            inputSchema: toolSchema,
+            execute: async (args) => {
+              const result = await executeAiAction(action.name, args ?? {}, ctx);
+              executed.push({ name: action.name, result });
+              return result;
+            },
+          }),
+        ])
     );
 
     let text = "";
@@ -90,6 +123,7 @@ export async function runAiWithActions(
                 role: "system",
                 content:
                   "Voce e um assistente do sistema BFX. Use as funcoes disponiveis para executar acoes. " +
+                  "Quando precisar criar/atualizar algo, descreva e inclua ACTIONS: [...] no final. " +
                   "Responda sempre em portugues do Brasil.",
               },
               { role: "user", content: prompt },
@@ -131,6 +165,10 @@ export async function runAiWithActions(
       }
     }
 
+    if (ctx.mode === "plan") {
+      const planned = extractActions(text);
+      return { text: stripActions(text), actions: planned };
+    }
     if (text && text.trim()) return { text, actions: executed };
     if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
@@ -158,18 +196,20 @@ export async function runAiWithActions(
   const openai = createOpenAI({ apiKey: cfg.openaiKey });
   const executed: { name: string; result: unknown }[] = [];
   const tools = Object.fromEntries(
-    aiActions.map((action) => [
-      action.name,
-      tool({
-        description: action.description,
-        inputSchema: toolSchema,
-        execute: async (args) => {
-          const result = await executeAiAction(action.name, args ?? {}, ctx);
-          executed.push({ name: action.name, result });
-          return result;
-        },
-      }),
-    ])
+    aiActions
+      .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
+      .map((action) => [
+        action.name,
+        tool({
+          description: action.description,
+          inputSchema: toolSchema,
+          execute: async (args) => {
+            const result = await executeAiAction(action.name, args ?? {}, ctx);
+            executed.push({ name: action.name, result });
+            return result;
+          },
+        }),
+      ])
   );
 
   const { text } = await generateText({
@@ -180,6 +220,7 @@ export async function runAiWithActions(
         content:
           "Voce e um assistente do sistema BFX. Use as funcoes disponiveis para executar acoes. " +
           "Respeite o perfil do usuario. Se for vendedor, nao tente acoes administrativas. " +
+          "Quando precisar criar/atualizar algo, descreva e inclua ACTIONS: [...] no final. " +
           "Responda sempre em portugues do Brasil.",
       },
       { role: "user", content: prompt },
@@ -205,6 +246,10 @@ export async function runAiWithActions(
     }
   }
 
+  if (ctx.mode === "plan") {
+    const planned = extractActions(text);
+    return { text: stripActions(text), actions: planned };
+  }
   if (text && text.trim()) return { text, actions: executed };
   if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
@@ -224,4 +269,25 @@ export async function runAiWithActions(
     .join("\n");
 
   return { text: fallbackText, actions: executed };
+}
+
+function extractActions(text: string) {
+  const marker = "ACTIONS:";
+  const idx = text.indexOf(marker);
+  if (idx === -1) return [];
+  const raw = text.slice(idx + marker.length).trim();
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as { name: string; params: Record<string, unknown> }[];
+  } catch {
+    // ignore
+  }
+  return [];
+}
+
+function stripActions(text: string) {
+  const marker = "ACTIONS:";
+  const idx = text.indexOf(marker);
+  if (idx === -1) return text.trim();
+  return text.slice(0, idx).trim();
 }
