@@ -1,5 +1,5 @@
 ﻿import { prisma } from "@/lib/db";
-import { PDFDocument, StandardFonts, rgb, PNG, JPG } from "pdf-lib"; // Added PNG, JPG
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises"; // Added readFile
 import path from "path"; // Added path
 
@@ -35,10 +35,13 @@ function fillTemplate(template: string, data: Record<string, string>) {
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const id = Number(searchParams.get("id") || 0);
-  if (!id) return new Response("ID inválido", { status: 400 });
+  const idParam = (searchParams.get("id") || "").trim();
+  if (!idParam) return new Response("ID inválido", { status: 400 });
 
-  const venda = await prisma.venda.findUnique({ where: { id } });
+  const isNumeric = /^\d+$/.test(idParam);
+  const venda = isNumeric
+    ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
+    : await prisma.venda.findUnique({ where: { uuid: idParam } });
   if (!venda) return new Response("Venda não encontrada", { status: 404 });
   const cliente = venda.clienteId
     ? await prisma.cliente.findUnique({ where: { id: venda.clienteId } })
