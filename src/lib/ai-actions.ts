@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { uuidv7 } from "@/lib/uuid";
+import { v7 as uuidv7 } from "uuid";
 
 export type ActionContext = {
   role: "admin" | "vendedor";

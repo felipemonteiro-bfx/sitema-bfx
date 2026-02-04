@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { revalidatePath } from "next/cache";
 import Papa from "papaparse";
-import { uuidv7 } from "@/lib/uuid";
+import { v7 as uuidv7 } from "uuid";
 
 async function importar(formData: FormData) {
   "use server";

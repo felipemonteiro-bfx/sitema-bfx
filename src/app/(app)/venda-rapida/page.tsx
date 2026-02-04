@@ -6,7 +6,7 @@ import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { headers } from "next/headers";
-import { uuidv7 } from "@/lib/uuid";
+import { v7 as uuidv7 } from "uuid";
 
 async function criarVenda(formData: FormData) {
   "use server";
