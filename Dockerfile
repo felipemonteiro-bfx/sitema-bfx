@@ -38,4 +38,4 @@ COPY --from=deps /app/node_modules ./node_modules
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node ./node_modules/prisma/build/index.js migrate deploy && node .next/standalone/server.js"]
+CMD ["sh", "-c", "node ./node_modules/prisma/build/index.js migrate deploy && node server.js"]
