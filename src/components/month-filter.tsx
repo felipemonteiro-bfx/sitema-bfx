@@ -1,12 +1,15 @@
 "use client";
 
+import { useQueryState, parseAsString } from "nuqs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useQueryParam } from "@/lib/use-query-param";
 
 export function MonthFilter() {
-  const [mes, setMes] = useQueryParam("mes", format(new Date(), "yyyy-MM"));
+  const [mes, setMes] = useQueryState(
+    "mes",
+    parseAsString.withDefault(format(new Date(), "yyyy-MM")).withOptions({ shallow: false })
+  );
 
   const mesList = Array.from({ length: 12 }).map((_, i) => {
     const d = subMonths(new Date(), i);
@@ -18,10 +21,10 @@ export function MonthFilter() {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-muted-foreground">{"Per\u00EDodo:"}</span>
+      <span className="text-sm font-medium text-muted-foreground">Período:</span>
       <Select value={mes} onValueChange={(v) => setMes(v)}>
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder={"Selecione o m\u00EAs"} />
+          <SelectValue placeholder="Selecione o mês" />
         </SelectTrigger>
         <SelectContent>
           {mesList.map((m) => (

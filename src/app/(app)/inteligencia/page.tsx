@@ -71,7 +71,7 @@ export default async function Page() {
               Provedor ativo: {resolvedProviders[0]?.label || "OpenAI"}
             </div>
           </CardHeader>
-          <CardContent className="flex h-[65vh] min-h-0 flex-col gap-4 sm:h-[70vh]">
+          <CardContent className="flex h-[70vh] flex-col gap-4">
             <IntelligenceChatClient history={history} action={askAi} providers={resolvedProviders} />
           </CardContent>
         </Card>

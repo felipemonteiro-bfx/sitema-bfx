@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/db";
 
@@ -8,18 +8,14 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
-    if (!file || typeof file.name !== "string") {
+    if (!file) {
       return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = path.extname(file.name).toLowerCase();
-    const safeExt = ext && ext.length <= 8 ? ext : "";
-    const filename = `${Date.now()}-${crypto.randomUUID()}${safeExt}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    const filePath = path.join(uploadDir, filename);
+    const filename = `${Date.now()}-${file.name}`;
+    const filePath = path.join(process.cwd(), "public/uploads", filename);
 
-    await mkdir(uploadDir, { recursive: true });
     await writeFile(filePath, buffer);
 
     const publicPath = `/uploads/${filename}`;
@@ -33,8 +29,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, filePath: publicPath });
   } catch (error) {
-    const details = error instanceof Error ? error.message : "Unknown error";
     console.error("Error uploading file:", error);
-    return NextResponse.json({ error: "Failed to upload file.", details }, { status: 500 });
+    return NextResponse.json({ error: "Failed to upload file." }, { status: 500 });
   }
 }

@@ -49,10 +49,7 @@ export function VendorMultiSelect({
           <Button
             id={id}
             variant="outline"
-            type="button"
-            className={["h-10 w-full touch-manipulation justify-between", className]
-              .filter(Boolean)
-              .join(" ")}
+            className={["h-10 w-full justify-between", className].filter(Boolean).join(" ")}
           >
             Vendedores
             <span className="ml-2 text-xs text-muted-foreground">

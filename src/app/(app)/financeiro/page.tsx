@@ -45,8 +45,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const fluxo = await calcularFluxoCaixa(currentMes);
   
   const [ano, mesNum] = currentMes.split("-").map(Number);
-  const ini = new Date(ano, mesNum - 1, 1);
-  const fim = new Date(ano, mesNum, 1);
+  const ini = new Date(Date.UTC(ano, mesNum - 1, 1, 0, 0, 0));
+  const fim = new Date(Date.UTC(ano, mesNum, 1, 0, 0, 0));
 
   const despesas = await prisma.despesa.findMany({ 
     where: { dataDespesa: { gte: ini, lt: fim } },
@@ -88,11 +88,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardHeader>
                       <CardTitle>Lucro Líquido</CardTitle>
                     </CardHeader>
-                    <CardContent
-                      className={`text-2xl font-semibold ${
-                        dre.lucro < 0 ? "text-rose-600" : "text-emerald-600"
-                      }`}
-                    >
+                    <CardContent className="text-2xl font-semibold text-emerald-600">
                       {formatBRL(dre.lucro)}
                     </CardContent>
                   </Card>

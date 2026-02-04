@@ -7,6 +7,8 @@ import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { QueryTabs } from "@/components/query-tabs";
+import ProdutoFormClient from "@/components/produto-form-client";
+import Image from "next/image";
 
 type Search = { tab?: string };
 
@@ -42,6 +44,21 @@ async function addProduto(formData: FormData) {
       marca: String(formData.get("marca") || ""),
       ncm: String(formData.get("ncm") || ""),
       valorVenda: Number(formData.get("valor") || 0),
+      imagem: String(formData.get("imagem") || ""),
+      fornecedorId: formData.get("fornecedorId") ? Number(formData.get("fornecedorId")) : null,
+    },
+  });
+  revalidatePath("/cadastros");
+}
+
+async function addFornecedor(formData: FormData) {
+  "use server";
+  const nome = String(formData.get("nome") || "");
+  if (!nome) return;
+  await prisma.fornecedor.create({
+    data: {
+      nome,
+      telefone: String(formData.get("telefone") || ""),
     },
   });
   revalidatePath("/cadastros");
@@ -65,14 +82,20 @@ async function addEmpresa(formData: FormData) {
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const clientes = await prisma.cliente.findMany({ orderBy: { nome: "asc" } });
-  const produtos = await prisma.produto.findMany({ orderBy: { nome: "asc" } });
+  const produtos = await prisma.produto.findMany({ 
+    include: { 
+      fornecedor: true 
+    },
+    orderBy: { nome: "asc" } 
+  });
   const empresas = await prisma.empresaParceira.findMany({ orderBy: { nome: "asc" } });
+  const fornecedores = await prisma.fornecedor.findMany({ orderBy: { nome: "asc" } });
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Cadastros</h1>
-        <p className="text-sm text-muted-foreground">Base de clientes, produtos e empresas.</p>
+        <p className="text-sm text-muted-foreground">Base de clientes, produtos, fornecedores e empresas.</p>
       </div>
       <QueryTabs
         defaultTab={sp.tab || "clientes"}
@@ -84,7 +107,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Novo Cliente</CardTitle>
+                    <CardTitle className="text-blue-900">Novo Cliente</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form action={addCliente} className="grid gap-4">
@@ -134,14 +157,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                       </div>
                       <div className="flex items-center justify-end">
-                        <Button>Salvar</Button>
+                        <Button className="bg-blue-900 hover:bg-blue-800">Salvar Cliente</Button>
                       </div>
                     </form>
                   </CardContent>
                 </Card>
                 <Card className="mt-4">
                   <CardHeader>
-                    <CardTitle>Clientes</CardTitle>
+                    <CardTitle className="text-blue-900">Clientes</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -156,14 +179,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <TableBody>
                         {clientes.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={4} className="text-center text-muted-foreground">
-                              Sem dados.
+                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                              Sem clientes cadastrados.
                             </TableCell>
                           </TableRow>
                         ) : (
                           clientes.map((c) => (
                             <TableRow key={c.id}>
-                              <TableCell>{c.nome}</TableCell>
+                              <TableCell className="font-medium">{c.nome}</TableCell>
                               <TableCell>{c.cpf || c.cnpj}</TableCell>
                               <TableCell>{c.telefone}</TableCell>
                               <TableCell className="text-right tabular-nums">{formatBRL(c.renda || 0)}</TableCell>
@@ -184,66 +207,126 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Novo Produto</CardTitle>
+                    <CardTitle className="text-blue-900">Novo Produto</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form action={addProduto} className="grid gap-4">
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Nome do produto</div>
-                          <Input name="nome" placeholder="Nome do produto" aria-label="Nome" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Custo</div>
-                          <Input name="custo" placeholder="Custo" type="number" aria-label="Custo" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Marca</div>
-                          <Input name="marca" placeholder="Marca" aria-label="Marca" />
-                        </div>
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">NCM</div>
-                          <Input name="ncm" placeholder="NCM" aria-label="NCM" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Valor de venda</div>
-                          <Input name="valor" placeholder="Valor de venda" type="number" aria-label="Valor" />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <Button>Salvar</Button>
-                      </div>
-                    </form>
+                    <ProdutoFormClient 
+                      onSuccess={addProduto} 
+                      fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
+                    />
                   </CardContent>
                 </Card>
                 <Card className="mt-4">
                   <CardHeader>
-                    <CardTitle>Produtos</CardTitle>
+                    <CardTitle className="text-blue-900">Produtos</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-[80px]">Foto</TableHead>
                           <TableHead>Nome</TableHead>
-                          <TableHead>Marca</TableHead>
+                          <TableHead>Marca/Fornecedor</TableHead>
+                          <TableHead>NCM</TableHead>
                           <TableHead className="text-right">Valor</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {produtos.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={3} className="text-center text-muted-foreground">
-                              Sem dados.
+                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                              Sem produtos cadastrados.
                             </TableCell>
                           </TableRow>
                         ) : (
                           produtos.map((p) => (
                             <TableRow key={p.id}>
-                              <TableCell>{p.nome}</TableCell>
-                              <TableCell>{p.marca}</TableCell>
-                              <TableCell className="text-right tabular-nums">{formatBRL(p.valorVenda || 0)}</TableCell>
+                              <TableCell>
+                                {p.imagem ? (
+                                  <div className="relative w-10 h-10 border rounded overflow-hidden">
+                                    <Image 
+                                      src={p.imagem} 
+                                      alt={p.nome} 
+                                      fill 
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-[10px] text-muted-foreground">
+                                    Sem foto
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="font-medium">{p.nome}</TableCell>
+                              <TableCell>
+                                <div className="text-xs font-semibold">{p.marca}</div>
+                                <div className="text-[10px] text-muted-foreground">
+                                  {p.fornecedor?.nome || "Sem fornecedor"}
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">{p.ncm}</TableCell>
+                              <TableCell className="text-right tabular-nums font-semibold">{formatBRL(p.valorVenda || 0)}</TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            ),
+          },
+          {
+            value: "fornecedores",
+            label: "Fornecedores",
+            content: (
+              <>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-blue-900">Novo Fornecedor</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form action={addFornecedor} className="grid gap-4">
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
+                          <Input name="nome" placeholder="Razão Social ou Nome" aria-label="Nome" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
+                          <Input name="telefone" placeholder="(00) 00000-0000" aria-label="Telefone" />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end">
+                        <Button className="bg-blue-900 hover:bg-blue-800">Salvar Fornecedor</Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+                <Card className="mt-4">
+                  <CardHeader>
+                    <CardTitle className="text-blue-900">Fornecedores Cadastrados</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Telefone</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {fornecedores.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                              Sem fornecedores cadastrados.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          fornecedores.map((f) => (
+                            <TableRow key={f.id}>
+                              <TableCell className="font-medium">{f.nome}</TableCell>
+                              <TableCell>{f.telefone}</TableCell>
                             </TableRow>
                           ))
                         )}
@@ -261,14 +344,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Nova Empresa</CardTitle>
+                    <CardTitle className="text-blue-900">Nova Empresa</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form action={addEmpresa} className="grid gap-4">
                       <div className="grid gap-3 md:grid-cols-2">
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
-                          <Input name="nome" placeholder="Empresa" aria-label="Empresa" />
+                          <Input name="nome" placeholder="Empresa" aria-label="Nome" />
                         </div>
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Responsável RH</div>
@@ -286,14 +369,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                       </div>
                       <div className="flex items-center justify-end">
-                        <Button>Salvar</Button>
+                        <Button className="bg-blue-900 hover:bg-blue-800">Salvar Empresa</Button>
                       </div>
                     </form>
                   </CardContent>
                 </Card>
                 <Card className="mt-4">
                   <CardHeader>
-                    <CardTitle>Empresas</CardTitle>
+                    <CardTitle className="text-blue-900">Empresas Parceiras</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -307,14 +390,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <TableBody>
                         {empresas.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={3} className="text-center text-muted-foreground">
-                              Sem dados.
+                            <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                              Sem empresas cadastradas.
                             </TableCell>
                           </TableRow>
                         ) : (
                           empresas.map((e) => (
                             <TableRow key={e.id}>
-                              <TableCell>{e.nome}</TableCell>
+                              <TableCell className="font-medium">{e.nome}</TableCell>
                               <TableCell>{e.responsavelRh}</TableCell>
                               <TableCell>{e.telefoneRh || e.emailRh}</TableCell>
                             </TableRow>

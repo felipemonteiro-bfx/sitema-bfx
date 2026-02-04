@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQueryParam } from "@/lib/use-query-param";
+import { parseAsString, useQueryState } from "nuqs";
 
 export type QueryTabItem = {
   value: string;
@@ -18,7 +18,10 @@ export function QueryTabs({
   defaultTab: string;
   param?: string;
 }) {
-  const [tab, setTab] = useQueryParam(param, defaultTab);
+  const [tab, setTab] = useQueryState(
+    param,
+    parseAsString.withDefault(defaultTab).withOptions({ history: "push", shallow: true })
+  );
 
   return (
     <Tabs value={tab} onValueChange={setTab}>

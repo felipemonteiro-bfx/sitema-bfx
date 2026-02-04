@@ -36,6 +36,7 @@ model Produto {
   fornecedorId Int?   @map("fornecedor_id")
   qtdEstoque Int?     @default(0) @map("qtd_estoque")
   valorVenda Float?   @default(0) @map("valor_venda")
+  fornecedor Fornecedor? @relation(fields: [fornecedorId], references: [id])
 
   @@map("produtos")
 }
@@ -94,6 +95,7 @@ model Fornecedor {
   id       Int     @id @default(autoincrement())
   nome     String  @unique
   telefone String?
+  produtos Produto[]
 
   @@map("fornecedores")
 }

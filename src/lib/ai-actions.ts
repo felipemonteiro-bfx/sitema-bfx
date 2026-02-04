@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/db";
-import { v7 as uuidv7 } from "uuid";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -246,7 +245,6 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       const vendedor = ctx.role === "admin" ? params?.vendedor : ctx.displayName;
       return prisma.venda.create({
         data: {
-          uuid: uuidv7(),
           dataVenda: new Date(params.dataVenda),
           vendedor,
           clienteId: Number(params.clienteId),

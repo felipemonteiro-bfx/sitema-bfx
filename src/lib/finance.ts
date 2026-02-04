@@ -86,7 +86,7 @@ export async function calcularFluxoCaixa(mesAno?: string) {
     for (const v of vendas) {
       const dv = v.dataVenda;
       // Usar a representação ISO/UTC para comparação de mês
-      const dvStr = format(dv, "yyyy-MM");
+      const dvStr = `${dv.getUTCFullYear()}-${String(dv.getUTCMonth() + 1).padStart(2, "0")}`;
       if (v.antecipada === 1) {
         if (dvStr === mesStr) {
           entradas += (v.valorParcela || 0) * (v.parcelas || 0);
@@ -97,13 +97,18 @@ export async function calcularFluxoCaixa(mesAno?: string) {
         const inicio = addMonths(base, dia <= 20 ? 1 : 2);
         for (let p = 0; p < (v.parcelas || 0); p++) {
           const venc = addMonths(inicio, p);
-          if (format(venc, "yyyy-MM") === mesStr) entradas += v.valorParcela || 0;
+          const vencStr = `${venc.getUTCFullYear()}-${String(venc.getUTCMonth() + 1).padStart(2, "0")}`;
+          if (vencStr === mesStr) entradas += v.valorParcela || 0;
         }
       }
     }
 
     const saidas = despesas
-      .filter((d) => format(d.dataDespesa, "yyyy-MM") === mesStr)
+      .filter((d) => {
+        const dd = d.dataDespesa;
+        const ddStr = `${dd.getUTCFullYear()}-${String(dd.getUTCMonth() + 1).padStart(2, "0")}`;
+        return ddStr === mesStr;
+      })
       .reduce((s, d) => s + (d.valor || 0), 0);
 
     rows.push({ mes: mesNome, entradas, saidas, saldo: entradas - saidas });
