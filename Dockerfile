@@ -1,10 +1,11 @@
-FROM node:20-alpine
+FROM node:20-bullseye-slim
 
 WORKDIR /app
 
 COPY package*.json ./
 COPY prisma ./prisma
 
+ENV npm_config_optional=true
 RUN npm ci
 
 COPY . .
