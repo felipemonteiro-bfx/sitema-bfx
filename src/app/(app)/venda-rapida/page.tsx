@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
+import { headers } from "next/headers";
 
 async function criarVenda(formData: FormData) {
   "use server";
@@ -65,6 +66,11 @@ export default async function Page() {
   }));
 
   const totalUltima = ultima ? (ultima.valorVenda || 0) + (ultima.valorFrete || 0) : 0;
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") ?? "http";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3000");
 
   return (
     <div className="space-y-6">
@@ -171,7 +177,7 @@ export default async function Page() {
                 <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(
-                      `Segue seu recibo: http://localhost:3000/api/recibo?id=${ultima.id}`
+                      `Segue seu recibo: ${baseUrl}/api/recibo?id=${ultima.id}`
                     )}`}
                     target="_blank"
                     rel="noreferrer"

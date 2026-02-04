@@ -51,7 +51,7 @@ export function IntelligenceChatClient({ history, action, providers }: Intellige
 
   return (
     <>
-      <div className="flex-1 flex flex-col-reverse gap-6 overflow-auto rounded-lg border bg-background p-4">
+      <div className="flex min-h-0 flex-1 flex-col-reverse gap-4 overflow-auto rounded-lg border bg-background p-3 sm:gap-6 sm:p-4">
         {optimisticHistory.length === 0 ? (
           <div className="text-sm text-muted-foreground">
             Sem mensagens ainda. Faça uma pergunta para começar.
@@ -66,13 +66,13 @@ export function IntelligenceChatClient({ history, action, providers }: Intellige
                 <span className="ml-2">{new Date(m.at).toLocaleString("pt-BR")}</span>
               </div>
               <div className="flex justify-end">
-                <div className="max-w-[75%] rounded-2xl border bg-primary/10 px-4 py-3 text-sm text-foreground">
+                <div className="max-w-full rounded-2xl border bg-primary/10 px-4 py-3 text-sm text-foreground sm:max-w-[75%]">
                   <div className="text-xs font-semibold text-muted-foreground">Você</div>
                   <div>{m.prompt}</div>
                 </div>
               </div>
               <div className="flex justify-start">
-                <div className="max-w-[75%] rounded-2xl border bg-muted/50 px-4 py-3 text-sm text-foreground">
+                <div className="max-w-full rounded-2xl border bg-muted/50 px-4 py-3 text-sm text-foreground sm:max-w-[75%]">
                   <div className="text-xs font-semibold text-muted-foreground">
                     Assistente
                   </div>
