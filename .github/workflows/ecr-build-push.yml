@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - nextjs-migration
+    paths-ignore:
+      - deploy/**
 
 env:
   AWS_REGION: sa-east-1
