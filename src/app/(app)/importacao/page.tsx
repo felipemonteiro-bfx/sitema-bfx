@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { revalidatePath } from "next/cache";
 import Papa from "papaparse";
+import { uuidv7 } from "@/lib/uuid";
 
 async function importar(formData: FormData) {
   "use server";
@@ -31,6 +32,7 @@ async function importar(formData: FormData) {
 
     await prisma.venda.create({
       data: {
+        uuid: uuidv7(),
         dataVenda: new Date(row["Data (AAAA-MM-DD)"] || new Date().toISOString().slice(0, 10)),
         vendedor: row["Vendedor"] || "",
         clienteId: cliente.id,

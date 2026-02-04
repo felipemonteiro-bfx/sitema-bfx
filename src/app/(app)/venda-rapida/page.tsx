@@ -6,6 +6,7 @@ import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { headers } from "next/headers";
+import { uuidv7 } from "@/lib/uuid";
 
 async function criarVenda(formData: FormData) {
   "use server";
@@ -25,6 +26,7 @@ async function criarVenda(formData: FormData) {
   if (!data || !vendedor || !clienteId) return;
   await prisma.venda.create({
     data: {
+      uuid: uuidv7(),
       dataVenda: new Date(data),
       vendedor,
       clienteId,
@@ -66,6 +68,7 @@ export default async function Page() {
   }));
 
   const totalUltima = ultima ? (ultima.valorVenda || 0) + (ultima.valorFrete || 0) : 0;
+  const reciboToken = ultima?.uuid ?? String(ultima?.id ?? "");
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
   const proto = headerList.get("x-forwarded-proto") ?? "http";
@@ -175,12 +178,12 @@ export default async function Page() {
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 <Button asChild variant="outline">
-                  <a href={`/api/recibo?id=${ultima.id}`}>Baixar recibo PDF</a>
+                  <a href={`/api/recibo?id=${reciboToken}`}>Baixar recibo PDF</a>
                 </Button>
                 <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(
-                      `Segue seu recibo: ${baseUrl}/api/recibo?id=${ultima.id}`
+                      `Segue seu recibo: ${baseUrl}/api/recibo?id=${reciboToken}`
                     )}`}
                     target="_blank"
                     rel="noreferrer"

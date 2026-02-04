@@ -33,10 +33,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 
-# Prisma CLI + engines for migrate deploy
-COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
-COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=deps /app/node_modules/effect ./node_modules/effect
+# Full node_modules for runtime (includes Prisma CLI and deps)
+COPY --from=deps /app/node_modules ./node_modules
 
 EXPOSE 3000
 

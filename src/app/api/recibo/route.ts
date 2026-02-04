@@ -35,10 +35,13 @@ function fillTemplate(template: string, data: Record<string, string>) {
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const id = Number(searchParams.get("id") || 0);
-  if (!id) return new Response("ID inválido", { status: 400 });
+  const idParam = (searchParams.get("id") || "").trim();
+  if (!idParam) return new Response("ID inválido", { status: 400 });
 
-  const venda = await prisma.venda.findUnique({ where: { id } });
+  const isNumeric = /^\d+$/.test(idParam);
+  const venda = isNumeric
+    ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
+    : await prisma.venda.findUnique({ where: { uuid: idParam } });
   if (!venda) return new Response("Venda não encontrada", { status: 404 });
   const cliente = venda.clienteId
     ? await prisma.cliente.findUnique({ where: { id: venda.clienteId } })
@@ -100,7 +103,7 @@ export async function GET(req: Request) {
 
   page.drawText("BFX Manager", { x: headerTitleX, y: 805, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   page.drawText("Recibo de Venda", { x: headerTitleX, y: 783, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
-  page.drawText(`Recibo #${id}`, { x: 420, y: 805, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
+  page.drawText(`Recibo #${venda.id}`, { x: 420, y: 805, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
   page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: 785, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
   
   y = 730;
@@ -182,7 +185,7 @@ export async function GET(req: Request) {
   return new Response(Buffer.from(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="recibo_${id}.pdf"`,
+      "Content-Disposition": `attachment; filename="recibo_${venda.id}.pdf"`,
     },
   });
 }

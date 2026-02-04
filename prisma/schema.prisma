@@ -42,6 +42,7 @@ model Produto {
 
 model Venda {
   id                 Int       @id @default(autoincrement())
+  uuid               String?   @unique @db.Uuid
   dataVenda          DateTime  @map("data_venda")
   vendedor           String?
   clienteId          Int?      @map("cliente_id")

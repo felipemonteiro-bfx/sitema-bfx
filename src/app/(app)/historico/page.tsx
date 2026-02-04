@@ -144,7 +144,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </Link>
                         </Button>
                         <Button size="sm" variant="outline" asChild>
-                          <a href={`/api/recibo?id=${v.id}`}>PDF</a>
+                          <a href={`/api/recibo?id=${v.uuid ?? v.id}`}>PDF</a>
                         </Button>
                       </div>
                     </TableCell>
@@ -195,7 +195,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </div>
               <div className="md:col-span-3 flex flex-wrap items-center gap-3">
                 <Button>Salvar alterações</Button>
-                <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
+                <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.uuid ?? editVenda.id}`}>
                   Baixar recibo PDF
                 </a>
               </div>
