@@ -9,6 +9,7 @@ import { FormSelect } from "@/components/form-select";
 import { QueryTabs } from "@/components/query-tabs";
 import ProdutoFormClient from "@/components/produto-form-client";
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 
 type Search = { tab?: string };
 
@@ -42,6 +43,7 @@ async function addProduto(formData: FormData) {
       nome,
       custoPadrao: Number(formData.get("custo") || 0),
       marca: String(formData.get("marca") || ""),
+      categoria: String(formData.get("categoria") || ""),
       ncm: String(formData.get("ncm") || ""),
       valorVenda: Number(formData.get("valor") || 0),
       imagem: String(formData.get("imagem") || ""),
@@ -226,6 +228,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <TableRow>
                           <TableHead className="w-[80px]">Foto</TableHead>
                           <TableHead>Nome</TableHead>
+                          <TableHead>Categoria</TableHead>
                           <TableHead>Marca/Fornecedor</TableHead>
                           <TableHead>NCM</TableHead>
                           <TableHead className="text-right">Valor</TableHead>
@@ -234,7 +237,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <TableBody>
                         {produtos.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                               Sem produtos cadastrados.
                             </TableCell>
                           </TableRow>
@@ -258,6 +261,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 )}
                               </TableCell>
                               <TableCell className="font-medium">{p.nome}</TableCell>
+                              <TableCell>
+                                <Badge variant="secondary" className="font-normal">{p.categoria || "N/A"}</Badge>
+                              </TableCell>
                               <TableCell>
                                 <div className="text-xs font-semibold">{p.marca}</div>
                                 <div className="text-[10px] text-muted-foreground">
