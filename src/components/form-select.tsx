@@ -108,13 +108,13 @@ export function FormSelect({
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2">
           {searchable && (
-            <div className="mb-2 flex items-center gap-2 rounded-md border px-2">
+            <div className="mb-2 flex items-center gap-2 rounded-lg border bg-muted/30 px-2.5 py-1.5 shadow-sm transition-colors focus-within:border-primary/40 focus-within:bg-background">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="h-8 border-0 p-0 focus-visible:ring-0"
+                className="h-8 border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
           )}
