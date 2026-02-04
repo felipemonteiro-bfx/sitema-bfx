@@ -20,22 +20,25 @@ export async function GET(req: Request) {
     },
     include: {
       cliente: {
-        select: { empresa: true }
+        select: { empresa: true, nome: true }
       }
     },
     orderBy: { dataVenda: "desc" },
   });
 
-  const header = "Data,Vendedor,Empresa,Produto,Valor,Frete,Parcelas\n";
+  const header = "Data,Vendedor,Empresa,Cliente,Produto,Valor,Frete,Total,Parcelas,ValorParcela\n";
   const lines = vendas.map((v) =>
     [
       v.dataVenda.toISOString().slice(0, 10),
       v.vendedor || "",
       v.cliente?.empresa || "N/D",
+      v.cliente?.nome || "N/D",
       v.produtoNome || "",
       v.valorVenda || 0,
       v.valorFrete || 0,
+      (v.valorVenda || 0) + (v.valorFrete || 0),
       v.parcelas || 0,
+      v.valorParcela || 0,
     ].join(",")
   );
   const csv = header + lines.join("\n");

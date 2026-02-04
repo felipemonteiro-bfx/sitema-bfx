@@ -60,7 +60,46 @@ export async function runAiWithActions(
     return `Despesas encontradas: ${rows.length}. Total: ${currency.format(total)}.`;
   };
 
-  const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.test(prompt);
+  
+  const buildToolSummary = (executed: { name: string; result: unknown }[]) => {
+    if (!executed.length) return "";
+    const parts: string[] = [];
+    for (const item of executed) {
+      if (item.name === "listar_clientes" && Array.isArray(item.result)) {
+        const nomes = (item.result as any[]).slice(0, 5).map((c) => c.nome).filter(Boolean);
+        parts.push(
+          nomes.length
+            ? `Clientes encontrados: ${nomes.join(", ")}.`
+            : "Nenhum cliente encontrado."
+        );
+      } else if (item.name === "listar_produtos" && Array.isArray(item.result)) {
+        const nomes = (item.result as any[]).slice(0, 5).map((p) => p.nome).filter(Boolean);
+        parts.push(
+          nomes.length
+            ? `Produtos encontrados: ${nomes.join(", ")}.`
+            : "Nenhum produto encontrado."
+        );
+      } else if (item.name === "listar_vendas" && Array.isArray(item.result)) {
+        parts.push(`Vendas encontradas: ${(item.result as any[]).length}.`);
+      } else if (item.name === "listar_despesas" && Array.isArray(item.result)) {
+        parts.push(summarizeDespesas(item.result as any[]));
+      } else if (item.name === "listar_usuarios" && Array.isArray(item.result)) {
+        const nomes = (item.result as any[]).slice(0, 5).map((u) => u.nomeExibicao || u.username).filter(Boolean);
+        parts.push(
+          nomes.length
+            ? `Usuários encontrados: ${nomes.join(", ")}.`
+            : "Nenhum usuário encontrado."
+        );
+      } else {
+        parts.push(`Ação executada: ${item.name}.`);
+      }
+    }
+    return parts.join("\n");
+  };
+
+  const shouldAppendSummary = (text: string) =>
+    !text.trim() || /buscando|aguarde|processando|consultando/i.test(text);
+const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /m[eê]s|mes/i.test(prompt);
 
   if (ctx.mode === "execute" && ctx.executeAction) {
     const execResult = await executeAiAction(ctx.executeAction.name, ctx.executeAction.params, ctx);
@@ -169,7 +208,16 @@ export async function runAiWithActions(
       const planned = extractActions(text);
       return { text: stripActions(text), actions: planned };
     }
-    if (text && text.trim()) return { text, actions: executed };
+    if (text && text.trim()) {
+      const summary = buildToolSummary(executed);
+      if (summary && shouldAppendSummary(text)) {
+        return { text: summary, actions: executed };
+      }
+      if (summary) {
+        return { text: `${text}\n\n${summary}`, actions: executed };
+      }
+      return { text, actions: executed };
+    }
     if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
     const fallbackText = executed
@@ -250,7 +298,16 @@ export async function runAiWithActions(
     const planned = extractActions(text);
     return { text: stripActions(text), actions: planned };
   }
-  if (text && text.trim()) return { text, actions: executed };
+  if (text && text.trim()) {
+      const summary = buildToolSummary(executed);
+      if (summary && shouldAppendSummary(text)) {
+        return { text: summary, actions: executed };
+      }
+      if (summary) {
+        return { text: `${text}\n\n${summary}`, actions: executed };
+      }
+      return { text, actions: executed };
+    }
   if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
   const fallbackText = executed

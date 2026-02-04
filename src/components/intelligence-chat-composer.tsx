@@ -67,6 +67,7 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
           options={providers}
           defaultValue={providers[0]?.value ?? "openai"}
           className="h-9 min-w-[110px] rounded-full border border-border/60 bg-muted/40 text-xs"
+          searchable={false}
         />
 
         <ChatPromptInput

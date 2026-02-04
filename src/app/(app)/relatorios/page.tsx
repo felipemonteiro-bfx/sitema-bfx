@@ -1,6 +1,7 @@
 ﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { format } from "date-fns";
@@ -9,8 +10,16 @@ export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
   
-  const today = format(new Date(), "yyyy-MM-dd");
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const today = format(now, "yyyy-MM-dd");
+  const monthStartStr = format(monthStart, "yyyy-MM-dd");
   const empresas = await prisma.empresaParceira.findMany({ orderBy: { nome: "asc" } });
+  const extraEmpresas = ["Amazonfive", "Gimam"];
+  const empresaOptions = [
+    ...empresas.map((e) => e.nome),
+    ...extraEmpresas.filter((name) => !empresas.some((e) => e.nome.toLowerCase() === name.toLowerCase())),
+  ];
 
   const formatDateBR = (value: string) =>
     new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value + "T00:00:00"));
@@ -33,19 +42,18 @@ export default async function Page() {
             <form action="/api/relatorios/vendas" method="get" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Empresa Parceira</div>
-                <select 
-                  name="empresa" 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="all">Todas</option>
-                  {empresas.map(e => (
-                    <option key={e.id} value={e.nome}>{e.nome}</option>
-                  ))}
-                </select>
+                <FormSelect
+                  name="empresa"
+                  defaultValue="all"
+                  options={[
+                    { value: "all", label: "Todas" },
+                    ...empresaOptions.map((nome) => ({ value: nome, label: nome })),
+                  ]}
+                />
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Data inicial</div>
-                <Input type="date" name="from" defaultValue={today} aria-label="Data inicial" />
+                <Input type="date" name="from" defaultValue={monthStartStr} aria-label="Data inicial" />
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Data final</div>
@@ -55,7 +63,18 @@ export default async function Page() {
                 Baixar CSV
               </Button>
             </form>
-            <div className="text-xs text-muted-foreground">Período padrão: hoje ({formatDateBR(today)}).</div>
+            <div className="text-xs text-muted-foreground">
+              Período padrão: mês atual ({formatDateBR(monthStartStr)} a {formatDateBR(today)}).
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["Amazonfive", "Gimam"].map((empresa) => (
+                <Button key={empresa} asChild variant="outline" size="sm">
+                  <a href={`/api/relatorios/vendas?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}>
+                    CSV {empresa}
+                  </a>
+                </Button>
+              ))}
+            </div>
           </CardContent>
         </Card>
 

@@ -144,11 +144,12 @@
     min-height: 100%;
     min-height: 100dvh;
   }
-  #__next,
+
+  /* #__next,
   body > div {
     min-height: 100%;
     min-height: 100dvh;
-  }
+  } */
 
   body {
     @apply bg-background text-foreground;

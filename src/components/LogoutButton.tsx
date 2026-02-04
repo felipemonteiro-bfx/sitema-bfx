@@ -1,9 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { LogOut, ShieldAlert } from "lucide-react";
 
 export function LogoutButton() {
@@ -26,13 +33,17 @@ export function LogoutButton() {
   return (
     <>
       <Button
-        variant="destructive"
+        variant="outline"
         onClick={() => setOpen(true)}
         type="button"
-        className="w-full justify-start gap-2"
+        className="w-full justify-between border-destructive/30 bg-destructive/5 text-destructive hover:border-destructive/40 hover:bg-destructive/10"
       >
-        <LogOut className="h-4 w-4" />
-        Sair
+        <span className="flex items-center gap-2">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-destructive/10">
+            <LogOut className="h-4 w-4" />
+          </span>
+          Sair
+        </span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

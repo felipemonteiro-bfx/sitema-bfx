@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useQueryState, parseAsString } from "nuqs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormSelect } from "@/components/form-select";
 import { format, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -22,18 +22,15 @@ export function MonthFilter() {
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm font-medium text-muted-foreground">Período:</span>
-      <Select value={mes} onValueChange={(v) => setMes(v)}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Selecione o mês" />
-        </SelectTrigger>
-        <SelectContent>
-          {mesList.map((m) => (
-            <SelectItem key={m.value} value={m.value}>
-              <span className="capitalize">{m.label}</span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FormSelect
+        name="mes"
+        value={mes}
+        onValueChange={(v) => setMes(v)}
+        options={mesList}
+        placeholder="Selecione o mês"
+        searchPlaceholder="Pesquisar mês..."
+        className="w-[180px]"
+      />
     </div>
   );
 }

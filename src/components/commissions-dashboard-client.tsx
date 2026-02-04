@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatBRL } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormSelect } from "@/components/form-select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function CommissionsDashboardClient() {
@@ -47,6 +47,11 @@ export default function CommissionsDashboardClient() {
   }, [vendedorFiltro, dataInicio, dataFim]);
 
   const totalComissoes = commissions.reduce((sum, item) => sum + item.valorComissao, 0);
+  const vendedores = ["all", "Vendedor Um", "Vendedor Dois"];
+  const vendedoresOptions = vendedores.map((v) => ({
+    value: v,
+    label: v === "all" ? "Todos os Vendedores" : v,
+  }));
 
   // Cores harmônicas seguindo a Lei Suprema #1
   const COLORS = ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
@@ -69,17 +74,14 @@ export default function CommissionsDashboardClient() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Vendedor</Label>
-              <Select value={vendedorFiltro} onValueChange={setVendedorFiltro}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um vendedor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Vendedores</SelectItem>
-                  {/* Idealmente, buscaríamos a lista de vendedores de outra API ou dos dados brutos */}
-                  <SelectItem value="Vendedor Um">Vendedor Um</SelectItem>
-                  <SelectItem value="Vendedor Dois">Vendedor Dois</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormSelect
+                name="vendedorFiltro"
+                value={vendedorFiltro}
+                onValueChange={setVendedorFiltro}
+                options={vendedoresOptions}
+                placeholder="Selecione um vendedor"
+                searchPlaceholder="Pesquisar vendedor..."
+              />
             </div>
             <div className="space-y-2">
               <Label>Data Início</Label>

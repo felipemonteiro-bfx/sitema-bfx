@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -25,7 +27,13 @@ export function VendorMultiSelect({
   className?: string;
 }) {
   const [selected, setSelected] = useState<string[]>(defaultSelected);
+  const [query, setQuery] = useState("");
   const value = useMemo(() => selected.join(","), [selected]);
+  const filtered = useMemo(() => {
+    if (!query.trim()) return vendors;
+    const q = query.trim().toLowerCase();
+    return vendors.filter((v) => v.toLowerCase().includes(q));
+  }, [query, vendors]);
 
   function toggle(v: string) {
     setSelected((prev) =>
@@ -69,15 +77,32 @@ export function VendorMultiSelect({
             </Button>
           </div>
           <DropdownMenuSeparator />
-          {vendors.map((v) => (
-            <DropdownMenuCheckboxItem
-              key={v}
-              checked={selected.includes(v)}
-              onCheckedChange={() => toggle(v)}
-            >
-              {v}
-            </DropdownMenuCheckboxItem>
-          ))}
+          <div className="px-2 pb-2">
+            <div className="flex items-center gap-2 border-b border-border/60 pb-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Pesquisar vendedor..."
+                className="h-8 border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </div>
+          </div>
+          <div className="max-h-64 overflow-y-auto px-2 pb-2 pr-1">
+            {filtered.length === 0 ? (
+              <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum resultado.</div>
+            ) : (
+              filtered.map((v) => (
+                <DropdownMenuCheckboxItem
+                  key={v}
+                  checked={selected.includes(v)}
+                  onCheckedChange={() => toggle(v)}
+                >
+                  {v}
+                </DropdownMenuCheckboxItem>
+              ))
+            )}
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

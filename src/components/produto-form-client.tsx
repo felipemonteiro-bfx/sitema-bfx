@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { FormSelect } from "@/components/form-select";
 import { Loader2, Camera, Wand2, CheckCircle2, AlertCircle } from "lucide-react";
 import Image from 'next/image';
 
@@ -210,16 +211,13 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Fornecedor</Label>
-              <select 
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <FormSelect
+                name="fornecedorId"
                 value={fornecedorId}
-                onChange={(e) => setFornecedorId(e.target.value)}
-              >
-                <option value="">Selecione o Fornecedor</option>
-                {fornecedores.map(f => (
-                  <option key={f.id} value={f.id}>{f.nome}</option>
-                ))}
-              </select>
+                onValueChange={setFornecedorId}
+                placeholder="Selecione o Fornecedor"
+                options={fornecedores.map((f) => ({ value: String(f.id), label: f.nome }))}
+              />
             </div>
           </div>
 

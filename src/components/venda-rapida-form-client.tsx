@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // CÃ¡lculos em tempo real
+  // Cálculos em tempo real
   const numValor = Number(valor) || 0;
   const numCusto = Number(custo) || 0;
   const numFrete = Number(frete) || 0;
@@ -267,7 +267,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
           </div>
 
           <div>
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Lucro LÃ­quido</Label>
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Lucro Líquido</Label>
             <div className={`text-lg font-bold ${lucroBruto >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {formatBRL(lucroBruto)}
             </div>
@@ -275,7 +275,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
           </div>
 
           <div>
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">ComissÃ£o ({comissaoPct}%)</Label>
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Comissão ({comissaoPct}%)</Label>
             <div className="text-lg font-bold text-amber-600">
               {formatBRL(valorComissao > 0 ? valorComissao : 0)}
             </div>

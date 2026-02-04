@@ -377,7 +377,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         });
         break;
       default:
-        throw new Error("A��o n�o suportada.");
+        throw new Error("Ação não suportada.");
     }
 
     await logAction("success", { params, result });
