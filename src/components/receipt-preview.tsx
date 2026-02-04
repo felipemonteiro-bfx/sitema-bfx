@@ -28,16 +28,22 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
   return (
     <div className="font-sans text-gray-800 p-4 bg-white shadow-md rounded-md">
       {/* Header */}
-      <div className="flex justify-between items-center border-b pb-4 mb-4">
+      <div className="flex items-center gap-4 border-b pb-4 mb-4">
+        {logoPath && (
+          <div className="relative w-16 h-16 shrink-0">
+            <Image
+              src={logoPath}
+              alt="Company Logo"
+              fill
+              sizes="64px"
+              className="object-contain"
+            />
+          </div>
+        )}
         <div>
           <h1 className="text-xl font-bold">BFX Manager</h1>
           <p className="text-sm text-gray-600">Recibo de Venda (Prévia)</p>
         </div>
-        {logoPath && (
-          <div className="relative w-20 h-20">
-            <Image src={logoPath} alt="Company Logo" layout="fill" objectFit="contain" />
-          </div>
-        )}
       </div>
 
       {/* Sale Details */}
