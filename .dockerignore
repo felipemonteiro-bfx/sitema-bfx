@@ -5,3 +5,13 @@ node_modules
 *.log
 coverage
 dist
+.git
+.github
+.vscode
+*.md
+docker-compose*.yml
+Dockerfile.dev
+README.md
+scripts
+streamlit
+prisma/*.db
