@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { parseAsString, useQueryState } from "nuqs";
+import { useQueryParam } from "@/lib/use-query-param";
 
 export type TabItem = {
   value: string;
@@ -16,10 +16,7 @@ export function GestaoRhTabs({
   tabs: TabItem[];
   defaultTab: string;
 }) {
-  const [tab, setTab] = useQueryState(
-    "tab",
-    parseAsString.withDefault(defaultTab).withOptions({ history: "push", shallow: true })
-  );
+  const [tab, setTab] = useQueryParam("tab", defaultTab);
 
   return (
     <Tabs value={tab} onValueChange={setTab}>

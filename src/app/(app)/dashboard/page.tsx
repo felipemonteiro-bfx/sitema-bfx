@@ -164,10 +164,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <CardHeader className="relative pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido Real</CardTitle>
               </CardHeader>
-              <CardContent className="relative text-2xl font-semibold text-emerald-700">
+              <CardContent
+                className={`relative text-2xl font-semibold ${
+                  lucro < 0 ? "text-rose-700" : "text-emerald-700"
+                }`}
+              >
                 {formatBRL(lucro)}
               </CardContent>
-              <div className="relative px-6 pb-4 text-xs text-emerald-700">Margem: {margem.toFixed(1)}%</div>
+              <div
+                className={`relative px-6 pb-4 text-xs ${
+                  margem < 0 ? "text-rose-700" : "text-emerald-700"
+                }`}
+              >
+                Margem: {margem.toFixed(1)}%
+              </div>
             </Card>
             <Card className="relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-indigo-100 opacity-70" />

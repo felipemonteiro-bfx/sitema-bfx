@@ -1,6 +1,8 @@
-FROM node:20-alpine
+FROM node:20-bullseye-slim
 
 WORKDIR /app
+
+ENV npm_config_optional=true
 
 COPY package*.json ./
 RUN npm install
@@ -8,6 +10,7 @@ RUN npm install
 COPY . .
 
 ENV NODE_ENV=development
+ENV TAILWIND_DISABLE_LIGHTNINGCSS=1
 EXPOSE 3000
 
 CMD ["npm", "run", "dev"]

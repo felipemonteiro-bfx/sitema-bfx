@@ -1,6 +1,5 @@
 ﻿import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -22,6 +21,8 @@ export const metadata: Metadata = {
   description: "Gestao comercial BFX",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${manrope.variable} ${spaceGrotesk.variable}`}>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        {children}
       </body>
     </html>
   );

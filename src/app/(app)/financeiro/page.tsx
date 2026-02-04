@@ -88,7 +88,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardHeader>
                       <CardTitle>Lucro Líquido</CardTitle>
                     </CardHeader>
-                    <CardContent className="text-2xl font-semibold text-emerald-600">
+                    <CardContent
+                      className={`text-2xl font-semibold ${
+                        dre.lucro < 0 ? "text-rose-600" : "text-emerald-600"
+                      }`}
+                    >
                       {formatBRL(dre.lucro)}
                     </CardContent>
                   </Card>

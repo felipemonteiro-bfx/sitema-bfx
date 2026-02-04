@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
-    "build": "next build",
+    "build": "cross-env NODE_ENV=production NEXT_DISABLE_TURBOPACK=1 next build",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate deploy",
@@ -44,8 +44,8 @@
     "openai": "^4.91.0",
     "papaparse": "^5.5.3",
     "pdf-lib": "^1.17.1",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
@@ -56,8 +56,8 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
     "@types/papaparse": "^5.3.16",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "autoprefixer": "^10.4.24",
     "better-sqlite3": "^12.6.2",
     "eslint": "^9",
@@ -68,7 +68,15 @@
     "tailwindcss": "^4.1.18",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "cross-env": "^7.0.3"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@1.22.22",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "optionalDependencies": {
+    "lightningcss-linux-x64-gnu": "1.30.2",
+    "@tailwindcss/oxide-linux-x64-gnu": "4.1.18"
+  }
 }
