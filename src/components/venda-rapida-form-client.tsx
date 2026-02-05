@@ -283,27 +283,28 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
           {/* BFX Intelligence Suggestions */}
           {aiSuggestions && (aiSuggestions.upsell.length > 0 || aiSuggestions.crossSell.length > 0) && (
-            <div className="absolute z-40 w-full mt-1 bg-purple-50/95 border border-purple-200 rounded-md shadow-lg p-2 animate-in fade-in slide-in-from-top-2">
-              <div className="flex items-center gap-1 text-[10px] font-black text-purple-700 uppercase mb-2 px-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+            <div className="absolute z-40 w-full mt-1 bg-gradient-to-br from-purple-50/95 to-purple-100/90 border border-purple-200/80 rounded-lg shadow-lg backdrop-blur-sm p-3 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 text-[11px] font-black text-purple-700 uppercase mb-3 pb-2 border-b border-purple-200/50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
                 BFX Intelligence
               </div>
-              <div className="grid gap-2">
+              <div className="space-y-1.5">
                 {[...aiSuggestions.upsell, ...aiSuggestions.crossSell].map((s) => (
-                  <div 
+                  <button
                     key={s.id}
+                    type="button"
                     onClick={() => {
                       selectProduto(s);
                       setAiSuggestions(null);
                     }}
-                    className="flex items-center justify-between p-2 rounded bg-white hover:bg-purple-100 border border-purple-100 cursor-pointer transition-colors group"
+                    className="flex items-center justify-between w-full p-2.5 rounded-md bg-white/80 hover:bg-white hover:shadow-sm border border-transparent hover:border-purple-200 cursor-pointer transition-all group"
                   >
-                    <div className="flex flex-col">
+                    <div className="flex flex-col items-start">
                       <span className="text-[10px] font-bold text-purple-600 uppercase leading-none mb-1">{s.label}</span>
                       <span className="text-xs font-semibold text-slate-800 group-hover:text-purple-900 truncate max-w-[150px]">{s.nome}</span>
                     </div>
-                    <span className="text-xs font-bold text-slate-900 bg-muted px-2 py-1 rounded">{formatBRL(s.valorVenda)}</span>
-                  </div>
+                    <span className="text-xs font-bold text-slate-900 bg-purple-100 group-hover:bg-purple-200 px-2.5 py-1 rounded-md transition-colors">{formatBRL(s.valorVenda)}</span>
+                  </button>
                 ))}
               </div>
             </div>
