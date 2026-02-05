@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
-import { Loader2, Camera, Wand2, CheckCircle2, AlertCircle, Tag } from "lucide-react";
+import { Loader2, Camera, CheckCircle2, AlertCircle, Tag } from "lucide-react";
 import Image from 'next/image';
 
 interface Props {
@@ -24,7 +24,6 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
   const [fornecedorId, setFornecedorId] = useState('');
 
   const [isUploading, setIsUploading] = useState(false);
-  const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,29 +84,6 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
       if (ncmTimer.current) clearTimeout(ncmTimer.current);
     };
   }, [nome]);
-
-  // Sugerir NCM via IA
-  const handleSuggestNcm = async () => {
-    if (!nome || nome.length < 3) {
-      alert("Digite um nome mais completo para sugerir o NCM.");
-      return;
-    }
-
-    setIsSuggesting(true);
-    try {
-      const res = await fetch(`/api/produtos/autocomplete?q=${encodeURIComponent(nome)}&suggestNcm=true`);
-      const data = await res.json();
-      if (data.suggestedNcm) {
-        setNcm(data.suggestedNcm);
-      } else {
-        alert("Não foi possível sugerir um NCM para este produto. Verifique suas configurações de IA.");
-      }
-    } catch (error) {
-      alert("Erro ao sugerir NCM.");
-    } finally {
-      setIsSuggesting(false);
-    }
-  };
 
   // Upload de Imagem
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,19 +225,7 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">NCM</Label>
-              <div className="flex gap-2">
-                <Input value={ncm} onChange={(e) => setNcm(e.target.value)} placeholder="8 dígitos" maxLength={8} />
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  title="Sugerir NCM via IA"
-                  onClick={handleSuggestNcm}
-                  disabled={isSuggesting}
-                >
-                  {isSuggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4 text-purple-600" />}
-                </Button>
-              </div>
+              <Input value={ncm} onChange={(e) => setNcm(e.target.value)} placeholder="8 dígitos" maxLength={8} />
               <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 p-2">
                 <div className="flex items-center gap-2 text-[11px] uppercase text-muted-foreground">
                   <Tag className="h-3.5 w-3.5" />
