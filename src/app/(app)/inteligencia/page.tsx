@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
 import { prisma } from "@/lib/db";
 import { headers } from "next/headers";
+import { Button } from "@/components/ui/button";
 
 async function askAi(formData: FormData) {
   "use server";
@@ -136,6 +137,12 @@ async function confirmAi(formData: FormData) {
   revalidatePath("/inteligencia");
 }
 
+async function clearAi() {
+  "use server";
+  prismaMessageStore.data = [];
+  revalidatePath("/inteligencia");
+}
+
 const prismaMessageStore = {
   data: [] as {
     prompt: string;
@@ -170,33 +177,43 @@ export default async function Page() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold sm:text-3xl">BFX Intelligence (IA)</h1>
-          <p className="text-sm text-muted-foreground sm:text-base text-balance">
-            Assistente virtual para estratégias, cobranças e dúvidas do time.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-6">
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle>Conversas</CardTitle>
-            <div className="text-xs text-muted-foreground">
-              Provedor ativo: {resolvedProviders[0]?.label || "OpenAI"}
+      <Card className="h-full">
+        <CardHeader className="space-y-1">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <CardTitle className="text-2xl font-semibold sm:text-3xl">
+                BFX Intelligence (IA)
+              </CardTitle>
+              <div className="text-sm text-muted-foreground sm:text-base text-balance">
+                Assistente virtual para estratégias, cobranças e dúvidas do time.
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="flex h-[65vh] min-h-[420px] flex-col gap-4 sm:h-[70vh]">
-            <IntelligenceChatClient
-              history={history}
-              action={askAi}
-              confirmAction={confirmAi}
-              providers={resolvedProviders}
-            />
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                {resolvedProviders[0]?.label || "OpenAI"}
+              </span>
+              <form action={clearAi}>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full text-xs"
+                >
+                  Limpar conversa
+                </Button>
+              </form>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex h-[60vh] min-h-[420px] flex-col gap-4 sm:h-[68vh] lg:h-[72vh]">
+          <IntelligenceChatClient
+            history={history}
+            action={askAi}
+            confirmAction={confirmAi}
+            providers={resolvedProviders}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
