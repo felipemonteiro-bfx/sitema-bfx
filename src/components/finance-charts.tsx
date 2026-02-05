@@ -31,10 +31,13 @@ export function FluxoCharts({ rows }: { rows: FluxoRow[] }) {
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rows} margin={{ left: 10, right: 10, top: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="mes" />
-            <YAxis tickFormatter={(v) => currency(Number(v))} />
-            <Tooltip formatter={(v) => currency(Number(v))} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+            <YAxis tickFormatter={(v) => currency(Number(v))} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+            <Tooltip 
+              formatter={(v) => currency(Number(v))}
+              contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            />
             <Legend />
             <Bar dataKey="entradas" fill="#16a34a" name="Entradas" radius={[4, 4, 0, 0]} />
             <Bar dataKey="saidas" fill="#dc2626" name="Saídas" radius={[4, 4, 0, 0]} />
@@ -44,12 +47,15 @@ export function FluxoCharts({ rows }: { rows: FluxoRow[] }) {
       <div className="h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={rows} margin={{ left: 10, right: 10, top: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="mes" />
-            <YAxis tickFormatter={(v) => currency(Number(v))} />
-            <Tooltip formatter={(v) => currency(Number(v))} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+            <YAxis tickFormatter={(v) => currency(Number(v))} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+            <Tooltip 
+              formatter={(v) => currency(Number(v))}
+              contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--foreground)" }}
+            />
             <Legend />
-            <Line type="monotone" dataKey="saldo" stroke="#0f172a" strokeWidth={2} name="Saldo" />
+            <Line type="monotone" dataKey="saldo" stroke="var(--foreground)" strokeWidth={2} name="Saldo" />
           </LineChart>
         </ResponsiveContainer>
       </div>

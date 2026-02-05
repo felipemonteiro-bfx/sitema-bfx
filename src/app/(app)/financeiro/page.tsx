@@ -1,10 +1,10 @@
-﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
-import { formatBRL } from "@/lib/utils";
+import { formatBRL, cn } from "@/lib/utils";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
@@ -285,7 +285,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <DateInput name="data" aria-label="Data" />
                       </div>
                       <div className="md:col-span-4 flex flex-wrap items-center gap-3">
-                        <Button>Lançar despesa</Button>
+                        <button className={cn(buttonVariants(), "cursor-pointer")}>Lançar despesa</button>
                         <span className="text-xs text-muted-foreground">
                           Campos obrigatórios para cálculo do fluxo.
                         </span>
@@ -326,10 +326,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           <DateInput name="data" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
                         </div>
                         <div className="md:col-span-4 flex items-center gap-2">
-                          <Button>Salvar Alterações</Button>
-                          <Button variant="outline" asChild>
-                            <Link href={`/financeiro?tab=lanc&mes=${currentMes}`}>Cancelar</Link>
-                          </Button>
+                          <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar Alterações</button>
+                          <Link 
+                            href={`/financeiro?tab=lanc&mes=${currentMes}`}
+                            className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}
+                          >
+                            Cancelar
+                          </Link>
                         </div>
                       </form>
                     </CardContent>
@@ -367,16 +370,21 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               <TableCell className="text-right tabular-nums">{formatBRL(d.valor || 0)}</TableCell>
                               <TableCell>
                                 <div className="flex items-center justify-end gap-2">
-                                  <Button size="icon" variant="ghost" asChild title="Editar">
-                                    <Link href={`/financeiro?tab=lanc&mes=${currentMes}&edit=${d.id}`}>
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                                    </Link>
-                                  </Button>
+                                  <Link 
+                                    href={`/financeiro?tab=lanc&mes=${currentMes}&edit=${d.id}`}
+                                    className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "cursor-pointer")}
+                                    title="Editar"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                  </Link>
                                   <form action={deleteDespesa}>
                                     <input type="hidden" name="id" value={d.id} />
-                                    <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Excluir">
+                                    <button 
+                                      className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer")} 
+                                      title="Excluir"
+                                    >
                                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                    </Button>
+                                    </button>
                                   </form>
                                 </div>
                               </TableCell>
@@ -395,6 +403,3 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     </div>
   );
 }
-
-
-

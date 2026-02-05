@@ -35,7 +35,7 @@ export default async function Page() {
           <CardTitle className="text-primary">Vendas Pendentes</CardTitle>
         </CardHeader>
         <CardContent>
-          <AntecipacaoClient vendasIniciais={pend} onSubmit={antecipar} />
+          <AntecipacaoClient vendasIniciais={pend} onSubmitAction={antecipar} />
         </CardContent>
       </Card>
     </div>

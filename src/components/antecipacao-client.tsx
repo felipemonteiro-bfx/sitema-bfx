@@ -16,7 +16,7 @@ interface Venda {
 
 interface Props {
   vendasIniciais: Venda[];
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmitAction: (formData: FormData) => Promise<void>;
 }
 
 const TAXA_MENSAL = 3.99;
@@ -76,7 +76,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
 
       // 2. Executar a antecipação no banco
       selectedIds.forEach(id => formData.append('id', id.toString()));
-      await onSubmit(formData);
+      await onSubmitAction(formData);
       setSelectedIds([]);
     } catch (error) {
       console.error("Erro na antecipação:", error);

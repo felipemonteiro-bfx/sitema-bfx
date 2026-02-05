@@ -2,13 +2,14 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { Badge } from "@/components/ui/badge";
 import { GestaoRhTabs } from "@/components/gestao-rh-tabs";
 import { DeleteUserButton } from "@/components/delete-user-button";
+import { cn } from "@/lib/utils";
 
 type Search = { user?: string; tab?: string };
 
@@ -182,9 +183,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         ]}
                       />
                     </div>
-                    <Button type="submit" variant="outline">
+                    <button type="submit" className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}>
                       Aplicar
-                    </Button>
+                    </button>
                   </form>
 
                   {filteredUsers.length === 0 ? (
@@ -235,7 +236,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             userName={u.nomeExibicao || u.username} 
                             onDelete={deleteUser} 
                           />
-                          <Button className="bg-primary hover:bg-primary/90">Salvar Alterações</Button>
+                          <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Alterações</button>
                         </div>
                       </form>
                     ))
@@ -274,7 +275,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         { value: "vendedor", label: "Vendedor" },
                       ]}
                     />
-                    <Button className="md:col-span-3">Cadastrar</Button>
+                    <button className={cn(buttonVariants(), "md:col-span-3 cursor-pointer")}>Cadastrar</button>
                   </form>
                 </CardContent>
               </Card>

@@ -1,10 +1,10 @@
 ﻿import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
-import { formatBRL } from "@/lib/utils";
+import { formatBRL, cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
@@ -135,7 +135,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 defaultSelected={vendorsFilter}
               />
             </div>
-            <Button className="h-10 w-full lg:w-auto">Filtrar</Button>
+            <button className={cn(buttonVariants(), "h-10 w-full lg:w-auto cursor-pointer")}>Filtrar</button>
           </form>
         </CardContent>
       </Card>
@@ -268,15 +268,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardTitle>Atalhos</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
-                <Button asChild variant="outline">
-                  <Link href="/venda-rapida">Nova venda</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/financeiro">Financeiro</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/relatorios">Relatórios</Link>
-                </Button>
+                <Link href="/venda-rapida" className={buttonVariants({ variant: "outline" })}>
+                  Nova venda
+                </Link>
+                <Link href="/financeiro" className={buttonVariants({ variant: "outline" })}>
+                  Financeiro
+                </Link>
+                <Link href="/relatorios" className={buttonVariants({ variant: "outline" })}>
+                  Relatórios
+                </Link>
               </CardContent>
             </Card>
           </div>
