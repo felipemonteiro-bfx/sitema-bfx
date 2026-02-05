@@ -333,29 +333,32 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3 items-end">
-        <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white">
-          <input 
-            type="checkbox" 
-            id="temNota" 
-            checked={temNota} 
-            onChange={(e) => setTemNota(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <Label htmlFor="temNota" className="text-sm font-medium leading-none cursor-pointer">
-            Com Nota Fiscal
-          </Label>
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="space-y-1">
+          <Label className="text-xs font-semibold text-muted-foreground">Emissão de Nota</Label>
+          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-background hover:bg-accent/50 transition-colors">
+            <input
+              type="checkbox"
+              id="temNota"
+              checked={temNota}
+              onChange={(e) => setTemNota(e.target.checked)}
+              className="h-4 w-4 rounded border-input focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            />
+            <Label htmlFor="temNota" className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Com Nota Fiscal
+            </Label>
+          </div>
         </div>
 
         {temNota && (
           <div className="space-y-1">
             <Label className="text-xs font-semibold text-muted-foreground">Taxa da Nota (%)</Label>
-            <Input 
-              type="number" 
-              step="0.01" 
-              value={taxaNota} 
-              onChange={(e) => setTaxaNota(e.target.value)} 
-              placeholder="5,97" 
+            <Input
+              type="number"
+              step="0.01"
+              value={taxaNota}
+              onChange={(e) => setTaxaNota(e.target.value)}
+              placeholder="5,97"
             />
           </div>
         )}
