@@ -18,6 +18,7 @@ type IntelligenceChatClientProps = {
   action: (formData: FormData) => Promise<void> | void;
   confirmAction: (formData: FormData) => Promise<void> | void;
   providers: { value: "openai" | "gemini"; label: string }[];
+  formId?: string;
 };
 
 export function IntelligenceChatClient({
@@ -25,6 +26,7 @@ export function IntelligenceChatClient({
   action,
   confirmAction,
   providers,
+  formId,
 }: IntelligenceChatClientProps) {
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
     history,
@@ -141,7 +143,12 @@ export function IntelligenceChatClient({
       </div>
 
       <div className="mt-auto">
-        <IntelligenceChatComposer action={handleSubmit} providers={providers} />
+        <IntelligenceChatComposer
+          action={handleSubmit}
+          providers={providers}
+          formId={formId}
+          showProviderSelect={false}
+        />
       </div>
     </>
   );

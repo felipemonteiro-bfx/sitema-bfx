@@ -3,6 +3,7 @@ import { readOnlyActions, runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
+import { FormSelect } from "@/components/form-select";
 import { prisma } from "@/lib/db";
 import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
@@ -166,6 +167,7 @@ const prismaMessageStore = {
 };
 
 export default async function Page() {
+  const formId = "intelligence-chat-form";
   const cfg = await prisma.config.findFirst();
   const providers = [
     ...(cfg?.openaiKey ? [{ value: "openai" as const, label: "OpenAI" }] : []),
@@ -189,9 +191,14 @@ export default async function Page() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                {resolvedProviders[0]?.label || "OpenAI"}
-              </span>
+              <FormSelect
+                name="provider"
+                options={resolvedProviders}
+                defaultValue={resolvedProviders[0]?.value ?? "openai"}
+                className="h-9 w-full rounded-full border border-border/60 bg-muted/40 text-xs sm:w-auto sm:min-w-[140px]"
+                searchable={false}
+                formId={formId}
+              />
               <form action={clearAi}>
                 <Button
                   type="submit"
@@ -211,6 +218,7 @@ export default async function Page() {
             action={askAi}
             confirmAction={confirmAi}
             providers={resolvedProviders}
+            formId={formId}
           />
         </CardContent>
       </Card>

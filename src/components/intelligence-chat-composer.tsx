@@ -9,9 +9,16 @@ import { ChatPromptInput } from "@/components/chat-prompt-input";
 type IntelligenceChatComposerProps = {
   action: (formData: FormData) => void;
   providers?: { value: "openai" | "gemini"; label: string }[];
+  formId?: string;
+  showProviderSelect?: boolean;
 };
 
-export function IntelligenceChatComposer({ action, providers = [] }: IntelligenceChatComposerProps) {
+export function IntelligenceChatComposer({
+  action,
+  providers = [],
+  formId = "intelligence-chat-form",
+  showProviderSelect = true,
+}: IntelligenceChatComposerProps) {
   const [prompt, setPrompt] = React.useState("");
   const formRef = React.useRef<HTMLFormElement | null>(null);
   const submitRef = React.useRef<HTMLButtonElement | null>(null);
@@ -26,6 +33,7 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
 
   return (
     <form
+      id={formId}
       action={action}
       ref={formRef}
       onSubmit={() => {
@@ -62,13 +70,15 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
           </div>
         </div>
 
-        <FormSelect
-          name="provider"
-          options={providers}
-          defaultValue={providers[0]?.value ?? "openai"}
-          className="h-10 w-full rounded-full border border-border/60 bg-muted/40 text-xs sm:w-auto sm:min-w-[110px]"
-          searchable={false}
-        />
+        {showProviderSelect && (
+          <FormSelect
+            name="provider"
+            options={providers}
+            defaultValue={providers[0]?.value ?? "openai"}
+            className="h-10 w-full rounded-full border border-border/60 bg-muted/40 text-xs sm:w-auto sm:min-w-[110px]"
+            searchable={false}
+          />
+        )}
 
         <ChatPromptInput
           value={prompt}

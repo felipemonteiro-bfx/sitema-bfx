@@ -22,6 +22,7 @@ type FormSelectProps = {
   className?: string;
   searchable?: boolean;
   searchPlaceholder?: string;
+  formId?: string;
 };
 
 export function FormSelect({
@@ -34,6 +35,7 @@ export function FormSelect({
   className,
   searchable = true,
   searchPlaceholder = "Pesquisar...",
+  formId,
 }: FormSelectProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue ?? "");
   const [open, setOpen] = React.useState(false);
@@ -63,7 +65,7 @@ export function FormSelect({
 
   return (
     <div>
-      <input type="hidden" name={name} value={value} />
+      <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
