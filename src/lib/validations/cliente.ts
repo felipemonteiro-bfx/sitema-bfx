@@ -5,9 +5,7 @@ import { z } from "zod"
  */
 export const clienteSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório"),
-  tipo: z.enum(["PF", "PJ"], {
-    errorMap: () => ({ message: "Tipo deve ser PF ou PJ" }),
-  }),
+  tipo: z.enum(["PF", "PJ"]),
   cpfCnpj: z.string().optional(),
   telefone: z.string().optional(),
   email: z
@@ -17,9 +15,7 @@ export const clienteSchema = z.object({
     .or(z.literal("")),
   endereco: z.string().optional(),
   limiteCredito: z
-    .number({
-      invalid_type_error: "Limite de crédito deve ser um número",
-    })
+    .number()
     .min(0, "Limite de crédito deve ser positivo")
     .optional(),
 })
