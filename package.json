@@ -41,6 +41,7 @@
     "jose": "^6.1.3",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
+    "next-themes": "^0.4.6",
     "nuqs": "^2.8.8",
     "openai": "^4.91.0",
     "papaparse": "^5.5.3",
@@ -63,6 +64,7 @@
     "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.24",
     "better-sqlite3": "^12.6.2",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "postcss": "^8.5.6",
@@ -71,15 +73,14 @@
     "tailwindcss": "^4.1.18",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5",
-    "cross-env": "^7.0.3"
+    "typescript": "^5"
   },
   "packageManager": "yarn@1.22.22",
   "prisma": {
     "seed": "node prisma/seed.js"
   },
   "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "1.30.2",
-    "@tailwindcss/oxide-linux-x64-gnu": "4.1.18"
+    "@tailwindcss/oxide-linux-x64-gnu": "4.1.18",
+    "lightningcss-linux-x64-gnu": "1.30.2"
   }
 }

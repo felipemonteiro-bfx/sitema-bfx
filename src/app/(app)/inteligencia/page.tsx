@@ -1,4 +1,4 @@
-﻿import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { readOnlyActions, runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
@@ -6,7 +6,8 @@ import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
 import { FormSelect } from "@/components/form-select";
 import { prisma } from "@/lib/db";
 import { headers } from "next/headers";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 async function askAi(formData: FormData) {
   "use server";
@@ -200,14 +201,12 @@ export default async function Page() {
                 formId={formId}
               />
               <form action={clearAi}>
-                <Button
+                <button
                   type="submit"
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full text-xs"
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full text-xs cursor-pointer")}
                 >
                   Limpar conversa
-                </Button>
+                </button>
               </form>
             </div>
           </div>

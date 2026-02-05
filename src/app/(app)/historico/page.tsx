@@ -3,11 +3,12 @@ import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
+import { cn } from "@/lib/utils";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -27,6 +28,7 @@ async function updateVenda(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   const data = String(formData.get("data") || "");
   const valor = Number(formData.get("valor") || 0);
+  const quantidade = Number(formData.get("quantidade") || 1);
   const frete = Number(formData.get("frete") || 0);
   const envio = Number(formData.get("envio") || 0);
   const custo = Number(formData.get("custo_prod") || 0);
@@ -35,9 +37,10 @@ async function updateVenda(formData: FormData) {
 
   if (!id || !data) return;
 
-  const valorDescontoNota = temNota ? (valor * taxaNota) / 100 : 0;
-  const total = valor + frete;
-  const lucro = total - (custo + envio + valorDescontoNota);
+  const subtotal = valor * quantidade;
+  const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
+  const total = subtotal + frete;
+  const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
 
   await prisma.venda.update({
     where: { id },
@@ -45,6 +48,7 @@ async function updateVenda(formData: FormData) {
       dataVenda: new Date(data),
       vendedor: String(formData.get("vendedor") || ""),
       produtoNome: String(formData.get("produto") || ""),
+      quantidade,
       valorVenda: valor,
       valorFrete: frete,
       custoEnvio: envio,
@@ -162,7 +166,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               ]}
             />
             <input type="hidden" name="page" value="1" />
-            <Button>Filtrar</Button>
+            <button className={cn(buttonVariants(), "cursor-pointer")}>Filtrar</button>
           </form>
         </CardContent>
       </Card>
@@ -180,7 +184,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead>Cliente</TableHead>
                 <TableHead>Vendedor</TableHead>
                 <TableHead>Produto</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="text-center">Qtd</TableHead>
+                <TableHead className="text-right">Valor Total</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -199,8 +204,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
                     <TableCell>{v.produtoNome}</TableCell>
+                    <TableCell className="text-center">{v.quantidade || 1}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}
+                      {formatBRL(((v.valorVenda || 0) * (v.quantidade || 1)) + (v.valorFrete || 0))}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
@@ -211,16 +217,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-2 justify-end">
-                        <Button size="sm" asChild variant="outline">
-                          <Link
-                            href={buildUrl({ edit: v.id.toString() }) + "#editar-venda"}
-                          >
-                            Editar
-                          </Link>
-                        </Button>
-                        <Button size="sm" variant="ghost" asChild>
-                          <a href={`/api/recibo?id=${v.id}`}>PDF</a>
-                        </Button>
+                        <Link
+                          href={buildUrl({ edit: v.id.toString() }) + "#editar-venda"}
+                          className={buttonVariants({ variant: "outline", size: "sm" })}
+                        >
+                          Editar
+                        </Link>
+                        <a 
+                          href={`/api/recibo?id=${v.id}`}
+                          className={buttonVariants({ variant: "ghost", size: "sm" })}
+                        >
+                          PDF
+                        </a>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -233,22 +241,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <div className="flex items-center justify-between border-t pt-4">
               <div className="text-xs text-muted-foreground">Mostrando {vendas.length} de {totalVendas} resultados</div>
               <div className="flex items-center gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  disabled={page <= 1}
-                  asChild
-                >
-                  <Link href={buildUrl({ page: (page - 1).toString() })}>Anterior</Link>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  disabled={page >= totalPages}
-                  asChild
-                >
-                  <Link href={buildUrl({ page: (page + 1).toString() })}>Próxima</Link>
-                </Button>
+                {page > 1 ? (
+                  <Link 
+                    href={buildUrl({ page: (page - 1).toString() })}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Anterior
+                  </Link>
+                ) : (
+                  <div className={cn(buttonVariants({ variant: "outline", size: "sm" }), "opacity-50 pointer-events-none")}>
+                    Anterior
+                  </div>
+                )}
+                {page < totalPages ? (
+                  <Link 
+                    href={buildUrl({ page: (page + 1).toString() })}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Próxima
+                  </Link>
+                ) : (
+                  <div className={cn(buttonVariants({ variant: "outline", size: "sm" }), "opacity-50 pointer-events-none")}>
+                    Próxima
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -277,7 +293,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Valor do produto</label>
+                <label className="text-xs font-medium text-muted-foreground">Quantidade</label>
+                <Input name="quantidade" type="number" min="1" defaultValue={editVenda.quantidade || 1} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Valor Unitário</label>
                 <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
               </div>
               <div className="space-y-1">
@@ -320,7 +340,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
               <div className="md:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
                 <div className="flex items-center gap-3">
-                  <Button>Salvar alterações</Button>
+                  <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar alterações</button>
                   <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
                     Baixar recibo PDF
                   </a>

@@ -3,12 +3,13 @@ import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { revalidatePath } from "next/cache";
 import { QueryTabs } from "@/components/query-tabs";
 import { Separator } from "@/components/ui/separator";
 import { LogoUploadForm } from "@/components/logo-upload-form";
 import { ReceiptEditorClient } from "@/components/receipt-editor-client";
+import { cn } from "@/lib/utils";
 
 type Search = { tab?: string };
 
@@ -85,7 +86,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </div>
                   <form action={saveAviso} className="space-y-3">
                     <Textarea name="mensagem" defaultValue={aviso?.mensagem || ""} />
-                    <Button>Publicar aviso</Button>
+                    <button className={cn(buttonVariants(), "cursor-pointer")}>Publicar aviso</button>
                   </form>
                 </CardContent>
               </Card>
@@ -145,7 +146,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <div className="text-xs text-muted-foreground">Chave Gemini salva.</div>
                       )}
                     </div>
-                    <Button>Salvar</Button>
+                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
                   </form>
                 </CardContent>
               </Card>
@@ -162,7 +163,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent className="space-y-2">
                   <div className="text-sm text-muted-foreground">Vendas com nome "Jaqueline": {countWrong}</div>
                   <form action={corrigirVendedor}>
-                    <Button variant="destructive">Corrigir todas</Button>
+                    <button className={cn(buttonVariants({ variant: "destructive" }), "cursor-pointer")}>Corrigir todas</button>
                   </form>
                 </CardContent>
               </Card>

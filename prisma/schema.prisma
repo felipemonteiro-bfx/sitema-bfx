@@ -49,6 +49,7 @@ model Venda {
   clienteId          Int?      @map("cliente_id")
   produtoNome        String?   @map("produto_nome")
   custoProduto       Float?    @map("custo_produto")
+  quantidade         Int?      @default(1)
   valorVenda         Float?
   valorFrete         Float?    @default(0) @map("valor_frete")
   custoEnvio         Float?    @default(0) @map("custo_envio")

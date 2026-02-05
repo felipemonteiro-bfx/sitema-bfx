@@ -1,10 +1,10 @@
 ﻿import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
 import { LogoutButton } from "@/components/LogoutButton";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarNav } from "@/components/sidebar-nav";
+import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -50,25 +50,16 @@ export default async function AppLayout({
           </div>
         </aside>
         <main className="flex-1 min-w-0 rounded-2xl border bg-card/80 px-4 py-5 shadow-sm backdrop-blur lg:px-8 lg:py-7">
-          <div className="mb-6 flex items-center gap-3 lg:hidden">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Abrir menu">
-                  <span className="text-lg leading-none">≡</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-4">
-                <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
-                </SheetHeader>
-                <div className="mt-4">
-                  <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
-                </div>
-              </SheetContent>
-            </Sheet>
-            <div className="text-sm text-muted-foreground">
-              {session.nomeExibicao || session.username}
+          <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
+            <div className="flex items-center gap-3">
+              <MobileMenuTrigger>
+                <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
+              </MobileMenuTrigger>
+              <div className="text-sm text-muted-foreground">
+                {session.nomeExibicao || session.username}
+              </div>
             </div>
+            <ThemeToggle />
           </div>
           {children}
         </main>
@@ -86,9 +77,12 @@ function SidebarContent({
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="space-y-1">
-        <h1 className="text-lg font-semibold tracking-tight">BFX Manager</h1>
-        <div className="text-sm text-muted-foreground">{userLabel}</div>
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1">
+          <h1 className="text-lg font-semibold tracking-tight">BFX Manager</h1>
+          <div className="text-sm text-muted-foreground">{userLabel}</div>
+        </div>
+        <ThemeToggle />
       </div>
       <Separator className="my-4" />
       <SidebarNav menu={menu} />

@@ -1,10 +1,10 @@
-﻿import { getSession } from "@/lib/session";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { revalidatePath } from "next/cache";
-import { formatBRL } from "@/lib/utils";
+import { formatBRL, cn } from "@/lib/utils";
 import Link from "next/link";
 
 async function savePerfil(formData: FormData) {
@@ -61,7 +61,7 @@ export default async function Page() {
               <Input name="telefone" defaultValue={user.telefone || ""} placeholder="Telefone" aria-label="Telefone" />
               <Input name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" aria-label="Endereço" />
               <Input name="senha" defaultValue={user.password} placeholder="Senha" aria-label="Senha" />
-              <Button className="md:col-span-2 bg-blue-900 hover:bg-blue-800">Salvar Alterações</Button>
+              <button className={cn(buttonVariants(), "md:col-span-2 bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Alterações</button>
             </form>
           </CardContent>
         </Card>
@@ -80,9 +80,12 @@ export default async function Page() {
               <p className="text-sm text-muted-foreground">Sua Taxa</p>
               <div className="text-lg font-semibold text-blue-900">{pct}%</div>
             </div>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/comissoes">Ver Detalhes Completo</Link>
-            </Button>
+            <Link 
+              href="/comissoes"
+              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+            >
+              Ver Detalhes Completo
+            </Link>
           </CardContent>
         </Card>
       </div>

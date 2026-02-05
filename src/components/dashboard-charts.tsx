@@ -62,8 +62,8 @@ export function DashboardCharts({
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={evoData} margin={{ left: 8, right: 8, top: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.3)" />
-                <XAxis dataKey="mes" />
-                <YAxis tickFormatter={(v) => currency(Number(v))} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={(v) => currency(Number(v))} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
                 <Tooltip
                   formatter={(v) => currency(Number(v))}
                   contentStyle={{
@@ -119,14 +119,14 @@ export function DashboardCharts({
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="rgba(148, 163, 184, 0.22)" />
-                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#64748b" }} />
+                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
                 <YAxis
                   type="category"
                   dataKey="label"
                   width={140}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11, fill: "#475569" }}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                   tickFormatter={(value) => shorten(String(value))}
                 />
                 <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.12)" }} content={<TopTooltip />} />

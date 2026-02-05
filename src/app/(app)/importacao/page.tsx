@@ -1,7 +1,8 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import ImportacaoClient from "@/components/importacao-client";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default async function Page() {
   const ok = await requireAdmin();
@@ -27,9 +28,13 @@ export default async function Page() {
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">Total no Banco</div>
             <div className="text-xl font-black text-blue-900 leading-tight">{count}</div>
           </div>
-          <Button variant="outline" size="sm" asChild className="border-blue-900 text-blue-900 hover:bg-blue-50">
-            <a href={csvHref} download="modelo-importacao.csv">Baixar Modelo</a>
-          </Button>
+          <a 
+            href={csvHref} 
+            download="modelo-importacao.csv"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-blue-900 text-blue-900 hover:bg-blue-50 cursor-pointer")}
+          >
+            Baixar Modelo
+          </a>
         </div>
       </div>
 
@@ -37,4 +42,3 @@ export default async function Page() {
     </div>
   );
 }
-

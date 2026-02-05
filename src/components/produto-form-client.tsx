@@ -16,6 +16,7 @@ interface Props {
 export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
   const [nome, setNome] = useState('');
   const [custo, setCusto] = useState('');
+  const [estoque, setEstoque] = useState('0');
   const [marca, setMarca] = useState('');
   const [categoria, setCategoria] = useState('');
   const [ncm, setNcm] = useState('');
@@ -146,6 +147,7 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
     formData.append('categoria', categoria);
     formData.append('ncm', ncm);
     formData.append('valor', valor);
+    formData.append('estoque', estoque);
     formData.append('imagem', imagemPath);
     formData.append('fornecedorId', fornecedorId);
 
@@ -153,6 +155,7 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
       await onSuccess(formData);
       setNome('');
       setCusto('');
+      setEstoque('0');
       setMarca('');
       setCategoria('');
       setNcm('');
@@ -223,7 +226,7 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Custo (R$)</Label>
               <Input type="number" value={custo} onChange={(e) => setCusto(e.target.value)} placeholder="0,00" />
@@ -232,6 +235,11 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Valor de Venda (R$)</Label>
               <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground">Qtd em Estoque</Label>
+              <Input type="number" value={estoque} onChange={(e) => setEstoque(e.target.value)} placeholder="0" />
             </div>
 
             <div className="space-y-1">
