@@ -8,10 +8,28 @@ import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { Badge } from "@/components/ui/badge";
 import { GestaoRhTabs } from "@/components/gestao-rh-tabs";
+import { DeleteUserButton } from "@/components/delete-user-button";
 
 type Search = { user?: string; tab?: string };
 
 async function updateMeta(formData: FormData) {
+// ...
+}
+
+async function addUser(formData: FormData) {
+// ...
+}
+
+async function deleteUser(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  if (!id) return;
+  
+  // Opcional: Impedir de excluir a si mesmo ou o último admin
+  // Por enquanto, exclusão direta conforme solicitado.
+  await prisma.usuario.delete({ where: { id } });
+  revalidatePath("/gestao-rh");
+}
   "use server";
   const id = Number(formData.get("id") || 0);
   if (!id) return;
@@ -220,11 +238,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             aria-label="Comissão"
                           />
                         </div>
-                        <div className="md:col-span-6 flex items-center justify-between gap-3">
-                          <div className="text-xs text-muted-foreground">
-                            Última atualização depende do salvamento.
-                          </div>
-                          <Button>Salvar</Button>
+                        <div className="md:col-span-6 flex items-center justify-between gap-3 border-t pt-4">
+                          <DeleteUserButton 
+                            userId={u.id} 
+                            userName={u.nomeExibicao || u.username} 
+                            onDelete={deleteUser} 
+                          />
+                          <Button className="bg-blue-900 hover:bg-blue-800">Salvar Alterações</Button>
                         </div>
                       </form>
                     ))
