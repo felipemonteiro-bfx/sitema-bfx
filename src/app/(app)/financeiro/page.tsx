@@ -11,6 +11,7 @@ import { FormSelect } from "@/components/form-select";
 import { FluxoCharts } from "@/components/finance-charts";
 import { QueryTabs } from "@/components/query-tabs";
 import { MonthFilter } from "@/components/month-filter";
+import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 import Link from "next/link";
 
@@ -281,7 +282,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-medium text-muted-foreground">Data</label>
-                        <Input name="data" type="date" aria-label="Data" />
+                        <DateInput name="data" aria-label="Data" />
                       </div>
                       <div className="md:col-span-4 flex flex-wrap items-center gap-3">
                         <Button>Lançar despesa</Button>
@@ -322,7 +323,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                         <div className="space-y-1">
                           <label className="text-xs font-medium text-muted-foreground">Data</label>
-                          <Input name="data" type="date" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
+                          <DateInput name="data" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
                         </div>
                         <div className="md:col-span-4 flex items-center gap-2">
                           <Button>Salvar Alterações</Button>

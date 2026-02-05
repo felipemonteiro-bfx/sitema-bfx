@@ -8,6 +8,7 @@ import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
+import { DateInput } from "@/components/ui/date-input";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -122,14 +123,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         </CardHeader>
         <CardContent>
           <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-            <Input
-              type="date"
+            <DateInput
               name="from"
               defaultValue={start.toISOString().slice(0, 10)}
               aria-label="Data inicial"
             />
-            <Input
-              type="date"
+            <DateInput
               name="to"
               defaultValue={end.toISOString().slice(0, 10)}
               aria-label="Data final"
@@ -266,7 +265,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <input type="hidden" name="id" value={editVenda.id} />
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Data da venda</label>
-                <Input name="data" type="date" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
+                <DateInput name="data" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Vendedor</label>

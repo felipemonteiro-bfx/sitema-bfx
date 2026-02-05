@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
+import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 
 export default async function Page() {
@@ -57,11 +58,11 @@ export default async function Page() {
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Data inicial</div>
-                <Input type="date" name="from" defaultValue={monthStartStr} aria-label="Data inicial" />
+                <DateInput name="from" defaultValue={monthStartStr} aria-label="Data inicial" />
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Data final</div>
-                <Input type="date" name="to" defaultValue={today} aria-label="Data final" />
+                <DateInput name="to" defaultValue={today} aria-label="Data final" />
               </div>
             </form>
 

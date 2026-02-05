@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
+import { DateInput } from "@/components/ui/date-input";
 import Link from "next/link";
 
 type Search = {
@@ -115,13 +116,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <label htmlFor="filter-from" className="text-xs font-semibold text-muted-foreground">
                 Início
               </label>
-              <Input id="filter-from" type="date" name="from" defaultValue={start.toISOString().slice(0, 10)} />
+              <DateInput id="filter-from" name="from" defaultValue={start.toISOString().slice(0, 10)} />
             </div>
             <div className="space-y-1">
               <label htmlFor="filter-to" className="text-xs font-semibold text-muted-foreground">
                 Fim
               </label>
-              <Input id="filter-to" type="date" name="to" defaultValue={end.toISOString().slice(0, 10)} />
+              <DateInput id="filter-to" name="to" defaultValue={end.toISOString().slice(0, 10)} />
             </div>
             <div className="space-y-1">
               <label htmlFor="filter-vendors" className="text-xs font-semibold text-muted-foreground">

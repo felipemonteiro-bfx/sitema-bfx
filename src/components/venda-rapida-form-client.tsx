@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, User, Package, CheckCircle2, Calendar } from "lucide-react";
+import { Loader2, User, Package, CheckCircle2 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
+import { DateInput } from "@/components/ui/date-input";
 import { formatBRL } from "@/lib/utils";
 
 interface Props {
@@ -199,16 +200,11 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
       <div className="grid gap-3 md:grid-cols-3">
         <div className="space-y-1">
           <Label className="text-xs font-semibold text-muted-foreground">Data da venda</Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              type="date"
-              value={dataVenda}
-              onChange={(e) => setDataVenda(e.target.value)}
-              required
-              className="pl-10 bg-background hover:bg-accent/50 transition-colors cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100"
-            />
-          </div>
+          <DateInput
+            value={dataVenda}
+            onChange={(e) => setDataVenda(e.target.value)}
+            required
+          />
         </div>
         
         <div className="space-y-1">

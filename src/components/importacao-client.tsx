@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Loader2, AlertCircle, CheckCircle2, Trash2 } from "lucide-react";
 import Papa from "papaparse";
 
@@ -154,9 +155,8 @@ export default function ImportacaoClient() {
                   {data.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="p-1">
-                        <input 
-                          type="date" 
-                          value={row.dataVenda} 
+                        <DateInput
+                          value={row.dataVenda}
                           onChange={(e) => updateCell(row.id, 'dataVenda', e.target.value)}
                           className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1"
                         />
