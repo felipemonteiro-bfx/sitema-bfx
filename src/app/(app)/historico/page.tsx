@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
+import { DeleteVendaButton } from "@/components/delete-venda-button";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -257,10 +258,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     Baixar recibo PDF
                   </a>
                 </div>
-                <form action={deleteVenda} onSubmit={(e) => !confirm("Tem certeza que deseja excluir esta venda permanentemente?") && e.preventDefault()}>
-                  <input type="hidden" name="id" value={editVenda.id} />
-                  <Button variant="destructive" size="sm">Excluir Venda</Button>
-                </form>
+                <DeleteVendaButton vendaId={editVenda.id} onDelete={deleteVenda} />
               </div>
             </form>
           </CardContent>
