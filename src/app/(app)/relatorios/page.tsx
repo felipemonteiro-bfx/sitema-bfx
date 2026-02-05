@@ -39,7 +39,11 @@ export default async function Page() {
             <CardTitle className="text-blue-900">Relatório de vendas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <form id="report-form" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <form
+              id="report-form"
+              method="GET"
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+            >
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Empresa Parceira</div>
                 <FormSelect
@@ -62,29 +66,59 @@ export default async function Page() {
             </form>
 
             <div className="flex flex-wrap gap-3 pt-4 border-t">
-              <Button 
-                onClick={() => {
-                  const form = document.getElementById('report-form') as HTMLFormElement;
-                  const params = new URLSearchParams(new FormData(form) as any);
-                  window.location.href = `/api/relatorios/vendas?${params.toString()}`;
-                }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              <button
+                type="submit"
+                form="report-form"
+                formAction="/api/relatorios/vendas"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium h-10 px-4 bg-emerald-600 text-white hover:bg-emerald-700"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-2"
+                >
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="8" y1="13" x2="16" y2="13" />
+                  <line x1="8" y1="17" x2="16" y2="17" />
+                  <line x1="10" y1="9" x2="8" y2="9" />
+                </svg>
                 Baixar CSV (Excel)
-              </Button>
+              </button>
 
-              <Button 
-                onClick={() => {
-                  const form = document.getElementById('report-form') as HTMLFormElement;
-                  const params = new URLSearchParams(new FormData(form) as any);
-                  window.location.href = `/api/relatorios/vendas/pdf?${params.toString()}`;
-                }}
-                className="bg-rose-600 hover:bg-rose-700 text-white"
+              <button
+                type="submit"
+                form="report-form"
+                formAction="/api/relatorios/vendas/pdf"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium h-10 px-4 bg-rose-600 text-white hover:bg-rose-700"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-2"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <path d="M16 13H8" />
+                  <path d="M16 17H8" />
+                  <path d="M10 9H8" />
+                </svg>
                 Baixar PDF (Impressão)
-              </Button>
+              </button>
             </div>
 
             <div className="text-xs text-muted-foreground pt-2">
@@ -94,7 +128,13 @@ export default async function Page() {
             <div className="flex flex-wrap gap-2 border-t pt-4">
               <span className="w-full text-[10px] font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
               {["Amazonfive", "Gimam"].map((empresa) => (
-                <Button key={empresa} asChild variant="outline" size="sm" className="border-rose-200 text-rose-700 hover:bg-rose-50">
+                <Button
+                  key={empresa}
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="border-rose-200 text-rose-700 hover:bg-rose-50"
+                >
                   <a href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}>
                     PDF {empresa}
                   </a>
