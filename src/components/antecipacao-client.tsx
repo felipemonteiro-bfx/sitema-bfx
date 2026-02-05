@@ -46,6 +46,7 @@ function calcularTaxaPercent(prazoMedio: number) {
 
 export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const toggleSelect = (id: number) => {
     setSelectedIds(prev =>
@@ -58,6 +59,30 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
       setSelectedIds([]);
     } else {
       setSelectedIds(vendasIniciais.map(v => v.id));
+    }
+  };
+
+  const handleAction = async (formData: FormData) => {
+    if (selectedIds.length === 0) return;
+    
+    setIsProcessing(true);
+    try {
+      // 1. Gerar e baixar o relatório para a financeira
+      const idsParam = selectedIds.join(',');
+      window.location.href = `/api/relatorios/antecipacao?ids=${idsParam}`;
+
+      // Pequeno delay para garantir que o download inicie
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 2. Executar a antecipação no banco
+      selectedIds.forEach(id => formData.append('id', id.toString()));
+      await onSubmit(formData);
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Erro na antecipação:", error);
+      alert("Ocorreu um erro ao processar a antecipação.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -74,12 +99,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
   };
 
   return (
-    <form action={async (formData) => {
-      // Garantir que os IDs selecionados via estado sejam passados no formulário
-      selectedIds.forEach(id => formData.append('id', id.toString()));
-      await onSubmit(formData);
-      setSelectedIds([]);
-    }}>
+    <form action={handleAction}>
       <Table>
         <TableHeader>
           <TableRow>
@@ -87,6 +107,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
               <Checkbox
                 checked={vendasIniciais.length > 0 && selectedIds.length === vendasIniciais.length}
                 onCheckedChange={toggleAll}
+                disabled={isProcessing}
               />
             </TableHead>
             <TableHead>Data</TableHead>
@@ -104,11 +125,12 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
             </TableRow>
           ) : (
             vendasIniciais.map((v) => (
-              <TableRow key={v.id} className="cursor-pointer hover:bg-slate-50" onClick={() => toggleSelect(v.id)}>
+              <TableRow key={v.id} className="cursor-pointer hover:bg-slate-50" onClick={() => !isProcessing && toggleSelect(v.id)}>
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedIds.includes(v.id)}
                     onCheckedChange={() => toggleSelect(v.id)}
+                    disabled={isProcessing}
                   />
                 </TableCell>
                 <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
@@ -144,8 +166,8 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
             </div>
           </div>
 
-          <Button disabled={selectedIds.length === 0} className="h-12 px-8 bg-blue-900 hover:bg-blue-800">
-            Antecipar {selectedIds.length} selecionados
+          <Button disabled={selectedIds.length === 0 || isProcessing} className="h-12 px-8 bg-blue-900 hover:bg-blue-800">
+            {isProcessing ? "Gerando Relatório..." : `Antecipar ${selectedIds.length} itens`}
           </Button>
         </div>
         <div className="text-[11px] text-muted-foreground">

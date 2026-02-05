@@ -36,10 +36,10 @@ export default async function Page() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-blue-900">Relatório de vendas (CSV)</CardTitle>
+            <CardTitle className="text-blue-900">Relatório de vendas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <form action="/api/relatorios/vendas" method="get" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <CardContent className="space-y-6">
+            <form id="report-form" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Empresa Parceira</div>
                 <FormSelect
@@ -59,18 +59,44 @@ export default async function Page() {
                 <div className="text-xs font-semibold text-muted-foreground">Data final</div>
                 <Input type="date" name="to" defaultValue={today} aria-label="Data final" />
               </div>
-              <Button type="submit" className="self-end bg-blue-900 hover:bg-blue-800">
-                Baixar CSV
-              </Button>
             </form>
-            <div className="text-xs text-muted-foreground">
+
+            <div className="flex flex-wrap gap-3 pt-4 border-t">
+              <Button 
+                onClick={() => {
+                  const form = document.getElementById('report-form') as HTMLFormElement;
+                  const params = new URLSearchParams(new FormData(form) as any);
+                  window.location.href = `/api/relatorios/vendas?${params.toString()}`;
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                Baixar CSV (Excel)
+              </Button>
+
+              <Button 
+                onClick={() => {
+                  const form = document.getElementById('report-form') as HTMLFormElement;
+                  const params = new URLSearchParams(new FormData(form) as any);
+                  window.location.href = `/api/relatorios/vendas/pdf?${params.toString()}`;
+                }}
+                className="bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                Baixar PDF (Impressão)
+              </Button>
+            </div>
+
+            <div className="text-xs text-muted-foreground pt-2">
               Período padrão: mês atual ({formatDateBR(monthStartStr)} a {formatDateBR(today)}).
             </div>
-            <div className="flex flex-wrap gap-2">
+            
+            <div className="flex flex-wrap gap-2 border-t pt-4">
+              <span className="w-full text-[10px] font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
               {["Amazonfive", "Gimam"].map((empresa) => (
-                <Button key={empresa} asChild variant="outline" size="sm">
-                  <a href={`/api/relatorios/vendas?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}>
-                    CSV {empresa}
+                <Button key={empresa} asChild variant="outline" size="sm" className="border-rose-200 text-rose-700 hover:bg-rose-50">
+                  <a href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}>
+                    PDF {empresa}
                   </a>
                 </Button>
               ))}

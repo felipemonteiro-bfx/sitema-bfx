@@ -34,8 +34,29 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   const [valor, setValor] = useState('');
   const [frete, setFrete] = useState('0');
   const [envio, setEnvio] = useState('0');
+  const [temNota, setTemNota] = useState(false);
+  const [taxaNota, setTaxaNota] = useState('5.97');
+  
+  const [limiteData, setLimiteData] = useState<{
+    margemTotal: number;
+    comprometimentoAtual: number;
+    margemDisponivel: number;
+    tetoParcelaMax: number;
+  } | null>(null);
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Consulta de Limite ao selecionar cliente
+  useEffect(() => {
+    if (selectedCliente) {
+      fetch(`/api/clientes/${selectedCliente.id}/limite`)
+        .then(res => res.json())
+        .then(data => setLimiteData(data))
+        .catch(err => console.error("Erro ao buscar limite:", err));
+    } else {
+      setLimiteData(null);
+    }
+  }, [selectedCliente]);
 
   // Cálculos em tempo real
   const numValor = Number(valor) || 0;
@@ -43,15 +64,25 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   const numFrete = Number(frete) || 0;
   const numEnvio = Number(envio) || 0;
   const numParcelas = Number(parcelas) || 1;
+  const numTaxaNota = Number(taxaNota) || 0;
 
   const totalVenda = numValor + numFrete;
   const valorParcela = totalVenda / numParcelas;
-  const lucroBruto = totalVenda - (numCusto + numEnvio);
+  
+  // Cálculo do valor da nota (sobre o valor da venda)
+  const valorDescontoNota = temNota ? (numValor * numTaxaNota) / 100 : 0;
+  
+  const lucroBruto = totalVenda - (numCusto + numEnvio + valorDescontoNota);
   const margemPct = numValor > 0 ? (lucroBruto / totalVenda) * 100 : 0;
 
   const selectedVendedorData = vendedorOptions.find(v => v.value === vendedor);
   const comissaoPct = selectedVendedorData?.comissaoPct || 0;
   const valorComissao = (lucroBruto * comissaoPct) / 100;
+
+  // Verificações de crédito
+  const excedeuMargem = limiteData ? valorParcela > (limiteData.margemDisponivel + 1) : false;
+  const excedeuTeto = valorParcela > 475.01;
+  const showCreditWarning = excedeuMargem || excedeuTeto;
 
   // Cliente Autocomplete
   useEffect(() => {
@@ -119,6 +150,8 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     formData.append('frete', frete);
     formData.append('envio', envio);
     formData.append('parcelas', parcelas);
+    formData.append('temNota', String(temNota));
+    formData.append('taxaNota', taxaNota);
 
     try {
       await onSubmit(formData);
@@ -131,6 +164,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
       setValor('');
       setFrete('0');
       setEnvio('0');
+      setTemNota(false);
       alert("Venda realizada com sucesso!");
     } catch (error) {
       alert("Erro ao finalizar venda.");
@@ -255,6 +289,66 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
           <Input type="number" step="0.01" value={envio} onChange={(e) => setEnvio(e.target.value)} placeholder="0,00" />
         </div>
       </div>
+
+      <div className="grid gap-3 md:grid-cols-3 items-end">
+        <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white">
+          <input 
+            type="checkbox" 
+            id="temNota" 
+            checked={temNota} 
+            onChange={(e) => setTemNota(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <Label htmlFor="temNota" className="text-sm font-medium leading-none cursor-pointer">
+            Com Nota Fiscal
+          </Label>
+        </div>
+
+        {temNota && (
+          <div className="space-y-1">
+            <Label className="text-xs font-semibold text-muted-foreground">Taxa da Nota (%)</Label>
+            <Input 
+              type="number" 
+              step="0.01" 
+              value={taxaNota} 
+              onChange={(e) => setTaxaNota(e.target.value)} 
+              placeholder="5,97" 
+            />
+          </div>
+        )}
+      </div>
+
+      {limiteData && (
+        <div className={`p-3 rounded-lg border ${showCreditWarning ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-100'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div>
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Margem Total (30%)</Label>
+                <div className="text-sm font-bold">{formatBRL(limiteData.margemTotal)}</div>
+              </div>
+              <div className="text-muted-foreground">−</div>
+              <div>
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Comprometido</Label>
+                <div className="text-sm font-bold text-red-600">{formatBRL(limiteData.comprometimentoAtual)}</div>
+              </div>
+              <div className="text-muted-foreground">=</div>
+              <div>
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Residual Disponível</Label>
+                <div className={`text-sm font-bold ${limiteData.margemDisponivel > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {formatBRL(limiteData.margemDisponivel)}
+                </div>
+              </div>
+            </div>
+
+            {showCreditWarning && (
+              <div className="flex items-center gap-2 text-amber-700 bg-amber-100 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                ATENÇÃO: Parcela {formatBRL(valorParcela)} excede o limite {excedeuTeto ? '(Teto 475,00)' : '(Margem)'}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

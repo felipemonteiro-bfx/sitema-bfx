@@ -58,6 +58,8 @@ model Venda {
   lucroLiquido       Float?    @map("lucro_liquido")
   antecipada         Int?      @default(1)
   excedeuLimite      Int?      @default(0) @map("excedeu_limite")
+  temNota            Boolean   @default(false) @map("tem_nota")
+  taxaNota           Float?    @default(5.97) @map("taxa_nota")
   comprovantePdf     String?   @map("comprovante_pdf")
   cliente            Cliente?  @relation(fields: [clienteId], references: [id])
 

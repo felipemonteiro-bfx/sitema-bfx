@@ -207,6 +207,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             label: "Produtos",
             content: (
               <>
+                <div className="flex justify-end mb-4">
+                  <Button asChild variant="outline" className="border-blue-900 text-blue-900 hover:bg-blue-50">
+                    <a href="/api/relatorios/catalogo" target="_blank" rel="noreferrer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
+                      Gerar Catálogo (Imprimir)
+                    </a>
+                  </Button>
+                </div>
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-blue-900">Novo Produto</CardTitle>

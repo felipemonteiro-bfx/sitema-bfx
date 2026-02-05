@@ -50,9 +50,20 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
       </div>
 
       {/* Terms and Conditions */}
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Termos e Condições</h2>
-        <p className="text-sm whitespace-pre-wrap">{filledTemplate}</p>
+      <div className="mb-12">
+        <h2 className="text-lg font-semibold mb-2 border-b border-gray-100 pb-1">Termos e Condições</h2>
+        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap italic">{filledTemplate}</p>
+      </div>
+
+      {/* Signature Section */}
+      <div className="mt-16 flex flex-col items-center">
+        <div className="w-64 border-t border-gray-400 mb-2"></div>
+        <p className="text-sm font-semibold text-gray-900">Assinatura: {dummyData.CLIENTE}</p>
+        <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Aceite Digital / Presencial</p>
+      </div>
+
+      <div className="mt-8 text-center border-t border-gray-50 pt-4">
+        <p className="text-[10px] text-gray-400">Este é um documento oficial gerado pelo BFX Manager.</p>
       </div>
     </div>
   );

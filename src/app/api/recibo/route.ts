@@ -228,13 +228,32 @@ export async function GET(req: Request) {
     y -= 14;
   }
 
-  // Footer
+  // Footer Note
   page.drawText("Documento gerado automaticamente pelo BFX Manager.", {
     x: marginX,
-    y: 36,
-    size: 9,
+    y: 110,
+    size: 8,
     font,
-    color: rgb(0.45, 0.48, 0.52),
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  // Signature Section
+  const signatureY = 70;
+  page.drawLine({
+    start: { x: centerX - 100, y: signatureY },
+    end: { x: centerX + 100, y: signatureY },
+    thickness: 1,
+    color: rgb(0.1, 0.1, 0.1),
+  });
+  
+  const signatureText = `Assinatura: ${cliente?.nome || "________________________"}`;
+  const sigWidth = font.widthOfTextAtSize(signatureText, 10);
+  page.drawText(signatureText, {
+    x: centerX - sigWidth / 2,
+    y: signatureY - 15,
+    size: 10,
+    font,
+    color: rgb(0.1, 0.1, 0.1),
   });
 
   const pdfBytes = await pdf.save();

@@ -16,9 +16,13 @@ async function criarVenda(formData: FormData) {
   const frete = Number(formData.get("frete") || 0);
   const envio = Number(formData.get("envio") || 0);
   const parcelas = Number(formData.get("parcelas") || 1);
+  const temNota = formData.get("temNota") === "true";
+  const taxaNota = Number(formData.get("taxaNota") || 5.97);
+  
+  const valorDescontoNota = temNota ? (valor * taxaNota) / 100 : 0;
   const total = valor + frete;
   const parcela = parcelas > 0 ? total / parcelas : 0;
-  const lucro = total - (custo + envio);
+  const lucro = total - (custo + envio + valorDescontoNota);
 
   if (!data || !vendedor || !clienteId) return;
   await prisma.venda.create({
@@ -35,6 +39,8 @@ async function criarVenda(formData: FormData) {
       valorParcela: parcela,
       lucroLiquido: lucro,
       antecipada: 1,
+      temNota,
+      taxaNota,
     },
   });
   revalidatePath("/venda-rapida");

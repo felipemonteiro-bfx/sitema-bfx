@@ -17,19 +17,42 @@ async function updateVenda(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
   const data = String(formData.get("data") || "");
+  const valor = Number(formData.get("valor") || 0);
+  const frete = Number(formData.get("frete") || 0);
+  const envio = Number(formData.get("envio") || 0);
+  const custo = Number(formData.get("custo_prod") || 0); // Pegar custo original se precisar
+  const temNota = formData.get("temNota") === "on";
+  const taxaNota = Number(formData.get("taxaNota") || 5.97);
+
   if (!id || !data) return;
+
+  const valorDescontoNota = temNota ? (valor * taxaNota) / 100 : 0;
+  const total = valor + frete;
+  const lucro = total - (custo + envio + valorDescontoNota);
+
   await prisma.venda.update({
     where: { id },
     data: {
       dataVenda: new Date(data),
       vendedor: String(formData.get("vendedor") || ""),
       produtoNome: String(formData.get("produto") || ""),
-      valorVenda: Number(formData.get("valor") || 0),
-      valorFrete: Number(formData.get("frete") || 0),
-      custoEnvio: Number(formData.get("envio") || 0),
+      valorVenda: valor,
+      valorFrete: frete,
+      custoEnvio: envio,
       parcelas: Number(formData.get("parcelas") || 1),
+      temNota,
+      taxaNota,
+      lucroLiquido: lucro,
     },
   });
+  revalidatePath("/historico");
+}
+
+async function deleteVenda(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  if (!id) return;
+  await prisma.venda.delete({ where: { id } });
   revalidatePath("/historico");
 }
 
@@ -115,13 +138,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead>Vendedor</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="text-center">Nota</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     Sem dados.
                   </TableCell>
                 </TableRow>
@@ -133,6 +157,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell>{v.produtoNome}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {v.temNota ? (
+                        <span className="text-emerald-600 font-bold">✓</span>
+                      ) : (
+                        <span className="text-muted-foreground opacity-30">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-2">
@@ -193,11 +224,43 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
-              <div className="md:col-span-3 flex flex-wrap items-center gap-3">
-                <Button>Salvar alterações</Button>
-                <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
-                  Baixar recibo PDF
-                </a>
+              
+              <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
+
+              <div className="md:col-span-1 flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
+                <input 
+                  type="checkbox" 
+                  name="temNota" 
+                  id="edit-temNota" 
+                  defaultChecked={editVenda.temNota}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer">
+                  Com Nota Fiscal
+                </label>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Taxa da Nota (%)</label>
+                <Input 
+                  name="taxaNota" 
+                  type="number" 
+                  step="0.01" 
+                  defaultValue={editVenda.taxaNota || 5.97} 
+                />
+              </div>
+
+              <div className="md:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+                <div className="flex items-center gap-3">
+                  <Button>Salvar alterações</Button>
+                  <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
+                    Baixar recibo PDF
+                  </a>
+                </div>
+                <form action={deleteVenda} onSubmit={(e) => !confirm("Tem certeza que deseja excluir esta venda permanentemente?") && e.preventDefault()}>
+                  <input type="hidden" name="id" value={editVenda.id} />
+                  <Button variant="destructive" size="sm">Excluir Venda</Button>
+                </form>
               </div>
             </form>
           </CardContent>

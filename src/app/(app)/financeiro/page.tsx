@@ -12,8 +12,9 @@ import { FluxoCharts } from "@/components/finance-charts";
 import { QueryTabs } from "@/components/query-tabs";
 import { MonthFilter } from "@/components/month-filter";
 import { format } from "date-fns";
+import Link from "next/link";
 
-type Search = { tab?: string; mes?: string };
+type Search = { tab?: string; mes?: string; edit?: string };
 
 async function addDespesa(formData: FormData) {
   "use server";
@@ -33,6 +34,34 @@ async function addDespesa(formData: FormData) {
   revalidatePath("/financeiro");
 }
 
+async function updateDespesa(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  const descricao = String(formData.get("descricao") || "");
+  const valor = Number(formData.get("valor") || 0);
+  const tipo = String(formData.get("tipo") || "Fixa");
+  const data = String(formData.get("data") || "");
+  if (!id || !descricao || !data) return;
+  await prisma.despesa.update({
+    where: { id },
+    data: {
+      descricao,
+      valor,
+      tipo,
+      dataDespesa: new Date(data),
+    },
+  });
+  revalidatePath("/financeiro");
+}
+
+async function deleteDespesa(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  if (!id) return;
+  await prisma.despesa.delete({ where: { id } });
+  revalidatePath("/financeiro");
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
@@ -40,6 +69,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const formatDate = (d: Date) => new Intl.DateTimeFormat("pt-BR").format(d);
   
   const currentMes = sp.mes || format(new Date(), "yyyy-MM");
+  const editId = sp.edit ? Number(sp.edit) : 0;
 
   const dre = await calcularDre(currentMes);
   const fluxo = await calcularFluxoCaixa(currentMes);
@@ -52,6 +82,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     where: { dataDespesa: { gte: ini, lt: fim } },
     orderBy: { dataDespesa: "desc" } 
   });
+
+  const editDespesa = editId ? await prisma.despesa.findUnique({ where: { id: editId } }) : null;
 
   return (
     <div className="space-y-6">
@@ -260,6 +292,49 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </form>
                   </CardContent>
                 </Card>
+
+                {editDespesa && (
+                  <Card className="mt-4 border-amber-200 bg-amber-50/20">
+                    <CardHeader>
+                      <CardTitle>Editar Lançamento #{editDespesa.id}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <form action={updateDespesa} className="grid gap-4 md:grid-cols-4">
+                        <input type="hidden" name="id" value={editDespesa.id} />
+                        <div className="space-y-1 md:col-span-2">
+                          <label className="text-xs font-medium text-muted-foreground">Descrição</label>
+                          <Input name="descricao" defaultValue={editDespesa.descricao || ""} aria-label="Descrição" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground">Valor</label>
+                          <Input name="valor" type="number" step="0.01" defaultValue={editDespesa.valor || 0} aria-label="Valor" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+                          <FormSelect
+                            name="tipo"
+                            options={[
+                              { value: "Fixa", label: "Fixa" },
+                              { value: "Variável", label: "Variável" },
+                            ]}
+                            defaultValue={editDespesa.tipo || "Fixa"}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-muted-foreground">Data</label>
+                          <Input name="data" type="date" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
+                        </div>
+                        <div className="md:col-span-4 flex items-center gap-2">
+                          <Button>Salvar Alterações</Button>
+                          <Button variant="outline" asChild>
+                            <Link href={`/financeiro?tab=lanc&mes=${currentMes}`}>Cancelar</Link>
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
+
                 <Card className="mt-4">
                   <CardHeader>
                     <CardTitle>Despesas</CardTitle>
@@ -272,12 +347,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           <TableHead>Descrição</TableHead>
                           <TableHead>Tipo</TableHead>
                           <TableHead className="text-right">Valor</TableHead>
+                          <TableHead className="w-24"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {despesas.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={4} className="text-center text-muted-foreground">
+                            <TableCell colSpan={5} className="text-center text-muted-foreground">
                               Sem dados.
                             </TableCell>
                           </TableRow>
@@ -288,6 +364,21 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               <TableCell>{d.descricao}</TableCell>
                               <TableCell>{d.tipo}</TableCell>
                               <TableCell className="text-right tabular-nums">{formatBRL(d.valor || 0)}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button size="icon" variant="ghost" asChild title="Editar">
+                                    <Link href={`/financeiro?tab=lanc&mes=${currentMes}&edit=${d.id}`}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                    </Link>
+                                  </Button>
+                                  <form action={deleteDespesa}>
+                                    <input type="hidden" name="id" value={d.id} />
+                                    <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Excluir">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                    </Button>
+                                  </form>
+                                </div>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
