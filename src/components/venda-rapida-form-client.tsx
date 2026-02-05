@@ -29,6 +29,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   const [produtoQuery, setProdutoQuery] = useState('');
   const [selectedProduto, setSelectedProduto] = useState<{id: number, nome: string} | null>(null);
   const [produtoSuggestions, setProdutoSuggestions] = useState<any[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<{upsell: any[], crossSell: any[]} | null>(null);
   
   const [custo, setCusto] = useState('');
   const [valor, setValor] = useState('');
@@ -57,6 +58,26 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
       setLimiteData(null);
     }
   }, [selectedCliente]);
+
+  // Busca Sugestões Inteligentes (Upsell/Cross-sell)
+  useEffect(() => {
+    if (selectedProduto) {
+      fetch(`/api/vendas/sugestoes?produtoId=${selectedProduto.id}`)
+        .then(res => res.json())
+        .then(data => setAiSuggestions(data))
+        .catch(err => console.error("Erro ao buscar sugestões IA:", err));
+    } else {
+      setAiSuggestions(null);
+    }
+  }, [selectedProduto]);
+
+  const selectProduto = (p: any) => {
+    setSelectedProduto(p);
+    setProdutoQuery(p.nome);
+    setCusto(p.custoPadrao?.toString() || p.custoProduto?.toString() || '');
+    setValor(p.valorVenda?.toString() || '');
+    setProdutoSuggestions([]);
+  };
 
   // Cálculos em tempo real
   const numValor = Number(valor) || 0;
@@ -246,18 +267,40 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                 <div 
                   key={p.id} 
                   className="p-2 hover:bg-slate-100 cursor-pointer text-sm flex flex-col"
-                  onClick={() => {
-                    setSelectedProduto(p);
-                    setProdutoQuery(p.nome);
-                    setCusto(p.custoPadrao?.toString() || '');
-                    setValor(p.valorVenda?.toString() || '');
-                    setProdutoSuggestions([]);
-                  }}
+                  onClick={() => selectProduto(p)}
                 >
                   <span className="font-medium">{p.nome}</span>
                   <span className="text-[10px] text-muted-foreground">{p.marca} - {formatBRL(p.valorVenda || 0)}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* BFX Intelligence Suggestions */}
+          {aiSuggestions && (aiSuggestions.upsell.length > 0 || aiSuggestions.crossSell.length > 0) && (
+            <div className="absolute z-40 w-full mt-1 bg-purple-50/95 border border-purple-200 rounded-md shadow-lg p-2 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-1 text-[10px] font-black text-purple-700 uppercase mb-2 px-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                BFX Intelligence
+              </div>
+              <div className="grid gap-2">
+                {[...aiSuggestions.upsell, ...aiSuggestions.crossSell].map((s) => (
+                  <div 
+                    key={s.id}
+                    onClick={() => {
+                      selectProduto(s);
+                      setAiSuggestions(null);
+                    }}
+                    className="flex items-center justify-between p-2 rounded bg-white hover:bg-purple-100 border border-purple-100 cursor-pointer transition-colors group"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-purple-600 uppercase leading-none mb-1">{s.label}</span>
+                      <span className="text-xs font-semibold text-slate-800 group-hover:text-purple-900 truncate max-w-[150px]">{s.nome}</span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded">{formatBRL(s.valorVenda)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
