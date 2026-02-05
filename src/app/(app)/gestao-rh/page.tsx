@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,23 +13,6 @@ import { DeleteUserButton } from "@/components/delete-user-button";
 type Search = { user?: string; tab?: string };
 
 async function updateMeta(formData: FormData) {
-// ...
-}
-
-async function addUser(formData: FormData) {
-// ...
-}
-
-async function deleteUser(formData: FormData) {
-  "use server";
-  const id = Number(formData.get("id") || 0);
-  if (!id) return;
-  
-  // Opcional: Impedir de excluir a si mesmo ou o último admin
-  // Por enquanto, exclusão direta conforme solicitado.
-  await prisma.usuario.delete({ where: { id } });
-  revalidatePath("/gestao-rh");
-}
   "use server";
   const id = Number(formData.get("id") || 0);
   if (!id) return;
@@ -61,6 +44,14 @@ async function addUser(formData: FormData) {
       role,
     },
   });
+  revalidatePath("/gestao-rh");
+}
+
+async function deleteUser(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  if (!id) return;
+  await prisma.usuario.delete({ where: { id } });
   revalidatePath("/gestao-rh");
 }
 
