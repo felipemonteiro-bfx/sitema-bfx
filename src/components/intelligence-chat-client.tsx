@@ -67,7 +67,7 @@ export function IntelligenceChatClient({
 
   return (
     <>
-      <div className="flex-1 flex flex-col-reverse gap-6 overflow-auto rounded-lg border bg-background p-4">
+      <div className="flex flex-1 flex-col-reverse gap-6 overflow-auto rounded-lg border bg-background p-3 sm:p-4">
         {optimisticHistory.length === 0 ? (
           <div className="text-sm text-muted-foreground">
             Sem mensagens ainda. Faça uma pergunta para começar.
@@ -75,24 +75,24 @@ export function IntelligenceChatClient({
         ) : (
           optimisticHistory.map((m, i) => (
             <div key={`${m.at}-${i}`} className="space-y-3">
-              <div className="flex justify-center text-[11px] text-muted-foreground">
+              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
                 <span className="rounded-full bg-muted px-2 py-0.5 uppercase tracking-wide">
                   {m.provider}
                 </span>
-                <span className="ml-2">{new Date(m.at).toLocaleString("pt-BR")}</span>
+                <span>{new Date(m.at).toLocaleString("pt-BR")}</span>
               </div>
               <div className="flex justify-end">
-                <div className="max-w-[75%] rounded-2xl border bg-primary/10 px-4 py-3 text-sm text-foreground">
+                <div className="w-full max-w-[92%] rounded-2xl border bg-primary/10 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
                   <div className="text-xs font-semibold text-muted-foreground">Você</div>
-                  <div>{m.prompt}</div>
+                  <div className="break-words">{m.prompt}</div>
                 </div>
               </div>
               <div className="flex justify-start">
-                <div className="max-w-[75%] rounded-2xl border bg-muted/50 px-4 py-3 text-sm text-foreground">
+                <div className="w-full max-w-[92%] rounded-2xl border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
                   <div className="text-xs font-semibold text-muted-foreground">
                     Assistente
                   </div>
-                  <div className="whitespace-pre-wrap">{m.response}</div>
+                  <div className="whitespace-pre-wrap break-words">{m.response}</div>
                   {m.links && m.links.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {m.links.map((link, idx) => (
@@ -111,10 +111,11 @@ export function IntelligenceChatClient({
                       <div className="text-xs font-semibold text-muted-foreground">
                         Ações sugeridas pela IA (confirmação necessária)
                       </div>
-                      <ul className="text-xs text-muted-foreground space-y-1">
+                      <ul className="space-y-1 text-xs text-muted-foreground">
                         {m.actions.map((a, idx) => (
                           <li key={`${a.name}-${idx}`}>
-                            {a.name} — {JSON.stringify(a.params)}
+                            <span className="font-medium">{a.name}</span>
+                            <span className="break-words"> — {JSON.stringify(a.params)}</span>
                           </li>
                         ))}
                       </ul>

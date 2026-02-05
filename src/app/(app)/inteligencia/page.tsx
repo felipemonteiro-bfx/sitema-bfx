@@ -169,11 +169,11 @@ export default async function Page() {
   const history = prismaMessageStore.data.slice(0, 20);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">BFX Intelligence (IA)</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-semibold sm:text-3xl">BFX Intelligence (IA)</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
             Assistente virtual para estratégias, cobranças e dúvidas do time.
           </p>
         </div>
@@ -187,7 +187,7 @@ export default async function Page() {
               Provedor ativo: {resolvedProviders[0]?.label || "OpenAI"}
             </div>
           </CardHeader>
-          <CardContent className="flex h-[70vh] flex-col gap-4">
+          <CardContent className="flex h-[65vh] min-h-[420px] flex-col gap-4 sm:h-[70vh]">
             <IntelligenceChatClient
               history={history}
               action={askAi}

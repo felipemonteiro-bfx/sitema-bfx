@@ -51,12 +51,25 @@ function inferReadOnlyActions(prompt: string) {
     { name: "gerar_catalogo_produtos", re: /(catalogo|gerar catalogo)/i },
   ];
   const hasQuantos = /quantos|quantas|qtd/.test(p);
-  const limitMatch = p.match(/(\d{1,3})/);
+  const limitMatch = p.match(/\b(\d{1,3})\b/);
   const limit = !hasQuantos && limitMatch ? Number(limitMatch[1]) : undefined;
-  const params = limit ? { limit } : {};
+  const dateMatches = [...p.matchAll(/\b(\d{4}-\d{2}-\d{2})\b/g)].map((m) => m[1]);
+  const dateParams =
+    dateMatches.length >= 2 ? { from: dateMatches[0], to: dateMatches[1] } : {};
+  const baseParams = {
+    ...(limit ? { limit } : {}),
+    ...dateParams,
+  };
   const actions = rules
     .filter((r) => r.re.test(p))
-    .map((r) => ({ name: r.name, params: r.name === "gerar_catalogo_produtos" ? {} : params }));
+    .map((r) => {
+      if (r.name === "gerar_catalogo_produtos") return { name: r.name, params: {} };
+      if (r.name === "listar_vendas" || r.name === "listar_despesas") {
+        return { name: r.name, params: baseParams };
+      }
+      const { from, to, ...rest } = baseParams;
+      return { name: r.name, params: rest };
+    });
   return actions.filter((a) => readOnlyActions.has(a.name));
 }
 
@@ -144,7 +157,8 @@ export async function runAiWithActions(
 
   const shouldAppendSummary = (text: string) =>
     !text.trim() || /buscando|aguarde|processando|consultando/i.test(text);
-  const isDespesasMes = /despesa|gasto|gastando/i.test(prompt) && /mês|mes/i.test(prompt);
+  const normalizedPrompt = prompt.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  const isDespesasMes = /despesa|gasto|gastando/.test(normalizedPrompt) && /mes/.test(normalizedPrompt);
 
   if (ctx.mode === "execute" && ctx.executeAction) {
     const execResult = await callMcpTool(ctx.executeAction.name, ctx.executeAction.params, ctx);
@@ -177,6 +191,7 @@ export async function runAiWithActions(
     const executed: { name: string; result: unknown }[] = [];
     const tools = Object.fromEntries(
       aiActions
+        .filter((action) => action.roles?.includes(ctx.role) ?? true)
         .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
         .map((action) => [
           action.name,
@@ -301,6 +316,7 @@ export async function runAiWithActions(
   const executed: { name: string; result: unknown }[] = [];
   const tools = Object.fromEntries(
     aiActions
+      .filter((action) => action.roles?.includes(ctx.role) ?? true)
       .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
       .map((action) => [
         action.name,
