@@ -1,7 +1,6 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
-import type { FormEvent } from "react";
 import { IntelligenceChatComposer } from "@/components/intelligence-chat-composer";
 
 type Message = {
@@ -69,8 +68,16 @@ export function IntelligenceChatClient({
     <>
       <div className="flex flex-1 flex-col-reverse gap-6 overflow-auto rounded-lg border bg-background p-3 sm:p-4">
         {optimisticHistory.length === 0 ? (
-          <div className="text-sm text-muted-foreground">
-            Sem mensagens ainda. Faça uma pergunta para começar.
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <div>Sem mensagens ainda. Faça uma pergunta para começar.</div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="rounded-lg border bg-muted/40 p-3">
+                Pergunte por cobranças prontas ou sugestões de abordagem.
+              </div>
+              <div className="rounded-lg border bg-muted/40 p-3">
+                Solicite um resumo de metas ou desempenho semanal.
+              </div>
+            </div>
           </div>
         ) : (
           optimisticHistory.map((m, i) => (
@@ -89,9 +96,7 @@ export function IntelligenceChatClient({
               </div>
               <div className="flex justify-start">
                 <div className="w-full max-w-[92%] rounded-2xl border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
-                  <div className="text-xs font-semibold text-muted-foreground">
-                    Assistente
-                  </div>
+                  <div className="text-xs font-semibold text-muted-foreground">Assistente</div>
                   <div className="whitespace-pre-wrap break-words">{m.response}</div>
                   {m.links && m.links.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -99,7 +104,7 @@ export function IntelligenceChatClient({
                         <a
                           key={`${link.url}-${idx}`}
                           href={link.url}
-                          className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-foreground hover:bg-muted"
+                          className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-foreground transition-colors duration-150 hover:bg-muted motion-reduce:transition-none"
                         >
                           {link.label}
                         </a>
@@ -121,7 +126,7 @@ export function IntelligenceChatClient({
                       </ul>
                       <button
                         type="button"
-                        className="mt-2 inline-flex items-center rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
+                        className="mt-2 inline-flex items-center rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white transition-colors duration-150 hover:bg-emerald-700 motion-reduce:transition-none"
                         onClick={() => handleConfirm(m.actions)}
                       >
                         Confirmar ações

@@ -48,7 +48,7 @@ export function IntelligenceChatComposer({ action, providers = [] }: Intelligenc
           <div
             id="guia-rapida"
             role="tooltip"
-            className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-72 -translate-x-1/2 rounded-md border bg-popover p-3 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100"
+            className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-72 -translate-x-1/2 rounded-md border bg-popover p-3 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none"
           >
             <div className="space-y-2 text-muted-foreground">
               <div>Gere mensagens de cobrança com tom profissional.</div>
