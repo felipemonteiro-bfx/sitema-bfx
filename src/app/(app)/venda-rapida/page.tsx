@@ -64,10 +64,10 @@ export default async function Page() {
         )}
       </div>
 
-      <VendaRapidaFormClient 
-        vendedorOptions={vendedorOptions} 
-        parcelasOptions={parcelasOptions} 
-        onSubmitAction={criarVenda} 
+      <VendaRapidaFormClient
+        vendedorOptions={vendedorOptions}
+        parcelasOptions={parcelasOptions}
+        onSubmit={criarVenda}
       />
 
       {!ultima && (
