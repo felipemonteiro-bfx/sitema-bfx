@@ -302,7 +302,7 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
       </div>
 
       <div className="flex items-center justify-end">
-        <Button disabled={isSubmitting || isUploading || isDuplicate} type="submit" className="bg-blue-900 hover:bg-blue-800">
+        <Button disabled={isSubmitting || isUploading || isDuplicate} type="submit" className="bg-primary hover:bg-primary/90">
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
           Cadastrar Produto
         </Button>

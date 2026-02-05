@@ -125,7 +125,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
             </TableRow>
           ) : (
             vendasIniciais.map((v) => (
-              <TableRow key={v.id} className="cursor-pointer hover:bg-slate-50" onClick={() => !isProcessing && toggleSelect(v.id)}>
+              <TableRow key={v.id} className="cursor-pointer hover:bg-muted" onClick={() => !isProcessing && toggleSelect(v.id)}>
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedIds.includes(v.id)}
@@ -143,11 +143,11 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
         </TableBody>
       </Table>
 
-      <div className="mt-6 flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div className="mt-6 flex flex-col gap-4 rounded-lg border border-border bg-muted p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Selecionado</span>
-            <span className="text-2xl font-bold text-blue-900">{formatBRL(totalSelecionado)}</span>
+            <span className="text-2xl font-bold text-primary">{formatBRL(totalSelecionado)}</span>
             <span className="text-xs text-muted-foreground">{selectedIds.length} itens selecionados</span>
           </div>
 
@@ -162,11 +162,11 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
             </div>
             <div className="rounded-lg border border-border/60 bg-background px-3 py-2">
               <div className="text-[11px] uppercase text-muted-foreground">Valor líquido</div>
-              <div className="text-sm font-semibold text-emerald-700">{formatBRL(valorLiquido)}</div>
+              <div className="text-sm font-semibold text-success">{formatBRL(valorLiquido)}</div>
             </div>
           </div>
 
-          <Button disabled={selectedIds.length === 0 || isProcessing} className="h-12 px-8 bg-blue-900 hover:bg-blue-800">
+          <Button disabled={selectedIds.length === 0 || isProcessing} className="h-12 px-8 bg-primary hover:bg-primary/90">
             {isProcessing ? "Gerando Relatório..." : `Antecipar ${selectedIds.length} itens`}
           </Button>
         </div>

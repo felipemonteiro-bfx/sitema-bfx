@@ -210,7 +210,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
-                        <span className="text-emerald-600 font-bold" title={`Taxa: ${v.taxaNota}%`}>✓</span>
+                        <span className="text-success font-bold" title={`Taxa: ${v.taxaNota}%`}>✓</span>
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}

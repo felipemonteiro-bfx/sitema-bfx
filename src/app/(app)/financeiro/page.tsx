@@ -120,7 +120,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardHeader>
                       <CardTitle>Lucro Líquido</CardTitle>
                     </CardHeader>
-                    <CardContent className="text-2xl font-semibold text-emerald-600">
+                    <CardContent className="text-2xl font-semibold text-success">
                       {formatBRL(dre.lucro)}
                     </CardContent>
                   </Card>
@@ -133,26 +133,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-lg border border-dashed p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">CMV</div>
-                        <div className="mt-1 text-base font-semibold text-red-600">{formatBRL(dre.detalhe.cmv)}</div>
+                        <div className="mt-1 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.cmv)}</div>
                         <div className="text-xs text-muted-foreground">Custo de mercadorias</div>
                       </div>
                       <div className="rounded-lg border border-dashed p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Comissões</div>
-                        <div className="mt-1 text-base font-semibold text-red-600">
+                        <div className="mt-1 text-base font-semibold text-destructive">
                           {formatBRL(dre.detalhe.comissoes)}
                         </div>
                         <div className="text-xs text-muted-foreground">Vendas da equipe</div>
                       </div>
                       <div className="rounded-lg border border-dashed p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Frete Real</div>
-                        <div className="mt-1 text-base font-semibold text-red-600">
+                        <div className="mt-1 text-base font-semibold text-destructive">
                           {formatBRL(dre.detalhe.freteReal)}
                         </div>
                         <div className="text-xs text-muted-foreground">Logística</div>
                       </div>
                       <div className="rounded-lg border border-dashed p-3">
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Despesas Fixas</div>
-                        <div className="mt-1 text-base font-semibold text-red-600">{formatBRL(dre.fixas)}</div>
+                        <div className="mt-1 text-base font-semibold text-destructive">{formatBRL(dre.fixas)}</div>
                         <div className="text-xs text-muted-foreground">Operação mensal</div>
                       </div>
                     </div>
@@ -184,7 +184,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                       <div className="text-xs text-muted-foreground">Entrada média</div>
-                      <div className="mt-1 text-base font-semibold text-emerald-600">
+                      <div className="mt-1 text-base font-semibold text-success">
                         {formatBRL(
                           fluxo.length ? fluxo.reduce((acc, r) => acc + r.entradas, 0) / fluxo.length : 0
                         )}
@@ -228,7 +228,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         fluxo.map((r) => (
                           <TableRow key={r.mes}>
                             <TableCell>{r.mes}</TableCell>
-                            <TableCell className="text-right tabular-nums text-emerald-700">
+                            <TableCell className="text-right tabular-nums text-success">
                               {formatBRL(r.entradas)}
                             </TableCell>
                             <TableCell className="text-right tabular-nums text-rose-700">

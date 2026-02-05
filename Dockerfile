@@ -1,24 +1,29 @@
 FROM node:20-bullseye-slim AS deps
 
 WORKDIR /app
-ENV npm_config_optional=true
 ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY package*.json ./
+# Install Yarn
+RUN corepack enable && corepack prepare yarn@stable --activate
+
+COPY package.json yarn.lock ./
 COPY prisma ./prisma
-RUN npm ci
+
+RUN yarn install --frozen-lockfile
 
 FROM node:20-bullseye-slim AS builder
 
 WORKDIR /app
-ENV npm_config_optional=true
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Install Yarn
+RUN corepack enable && corepack prepare yarn@stable --activate
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npm run prisma:generate
-RUN npm run build
+RUN yarn prisma:generate
+RUN yarn build
 
 FROM node:20-bullseye-slim AS runner
 
