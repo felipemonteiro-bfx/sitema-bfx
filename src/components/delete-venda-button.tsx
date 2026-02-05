@@ -12,34 +12,32 @@ interface Props {
 export function DeleteVendaButton({ vendaId, onDelete }: Props) {
   const [loading, setLoading] = useState(false);
 
-  const handleAction = async (formData: FormData) => {
-    if (!confirm("Tem certeza que deseja excluir esta venda permanentemente?")) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onDelete(formData);
-    } catch (error) {
-      alert("Erro ao excluir venda.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <form action={handleAction}>
-      <input type="hidden" name="id" value={vendaId} />
-      <Button 
-        type="submit" 
-        variant="destructive" 
-        size="sm" 
-        disabled={loading}
-        className="flex items-center gap-2"
-      >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-        Excluir Venda
-      </Button>
-    </form>
+    <Button 
+      type="button" 
+      variant="destructive" 
+      size="sm" 
+      disabled={loading}
+      onClick={async () => {
+        if (!confirm("Tem certeza que deseja excluir esta venda permanentemente?")) {
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const formData = new FormData();
+          formData.append('id', vendaId.toString());
+          await onDelete(formData);
+        } catch (error) {
+          alert("Erro ao excluir venda.");
+        } finally {
+          setLoading(false);
+        }
+      }}
+      className="flex items-center gap-2"
+    >
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+      Excluir Venda
+    </Button>
   );
 }
