@@ -71,7 +71,7 @@ export default async function Page() {
       </div>
       <Card>
         <CardHeader>
-          <CardTitle className="text-blue-900">Nova venda</CardTitle>
+          <CardTitle className="text-primary">Nova venda</CardTitle>
         </CardHeader>
         <CardContent>
           <VendaRapidaFormClient 
@@ -84,7 +84,7 @@ export default async function Page() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-blue-900">Resumo</CardTitle>
+          <CardTitle className="text-primary">Resumo</CardTitle>
         </CardHeader>
         <CardContent>
           {ultima ? (
@@ -94,7 +94,7 @@ export default async function Page() {
                   <div className="text-sm text-muted-foreground">Última venda</div>
                   <div className="text-lg font-semibold">#{ultima.id}</div>
                 </div>
-                <div className="text-2xl font-semibold text-emerald-700">
+                <div className="text-2xl font-semibold text-success">
                   {formatBRL(totalUltima)}
                 </div>
               </div>
@@ -102,7 +102,7 @@ export default async function Page() {
                 <Button asChild variant="outline">
                   <a href={`/api/recibo?id=${ultima.id}`}>Baixar recibo PDF</a>
                 </Button>
-                <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+                <Button asChild className="bg-success hover:bg-success/90">
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(
                       `Segue seu recibo: http://localhost:3000/api/recibo?id=${ultima.id}`

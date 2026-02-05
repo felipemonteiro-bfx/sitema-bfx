@@ -223,7 +223,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               className={selectedCliente ? "border-emerald-500 bg-emerald-50/30" : ""}
               required
             />
-            <User className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${selectedCliente ? "text-emerald-600" : "text-muted-foreground"}`} />
+            <User className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${selectedCliente ? "text-success" : "text-muted-foreground"}`} />
           </div>
           
           {clienteSuggestions.length > 0 && (
@@ -258,7 +258,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               className={selectedProduto ? "border-emerald-500 bg-emerald-50/30" : ""}
               required
             />
-            <Package className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${selectedProduto ? "text-emerald-600" : "text-muted-foreground"}`} />
+            <Package className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${selectedProduto ? "text-success" : "text-muted-foreground"}`} />
           </div>
 
           {produtoSuggestions.length > 0 && (
@@ -297,7 +297,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                       <span className="text-[10px] font-bold text-purple-600 uppercase leading-none mb-1">{s.label}</span>
                       <span className="text-xs font-semibold text-slate-800 group-hover:text-purple-900 truncate max-w-[150px]">{s.nome}</span>
                     </div>
-                    <span className="text-xs font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded">{formatBRL(s.valorVenda)}</span>
+                    <span className="text-xs font-bold text-slate-900 bg-muted px-2 py-1 rounded">{formatBRL(s.valorVenda)}</span>
                   </div>
                 ))}
               </div>
@@ -372,12 +372,12 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               <div className="text-muted-foreground">−</div>
               <div>
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground">Comprometido</Label>
-                <div className="text-sm font-bold text-red-600">{formatBRL(limiteData.comprometimentoAtual)}</div>
+                <div className="text-sm font-bold text-destructive">{formatBRL(limiteData.comprometimentoAtual)}</div>
               </div>
               <div className="text-muted-foreground">=</div>
               <div>
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground">Residual Disponível</Label>
-                <div className={`text-sm font-bold ${limiteData.margemDisponivel > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                <div className={`text-sm font-bold ${limiteData.margemDisponivel > 0 ? 'text-success' : 'text-destructive'}`}>
                   {formatBRL(limiteData.margemDisponivel)}
                 </div>
               </div>
@@ -393,11 +393,11 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         </div>
       )}
 
-      <div className="grid gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+      <div className="grid gap-4 p-4 bg-muted rounded-xl border border-border">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <Label className="text-[10px] uppercase font-bold text-muted-foreground">Total da Venda</Label>
-            <div className="text-lg font-bold text-blue-900">{formatBRL(totalVenda)}</div>
+            <div className="text-lg font-bold text-primary">{formatBRL(totalVenda)}</div>
             {numParcelas > 1 && (
               <div className="text-[10px] text-muted-foreground">{numParcelas}x de {formatBRL(valorParcela)}</div>
             )}
@@ -405,7 +405,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
           <div>
             <Label className="text-[10px] uppercase font-bold text-muted-foreground">Lucro Líquido</Label>
-            <div className={`text-lg font-bold ${lucroBruto >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            <div className={`text-lg font-bold ${lucroBruto >= 0 ? 'text-success' : 'text-destructive'}`}>
               {formatBRL(lucroBruto)}
             </div>
             <div className="text-[10px] text-muted-foreground">Margem: {margemPct.toFixed(1)}%</div>
@@ -420,7 +420,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
           </div>
 
           <div className="flex items-end justify-end">
-            <Button disabled={loading || !selectedCliente || !produtoQuery} type="submit" className="w-full h-12 bg-blue-900 hover:bg-blue-800">
+            <Button disabled={loading || !selectedCliente || !produtoQuery} type="submit" className="w-full h-12 bg-primary hover:bg-primary/90">
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
               Finalizar Venda
             </Button>

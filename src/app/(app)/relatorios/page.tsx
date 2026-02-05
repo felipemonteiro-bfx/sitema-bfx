@@ -36,7 +36,7 @@ export default async function Page() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-blue-900">Relatório de vendas</CardTitle>
+            <CardTitle className="text-primary">Relatório de vendas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <form
@@ -70,7 +70,7 @@ export default async function Page() {
                 type="submit"
                 form="report-form"
                 formAction="/api/relatorios/vendas"
-                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium h-10 px-4 bg-emerald-600 text-white hover:bg-emerald-700"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium h-10 px-4 bg-success text-white hover:bg-success/90"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -97,7 +97,7 @@ export default async function Page() {
                 type="submit"
                 form="report-form"
                 formAction="/api/relatorios/vendas/pdf"
-                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium h-10 px-4 bg-rose-600 text-white hover:bg-rose-700"
+                className="inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium h-10 px-4 bg-destructive text-white hover:bg-destructive/90"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -146,7 +146,7 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900">Atalhos</CardTitle>
+            <CardTitle className="text-primary">Atalhos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild variant="outline" className="w-full">

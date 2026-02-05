@@ -128,7 +128,7 @@ export function IntelligenceChatClient({
                       </ul>
                       <button
                         type="button"
-                        className="mt-2 inline-flex items-center rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white transition-colors duration-150 hover:bg-emerald-700 motion-reduce:transition-none"
+                        className="mt-2 inline-flex items-center rounded-full bg-success px-3 py-1 text-xs font-semibold text-white transition-colors duration-150 hover:bg-success/90 motion-reduce:transition-none"
                         onClick={() => handleConfirm(m.actions)}
                       >
                         Confirmar ações

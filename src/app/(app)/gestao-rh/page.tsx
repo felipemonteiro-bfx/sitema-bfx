@@ -235,7 +235,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             userName={u.nomeExibicao || u.username} 
                             onDelete={deleteUser} 
                           />
-                          <Button className="bg-blue-900 hover:bg-blue-800">Salvar Alterações</Button>
+                          <Button className="bg-primary hover:bg-primary/90">Salvar Alterações</Button>
                         </div>
                       </form>
                     ))

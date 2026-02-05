@@ -53,8 +53,8 @@ export function SidebarNav({ menu }: { menu: MenuItem[] }) {
       {menu.map((item) => {
         const active = !item.external && isActive(pathname, item.href);
         const className = active
-          ? "justify-start gap-2 rounded-lg bg-muted text-foreground shadow-sm hover:bg-muted"
-          : "justify-start gap-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground";
+          ? "justify-start gap-2 rounded-lg bg-accent text-accent-foreground shadow-sm"
+          : "justify-start gap-2 rounded-lg text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground transition-colors duration-200";
 
         const icon = icons[item.href];
         return item.external ? (

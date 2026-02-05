@@ -68,7 +68,7 @@ export default function CommissionsDashboardClient() {
       {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg text-blue-900">Filtros</CardTitle>
+          <CardTitle className="text-lg text-primary">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -102,7 +102,7 @@ export default function CommissionsDashboardClient() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Comissões</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-700">{formatBRL(totalComissoes)}</div>
+            <div className="text-2xl font-bold text-success">{formatBRL(totalComissoes)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -110,7 +110,7 @@ export default function CommissionsDashboardClient() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Vendas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{details.length}</div>
+            <div className="text-2xl font-bold text-primary">{details.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -126,7 +126,7 @@ export default function CommissionsDashboardClient() {
       {/* Gráfico de Comissões */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-blue-900">Comissões por Vendedor</CardTitle>
+          <CardTitle className="text-primary">Comissões por Vendedor</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] w-full">
@@ -166,7 +166,7 @@ export default function CommissionsDashboardClient() {
       {/* Tabela de Detalhes */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-blue-900">Detalhes das Comissões</CardTitle>
+          <CardTitle className="text-primary">Detalhes das Comissões</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -174,16 +174,16 @@ export default function CommissionsDashboardClient() {
           ) : (
             <div className="rounded-md border">
               <Table>
-                <TableHeader className="bg-slate-50">
+                <TableHeader className="bg-muted">
                   <TableRow>
-                    <TableHead className="text-blue-900 font-semibold">Data</TableHead>
-                    <TableHead className="text-blue-900 font-semibold">Vendedor</TableHead>
-                    <TableHead className="text-blue-900 font-semibold">Cliente</TableHead>
-                    <TableHead className="text-blue-900 font-semibold">Produto</TableHead>
-                    <TableHead className="text-right text-blue-900 font-semibold">Venda</TableHead>
-                    <TableHead className="text-right text-blue-900 font-semibold">Lucro</TableHead>
-                    <TableHead className="text-right text-blue-900 font-semibold">Comissão (%)</TableHead>
-                    <TableHead className="text-right font-bold text-blue-900">Valor Comissão</TableHead>
+                    <TableHead className="text-primary font-semibold">Data</TableHead>
+                    <TableHead className="text-primary font-semibold">Vendedor</TableHead>
+                    <TableHead className="text-primary font-semibold">Cliente</TableHead>
+                    <TableHead className="text-primary font-semibold">Produto</TableHead>
+                    <TableHead className="text-right text-primary font-semibold">Venda</TableHead>
+                    <TableHead className="text-right text-primary font-semibold">Lucro</TableHead>
+                    <TableHead className="text-right text-primary font-semibold">Comissão (%)</TableHead>
+                    <TableHead className="text-right font-bold text-primary">Valor Comissão</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -203,7 +203,7 @@ export default function CommissionsDashboardClient() {
                         <TableCell className="text-right tabular-nums">{formatBRL(d.valorVenda)}</TableCell>
                         <TableCell className="text-right tabular-nums">{formatBRL(d.lucroLiquido)}</TableCell>
                         <TableCell className="text-right">{d.percentualComissao}%</TableCell>
-                        <TableCell className="text-right font-semibold text-emerald-700 tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
+                        <TableCell className="text-right font-semibold text-success tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
                       </TableRow>
                     ))
                   )}

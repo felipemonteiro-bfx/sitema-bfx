@@ -51,7 +51,7 @@ export default async function Page() {
         {/* Dados Pessoais */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-blue-900">Dados pessoais</CardTitle>
+            <CardTitle className="text-primary">Dados pessoais</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={savePerfil} className="grid gap-3 md:grid-cols-2">
@@ -61,7 +61,7 @@ export default async function Page() {
               <Input name="telefone" defaultValue={user.telefone || ""} placeholder="Telefone" aria-label="Telefone" />
               <Input name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" aria-label="Endereço" />
               <Input name="senha" defaultValue={user.password} placeholder="Senha" aria-label="Senha" />
-              <Button className="md:col-span-2 bg-blue-900 hover:bg-blue-800">Salvar Alterações</Button>
+              <Button className="md:col-span-2 bg-primary hover:bg-primary/90">Salvar Alterações</Button>
             </form>
           </CardContent>
         </Card>
@@ -69,16 +69,16 @@ export default async function Page() {
         {/* Resumo de Comissões */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900">Suas Comissões</CardTitle>
+            <CardTitle className="text-primary">Suas Comissões</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Total Acumulado</p>
-              <div className="text-2xl font-bold text-emerald-700">{formatBRL(totalComissao)}</div>
+              <div className="text-2xl font-bold text-success">{formatBRL(totalComissao)}</div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Sua Taxa</p>
-              <div className="text-lg font-semibold text-blue-900">{pct}%</div>
+              <div className="text-lg font-semibold text-primary">{pct}%</div>
             </div>
             <Button asChild variant="outline" className="w-full">
               <Link href="/comissoes">Ver Detalhes Completo</Link>

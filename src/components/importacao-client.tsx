@@ -127,10 +127,10 @@ export default function ImportacaoClient() {
         <Card className="border-blue-200 bg-blue-50/10">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-blue-900">2. Validar e Editar Dados</CardTitle>
+              <CardTitle className="text-primary">2. Validar e Editar Dados</CardTitle>
               <p className="text-sm text-muted-foreground italic">Edite as células abaixo se necessário antes de confirmar.</p>
             </div>
-            <Button onClick={finalizeImport} disabled={saving} className="bg-blue-900 hover:bg-blue-800">
+            <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90">
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
               Subir {data.length} Vendas
             </Button>
@@ -138,7 +138,7 @@ export default function ImportacaoClient() {
           <CardContent>
             <div className="rounded-md border bg-white overflow-hidden overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50">
+                <TableHeader className="bg-muted">
                   <TableRow>
                     <TableHead className="w-32">Data</TableHead>
                     <TableHead>Vendedor</TableHead>
@@ -173,7 +173,7 @@ export default function ImportacaoClient() {
                           value={row.cliente} 
                           placeholder="OBRIGATÓRIO"
                           onChange={(e) => updateCell(row.id, 'cliente', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1 ${!row.cliente ? 'bg-red-50 text-red-600' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1 ${!row.cliente ? 'bg-red-50 text-destructive' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -181,7 +181,7 @@ export default function ImportacaoClient() {
                           value={row.produto} 
                           placeholder="OBRIGATÓRIO"
                           onChange={(e) => updateCell(row.id, 'produto', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1 ${!row.produto ? 'bg-red-50 text-red-600' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1 ${!row.produto ? 'bg-red-50 text-destructive' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -209,7 +209,7 @@ export default function ImportacaoClient() {
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
-                        <button onClick={() => removeRow(row.id)} className="text-red-400 hover:text-red-600 p-1">
+                        <button onClick={() => removeRow(row.id)} className="text-red-400 hover:text-destructive p-1">
                           <Trash2 className="h-3 w-3" />
                         </button>
                       </TableCell>
