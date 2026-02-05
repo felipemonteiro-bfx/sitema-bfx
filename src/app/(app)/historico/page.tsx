@@ -22,7 +22,48 @@ type Search = {
   page?: string;
 };
 
-// ... (updateVenda and deleteVenda actions remain the same) ...
+async function updateVenda(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  const data = String(formData.get("data") || "");
+  const valor = Number(formData.get("valor") || 0);
+  const frete = Number(formData.get("frete") || 0);
+  const envio = Number(formData.get("envio") || 0);
+  const custo = Number(formData.get("custo_prod") || 0);
+  const temNota = formData.get("temNota") === "on";
+  const taxaNota = Number(formData.get("taxaNota") || 5.97);
+
+  if (!id || !data) return;
+
+  const valorDescontoNota = temNota ? (valor * taxaNota) / 100 : 0;
+  const total = valor + frete;
+  const lucro = total - (custo + envio + valorDescontoNota);
+
+  await prisma.venda.update({
+    where: { id },
+    data: {
+      dataVenda: new Date(data),
+      vendedor: String(formData.get("vendedor") || ""),
+      produtoNome: String(formData.get("produto") || ""),
+      valorVenda: valor,
+      valorFrete: frete,
+      custoEnvio: envio,
+      parcelas: Number(formData.get("parcelas") || 1),
+      temNota,
+      taxaNota,
+      lucroLiquido: lucro,
+    },
+  });
+  revalidatePath("/historico");
+}
+
+async function deleteVenda(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  if (!id) return;
+  await prisma.venda.delete({ where: { id } });
+  revalidatePath("/historico");
+}
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
