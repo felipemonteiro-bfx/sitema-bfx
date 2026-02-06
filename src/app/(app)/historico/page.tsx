@@ -9,6 +9,10 @@ import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
 import { DateInput } from "@/components/ui/date-input";
+import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+import fs from "fs";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -28,17 +32,41 @@ async function updateVenda(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   const data = String(formData.get("data") || "");
   const valor = Number(formData.get("valor") || 0);
+  const quantidade = Number(formData.get("quantidade") || 1);
   const frete = Number(formData.get("frete") || 0);
   const envio = Number(formData.get("envio") || 0);
   const custo = Number(formData.get("custo_prod") || 0);
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
+  
+  const file = formData.get("comprovante") as File | null;
 
   if (!id || !data) return;
 
-  const valorDescontoNota = temNota ? (valor * taxaNota) / 100 : 0;
-  const total = valor + frete;
-  const lucro = total - (custo + envio + valorDescontoNota);
+  const subtotal = valor * quantidade;
+  const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
+  const total = subtotal + frete;
+  const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
+
+  let comprovantePath: string | undefined = undefined;
+
+  if (file && file.size > 0 && file.name) {
+    try {
+      const uploadDir = path.join(process.cwd(), "public/uploads/recibos");
+      if (!fs.existsSync(uploadDir)) {
+        await mkdir(uploadDir, { recursive: true });
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const filename = `${id}-${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+      const filePath = path.join(uploadDir, filename);
+
+      await writeFile(filePath, buffer);
+      comprovantePath = `/uploads/recibos/${filename}`;
+    } catch (error) {
+      console.error("Erro ao fazer upload do comprovante:", error);
+    }
+  }
 
   await prisma.venda.update({
     where: { id },
@@ -46,6 +74,7 @@ async function updateVenda(formData: FormData) {
       dataVenda: new Date(data),
       vendedor: String(formData.get("vendedor") || ""),
       produtoNome: String(formData.get("produto") || ""),
+      quantidade,
       valorVenda: valor,
       valorFrete: frete,
       custoEnvio: envio,
@@ -53,6 +82,7 @@ async function updateVenda(formData: FormData) {
       temNota,
       taxaNota,
       lucroLiquido: lucro,
+      ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
     },
   });
   revalidatePath("/historico");
@@ -179,8 +209,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead>Cliente</TableHead>
                 <TableHead>Vendedor</TableHead>
                 <TableHead>Produto</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <TableHead className="text-center">Qtd</TableHead>
+                <TableHead className="text-right">Valor Total</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
+                <TableHead className="text-center">Assinado</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -198,14 +230,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
                     <TableCell>{v.produtoNome}</TableCell>
+                    <TableCell className="text-center font-medium">{v.quantidade || 1}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatBRL((v.valorVenda || 0) + (v.valorFrete || 0))}
+                      {formatBRL(((v.valorVenda || 0) * (v.quantidade || 1)) + (v.valorFrete || 0))}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
                         <span className="text-success font-bold" title={`Taxa: ${v.taxaNota}%`}>✓</span>
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {v.comprovantePdf ? (
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
                       )}
                     </TableCell>
                     <TableCell>
@@ -276,7 +316,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Valor do produto</label>
+                <label className="text-xs font-medium text-muted-foreground">Quantidade</label>
+                <Input name="quantidade" type="number" min="1" defaultValue={editVenda.quantidade || 1} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Valor Unitário</label>
                 <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
               </div>
               <div className="space-y-1">
@@ -287,14 +331,35 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <label className="text-xs font-medium text-muted-foreground">Custo de envio</label>
                 <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
               </div>
-              <div className="space-y-1 md:col-span-1">
+              <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
               
               <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
 
-              <div className="md:col-span-1 flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF)</label>
+                <div className="flex flex-col gap-2">
+                  <Input type="file" name="comprovante" accept="application/pdf" className="h-10 px-2 pt-1.5" />
+                  {editVenda.comprovantePdf ? (
+                    <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-md border border-emerald-100">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Comprovante já enviado. 
+                      <a href={editVenda.comprovantePdf} target="_blank" className="font-bold underline flex items-center gap-1">
+                        Ver atual <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 px-2 py-1.5 rounded-md border border-amber-100 animate-pulse">
+                      <AlertCircle className="h-3 w-3" />
+                      <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
                 <input 
                   type="checkbox" 
                   name="temNota" 

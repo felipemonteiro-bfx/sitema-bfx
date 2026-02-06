@@ -3,8 +3,7 @@ import { Calendar } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
-export interface DateInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+export type DateInputProps = React.InputHTMLAttributes<HTMLInputElement>;
 
 const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
   ({ className, ...props }, ref) => {
