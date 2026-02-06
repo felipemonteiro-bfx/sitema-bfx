@@ -4,10 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Loader2, User, Package, CheckCircle2 } from "lucide-react";
+import { 
+  Loader2, User, Package, CheckCircle2, 
+  Calendar, ShoppingCart, Calculator, 
+  CreditCard, AlertTriangle, Sparkles,
+  ArrowRight, Truck, Receipt, Percent
+} from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { formatBRL } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
@@ -25,15 +33,19 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   
   const [clienteQuery, setClienteQuery] = useState('');
   const [selectedCliente, setSelectedCliente] = useState<{id: number, nome: string} | null>(null);
-  const [clienteSuggestions, setClienteSuggestions] = useState<any[]>([]);
+  const [clienteSuggestions, setClienteSuggestions] = useState<{ id: number; nome: string; cpf?: string; cnpj?: string }[]>([]);
   
   const [produtoQuery, setProdutoQuery] = useState('');
   const [selectedProduto, setSelectedProduto] = useState<{id: number, nome: string} | null>(null);
-  const [produtoSuggestions, setProdutoSuggestions] = useState<any[]>([]);
-  const [aiSuggestions, setAiSuggestions] = useState<{upsell: any[], crossSell: any[]} | null>(null);
+  const [produtoSuggestions, setProdutoSuggestions] = useState<{ id: number; nome: string; marca?: string; valorVenda?: number; custoPadrao?: number; custoProduto?: number; estoqueAtual?: number }[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<{
+    upsell: { id: number; nome: string; valorVenda: number; label: string }[], 
+    crossSell: { id: number; nome: string; valorVenda: number; label: string }[]
+  } | null>(null);
   
   const [custo, setCusto] = useState('');
   const [valor, setValor] = useState('');
+  const [quantidade, setQuantidade] = useState('1');
   const [frete, setFrete] = useState('0');
   const [envio, setEnvio] = useState('0');
   const [temNota, setTemNota] = useState(false);
@@ -54,7 +66,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
       fetch(`/api/clientes/${selectedCliente.id}/limite`)
         .then(res => res.json())
         .then(data => setLimiteData(data))
-        .catch(err => console.error("Erro ao buscar limite:", err));
+        .catch(error => console.error("Erro ao buscar limite:", error));
     } else {
       setLimiteData(null);
     }
@@ -63,16 +75,17 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   // Busca Sugestões Inteligentes (Upsell/Cross-sell)
   useEffect(() => {
     if (selectedProduto) {
-      fetch(`/api/vendas/sugestoes?produtoId=${selectedProduto.id}`)
+      const clienteParam = selectedCliente ? `&clienteId=${selectedCliente.id}` : '';
+      fetch(`/api/vendas/sugestoes?produtoId=${selectedProduto.id}${clienteParam}`)
         .then(res => res.json())
         .then(data => setAiSuggestions(data))
-        .catch(err => console.error("Erro ao buscar sugestões IA:", err));
+        .catch(error => console.error("Erro ao buscar sugestões IA:", error));
     } else {
       setAiSuggestions(null);
     }
-  }, [selectedProduto]);
+  }, [selectedProduto, selectedCliente]);
 
-  const selectProduto = (p: any) => {
+  const selectProduto = (p: { id: number; nome: string; valorVenda?: number; custoPadrao?: number; custoProduto?: number }) => {
     setSelectedProduto(p);
     setProdutoQuery(p.nome);
     setCusto(p.custoPadrao?.toString() || p.custoProduto?.toString() || '');
@@ -83,19 +96,21 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   // Cálculos em tempo real
   const numValor = Number(valor) || 0;
   const numCusto = Number(custo) || 0;
+  const numQuantidade = Number(quantidade) || 1;
   const numFrete = Number(frete) || 0;
   const numEnvio = Number(envio) || 0;
   const numParcelas = Number(parcelas) || 1;
   const numTaxaNota = Number(taxaNota) || 0;
 
-  const totalVenda = numValor + numFrete;
+  const subtotal = numValor * numQuantidade;
+  const totalVenda = subtotal + numFrete;
   const valorParcela = totalVenda / numParcelas;
   
-  // Cálculo do valor da nota (sobre o valor da venda)
-  const valorDescontoNota = temNota ? (numValor * numTaxaNota) / 100 : 0;
+  const valorDescontoNota = temNota ? (subtotal * numTaxaNota) / 100 : 0;
+  const custoTotal = (numCusto * numQuantidade) + numEnvio + valorDescontoNota;
   
-  const lucroBruto = totalVenda - (numCusto + numEnvio + valorDescontoNota);
-  const margemPct = numValor > 0 ? (lucroBruto / totalVenda) * 100 : 0;
+  const lucroBruto = totalVenda - custoTotal;
+  const margemPct = subtotal > 0 ? (lucroBruto / totalVenda) * 100 : 0;
 
   const selectedVendedorData = vendedorOptions.find(v => v.value === vendedor);
   const comissaoPct = selectedVendedorData?.comissaoPct || 0;
@@ -169,6 +184,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     formData.append('produto', produtoQuery);
     formData.append('custo', custo);
     formData.append('valor', valor);
+    formData.append('quantidade', quantidade);
     formData.append('frete', frete);
     formData.append('envio', envio);
     formData.append('parcelas', parcelas);
@@ -184,11 +200,13 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
       setSelectedProduto(null);
       setCusto('');
       setValor('');
+      setQuantidade('1');
       setFrete('0');
       setEnvio('0');
       setTemNota(false);
       alert("Venda realizada com sucesso!");
     } catch (error) {
+      console.error("Erro ao finalizar venda:", error);
       alert("Erro ao finalizar venda.");
     } finally {
       setLoading(false);
@@ -196,243 +214,362 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4">
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Data da venda</Label>
-          <DateInput
-            value={dataVenda}
-            onChange={(e) => setDataVenda(e.target.value)}
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="flex flex-col lg:grid lg:grid-cols-12 gap-6">
+      {/* Coluna da Esquerda: Inputs do Form */}
+      <div className="lg:col-span-8 space-y-6">
         
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Vendedor</Label>
-          <FormSelect
-            name="vendedor"
-            options={vendedorOptions}
-            value={vendedor}
-            onValueChange={setVendedor}
-            placeholder="Vendedor"
-          />
-        </div>
-
-        <div className="space-y-1 relative">
-          <Label className="text-xs font-semibold text-muted-foreground">Cliente (Busca)</Label>
-          <div className="relative">
-            <Input 
-              value={clienteQuery} 
-              onChange={(e) => setClienteQuery(e.target.value)} 
-              placeholder="Digite o nome do cliente..."
-              className={selectedCliente ? "border-emerald-500 bg-emerald-50/30" : ""}
-              required
-            />
-            <User className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${selectedCliente ? "text-success" : "text-muted-foreground"}`} />
-          </div>
-          
-          {clienteSuggestions.length > 0 && (
-            <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-40 overflow-auto">
-              {clienteSuggestions.map((c) => (
-                <div 
-                  key={c.id} 
-                  className="p-2 hover:bg-slate-100 cursor-pointer text-sm flex justify-between items-center"
-                  onClick={() => {
-                    setSelectedCliente(c);
-                    setClienteQuery(c.nome);
-                    setClienteSuggestions([]);
-                  }}
-                >
-                  <span className="font-medium">{c.nome}</span>
-                  <span className="text-[10px] text-muted-foreground">{c.cpf || c.cnpj || 'Sem doc'}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="space-y-1 relative">
-          <Label className="text-xs font-semibold text-muted-foreground">Produto (Busca)</Label>
-          <div className="relative">
-            <Input 
-              value={produtoQuery} 
-              onChange={(e) => setProdutoQuery(e.target.value)} 
-              placeholder="Digite o nome do produto..."
-              className={selectedProduto ? "border-emerald-500 bg-emerald-50/30" : ""}
-              required
-            />
-            <Package className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 ${selectedProduto ? "text-success" : "text-muted-foreground"}`} />
-          </div>
-
-          {produtoSuggestions.length > 0 && (
-            <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-40 overflow-auto">
-              {produtoSuggestions.map((p) => (
-                <div 
-                  key={p.id} 
-                  className="p-2 hover:bg-slate-100 cursor-pointer text-sm flex flex-col"
-                  onClick={() => selectProduto(p)}
-                >
-                  <span className="font-medium">{p.nome}</span>
-                  <span className="text-[10px] text-muted-foreground">{p.marca} - {formatBRL(p.valorVenda || 0)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* BFX Intelligence Suggestions */}
-          {aiSuggestions && (aiSuggestions.upsell.length > 0 || aiSuggestions.crossSell.length > 0) && (
-            <div className="absolute z-40 w-full mt-1 bg-gradient-to-br from-purple-50/95 to-purple-100/90 border border-purple-200/80 rounded-lg shadow-lg backdrop-blur-sm p-3 animate-in fade-in slide-in-from-top-2">
-              <div className="flex items-center gap-2 text-[11px] font-black text-purple-700 uppercase mb-3 pb-2 border-b border-purple-200/50">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
-                BFX Intelligence
-              </div>
-              <div className="space-y-1.5">
-                {[...aiSuggestions.upsell, ...aiSuggestions.crossSell].map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => {
-                      selectProduto(s);
-                      setAiSuggestions(null);
-                    }}
-                    className="flex items-center justify-between w-full p-2.5 rounded-md bg-white/80 hover:bg-white hover:shadow-sm border border-transparent hover:border-purple-200 cursor-pointer transition-all group"
-                  >
-                    <div className="flex flex-col items-start">
-                      <span className="text-[10px] font-bold text-purple-600 uppercase leading-none mb-1">{s.label}</span>
-                      <span className="text-xs font-semibold text-slate-800 group-hover:text-purple-900 truncate max-w-[150px]">{s.nome}</span>
-                    </div>
-                    <span className="text-xs font-bold text-slate-900 bg-purple-100 group-hover:bg-purple-200 px-2.5 py-1 rounded-md transition-colors">{formatBRL(s.valorVenda)}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Parcelas</Label>
-          <FormSelect name="parcelas" options={parcelasOptions} value={parcelas} onValueChange={setParcelas} />
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Custo do produto (R$)</Label>
-          <Input type="number" step="0.01" value={custo} onChange={(e) => setCusto(e.target.value)} placeholder="0,00" />
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Valor da venda (R$)</Label>
-          <Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" required />
-        </div>
-        
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Frete cobrado (R$)</Label>
-          <Input type="number" step="0.01" value={frete} onChange={(e) => setFrete(e.target.value)} placeholder="0,00" />
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Custo de envio (R$)</Label>
-          <Input type="number" step="0.01" value={envio} onChange={(e) => setEnvio(e.target.value)} placeholder="0,00" />
-        </div>
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-3">
-        <div className="space-y-1">
-          <Label className="text-xs font-semibold text-muted-foreground">Emissão de Nota</Label>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-background hover:bg-accent/50 transition-colors">
-            <input
-              type="checkbox"
-              id="temNota"
-              checked={temNota}
-              onChange={(e) => setTemNota(e.target.checked)}
-              className="h-4 w-4 rounded border-input focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            />
-            <Label htmlFor="temNota" className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Com Nota Fiscal
+        {/* Seção 1: Contexto da Venda */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-dashed">
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Calendar className="h-3 w-3" /> Data da Venda
             </Label>
+            <DateInput
+              value={dataVenda} 
+              onChange={(e) => setDataVenda(e.target.value)} 
+              required 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <User className="h-3 w-3" /> Vendedor Responsável
+            </Label>
+            <FormSelect
+              name="vendedor"
+              options={vendedorOptions}
+              value={vendedor}
+              onValueChange={setVendedor}
+              placeholder="Selecione o vendedor"
+            />
           </div>
         </div>
 
-        {temNota && (
-          <div className="space-y-1">
-            <Label className="text-xs font-semibold text-muted-foreground">Taxa da Nota (%)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              value={taxaNota}
-              onChange={(e) => setTaxaNota(e.target.value)}
-              placeholder="5,97"
-            />
-          </div>
-        )}
-      </div>
+        {/* Seção 2: Identificação do Cliente */}
+        <Card className="border-none shadow-sm bg-white dark:bg-card overflow-visible">
+          <CardHeader className="pb-3 px-4 pt-4">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <User className="h-4 w-4 text-blue-600" /> Cliente
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="relative">
+              <div className="relative">
+                <Input 
+                  value={clienteQuery} 
+                  onChange={(e) => setClienteQuery(e.target.value)} 
+                  placeholder="Pesquisar por nome ou CPF..."
+                  className={`pl-10 h-11 transition-all ${selectedCliente ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20 ring-emerald-500/20" : ""}`}
+                  required
+                />
+                <User className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${selectedCliente ? "text-emerald-600" : "text-muted-foreground"}`} />
+                {selectedCliente && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Badge variant="outline" className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Selecionado</Badge>
+                  </div>
+                )}
+              </div>
+              
+              {clienteSuggestions.length > 0 && (
+                <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
+                  {clienteSuggestions.map((c) => (
+                    <div 
+                      key={c.id} 
+                      className="p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm flex justify-between items-center border-b last:border-0 transition-colors"
+                      onClick={() => {
+                        setSelectedCliente(c);
+                        setClienteQuery(c.nome);
+                        setClienteSuggestions([]);
+                      }}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">{c.nome}</span>
+                        <span className="text-xs text-muted-foreground">{c.cpf || c.cnpj || 'Sem documento'}</span>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      {limiteData && (
-        <div className={`p-3 rounded-lg border ${showCreditWarning ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-100'}`}>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div>
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Margem Total (30%)</Label>
-                <div className="text-sm font-bold">{formatBRL(limiteData.margemTotal)}</div>
+        {/* Seção 3: Seleção do Produto */}
+        <Card className="border-none shadow-sm bg-white dark:bg-card overflow-visible">
+          <CardHeader className="pb-3 px-4 pt-4">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Package className="h-4 w-4 text-blue-600" /> Produto
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="grid gap-4">
+              <div className="relative">
+                <div className="relative">
+                  <Input 
+                    value={produtoQuery} 
+                    onChange={(e) => setProdutoQuery(e.target.value)} 
+                    placeholder="Pesquisar produto por nome..."
+                    className={`pl-10 h-11 transition-all ${selectedProduto ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20" : ""}`}
+                    required
+                  />
+                  <Package className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${selectedProduto ? "text-emerald-600" : "text-muted-foreground"}`} />
+                </div>
+
+                {produtoSuggestions.length > 0 && (
+                  <div className="absolute z-[90] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
+                    {produtoSuggestions.map((p) => (
+                      <div 
+                        key={p.id} 
+                        className="p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm flex justify-between items-center border-b last:border-0 transition-colors"
+                        onClick={() => selectProduto(p)}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{p.nome}</span>
+                          <span className="text-xs text-muted-foreground">{p.marca || 'Sem marca'} • Estoque: {p.estoqueAtual || 0}</span>
+                        </div>
+                        <span className="font-bold text-blue-700 dark:text-blue-400">{formatBRL(p.valorVenda || 0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="text-muted-foreground">−</div>
-              <div>
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Comprometido</Label>
-                <div className="text-sm font-bold text-destructive">{formatBRL(limiteData.comprometimentoAtual)}</div>
+
+              {/* Inteligência Artificial de Vendas */}
+              {aiSuggestions && (aiSuggestions.upsell.length > 0 || aiSuggestions.crossSell.length > 0) && (
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-purple-100 dark:border-purple-900/30 rounded-xl p-4 mt-2">
+                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-bold text-xs uppercase mb-3">
+                    <Sparkles className="h-4 w-4" /> BFX Intelligence Sugestões
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {[...aiSuggestions.upsell, ...aiSuggestions.crossSell].slice(0, 2).map((s) => (
+                      <div 
+                        key={s.id}
+                        onClick={() => {
+                          selectProduto(s);
+                          setAiSuggestions(null);
+                        }}
+                        className="flex items-center justify-between p-3 rounded-lg bg-white/80 dark:bg-card/80 hover:bg-white dark:hover:bg-card border border-purple-200 dark:border-purple-800/50 cursor-pointer transition-all hover:shadow-md group"
+                      >
+                        <div className="flex flex-col overflow-hidden">
+                          <Badge variant="secondary" className="w-fit text-[9px] h-4 mb-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100">
+                            {s.label || 'Sugestão'}
+                          </Badge>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-purple-700 dark:group-hover:text-purple-400">{s.nome}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium">{formatBRL(s.valorVenda)}</span>
+                        </div>
+                        <div className="h-8 w-8 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center group-hover:bg-purple-600 transition-colors">
+                          <ShoppingCart className="h-4 w-4 text-purple-600 dark:text-purple-400 group-hover:text-white" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Seção 4: Valores e Detalhes Financeiros */}
+        <Card className="border-none shadow-sm bg-white dark:bg-card">
+          <CardHeader className="pb-3 px-4 pt-4">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Calculator className="h-4 w-4 text-blue-600" /> Valores e Custos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Preço Unit.</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
+                  <Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} className="pl-9 font-bold" required />
+                </div>
               </div>
-              <div className="text-muted-foreground">=</div>
-              <div>
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Residual Disponível</Label>
-                <div className={`text-sm font-bold ${limiteData.margemDisponivel > 0 ? 'text-success' : 'text-destructive'}`}>
-                  {formatBRL(limiteData.margemDisponivel)}
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Qtd</Label>
+                <Input type="number" min="1" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} className="font-bold" required />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Parcelas</Label>
+                <FormSelect name="parcelas" options={parcelasOptions} value={parcelas} onValueChange={setParcelas} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Frete Cobrado</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
+                  <Input type="number" step="0.01" value={frete} onChange={(e) => setFrete(e.target.value)} className="pl-9" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Custo Unit.</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
+                  <Input type="number" step="0.01" value={custo} onChange={(e) => setCusto(e.target.value)} className="pl-9 text-red-600" />
                 </div>
               </div>
             </div>
 
-            {showCreditWarning && (
-              <div className="flex items-center gap-2 text-amber-700 bg-amber-100 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-                ATENÇÃO: Parcela {formatBRL(valorParcela)} excede o limite {excedeuTeto ? '(Teto 475,00)' : '(Margem)'}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground">Custo Envio</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
+                  <Input type="number" step="0.01" value={envio} onChange={(e) => setEnvio(e.target.value)} className="pl-9 text-red-600" />
+                </div>
+              </div>
+              <div className="col-span-1 md:col-span-2 flex items-end">
+                <div className="flex items-center space-x-2 border rounded-md h-10 px-3 w-full bg-slate-50/50 dark:bg-slate-900/50">
+                  <input 
+                    type="checkbox" 
+                    id="temNota" 
+                    checked={temNota} 
+                    onChange={(e) => setTemNota(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <Label htmlFor="temNota" className="text-sm font-medium leading-none cursor-pointer select-none">
+                    Emitir Nota Fiscal
+                  </Label>
+                </div>
+              </div>
+              {temNota && (
+                <div className="space-y-1 animate-in slide-in-from-left-2 duration-200">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Alíquota (%)</Label>
+                  <Input type="number" step="0.01" value={taxaNota} onChange={(e) => setTaxaNota(e.target.value)} />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Coluna da Direita: Resumo Fixo (Sidebar) */}
+      <div className="lg:col-span-4 space-y-4">
+        <div className="sticky top-6">
+          <Card className="border-none shadow-lg bg-blue-900 text-white overflow-hidden">
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" /> Resumo
+                </h3>
+                <Badge className="bg-blue-800 text-blue-200 hover:bg-blue-800 border-none">
+                  {selectedProduto ? `${quantidade} Item(s)` : 'Vazio'}
+                </Badge>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between text-blue-100 text-sm">
+                  <span>Subtotal</span>
+                  <span className="font-semibold">{formatBRL(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-blue-100 text-sm">
+                  <span className="flex items-center gap-1"><Truck className="h-3 w-3" /> Frete</span>
+                  <span className="font-semibold">{formatBRL(numFrete)}</span>
+                </div>
+                {temNota && (
+                  <div className="flex justify-between text-blue-100 text-sm">
+                    <span className="flex items-center gap-1"><Receipt className="h-3 w-3" /> Impostos</span>
+                    <span className="font-semibold text-red-300">-{formatBRL(valorDescontoNota)}</span>
+                  </div>
+                )}
+                <Separator className="bg-blue-800" />
+                <div className="flex justify-between items-end pt-1">
+                  <span className="text-sm text-blue-200 uppercase font-bold tracking-widest">Total Geral</span>
+                  <span className="text-3xl font-black text-white leading-none">
+                    {formatBRL(totalVenda)}
+                  </span>
+                </div>
+                {numParcelas > 1 && (
+                  <div className="text-right text-xs text-blue-300 font-medium">
+                    {numParcelas}x de {formatBRL(valorParcela)}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-blue-950/40 rounded-xl p-4 mb-6 border border-blue-800/50">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-[10px] text-blue-300 uppercase font-bold mb-1">Lucro Líquido</div>
+                    <div className={`text-lg font-bold ${lucroBruto >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {formatBRL(lucroBruto)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-blue-300 uppercase font-bold mb-1">Margem %</div>
+                    <div className={`text-lg font-bold ${margemPct >= 20 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {margemPct.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-[11px] text-blue-200 border-t border-blue-800/50 pt-2">
+                  <span className="flex items-center gap-1"><Percent className="h-3 w-3" /> Comissão ({comissaoPct}%)</span>
+                  <span className="font-bold text-amber-400">{formatBRL(valorComissao > 0 ? valorComissao : 0)}</span>
+                </div>
+              </div>
+
+              <Button 
+                disabled={loading || !selectedCliente || !produtoQuery} 
+                type="submit" 
+                className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-black text-lg shadow-[0_4px_20px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] cursor-pointer"
+              >
+                {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    FINALIZAR VENDA
+                  </div>
+                )}
+              </Button>
+            </div>
+          </Card>
+
+          {/* Widgets de Contexto Extra */}
+          <div className="mt-4 space-y-4">
+            {limiteData && (
+              <Card className={`border-2 transition-colors ${showCreditWarning ? 'bg-amber-50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30' : 'bg-emerald-50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/30'}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-2">
+                      <CreditCard className="h-4 w-4" /> Análise de Crédito
+                    </div>
+                    {showCreditWarning && (
+                      <Badge variant="destructive" className="animate-pulse">Risco Alto</Badge>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-500">Saldo Disponível</span>
+                      <span className={`font-bold ${limiteData.margemDisponivel > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {formatBRL(limiteData.margemDisponivel)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all ${showCreditWarning ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+                        style={{ width: `${Math.min(100, (limiteData.comprometimentoAtual / limiteData.margemTotal) * 100)}%` }}
+                      />
+                    </div>
+                    {showCreditWarning && (
+                      <div className="flex items-start gap-2 text-[10px] text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 p-2 rounded border border-amber-200 dark:border-amber-900/30 mt-2">
+                        <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+                        <div>
+                          <strong>Limite Excedido:</strong> A parcela de {formatBRL(valorParcela)} supera a margem residual ou o teto de crédito do cliente.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {!selectedCliente && (
+              <div className="p-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center justify-center text-center space-y-2 opacity-60">
+                <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-600">
+                  <User className="h-5 w-5" />
+                </div>
+                <div className="text-[10px] font-bold uppercase text-slate-400">Nenhum Cliente</div>
+                <p className="text-[10px] text-slate-400 px-4">Selecione um cliente para ver o limite de crédito e histórico.</p>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      <div className="grid gap-4 p-4 bg-muted rounded-xl border border-border">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Total da Venda</Label>
-            <div className="text-lg font-bold text-primary">{formatBRL(totalVenda)}</div>
-            {numParcelas > 1 && (
-              <div className="text-[10px] text-muted-foreground">{numParcelas}x de {formatBRL(valorParcela)}</div>
-            )}
-          </div>
-
-          <div>
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Lucro Líquido</Label>
-            <div className={`text-lg font-bold ${lucroBruto >= 0 ? 'text-success' : 'text-destructive'}`}>
-              {formatBRL(lucroBruto)}
-            </div>
-            <div className="text-[10px] text-muted-foreground">Margem: {margemPct.toFixed(1)}%</div>
-          </div>
-
-          <div>
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Comissão ({comissaoPct}%)</Label>
-            <div className="text-lg font-bold text-amber-600">
-              {formatBRL(valorComissao > 0 ? valorComissao : 0)}
-            </div>
-            <div className="text-[10px] text-muted-foreground">Para: {vendedor}</div>
-          </div>
-
-          <div className="flex items-end justify-end">
-            <Button disabled={loading || !selectedCliente || !produtoQuery} type="submit" className="w-full h-12 bg-primary hover:bg-primary/90">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-              Finalizar Venda
-            </Button>
           </div>
         </div>
       </div>
