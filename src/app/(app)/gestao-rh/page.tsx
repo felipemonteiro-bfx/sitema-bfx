@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
@@ -234,7 +234,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           <DeleteUserButton 
                             userId={u.id} 
                             userName={u.nomeExibicao || u.username} 
-                            onDelete={deleteUser} 
+                            deleteAction={deleteUser} 
                           />
                           <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Alterações</button>
                         </div>

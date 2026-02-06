@@ -3,8 +3,8 @@ import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { formatBRL } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { formatBRL, cn } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
@@ -191,7 +191,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               ]}
             />
             <input type="hidden" name="page" value="1" />
-            <Button>Filtrar</Button>
+            <button className={cn(buttonVariants(), "cursor-pointer")}>Filtrar</button>
           </form>
         </CardContent>
       </Card>
@@ -250,16 +250,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-2 justify-end">
-                        <Button size="sm" asChild variant="outline">
-                          <Link
-                            href={buildUrl({ edit: v.id.toString() }) + "#editar-venda"}
-                          >
-                            Editar
-                          </Link>
-                        </Button>
-                        <Button size="sm" variant="ghost" asChild>
-                          <a href={`/api/recibo?id=${v.id}`}>PDF</a>
-                        </Button>
+                        <Link
+                          href={buildUrl({ edit: v.id.toString() }) + "#editar-venda"}
+                          className={buttonVariants({ variant: "outline", size: "sm" })}
+                        >
+                          Editar
+                        </Link>
+                        <a 
+                          href={`/api/recibo?id=${v.id}`}
+                          className={buttonVariants({ variant: "ghost", size: "sm" })}
+                        >
+                          PDF
+                        </a>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -272,22 +274,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <div className="flex items-center justify-between border-t pt-4">
               <div className="text-xs text-muted-foreground">Mostrando {vendas.length} de {totalVendas} resultados</div>
               <div className="flex items-center gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  disabled={page <= 1}
-                  asChild
-                >
-                  <Link href={buildUrl({ page: (page - 1).toString() })}>Anterior</Link>
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  disabled={page >= totalPages}
-                  asChild
-                >
-                  <Link href={buildUrl({ page: (page + 1).toString() })}>Próxima</Link>
-                </Button>
+                {page > 1 ? (
+                  <Link 
+                    href={buildUrl({ page: (page - 1).toString() })}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Anterior
+                  </Link>
+                ) : (
+                  <div className={cn(buttonVariants({ variant: "outline", size: "sm" }), "opacity-50 pointer-events-none")}>
+                    Anterior
+                  </div>
+                )}
+                {page < totalPages ? (
+                  <Link 
+                    href={buildUrl({ page: (page + 1).toString() })}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Próxima
+                  </Link>
+                ) : (
+                  <div className={cn(buttonVariants({ variant: "outline", size: "sm" }), "opacity-50 pointer-events-none")}>
+                    Próxima
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -384,12 +394,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
               <div className="md:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
                 <div className="flex items-center gap-3">
-                  <Button>Salvar alterações</Button>
+                  <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar alterações</button>
                   <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
                     Baixar recibo PDF
                   </a>
                 </div>
-                <DeleteVendaButton vendaId={editVenda.id} onDelete={deleteVenda} />
+                <DeleteVendaButton vendaId={editVenda.id} deleteAction={deleteVenda} />
               </div>
             </form>
           </CardContent>

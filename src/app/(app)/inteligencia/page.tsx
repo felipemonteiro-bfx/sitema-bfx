@@ -6,7 +6,7 @@ import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
 import { FormSelect } from "@/components/form-select";
 import { prisma } from "@/lib/db";
 import { headers } from "next/headers";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 
 async function askAi(formData: FormData) {

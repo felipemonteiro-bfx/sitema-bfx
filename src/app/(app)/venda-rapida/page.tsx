@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatBRL, cn } from "@/lib/utils";
 import VendaRapidaFormClient from "@/components/venda-rapida-form-client";

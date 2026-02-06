@@ -1,7 +1,7 @@
 ﻿import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, cn } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
@@ -266,7 +266,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </CardHeader>
                   <CardContent>
                     <ProdutoFormClient 
-                      onSuccess={addProduto} 
+                      onSuccessAction={addProduto} 
                       fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
                     />
                   </CardContent>

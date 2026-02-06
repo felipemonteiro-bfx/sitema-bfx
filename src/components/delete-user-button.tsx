@@ -7,10 +7,10 @@ import { useState } from "react";
 interface Props {
   userId: number;
   userName: string;
-  onDelete: (formData: FormData) => Promise<void>;
+  deleteAction: (formData: FormData) => Promise<void>;
 }
 
-export function DeleteUserButton({ userId, userName, onDelete }: Props) {
+export function DeleteUserButton({ userId, userName, deleteAction }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleAction = async () => {
@@ -23,7 +23,7 @@ Esta ação não poderá ser desfeita.`)) {
     try {
       const formData = new FormData();
       formData.append('id', userId.toString());
-      await onDelete(formData);
+      await deleteAction(formData);
     } catch (error) {
       alert("Erro ao remover usuário.");
     } finally {

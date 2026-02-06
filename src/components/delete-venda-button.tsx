@@ -6,10 +6,10 @@ import { useState } from "react";
 
 interface Props {
   vendaId: number;
-  onDelete: (formData: FormData) => Promise<void>;
+  deleteAction: (formData: FormData) => Promise<void>;
 }
 
-export function DeleteVendaButton({ vendaId, onDelete }: Props) {
+export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
   const [loading, setLoading] = useState(false);
 
   return (
@@ -27,7 +27,7 @@ export function DeleteVendaButton({ vendaId, onDelete }: Props) {
         try {
           const formData = new FormData();
           formData.append('id', vendaId.toString());
-          await onDelete(formData);
+          await deleteAction(formData);
         } catch (error) {
           alert("Erro ao excluir venda.");
         } finally {

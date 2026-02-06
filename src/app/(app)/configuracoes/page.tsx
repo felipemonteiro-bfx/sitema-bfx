@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { revalidatePath } from "next/cache";
 import { QueryTabs } from "@/components/query-tabs";
 import { Separator } from "@/components/ui/separator";

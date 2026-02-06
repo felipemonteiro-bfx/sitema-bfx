@@ -9,11 +9,11 @@ import { Loader2, Camera, CheckCircle2, AlertCircle, Tag } from "lucide-react";
 import Image from 'next/image';
 
 interface Props {
-  onSuccess: (formData: FormData) => Promise<void>;
+  onSuccessAction: (formData: FormData) => Promise<void>;
   fornecedores: { id: number; nome: string }[];
 }
 
-export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
+export default function ProdutoFormClient({ onSuccessAction, fornecedores }: Props) {
   const [nome, setNome] = useState('');
   const [custo, setCusto] = useState('');
   const [estoque, setEstoque] = useState('0');
@@ -128,7 +128,7 @@ export default function ProdutoFormClient({ onSuccess, fornecedores }: Props) {
     formData.append('fornecedorId', fornecedorId);
 
     try {
-      await onSuccess(formData);
+      await onSuccessAction(formData);
       setNome('');
       setCusto('');
       setEstoque('0');
