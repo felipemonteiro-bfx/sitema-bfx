@@ -5,7 +5,7 @@ import { formatBRL, cn } from "@/lib/utils";
 import VendaRapidaFormClient from "@/components/venda-rapida-form-client";
 import { ShoppingCart, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { criarVenda } from "./actions";
+import { criarVendaV2 } from "./actions";
 
 export default async function Page() {
   const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
@@ -67,7 +67,7 @@ export default async function Page() {
       <VendaRapidaFormClient
         vendedorOptions={vendedorOptions}
         parcelasOptions={parcelasOptions}
-        onSubmit={criarVenda}
+        onSubmit={criarVendaV2}
       />
 
       {!ultima && (

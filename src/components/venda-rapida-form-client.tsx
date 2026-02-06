@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { 
-  Loader2, User, Package, CheckCircle2, 
-  Calendar, ShoppingCart, Calculator, 
+import { Switch } from "@/components/ui/switch";
+import {
+  Loader2, User, Package, CheckCircle2,
+  Calendar, ShoppingCart, Calculator,
   CreditCard, AlertTriangle, Sparkles,
-  ArrowRight, Truck, Receipt, Percent
+  ArrowRight, Truck, Receipt, Percent, Plus, X
 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
@@ -16,33 +17,42 @@ import { formatBRL } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import type { ActionResponse } from "@/lib/action-response";
 
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
   parcelasOptions: { value: string; label: string }[];
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmit: (formData: FormData) => Promise<ActionResponse>;
+}
+
+interface ProdutoItem {
+  produtoNome: string;
+  custoProduto: number;
+  valorVenda: number;
+  quantidade: number;
+  subtotal: number;
 }
 
 export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions, onSubmit }: Props) {
   const [loading, setLoading] = useState(false);
-  
+
   // Form states
   const [dataVenda, setDataVenda] = useState(new Date().toISOString().split('T')[0]);
   const [vendedor, setVendedor] = useState(vendedorOptions[0]?.value || '');
   const [parcelas, setParcelas] = useState('1');
-  
+
   const [clienteQuery, setClienteQuery] = useState('');
   const [selectedCliente, setSelectedCliente] = useState<{id: number, nome: string} | null>(null);
   const [clienteSuggestions, setClienteSuggestions] = useState<{ id: number; nome: string; cpf?: string; cnpj?: string }[]>([]);
-  
+
   const [produtoQuery, setProdutoQuery] = useState('');
   const [selectedProduto, setSelectedProduto] = useState<{id: number, nome: string} | null>(null);
   const [produtoSuggestions, setProdutoSuggestions] = useState<{ id: number; nome: string; marca?: string; valorVenda?: number; custoPadrao?: number; custoProduto?: number; estoqueAtual?: number }[]>([]);
   const [aiSuggestions, setAiSuggestions] = useState<{
-    upsell: { id: number; nome: string; valorVenda: number; label: string }[], 
+    upsell: { id: number; nome: string; valorVenda: number; label: string }[],
     crossSell: { id: number; nome: string; valorVenda: number; label: string }[]
   } | null>(null);
-  
+
   const [custo, setCusto] = useState('');
   const [valor, setValor] = useState('');
   const [quantidade, setQuantidade] = useState('1');
@@ -50,7 +60,10 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   const [envio, setEnvio] = useState('0');
   const [temNota, setTemNota] = useState(false);
   const [taxaNota, setTaxaNota] = useState('5.97');
-  
+
+  // Multiple products support
+  const [produtos, setProdutos] = useState<ProdutoItem[]>([]);
+
   const [limiteData, setLimiteData] = useState<{
     margemTotal: number;
     comprometimentoAtual: number;
@@ -93,6 +106,39 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     setProdutoSuggestions([]);
   };
 
+  const adicionarProduto = () => {
+    if (!produtoQuery || !valor || !custo) {
+      alert("Preencha produto, custo e valor antes de adicionar");
+      return;
+    }
+
+    const numValor = Number(valor) || 0;
+    const numCusto = Number(custo) || 0;
+    const numQuantidade = Number(quantidade) || 1;
+
+    const novoProduto: ProdutoItem = {
+      produtoNome: produtoQuery,
+      custoProduto: numCusto,
+      valorVenda: numValor,
+      quantidade: numQuantidade,
+      subtotal: numValor * numQuantidade,
+    };
+
+    setProdutos([...produtos, novoProduto]);
+
+    // Reset product fields
+    setProdutoQuery('');
+    setSelectedProduto(null);
+    setCusto('');
+    setValor('');
+    setQuantidade('1');
+    setAiSuggestions(null);
+  };
+
+  const removerProduto = (index: number) => {
+    setProdutos(produtos.filter((_, i) => i !== index));
+  };
+
   // Cálculos em tempo real
   const numValor = Number(valor) || 0;
   const numCusto = Number(custo) || 0;
@@ -102,15 +148,24 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   const numParcelas = Number(parcelas) || 1;
   const numTaxaNota = Number(taxaNota) || 0;
 
-  const subtotal = numValor * numQuantidade;
+  // Subtotal do produto atual (não adicionado ainda)
+  const subtotalProdutoAtual = numValor * numQuantidade;
+  const custoProdutoAtual = numCusto * numQuantidade;
+
+  // Subtotal de todos os produtos já adicionados
+  const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);
+  const custoProdutos = produtos.reduce((sum, p) => sum + (p.custoProduto * p.quantidade), 0);
+
+  // Total geral (produtos adicionados + produto atual)
+  const subtotal = subtotalProdutos + subtotalProdutoAtual;
   const totalVenda = subtotal + numFrete;
   const valorParcela = totalVenda / numParcelas;
-  
+
   const valorDescontoNota = temNota ? (subtotal * numTaxaNota) / 100 : 0;
-  const custoTotal = (numCusto * numQuantidade) + numEnvio + valorDescontoNota;
-  
+  const custoTotal = custoProdutos + custoProdutoAtual + numEnvio + valorDescontoNota;
+
   const lucroBruto = totalVenda - custoTotal;
-  const margemPct = subtotal > 0 ? (lucroBruto / totalVenda) * 100 : 0;
+  const margemPct = totalVenda > 0 ? (lucroBruto / totalVenda) * 100 : 0;
 
   const selectedVendedorData = vendedorOptions.find(v => v.value === vendedor);
   const comissaoPct = selectedVendedorData?.comissaoPct || 0;
@@ -171,40 +226,66 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCliente || !produtoQuery) {
-      alert("Por favor, selecione um cliente e informe o produto.");
+
+    // Validar se tem cliente
+    if (!selectedCliente) {
+      alert("Por favor, selecione um cliente.");
+      return;
+    }
+
+    // Validar se tem pelo menos um produto (adicionado ou atual)
+    if (produtos.length === 0 && !produtoQuery) {
+      alert("Adicione pelo menos um produto à venda.");
       return;
     }
 
     setLoading(true);
+
+    // Preparar lista de produtos
+    let produtosParaEnviar = [...produtos];
+
+    // Se tem produto atual preenchido, adicionar à lista
+    if (produtoQuery && valor && custo) {
+      produtosParaEnviar.push({
+        produtoNome: produtoQuery,
+        custoProduto: Number(custo),
+        valorVenda: Number(valor),
+        quantidade: Number(quantidade),
+        subtotal: Number(valor) * Number(quantidade),
+      });
+    }
+
     const formData = new FormData();
     formData.append('data', dataVenda);
     formData.append('vendedor', vendedor);
-    formData.append('cliente', selectedCliente.id.toString());
-    formData.append('produto', produtoQuery);
-    formData.append('custo', custo);
-    formData.append('valor', valor);
-    formData.append('quantidade', quantidade);
+    formData.append('clienteId', selectedCliente.id.toString());
     formData.append('frete', frete);
     formData.append('envio', envio);
     formData.append('parcelas', parcelas);
     formData.append('temNota', String(temNota));
     formData.append('taxaNota', taxaNota);
+    formData.append('produtos', JSON.stringify(produtosParaEnviar));
 
     try {
-      await onSubmit(formData);
-      // Reset form (except date and vendor)
-      setClienteQuery('');
-      setSelectedCliente(null);
-      setProdutoQuery('');
-      setSelectedProduto(null);
-      setCusto('');
-      setValor('');
-      setQuantidade('1');
-      setFrete('0');
-      setEnvio('0');
-      setTemNota(false);
-      alert("Venda realizada com sucesso!");
+      const result = await onSubmit(formData);
+
+      if (result.success) {
+        // Reset form (except date and vendor)
+        setClienteQuery('');
+        setSelectedCliente(null);
+        setProdutoQuery('');
+        setSelectedProduto(null);
+        setCusto('');
+        setValor('');
+        setQuantidade('1');
+        setFrete('0');
+        setEnvio('0');
+        setTemNota(false);
+        setProdutos([]);
+        alert(result.message || "Venda realizada com sucesso!");
+      } else {
+        alert(result.error || "Erro ao finalizar venda.");
+      }
     } catch (error) {
       console.error("Erro ao finalizar venda:", error);
       alert("Erro ao finalizar venda.");
@@ -254,9 +335,9 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
           <CardContent className="px-4 pb-4">
             <div className="relative">
               <div className="relative">
-                <Input 
-                  value={clienteQuery} 
-                  onChange={(e) => setClienteQuery(e.target.value)} 
+                <Input
+                  value={clienteQuery}
+                  onChange={(e) => setClienteQuery(e.target.value)}
                   placeholder="Pesquisar por nome ou CPF..."
                   className={`pl-10 h-11 transition-all ${selectedCliente ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20 ring-emerald-500/20" : ""}`}
                   required
@@ -268,12 +349,12 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   </div>
                 )}
               </div>
-              
+
               {clienteSuggestions.length > 0 && (
-                <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
+                <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
                   {clienteSuggestions.map((c) => (
-                    <div 
-                      key={c.id} 
+                    <div
+                      key={c.id}
                       className="p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm flex justify-between items-center border-b last:border-0 transition-colors"
                       onClick={() => {
                         setSelectedCliente(c);
@@ -305,9 +386,9 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
             <div className="grid gap-4">
               <div className="relative">
                 <div className="relative">
-                  <Input 
-                    value={produtoQuery} 
-                    onChange={(e) => setProdutoQuery(e.target.value)} 
+                  <Input
+                    value={produtoQuery}
+                    onChange={(e) => setProdutoQuery(e.target.value)}
                     placeholder="Pesquisar produto por nome..."
                     className={`pl-10 h-11 transition-all ${selectedProduto ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20" : ""}`}
                     required
@@ -316,10 +397,10 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                 </div>
 
                 {produtoSuggestions.length > 0 && (
-                  <div className="absolute z-[90] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
+                  <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
                     {produtoSuggestions.map((p) => (
-                      <div 
-                        key={p.id} 
+                      <div
+                        key={p.id}
                         className="p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm flex justify-between items-center border-b last:border-0 transition-colors"
                         onClick={() => selectProduto(p)}
                       >
@@ -342,7 +423,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {[...aiSuggestions.upsell, ...aiSuggestions.crossSell].slice(0, 2).map((s) => (
-                      <div 
+                      <div
                         key={s.id}
                         onClick={() => {
                           selectProduto(s);
@@ -360,6 +441,53 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                         <div className="h-8 w-8 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center group-hover:bg-purple-600 transition-colors">
                           <ShoppingCart className="h-4 w-4 text-purple-600 dark:text-purple-400 group-hover:text-white" />
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Botão Adicionar Produto */}
+              {produtoQuery && valor && custo && (
+                <Button
+                  type="button"
+                  onClick={adicionarProduto}
+                  variant="outline"
+                  className="w-full mt-2 border-dashed border-2 hover:bg-primary/5 hover:border-primary transition-all"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Produto à Venda
+                </Button>
+              )}
+
+              {/* Lista de Produtos Adicionados */}
+              {produtos.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Package className="h-3 w-3" /> Produtos Adicionados ({produtos.length})
+                  </Label>
+                  <div className="space-y-2">
+                    {produtos.map((p, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border group hover:border-primary/50 transition-all"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm truncate">{p.produtoNome}</div>
+                          <div className="text-xs text-muted-foreground flex gap-3">
+                            <span>{p.quantidade}x {formatBRL(p.valorVenda)}</span>
+                            <span className="text-success font-medium">= {formatBRL(p.subtotal)}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removerProduto(index)}
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -417,18 +545,21 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   <Input type="number" step="0.01" value={envio} onChange={(e) => setEnvio(e.target.value)} className="pl-9 text-red-600" />
                 </div>
               </div>
-              <div className="col-span-1 md:col-span-2 flex items-end">
-                <div className="flex items-center space-x-2 border rounded-md h-10 px-3 w-full bg-slate-50/50 dark:bg-slate-900/50">
-                  <input 
-                    type="checkbox" 
-                    id="temNota" 
-                    checked={temNota} 
-                    onChange={(e) => setTemNota(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Label htmlFor="temNota" className="text-sm font-medium leading-none cursor-pointer select-none">
-                    Emitir Nota Fiscal
+              <div className="col-span-1 md:col-span-2 space-y-1">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1.5">
+                  <Receipt className="h-3 w-3" />
+                  Nota Fiscal
+                </Label>
+                <div className="flex items-center justify-between h-10 px-4 rounded-lg border border-input bg-background/70 hover:bg-accent/50 transition-all group">
+                  <Label htmlFor="temNota" className="text-sm font-medium cursor-pointer select-none flex-1">
+                    Emitir NF-e
                   </Label>
+                  <Switch
+                    id="temNota"
+                    checked={temNota}
+                    onCheckedChange={setTemNota}
+                    className="data-[state=checked]:bg-success"
+                  />
                 </div>
               </div>
               {temNota && (
@@ -452,7 +583,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   <ShoppingCart className="h-5 w-5" /> Resumo
                 </h3>
                 <Badge className="bg-blue-800 text-blue-200 hover:bg-blue-800 border-none">
-                  {selectedProduto ? `${quantidade} Item(s)` : 'Vazio'}
+                  {produtos.length > 0 || produtoQuery ? `${produtos.length + (produtoQuery ? 1 : 0)} Produto(s)` : 'Vazio'}
                 </Badge>
               </div>
 
