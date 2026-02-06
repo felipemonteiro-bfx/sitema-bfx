@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { ActionResponse } from "@/lib/action-response";
+import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
@@ -63,6 +64,13 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
   // Multiple products support
   const [produtos, setProdutos] = useState<ProdutoItem[]>([]);
+
+  // Parcelas com datas de vencimento
+  const [parcelasVencimento, setParcelasVencimento] = useState<{
+    numeroParcela: number;
+    dataVencimento: string;
+    valorParcela: number;
+  }[]>([]);
 
   const [limiteData, setLimiteData] = useState<{
     margemTotal: number;
@@ -265,6 +273,11 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     formData.append('temNota', String(temNota));
     formData.append('taxaNota', taxaNota);
     formData.append('produtos', JSON.stringify(produtosParaEnviar));
+
+    // Adicionar parcelas com datas de vencimento (se houver)
+    if (parcelasVencimento.length > 0) {
+      formData.append('parcelasVencimento', JSON.stringify(parcelasVencimento));
+    }
 
     try {
       const result = await onSubmit(formData);
@@ -571,6 +584,16 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
             </div>
           </CardContent>
         </Card>
+
+        {/* Seção 5: Datas de Vencimento das Parcelas */}
+        {numParcelas > 1 && (
+          <ParcelasVencimentoForm
+            numeroParcelas={numParcelas}
+            valorTotal={totalVenda}
+            parcelas={parcelasVencimento}
+            onChange={setParcelasVencimento}
+          />
+        )}
       </div>
 
       {/* Coluna da Direita: Resumo Fixo (Sidebar) */}
