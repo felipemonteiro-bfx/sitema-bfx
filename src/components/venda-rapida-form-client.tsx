@@ -351,11 +351,11 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               </div>
 
               {clienteSuggestions.length > 0 && (
-                <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
+                <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
                   {clienteSuggestions.map((c) => (
                     <div
                       key={c.id}
-                      className="p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm flex justify-between items-center border-b last:border-0 transition-colors"
+                      className="p-3 hover:bg-primary/5 dark:hover:bg-primary/20 hover:border-l-2 hover:border-l-primary cursor-pointer text-sm flex justify-between items-center border-b border-border last:border-0 transition-all duration-200 group"
                       onClick={() => {
                         setSelectedCliente(c);
                         setClienteQuery(c.nome);
@@ -363,10 +363,10 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                       }}
                     >
                       <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">{c.nome}</span>
+                        <span className="font-semibold text-foreground group-hover:text-primary transition-colors">{c.nome}</span>
                         <span className="text-xs text-muted-foreground">{c.cpf || c.cnpj || 'Sem documento'}</span>
                       </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                   ))}
                 </div>
@@ -397,18 +397,18 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                 </div>
 
                 {produtoSuggestions.length > 0 && (
-                  <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-card border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
+                  <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
                     {produtoSuggestions.map((p) => (
                       <div
                         key={p.id}
-                        className="p-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm flex justify-between items-center border-b last:border-0 transition-colors"
+                        className="p-3 hover:bg-primary/5 dark:hover:bg-primary/20 hover:border-l-2 hover:border-l-primary cursor-pointer text-sm flex justify-between items-center border-b border-border last:border-0 transition-all duration-200 group"
                         onClick={() => selectProduto(p)}
                       >
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-slate-900 dark:text-slate-100">{p.nome}</span>
-                          <span className="text-xs text-muted-foreground">{p.marca || 'Sem marca'} • Estoque: {p.estoqueAtual || 0}</span>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <span className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">{p.nome}</span>
+                          <span className="text-xs text-muted-foreground truncate">{p.marca || 'Sem marca'} • Estoque: {p.estoqueAtual || 0}</span>
                         </div>
-                        <span className="font-bold text-blue-700 dark:text-blue-400">{formatBRL(p.valorVenda || 0)}</span>
+                        <span className="font-bold text-success dark:text-success ml-3 flex-shrink-0">{formatBRL(p.valorVenda || 0)}</span>
                       </div>
                     ))}
                   </div>
@@ -417,8 +417,8 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
               {/* Inteligência Artificial de Vendas */}
               {aiSuggestions && (aiSuggestions.upsell.length > 0 || aiSuggestions.crossSell.length > 0) && (
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/20 dark:to-purple-950/20 border border-purple-100 dark:border-purple-900/30 rounded-xl p-4 mt-2">
-                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-bold text-xs uppercase mb-3">
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 border border-purple-200 dark:border-purple-700/50 rounded-xl p-4 mt-2">
+                  <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-bold text-xs uppercase mb-3">
                     <Sparkles className="h-4 w-4" /> BFX Intelligence Sugestões
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -429,17 +429,17 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                           selectProduto(s);
                           setAiSuggestions(null);
                         }}
-                        className="flex items-center justify-between p-3 rounded-lg bg-white/80 dark:bg-card/80 hover:bg-white dark:hover:bg-card border border-purple-200 dark:border-purple-800/50 cursor-pointer transition-all hover:shadow-md group"
+                        className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-card hover:bg-purple-50 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-700/50 hover:border-purple-400 dark:hover:border-purple-500 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group"
                       >
-                        <div className="flex flex-col overflow-hidden">
-                          <Badge variant="secondary" className="w-fit text-[9px] h-4 mb-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 hover:bg-purple-100">
+                        <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+                          <Badge variant="secondary" className="w-fit text-[9px] h-4 mb-1 bg-purple-100 dark:bg-purple-800/50 text-purple-700 dark:text-purple-200 border-0">
                             {s.label || 'Sugestão'}
                           </Badge>
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-purple-700 dark:group-hover:text-purple-400">{s.nome}</span>
+                          <span className="text-xs font-bold text-foreground group-hover:text-purple-700 dark:group-hover:text-purple-300 truncate transition-colors">{s.nome}</span>
                           <span className="text-[10px] text-muted-foreground font-medium">{formatBRL(s.valorVenda)}</span>
                         </div>
-                        <div className="h-8 w-8 rounded-full bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center group-hover:bg-purple-600 transition-colors">
-                          <ShoppingCart className="h-4 w-4 text-purple-600 dark:text-purple-400 group-hover:text-white" />
+                        <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-800/50 flex items-center justify-center group-hover:bg-purple-600 dark:group-hover:bg-purple-500 transition-all flex-shrink-0 ml-2">
+                          <ShoppingCart className="h-4 w-4 text-purple-600 dark:text-purple-200 group-hover:text-white transition-colors" />
                         </div>
                       </div>
                     ))}
@@ -453,7 +453,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   type="button"
                   onClick={adicionarProduto}
                   variant="outline"
-                  className="w-full mt-2 border-dashed border-2 hover:bg-primary/5 hover:border-primary transition-all"
+                  className="w-full mt-2 border-dashed border-2 border-primary/30 dark:border-primary/50 hover:bg-primary/10 dark:hover:bg-primary/20 hover:border-primary dark:hover:border-primary text-primary dark:text-primary hover:shadow-md transition-all duration-200"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Produto à Venda
@@ -470,13 +470,13 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                     {produtos.map((p, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border group hover:border-primary/50 transition-all"
+                        className="flex items-center justify-between p-3 bg-muted/20 dark:bg-muted/10 rounded-lg border border-border hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/50 dark:hover:border-primary/60 group transition-all duration-200"
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm truncate">{p.produtoNome}</div>
+                          <div className="font-semibold text-sm truncate text-foreground group-hover:text-primary transition-colors">{p.produtoNome}</div>
                           <div className="text-xs text-muted-foreground flex gap-3">
                             <span>{p.quantidade}x {formatBRL(p.valorVenda)}</span>
-                            <span className="text-success font-medium">= {formatBRL(p.subtotal)}</span>
+                            <span className="text-success dark:text-success font-semibold">= {formatBRL(p.subtotal)}</span>
                           </div>
                         </div>
                         <Button
@@ -484,7 +484,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                           variant="ghost"
                           size="sm"
                           onClick={() => removerProduto(index)}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive dark:hover:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/20 opacity-0 group-hover:opacity-100 transition-all duration-200"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -550,15 +550,15 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   <Receipt className="h-3 w-3" />
                   Nota Fiscal
                 </Label>
-                <div className="flex items-center justify-between h-10 px-4 rounded-lg border border-input bg-background/70 hover:bg-accent/50 transition-all group">
-                  <Label htmlFor="temNota" className="text-sm font-medium cursor-pointer select-none flex-1">
+                <div className="flex items-center justify-between h-10 px-4 rounded-lg border border-input bg-background/70 hover:bg-primary/5 dark:hover:bg-primary/10 hover:border-primary/50 dark:hover:border-primary/60 transition-all duration-200 group">
+                  <Label htmlFor="temNota" className="text-sm font-medium cursor-pointer select-none flex-1 group-hover:text-primary transition-colors">
                     Emitir NF-e
                   </Label>
                   <Switch
                     id="temNota"
                     checked={temNota}
                     onCheckedChange={setTemNota}
-                    className="data-[state=checked]:bg-success"
+                    className="data-[state=checked]:bg-success dark:data-[state=checked]:bg-success"
                   />
                 </div>
               </div>
