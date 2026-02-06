@@ -24,7 +24,7 @@ export function successResponse<T = void>(message?: string, data?: T): ActionRes
 /**
  * Cria uma resposta de erro
  */
-export function errorResponse(error: string): ActionResponse {
+export function errorResponse<T = void>(error: string): ActionResponse<T> {
   return {
     success: false,
     error,

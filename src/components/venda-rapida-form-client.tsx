@@ -23,7 +23,7 @@ import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
   parcelasOptions: { value: string; label: string }[];
-  onSubmit: (formData: FormData) => Promise<ActionResponse>;
+  onSubmit: (formData: FormData) => Promise<ActionResponse<{ vendaId: number }>>;
 }
 
 interface ProdutoItem {
