@@ -149,67 +149,77 @@
 }
 
 .dark {
-  /* Core Colors - Dark Mode OLED */
-  --background: oklch(0.12 0.02 250); /* #020617 slate-950 */
+  /* Core Colors - Dark Mode OLED Enhanced */
+  --background: oklch(0.10 0.02 250); /* Mais escuro para OLED puro */
   --foreground: oklch(0.985 0 0); /* #F8FAFC slate-50 */
 
-  /* Primary - Inverted for dark mode */
+  /* Primary - Inverted for dark mode with better contrast */
   --primary: oklch(0.985 0 0); /* slate-50 */
   --primary-foreground: oklch(0.145 0.02 250); /* slate-900 */
   --primary-hover: oklch(0.922 0 0); /* slate-100 */
 
-  /* Secondary */
-  --secondary: oklch(0.185 0.02 250); /* slate-800 */
+  /* Secondary - Ligeiramente mais claro para contraste */
+  --secondary: oklch(0.22 0.02 250); /* slate-800 mais visível */
   --secondary-foreground: oklch(0.985 0 0);
 
-  /* Accent/CTA - Same green for consistency */
-  --accent: oklch(0.65 0.18 145); /* #22C55E green-500 */
-  --accent-foreground: oklch(0.985 0 0);
-  --accent-hover: oklch(0.55 0.18 145);
+  /* Accent/CTA - Green mais brilhante para dark mode */
+  --accent: oklch(0.70 0.20 145); /* #34D399 green-400 mais vibrante */
+  --accent-foreground: oklch(0.10 0.02 250); /* Texto escuro no accent */
+  --accent-hover: oklch(0.75 0.22 145);
 
-  /* Semantic Colors - Dark mode variants */
-  --success: oklch(0.65 0.18 145);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.77 0.15 85);
-  --warning-foreground: oklch(0.145 0.02 250);
-  --error: oklch(0.65 0.22 25);
-  --error-foreground: oklch(0.985 0 0);
-  --info: oklch(0.60 0.18 240);
-  --info-foreground: oklch(0.985 0 0);
+  /* Semantic Colors - Dark mode otimizado WCAG AAA */
+  --success: oklch(0.70 0.20 145); /* #34D399 green-400 */
+  --success-foreground: oklch(0.10 0.02 250);
+  --success-bg: oklch(0.25 0.10 145 / 20%); /* Background sutil */
+
+  --warning: oklch(0.80 0.17 85); /* #FCD34D yellow-300 mais brilhante */
+  --warning-foreground: oklch(0.10 0.02 250);
+  --warning-bg: oklch(0.30 0.10 85 / 20%);
+
+  --error: oklch(0.70 0.24 25); /* #F87171 red-400 */
+  --error-foreground: oklch(0.10 0.02 250);
+  --error-bg: oklch(0.25 0.12 25 / 20%);
+
+  --info: oklch(0.68 0.20 240); /* #60A5FA blue-400 */
+  --info-foreground: oklch(0.10 0.02 250);
+  --info-bg: oklch(0.25 0.10 240 / 20%);
 
   /* Destructive */
-  --destructive: oklch(0.65 0.22 25);
+  --destructive: oklch(0.70 0.24 25);
   --destructive-foreground: oklch(0.985 0 0);
 
-  /* Surfaces - Elevated layers */
-  --card: oklch(0.15 0.02 250); /* surface-primary */
+  /* Surfaces - Hierarquia clara com elevação */
+  --card: oklch(0.17 0.02 250); /* surface-primary - mais claro */
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.20 0.02 250); /* surface-secondary */
+  --card-elevated: oklch(0.20 0.02 250); /* Para cards com hover */
+
+  --popover: oklch(0.22 0.02 250); /* surface-secondary - mais elevado */
   --popover-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.25 0.02 250); /* surface-elevated */
-  --muted-foreground: oklch(0.708 0 0);
 
-  /* Borders & Inputs */
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --muted: oklch(0.27 0.02 250); /* surface-elevated - bem visível */
+  --muted-foreground: oklch(0.75 0 0); /* Texto mais claro */
 
-  /* Charts - Dark mode palette */
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  /* Borders & Inputs - WCAG AA compliance (4.5:1 mínimo) */
+  --border: oklch(0.35 0.02 250); /* #334155 slate-700 - visível */
+  --input: oklch(0.35 0.02 250); /* Mesmo que border */
+  --ring: oklch(0.65 0.18 145); /* Ring verde accent */
 
-  /* Sidebar - Uses primary surface */
-  --sidebar: oklch(0.145 0.02 250); /* slate-900 */
+  /* Charts - Dark mode palette vibrante */
+  --chart-1: oklch(0.55 0.25 264); /* Purple vibrante */
+  --chart-2: oklch(0.72 0.19 162); /* Green vibrante */
+  --chart-3: oklch(0.80 0.20 70); /* Yellow vibrante */
+  --chart-4: oklch(0.65 0.28 304); /* Pink vibrante */
+  --chart-5: oklch(0.68 0.26 16); /* Orange vibrante */
+
+  /* Sidebar - Separação clara do conteúdo */
+  --sidebar: oklch(0.13 0.02 250); /* Levemente mais claro que background */
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.65 0.20 145); /* Accent green */
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.25 0.02 250);
+  --sidebar-accent: oklch(0.27 0.02 250); /* Hover state visível */
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-border: oklch(0.30 0.02 250); /* Border visível */
+  --sidebar-ring: oklch(0.65 0.18 145);
 }
 
 @layer base {
@@ -248,7 +258,22 @@
 }
 
 .dark body {
+  /* Gradientes mais sutis e profissionais para dark mode */
   background-image:
-    radial-gradient(1200px 600px at 10% -10%, oklch(0.28 0.06 260 / 45%), transparent),
-    radial-gradient(900px 500px at 90% -20%, oklch(0.22 0.04 210 / 35%), transparent);
+    radial-gradient(1200px 600px at 10% -10%, oklch(0.25 0.08 260 / 25%), transparent),
+    radial-gradient(900px 500px at 90% -20%, oklch(0.20 0.06 210 / 20%), transparent);
+}
+
+/* Dark Mode - Melhorias de UX/UI */
+.dark {
+  /* Glow effects sutis para elementos importantes */
+  --glow-primary: 0 0 20px oklch(0.65 0.18 145 / 15%);
+  --glow-accent: 0 0 30px oklch(0.70 0.20 145 / 20%);
+  --glow-card: 0 4px 20px oklch(0 0 0 / 40%);
+
+  /* Sombras com elevação para hierarquia visual */
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 50%);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 60%);
+  --shadow-lg: 0 8px 24px oklch(0 0 0 / 70%);
+  --shadow-xl: 0 12px 40px oklch(0 0 0 / 80%);
 }

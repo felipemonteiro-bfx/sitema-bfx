@@ -53,15 +53,15 @@ export function SidebarNav({ menu }: { menu: MenuItem[] }) {
       {menu.map((item) => {
         const active = !item.external && isActive(pathname, item.href);
         const className = active
-          ? "justify-start gap-2 rounded-lg bg-accent text-accent-foreground shadow-sm"
-          : "justify-start gap-2 rounded-lg text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground transition-colors duration-200";
+          ? "justify-start gap-3 rounded-lg bg-accent text-accent-foreground shadow-md border-l-4 border-success dark:shadow-[var(--glow-primary)]"
+          : "justify-start gap-3 rounded-lg text-muted-foreground hover:bg-accent/70 hover:text-accent-foreground hover:shadow-sm hover:border-l-4 hover:border-accent/50 border-l-4 border-transparent transition-all duration-200 cursor-pointer";
 
         const icon = icons[item.href];
         return item.external ? (
           <Button key={item.href} variant="ghost" className={className} asChild>
             <a href={item.href} target="_blank" rel="noreferrer">
               {icon}
-              {item.label}
+              <span className="flex-1 text-left">{item.label}</span>
             </a>
           </Button>
         ) : (
@@ -73,7 +73,7 @@ export function SidebarNav({ menu }: { menu: MenuItem[] }) {
           >
             <Link href={item.href} aria-current={active ? "page" : undefined}>
               {icon}
-              {item.label}
+              <span className="flex-1 text-left">{item.label}</span>
             </Link>
           </Button>
         );

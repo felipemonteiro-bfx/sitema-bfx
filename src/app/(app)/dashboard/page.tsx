@@ -103,10 +103,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <Card className="border bg-gradient-to-br from-white/90 to-slate-50/90 shadow-sm">
+      <Card className="border-primary/20 bg-gradient-to-br from-card to-card-elevated shadow-lg dark:shadow-[var(--shadow-lg)]">
         <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Dashboard Executivo e Performance</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard Executivo e Performance</h1>
             <p className="text-sm text-muted-foreground">
               Período: {formatDate(start)} a {formatDate(end)}
             </p>
@@ -152,38 +152,37 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 opacity-70" />
+            <Card className="group relative overflow-hidden border-primary/20 transition-all hover:scale-[1.02] hover:border-primary/40 cursor-default">
+              <div className="absolute inset-0 bg-gradient-to-br from-muted/30 to-muted/10" />
               <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Faturamento Total</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Faturamento Total</CardTitle>
               </CardHeader>
-              <CardContent className="relative text-2xl font-semibold">{formatBRL(fat + frete)}</CardContent>
+              <CardContent className="relative text-2xl font-bold text-foreground">{formatBRL(fat + frete)}</CardContent>
               <div className="relative px-6 pb-4 text-xs text-muted-foreground">{peds} vendas</div>
             </Card>
-            <Card className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-emerald-100 opacity-70" />
+            <Card className="group relative overflow-hidden border-success/30 bg-gradient-to-br from-success-bg to-transparent transition-all hover:scale-[1.02] hover:border-success/50 dark:shadow-[var(--glow-primary)] cursor-default">
               <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido Real</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Lucro Líquido Real</CardTitle>
               </CardHeader>
-              <CardContent className="relative text-2xl font-semibold text-success">
+              <CardContent className="relative text-2xl font-bold text-success">
                 {formatBRL(lucro)}
               </CardContent>
-              <div className="relative px-6 pb-4 text-xs text-success">Margem: {margem.toFixed(1)}%</div>
+              <div className="relative px-6 pb-4 text-xs text-success font-semibold">Margem: {margem.toFixed(1)}%</div>
             </Card>
-            <Card className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-indigo-100 opacity-70" />
+            <Card className="group relative overflow-hidden border-info/20 transition-all hover:scale-[1.02] hover:border-info/40 cursor-default">
+              <div className="absolute inset-0 bg-gradient-to-br from-info-bg to-transparent" />
               <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Médio</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Ticket Médio</CardTitle>
               </CardHeader>
-              <CardContent className="relative text-2xl font-semibold">{formatBRL(tik)}</CardContent>
+              <CardContent className="relative text-2xl font-bold text-info">{formatBRL(tik)}</CardContent>
             </Card>
-            <Card className="relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-amber-100 opacity-70" />
+            <Card className="group relative overflow-hidden border-warning/20 transition-all hover:scale-[1.02] hover:border-warning/40 cursor-default">
+              <div className="absolute inset-0 bg-gradient-to-br from-warning-bg to-transparent" />
               <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Melhor Performance</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Melhor Performance</CardTitle>
               </CardHeader>
               <CardContent className="relative space-y-1">
-                <div className="text-base font-semibold">{bestRev?.vendedor || "—"}</div>
+                <div className="text-base font-bold text-warning">{bestRev?.vendedor || "—"}</div>
                 <div className="text-sm text-muted-foreground">{formatBRL(bestRev?.total || 0)}</div>
               </CardContent>
             </Card>
@@ -227,7 +226,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <TableCell className="text-right tabular-nums">{formatBRL(r.lucro)}</TableCell>
                         <TableCell className="text-right tabular-nums">{formatBRL(r.ticket)}</TableCell>
                         <TableCell className="text-right">
-                          <Badge variant="secondary" className="bg-emerald-50 text-success">
+                          <Badge variant="secondary" className="bg-success-bg border-success/30 text-success font-semibold">
                             {r.margem.toFixed(1)}%
                           </Badge>
                         </TableCell>

@@ -42,14 +42,14 @@ export default async function AppLayout({
   const menu = session.role === "admin" ? adminMenu : sellerMenu;
 
   return (
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-3 py-5 lg:px-6">
         <aside className="hidden w-72 shrink-0 lg:flex">
-          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border bg-card/90 px-5 py-6 text-card-foreground shadow-sm">
+          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-border bg-card px-5 py-6 text-card-foreground shadow-md backdrop-blur-sm transition-all duration-200 hover:shadow-lg dark:shadow-[var(--shadow-md)]">
             <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} />
           </div>
         </aside>
-        <main className="flex-1 min-w-0 rounded-2xl border bg-card/80 px-4 py-5 shadow-sm backdrop-blur lg:px-8 lg:py-7">
+        <main className="flex-1 min-w-0 rounded-2xl border border-border bg-card px-4 py-5 shadow-md backdrop-blur-sm transition-shadow duration-200 dark:shadow-[var(--shadow-md)] lg:px-8 lg:py-7">
           <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
             <div className="flex items-center gap-3">
               <MobileMenuTrigger>
