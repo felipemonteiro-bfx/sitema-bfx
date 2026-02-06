@@ -660,10 +660,10 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                 </div>
               </div>
 
-              <Button 
-                disabled={loading || !selectedCliente || !produtoQuery} 
-                type="submit" 
-                className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-black text-lg shadow-[0_4px_20px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] cursor-pointer"
+              <Button
+                disabled={loading || !selectedCliente || produtos.length === 0}
+                type="submit"
+                className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-black text-lg shadow-[0_4px_20px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
                   <div className="flex items-center gap-2">

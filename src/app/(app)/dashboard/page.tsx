@@ -11,6 +11,7 @@ import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { DateInput } from "@/components/ui/date-input";
 import Link from "next/link";
+import { DollarSign, TrendingUp, Percent } from "lucide-react";
 
 type Search = {
   from?: string;
@@ -254,12 +255,49 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Resumo Rápido</CardTitle>
+            <Card className="border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Resumo Rápido</CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                Receita: {formatBRL(fat + frete)} · Lucro: {formatBRL(lucro)} · Margem: {margem.toFixed(1)}%
+              <CardContent className="space-y-3">
+                {/* Receita */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-info/5 dark:bg-info/10 border border-info/20 dark:border-info/30 transition-all hover:bg-info/10 dark:hover:bg-info/15 hover:border-info/40 dark:hover:border-info/50 group">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-info/10 dark:bg-info/20 flex items-center justify-center group-hover:bg-info/20 dark:group-hover:bg-info/30 transition-colors">
+                      <DollarSign className="h-5 w-5 text-info dark:text-info" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Receita</div>
+                      <div className="text-lg font-bold text-info dark:text-info">{formatBRL(fat + frete)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lucro */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-success/5 dark:bg-success/10 border border-success/20 dark:border-success/30 transition-all hover:bg-success/10 dark:hover:bg-success/15 hover:border-success/40 dark:hover:border-success/50 group">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-success/10 dark:bg-success/20 flex items-center justify-center group-hover:bg-success/20 dark:group-hover:bg-success/30 transition-colors">
+                      <TrendingUp className="h-5 w-5 text-success dark:text-success" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Lucro</div>
+                      <div className="text-lg font-bold text-success dark:text-success">{formatBRL(lucro)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Margem */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-warning/5 dark:bg-warning/10 border border-warning/20 dark:border-warning/30 transition-all hover:bg-warning/10 dark:hover:bg-warning/15 hover:border-warning/40 dark:hover:border-warning/50 group">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-lg bg-warning/10 dark:bg-warning/20 flex items-center justify-center group-hover:bg-warning/20 dark:group-hover:bg-warning/30 transition-colors">
+                      <Percent className="h-5 w-5 text-warning dark:text-warning" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Margem</div>
+                      <div className="text-lg font-bold text-warning dark:text-warning">{margem.toFixed(1)}%</div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
             <Card>
