@@ -47,10 +47,14 @@ model Venda {
   dataVenda          DateTime  @map("data_venda")
   vendedor           String?
   clienteId          Int?      @map("cliente_id")
+
+  // DEPRECATED: Campos mantidos para compatibilidade com vendas antigas
   produtoNome        String?   @map("produto_nome")
   custoProduto       Float?    @map("custo_produto")
   quantidade         Int?      @default(1)
   valorVenda         Float?
+
+  // Novos campos para venda com múltiplos produtos
   valorFrete         Float?    @default(0) @map("valor_frete")
   custoEnvio         Float?    @default(0) @map("custo_envio")
   parcelas           Int?
@@ -62,9 +66,44 @@ model Venda {
   temNota            Boolean   @default(false) @map("tem_nota")
   taxaNota           Float?    @default(5.97) @map("taxa_nota")
   comprovantePdf     String?   @map("comprovante_pdf")
+
+  // Relacionamentos
   cliente            Cliente?  @relation(fields: [clienteId], references: [id])
+  itens              ItemVenda[]
+  parcelasVencimento ParcelaVencimento[]
 
   @@map("vendas")
+}
+
+model ItemVenda {
+  id           Int     @id @default(autoincrement())
+  vendaId      Int     @map("venda_id")
+  produtoNome  String  @map("produto_nome")
+  custoProduto Float   @map("custo_produto")
+  valorVenda   Float   @map("valor_venda")
+  quantidade   Int     @default(1)
+  subtotal     Float   // quantidade * valorVenda
+
+  venda        Venda   @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+
+  @@map("itens_venda")
+  @@index([vendaId])
+}
+
+model ParcelaVencimento {
+  id              Int      @id @default(autoincrement())
+  vendaId         Int      @map("venda_id")
+  numeroParcela   Int      @map("numero_parcela")  // 1, 2, 3...
+  dataVencimento  DateTime @map("data_vencimento")
+  valorParcela    Float    @map("valor_parcela")
+  paga            Boolean  @default(false)
+  dataPagamento   DateTime? @map("data_pagamento")
+
+  venda           Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+
+  @@map("parcelas_vencimento")
+  @@index([vendaId])
+  @@index([dataVencimento])
 }
 
 model Config {
