@@ -125,7 +125,13 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
             </TableRow>
           ) : (
             vendasIniciais.map((v) => (
-              <TableRow key={v.id} className="cursor-pointer hover:bg-muted" onClick={() => !isProcessing && toggleSelect(v.id)}>
+              <TableRow
+                key={v.id}
+                className={`cursor-pointer transition-all duration-200 hover:bg-accent/50 hover:shadow-sm ${
+                  selectedIds.includes(v.id) ? 'bg-success/10 border-l-4 border-success' : ''
+                }`}
+                onClick={() => !isProcessing && toggleSelect(v.id)}
+              >
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectedIds.includes(v.id)}
@@ -133,44 +139,53 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
                     disabled={isProcessing}
                   />
                 </TableCell>
-                <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
-                <TableCell className="font-medium">{v.produtoNome}</TableCell>
-                <TableCell className="text-right tabular-nums">{formatBRL(v.valorVenda || 0)}</TableCell>
-                <TableCell className="text-right tabular-nums">{v.parcelas}</TableCell>
+                <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
+                <TableCell className="font-semibold text-foreground">{v.produtoNome}</TableCell>
+                <TableCell className="text-right tabular-nums font-bold text-foreground">{formatBRL(v.valorVenda || 0)}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  <span className="inline-flex items-center justify-center rounded-md bg-info/20 px-2 py-0.5 text-xs font-bold text-info">
+                    {v.parcelas}x
+                  </span>
+                </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
 
-      <div className="mt-6 flex flex-col gap-4 rounded-lg border border-border bg-muted p-4">
+      <div className="mt-6 flex flex-col gap-4 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-card to-card-elevated shadow-lg p-6 dark:shadow-[var(--shadow-lg)] transition-all">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Selecionado</span>
-            <span className="text-2xl font-bold text-primary">{formatBRL(totalSelecionado)}</span>
-            <span className="text-xs text-muted-foreground">{selectedIds.length} itens selecionados</span>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Selecionado</span>
+            <span className="text-3xl font-black text-foreground tabular-nums">{formatBRL(totalSelecionado)}</span>
+            <span className="text-xs font-medium text-muted-foreground">{selectedIds.length} {selectedIds.length === 1 ? 'item selecionado' : 'itens selecionados'}</span>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <div className="rounded-lg border border-border/60 bg-background px-3 py-2">
-              <div className="text-[11px] uppercase text-muted-foreground">Prazo médio (D+1)</div>
-              <div className="text-sm font-semibold text-slate-900">{prazoMedio.toFixed(1)} dias</div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="group relative overflow-hidden rounded-lg border-2 border-info/30 bg-gradient-to-br from-info-bg to-transparent px-4 py-3 transition-all hover:border-info/50 hover:scale-[1.02] cursor-default">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Prazo médio (D+1)</div>
+              <div className="text-lg font-bold text-info tabular-nums">{prazoMedio.toFixed(1)} dias</div>
             </div>
-            <div className="rounded-lg border border-border/60 bg-background px-3 py-2">
-              <div className="text-[11px] uppercase text-muted-foreground">Taxa total</div>
-              <div className="text-sm font-semibold text-slate-900">{taxaPercent.toFixed(2)}%</div>
+            <div className="group relative overflow-hidden rounded-lg border-2 border-warning/30 bg-gradient-to-br from-warning-bg to-transparent px-4 py-3 transition-all hover:border-warning/50 hover:scale-[1.02] cursor-default">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Taxa total</div>
+              <div className="text-lg font-bold text-warning tabular-nums">{taxaPercent.toFixed(2)}%</div>
             </div>
-            <div className="rounded-lg border border-border/60 bg-background px-3 py-2">
-              <div className="text-[11px] uppercase text-muted-foreground">Valor líquido</div>
-              <div className="text-sm font-semibold text-success">{formatBRL(valorLiquido)}</div>
+            <div className="group relative overflow-hidden rounded-lg border-2 border-success/30 bg-gradient-to-br from-success-bg to-transparent px-4 py-3 transition-all hover:border-success/50 hover:scale-[1.02] dark:shadow-[var(--glow-primary)] cursor-default">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Valor líquido</div>
+              <div className="text-lg font-bold text-success tabular-nums">{formatBRL(valorLiquido)}</div>
             </div>
           </div>
 
-          <Button disabled={selectedIds.length === 0 || isProcessing} className="h-12 px-8 bg-primary hover:bg-primary/90">
-            {isProcessing ? "Gerando Relatório..." : `Antecipar ${selectedIds.length} itens`}
+          <Button
+            disabled={selectedIds.length === 0 || isProcessing}
+            variant="success"
+            className="h-12 px-8 text-base font-bold shadow-lg hover:shadow-xl transition-all"
+          >
+            {isProcessing ? "Gerando Relatório..." : `Antecipar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'}`}
           </Button>
         </div>
-        <div className="text-[11px] text-muted-foreground">
+        <div className="pt-3 border-t border-border text-xs font-medium text-muted-foreground flex items-center gap-2">
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-info/20 text-[10px] font-bold text-info">ℹ</span>
           Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. Juros simples &lt; 30 dias e compostos a partir de 30 dias.
         </div>
       </div>
