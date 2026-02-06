@@ -51,7 +51,7 @@ export async function criarVenda(formData: FormData) {
 /**
  * Nova action com suporte a múltiplos produtos e parcelas com datas
  */
-export async function criarVendaV2(formData: FormData): Promise<ActionResponse> {
+export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{ vendaId: number }>> {
   try {
     const data = String(formData.get("data") || "");
     const vendedor = String(formData.get("vendedor") || "");
