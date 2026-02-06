@@ -2,10 +2,10 @@ import { prisma } from "@/lib/db";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatBRL, cn } from "@/lib/utils";
-import VendaRapidaFormClient from "@/components/venda-rapida-form-client";
+import VendaRapidaFormV2 from "@/components/venda-rapida-form-v2";
 import { ShoppingCart, CheckCircle2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { criarVenda } from "./actions";
+import { criarVendaV2 } from "./actions";
 
 export default async function Page() {
   const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
@@ -64,10 +64,10 @@ export default async function Page() {
         )}
       </div>
 
-      <VendaRapidaFormClient
+      <VendaRapidaFormV2
         vendedorOptions={vendedorOptions}
         parcelasOptions={parcelasOptions}
-        onSubmit={criarVenda}
+        onSubmit={criarVendaV2}
       />
 
       {!ultima && (
