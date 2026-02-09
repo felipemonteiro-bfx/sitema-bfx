@@ -404,7 +404,6 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                     onChange={(e) => setProdutoQuery(e.target.value)}
                     placeholder="Pesquisar produto por nome..."
                     className={`pl-10 h-11 transition-all ${selectedProduto ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20" : ""}`}
-                    required
                   />
                   <Package className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${selectedProduto ? "text-emerald-600" : "text-muted-foreground"}`} />
                 </div>
@@ -661,7 +660,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               </div>
 
               <Button
-                disabled={loading || !selectedCliente || produtos.length === 0}
+                disabled={loading || !selectedCliente || (produtos.length === 0 && (!produtoQuery || !valor || !custo))}
                 type="submit"
                 className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-black text-lg shadow-[0_4px_20px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
