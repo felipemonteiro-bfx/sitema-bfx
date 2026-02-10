@@ -9,3 +9,7 @@ resources:
   - postgres.yaml
   - app.yaml
   - ingress.yaml
+
+images:
+  - name: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop
+    newName: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop
