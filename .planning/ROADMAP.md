@@ -21,7 +21,10 @@ O PDV atual suporta apenas um produto por venda. Este roadmap entrega suporte co
   2. Cada item na lista exibe produto, quantidade e preço unitário
   3. Vendedor pode remover um item da lista sem perder os demais itens já adicionados
   4. O total da venda atualiza automaticamente ao adicionar, remover ou alterar quantidade de qualquer item
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 1-PLAN.md — Ativar VendaRapidaFormV2 na pagina do PDV, corrigir tipos e substituir alerts por toasts
 
 ### Phase 2: Descontos e Parcelamento
 **Goal**: Vendedor pode aplicar desconto individual por item e definir datas de vencimento por parcela
@@ -52,6 +55,6 @@ Phases execute in order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Multi-Produto | 0/? | Not started | - |
+| 1. Multi-Produto | 0/1 | In progress | - |
 | 2. Descontos e Parcelamento | 0/? | Not started | - |
 | 3. Busca Rápida de Cliente | 0/? | Not started | - |
