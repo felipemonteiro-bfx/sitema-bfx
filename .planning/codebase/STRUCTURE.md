@@ -1,6 +1,6 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-19
 
 ## Directory Layout
 
@@ -8,353 +8,312 @@
 sitema-bfx/
 ├── src/                          # Application source code
 │   ├── app/                      # Next.js App Router
-│   │   ├── layout.tsx            # Root layout with fonts, metadata
-│   │   ├── globals.css           # Global styles
-│   │   ├── (auth)/               # Authentication routes (no layout wrapper)
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx      # Login page
-│   │   │   └── loading.tsx       # Auth fallback loader
-│   │   ├── (app)/                # Protected app routes (with sidebar layout)
-│   │   │   ├── layout.tsx        # App layout with sidebar & navigation
-│   │   │   ├── dashboard/
-│   │   │   │   └── page.tsx      # Sales dashboard (admin)
-│   │   │   ├── financeiro/       # Finance & DRE module
-│   │   │   ├── prudent/          # Antecipação (credit facility) module
-│   │   │   ├── inteligencia/     # AI intelligence chat module
-│   │   │   ├── importacao/       # Batch CSV import module
-│   │   │   ├── venda-rapida/     # Quick sales entry module
-│   │   │   ├── historico/        # Sales history editor
-│   │   │   ├── cadastros/        # Master data (clients, products)
-│   │   │   ├── gestao-rh/        # HR management
-│   │   │   ├── relatorios/       # Report generation & export
-│   │   │   ├── comissoes/        # Commission dashboard
-│   │   │   ├── configuracoes/    # Settings (admin)
-│   │   │   ├── perfil/           # User profile (seller)
-│   │   │   ├── error.tsx         # Error boundary for app routes
-│   │   │   └── loading.tsx       # Suspense fallback for app routes
-│   │   └── api/                  # Route Handlers (backend API)
+│   │   ├── layout.tsx           # Root layout (theme provider, fonts)
+│   │   ├── page.tsx             # Home redirect (/ → /dashboard or /login)
+│   │   ├── globals.css          # Tailwind + CSS variables (semantic tokens)
+│   │   ├── global-error.tsx     # Error boundary
+│   │   │
+│   │   ├── (auth)/              # Auth group (unauthenticated routes)
+│   │   │   └── login/
+│   │   │       └── page.tsx     # Login form (React Hook Form + Zod)
+│   │   │
+│   │   ├── (app)/               # App group (authenticated routes, role-based)
+│   │   │   ├── layout.tsx       # App wrapper (sidebar, session guard)
+│   │   │   ├── dashboard/       # Analytics, KPIs
+│   │   │   ├── venda-rapida/    # POS terminal (primary sales feature)
+│   │   │   ├── historico/       # Sales history (CRUD)
+│   │   │   ├── cadastros/       # Client/Product/Vendor/Company data entry
+│   │   │   ├── comissoes/       # Commission tracking (sellers)
+│   │   │   ├── financeiro/      # P&L, DRE reports
+│   │   │   ├── gestao-rh/       # HR management
+│   │   │   ├── inteligencia/    # AI chat (BFX Intelligence)
+│   │   │   ├── importacao/      # CSV/data import
+│   │   │   ├── prudent/         # Receivables anticipation module
+│   │   │   ├── relatorios/      # PDF exports, catalogs
+│   │   │   ├── configuracoes/   # Settings, API keys
+│   │   │   └── perfil/          # User profile
+│   │   │
+│   │   └── api/                 # REST API routes (HTTP)
 │   │       ├── auth/
-│   │       │   ├── login/
-│   │       │   │   └── route.ts  # POST /api/auth/login (auth)
-│   │       │   └── logout/
-│   │       │       └── route.ts  # POST /api/auth/logout
+│   │       │   ├── login/route.ts      # POST - create session
+│   │       │   └── logout/route.ts     # POST - clear session
 │   │       ├── vendas/
-│   │       │   └── autocomplete/
-│   │       │       └── clientes/
-│   │       │           └── route.ts # GET autocomplete clients
-│   │       ├── productos/         # Intentional naming variation
-│   │       │   ├── autocomplete/  # Product search
-│   │       │   └── upload/        # Bulk product upload
-│   │       ├── comissoes/         # Commission calculations
-│   │       ├── importacao/        # Batch import handler
-│   │       ├── relatorios/        # Report generation
-│   │       │   ├── vendas/        # Sales reports
-│   │       │   │   ├── route.ts   # CSV export
-│   │       │   │   └── pdf/       # PDF generation
-│   │       │   ├── catalogo/      # Catalog reports
-│   │       │   └── antecipacao/   # Credit facility reports
-│   │       ├── ncm/search/        # NCM code lookup
-│   │       ├── mcp/               # AI Model Context Protocol
-│   │       ├── upload-logo/       # Logo upload
-│   │       ├── recibo/            # Receipt generation
-│   │       ├── catalogo/          # Catalog endpoint
-│   │       ├── clientes/          # Client endpoints
+│   │       │   ├── autocomplete/clientes/route.ts    # GET - client search
+│   │       │   ├── autocomplete/produtos/route.ts    # GET - product search
+│   │       │   └── sugestoes/route.ts  # GET - AI upsell/crosssell
+│   │       ├── produtos/
+│   │       │   ├── autocomplete/route.ts # GET - product search
+│   │       │   └── upload/route.ts      # POST - product image
+│   │       ├── clientes/
 │   │       │   └── [id]/
-│   │       │       └── limite/    # Client credit limit
-│   │       └── search/            # Global search
+│   │       │       └── limite/route.ts  # GET - credit limit info
+│   │       ├── comissoes/
+│   │       ├── relatorios/
+│   │       │   ├── vendas/pdf/route.ts  # GET - PDF generation
+│   │       │   └── catalogo/route.ts    # GET - product catalog
+│   │       ├── importacao/
+│   │       │   └── batch/route.ts       # POST - bulk data import
+│   │       ├── search/route.ts          # GET - global search
+│   │       ├── ncm/search/route.ts      # GET - NCM code lookup
+│   │       ├── recibo/route.ts          # GET - receipt generation
+│   │       └── upload-logo/route.ts     # POST - company logo upload
 │   │
-│   ├── components/               # React components
-│   │   ├── ui/                   # shadcn/ui primitives
+│   ├── components/                # React components (UI + features)
+│   │   ├── ui/                   # shadcn/ui base components
 │   │   │   ├── button.tsx
 │   │   │   ├── card.tsx
 │   │   │   ├── input.tsx
-│   │   │   ├── dialog.tsx
+│   │   │   ├── form.tsx          # React Hook Form wrapper
+│   │   │   ├── label.tsx
 │   │   │   ├── table.tsx
-│   │   │   ├── ... (20+ UI components)
-│   │   ├── sidebar-nav.tsx       # Navigation menu component
-│   │   ├── LogoutButton.tsx      # Logout action
+│   │   │   ├── dialog.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── tabs.tsx
+│   │   │   ├── skeleton.tsx      # Loading placeholder
+│   │   │   ├── date-input.tsx    # Date picker
+│   │   │   └── [27 other base components]
 │   │   │
-│   │   # Page-specific client components
-│   │   ├── dashboard-charts.tsx          # Charts on dashboard
-│   │   ├── finance-charts.tsx            # Finance module charts
-│   │   ├── DashboardCharts.tsx           # (duplicate naming)
-│   │   ├── venda-rapida-form-client.tsx  # Quick sale form
-│   │   ├── importacao-client.tsx         # CSV import form
-│   │   ├── intelligence-chat-client.tsx  # AI chat interface
-│   │   ├── intelligence-chat-composer.tsx # Chat input component
-│   │   ├── commissions-dashboard-client.tsx # Commissions view
-│   │   ├── antecipacao-client.tsx        # Credit facility form
-│   │   ├── produto-form-client.tsx       # Product form
-│   │   ├── receipt-editor-client.tsx     # Receipt editor
-│   │   ├── receipt-preview.tsx           # Receipt display
+│   │   ├── theme-provider.tsx    # next-themes setup
+│   │   ├── theme-toggle.tsx      # Dark mode toggle button
+│   │   ├── sidebar-nav.tsx       # Sidebar navigation menu
+│   │   ├── mobile-menu-trigger.tsx # Mobile drawer menu
 │   │   │
-│   │   # Reusable form components
-│   │   ├── form-select.tsx               # Select wrapper
-│   │   ├── vendor-multiselect.tsx        # Multi-select for vendors
-│   │   ├── month-filter.tsx              # Date range picker
-│   │   ├── query-tabs.tsx                # Tab switcher (query-based)
+│   │   ├── venda-rapida-form-client.tsx     # POS form (multi-product, parcels)
+│   │   ├── produto-form-client.tsx          # Product create/edit
+│   │   ├── produto-item-form.tsx            # Line item in sale
+│   │   ├── parcelas-vencimento-form.tsx    # Installment schedule UI
+│   │   ├── antecipacao-client.tsx          # Receivables form
 │   │   │
-│   │   # Action components
-│   │   ├── delete-user-button.tsx        # Delete user action
-│   │   ├── delete-venda-button.tsx       # Delete sale action
-│   │   ├── logo-upload-form.tsx          # Logo file upload
-│   │   ├── chat-prompt-input.tsx         # Chat message input
-│   │   └── ...
+│   │   ├── delete-venda-button.tsx         # Delete sale confirmation dialog
+│   │   ├── delete-user-button.tsx          # Delete user confirmation
+│   │   ├── LogoutButton.tsx                # Session logout
+│   │   │
+│   │   ├── importacao-client.tsx           # CSV import uploader
+│   │   ├── intelligence-chat-client.tsx   # AI chat interface
+│   │   ├── intelligence-chat-composer.tsx # Message input for AI
+│   │   ├── dashboard-charts.tsx           # Recharts visualizations
+│   │   ├── finance-charts.tsx             # P&L charts
+│   │   ├── commissions-dashboard-client.tsx # Commission metrics
+│   │   ├── report-buttons-client.tsx      # PDF export buttons
+│   │   │
+│   │   ├── form-select.tsx                # Custom select with search
+│   │   ├── query-tabs.tsx                 # Tabs with URL sync (nuqs)
+│   │   ├── month-filter.tsx               # Month range picker
+│   │   ├── receipt-editor-client.tsx      # Receipt preview/edit
+│   │   ├── receipt-preview.tsx            # Receipt display
+│   │   ├── logo-upload-form.tsx           # Company logo upload
+│   │   ├── chat-prompt-input.tsx          # AI chat input field
+│   │   └── [other feature components]
 │   │
-│   └── lib/                      # Business logic & utilities
+│   └── lib/                       # Utilities and helpers
 │       ├── db.ts                 # Prisma client singleton
-│       ├── session.ts            # JWT session management
-│       ├── guards.ts             # Role-based authorization
-│       ├── ai.ts                 # AI integration main
-│       ├── ai-actions.ts         # AI action definitions & execution
-│       ├── finance.ts            # DRE calculations
-│       ├── credit.ts             # Credit analysis
-│       ├── ncm.ts                # NCM code mappings
-│       ├── mcp.ts                # MCP (Model Context Protocol)
-│       ├── utils.ts              # Formatting & helper functions
-│       ├── use-query-param.tsx   # URL query param hook
-│       └── ...
+│       ├── session.ts            # JWT auth (createSessionToken, getSession)
+│       ├── guards.ts             # Access control (requireAdmin)
+│       ├── utils.ts              # Formatting (formatBRL, cn)
+│       ├── action-response.ts    # Server Action response type + helpers
+│       │
+│       ├── design-tokens.ts      # Semantic tokens (spacing, colors, typography)
+│       ├── finance.ts            # Financial calculations (margin, ROI, etc.)
+│       ├── animations.ts         # Tailwind animation utilities
+│       ├── ai.ts                 # AI model integration (OpenAI, Gemini)
+│       ├── ai-actions.ts         # AI action definitions and execution
+│       ├── credit.ts             # Credit limit and risk calculations
+│       ├── ncm.ts                # NCM code utilities
+│       ├── mcp.ts                # MCP (Multi-Client Protocol) tools
+│       ├── use-query-param.tsx   # nuqs hook for URL state
+│       │
+│       └── validations/          # Zod schemas (form validation)
+│           ├── auth.ts           # Login schema
+│           ├── cliente.ts        # Customer form schema
+│           ├── produto.ts        # Product form schema
+│           └── venda.ts          # Sales form schema
 │
-├── prisma/                       # Database schema & migrations
-│   ├── schema.prisma             # Prisma ORM schema
-│   ├── migrations/               # DB migration history
-│   ├── seed.js                   # Initial data seeding
-│   └── import_sqlite.js          # Data import from SQLite
+├── prisma/                        # Database configuration
+│   ├── schema.prisma             # Data models (11 models)
+│   ├── seed.js                   # Database seeding
+│   ├── import_sqlite.js          # Legacy SQLite migration
+│   └── migrations/               # Prisma migrations
 │
-├── public/                       # Static assets
-├── design-system/                # Design tokens & system
-├── deploy/                       # Deployment configs
-├── scripts/                      # Build & utility scripts
-├── skills/                       # Claude skills definitions
-├── nginx/                        # Nginx reverse proxy config
-├── streamlit/                    # Streamlit data app (separate)
+├── public/                        # Static assets
+│   └── uploads/                  # User-uploaded files (receipts, logos)
 │
-├── next.config.ts                # Next.js configuration
-├── tsconfig.json                 # TypeScript configuration
-├── tailwind.config.ts            # Tailwind CSS configuration
-├── postcss.config.js             # PostCSS plugins
-├── eslint.config.mjs             # ESLint configuration
-├── components.json               # shadcn component manifest
-├── package.json                  # Dependencies & scripts
-├── Dockerfile                    # Container build
-├── docker-compose.yml            # Service orchestration
-├── .env.example                  # Environment variables template
-└── README.md                     # Project documentation
+├── .planning/                     # GSD planning artifacts
+│   └── codebase/                 # Architecture/quality docs (you are here)
+│
+├── .github/                       # GitHub CI/CD workflows
+├── .vscode/                       # IDE settings
+├── design-system/                 # Design tokens documentation
+├── scripts/                       # Utility scripts
+├── deploy/                        # Docker/deployment configs
+├── nginx/                         # Nginx reverse proxy config
+├── tests/                         # Test files
+├── package.json                   # Dependencies (React 18.3.1, Next 16.1.6)
+├── tsconfig.json                  # TypeScript config (paths: @/*)
+├── next.config.ts                 # Next.js configuration
+└── tailwind.config.ts             # Tailwind CSS v4 config
 ```
 
 ## Directory Purposes
 
-**`src/app/`:**
-- Purpose: Next.js App Router - handles routing, layouts, pages, and API routes
-- Contains: Route segments, page components, error boundaries, API handlers
-- Key structure: Route groups `(app)` and `(auth)` for layout isolation
-
 **`src/app/(auth)/`:**
-- Purpose: Unauthenticated pages without sidebar
-- Contains: Login page only
-- Note: Route group `(auth)` prevents layout sharing with `(app)` routes
+- Purpose: Unauthenticated routes (login page)
+- Contains: Login form, session creation
+- Key files: `login/page.tsx` (React Hook Form + Zod validation)
 
 **`src/app/(app)/`:**
-- Purpose: Protected pages with authenticated layout
-- Contains: Dashboard, sales, finance, reports, settings, HR, commerce features
-- Layout: Includes sidebar navigation, header, role-based menu switching
+- Purpose: Protected routes (require authenticated session)
+- Contains: Business logic pages, forms, reports
+- Key files: `layout.tsx` (session guard, sidebar, menu routing)
+- Pattern: Each feature is a route directory with page.tsx, actions.ts, loading.tsx
 
 **`src/app/api/`:**
-- Purpose: Backend HTTP endpoints and server actions
-- Org: Nested by domain (auth, vendas, relatorios, etc.)
-- Pattern: RESTful GET/POST handlers, some with dynamic segments `[id]`
+- Purpose: HTTP API endpoints for client autocomplete, file uploads, webhooks
+- Contains: Route handlers (GET/POST) following REST conventions
+- Key files: Auth routes, autocomplete endpoints, PDF generation
+
+**`src/components/ui/`:**
+- Purpose: shadcn/ui base components (buttons, forms, cards, etc.)
+- Contains: Unstyled Radix UI + Tailwind components
+- Key files: form.tsx (React Hook Form wrapper), button.tsx (variants)
 
 **`src/components/`:**
-- Purpose: Reusable React components
-- Organization:
-  - `ui/`: Unstyled shadcn primitives (button, input, card, etc.)
-  - Root level: Page-specific client components and form components
-  - Naming: `-client.tsx` for client components, others can be either
+- Purpose: Feature-specific client components (forms, dialogs, charts)
+- Contains: "use client" components for interactivity
+- Key files: VendaRapidaFormClient, ProductFormClient, AI chat, charts
 
 **`src/lib/`:**
-- Purpose: Business logic, database access, utilities
-- Organization by concern:
-  - `db.ts`: Data access layer
-  - `session.ts`, `guards.ts`: Authentication
-  - `ai.ts`, `ai-actions.ts`: AI features
-  - `finance.ts`, `credit.ts`: Business calculations
-  - `utils.ts`: Formatting and helpers
+- Purpose: Shared utilities, types, validation schemas
+- Contains: Database client, session management, helpers, validators
+- Key files: db.ts (Prisma), session.ts (JWT), validations/ (Zod schemas)
 
 **`prisma/`:**
-- Purpose: ORM schema and database management
-- Contains: Schema definitions, migrations, seed scripts
-- Important: `schema.prisma` defines all database models
+- Purpose: Database schema and migrations
+- Contains: 11 Prisma models (Cliente, Produto, Venda, Usuario, etc.)
+- Key files: schema.prisma, seed.js
 
 ## Key File Locations
 
 **Entry Points:**
-
-- `src/app/layout.tsx`: Root layout (fonts, metadata, NuqsAdapter)
-- `src/app/(auth)/login/page.tsx`: Login page (client component)
-- `src/app/(app)/layout.tsx`: App layout (sidebar, auth check)
-- `src/app/(app)/dashboard/page.tsx`: Main dashboard for admins
+- `src/app/layout.tsx`: Root HTML structure, theme provider, fonts
+- `src/app/page.tsx`: Home redirect (/ → /dashboard or /login)
+- `src/app/(app)/layout.tsx`: App wrapper with sidebar, session validation
+- `src/app/(auth)/login/page.tsx`: Login form with credentials input
 
 **Configuration:**
-
-- `tsconfig.json`: TypeScript config with `@/*` alias pointing to `src/*`
-- `next.config.ts`: Next.js config (output: "standalone")
-- `tailwind.config.ts`: Tailwind CSS theme and plugins
-- `eslint.config.mjs`: ESLint rules
+- `tsconfig.json`: TypeScript config with `@/*` path alias
+- `next.config.ts`: Next.js runtime config
+- `tailwind.config.ts`: Tailwind CSS framework config
+- `prisma/schema.prisma`: Database schema and relationships
 
 **Core Logic:**
-
-- `src/lib/db.ts`: Prisma client singleton
-- `src/lib/session.ts`: JWT creation, verification, retrieval
-- `src/lib/ai-actions.ts`: AI action definitions (100+ lines)
-- `src/lib/finance.ts`: DRE calculation logic
-- `src/lib/utils.ts`: Formatting (BRL, CPF, CNPJ, phone, CEP), masking
-
-**Authentication:**
-
-- `src/app/api/auth/login/route.ts`: Login handler (username/password)
-- `src/app/api/auth/logout/route.ts`: Logout (cookie clearing)
-- `src/lib/session.ts`: Token creation and verification
-- `src/lib/guards.ts`: `requireAdmin()` function
-
-**Database:**
-
-- `prisma/schema.prisma`: Model definitions (Cliente, Venda, Produto, Usuario, etc.)
-- `src/lib/db.ts`: Prisma client initialization
-
-**Reporting:**
-
-- `src/app/(app)/relatorios/page.tsx`: Report builder UI
-- `src/app/api/relatorios/vendas/route.ts`: CSV export
-- `src/app/api/relatorios/vendas/pdf/route.ts`: PDF generation
+- `src/lib/db.ts`: Prisma client (database connection)
+- `src/lib/session.ts`: JWT token management (create, verify)
+- `src/lib/guards.ts`: Access control functions (requireAdmin)
+- `src/lib/action-response.ts`: Server Action response standardization
 
 **Testing:**
-
-- Not detected in current structure (no test files found)
+- `tests/`: Test files (not extensively documented in codebase)
+- `test-results/`: Test output artifacts
 
 ## Naming Conventions
 
 **Files:**
-
-- `*.page.tsx`: Page components in app router
-- `*-client.tsx`: Client components (use client directive)
-- `route.ts`: API Route Handler (in app/api/*)
-- `layout.tsx`: Layout component for route segment
-- `loading.tsx`: Suspense fallback
-- `error.tsx`: Error boundary
-- `[param]`: Dynamic segment (e.g., `[id]`)
-- `...`: Catch-all segments
+- Pages: `page.tsx` (Server Component by default)
+- Server Actions: `actions.ts` (in same directory as page)
+- Loading states: `loading.tsx` (auto-shown by Next.js)
+- Client components: `-client.tsx` suffix for clarity
+- UI components: `kebab-case.tsx`
+- API routes: `route.ts` (HTTP method exported from file)
 
 **Directories:**
+- Feature routes: lowercase-with-hyphens (venda-rapida, historico, gestao-rh)
+- Component folders: PascalCase for features, lowercase for categories (ui/)
+- Utility modules: Single word (lib, utils) or grouped (lib/validations/)
 
-- `(groupName)`: Route group - groups routes without affecting URL
-- `[dynamic]`: Dynamic segment in URL
-- Lowercase with hyphens: Kebab case for directory names (venda-rapida, comissoes)
+**Variables & Functions:**
+- Constants: UPPER_SNAKE_CASE (API keys, configuration)
+- Functions: camelCase (getSession, formatBRL, requireAdmin)
+- Types/Interfaces: PascalCase (SessionPayload, ActionResponse, VendaFormData)
+- CSS classes: kebab-case (via Tailwind utilities)
+- Database columns: snake_case in schema, camelCase in ORM (dataVenda, produtoNome)
 
 **Components:**
-
-- PascalCase for component names and exported functions
-- Descriptive names with domain context: `VendaRapidaFormClient`, `DashboardCharts`
-- UI components: Simple names like `Button`, `Card`, `Input`
-
-**Functions/Variables:**
-
-- camelCase: `getSession()`, `requireAdmin()`, `formatBRL()`
-- Functions: Verb-first when action: `create`, `update`, `delete`, `format`, `calculate`
-- Constants: UPPER_SNAKE_CASE or camelCase depending on scope
-
-**API Routes:**
-
-- Path reflects resource: `/api/vendas/`, `/api/relatorios/`, `/api/auth/`
-- Query params: snake_case or camelCase mixed
-- Examples: `?from=`, `?to=`, `?q=`, `?empresa=`
+- Exported React components: PascalCase
+- Props interfaces: Component name + "Props" (e.g., VendaRapidaFormClientProps)
+- Variant/enum values: lowercase (variant="success", size="sm")
 
 ## Where to Add New Code
 
-**New Feature (e.g., new sales module):**
-
-1. **Page:** Create `src/app/(app)/novo-modulo/page.tsx`
-   - Async server component
-   - Import layout components, guards, Prisma
-   - Fetch data server-side
-   - Call `requireAdmin()` if restricted
-
-2. **UI Components:** Create `src/components/novo-modulo-client.tsx`
-   - Client component for interactivity
-   - Use shadcn/ui primitives
-   - State management with `useState`
-
-3. **API Routes:** Create `src/app/api/novo-modulo/route.ts`
-   - Handle GET/POST requests
-   - Query Prisma in handler
-   - Return JSON or file response
-
-4. **Business Logic:** Add to `src/lib/`
-   - Create `novo-modulo.ts` if complex logic
-   - Export functions used by components/routes
+**New Feature (e.g., "Contratos"):**
+1. Create route: `src/app/(app)/contratos/`
+2. Add page: `src/app/(app)/contratos/page.tsx` (Server Component)
+3. Add actions: `src/app/(app)/contratos/actions.ts` (Server Actions)
+4. Add loading: `src/app/(app)/contratos/loading.tsx` (skeleton UI)
+5. Add forms: `src/components/contrato-form-client.tsx` ("use client")
+6. Add validation: `src/lib/validations/contrato.ts` (Zod schema)
+7. Add API endpoints: `src/app/api/contratos/route.ts` if needed
+8. Add menu item: Update `src/app/(app)/layout.tsx` adminMenu or sellerMenu array
 
 **New Component/Module:**
+- Reusable components: `src/components/component-name.tsx`
+- UI base component: `src/components/ui/component-name.tsx` (from shadcn/ui)
+- Feature-specific: `src/components/feature-name-xxx.tsx` with clear suffix
 
-- Shared form components: `src/components/form-*.tsx`
-- Layout/presentational: `src/components/section-*.tsx`
-- Client-heavy: `src/components/*-client.tsx`
-- UI primitives: Add to `src/components/ui/` from shadcn
+**New API Endpoint:**
+- Structure: `src/app/api/[resource]/route.ts` or `src/app/api/[resource]/[action]/route.ts`
+- Pattern: Export async `GET()` or `POST()` functions
+- Example: `src/app/api/contratos/[id]/route.ts` for GET/PUT/DELETE by ID
 
-**Utilities:**
+**Shared Utilities:**
+- Formatting/calculations: `src/lib/utils.ts` or new domain file (finance.ts, credit.ts)
+- Validation schemas: `src/lib/validations/[domain].ts`
+- Type definitions: Inside the schema file or dedicated `types.ts`
 
-- Formatting functions: `src/lib/utils.ts` (add to existing file)
-- Domain-specific: Create `src/lib/domain-name.ts` (e.g., `src/lib/nuevo-modulo.ts`)
-- Shared hooks: `src/lib/use-*.tsx` (e.g., `src/lib/use-query-param.tsx`)
-
-**Database Changes:**
-
-1. Update `prisma/schema.prisma` - add or modify models
-2. Run `npx prisma migrate dev --name migration_name`
-3. Commit migration file to version control
-4. Update queries in `src/lib/db.ts` if new patterns needed
-
-**API Endpoints:**
-
-- Follow nested structure: `src/app/api/[domain]/[action]/route.ts`
-- Example pattern: `/api/vendas/autocomplete/clientes/route.ts`
-- Use dynamic segments for IDs: `src/app/api/clientes/[id]/limite/route.ts`
+**Database Model Changes:**
+1. Update `prisma/schema.prisma` (add model or field)
+2. Run `npm run prisma:generate` (generate Prisma client types)
+3. Create migration: `npx prisma migrate dev --name describe_change`
+4. Seed if needed: Update `prisma/seed.js`
 
 ## Special Directories
 
-**`src/components/ui/`:**
-- Purpose: Unstyled shadcn components (generated by `shadcn`)
-- Generated: Yes (via `shadcn add <component>`)
-- Committed: Yes (components are source code)
-- Maintenance: Customize for design system, update manually
-
-**`public/`:**
-- Purpose: Static assets served directly by Next.js
-- Generated: No
+**`src/app/api/`:**
+- Purpose: HTTP API endpoints
+- Generated: No (developer-created)
 - Committed: Yes
-- Examples: Images, logos, favicons
-
-**`.next/`:**
-- Purpose: Build output and cache
-- Generated: Yes (on `next build` or `next dev`)
-- Committed: No (in .gitignore)
-- Cleanup: Safe to delete, rebuilds automatically
+- Pattern: Each route.ts file exports request handlers (GET, POST, PUT, DELETE)
+- Dynamic routes: Use `[id]` or `[...slug]` syntax for path parameters
 
 **`prisma/migrations/`:**
-- Purpose: SQL migration history
-- Generated: Partially (auto-created on `prisma migrate dev`)
-- Committed: Yes (required for deployment)
-- Modification: Edit manually only if absolutely necessary
+- Purpose: Database schema version history
+- Generated: Auto-generated by `prisma migrate dev`
+- Committed: Yes (tracks schema changes across team)
+- Note: Never edit manually; regenerate with `prisma migrate dev`
+
+**`.planning/codebase/`:**
+- Purpose: Architecture and quality documentation for GSD
+- Generated: Manual (this file you're reading)
+- Committed: Yes (guides future development)
+- Contents: ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, CONCERNS.md
+
+**`public/uploads/`:**
+- Purpose: User-uploaded files (receipts, logos, product images)
+- Generated: Runtime upload handlers
+- Committed: No (added to .gitignore)
+- Cleanup: Manual or via cron job
+
+**`.next/`:**
+- Purpose: Next.js build artifacts and cache
+- Generated: Auto-generated by `npm run build`
+- Committed: No (.gitignore)
+- Clean: `rm -rf .next/` to force rebuild
 
 **`node_modules/`:**
 - Purpose: Installed dependencies
-- Generated: Yes (on `yarn install`)
-- Committed: No (in .gitignore, uses yarn.lock)
-
-**`.planning/codebase/`:**
-- Purpose: GSD codebase analysis documents
-- Generated: Yes (by GSD tools)
-- Committed: Yes (reference for future work)
-- Examples: ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md
+- Generated: `yarn install` or `npm install`
+- Committed: No (.gitignore)
+- Lockfile: `yarn.lock` (yarn package manager)
 
 ---
 
-*Structure analysis: 2026-02-05*
+*Structure analysis: 2026-02-19*

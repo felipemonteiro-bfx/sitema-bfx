@@ -1,361 +1,244 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-19
 
 ## Test Framework
 
-**Status:** No testing framework configured
+**Runner:**
+- Playwright v1+ (inferred from test file syntax)
+- Location: `tests/` directory at project root
+- Config: Not explicitly configured (using Playwright defaults)
 
-**Finding:**
-- No test files detected (no `*.test.ts`, `*.test.tsx`, `*.spec.ts`, `*.spec.tsx` files found in codebase)
-- No Jest, Vitest, or other test runner config files present
-- No test dependencies in `package.json`
-- This codebase does not currently have automated tests
+**Assertion Library:**
+- Playwright built-in expect() assertions: `expect(element).toBeVisible()`
 
-**Current State:**
-- Development and production validation rely on runtime checks
-- Error handling uses try-catch and console logging for debugging
-- Manual testing is likely the primary validation method
+**Run Commands:**
+```bash
+npx playwright test                    # Run all tests
+npx playwright test --headed           # Run with UI visible
+npx playwright test --debug            # Debug mode
+npx playwright test --grep "pattern"   # Run matching tests
+```
 
-## Test Structure (If Implemented)
+## Test File Organization
 
-**Recommended Approach:**
-Based on the codebase architecture, when tests are added:
+**Location:**
+- Separate test directory: `tests/` at project root (not co-located)
+- Test files not in `src/` directory structure
 
-**Location Pattern:**
-- Co-locate test files: `src/lib/__tests__/`, `src/components/__tests__/`
-- Or parallel structure: `tests/unit/`, `tests/integration/`
+**Naming:**
+- Pattern: `feature-name.spec.ts`
+- Example: `venda-rapida-dropdown.spec.ts`
+- Extension: `.spec.ts` (not `.test.ts`)
 
-**Naming Convention:**
-- `*.test.ts` for unit tests
-- `*.test.tsx` for component tests
-- `*.integration.test.ts` for integration tests
+**Structure:**
+```
+tests/
+├── venda-rapida-dropdown.spec.ts
+└── screenshots/              # Generated during test run
+```
 
-**Structure (Template):**
+## Test Structure
+
+**Suite Organization:**
 ```typescript
-// src/lib/__tests__/utils.test.ts
-describe('utils', () => {
-  describe('formatBRL', () => {
-    it('should format number as BRL currency', () => {
-      // Test implementation
-    });
+import { test, expect } from '@playwright/test';
+
+test.describe('Terminal de Vendas - Dropdown Z-Index', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('http://localhost:3000/venda-rapida');
+    await page.waitForLoadState('networkidle');
   });
 
-  describe('maskCpf', () => {
-    it('should mask CPF correctly', () => {
-      // Test implementation
-    });
+  test('Client dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
+    // Test implementation
+  });
+
+  test('Produto dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
+    // Test implementation
   });
 });
 ```
 
-## Mocking Patterns
+**Patterns:**
+- `test.describe()` groups related tests by feature
+- `test.beforeEach()` runs setup before each test (navigation, page load)
+- `test()` function defines individual test case
+- Tests are async and use `await` for all page interactions
 
-**Current Mocking Strategy (No Test Framework):**
-Inference from production code:
+## Test Types Present
 
-**Database Mocking:**
-- Uses real Prisma client in development/production
-- No mock database layer detected
-- Would need to mock Prisma calls in tests if implemented
+**E2E Tests:**
+- Framework: Playwright
+- Scope: User interactions and UI behavior (not unit tests)
+- Approach: Navigate to page → perform action → assert result
+- Example test checks z-index of dropdown elements
 
-**Module Mocking Pattern (If Using Jest):**
+**Example E2E Test:**
 ```typescript
-// Example pattern for mocking @/lib/db
-jest.mock('@/lib/db', () => ({
-  prisma: {
-    usuario: { findUnique: jest.fn() },
-    venda: { findMany: jest.fn() },
-  },
-}));
+test('Cliente dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
+  // 1. Find and interact with element
+  const clienteInput = page.locator('input[placeholder*="nome ou CPF"]');
+  await clienteInput.fill('Maria');
+  await page.waitForTimeout(500); // Aguardar debounce
+
+  // 2. Verify visibility
+  const dropdown = page.locator('div.absolute.z-\\[9999\\]').first();
+  await expect(dropdown).toBeVisible();
+
+  // 3. Check computed styles
+  const zIndex = await dropdown.evaluate((el) => {
+    return window.getComputedStyle(el).zIndex;
+  });
+  expect(parseInt(zIndex)).toBeGreaterThan(1000);
+
+  // 4. Screenshot for debugging
+  await page.screenshot({
+    path: 'tests/screenshots/cliente-dropdown.png',
+    fullPage: true
+  });
+});
 ```
 
-**AI Service Mocking:**
-- `@/lib/ai.ts` calls external LLM APIs (OpenAI, Gemini)
-- Would need HTTP mocking (MSW, nock) or function mocks for tests
-- Mock data should return consistent responses for reliability
+## Selectors
 
-**Session/Auth Mocking:**
-- `getSession()` from `@/lib/session.ts` retrieves JWT from cookies
-- Tests would need to mock `jose` library and cookie handling
-- Example pattern:
-  ```typescript
-  jest.mock('@/lib/session', () => ({
-    getSession: jest.fn().mockResolvedValue({
-      id: 1,
-      username: 'test',
-      role: 'admin',
-    }),
-  }));
-  ```
+**Patterns:**
+- Attribute selectors: `input[placeholder*="nome ou CPF"]`
+- CSS classes: `div.absolute.z-\\[9999\\]`
+- nth-child navigation: `.nth(1)` for multiple matching elements
+- Custom roles: `page.locator('div.Card')`
 
-## What to Mock
+**Best Practices:**
+- Use semantic attributes (placeholder) when available
+- Escape square brackets in Tailwind classes: `z-\\[9999\\]`
+- Use `.first()` or `.nth(n)` for multiple matches
 
-**External Services:**
-- OpenAI API calls
-- Google Gemini API calls
-- Database operations (Prisma)
-- File uploads/downloads
-- JWT token creation/verification
+## Page Interactions
 
-**Should NOT Mock (Test Integration):**
-- Utility functions (`formatBRL`, `maskCpf`, etc.)
-- Local business logic (`calcularDre`, `calcularFluxoCaixa`)
-- Error handling flows
-- Validation logic (Zod schemas)
-
-## Fixtures and Factories
-
-**Current Pattern (No Test Framework):**
-No test fixtures or factories exist.
-
-**Recommended Implementation:**
+**Navigation:**
 ```typescript
-// tests/factories/usuario.factory.ts
-export function createUsuario(overrides = {}) {
-  return {
-    id: 1,
-    username: 'vendedor',
-    password: 'password123',
-    role: 'vendedor',
-    nomeExibicao: 'João Silva',
-    metaMensal: 50000,
-    comissaoPct: 2,
-    ...overrides,
-  };
-}
-
-// tests/factories/venda.factory.ts
-export function createVenda(overrides = {}) {
-  return {
-    id: 1,
-    uuid: 'uuid-xxx',
-    dataVenda: new Date('2026-01-15'),
-    vendedor: 'João Silva',
-    clienteId: 1,
-    produtoNome: 'iPhone 15',
-    custoProduto: 2000,
-    valorVenda: 3500,
-    valorFrete: 50,
-    custoEnvio: 30,
-    parcelas: 3,
-    valorParcela: 1166.67,
-    antecipada: 1,
-    ...overrides,
-  };
-}
-
-// tests/factories/config.factory.ts
-export function createConfig(overrides = {}) {
-  return {
-    id: 1,
-    openaiKey: 'sk-test-key',
-    geminiKey: 'test-gemini-key',
-    ...overrides,
-  };
-}
+await page.goto('http://localhost:3000/venda-rapida');
+await page.waitForLoadState('networkidle');  // Wait for network idle
 ```
 
-**Test Data Location:**
-- `tests/fixtures/` for static test data (JSON)
-- `tests/factories/` for dynamic test data generators
-- `tests/mocks/` for mock implementations
+**User Input:**
+```typescript
+const input = page.locator('input[placeholder*="nome ou CPF"]');
+await input.fill('Maria');
+await page.waitForTimeout(500);  // Wait for debounce
+```
+
+**Assertions:**
+```typescript
+await expect(element).toBeVisible();
+const zIndex = await element.evaluate((el) => window.getComputedStyle(el).zIndex);
+expect(parseInt(zIndex)).toBeGreaterThan(1000);
+```
+
+**Screenshots:**
+```typescript
+await page.screenshot({
+  path: 'tests/screenshots/elemento.png',
+  fullPage: true
+});
+```
+
+## Test Data & Fixtures
+
+**No Explicit Fixtures:** Tests use live application state
+- Navigate to running application (http://localhost:3000)
+- Interact with actual database/form fields
+- No mock data or factories observed
+
+**Test Setup:**
+- `beforeEach()` used for common setup (navigation)
+- Each test creates its own state by user interaction
+- No cleanup hooks observed (tests appear independent)
 
 ## Coverage
 
-**Current Status:** Not tracked
+**Requirements:** Not enforced (no coverage config found)
 
-**Recommended Requirements (When Implemented):**
-- Utility functions: 100% coverage required (`@/lib/utils.ts`)
-- Business logic: 80%+ coverage (`@/lib/finance.ts`, `@/lib/ai.ts`)
-- API routes: 80%+ coverage
-- Component rendering: 60%+ coverage
-- Overall target: 75%+
+**Current Status:**
+- Only 1 test file present: `venda-rapida-dropdown.spec.ts`
+- Tests are E2E/integration only (no unit test suite)
+- No coverage reports generated
 
-**View Coverage (When Implemented):**
+## Debugging Tools
+
+**Screenshots:**
+- Generated during test run with `page.screenshot()`
+- Saved to `tests/screenshots/` directory
+- Full page captures for visual debugging
+
+**Console Output:**
+```typescript
+console.log('Cliente dropdown z-index:', zIndex);
+console.log(`Total de cards encontrados: ${count}`);
+```
+
+**Playwright Inspector:**
 ```bash
-# After Jest/Vitest setup
-npm run test:coverage
-# or
-yarn test --coverage
+npx playwright test --debug  # Opens inspector
 ```
 
-## Test Types Observed in Code
+## Test Isolation
 
-### Unit Tests (Should Implement)
+**Page Context:**
+- Each test runs with its own browser page
+- No shared state between tests (new page instance per test)
+- `beforeEach()` ensures consistent starting state
 
-**Utilities Testing:**
-- `maskCpf()`, `maskCnpj()`, `maskTel()`, `maskCep()`
-  ```typescript
-  describe('maskCpf', () => {
-    it('should format valid CPF', () => {
-      expect(maskCpf('12345678900')).toBe('123.456.789-00');
-    });
-    it('should return original if invalid length', () => {
-      expect(maskCpf('123')).toBe('123');
-    });
-  });
-  ```
+**Server State:**
+- Tests hit live application state
+- Database changes may persist (no automatic rollback)
+- Tests should be independent and not rely on execution order
 
-- `formatBRL()` for currency formatting
-- `cleanStr()` for string sanitization
+## Known Gaps
 
-**Validation Testing:**
-- Zod schemas from `ai-actions.ts`:
-  ```typescript
-  describe('actionParamSchemas', () => {
-    it('should validate listar_vendas params', () => {
-      const schema = actionParamSchemas.listar_vendas;
-      expect(() => schema.parse({ limit: 'invalid' })).toThrow();
-      expect(schema.parse({ limit: 10 })).toEqual({ limit: 10 });
-    });
-  });
-  ```
+**Not Tested:**
+- Unit tests: No test framework for individual functions (validations, utilities)
+- Component testing: No component test suite (Jest, Vitest, React Testing Library)
+- API endpoint testing: No direct API route tests
+- Form validation: No specific tests for Zod schema validation
+- Error scenarios: No tests for error states or edge cases
 
-**Business Logic Testing:**
-- `calcularDre()` with mock data
-- `calcularFluxoCaixa()` with known date ranges
-- `calcularTaxaPercent()`, `calcularPrazoMedioDias()` (private helpers)
+**To Add (Future):**
+- Unit tests for: `finance.ts`, `ai-actions.ts`, `utils.ts` functions
+- Component tests for form interactions
+- Error boundary and error state testing
+- Accessibility tests (a11y)
+- Performance testing (Lighthouse integration)
 
-### Integration Tests (Should Implement)
+## Running Tests
 
-**API Route Testing:**
-```typescript
-describe('POST /api/auth/login', () => {
-  it('should return error for missing credentials', async () => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({}),
-    });
-    expect(res.status).toBe(400);
-  });
+**Prerequisites:**
+- Application running on http://localhost:3000
+- Test environment variables configured
+- Playwright browsers installed
 
-  it('should create session token on valid login', async () => {
-    // Mock Prisma user lookup
-    // Verify session cookie is set
-  });
-});
-```
-
-**Database Operations:**
-- Test Prisma queries with test database
-- Verify transactions work correctly
-- Test error handling for database failures
-
-### E2E Tests
-
-**Status:** Not used
-
-**Would test (if implemented):**
-- Complete user workflows (login → create venda → view relatório)
-- Form submissions and validation
-- AI chat interactions
-- Report generation (PDF/CSV)
-
-## Error Handling in Tests (Patterns)
-
-**Current Code Pattern (No Tests):**
-Errors are handled at runtime with try-catch:
-
-```typescript
-// From logo-upload-form.tsx
-try {
-  const response = await fetch("/api/upload-logo", {
-    method: "POST",
-    body: formData,
-  });
-  if (response.ok) {
-    alert("Logo enviada com sucesso!");
-  } else {
-    const errorData = await response.json();
-    alert(`Falha ao enviar logo: ${errorData.error}`);
-  }
-} catch (error) {
-  console.error("Erro ao enviar logo:", error);
-  alert("Erro de rede ou servidor ao enviar logo.");
-}
-```
-
-**Test Pattern (When Implemented):**
-```typescript
-it('should handle API errors gracefully', async () => {
-  const mockFetch = jest.fn().mockRejectedValue(new Error('Network error'));
-  global.fetch = mockFetch;
-
-  // Test component/function behavior
-  // Verify error message is displayed
-  expect(mockFetch).toHaveBeenCalled();
-});
-```
-
-## Async Testing Pattern (Inference)
-
-**Code Using Async/Await (Current):**
-```typescript
-// From antecipacao-client.tsx
-const handleAction = async (formData: FormData) => {
-  const idsParam = selectedIds.join(',');
-  try {
-    const result = await onSubmit(formData, idsParam);
-    // Handle result
-  } catch (error) {
-    console.error("Erro na antecipação:", error);
-  }
-};
-```
-
-**Test Pattern (When Implemented with Jest/Vitest):**
-```typescript
-it('should handle async submission', async () => {
-  const mockSubmit = jest.fn().mockResolvedValue({ success: true });
-
-  // Render component or call function
-  // Trigger async operation
-
-  await waitFor(() => {
-    expect(mockSubmit).toHaveBeenCalled();
-  });
-});
-```
-
-## Test Commands (Recommended Setup)
-
+**Execute:**
 ```bash
-# When test framework is added to package.json
-yarn test                    # Run all tests
-yarn test --watch           # Watch mode
-yarn test --coverage        # Coverage report
-yarn test src/lib/utils     # Test specific file
+# Start dev server first
+npm run dev
 
-# By test type
-yarn test --testNamePattern="unit"
-yarn test --testNamePattern="integration"
+# In another terminal
+npx playwright test
 ```
 
-## Recommended Testing Stack
+**Parallel Execution:**
+- Playwright runs tests in parallel by default
+- Can configure workers via `playwright.config.ts` (not present)
 
-**Based on codebase analysis:**
+## CI/CD Integration
 
-1. **Test Runner:** Vitest (faster for TypeScript/React, ESM-first)
-   - Or Jest with ts-jest preset
+**Current Setup:** Not detected
 
-2. **React Component Testing:** React Testing Library
-   - Already pattern-consistent with component design
-
-3. **HTTP Mocking:** MSW (Mock Service Worker)
-   - For API route testing and external service calls
-
-4. **Database Testing:** Test database (SQLite/PostgreSQL test instance)
-   - Or Prisma mock adapter when available
-
-5. **Coverage:** Built-in coverage tools
-
-**Setup priority:**
-1. Unit tests for `src/lib/` utilities and business logic
-2. API route tests for `src/app/api/`
-3. Component tests for `src/components/` (high-complexity components)
-4. Integration tests for workflows
+**To Implement:**
+- GitHub Actions workflow to run Playwright tests
+- Run tests on PR/push to ensure no regressions
+- Generate test reports and upload artifacts
 
 ---
 
-*Testing analysis: 2026-02-05*
+*Testing analysis: 2026-02-19*

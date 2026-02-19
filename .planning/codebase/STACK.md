@@ -1,147 +1,160 @@
 # Technology Stack
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-19
 
 ## Languages
 
 **Primary:**
-- TypeScript 5.x - Full application codebase (React components, Next.js server/API routes, utilities)
-- JavaScript - Build configuration and scripts
+- TypeScript 5 - All source code (`src/**/*.ts`, `src/**/*.tsx`)
+- JavaScript - Build config, scripts, and Node scripts
 
 **Secondary:**
-- SQL - PostgreSQL queries via Prisma ORM
+- CSS - Styling via Tailwind CSS (defined in component files)
 
 ## Runtime
 
 **Environment:**
-- Node.js (version not explicitly pinned in package.json, inferred from Next.js 16.x support)
+- Node.js 20 (specified in Docker images `node:20-bullseye-slim`)
 
 **Package Manager:**
 - Yarn 1.22.22
-- Lockfile: `yarn.lock` present
+- Lockfile: `.pnp.cjs` and `.pnp.loader.mjs` (Yarn PnP enabled)
 
 ## Frameworks
 
 **Core:**
-- Next.js 16.1.6 - Full-stack web framework (App Router, API routes, server actions)
-- React 18.3.1 - UI library with React DOM 18.3.1
-
-**Testing:**
-- Not detected - No test framework configured (Jest, Vitest, etc.)
-
-**Build/Dev:**
-- TypeScript 5.x - Type checking
-- ESLint 9.x - Code linting (via `eslint-config-next`)
-- PostCSS 8.5.6 - CSS processing
-- Tailwind CSS 4.1.18 - Utility-first CSS framework with `@tailwindcss/postcss` 4.1.18
-- Autoprefixer 10.4.24 - CSS vendor prefixing
+- Next.js 16.1.6 - Full-stack React framework with App Router
+- React 18.3.1 - UI library
 
 **UI Components:**
-- shadcn 3.8.2 - Component CLI tool for installing Radix UI components
+- shadcn/ui - Component library (25+ components installed)
+- Radix UI - Headless primitives (`@radix-ui/react-*` 12+ packages)
+- Lucide React 0.563.0 - Icon library
 
-## Key Dependencies
+**Form & Validation:**
+- React Hook Form 7.71.1 - Form state management
+- @hookform/resolvers 5.2.2 - Schema validation bridge
+- Zod 4.3.6 - Schema validation and TypeScript-first validation
 
-**Critical:**
-- `@prisma/client` 6.5.0 - PostgreSQL ORM and database client
-- `ai` 6.0.69 - Vercel AI SDK for LLM integration and tool calling
-- `@ai-sdk/openai` 3.0.25 - OpenAI provider for Vercel AI SDK (models: gpt-4o-mini)
-- `@ai-sdk/google` 3.0.20 - Google Generative AI provider for Vercel AI SDK (models: gemini-2.5-flash)
-- `zod` 3.25.76 - Runtime schema validation for API parameters and data structures
+**Styling:**
+- Tailwind CSS 4.1.18 - Utility-first CSS framework
+- @tailwindcss/postcss 4.1.18 - PostCSS plugin
+- Tailwind Merge 3.4.0 - Utility class conflict resolution
+- Tailwindcss Animate 1.0.7 - Animation utilities
+- tw-animate-css 1.4.0 - Additional animations
 
-**UI Component System:**
-- Radix UI components:
-  - `@radix-ui/react-accordion` 1.2.12
-  - `@radix-ui/react-avatar` 1.1.11
-  - `@radix-ui/react-checkbox` 1.3.3
-  - `@radix-ui/react-dialog` 1.1.15
-  - `@radix-ui/react-dropdown-menu` 2.1.16
-  - `@radix-ui/react-label` 2.1.8
-  - `@radix-ui/react-popover` 1.1.15
-  - `@radix-ui/react-progress` 1.1.8
-  - `@radix-ui/react-radio-group` 1.3.8
-  - `@radix-ui/react-select` 2.2.6
-  - `@radix-ui/react-separator` 1.1.8
-  - `@radix-ui/react-slot` 1.2.4
-  - `@radix-ui/react-switch` 1.2.6
-  - `@radix-ui/react-tabs` 1.1.13
-  - `@radix-ui/react-tooltip` 1.2.8
+**Date & Time:**
+- date-fns 4.1.0 - Date manipulation and formatting
 
-**Document Generation:**
-- `pdf-lib` 1.17.1 - PDF creation and manipulation (used in `src/app/api/recibo/route.ts` and `src/app/api/relatorios/vendas/pdf/route.ts`)
-- `papaparse` 5.5.3 - CSV parsing for data import
+**Charts & Visualization:**
+- Recharts 3.7.0 - React charting library
 
-**Data Visualization:**
-- `recharts` 3.7.0 - React charting library
+**AI & ML:**
+- ai 6.0.69 - Vercel AI SDK
+- @ai-sdk/openai 3.0.25 - OpenAI integration
+- @ai-sdk/google 3.0.20 - Google Generative AI integration
+- openai 4.91.0 - Direct OpenAI SDK
+- @google/generative-ai 0.21.0 - Google Generative AI SDK
+- @google/genai 0.7.0 - Alternative Google AI SDK
+
+**Database:**
+- @prisma/client 6.5.0 - Database ORM/query builder
 
 **Utilities:**
-- `clsx` 2.1.1 - Conditional className utility
-- `tailwind-merge` 3.4.0 - Merge Tailwind CSS classes intelligently
-- `date-fns` 4.1.0 - Date manipulation and formatting (localized to pt-BR)
-- `uuid` 10.0.0 - UUID generation (v4 and v7 for sales)
-- `class-variance-authority` 0.7.1 - Component variant management
-- `nuqs` 2.8.8 - Next.js URL state management
-- `tw-animate-css` 1.4.0 - Tailwind animation utilities
-- `tailwindcss-animate` 1.0.7 - Tailwind animation plugins
-- `lucide-react` 0.563.0 - Icon library
-- `jose` 6.1.3 - JWT creation and verification for session management
-- `openai` 4.91.0 - OpenAI REST client (fallback/legacy support)
-- `@google/generative-ai` 0.21.0 - Google Generative AI REST client (legacy support)
-- `@google/genai` 0.7.0 - Newer Google Generative AI library
+- uuid 10.0.0 - UUID generation (v10.0.0)
+- class-variance-authority 0.7.1 - Variant pattern for components
+- clsx 2.1.1 - Conditional className helper
+- papaparse 5.5.3 - CSV parsing
+- pdf-lib 1.17.1 - PDF generation
+- nuqs 2.8.8 - URL query state management
+- next-themes 0.4.6 - Dark mode theme provider
+- jose 6.1.3 - JWT handling
 
-**Development-only:**
-- `ts-node` 10.9.2 - TypeScript execution and REPL
-- `tsx` 4.21.0 - TypeScript executor for scripts
-- `better-sqlite3` 12.6.2 - SQLite for database seeding/migration scripts
-- `cross-env` 7.0.3 - Cross-platform environment variable setting
-
-**Optional (Linux-specific):**
-- `lightningcss-linux-x64-gnu` 1.30.2 - CSS parser optimization
-- `@tailwindcss/oxide-linux-x64-gnu` 4.1.18 - Tailwind CSS engine optimization
+**Dev & Build Tools:**
+- Prisma 6.5.0 - Database toolkit and migration CLI
+- TypeScript 5 - Type checking
+- ESLint 9 - Linting (`eslint-config-next 16.1.6`)
+- Autoprefixer 10.4.24 - CSS vendor prefix auto-add
+- PostCSS 8.5.6 - CSS transformation
+- shadcn (CLI) 3.8.2 - Component scaffolding
+- ts-node 10.9.2 - TypeScript execution
+- tsx 4.21.0 - TypeScript execution
+- cross-env 7.0.3 - Cross-platform env variable setting
+- better-sqlite3 12.6.2 - SQLite database (optional)
 
 ## Configuration
 
 **Environment:**
-- `DATABASE_URL` - PostgreSQL connection string (required)
-- `SESSION_SECRET` - JWT signing key for session tokens (required, recommended: change from default)
-- `NEXT_PUBLIC_APP_URL` - Public application URL for links in PDFs and API responses (used in `src/lib/ai.ts`, `src/app/api/recibo/route.ts`)
-- Config file: `.env.example` provides template with minimal required variables
+- Environment variables defined via `.env` file
+- Example provided in `.env.example`:
+  - `DATABASE_URL` - PostgreSQL connection string
+  - `SESSION_SECRET` - JWT session signing key
+  - `NEXT_PUBLIC_APP_URL` - Public application URL
 
 **Build:**
-- `next.config.ts` - Next.js configuration with `output: "standalone"` for containerized deployments
-- `tsconfig.json` - TypeScript compiler options with path alias `@/*` mapping to `./src/*`
-- `tailwind.config.ts` - Tailwind CSS configuration with theme extensions and dark mode support
-- `postcss.config.js` - PostCSS configuration for Tailwind processing
-- `prisma.config.ts` - Prisma configuration (basic TypeScript config)
-
-**Code Quality:**
-- `eslint.config.mjs` - ESLint configuration extending `eslint-config-next` with core-web-vitals and TypeScript support
-
-**Database:**
-- `prisma/schema.prisma` - ORM schema defining all database models (PostgreSQL provider)
-- `prisma/seed.js` - Database seeding script (referenced in package.json scripts)
-- `prisma/import_sqlite.js` - SQLite to PostgreSQL migration script (referenced in package.json)
+- `next.config.ts` - Next.js configuration (standalone output mode)
+- `tsconfig.json` - TypeScript compiler configuration with `@/*` path alias
+- `tailwind.config.ts` - Tailwind CSS configuration (dark mode via class)
+- `eslint.config.mjs` - ESLint configuration with Next.js best practices
+- `postcss.config.js` - PostCSS plugins
+- `prisma/schema.prisma` - Database schema definition
+- `components.json` - shadcn/ui component configuration
 
 ## Platform Requirements
 
 **Development:**
-- Node.js (compatible with Next.js 16.x, TypeScript 5.x)
-- PostgreSQL database (required, schema managed by Prisma migrations)
-- Yarn 1.22.22 as package manager
-- Text editor/IDE with TypeScript support
+- Node.js 20+
+- Yarn 1.22.22
+- PostgreSQL 16+ (in Docker: `postgres:16-alpine`)
+- Optional: SQLite (via better-sqlite3)
 
 **Production:**
-- Docker/containerized environment (standalone output mode)
-- PostgreSQL database
-- Node.js runtime
-- Environment variables: `DATABASE_URL`, `SESSION_SECRET`, `NEXT_PUBLIC_APP_URL`
-- For AI features: OpenAI API key or Google Generative AI API key in database config
+- Node.js 20
+- PostgreSQL 16+
+- 3000 port exposure (configurable via `PORT` env var)
+- 512MB+ RAM recommended (Next.js + Prisma)
 
-**Feature Support:**
-- AI capabilities: OpenAI (gpt-4o-mini) or Google Gemini (gemini-2.5-flash) APIs
-- File uploads: Local filesystem storage in `public/uploads/productos` directory
-- PDF generation: Supported natively via `pdf-lib`
-- CSV import: Supported via `papaparse`
+## Docker Support
+
+**Development:**
+- `Dockerfile.dev` - Development image with hot reload
+- Multi-stage build for dependencies isolation
+- Volume mounts for live code changes
+
+**Production:**
+- `Dockerfile` - Multi-stage production build (deps → builder → runner)
+- Standalone mode enabled for smaller production footprint
+- Automatic database migrations on startup
+
+**Compose:**
+- `docker-compose.yml` - PostgreSQL (port 5432) + Next.js app (port 3000)
+- Named volume `bfx_pg` for persistent data
+
+## Key Dependencies Summary
+
+| Category | Package | Version | Purpose |
+|----------|---------|---------|---------|
+| **Web Framework** | Next.js | 16.1.6 | Full-stack React framework |
+| **UI Library** | React | 18.3.1 | Component library |
+| **Form Validation** | React Hook Form + Zod | 7.71.1 + 4.3.6 | Form state + validation |
+| **Database** | Prisma | 6.5.0 | ORM and migrations |
+| **Database Engine** | PostgreSQL | 16 | Primary database |
+| **AI/LLM** | @ai-sdk (OpenAI + Google) | 3.0+ | LLM integration |
+| **Styling** | Tailwind CSS | 4.1.18 | Utility CSS framework |
+| **Components** | shadcn/ui + Radix | Latest | Accessible component library |
+| **Authentication** | jose + next cookies | 6.1.3 | JWT session management |
+
+## Build Output
+
+- **Bundle Target:** ES2017
+- **Module Resolution:** Bundler mode (ESM)
+- **Output Mode:** Next.js standalone (no Node.js server required in production)
+- **Turbopack:** Disabled in production (`NEXT_DISABLE_TURBOPACK=1`)
+
+## Telemetry
+
+- Next.js telemetry disabled (`NEXT_TELEMETRY_DISABLED=1`)
 
 ---
 
-*Stack analysis: 2026-02-05*
+*Stack analysis: 2026-02-19*

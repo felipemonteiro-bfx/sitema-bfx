@@ -1,169 +1,202 @@
 # External Integrations
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-19
 
 ## APIs & External Services
 
-**AI/LLM Models:**
-- **OpenAI** - GPT-4o-mini model for text generation and tool calling
-  - SDK/Client: `@ai-sdk/openai` 3.0.25 (via Vercel AI SDK)
-  - Legacy: `openai` 4.91.0 (fallback for backwards compatibility)
-  - Configuration: API key stored in database `Config.openaiKey` field
-  - Used in: `src/lib/ai.ts`, `src/lib/ai-actions.ts`
-  - Purpose: Generate sales suggestions, process AI chat requests with tool execution
+**Artificial Intelligence:**
+- OpenAI API - LLM and text generation
+  - SDK: `@ai-sdk/openai` + `openai` (direct SDK)
+  - Auth: `Config.openaiKey` stored in database (`prisma/schema.prisma`)
+  - Models: gpt-4o-mini
+  - Integration file: `src/lib/ai.ts`, `src/lib/ai-actions.ts`
 
-- **Google Generative AI** - Gemini 2.5 Flash model for text generation and tool calling
-  - SDK/Client: `@ai-sdk/google` 3.0.20 (via Vercel AI SDK)
-  - Legacy: `@google/generative-ai` 0.21.0, `@google/genai` 0.7.0 (fallback support)
-  - Configuration: API key stored in database `Config.geminiKey` field
-  - Used in: `src/lib/ai.ts`, `src/lib/ai-actions.ts`
-  - Purpose: Generate sales suggestions, process AI chat requests with tool execution
-  - Fallback: If Gemini fails or rate-limited, automatically falls back to OpenAI if configured
+- Google Generative AI (Gemini) - LLM alternative
+  - SDK: `@ai-sdk/google` + `@google/generative-ai`
+  - Auth: `Config.geminiKey` stored in database
+  - Models: gemini-2.5-flash
+  - Integration file: `src/lib/ai.ts`
+
+**NCM (Nomenclatura Comum do MERCOSUL) Database:**
+- Custom integration via `searchNcm()` function
+- Location: `src/lib/ncm.ts`
+- Purpose: Brazilian product classification code lookup
+- Endpoint: `GET /api/ncm/search?q=<query>`
 
 ## Data Storage
 
-**Databases:**
-- **PostgreSQL**
-  - Connection: `DATABASE_URL` environment variable (format: `postgresql://user:pass@host:port/database?schema=public`)
-  - Client: `@prisma/client` 6.5.0
-  - ORM: Prisma
-  - Schema: `prisma/schema.prisma` defines 12 models:
-    - `Cliente` - Customer/client information (CPF, CNPJ, contact, company affiliation)
-    - `Produto` - Product catalog (cost, price, inventory, supplier)
-    - `Venda` - Sales transactions (customer, product, pricing, financing, invoice status)
-    - `Usuario` - User accounts (username, password, roles: admin/vendedor, commission config)
-    - `Fornecedor` - Supplier/vendor information
-    - `EmpresaParceira` - Partner company HR contacts
-    - `Pagamento` - Commission/payment records
-    - `Despesa` - Expense tracking (category, amount, date)
-    - `Config` - Global configuration (API keys for OpenAI/Gemini, contract template, logo path)
-    - `AuditLog` - System audit trail (action, user, timestamp, details)
-    - `Aviso` - System announcements/notices
-  - Migrations: `db:migrate` command runs pending Prisma migrations
-  - Seeding: `db:seed` command runs `prisma/seed.js` for initial data population
+**Primary Database:**
+- PostgreSQL 16+
+  - Connection: `DATABASE_URL` env var
+  - Client: Prisma Client (`@prisma/client`)
+  - Schema: `prisma/schema.prisma`
+  - Tables: Cliente, Produto, Venda, ItemVenda, ParcelaVencimento, Config, Usuario, Fornecedor, EmpresaParceira, Pagamento, AuditLog, Despesa, Aviso
+
+**Optional Secondary Database:**
+- SQLite (via `better-sqlite3` package)
+  - Used for: Data import/migration only (`prisma/import_sqlite.js`)
+  - Not used in runtime
 
 **File Storage:**
-- **Local Filesystem Only**
-  - Product images: `public/uploads/produtos/` directory
-  - Logo uploads: Stored in `public/` directory (path referenced in `Config.logoPath`)
-  - Upload endpoint: `src/app/api/produtos/upload/route.ts` handles file writes
-  - PDF generation: Temporary in-memory generation, streamed to client (no persistence by default)
+- Local filesystem only
+  - Product images: `public/` directory
+  - Logo uploads: `public/` directory configured in `Config.logoPath`
+  - PDF generation: Server-side temporary (in-memory via pdf-lib)
+  - Upload endpoint: `POST /api/upload-logo`
 
 **Caching:**
-- None detected - Direct database queries on each request
+- None configured - all queries hit PostgreSQL directly
+- Client-side React Query pattern via `fetch()` in components
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- Custom JWT-based authentication (no OAuth/third-party auth)
-- Implementation approach:
-  - Password stored in `Usuario` table (plaintext - security concern, see CONCERNS.md)
-  - Session tokens created with `jose` 6.1.3 using HMAC-HS256
-  - Token format: JWT with payload containing user id, username, role, displayName
-  - Token lifetime: 7 days
-  - Storage: HTTP-only cookies with SameSite=Lax
-  - Login endpoint: `POST /api/auth/login` - `src/app/api/auth/login/route.ts`
-  - Logout endpoint: `POST /api/auth/logout` - `src/app/api/auth/logout/route.ts`
-  - Session verification: `src/lib/session.ts` - `getSession()` function validates JWT from cookies
-  - Key file: `src/lib/session.ts`
+- Custom JWT-based authentication
+  - Implementation: `src/lib/session.ts`
+  - Algorithm: HS256
+  - Token expiration: 7 days
+  - Storage: HTTP-only cookie named "session"
+
+**Login Mechanism:**
+- Username/password stored in `Usuario` table
+- Endpoint: `POST /api/auth/login`
+- Session creation: `createSessionToken()` (jose library)
+- Location: `src/app/api/auth/login/route.ts`
 
 **Authorization:**
-- Role-based access control (RBAC) with two roles: `admin`, `vendedor` (seller)
-- Role enforcement in AI actions: `src/lib/ai-actions.ts` defines per-action role restrictions
-- Admin-only actions: create/update users, create/update products, manage expenses, manage partners, SQL queries
-- Vendor actions: limited to personal sales listing, creating sales/clients, viewing products/clients
+- Role-based access control (RBAC)
+  - Roles: "admin" | "vendedor"
+  - Checked in protected routes and API handlers
+  - User data available via `getSession()` from cookies
+
+**Logout:**
+- Endpoint: `POST /api/auth/logout`
+- Location: `src/app/api/auth/logout/route.ts`
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None detected - No external error tracking service configured
-- Basic error logging: Console error statements in API routes
+- Not detected - no Sentry, Bugsnag, or similar configured
 
 **Logs:**
-- Prisma logging: Configured to log only errors (`log: ["error"]` in `src/lib/db.ts`)
-- Audit logging: Custom `AuditLog` table tracks all AI actions with status, user, timestamp, and details
-- Format: JSON serialized action params and results in `detalhes` field
-- Recorded in: `src/lib/ai-actions.ts` - `executeAiAction()` function logs all action executions
+- Prisma: Configured to log errors only (`log: ["error"]`)
+- Audit trail: Custom `AuditLog` table in database
+  - Fields: id, dataHora, usuario, acao, detalhes
+  - Location: `prisma/schema.prisma`
+  - Populated in `src/lib/ai-actions.ts` line 426
+
+**Performance Monitoring:**
+- Not detected - no New Relic or Datadog
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Not explicitly configured - Application structure supports Docker/Kubernetes
-- Standalone mode enabled in Next.js config for containerized deployment
-- Build: `NODE_ENV=production NEXT_DISABLE_TURBOPACK=1 next build`
-- Start: `next start` (production mode)
-- Dev: `next dev -H 0.0.0.0 -p 3000` (listens on all interfaces)
+- Docker containerization supported (`Dockerfile`, `docker-compose.yml`)
+- Platform: Any Kubernetes-compatible or Docker-capable host
+- Port: 3000 (configurable)
 
 **CI Pipeline:**
-- Not detected - No GitHub Actions, GitLab CI, or other CI/CD configuration found
+- GitHub Actions workflow files in `.github/` directory
+- Not fully examined - appears to have automatic update workflows
+
+**Build Process:**
+- `yarn build` - Compiles Next.js
+- `npx prisma generate` - Generates Prisma client
+- `npx prisma migrate deploy` - Runs pending migrations
+- Multi-stage Docker build for production optimization
+
+**Database Migrations:**
+- Managed via Prisma migrations
+- Command: `db:migrate` → `npx prisma migrate deploy`
+- Auto-run on Docker startup (`Dockerfile` line 46)
 
 ## Environment Configuration
 
 **Required env vars:**
-- `DATABASE_URL` - PostgreSQL connection string (mandatory)
-- `SESSION_SECRET` - JWT signing key (mandatory, must be changed from default)
-- `NEXT_PUBLIC_APP_URL` - Public application URL (e.g., https://seu-dominio.com) for PDF links
+- `DATABASE_URL` - PostgreSQL connection string (format: `postgresql://user:password@host:port/db?schema=public`)
+- `SESSION_SECRET` - JWT signing secret (minimum 16 chars recommended)
+- `NEXT_PUBLIC_APP_URL` - Public base URL (e.g., `https://seu-dominio.com`)
 
 **Optional env vars:**
-- `NODE_ENV` - Set to "production" for builds (default: development)
-- `NEXT_DISABLE_TURBOPACK` - Set to 1 in production builds (used in build script)
+- `NODE_ENV` - Set to "production" for production builds
+- `NEXT_DISABLE_TURBOPACK` - Set to 1 for production builds
+- `PORT` - Server port (default 3000)
+- `HOSTNAME` - Bind address (default 0.0.0.0)
 
-**Secrets location:**
-- `.env` file (git-ignored, not committed)
-- `.env.example` provides template
-- API keys (OpenAI, Gemini) stored in database `Config` table rather than environment variables
+**Secret Storage:**
+- OpenAI key: Stored in `Config.openaiKey` (database)
+- Gemini key: Stored in `Config.geminiKey` (database)
+- Session secret: Environment variable only (not in database)
+- No `.env` file in Git (excluded in `.gitignore`)
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- Not configured - No external webhook receivers
+- Not detected - no external webhook receivers
 
 **Outgoing:**
-- Not configured - No external webhook notifications
+- Not detected - no external API callbacks
 
-## API Endpoints
+## Data Import/Export
 
-**Internal API Routes:**
+**Import:**
+- CSV batch import endpoint: `POST /api/importacao/batch`
+- Location: `src/app/api/importacao/batch/route.ts`
+- Format: Array of objects with fields: cliente, valor, frete, envio, custo, parcelas, dataVenda, produto, vendedor, antecipada
+- Processing: Batch insert to Venda and Cliente tables
+
+- SQLite migration: Node script at `prisma/import_sqlite.js`
+  - Command: `db:import-sqlite`
+  - Purpose: One-time data migration from SQLite to PostgreSQL
+
+**Export:**
+- PDF catalog generation: `GET /api/catalogo?q=<search>`
+  - Location: `src/app/api/catalogo/route.ts`
+  - Output: Product catalog PDF with images, prices, NCM codes
+  - Uses: `pdf-lib` library for PDF generation
+
+## MCP (Model Context Protocol)
+
+**Custom MCP Server:**
+- Custom implementation in `src/lib/mcp.ts`
+- Endpoint: `GET /api/mcp` - List available tools
+- Endpoint: `POST /api/mcp` - Execute tool
+- Tools/Actions: Database CRUD operations via `src/lib/ai-actions.ts`
+- Available actions: listar_*, criar_*, update_*, delete_* for all major entities
+- Access control: Role-based (reads allowed for all, writes checked against roles)
+
+## Third-Party Services Summary
+
+| Service | Type | Integration | Config |
+|---------|------|------------ |--------|
+| OpenAI | LLM | @ai-sdk/openai | env + database |
+| Google Gemini | LLM | @ai-sdk/google | env + database |
+| PostgreSQL | Database | Prisma | DATABASE_URL env |
+| None other | - | - | - |
+
+## Security Considerations
+
+**Secrets Protection:**
+- `.env` excluded from Git (in `.gitignore`)
+- Example provided in `.env.example`
+- Production secrets injected at runtime
+
+**API Keys Management:**
+- LLM keys stored in database table `Config` for runtime retrieval
+- Session secret as environment variable only
+- No API keys hardcoded in source
 
 **Authentication:**
-- `POST /api/auth/login` - User login with username/password credentials
-- `POST /api/auth/logout` - Session termination
+- HS256 JWT with 7-day expiration
+- HTTP-only cookies to prevent XSS
+- SameSite=lax for CSRF protection
+- Secure flag enabled in production only
 
-**AI/Chat:**
-- `POST /api/mcp/route.ts` - Model Context Protocol (MCP) tool execution endpoint
-
-**Sales & Data:**
-- `GET /api/vendas/sugestoes` - AI-generated sales suggestions
-- `POST /api/vendas/autocomplete/clientes` - Client autocomplete for sales form
-- `POST /api/vendas/autocomplete/produtos` - Product autocomplete for sales form
-- `GET /api/catalogo` - Generate product catalog PDF
-
-**Search & Lookup:**
-- `POST /api/search` - Global search endpoint
-- `GET /api/produtos/autocomplete` - Product search with autocomplete
-- `POST /api/ncm/search` - NCM code lookup (Brazilian product classification)
-
-**Reporting:**
-- `GET /api/relatorios/vendas` - Sales report data endpoint (filterable by date/company)
-- `GET /api/relatorios/vendas/pdf` - Sales report PDF download
-- `GET /api/relatorios/catalogo` - Catalog report PDF
-- `GET /api/relatorios/antecipacao` - Advance/anticipation report
-- `GET /api/recibo` - Individual sales receipt/invoice PDF generation (lookup by id or uuid)
-
-**Commission/Financial:**
-- `GET /api/comissoes` - Commission calculations and listing
-- `GET /api/comissoes/detalhe` - Commission detail report
-- `GET /api/comissoes/relatorio` - Commission reporting
-
-**Client Management:**
-- `GET /api/clientes/[id]/limite` - Client credit limit information
-
-**Product Management:**
-- `POST /api/produtos/upload` - Image file upload for products
-
-**Other:**
-- `POST /api/importacao/batch` - Batch data import (CSV/bulk operations)
+**Database:**
+- Prisma prevents SQL injection
+- Schema validation via Zod
+- Password hashing: Currently stored plaintext (security concern - see CONCERNS.md)
 
 ---
 
-*Integration audit: 2026-02-05*
+*Integration audit: 2026-02-19*

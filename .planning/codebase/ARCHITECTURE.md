@@ -1,295 +1,253 @@
 # Architecture
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-19
 
 ## Pattern Overview
 
-**Overall:** Next.js App Router with Server Components and Actions - Full-stack monolithic application
+**Overall:** Server Components + Client Components with Server Actions
 
 **Key Characteristics:**
-- Server-side rendering with React Server Components for data fetching
-- Client Components for interactivity and forms
-- API routes (Route Handlers) for backend logic
-- Database layer via Prisma ORM
-- Role-based access control (Admin/Vendedor)
-- JWT session tokens for authentication
-- AI integration for intelligent features
+- Next.js 16 App Router (with grouped routes for auth/app separation)
+- Prisma ORM for database abstraction
+- React Hook Form + Zod for client-side validation
+- shadcn/ui components with semantic CSS tokens
+- Server Actions for mutations with ActionResponse pattern
+- Role-based access control (admin/vendedor)
+- AI integration (OpenAI/Gemini) for suggestions and analysis
 
 ## Layers
 
-**Presentation Layer (UI):**
-- Purpose: Render pages and interactive components to users
-- Location: `src/app/` (page routes, layouts) and `src/components/`
-- Contains: Page components (RSC), client components, UI primitives, forms
-- Depends on: Session layer, API routes, Prisma queries (via server actions)
-- Used by: Browser clients
+**Presentation (UI):**
+- Purpose: Render components and handle user interactions
+- Location: `src/components/` and `src/app/`
+- Contains: React Server Components (RSC), Client Components ("use client")
+- Depends on: `src/lib/` utilities, design tokens, validation schemas
+- Used by: Next.js App Router, browser clients
 
-**Application/Page Layer:**
-- Purpose: Route-specific logic and page composition
-- Location: `src/app/(app)/*/page.tsx` and `src/app/(auth)/login/page.tsx`
-- Contains: Server Components with data fetching, role-based rendering, form handlers
-- Depends on: `@/lib/guards` for auth, `@/lib/db` for queries, components
-- Used by: Next.js routing system
+**Form & Validation:**
+- Purpose: Validate user input before server processing
+- Location: `src/lib/validations/` and `src/components/ui/form.tsx`
+- Contains: Zod schemas (auth.ts, cliente.ts, produto.ts, venda.ts)
+- Depends on: Zod library, React Hook Form
+- Used by: Client forms and Server Actions
 
-**API Layer (Route Handlers):**
-- Purpose: HTTP endpoints for client-side requests and external integrations
-- Location: `src/app/api/*/route.ts`
-- Contains: GET/POST handlers, CSV/PDF generation, autocomplete endpoints, authentication
-- Depends on: Prisma client, session validation, file generation libraries
-- Used by: Frontend fetch calls, third-party integrations
+**API/Routes:**
+- Purpose: Handle HTTP requests and data mutations
+- Location: `src/app/api/`
+- Contains: Route handlers (GET/POST), Server Actions (uploadImage, createVenda)
+- Depends on: Prisma client, session management
+- Used by: Client components, external integrations
 
-**Business Logic Layer:**
-- Purpose: Core application logic separated from HTTP concerns
-- Location: `src/lib/` (finance.ts, ai-actions.ts, credit.ts, etc.)
-- Contains: DRE calculations, AI action definitions, credit analysis, data transformations
-- Depends on: Prisma client, external AI APIs
-- Used by: Page components, API routes, server actions
+**Business Logic:**
+- Purpose: Database operations and domain rules
+- Location: `src/app/*/actions.ts` (Server Actions) and API routes
+- Contains: Prisma queries, data calculations, file I/O
+- Depends on: Prisma client, guards, utilities
+- Used by: Presentation layer, API routes
 
-**Data Access Layer:**
-- Purpose: Database connection and Prisma client management
-- Location: `src/lib/db.ts` (Prisma singleton), `prisma/schema.prisma`
-- Contains: Database models (Cliente, Venda, Produto, Usuario, etc.)
-- Depends on: PostgreSQL database
-- Used by: All data-fetching code
+**Data Access:**
+- Purpose: Database abstraction and connection pooling
+- Location: `src/lib/db.ts` (Prisma client singleton)
+- Contains: Prisma client configuration with dev-only caching
+- Depends on: PostgreSQL database, environment config
+- Used by: All business logic layers
 
-**Authentication & Session Layer:**
-- Purpose: User authentication and session management
-- Location: `src/lib/session.ts`, `src/app/api/auth/*/route.ts`
-- Contains: JWT token creation/verification, session cookies, role-based guards
-- Depends on: jose library for JWT, cookies middleware
-- Used by: All protected pages and endpoints
+**Authentication & Authorization:**
+- Purpose: Session management and access control
+- Location: `src/lib/session.ts`, `src/lib/guards.ts`, `src/app/api/auth/`
+- Contains: JWT token handling, role-based checks
+- Depends on: jose library, cookies, database
+- Used by: Layout guards, page/API endpoint protection
 
-**Shared Utilities:**
-- Purpose: Common functions across layers
-- Location: `src/lib/utils.ts`, `src/lib/ncm.ts`, `src/lib/mcp.ts`
-- Contains: Formatting (BRL, CPF, CNPJ, phone), masking, NCM lookup helpers
-- Depends on: Standard library, date-fns
-- Used by: Components, pages, API routes
+**Utilities & Helpers:**
+- Purpose: Reusable logic across application
+- Location: `src/lib/` (utils.ts, finance.ts, ncm.ts, ai.ts, ai-actions.ts)
+- Contains: Formatting (formatBRL), calculations, AI integrations
+- Depends on: External APIs (OpenAI, Gemini), Prisma
+- Used by: Components, Server Actions, API routes
 
 ## Data Flow
 
-**Authentication Flow:**
+**User Authentication:**
 
-1. User visits `/login` (unauthenticated route)
-2. Submits credentials to `/api/auth/login` (POST)
-3. Route handler queries `prisma.usuario.findUnique()`
-4. On success, creates JWT token via `createSessionToken()`
-5. Sets httpOnly cookie with token
-6. Redirects to `/dashboard`
+1. User enters credentials on `src/app/(auth)/login/page.tsx`
+2. Client submits to POST `/api/auth/login`
+3. Route handler validates against `prisma.usuario` table
+4. Server creates JWT token via `createSessionToken()`
+5. Token set in HTTP-only cookie
+6. Session retrieved via `getSession()` in subsequent requests
 
-**Protected Page Access:**
+**Sales/Venda Creation (Primary Flow):**
 
-1. User requests protected page (e.g., `/dashboard`)
-2. Page component calls `getSession()` from session.ts
-3. `getSession()` reads token from cookies, verifies JWT
-4. Returns `SessionPayload` or null
-5. If null, page redirects to `/login`
-6. If verified, page renders with user context
+1. User navigates to `/venda-rapida` (Server Component)
+2. Server fetches vendors and last sale via Prisma
+3. Page renders `<VendaRapidaFormClient>` with data
+4. Client captures form data: date, vendor, products, customer, parcels
+5. Client autocomplete queries: `/api/vendas/autocomplete/clientes`, `/api/vendas/autocomplete/produtos`
+6. Client may trigger AI suggestions via `/api/vendas/sugestoes`
+7. User submits form, calls `criarVendaV2()` Server Action
+8. Server Action validates, calculates financials, writes to database
+9. Returns `ActionResponse` (success/error)
+10. Client displays toast notification and resets form
+11. Page revalidates via `revalidatePath()` showing new sale
 
-**Sales Data Flow (Example: Dashboard):**
+**Data Fetch & Display:**
 
-1. Admin visits `/dashboard` → `page.tsx` server component executes
-2. Page calls `requireAdmin()` guard → checks session role
-3. Fetches `prisma.venda.findMany()` with date filters from search params
-4. Calculates aggregates (total, freight, profit) in-memory
-5. Renders table and charts with data
-6. Charts component may trigger `dashboard-charts.tsx` client-side rendering
-
-**AI Intelligence Flow:**
-
-1. User submits prompt + optional file to `/inteligencia`
-2. Server action `askAi()` receives form data
-3. Calls `runAiWithActions()` from `ai.ts` library
-4. AI parses prompt, identifies actions from `ai-actions.ts`
-5. Executes read-only actions automatically or queues modifications
-6. Returns response with executed results
-
-**Import & Data Processing:**
-
-1. User uploads CSV to `/importacao` page
-2. `ImportacaoClient` parses CSV, sends batch to `/api/importacao/batch`
-3. API route validates and inserts records via Prisma
-4. Returns success/failure for each row
-5. Frontend shows validation results in table
+1. Server Component fetches aggregated data (sales, metrics) from Prisma
+2. Calculates summaries (total revenue, profit margin, per-vendor breakdown)
+3. Renders UI with fetched data embedded
+4. Client can filter/search using query params (nuqs library)
+5. Pagination handled server-side, UI updates client-side
 
 **State Management:**
 
-- **URL Search Params:** Filters, date ranges, vendor selection (via `nuqs` library)
-- **Form State:** Component-level with React `useState` (client components)
-- **Database State:** Single source of truth in PostgreSQL
-- **Session State:** JWT token in httpOnly cookie, verified per request
-- **Server Cache:** Next.js cache, revalidated via `revalidatePath()`
+- Server State: Database (Prisma), session cookies
+- Form State: React Hook Form (uncontrolled until submit)
+- UI State: React useState in client components (loading, suggestions, filters)
+- Global State: None (no Redux/Zustand) - query params drive filtering
 
 ## Key Abstractions
 
-**Page Component Pattern:**
+**ActionResponse Pattern:**
+- Purpose: Standardized success/error responses from Server Actions
+- Examples: `src/lib/action-response.ts`, `src/app/(app)/venda-rapida/actions.ts`
+- Pattern: Server Actions return `ActionResponse<T>` with `success`, `message`, `data`, or `error` fields
+- Benefits: Type-safe error handling, predictable client behavior, toast notifications
 
-Purpose: Server-rendered pages with data fetching, role checks, and layout
-Examples: `src/app/(app)/dashboard/page.tsx`, `src/app/(app)/cadastros/page.tsx`
-Pattern: Async server component → guard check → Prisma query → render UI
+**Prisma Models:**
+- Purpose: Database schema abstraction and type safety
+- Examples: `prisma/schema.prisma` (Cliente, Produto, Venda, ItemVenda, ParcelaVencimento, Usuario, etc.)
+- Pattern: Models with automatic migrations, relationships (Venda → Cliente, ItemVenda, ParcelaVencimento)
+- Benefits: Strong typing, referential integrity, ORM-level validations
 
-```typescript
-// Pattern example from dashboard/page.tsx
-export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
-  const ok = await requireAdmin();
-  if (!ok) return <div>Acesso restrito.</div>;
-  const sp = await searchParams;
-  const vendas = await prisma.venda.findMany({ where: {...} });
-  // render JSX
-}
-```
+**Session Management:**
+- Purpose: Stateless JWT-based auth without server sessions
+- Examples: `src/lib/session.ts` (SessionPayload type, createSessionToken, verifySessionToken)
+- Pattern: JWT stored in HTTP-only cookie, verified on each request
+- Benefits: Scalable, no session storage, automatic expiration (7d)
 
-**Server Action (Form Submission):**
+**Form Validation Schemas:**
+- Purpose: Single source of truth for form rules
+- Examples: `src/lib/validations/venda.ts` (vendaRapidaSchema), auth.ts, cliente.ts, produto.ts
+- Pattern: Zod schemas defining type, constraints, error messages
+- Benefits: Client + Server validation consistency, type inference
 
-Purpose: Handle form submissions securely on server
-Examples: `addCliente()`, `saveAviso()`, `askAi()`
-Pattern: `"use server"` directive, FormData input, Prisma mutation, revalidate cache
+**Design Tokens:**
+- Purpose: Semantic color/spacing/typography constants
+- Examples: `src/lib/design-tokens.ts` (spacing, typography, colors objects)
+- Pattern: TypeScript objects mapping to Tailwind class names or CSS variables
+- Benefits: Dark mode support, consistent visual language, easy refactoring
 
-```typescript
-// Pattern from cadastros/page.tsx
-async function addCliente(formData: FormData) {
-  "use server";
-  const nome = String(formData.get("nome") || "");
-  await prisma.cliente.create({ data: { nome, ... } });
-  revalidatePath("/cadastros");
-}
-```
-
-**Client Component:**
-
-Purpose: Interactive UI with state and event handling
-Examples: `venda-rapida-form-client.tsx`, `intelligence-chat-client.tsx`
-Pattern: `"use client"` directive, useState, fetch API routes, display results
-
-```typescript
-// Pattern from login/page.tsx
-"use client";
-export default function LoginPage() {
-  const [username, setUsername] = useState("");
-  const res = await fetch("/api/auth/login", { method: "POST", ... });
-}
-```
-
-**Guard Function:**
-
-Purpose: Check authorization before rendering or executing
-Examples: `requireAdmin()`, role checks in pages
-Pattern: Get session, verify role, return boolean
-
-```typescript
-// From guards.ts
-export async function requireAdmin() {
-  const session = await getSession();
-  if (!session || session.role !== "admin") return false;
-  return true;
-}
-```
-
-**API Route Handler:**
-
-Purpose: HTTP endpoint for GET/POST requests
-Examples: `/api/auth/login`, `/api/vendas/autocomplete/clientes`
-Pattern: Extract params, query database, return JSON or file
-
-```typescript
-// Pattern from vendas/autocomplete/clientes/route.ts
-export async function GET(request: NextRequest) {
-  const query = new URL(request.url).searchParams.get("q") || "";
-  const clientes = await prisma.cliente.findMany({ where: {...} });
-  return NextResponse.json(clientes);
-}
-```
-
-**AI Action Definition:**
-
-Purpose: Define actions that AI can execute
-Examples: `listar_vendas`, `criar_venda`, etc. in `ai-actions.ts`
-Pattern: Name, description, Zod schema for parameters, role restrictions
-
-```typescript
-// Pattern from ai-actions.ts
-const actionParamSchemas: Record<string, z.ZodTypeAny> = {
-  listar_vendas: z.object({
-    from: optionalString(),
-    to: optionalString(),
-    vendedor: optionalString(),
-    limit: optionalNumber(),
-  }),
-};
-```
+**Guards (Access Control):**
+- Purpose: Authorization checks for sensitive operations
+- Examples: `src/lib/guards.ts` (requireAdmin)
+- Pattern: Async functions returning boolean, called at page/API level
+- Benefits: Clear intent, reusable auth logic, prevents unauthorized access
 
 ## Entry Points
 
-**Web Application Root:**
+**Web Application:**
 - Location: `src/app/layout.tsx`
-- Triggers: All HTTP requests
-- Responsibilities: Setup fonts, metadata, root layout with NuqsAdapter
+- Triggers: HTTP request to domain root
+- Responsibilities: Initialize theme provider, NuqsAdapter (query params), structure HTML
 
-**Authentication Root:**
+**Authentication:**
 - Location: `src/app/(auth)/login/page.tsx`
-- Triggers: Unauthenticated access to protected pages (via redirect)
-- Responsibilities: Login form, credential submission, session creation
+- Triggers: Unauthenticated user or /login path
+- Responsibilities: Form UI, credential submission, session creation
 
-**Application Root:**
+**Protected App:**
 - Location: `src/app/(app)/layout.tsx`
-- Triggers: Authenticated requests to `/dashboard` and sub-routes
-- Responsibilities: Session verification, sidebar navigation, layout rendering
-- Dynamic: Menu switches between admin/seller based on role
+- Triggers: Authenticated user accessing /dashboard, /historico, etc.
+- Responsibilities: Session validation, sidebar navigation, role-based menu routing
 
-**Dashboard Entry:**
-- Location: `src/app/(app)/dashboard/page.tsx`
-- Triggers: Admin clicks dashboard link
-- Responsibilities: Display sales metrics, vendor selection, date filtering
-
-**API Entry Points:**
+**API Routes:**
 - Location: `src/app/api/*/route.ts`
-- Triggers: Client-side fetch calls
-- Responsibilities: Data retrieval, CSV/PDF generation, batch operations
+- Triggers: HTTP requests to /api/* paths
+- Responsibilities: Handle autocomplete, file uploads, AI suggestions, auth endpoints
+
+**Home Page:**
+- Location: `src/app/page.tsx`
+- Triggers: Root path /
+- Responsibilities: Redirect to /dashboard (authenticated) or /login (anonymous)
 
 ## Error Handling
 
-**Strategy:** Try-catch with fallback responses, graceful degradation
+**Strategy:** Try-catch with ActionResponse pattern for Server Actions, HTTP status codes for API routes
 
 **Patterns:**
 
-Authentication errors: Redirect to login, display error message on form
-Database errors: Log error, return generic 500 response or empty state
-API errors: Return `NextResponse.json({ error: "message" }, { status: 400 })`
-Missing session: Return falsy from `getSession()`, pages redirect to login
-AI errors: Catch in `runAiWithActions()`, return error in response object
+1. **Server Actions (Business Logic):**
+   ```typescript
+   async function criarVendaV2(formData: FormData): Promise<ActionResponse<{ vendaId: number }>> {
+     try {
+       if (!clienteId) return errorResponse("Cliente obrigatório")
+       const venda = await prisma.venda.create({ data })
+       revalidatePath("/venda-rapida")
+       return successResponse("Venda criada!", { vendaId: venda.id })
+     } catch (error) {
+       console.error("Error:", error)
+       return errorResponse("Erro ao criar venda")
+     }
+   }
+   ```
 
-Examples from code:
-- `src/app/api/vendas/autocomplete/clientes/route.ts`: catch database error, log, return 500
-- `src/app/(auth)/login/page.tsx`: catch fetch error, display "Erro ao conectar."
-- `src/app/(app)/layout.tsx`: check session, redirect if null
+2. **API Routes (HTTP):**
+   ```typescript
+   export async function GET(request: NextRequest) {
+     try {
+       const data = await prisma.cliente.findMany(...)
+       return NextResponse.json(data)
+     } catch (error) {
+       return NextResponse.json({ error: "..." }, { status: 500 })
+     }
+   }
+   ```
+
+3. **Client-Side Toast Notification:**
+   - ActionForm component wraps submission, catches ActionResponse
+   - On success: shows success toast, resets form
+   - On error: shows error toast with message from server
+
+4. **Validation Errors:**
+   - Zod schema parsing in Server Actions
+   - React Hook Form validation in client forms
+   - FormMessage component displays field-level errors
+
+5. **Authentication Errors:**
+   - Missing session redirects to /login
+   - Invalid JWT returns null from verifySessionToken
+   - Unauthorized access returns error page or redirects
 
 ## Cross-Cutting Concerns
 
 **Logging:**
-- Location: Console.log scattered in handlers (no unified logger)
-- Example: `console.log()` in finance calculations, autocomplete routes
-- Pattern: Direct console calls, mostly for debugging
+- Approach: Browser console.log for errors, Prisma logs set to ["error"] in dev
+- Files: Errors logged in catch blocks throughout codebase
+- No external logging service configured
 
 **Validation:**
-- Location: `src/lib/ai-actions.ts` (Zod schemas), guard functions
-- Pattern: Zod for AI actions, string trimming in forms, manual checks in routes
-- Examples: Email validation, required field checks
+- Client-side: React Hook Form + Zod schemas in forms
+- Server-side: Zod schema validation in Server Actions + manual checks
+- Database: Prisma enforces unique constraints, relationships, required fields
 
 **Authentication:**
-- Location: `src/lib/session.ts`, `src/lib/guards.ts`
-- Pattern: JWT verification, role-based guards, httpOnly cookies
-- Used by: All protected pages and some API routes
+- Method: JWT tokens in HTTP-only cookies
+- Protected pages: Check session via `getSession()`, redirect if null
+- Protected API: Session validation in route handlers
+- Role-based: Menu items and pages filtered by `session.role` (admin/vendedor)
 
-**Database Transaction Management:**
-- Location: Prisma client in `src/lib/db.ts`
-- Pattern: Singleton instance with connection pooling
-- No explicit transactions in current code (implicit via single queries)
+**Styling:**
+- Framework: Tailwind CSS v4 with CSS variables for semantic tokens
+- Dark mode: Automatic via next-themes, CSS variable swapping
+- Components: shadcn/ui wrapped with design-tokens configuration
 
-**File Upload/Generation:**
-- Location: `/api/upload-logo`, `/api/relatorios/*/route.ts`
-- Pattern: Handle file in request, process with pdf-lib or return CSV
-- Examples: CSV export, PDF receipt generation
+**Performance Optimizations:**
+- Server Components for initial data fetching
+- Incremental Static Regeneration (ISR) via revalidatePath
+- Client Components use React.memo and useCallback where needed
+- Prisma with connection pooling (via Neon or environment-specific pooling)
 
 ---
 
-*Architecture analysis: 2026-02-05*
+*Architecture analysis: 2026-02-19*

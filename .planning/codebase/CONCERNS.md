@@ -1,254 +1,347 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-02-05
+**Analysis Date:** 2026-02-19
 
-## Tech Debt
+## Security Issues
 
-**Prisma Client Instantiation in API Routes:**
-- Issue: Multiple API routes create their own `PrismaClient` instances instead of using the singleton from `src/lib/db.ts`
-- Files: `src/app/api/comissoes/route.ts`, `src/app/api/comissoes/detalhe/route.ts`, `src/app/api/comissoes/relatorio/route.ts`
-- Impact: Inefficient connection pooling, memory leaks, and possible connection exhaustion under load. Creates duplicate client instances that bypass the singleton pattern.
-- Fix approach: Replace `const prisma = new PrismaClient()` with `import { prisma } from "@/lib/db"` across all route files. These routes manually disconnect with `await prisma.$disconnect()` which breaks the singleton pattern and should be removed.
+### Authentication & Authorization Gaps
 
-**Manual Prisma Disconnection in Routes:**
-- Issue: Some API routes call `await prisma.$disconnect()` in finally blocks, which breaks the connection pooling strategy
-- Files: `src/app/api/comissoes/route.ts` (line 81), `src/app/api/comissoes/detalhe/route.ts` (line 85), `src/app/api/comissoes/relatorio/route.ts` (line 72)
-- Impact: Closes the connection pool after each request, defeating the purpose of singleton connection reuse and causing performance degradation
-- Fix approach: Remove all `await prisma.$disconnect()` calls from route handlers. The singleton in `src/lib/db.ts` manages the connection lifecycle properly.
+**Missing API route protection:**
+- Issue: API routes are not protected with authentication middleware or session validation
+- Files: `src/app/api/clientes/[id]/limite/route.ts`, `src/app/api/produtos/autocomplete/route.ts`, `src/app/api/vendas/autocomplete/clientes/route.ts`, `src/app/api/search/route.ts`, `src/app/api/importacao/batch/route.ts`
+- Impact: Any unauthenticated user can access data endpoints without logging in
+- Fix approach: Create middleware that validates session token before processing requests
 
-**Missing Error Handling in Multiple API Routes:**
-- Issue: Routes like `src/app/api/relatorios/vendas/route.ts`, `src/app/api/relatorios/catalogo/route.ts` do not wrap database calls in try-catch blocks
-- Files: `src/app/api/relatorios/vendas/route.ts`, `src/app/api/relatorios/catalogo/route.ts`
-- Impact: Unhandled promise rejections and server crashes if database queries fail. No user-facing error messages, leaving clients without feedback.
-- Fix approach: Add try-catch blocks around all `prisma.*` calls and return `NextResponse.json({ error: "..." }, { status: 500 })` consistently.
+**Missing role-based access control (RBAC) on protected pages:**
+- Issue: Dashboard requires admin check `requireAdmin()`, but other admin functions (comissoes, relatorios) lack validation
+- Files: `src/app/(app)/dashboard/page.tsx`, `src/lib/guards.ts`
+- Impact: Users can potentially access restricted features by bypassing client-side checks
+- Fix approach: Implement server-side RBAC middleware in `/app/layout.tsx` for all protected routes
 
-**Inconsistent Error Response Format:**
-- Issue: Different routes return error responses with different field names (`error`, `message`, etc.) and status codes
-- Files: Multiple API routes across `src/app/api/`
-- Impact: Frontend error handling code must anticipate multiple response formats, increasing complexity
-- Fix approach: Establish a consistent error response format (e.g., `{ error: string, code?: string }`) and use it across all routes.
+### File Upload Vulnerabilities
 
-## Security Considerations
+**No file type validation on uploads:**
+- Issue: File upload endpoints accept any file without MIME type or extension checks
+- Files: `src/app/api/produtos/upload/route.ts` (line 10-24), `src/app/api/upload-logo/route.ts` (line 15-19)
+- Impact: Users could upload executables (.exe, .sh) or malicious documents disguised as PDFs
+- Fix approach: Validate MIME type, extension whitelist, and file size before saving
 
-**Plaintext Password Storage:**
-- Risk: User passwords are stored in plaintext in the database (no hashing)
-- Files: `src/app/api/auth/login/route.ts` (line 15), `prisma/schema.prisma` (line 82)
-- Current mitigation: None. Direct string comparison of passwords.
-- Impact: If database is compromised, all user passwords are exposed. Violates basic security best practices.
-- Recommendations:
-  1. Use bcryptjs or argon2 to hash passwords before storage
-  2. Update login to compare hashed passwords
-  3. Require password reset for all existing users after deployment
+**No file size limits:**
+- Issue: Upload endpoints don't enforce maximum file size constraints
+- Files: `src/app/api/produtos/upload/route.ts`, `src/app/api/upload-logo/route.ts`
+- Impact: Disk space exhaustion attacks possible; large uploads could freeze application
+- Fix approach: Add `MAX_FILE_SIZE` constant, check `file.size` before processing
 
-**Hardcoded Default Session Secret:**
-- Risk: Default `SESSION_SECRET` fallback is "dev-secret" (plaintext)
-- Files: `src/lib/session.ts` (line 4)
-- Current mitigation: Environment variable override available
-- Impact: If env var is missing in production, JWTs are signed with a known secret, compromising session security
-- Recommendations:
-  1. Remove the default fallback
-  2. Fail fast if `SESSION_SECRET` is not set in production
-  3. Generate a secure random default only in dev
-
-**File Upload Path Traversal Risk:**
-- Risk: Uploaded filenames are not validated/sanitized in `src/app/api/produtos/upload/route.ts` and `src/app/api/upload-logo/route.ts`
+**Unsafe file path construction:**
+- Issue: Filenames not sanitized; paths built with unsanitized user input
 - Files: `src/app/api/produtos/upload/route.ts` (line 21), `src/app/api/upload-logo/route.ts` (line 16)
-- Current mitigation: Basic filename munging (spaces to dashes) but not comprehensive
-- Impact: Attackers could upload files with malicious names or potentially bypass upload restrictions
-- Recommendations:
-  1. Generate UUIDs for filenames instead of using original names
-  2. Validate file MIME types on server
-  3. Restrict file sizes
-  4. Scan for malware if handling user-uploaded content
+- Example: `filename = \`${Date.now()}-${file.name}\`` - allows malicious filenames like `../../etc/passwd`
+- Fix approach: Use `path.basename()` to extract filename only, remove special characters
 
-**Missing Request Validation:**
-- Risk: API routes accept query parameters and form data without proper validation/sanitization
-- Files: `src/app/api/relatorios/vendas/route.ts` (line 5-6), `src/app/api/catalogo/route.ts` (line 42), multiple routes
-- Current mitigation: Basic null coalescing and type assertions
-- Impact: Injection attacks, unexpected behavior, or DoS via crafted requests
-- Recommendations:
-  1. Use Zod schemas for request validation (already available in dependencies)
-  2. Parse and validate all query parameters and body data
-  3. Return 400 status for invalid input
+**Path traversal vulnerability:**
+- Issue: Logo/image paths loaded from database without validation
+- Files: `src/app/api/recibo/route.ts` (line 66), `src/app/api/catalogo/route.ts` (line 68)
+- Vulnerable code: `const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath)`
+- Impact: Attacker could craft malicious path in config to read any file on server
+- Fix approach: Validate paths are within `public/` directory; reject paths with `..` components
 
-**API Authorization Gaps:**
-- Risk: Most API routes do not check authentication or authorization
-- Files: `src/app/api/relatorios/vendas/route.ts`, `src/app/api/catalogo/route.ts`, `src/app/api/relatorios/antecipacao/route.ts`, and others
-- Current mitigation: Only `src/app/api/mcp/route.ts` and `src/app/api/auth/*` routes check sessions
-- Impact: Any authenticated user can access sensitive reports, financial data, and operations they shouldn't
-- Recommendations:
-  1. Add session verification to all API routes that access sensitive data
-  2. Implement role-based access control (use the `role` field from session)
-  3. Create a middleware function `requireSession()` to reduce boilerplate
+### Plaintext Password Storage
 
-**CSV Injection in Export Routes:**
-- Risk: CSV exports do not escape values that could contain formula injections
-- Files: `src/app/api/relatorios/vendas/route.ts` (line 29-44), `src/app/api/relatorios/catalogo/route.ts`
-- Current mitigation: None
-- Impact: Attackers could craft data that executes formulas in Excel/Sheets when opened
-- Recommendations:
-  1. Escape values starting with `=`, `+`, `@`, or `-` by prepending a single quote
-  2. Consider using a CSV library that handles escaping automatically
+**Critical: Passwords stored without hashing:**
+- Issue: Login route compares plaintext passwords directly
+- Files: `src/app/api/auth/login/route.ts` (line 15)
+- Vulnerable code: `if (!user || user.password !== String(body.password).trim())`
+- Impact: Database breach exposes all user passwords in plaintext
+- Fix approach: Use bcrypt or argon2 for password hashing; implement proper password verification
+
+### API Key Exposure
+
+**Secrets stored in database (Config table):**
+- Issue: OpenAI and Gemini API keys stored in plaintext in `config` table
+- Files: `prisma/schema.prisma` (lines 113-114), `src/lib/ai.ts` (lines 14-15, 24)
+- Impact: Database dump or SQL injection exposes production API keys
+- Fix approach: Use environment variables only; never store secrets in database
+
+**Sensitive data in session token:**
+- Issue: Session JWT uses default secret if `SESSION_SECRET` not set
+- Files: `src/lib/session.ts` (line 4)
+- Vulnerable code: `const secret = new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret")`
+- Impact: Default "dev-secret" makes sessions forgeable in development if deployed
+- Fix approach: Require `SESSION_SECRET` env var; fail startup if missing in production
+
+## Data Validation Issues
+
+### Missing Input Validation
+
+**No schema validation for server actions:**
+- Issue: `criarVenda` and `criarVendaV2` don't validate FormData before database operations
+- Files: `src/app/(app)/venda-rapida/actions.ts` (lines 8-49, 54-120)
+- Example: `const clienteId = Number(formData.get("cliente") || 0)` - no check if clienteId exists
+- Impact: Invalid data, negative values, NaN values can be saved to database
+- Fix approach: Create Zod schemas for all server actions; validate before database operations
+
+**Unvalidated query parameters in API routes:**
+- Issue: Search queries, date ranges, and limits not validated
+- Files: `src/app/api/search/route.ts` (line 10), `src/app/api/comissoes/route.ts` (lines 10-12)
+- Example: `const limit = Math.min(Number(searchParams.get("limit") || 20) || 20, MAX_LIMIT)` - still allows invalid dates
+- Impact: Invalid dates could return wrong results; string injection in search (though mitigated by Prisma)
+- Fix approach: Validate date strings with `new Date()` and check `!isNaN(date.getTime())`
+
+**No validation on batch import:**
+- Issue: `importacao/batch/route.ts` doesn't validate row data before database operations
+- Files: `src/app/api/importacao/batch/route.ts` (lines 9-48)
+- Example: No checks for negative numbers, invalid dates, or missing required fields
+- Impact: Corrupted data imported; financial calculations affected
+- Fix approach: Validate each row with schema; return detailed errors for invalid rows
+
+**Unvalidated date parsing:**
+- Issue: Date strings converted to `new Date()` without validation
+- Files: `src/app/(app)/venda-rapida/actions.ts` (line 31), `src/app/api/importacao/batch/route.ts` (line 34)
+- Impact: Invalid date strings create Invalid Date objects; calculations break silently
+- Fix approach: Use `z.coerce.date()` in Zod or validate with `!isNaN(new Date(str).getTime())`
+
+## Error Handling Issues
+
+### Silent Failures
+
+**No return value from server actions:**
+- Issue: `criarVenda` doesn't return ActionResponse; silently fails
+- Files: `src/app/(app)/venda-rapida/actions.ts` (line 28-29)
+- Impact: User doesn't know if operation succeeded; can repeat submissions
+- Fix approach: Return ActionResponse with success/error status from all server actions
+
+**Unhandled promise rejections:**
+- Issue: Fetch calls in client components don't handle all error cases
+- Files: `src/components/venda-rapida-form-client.tsx` (lines 87-90, 100+)
+- Example: `.catch(error => console.error(...))` - only logs, doesn't update UI
+- Impact: User sees no feedback if network request fails
+- Fix approach: Add proper error states; show toast notifications on failure
+
+**Generic error messages:**
+- Issue: All API errors return same generic "Erro interno no servidor"
+- Files: `src/app/api/importacao/batch/route.ts` (line 53), multiple routes
+- Impact: Impossible to debug; user doesn't know what failed
+- Fix approach: Return structured error objects with specific error codes
+
+### Uncaught Exceptions
+
+**JSON parsing without try-catch:**
+- Issue: Some routes parse JSON without error handling
+- Files: `src/app/(app)/venda-rapida/actions.ts` (line 77), `src/app/api/mcp/route.ts` (line 22)
+- Vulnerable code: `JSON.parse(String(produtosJson))` - throws if invalid JSON
+- Impact: Application crashes with 500 error instead of validation error
+- Fix approach: Wrap in try-catch; return `errorResponse` for invalid JSON
 
 ## Performance Bottlenecks
 
-**N+1 Query Pattern in Credit Calculation:**
-- Problem: `src/lib/credit.ts` loads all vendas for a client, then loops through them in memory for filtering
-- Files: `src/lib/credit.ts` (line 10)
-- Cause: `findMany` without date filters, then client-side filtering
-- Impact: Loads entire sales history for every credit check, becoming slower as data grows
-- Improvement path:
-  1. Add date range to the Prisma query where clause
-  2. Filter by month/year on database side instead of in JavaScript
+### N+1 Query Patterns
 
-**Catalog PDF Generation Without Pagination Limits:**
-- Problem: `src/app/api/catalogo/route.ts` generates PDF with all matching products, no limit
-- Files: `src/app/api/catalogo/route.ts` (line 44-47)
-- Cause: `findMany` without `take` parameter
-- Impact: Large product catalogs could cause OOM errors or extreme latency
-- Improvement path:
-  1. Add `take: 500` limit to Prisma query
-  2. Implement pagination or a separate index page showing page count
-  3. Add timeout handling
+**Multiple sequential queries for related data:**
+- Issue: `findMany` called without `include` relationships
+- Files: `src/app/(app)/historico/page.tsx` (lines 108-110), `src/app/(app)/dashboard/page.tsx` (line 38)
+- Example: Loads all `usuario` records separately for filtering instead of in `where` clause
+- Impact: Unnecessary database round trips; slow page loads with many users/vendors
+- Fix approach: Use Prisma `include` or `select` to batch load relationships
 
-**Inefficient Commission Calculations:**
-- Problem: `src/app/api/comissoes/route.ts` loads all sales and all users, then does client-side filtering
-- Files: `src/app/api/comissoes/route.ts` (line 32-68)
-- Cause: Creates Map from all usuarios, then loops through all vendas looking up by vendedor name
-- Impact: O(n*m) complexity; slow with hundreds of sales or users
-- Improvement path:
-  1. Join usuarios to vendas in Prisma query with `include`
-  2. Calculate commissions in a single database pass
-  3. Consider a materialized view or denormalized commission table
+**Loop-based data aggregation:**
+- Issue: Manual aggregation using loops instead of database queries
+- Files: `src/app/(app)/dashboard/page.tsx` (lines 57-87), `src/app/(app)/historico/page.tsx`
+- Example: Loads all sales, loops through manually to aggregate by vendor
+- Impact: Memory usage scales with data size; slow with thousands of records
+- Fix approach: Use Prisma `groupBy()` or raw SQL aggregation
 
-**Repeated Config Lookups:**
-- Problem: `src/app/api/catalogo/route.ts` calls `prisma.config.findFirst()` once per route, other routes repeat this pattern
-- Files: `src/app/api/catalogo/route.ts` (line 63), `src/app/api/recibo/route.ts`, `src/lib/ai.ts` (multiple)
-- Cause: No caching of config values
-- Impact: Unnecessary database queries for frequently-accessed static config
-- Improvement path:
-  1. Cache config in memory with a TTL (5-10 minutes)
-  2. Invalidate cache on config updates
-  3. Create a helper function `getConfig()` that handles caching
+### Missing Database Indexes
+
+**Insufficient indexes for common queries:**
+- Issue: `findMany` on unindexed fields without filters
+- Files: `prisma/schema.prisma` - missing indexes on frequently searched fields
+- Example: No index on `venda.vendedor` (used in WHERE clauses) or `cliente.nome` (used in searches)
+- Impact: Full table scans on queries; performance degrades as data grows
+- Fix approach: Add `@@index([vendedor])`, `@@index([nome])` to models
+
+**Date range queries slow:**
+- Issue: Dashboard queries large date ranges without proper indexes
+- Files: `src/app/(app)/dashboard/page.tsx` (line 92-94)
+- Query: `vendasEvo` loads 6 months of sales to calculate evolution
+- Impact: Slow on large dataset; blocks page load
+- Fix approach: Add `@@index([dataVenda])` to Venda model; consider pagination for time series
+
+### Unbounded Result Sets
+
+**No limit on full table scans:**
+- Issue: Some queries load all records without pagination or limits
+- Files: `src/lib/ai-actions.ts` (multiple `findMany` calls), `src/app/(app)/cadastros/page.tsx` (line 89+)
+- Example: `await prisma.usuario.findMany()` loads all users without limit
+- Impact: Memory exhaustion with large datasets; crashes possible
+- Fix approach: Add `take` parameter or pagination; implement cursor-based pagination
+
+## Database Schema Issues
+
+### Deprecated Fields Mixed with New
+
+**Parallel product tracking (conflicting data models):**
+- Issue: `Venda` model has both old fields (produtoNome) and new relationship (itens)
+- Files: `prisma/schema.prisma` (lines 51-72)
+- Impact: Data inconsistency; calculations may use wrong field; migrations risky
+- Fix approach: Complete migration to `ItemVenda` relationship; deprecate old fields in phases
+
+### Missing Constraints
+
+**No uniqueness on critical fields:**
+- Issue: `vendedor` field not indexed; allows duplicate vendor entries
+- Files: `prisma/schema.prisma` (line 48) - `vendedor` is plain String
+- Impact: Vendor analytics split across inconsistent names
+- Fix approach: Add `@@unique([vendedor])` or normalize vendor references
+
+**Orphaned records possible:**
+- Issue: `clienteId` is nullable; allows sales with null customer
+- Files: `prisma/schema.prisma` (line 49)
+- Impact: Reports exclude sales without client; data quality issues
+- Fix approach: Make `clienteId` required with `NOT NULL`; add data migration
+
+### Missing Cascade Delete Rules
+
+**Partial cascade delete implementation:**
+- Issue: `ItemVenda` and `ParcelaVencimento` have `onDelete: Cascade`, but business logic may expect soft deletes
+- Files: `prisma/schema.prisma` (lines 87, 102)
+- Impact: Hard deletes lose data; no audit trail of deletions
+- Fix approach: Implement soft deletes (add `deletedAt` field) or restrict deletion with validation
+
+## Tech Debt
+
+### Dead Code & Unused Features
+
+**Unused import patterns:**
+- Issue: Multiple import strategies not consistently used across codebase
+- Files: Various component files import unused icons from lucide-react
+- Impact: Larger bundle size; maintenance confusion
+- Fix approach: ESLint rule to enforce no unused imports
+
+**Dual form implementations:**
+- Issue: Both `VendaRapidaFormClient` (730 lines) and `VendaRapidaFormV2` (468 lines) exist
+- Files: `src/components/venda-rapida-form-client.tsx` vs `venda-rapida-form-v2.tsx`
+- Impact: Code duplication; twice the maintenance burden
+- Fix approach: Consolidate into single form component; deprecate old version
+
+### Type Safety Issues
+
+**Generic type parameter abuse:**
+- Issue: `toolSchema` uses `.passthrough()` allowing any properties
+- Files: `src/lib/ai.ts` (line 9)
+- Impact: Type safety lost; potential runtime errors from AI tool calls
+- Fix approach: Define strict schema for each AI action parameter
+
+**Loose type casting:**
+- Issue: Excessive use of `String()` and `Number()` coercion without validation
+- Files: Throughout codebase (e.g., `src/app/(app)/venda-rapida/actions.ts`)
+- Example: `Number(formData.get("cliente") || 0)` returns 0 if missing instead of error
+- Impact: Silent failures; calculations with wrong values
+- Fix approach: Use Zod to coerce with proper validation; throw on invalid input
 
 ## Fragile Areas
 
-**AI/Chat Integration Dependency Chain:**
-- Files: `src/lib/ai.ts`, `src/lib/ai-actions.ts`, `src/lib/mcp.ts`, `src/app/api/mcp/route.ts`
-- Why fragile: Complex fallback logic between Gemini and OpenAI, dynamic tool registration, and action execution without strong typing
-- Safe modification: Keep AI provider switching logic isolated. Add integration tests for both provider paths. Document the fallback behavior clearly.
-- Test coverage: No tests exist; the module is untested and risky to modify
+### Complex Multi-Product Sales Logic
 
-**Venda Data Model Inconsistencies:**
-- Files: `prisma/schema.prisma` (model Venda), multiple routes using `venda.vendedor` and `venda.clienteId`
-- Why fragile: Venda stores `vendedor` as a string (vendor name), but joins to Cliente via ID. This creates ambiguity about whether a venda is tied to a user or just a name string. Commission calculations rely on matching by name.
-- Safe modification:
-  1. Add a `vendedorId` foreign key to Usuario
-  2. Keep `vendedor` string as a denormalized copy for display
-  3. Update all queries and calculations to use the FK
-  4. This is a significant migration
+**Area:** `src/components/venda-rapida-form-client.tsx`, `src/app/(app)/venda-rapida/actions.ts`
+- Why fragile: 730+ lines managing product arrays, parcelas, AI suggestions, stock limits
+- Multiple state variables (clienteQuery, selectedCliente, produtoQuery, selectedProduto, etc.)
+- Heavy reliance on fetch calls with implicit error handling
+- Safe modification: Add comprehensive test suite before refactoring; use React Testing Library for form state
 
-**Direct PrismaClient Exports:**
-- Files: `src/lib/db.ts`
-- Why fragile: Singleton exported directly allows any module to run any query without intercepting or logging
-- Safe modification: Consider wrapping prisma in a service layer that logs queries, enforces tenancy if needed, or adds auditing
+### AI Integration with Dynamic Schemas
 
-**File Upload and Path Handling:**
-- Files: `src/app/api/produtos/upload/route.ts`, `src/app/api/upload-logo/route.ts`, `src/app/api/catalogo/route.ts`
-- Why fragile: Writes to `process.cwd()` + hardcoded paths, assumes directory exists, no cleanup of old files
-- Safe modification:
-  1. Use a dedicated uploads directory
-  2. Create it if it doesn't exist
-  3. Store path references consistently in database
-  4. Implement a cleanup job for orphaned files
+**Area:** `src/lib/ai-actions.ts`, `src/lib/ai.ts`
+- Why fragile: 615 lines of AI action definitions; schema validation at runtime
+- JSON parsing of action results without strict typing
+- Changes to AI model behavior could break assumptions
+- Safe modification: Lock AI model version; add integration tests for each action; validate output schemas
 
-## Scaling Limits
+### Financial Calculations Spread Across Multiple Files
 
-**Database Connection Pool:**
-- Current capacity: Prisma default is 10 connections
-- Limit: With 22 API routes and concurrent requests, connection exhaustion is possible under moderate load
-- Scaling path:
-  1. Increase `connection_limit` in DATABASE_URL
-  2. Implement connection pooling with PgBouncer if using PostgreSQL
-  3. Monitor connection usage
-
-**Synchronous File I/O in PDF Generation:**
-- Current capacity: Single request processes one PDF at a time
-- Limit: Large PDFs or concurrent requests can cause event loop blocking
-- Scaling path:
-  1. Move PDF generation to a background job queue
-  2. Use streams instead of buffering entire PDFs in memory
-  3. Implement request cancellation
-
-## Known Issues
-
-**Session Token Expiration:**
-- Symptoms: Users stay logged in for 7 days regardless of activity
-- Files: `src/lib/session.ts` (line 17)
-- Current behavior: Fixed 7-day expiration, no refresh tokens, no activity-based renewal
-- Recommendation: Implement sliding window expiration or refresh token flow
-
-**Missing Role-Based Access Control:**
-- Symptoms: All authenticated users can access all API endpoints
-- Files: `src/app/api/*` (most routes lack role checks)
-- Current behavior: `src/app/api/mcp/route.ts` checks role but doesn't enforce permissions on tools
-- Recommendation: Add middleware to check `session.role` and action permissions
-
-**Audit Logging Not Wired Up:**
-- Symptoms: `AuditLog` table exists but is never written to
-- Files: `prisma/schema.prisma` (model AuditLog), no usage in codebase
-- Current behavior: Table defined but unused
-- Recommendation: Implement audit logging wrapper for sensitive operations
-
-**CLI Import Script Not Tested:**
-- Symptoms: `src/lib/db.ts` references `prisma/import_sqlite.js` but script may be incomplete or broken
-- Files: `package.json` (line 14), `prisma/import_sqlite.js`
-- Current behavior: Script available but no tests, documentation, or error handling visible
-- Recommendation: Add validation, error handling, and tests for import flow
+**Area:** `src/lib/finance.ts`, `src/app/(app)/dashboard/page.tsx`, `src/components/venda-rapida-form-client.tsx`
+- Why fragile: Lucro, ticket, margem calculations duplicated in multiple places
+- Subtle differences in how fields are used (lucroLiquido vs calculated lucro)
+- Safe modification: Centralize all calculations in single module; unit test each formula
 
 ## Missing Critical Features
 
-**Input Validation Framework:**
-- Problem: Routes accept query parameters and JSON without schema validation
-- Blocks: Cannot safely handle user input, no error standardization
-- Solution: Use Zod (already in dependencies) to define request/response schemas for all routes
+### No Audit Trail
 
-**Authentication Middleware:**
-- Problem: Session checks scattered across individual routes
-- Blocks: Easy to forget to add `requireSession()` check, creating unintended public endpoints
-- Solution: Create Next.js middleware in `src/middleware.ts` to enforce auth on protected routes
+**Problem:** No logging of who created/modified records or when
+- Blocks: Compliance audits; fraud investigation; data recovery
+- Users can modify/delete records with no accountability
+- Fix approach: Add `createdAt`, `updatedAt`, `createdBy`, `updatedBy` fields to all models
 
-**Rate Limiting:**
-- Problem: No rate limiting on API endpoints
-- Blocks: Vulnerable to brute force (login), DoS (exports), credential stuffing
-- Solution: Add rate limiting middleware (use a library like `Ratelimit` from Upstash)
+### No Soft Deletes
 
-## Test Coverage Gaps
+**Problem:** Hard deletes lose data permanently
+- Blocks: Recovery of accidentally deleted sales/customers; data retention compliance
+- No way to distinguish deleted vs never-existing records
+- Fix approach: Add `deletedAt` field to models; filter out soft-deleted records in queries
 
-**No Unit Tests:**
-- What's not tested: All utility functions, helpers, and business logic
-- Files: `src/lib/*.ts` (credit.ts, finance.ts, session.ts, ai.ts, etc.)
-- Risk: Logic changes can introduce silent bugs in commission calculations, credit checks, or financial reporting
-- Priority: High
+### No Rate Limiting
 
-**No API Tests:**
-- What's not tested: All routes in `src/app/api/*`
-- Files: `src/app/api/**/*`
-- Risk: Regressions in data export, report generation, authentication, and business logic
-- Priority: High
+**Problem:** API endpoints have no rate limiting
+- Blocks: Protection against brute force attacks; DDoS mitigation
+- Batch import endpoint could be abused
+- Fix approach: Use `next-rate-limit` package; implement per-IP rate limiting on all API routes
 
-**No Integration Tests:**
-- What's not tested: Database interactions, Prisma queries, transaction handling
-- Files: Entire data layer
-- Risk: Data corruption, partial updates, broken relationships during multi-step operations
-- Priority: Medium
+### No CSRF Protection
 
-**No E2E Tests:**
-- What's not tested: User workflows (login, create sale, export report, etc.)
-- Files: Entire application
-- Risk: Critical user journeys can break without detection
-- Priority: Medium
+**Problem:** No CSRF tokens on state-changing requests
+- Blocks: Protection against cross-site request forgery
+- Forms using FormData don't validate origin
+- Fix approach: Implement CSRF token validation using `next-safe` or built-in Next.js mechanisms
+
+### No SQL Injection Prevention (Partially)
+
+**Problem:** While Prisma prevents SQL injection, raw dynamic query strings could be used
+- Impact: Safe with current code but risky pattern if extended
+- Fix approach: Enforce no raw SQL; use parameterized queries always
+
+## Scaling Limits
+
+### Database Connection Pooling
+
+**Current state:** No explicit connection pool configuration
+- Files: `src/lib/db.ts` (not examined but typically uses Prisma default)
+- Limit: Default Prisma pool ~10 connections; exhausted under heavy load
+- Scaling path: Configure `prisma.schema` with `connectionLimit`, `idleTimeout` parameters
+
+### Large File Handling
+
+**Current state:** Files written synchronously to local filesystem
+- Files: `src/app/api/produtos/upload/route.ts`, `src/app/api/upload-logo/route.ts`
+- Limit: Single server can't handle parallel uploads; disk I/O blocks requests
+- Scaling path: Migrate to S3/cloud storage; implement async upload with job queue
+
+### Dashboard Query Performance
+
+**Current state:** Dashboard loads 6+ months of sales data in memory
+- Files: `src/app/(app)/dashboard/page.tsx` (line 92-102)
+- Limit: >100K records causes OOM; page load >5 seconds
+- Scaling path: Implement time-series aggregation in database; use materialized views or cache
+
+## Dependencies at Risk
+
+### AI SDK Pinning
+
+**Risk:** `@ai-sdk/openai`, `@ai-sdk/google`, `ai` packages update frequently
+- Impact: Breaking API changes; new OpenAI API versions not supported
+- Migration plan: Pin major versions; test new releases in staging before updating
+
+### Prisma Version Gap
+
+**Risk:** `@prisma/client@6.5.0` is recent; upgrade path unclear
+- Impact: Bug fixes may require schema changes; migration failures possible
+- Migration plan: Monitor release notes; test migrations in dev first
+
+### Deprecated shadcn Component Versions
+
+**Risk:** Some shadcn/ui components may have breaking changes
+- Impact: Component API changes break existing usage
+- Workaround: Pin shadcn versions; create wrapper components for stability
 
 ---
 
-*Concerns audit: 2026-02-05*
+*Concerns audit: 2026-02-19*
