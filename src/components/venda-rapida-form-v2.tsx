@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
 import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { ActionResponse } from "@/lib/action-response";
 
 interface ProdutoItem {
   id: string;
@@ -34,7 +36,7 @@ interface Parcela {
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
   parcelasOptions: { value: string; label: string }[];
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmit: (formData: FormData) => Promise<ActionResponse<{ vendaId: number }>>;
 }
 
 export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, onSubmit }: Props) {
@@ -147,12 +149,12 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCliente) {
-      alert("Por favor, selecione um cliente.");
+      toast.warning("Selecione um cliente para continuar.");
       return;
     }
 
     if (produtos.some((p) => !p.produtoNome)) {
-      alert("Por favor, preencha todos os produtos.");
+      toast.warning("Preencha o nome de todos os produtos.");
       return;
     }
 
@@ -176,29 +178,33 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
     }
 
     try {
-      await onSubmit(formData);
-      // Reset form
-      setClienteQuery("");
-      setSelectedCliente(null);
-      setProdutos([
-        {
-          id: crypto.randomUUID(),
-          produtoNome: "",
-          custoProduto: 0,
-          valorVenda: 0,
-          quantidade: 1,
-          subtotal: 0,
-        },
-      ]);
-      setFrete("0");
-      setEnvio("0");
-      setParcelas("1");
-      setTemNota(false);
-      setParcelasVencimento([]);
-      alert("Venda realizada com sucesso!");
+      const result = await onSubmit(formData);
+      if (result.success) {
+        // Reset form
+        setClienteQuery("");
+        setSelectedCliente(null);
+        setProdutos([
+          {
+            id: crypto.randomUUID(),
+            produtoNome: "",
+            custoProduto: 0,
+            valorVenda: 0,
+            quantidade: 1,
+            subtotal: 0,
+          },
+        ]);
+        setFrete("0");
+        setEnvio("0");
+        setParcelas("1");
+        setTemNota(false);
+        setParcelasVencimento([]);
+        toast.success(result.message || "Venda realizada com sucesso!");
+      } else {
+        toast.error(result.error || "Erro ao finalizar venda.");
+      }
     } catch (error) {
       console.error("Erro ao finalizar venda:", error);
-      alert("Erro ao finalizar venda.");
+      toast.error("Erro ao finalizar venda. Tente novamente.");
     } finally {
       setLoading(false);
     }
