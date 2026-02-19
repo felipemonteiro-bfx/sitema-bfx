@@ -59,19 +59,19 @@ Melhorias no PDV (Venda Rápida) para suporte completo a vendas complexas.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PDV-01 | Phase 1 | Pending |
-| PDV-02 | Phase 1 | Pending |
-| PDV-03 | Phase 1 | Pending |
-| PDV-04 | Phase 1 | Pending |
-| PDV-05 | Phase 2 | Pending |
-| PDV-06 | Phase 2 | Pending |
-| PDV-07 | Phase 2 | Pending |
-| PDV-08 | Phase 2 | Pending |
-| PDV-09 | Phase 2 | Pending |
-| PDV-10 | Phase 2 | Pending |
-| PDV-11 | Phase 3 | Pending |
-| PDV-12 | Phase 3 | Pending |
-| PDV-13 | Phase 3 | Pending |
+| PDV-01 | Phase 1 — Multi-Produto | Pending |
+| PDV-02 | Phase 1 — Multi-Produto | Pending |
+| PDV-03 | Phase 1 — Multi-Produto | Pending |
+| PDV-04 | Phase 1 — Multi-Produto | Pending |
+| PDV-05 | Phase 2 — Descontos e Parcelamento | Pending |
+| PDV-06 | Phase 2 — Descontos e Parcelamento | Pending |
+| PDV-07 | Phase 2 — Descontos e Parcelamento | Pending |
+| PDV-08 | Phase 2 — Descontos e Parcelamento | Pending |
+| PDV-09 | Phase 2 — Descontos e Parcelamento | Pending |
+| PDV-10 | Phase 2 — Descontos e Parcelamento | Pending |
+| PDV-11 | Phase 3 — Busca Rápida de Cliente | Pending |
+| PDV-12 | Phase 3 — Busca Rápida de Cliente | Pending |
+| PDV-13 | Phase 3 — Busca Rápida de Cliente | Pending |
 
 **Coverage:**
 - v1 requirements: 13 total
@@ -80,4 +80,4 @@ Melhorias no PDV (Venda Rápida) para suporte completo a vendas complexas.
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-02-19 after initial definition*
+*Last updated: 2026-02-19 after roadmap creation*
