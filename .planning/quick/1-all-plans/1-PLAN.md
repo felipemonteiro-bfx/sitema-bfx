@@ -61,6 +61,49 @@ Output: Pagina /venda-rapida renderizando VendaRapidaFormV2 com suporte completo
 <tasks>
 
 <task type="auto">
+  <name>Task 0: Instalar Sonner e garantir Toaster no layout</name>
+  <files>src/app/layout.tsx</files>
+  <action>
+**Pre-requisito obrigatorio antes de qualquer mudanca de codigo.**
+
+1. **Verificar se sonner esta instalado**:
+   ```bash
+   node -e "require('sonner')" 2>&1
+   ```
+   Se o comando retornar erro (MODULE_NOT_FOUND), instalar:
+   ```bash
+   npm install sonner
+   ```
+
+2. **Verificar se `<Toaster />` esta no layout raiz** (`src/app/layout.tsx`):
+   - Abrir o arquivo e checar se existe `import { Toaster } from "sonner"` ou `from "@/components/ui/sonner"`
+   - Checar se `<Toaster />` esta sendo renderizado dentro do `<body>` ou do provider
+
+3. **Se `<Toaster />` estiver ausente**, adicionar ao `src/app/layout.tsx`:
+   ```tsx
+   import { Toaster } from "sonner"
+
+   // ... dentro do return, antes de fechar o body/ThemeProvider:
+   <Toaster richColors position="top-right" />
+   ```
+
+   Sem o `<Toaster />` no layout, todos os toasts sao silenciosamente descartados.
+  </action>
+  <verify>
+    ```bash
+    node -e "require('sonner')" && echo "sonner OK"
+    npx tsc --noEmit 2>&1 | head -30
+    ```
+    Resultado esperado: "sonner OK" e ausencia de erros de TypeScript relacionados ao layout.
+  </verify>
+  <done>
+    - Sonner listado em node_modules (require sem erro)
+    - `<Toaster />` presente e renderizado em src/app/layout.tsx
+    - Sem erros de TypeScript no layout
+  </done>
+</task>
+
+<task type="auto">
   <name>Task 1: Corrigir VendaRapidaFormV2 — tipos e feedback</name>
   <files>src/components/venda-rapida-form-v2.tsx</files>
   <action>
@@ -97,9 +140,9 @@ Fazer tres mudancas cirurgicas no arquivo existente:
 Nao alterar nada mais — layout, calculos, componentes filhos, logica de parcelas, etc. permanecem identicos.
   </action>
   <verify>
-    Verificar manualmente que o arquivo compila sem erros de TypeScript:
-    `npx tsc --noEmit 2>&1 | grep venda-rapida-form-v2`
-    (sem saida = sem erros)
+    Verificar que o projeto compila sem erros de TypeScript:
+    `npx tsc --noEmit 2>&1 | head -30`
+    (sem saida = sem erros; se houver erros, todos aparecem nas primeiras 30 linhas)
   </verify>
   <done>
     - Props.onSubmit aceita retorno de ActionResponse
