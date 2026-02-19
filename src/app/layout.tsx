@@ -2,6 +2,7 @@
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -38,6 +39,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>{children}</NuqsAdapter>
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>
