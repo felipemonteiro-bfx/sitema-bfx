@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, Package } from "lucide-react";
-import { formatBRL } from "@/lib/utils";
+import { formatBRL, cn } from "@/lib/utils";
 
 interface ProdutoItem {
   id: string; // ID temporário para o frontend
@@ -94,7 +94,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove }: 
   const margem = item.valorVenda > 0 ? (lucro / (item.valorVenda * item.quantidade)) * 100 : 0;
 
   return (
-    <Card variant="elevated" className="relative overflow-visible border-primary/20 transition-all hover:border-primary/40">
+    <Card variant="elevated" className={cn("relative overflow-visible border-primary/20 transition-all hover:border-primary/40", produtoSuggestions.length > 0 && "z-10")}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">

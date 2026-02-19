@@ -6,11 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-  Loader2, User, Calendar, ShoppingCart, Plus, CreditCard, Truck
+  Loader2,
+  User,
+  Calendar,
+  ShoppingCart,
+  Plus,
+  CreditCard,
+  Truck,
 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
-import { formatBRL } from "@/lib/utils";
+import { formatBRL, cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
@@ -36,20 +42,31 @@ interface Parcela {
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
   parcelasOptions: { value: string; label: string }[];
-  onSubmit: (formData: FormData) => Promise<ActionResponse<{ vendaId: number }>>;
+  onSubmit: (
+    formData: FormData,
+  ) => Promise<ActionResponse<{ vendaId: number }>>;
 }
 
-export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, onSubmit }: Props) {
+export default function VendaRapidaFormV2({
+  vendedorOptions,
+  parcelasOptions,
+  onSubmit,
+}: Props) {
   const [loading, setLoading] = useState(false);
 
   // Form states
-  const [dataVenda, setDataVenda] = useState(new Date().toISOString().split("T")[0]);
+  const [dataVenda, setDataVenda] = useState(
+    new Date().toISOString().split("T")[0],
+  );
   const [vendedor, setVendedor] = useState(vendedorOptions[0]?.value || "");
   const [parcelas, setParcelas] = useState("1");
 
   // Cliente autocomplete
   const [clienteQuery, setClienteQuery] = useState("");
-  const [selectedCliente, setSelectedCliente] = useState<{ id: number; nome: string } | null>(null);
+  const [selectedCliente, setSelectedCliente] = useState<{
+    id: number;
+    nome: string;
+  } | null>(null);
   const [clienteSuggestions, setClienteSuggestions] = useState<
     { id: number; nome: string; cpf?: string; cnpj?: string }[]
   >([]);
@@ -88,7 +105,9 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
 
     debounceTimer.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/vendas/autocomplete/clientes?q=${encodeURIComponent(clienteQuery)}`);
+        const res = await fetch(
+          `/api/vendas/autocomplete/clientes?q=${encodeURIComponent(clienteQuery)}`,
+        );
         const data = await res.json();
         setClienteSuggestions(data || []);
       } catch (error) {
@@ -109,13 +128,19 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
   const numParcelas = Number(parcelas) || 1;
 
   const totalVenda = subtotalProdutos + numFrete;
-  const valorDescontoNota = temNota ? (subtotalProdutos * numTaxaNota) / 100 : 0;
+  const valorDescontoNota = temNota
+    ? (subtotalProdutos * numTaxaNota) / 100
+    : 0;
   const custoTotal =
-    produtos.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0) + numEnvio + valorDescontoNota;
+    produtos.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0) +
+    numEnvio +
+    valorDescontoNota;
   const lucroBruto = totalVenda - custoTotal;
   const margemPct = subtotalProdutos > 0 ? (lucroBruto / totalVenda) * 100 : 0;
 
-  const selectedVendedorData = vendedorOptions.find((v) => v.value === vendedor);
+  const selectedVendedorData = vendedorOptions.find(
+    (v) => v.value === vendedor,
+  );
   const comissaoPct = selectedVendedorData?.comissaoPct || 0;
   const valorComissao = (lucroBruto * comissaoPct) / 100;
 
@@ -226,7 +251,11 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Data da Venda
               </Label>
-              <DateInput value={dataVenda} onChange={(e) => setDataVenda(e.target.value)} required />
+              <DateInput
+                value={dataVenda}
+                onChange={(e) => setDataVenda(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -245,7 +274,13 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
       </Card>
 
       {/* Seção 2: Cliente */}
-      <Card variant="elevated" className="border-info/20">
+      <Card
+        variant="elevated"
+        className={cn(
+          "border-info/20",
+          clienteSuggestions.length > 0 && "z-10",
+        )}
+      >
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <User className="h-4 w-4 text-info" />
@@ -278,7 +313,9 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
                   >
                     <div className="font-medium">{c.nome}</div>
                     {(c.cpf || c.cnpj) && (
-                      <div className="text-xs text-muted-foreground">{c.cpf || c.cnpj}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {c.cpf || c.cnpj}
+                      </div>
                     )}
                   </button>
                 ))}
@@ -295,7 +332,13 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
             <ShoppingCart className="h-5 w-5 text-primary" />
             Produtos da Venda
           </h3>
-          <Button type="button" onClick={addProduto} variant="outline" size="sm" className="gap-2">
+          <Button
+            type="button"
+            onClick={addProduto}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
             <Plus className="h-4 w-4" />
             Adicionar Produto
           </Button>
@@ -349,7 +392,10 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
-                <Checkbox checked={temNota} onCheckedChange={(checked) => setTemNota(checked === true)} />
+                <Checkbox
+                  checked={temNota}
+                  onCheckedChange={(checked) => setTemNota(checked === true)}
+                />
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground cursor-pointer">
                   Com Nota Fiscal
                 </Label>
@@ -401,27 +447,46 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
       />
 
       {/* Seção 7: Resumo Financeiro */}
-      <Card variant="elevated" className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+      <Card
+        variant="elevated"
+        className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent"
+      >
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Subtotal Produtos</div>
-              <div className="text-lg font-bold text-foreground">{formatBRL(subtotalProdutos)}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Subtotal Produtos
+              </div>
+              <div className="text-lg font-bold text-foreground">
+                {formatBRL(subtotalProdutos)}
+              </div>
             </div>
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Frete</div>
-              <div className="text-lg font-bold text-foreground">{formatBRL(numFrete)}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Frete
+              </div>
+              <div className="text-lg font-bold text-foreground">
+                {formatBRL(numFrete)}
+              </div>
             </div>
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Total Venda</div>
-              <div className="text-xl font-black text-primary">{formatBRL(totalVenda)}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Total Venda
+              </div>
+              <div className="text-xl font-black text-primary">
+                {formatBRL(totalVenda)}
+              </div>
             </div>
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Valor Parcela</div>
-              <div className="text-lg font-bold text-info">{formatBRL(totalVenda / numParcelas)}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Valor Parcela
+              </div>
+              <div className="text-lg font-bold text-info">
+                {formatBRL(totalVenda / numParcelas)}
+              </div>
             </div>
           </div>
 
@@ -429,22 +494,36 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Custo Total</div>
-              <div className="text-lg font-bold text-foreground">{formatBRL(custoTotal)}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Custo Total
+              </div>
+              <div className="text-lg font-bold text-foreground">
+                {formatBRL(custoTotal)}
+              </div>
             </div>
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Lucro Bruto</div>
-              <div className="text-lg font-bold text-success">{formatBRL(lucroBruto)}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Lucro Bruto
+              </div>
+              <div className="text-lg font-bold text-success">
+                {formatBRL(lucroBruto)}
+              </div>
             </div>
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">Margem</div>
-              <div className="text-lg font-bold text-success">{margemPct.toFixed(1)}%</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                Margem
+              </div>
+              <div className="text-lg font-bold text-success">
+                {margemPct.toFixed(1)}%
+              </div>
             </div>
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Comissão ({comissaoPct}%)
               </div>
-              <div className="text-lg font-bold text-warning">{formatBRL(valorComissao)}</div>
+              <div className="text-lg font-bold text-warning">
+                {formatBRL(valorComissao)}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -454,7 +533,9 @@ export default function VendaRapidaFormV2({ vendedorOptions, parcelasOptions, on
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={loading || !selectedCliente || produtos.some((p) => !p.produtoNome)}
+          disabled={
+            loading || !selectedCliente || produtos.some((p) => !p.produtoNome)
+          }
           variant="success"
           size="lg"
           className="px-12 text-base font-bold shadow-lg hover:shadow-xl"
