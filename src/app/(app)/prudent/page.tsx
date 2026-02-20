@@ -21,8 +21,59 @@ export default async function Page() {
   
   const pend = await prisma.venda.findMany({ 
     where: { antecipada: 0 },
-    orderBy: { dataVenda: "desc" }
+    orderBy: { dataVenda: "desc" },
+    include: {
+      cliente: {
+        select: {
+          empresa: true,
+          email: true,
+        },
+      },
+    },
   });
+
+  const now = new Date();
+  const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+  const fimMes = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+  const parcelasDoMes = await prisma.parcelaVencimento.findMany({
+    where: {
+      dataVencimento: {
+        gte: inicioMes,
+        lte: fimMes,
+      },
+      paga: false,
+      venda: {
+        antecipada: 0,
+      },
+    },
+    include: {
+      venda: {
+        include: {
+          cliente: {
+            select: {
+              empresa: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const vencimentosPorEmpresa: Record<string, number> = {};
+  parcelasDoMes.forEach((p) => {
+    const empresa = p.venda.cliente?.empresa || "Sem empresa";
+    vencimentosPorEmpresa[empresa] = (vencimentosPorEmpresa[empresa] || 0) + p.valorParcela;
+  });
+
+  const vendasFormatadas = pend.map((v) => ({
+    id: v.id,
+    dataVenda: v.dataVenda,
+    produtoNome: v.produtoNome,
+    valorVenda: v.valorVenda,
+    parcelas: v.parcelas,
+    empresaConveniada: v.cliente?.empresa || null,
+  }));
 
   return (
     <div className="space-y-6">
@@ -44,7 +95,11 @@ export default async function Page() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <AntecipacaoClient vendasIniciais={pend} onSubmit={antecipar} />
+          <AntecipacaoClient 
+            vendasIniciais={vendasFormatadas} 
+            onSubmit={antecipar}
+            vencimentosPorEmpresa={vencimentosPorEmpresa}
+          />
         </CardContent>
       </Card>
     </div>

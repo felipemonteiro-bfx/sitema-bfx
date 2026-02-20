@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,11 +12,13 @@ interface Venda {
   produtoNome: string | null;
   valorVenda: number | null;
   parcelas: number | null;
+  empresaConveniada: string | null;
 }
 
 interface Props {
   vendasIniciais: Venda[];
   onSubmit: (formData: FormData) => Promise<void>;
+  vencimentosPorEmpresa: Record<string, number>;
 }
 
 const TAXA_MENSAL = 3.99;
@@ -44,7 +46,7 @@ function calcularTaxaPercent(prazoMedio: number) {
   return (Math.pow(1 + TAXA_MENSAL / 100, prazoMedio / 30) - 1) * 100;
 }
 
-export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
+export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa }: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -111,6 +113,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
               />
             </TableHead>
             <TableHead>Data</TableHead>
+            <TableHead>Empresa Conveniada</TableHead>
             <TableHead>Produto</TableHead>
             <TableHead className="text-right">Valor</TableHead>
             <TableHead className="text-right">Parcelas</TableHead>
@@ -119,7 +122,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
         <TableBody>
           {vendasIniciais.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                 Sem vendas pendentes para antecipação.
               </TableCell>
             </TableRow>
@@ -140,6 +143,15 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
                   />
                 </TableCell>
                 <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
+                <TableCell className="text-foreground">
+                  {v.empresaConveniada ? (
+                    <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                      {v.empresaConveniada}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">-</span>
+                  )}
+                </TableCell>
                 <TableCell className="font-semibold text-foreground">{v.produtoNome}</TableCell>
                 <TableCell className="text-right tabular-nums font-bold text-foreground">{formatBRL(v.valorVenda || 0)}</TableCell>
                 <TableCell className="text-right tabular-nums">
@@ -189,6 +201,38 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit }: Props) {
           Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. Juros simples &lt; 30 dias e compostos a partir de 30 dias.
         </div>
       </div>
+
+      {Object.keys(vencimentosPorEmpresa).length > 0 && (
+        <div className="mt-6 rounded-xl border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated shadow-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">
+              <svg className="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Valores a Vencer no Mês por Empresa</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(vencimentosPorEmpresa)
+              .sort((a, b) => b[1] - a[1])
+              .map(([empresa, valor]) => (
+                <div
+                  key={empresa}
+                  className="group relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-warning/50 hover:shadow-md"
+                >
+                  <div className="text-xs font-medium text-muted-foreground truncate">{empresa}</div>
+                  <div className="text-lg font-bold text-warning tabular-nums">{formatBRL(valor)}</div>
+                </div>
+              ))}
+          </div>
+          <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">Total a vencer no mês</span>
+            <span className="text-xl font-bold text-warning tabular-nums">
+              {formatBRL(Object.values(vencimentosPorEmpresa).reduce((sum, v) => sum + v, 0))}
+            </span>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

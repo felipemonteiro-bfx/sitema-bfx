@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
@@ -20,22 +20,34 @@ export async function GET(request: NextRequest) {
             nome: true,
             cpf: true,
             cnpj: true,
+            email: true,
+            empresa: true,
           },
         },
       },
       orderBy: { dataVenda: "desc" },
     });
 
-    // Gerar CSV
     let csv =
-      "\uFEFFNome do Cliente,Documento (CPF/CNPJ),Produto,Valor Total,Parcelas,Valor da Parcela,Data da Venda\n";
+      "\uFEFFNome do Cliente,Documento (CPF/CNPJ),Email,Empresa Conveniada,Produto,Valor Total,Parcelas,Valor da Parcela,Data da Venda\n";
+
+    let totalGeral = 0;
+    const totaisPorEmpresa: Record<string, number> = {};
 
     vendas.forEach((v) => {
       const doc = v.cliente?.cpf || v.cliente?.cnpj || "N/D";
+      const email = v.cliente?.email || "N/D";
+      const empresa = v.cliente?.empresa || "Sem empresa";
       const valorTotal = (v.valorVenda || 0) + (v.valorFrete || 0);
+
+      totalGeral += valorTotal;
+      totaisPorEmpresa[empresa] = (totaisPorEmpresa[empresa] || 0) + valorTotal;
+
       const row = [
         `"${v.cliente?.nome || "N/D"}"`,
         `"${doc}"`,
+        `"${email}"`,
+        `"${empresa}"`,
         `"${v.produtoNome || "N/A"}"`,
         valorTotal.toFixed(2),
         v.parcelas || 1,
@@ -45,6 +57,18 @@ export async function GET(request: NextRequest) {
 
       csv += row + "\n";
     });
+
+    csv += "\n";
+    csv += `TOTAL GERAL,,,,,"${totalGeral.toFixed(2)}",,,\n`;
+    csv += "\n";
+    csv += "--- RESUMO POR EMPRESA CONVENIADA ---\n";
+    csv += "Empresa,Valor Total\n";
+
+    Object.entries(totaisPorEmpresa)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([empresa, valor]) => {
+        csv += `"${empresa}","${valor.toFixed(2)}"\n`;
+      });
 
     return new Response(csv, {
       headers: {

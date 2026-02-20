@@ -130,13 +130,13 @@ export default function CommissionsDashboardClient() {
           <CardTitle className="text-primary">Comissões por Vendedor</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] min-h-[300px] w-full">
             {loading ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">Carregando gráfico...</div>
             ) : commissions.length === 0 ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">Sem dados para exibir no gráfico.</div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
                 <BarChart data={commissions}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="vendedor" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />

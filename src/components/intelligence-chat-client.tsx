@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { IntelligenceChatComposer } from "@/components/intelligence-chat-composer";
@@ -17,7 +17,6 @@ type IntelligenceChatClientProps = {
   history: Message[];
   action: (formData: FormData) => Promise<void> | void;
   confirmAction: (formData: FormData) => Promise<void> | void;
-  providers: { value: "openai" | "gemini"; label: string }[];
   formId?: string;
 };
 
@@ -25,7 +24,6 @@ export function IntelligenceChatClient({
   history,
   action,
   confirmAction,
-  providers,
   formId,
 }: IntelligenceChatClientProps) {
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
@@ -35,7 +33,7 @@ export function IntelligenceChatClient({
 
   const handleSubmit = async (formData: FormData) => {
     const prompt = String(formData.get("prompt") || "").trim();
-    const provider = String(formData.get("provider") || "openai");
+    const provider = "gemini";
     const attachment = formData.get("attachment");
     const file =
       attachment &&
@@ -145,7 +143,6 @@ export function IntelligenceChatClient({
       <div className="mt-auto">
         <IntelligenceChatComposer
           action={handleSubmit}
-          providers={providers}
           formId={formId}
           showProviderSelect={false}
         />

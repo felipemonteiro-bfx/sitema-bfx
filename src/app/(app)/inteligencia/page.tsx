@@ -3,8 +3,6 @@ import { readOnlyActions, runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
-import { FormSelect } from "@/components/form-select";
-import { prisma } from "@/lib/db";
 import { headers } from "next/headers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
@@ -21,7 +19,7 @@ async function askAi(formData: FormData) {
       ? (attachment as File)
       : null;
   let prompt = String(formData.get("prompt") || "");
-  const provider = String(formData.get("provider") || "openai") as "openai" | "gemini";
+  const provider = "gemini" as const;
   if (!prompt && file) {
     prompt = `Arquivo anexado: ${file.name}`;
   } else if (file && file.name) {
@@ -112,7 +110,7 @@ async function confirmAi(formData: FormData) {
   const links: { label: string; url: string }[] = [];
   for (const action of actions) {
     try {
-      const result = await runAiWithActions("", "openai", {
+      const result = await runAiWithActions("", "gemini", {
         role: session.role as "admin" | "vendedor",
         username: session.username,
         displayName: session.nomeExibicao || session.username,
@@ -132,7 +130,7 @@ async function confirmAi(formData: FormData) {
   prismaMessageStore.add({
     prompt: "Confirmação de ações",
     response: results.join("\n"),
-    provider: "openai",
+    provider: "gemini",
     status: "done",
     links,
   });
@@ -169,13 +167,6 @@ const prismaMessageStore = {
 
 export default async function Page() {
   const formId = "intelligence-chat-form";
-  const cfg = await prisma.config.findFirst();
-  const providers = [
-    ...(cfg?.openaiKey ? [{ value: "openai" as const, label: "OpenAI" }] : []),
-    ...(cfg?.geminiKey ? [{ value: "gemini" as const, label: "Gemini" }] : []),
-  ];
-  const resolvedProviders =
-    providers.length > 0 ? providers : [{ value: "openai" as const, label: "OpenAI" }];
   const history = prismaMessageStore.data.slice(0, 20);
 
   return (
@@ -191,24 +182,14 @@ export default async function Page() {
                 Assistente virtual para estratégias, cobranças e dúvidas do time.
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <FormSelect
-                name="provider"
-                options={resolvedProviders}
-                defaultValue={resolvedProviders[0]?.value ?? "openai"}
-                className="h-9 w-full rounded-full border border-border/60 bg-muted/40 text-xs sm:w-auto sm:min-w-[140px]"
-                searchable={false}
-                formId={formId}
-              />
-              <form action={clearAi}>
-                <button
-                  type="submit"
-                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full text-xs cursor-pointer")}
-                >
-                  Limpar conversa
-                </button>
-              </form>
-            </div>
+            <form action={clearAi}>
+              <button
+                type="submit"
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full text-xs cursor-pointer")}
+              >
+                Limpar conversa
+              </button>
+            </form>
           </div>
         </CardHeader>
         <CardContent className="flex h-[60vh] min-h-[420px] flex-col gap-4 sm:h-[68vh] lg:h-[72vh]">
@@ -216,7 +197,6 @@ export default async function Page() {
             history={history}
             action={askAi}
             confirmAction={confirmAi}
-            providers={resolvedProviders}
             formId={formId}
           />
         </CardContent>

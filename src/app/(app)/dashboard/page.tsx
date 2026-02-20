@@ -1,17 +1,31 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { DateInput } from "@/components/ui/date-input";
+import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
-import { DollarSign, TrendingUp, Percent } from "lucide-react";
+import { 
+  DollarSign, 
+  TrendingUp, 
+  Percent, 
+  ShoppingCart, 
+  Target,
+  Trophy,
+  Wallet,
+  ArrowRight,
+  Calendar,
+  Users,
+  Package,
+  Filter
+} from "lucide-react";
 
 type Search = {
   from?: string;
@@ -104,29 +118,40 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <Card className="border-primary/20 bg-gradient-to-br from-card to-card-elevated shadow-lg dark:shadow-[var(--shadow-lg)]">
-        <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">Dashboard Executivo e Performance</h1>
-            <p className="text-sm text-muted-foreground">
-              Período: {formatDate(start)} a {formatDate(end)}
-            </p>
+      <Card variant="gradient" animated className="border-primary/20">
+        <CardContent className="flex flex-col gap-6 pt-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/20">
+                <Target className="h-6 w-6 text-primary dark:text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  Dashboard Executivo
+                </h1>
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  {formatDate(start)} — {formatDate(end)}
+                </p>
+              </div>
+            </div>
           </div>
-          <form className="grid w-full gap-2 sm:grid-cols-2 lg:w-auto lg:grid-cols-[repeat(3,minmax(0,1fr))_auto] lg:items-end">
-            <div className="space-y-1">
-              <label htmlFor="filter-from" className="text-xs font-semibold text-muted-foreground">
+          
+          <form className="flex flex-wrap items-end gap-3">
+            <div className="space-y-1.5">
+              <label htmlFor="filter-from" className="label-form">
                 Início
               </label>
               <DateInput id="filter-from" name="from" defaultValue={start.toISOString().slice(0, 10)} />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="filter-to" className="text-xs font-semibold text-muted-foreground">
+            <div className="space-y-1.5">
+              <label htmlFor="filter-to" className="label-form">
                 Fim
               </label>
               <DateInput id="filter-to" name="to" defaultValue={end.toISOString().slice(0, 10)} />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="filter-vendors" className="text-xs font-semibold text-muted-foreground">
+            <div className="space-y-1.5 min-w-[180px]">
+              <label htmlFor="filter-vendors" className="label-form">
                 Vendedores
               </label>
               <VendorMultiSelect
@@ -136,186 +161,270 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 defaultSelected={vendorsFilter}
               />
             </div>
-            <button className={cn(buttonVariants(), "h-10 w-full lg:w-auto cursor-pointer")}>Filtrar</button>
+            <Button type="submit" className="h-10 gap-2">
+              <Filter className="h-4 w-4" />
+              Filtrar
+            </Button>
           </form>
         </CardContent>
       </Card>
 
       {vendas.length === 0 ? (
-        <Card>
-          <CardContent className="space-y-2 py-10 text-center">
-            <div className="text-lg font-semibold">Nenhuma venda encontrada neste período.</div>
-            <div className="text-sm text-muted-foreground">
-              Tente ajustar o filtro de datas ou vendedores.
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          variant="sales"
+          title="Nenhuma venda encontrada"
+          description="Não há vendas registradas no período selecionado. Ajuste os filtros ou comece a registrar novas vendas."
+          action={{
+            label: "Nova Venda",
+            href: "/venda-rapida"
+          }}
+        />
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card className="group relative overflow-hidden border-primary/20 transition-all hover:scale-[1.02] hover:border-primary/40 cursor-default">
-              <div className="absolute inset-0 bg-gradient-to-br from-muted/30 to-muted/10" />
-              <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Faturamento Total</CardTitle>
-              </CardHeader>
-              <CardContent className="relative text-2xl font-bold text-foreground">{formatBRL(fat + frete)}</CardContent>
-              <div className="relative px-6 pb-4 text-xs text-muted-foreground">{peds} vendas</div>
-            </Card>
-            <Card className="group relative overflow-hidden border-success/30 bg-gradient-to-br from-success-bg to-transparent transition-all hover:scale-[1.02] hover:border-success/50 dark:shadow-[var(--glow-primary)] cursor-default">
-              <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Lucro Líquido Real</CardTitle>
-              </CardHeader>
-              <CardContent className="relative text-2xl font-bold text-success">
-                {formatBRL(lucro)}
-              </CardContent>
-              <div className="relative px-6 pb-4 text-xs text-success font-semibold">Margem: {margem.toFixed(1)}%</div>
-            </Card>
-            <Card className="group relative overflow-hidden border-info/20 transition-all hover:scale-[1.02] hover:border-info/40 cursor-default">
-              <div className="absolute inset-0 bg-gradient-to-br from-info-bg to-transparent" />
-              <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Ticket Médio</CardTitle>
-              </CardHeader>
-              <CardContent className="relative text-2xl font-bold text-info">{formatBRL(tik)}</CardContent>
-            </Card>
-            <Card className="group relative overflow-hidden border-warning/20 transition-all hover:scale-[1.02] hover:border-warning/40 cursor-default">
-              <div className="absolute inset-0 bg-gradient-to-br from-warning-bg to-transparent" />
-              <CardHeader className="relative pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Melhor Performance</CardTitle>
-              </CardHeader>
-              <CardContent className="relative space-y-1">
-                <div className="text-base font-bold text-warning">{bestRev?.vendedor || "—"}</div>
-                <div className="text-sm text-muted-foreground">{formatBRL(bestRev?.total || 0)}</div>
-              </CardContent>
-            </Card>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <CardStats
+              title="Faturamento Total"
+              value={formatBRL(fat + frete)}
+              description={`${peds} vendas`}
+              icon={Wallet}
+              color="info"
+              className="stagger-1"
+            />
+            <CardStats
+              title="Lucro Líquido"
+              value={formatBRL(lucro)}
+              description={`Margem: ${margem.toFixed(1)}%`}
+              icon={TrendingUp}
+              trend={{
+                value: margem,
+                direction: margem >= 20 ? "up" : margem >= 10 ? "neutral" : "down",
+              }}
+              color="success"
+              className="stagger-2"
+            />
+            <CardStats
+              title="Ticket Médio"
+              value={formatBRL(tik)}
+              icon={ShoppingCart}
+              color="info"
+              className="stagger-3"
+            />
+            <CardStats
+              title="Top Performance"
+              value={bestRev?.vendedor || "—"}
+              description={bestRev ? formatBRL(bestRev.total) : undefined}
+              icon={Trophy}
+              color="warning"
+              className="stagger-4"
+            />
           </div>
 
           <DashboardCharts evoData={evoData} topProdutos={topProd} />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Raio-X da Equipe</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                Performance detalhada por vendedor, com ticket e margem.
-              </div>
-              <Separator />
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Vendedor</TableHead>
-                    <TableHead className="text-right">Vendas</TableHead>
-                    <TableHead className="text-right">Faturamento</TableHead>
-                    <TableHead className="text-right">Lucro</TableHead>
-                    <TableHead className="text-right">Ticket</TableHead>
-                    <TableHead className="text-right">Margem</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teamRows.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center text-muted-foreground">
-                        Sem dados.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    teamRows.map((r) => (
-                      <TableRow key={r.vendedor}>
-                        <TableCell>{r.vendedor}</TableCell>
-                        <TableCell className="text-right tabular-nums">{r.vendas}</TableCell>
-                        <TableCell className="text-right tabular-nums">{formatBRL(r.total)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{formatBRL(r.lucro)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{formatBRL(r.ticket)}</TableCell>
-                        <TableCell className="text-right">
-                          <Badge variant="secondary" className="bg-success-bg border-success/30 text-success font-semibold">
-                            {r.margem.toFixed(1)}%
-                          </Badge>
-                        </TableCell>
+          <div className="grid gap-6 xl:grid-cols-3">
+            <Card animated className="xl:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    Raio-X da Equipe
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Performance detalhada por vendedor
+                  </p>
+                </div>
+                <Badge variant="info" size="sm">
+                  {teamRows.length} vendedores
+                </Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                        <TableHead className="font-semibold">Vendedor</TableHead>
+                        <TableHead className="text-right font-semibold">Vendas</TableHead>
+                        <TableHead className="text-right font-semibold">Faturamento</TableHead>
+                        <TableHead className="text-right font-semibold">Lucro</TableHead>
+                        <TableHead className="text-right font-semibold">Ticket</TableHead>
+                        <TableHead className="text-right font-semibold">Margem</TableHead>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Hall da Fama</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">Maior faturamento</div>
-                  <div className="text-sm font-semibold">{bestRev?.vendedor || "—"}</div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">Maior lucro</div>
-                  <div className="text-sm font-semibold">{bestProf?.vendedor || "—"}</div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-primary/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Resumo Rápido</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Receita */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-info/5 dark:bg-info/10 border border-info/20 dark:border-info/30 transition-all hover:bg-info/10 dark:hover:bg-info/15 hover:border-info/40 dark:hover:border-info/50 group">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-info/10 dark:bg-info/20 flex items-center justify-center group-hover:bg-info/20 dark:group-hover:bg-info/30 transition-colors">
-                      <DollarSign className="h-5 w-5 text-info dark:text-info" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Receita</div>
-                      <div className="text-lg font-bold text-info dark:text-info">{formatBRL(fat + frete)}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lucro */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-success/5 dark:bg-success/10 border border-success/20 dark:border-success/30 transition-all hover:bg-success/10 dark:hover:bg-success/15 hover:border-success/40 dark:hover:border-success/50 group">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-success/10 dark:bg-success/20 flex items-center justify-center group-hover:bg-success/20 dark:group-hover:bg-success/30 transition-colors">
-                      <TrendingUp className="h-5 w-5 text-success dark:text-success" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Lucro</div>
-                      <div className="text-lg font-bold text-success dark:text-success">{formatBRL(lucro)}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Margem */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-warning/5 dark:bg-warning/10 border border-warning/20 dark:border-warning/30 transition-all hover:bg-warning/10 dark:hover:bg-warning/15 hover:border-warning/40 dark:hover:border-warning/50 group">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-warning/10 dark:bg-warning/20 flex items-center justify-center group-hover:bg-warning/20 dark:group-hover:bg-warning/30 transition-colors">
-                      <Percent className="h-5 w-5 text-warning dark:text-warning" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Margem</div>
-                      <div className="text-lg font-bold text-warning dark:text-warning">{margem.toFixed(1)}%</div>
-                    </div>
-                  </div>
+                    </TableHeader>
+                    <TableBody>
+                      {teamRows.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                            Sem dados disponíveis
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        teamRows.map((r, index) => (
+                          <TableRow 
+                            key={r.vendedor} 
+                            className={cn(
+                              "animate-fade-in-up transition-colors",
+                              index === 0 && "bg-warning/5 dark:bg-warning/10"
+                            )}
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {index === 0 && <Trophy className="h-4 w-4 text-warning" />}
+                                {r.vendedor}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums">{r.vendas}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium">{formatBRL(r.total)}</TableCell>
+                            <TableCell className="text-right tabular-nums text-success font-medium">{formatBRL(r.lucro)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{formatBRL(r.ticket)}</TableCell>
+                            <TableCell className="text-right">
+                              <Badge 
+                                variant={r.margem >= 20 ? "success" : r.margem >= 10 ? "warning" : "error"}
+                                size="sm"
+                              >
+                                {r.margem.toFixed(1)}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Atalhos</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
-                <Link href="/venda-rapida" className={buttonVariants({ variant: "outline" })}>
-                  Nova venda
-                </Link>
-                <Link href="/financeiro" className={buttonVariants({ variant: "outline" })}>
-                  Financeiro
-                </Link>
-                <Link href="/relatorios" className={buttonVariants({ variant: "outline" })}>
-                  Relatórios
-                </Link>
-              </CardContent>
-            </Card>
+
+            <div className="space-y-4">
+              <Card animated className="stagger-5">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Trophy className="h-5 w-5 text-warning" />
+                    Hall da Fama
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-info/10">
+                        <DollarSign className="h-5 w-5 text-info" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Maior Faturamento</div>
+                        <div className="font-semibold">{bestRev?.vendedor || "—"}</div>
+                      </div>
+                    </div>
+                    {bestRev && (
+                      <Badge variant="info" size="sm">{formatBRL(bestRev.total)}</Badge>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+                        <TrendingUp className="h-5 w-5 text-success" />
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider">Maior Lucro</div>
+                        <div className="font-semibold">{bestProf?.vendedor || "—"}</div>
+                      </div>
+                    </div>
+                    {bestProf && (
+                      <Badge variant="success" size="sm">{formatBRL(bestProf.lucro)}</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card animated className="stagger-6">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Resumo Rápido</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-info/20 bg-info/5 dark:bg-info/10 hover:bg-info/10 dark:hover:bg-info/15 transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-info/10 dark:bg-info/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <DollarSign className="h-5 w-5 text-info" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Receita</div>
+                        <div className="text-lg font-bold text-info">{formatBRL(fat + frete)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-success/20 bg-success/5 dark:bg-success/10 hover:bg-success/10 dark:hover:bg-success/15 transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-success/10 dark:bg-success/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <TrendingUp className="h-5 w-5 text-success" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Lucro</div>
+                        <div className="text-lg font-bold text-success">{formatBRL(lucro)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-warning/20 bg-warning/5 dark:bg-warning/10 hover:bg-warning/10 dark:hover:bg-warning/15 transition-all group">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-warning/10 dark:bg-warning/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Percent className="h-5 w-5 text-warning" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Margem</div>
+                        <div className="text-lg font-bold text-warning">{margem.toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card animated className="stagger-7">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Atalhos Rápidos</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-2">
+                  <Link 
+                    href="/venda-rapida" 
+                    className={cn(
+                      buttonVariants({ variant: "outline" }), 
+                      "justify-between h-11 hover-lift"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <ShoppingCart className="h-4 w-4" />
+                      Nova Venda
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link 
+                    href="/financeiro" 
+                    className={cn(
+                      buttonVariants({ variant: "outline" }), 
+                      "justify-between h-11 hover-lift"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Wallet className="h-4 w-4" />
+                      Financeiro
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link 
+                    href="/relatorios" 
+                    className={cn(
+                      buttonVariants({ variant: "outline" }), 
+                      "justify-between h-11 hover-lift"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      Relatórios
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </>
       )}

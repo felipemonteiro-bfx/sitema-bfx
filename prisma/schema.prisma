@@ -20,6 +20,7 @@ model Cliente {
   dataNascimento DateTime? @map("data_nascimento")
   cep            String?
   endereco       String?
+  email          String?
   vendas         Venda[]
 
   @@map("clientes")
