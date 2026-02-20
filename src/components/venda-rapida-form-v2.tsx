@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
 import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 import { Checkbox } from "@/components/ui/checkbox";
+import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
 import type { ActionResponse } from "@/lib/action-response";
 
 interface ProdutoItem {
@@ -68,7 +69,14 @@ export default function VendaRapidaFormV2({
     nome: string;
   } | null>(null);
   const [clienteSuggestions, setClienteSuggestions] = useState<
-    { id: number; nome: string; cpf?: string; cnpj?: string }[]
+    {
+      id: number;
+      nome: string;
+      cpf?: string;
+      cnpj?: string;
+      renda?: number | null;
+      ultimaVenda?: { data: string; valor: number } | null;
+    }[]
   >([]);
 
   // Produtos (múltiplos)
@@ -91,6 +99,13 @@ export default function VendaRapidaFormV2({
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
+
+  // Produto selecionado para sugestões de upsell/cross-sell
+  const [produtoParaSugestoes, setProdutoParaSugestoes] = useState<{
+    id: number;
+    nome: string;
+    valorVenda?: number;
+  } | null>(null);
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -169,6 +184,80 @@ export default function VendaRapidaFormV2({
     const newProdutos = [...produtos];
     newProdutos[index] = item;
     setProdutos(newProdutos);
+
+    // Atualiza o produto para sugestões quando um produto é selecionado
+    if (item.produtoNome && !produtoParaSugestoes) {
+      // Busca o ID do produto pelo nome
+      fetch(`/api/vendas/autocomplete/produtos?q=${encodeURIComponent(item.produtoNome)}`)
+        .then(res => res.json())
+        .then(data => {
+          const produtoEncontrado = data?.find((p: { nome: string }) => 
+            p.nome.toLowerCase() === item.produtoNome.toLowerCase()
+          );
+          if (produtoEncontrado) {
+            setProdutoParaSugestoes({
+              id: produtoEncontrado.id,
+              nome: produtoEncontrado.nome,
+              valorVenda: produtoEncontrado.valorVenda,
+            });
+          }
+        })
+        .catch(err => console.error("Erro ao buscar produto:", err));
+    }
+  };
+
+  // Adiciona produto sugerido pela IA
+  const addProdutoSugerido = (produto: { id: number; nome: string; valorVenda: number; custoProduto?: number }) => {
+    // Busca o custo do produto se não foi fornecido
+    fetch(`/api/vendas/autocomplete/produtos?q=${encodeURIComponent(produto.nome)}`)
+      .then(res => res.json())
+      .then(data => {
+        const produtoCompleto = data?.find((p: { id: number }) => p.id === produto.id);
+        const custoProduto = produto.custoProduto || produtoCompleto?.custoPadrao || 0;
+
+        // Verifica se o primeiro item está vazio para preencher ou adicionar novo
+        const primeiroVazio = produtos.findIndex(p => !p.produtoNome);
+
+        if (primeiroVazio !== -1) {
+          // Preenche o item vazio
+          const newProdutos = [...produtos];
+          newProdutos[primeiroVazio] = {
+            id: crypto.randomUUID(),
+            produtoNome: produto.nome,
+            custoProduto,
+            valorVenda: produto.valorVenda,
+            quantidade: 1,
+            subtotal: produto.valorVenda,
+          };
+          setProdutos(newProdutos);
+        } else {
+          // Adiciona novo item
+          setProdutos([
+            ...produtos,
+            {
+              id: crypto.randomUUID(),
+              produtoNome: produto.nome,
+              custoProduto,
+              valorVenda: produto.valorVenda,
+              quantidade: 1,
+              subtotal: produto.valorVenda,
+            },
+          ]);
+        }
+
+        // Atualiza produto para sugestões
+        setProdutoParaSugestoes({
+          id: produto.id,
+          nome: produto.nome,
+          valorVenda: produto.valorVenda,
+        });
+
+        toast.success(`${produto.nome} adicionado!`);
+      })
+      .catch(err => {
+        console.error("Erro ao adicionar produto:", err);
+        toast.error("Erro ao adicionar produto");
+      });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -223,6 +312,7 @@ export default function VendaRapidaFormV2({
         setParcelas("1");
         setTemNota(false);
         setParcelasVencimento([]);
+        setProdutoParaSugestoes(null);
         toast.success(result.message || "Venda realizada com sucesso!");
       } else {
         toast.error(result.error || "Erro ao finalizar venda.");
@@ -299,7 +389,7 @@ export default function VendaRapidaFormV2({
               required
             />
             {clienteSuggestions.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {clienteSuggestions.map((c) => (
                   <button
                     key={c.id}
@@ -308,15 +398,28 @@ export default function VendaRapidaFormV2({
                       setSelectedCliente(c);
                       setClienteQuery(c.nome);
                       setClienteSuggestions([]);
+                      setProdutoParaSugestoes(null);
                     }}
-                    className="w-full px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer text-sm"
+                    className="w-full px-3 py-2.5 text-left hover:bg-accent transition-colors cursor-pointer text-sm border-b border-border last:border-b-0"
                   >
-                    <div className="font-medium">{c.nome}</div>
-                    {(c.cpf || c.cnpj) && (
-                      <div className="text-xs text-muted-foreground">
-                        {c.cpf || c.cnpj}
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">{c.nome}</div>
+                      {c.renda && c.renda > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium">
+                          Renda: {formatBRL(c.renda)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-xs text-muted-foreground">
+                        {c.cpf || c.cnpj || "Sem documento"}
+                      </span>
+                      {c.ultimaVenda && (
+                        <span className="text-[10px] text-muted-foreground">
+                          Última: {formatBRL(c.ultimaVenda.valor)} em {c.ultimaVenda.data.split("-").reverse().join("/")}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -324,6 +427,15 @@ export default function VendaRapidaFormV2({
           </div>
         </CardContent>
       </Card>
+
+      {/* Seção 2.5: Painel de Inteligência BFX */}
+      {selectedCliente && (
+        <BFXIntelligencePanel
+          clienteId={selectedCliente.id}
+          produtoSelecionado={produtoParaSugestoes}
+          onAddProduto={addProdutoSugerido}
+        />
+      )}
 
       {/* Seção 3: Produtos */}
       <div className="space-y-4">
