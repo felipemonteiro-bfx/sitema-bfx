@@ -91,6 +91,26 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
+            <CardTitle className="text-blue-900">Outros Relatórios</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <a 
+              href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}`}
+              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+            >
+              Inadimplência (CSV)
+            </a>
+            <a 
+              href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}`}
+              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+            >
+              Margem por Produto (CSV)
+            </a>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle className="text-blue-900">Atalhos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -19,7 +20,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
 
   const handleUpload = async () => {
     if (!file) {
-      alert("Nenhum arquivo selecionado.");
+      toast.warning("Nenhum arquivo selecionado.");
       return;
     }
 
@@ -34,16 +35,16 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
       });
 
       if (response.ok) {
-        alert("Logo enviada com sucesso!");
+        toast.success("Logo enviada com sucesso!");
         // For simplicity, reload the page to show the new logo and revalidate data
         window.location.reload();
       } else {
         const errorData = await response.json();
-        alert(`Falha ao enviar logo: ${errorData.error || response.statusText}`);
+        toast.error(`Falha ao enviar logo: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
       console.error("Erro ao enviar logo:", error);
-      alert("Erro de rede ou servidor ao enviar logo.");
+      toast.error("Erro de rede ou servidor ao enviar logo.");
     } finally {
       setIsUploading(false);
     }

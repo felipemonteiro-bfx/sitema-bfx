@@ -9,3 +9,4 @@ resources:
   - postgres.yaml
   - app.yaml
   - ingress.yaml
+  - cronjob-cleanup-uploads.yaml

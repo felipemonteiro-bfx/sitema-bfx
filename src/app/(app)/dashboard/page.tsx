@@ -24,7 +24,8 @@ import {
   Calendar,
   Users,
   Package,
-  Filter
+  Filter,
+  Megaphone
 } from "lucide-react";
 
 type Search = {
@@ -116,6 +117,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   }
   const evoData = Array.from(evoMap.entries()).map(([mes, r]) => ({ mes, total: r.total, lucro: r.lucro }));
 
+  const avisos = await prisma.aviso.findMany({
+    where: { ativo: 1 },
+    orderBy: { dataCriacao: "desc" },
+    take: 5,
+  });
+
   return (
     <div className="space-y-6">
       <Card variant="gradient" animated className="border-primary/20">
@@ -168,6 +175,32 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           </form>
         </CardContent>
       </Card>
+
+      {avisos.length > 0 && (
+        <Card animated className="border-info/20 bg-info/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Megaphone className="h-5 w-5 text-info" />
+              Mural de Avisos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {avisos.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-start gap-3 rounded-lg border border-border/60 bg-card px-3 py-2 text-sm"
+                >
+                  <span className="text-muted-foreground">
+                    {new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(a.dataCriacao)}
+                  </span>
+                  <span className="flex-1 text-foreground">{a.mensagem || ""}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {vendas.length === 0 ? (
         <EmptyState

@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { UserMinus, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -25,7 +26,7 @@ Esta ação não poderá ser desfeita.`)) {
       formData.append('id', userId.toString());
       await deleteAction(formData);
     } catch (error) {
-      alert("Erro ao remover usuário.");
+      toast.error("Erro ao remover usuário.");
     } finally {
       setLoading(false);
     }

@@ -14,6 +14,7 @@ import { MonthFilter } from "@/components/month-filter";
 import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 import Link from "next/link";
+import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; mes?: string; edit?: string };
 
@@ -24,7 +25,7 @@ async function addDespesa(formData: FormData) {
   const tipo = String(formData.get("tipo") || "Fixa");
   const data = String(formData.get("data") || "");
   if (!descricao || !data) return;
-  await prisma.despesa.create({
+  const despesa = await prisma.despesa.create({
     data: {
       descricao,
       valor,
@@ -32,6 +33,7 @@ async function addDespesa(formData: FormData) {
       dataDespesa: new Date(data),
     },
   });
+  await createAuditLog("despesa:create", { despesaId: despesa.id, descricao, valor, tipo });
   revalidatePath("/financeiro");
 }
 
@@ -52,6 +54,7 @@ async function updateDespesa(formData: FormData) {
       dataDespesa: new Date(data),
     },
   });
+  await createAuditLog("despesa:update", { despesaId: id, descricao, valor, tipo });
   revalidatePath("/financeiro");
 }
 
@@ -60,6 +63,7 @@ async function deleteDespesa(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   if (!id) return;
   await prisma.despesa.delete({ where: { id } });
+  await createAuditLog("despesa:delete", { despesaId: id });
   revalidatePath("/financeiro");
 }
 

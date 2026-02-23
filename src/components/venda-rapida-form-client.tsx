@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -116,7 +117,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
   const adicionarProduto = () => {
     if (!produtoQuery || !valor || !custo) {
-      alert("Preencha produto, custo e valor antes de adicionar");
+      toast.warning("Preencha produto, custo e valor antes de adicionar");
       return;
     }
 
@@ -237,13 +238,13 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
 
     // Validar se tem cliente
     if (!selectedCliente) {
-      alert("Por favor, selecione um cliente.");
+      toast.warning("Por favor, selecione um cliente.");
       return;
     }
 
     // Validar se tem pelo menos um produto (adicionado ou atual)
     if (produtos.length === 0 && !produtoQuery) {
-      alert("Adicione pelo menos um produto à venda.");
+      toast.warning("Adicione pelo menos um produto à venda.");
       return;
     }
 
@@ -295,13 +296,13 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         setEnvio('0');
         setTemNota(false);
         setProdutos([]);
-        alert(result.message || "Venda realizada com sucesso!");
+        toast.success(result.message || "Venda realizada com sucesso!");
       } else {
-        alert(result.error || "Erro ao finalizar venda.");
+        toast.error(result.error || "Erro ao finalizar venda.");
       }
     } catch (error) {
       console.error("Erro ao finalizar venda:", error);
-      alert("Erro ao finalizar venda.");
+      toast.error("Erro ao finalizar venda.");
     } finally {
       setLoading(false);
     }
@@ -320,7 +321,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
             </Label>
             <DateInput
               value={dataVenda} 
-              onChange={(e) => setDataVenda(e.target.value)} 
+              onChange={(v) => setDataVenda(v)} 
               required 
             />
           </div>

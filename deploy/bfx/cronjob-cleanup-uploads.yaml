@@ -1,0 +1,47 @@
+# CronJob para limpeza de uploads (domingos às 03:00 UTC)
+# Chama o endpoint /api/cron/cleanup-uploads da aplicação
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-cleanup-uploads
+  labels:
+    app: bfx-cleanup-uploads
+spec:
+  # Domingos às 03:00 UTC (0 3 * * 0)
+  schedule: "0 3 * * 0"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-cleanup-uploads
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cleanup
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  echo "Chamando cleanup de uploads..."
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/cleanup-uploads")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"

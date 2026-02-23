@@ -3,11 +3,13 @@ import { cn } from "@/lib/utils";
 interface SkeletonProps {
   className?: string;
   variant?: "default" | "shimmer";
+  style?: React.CSSProperties;
 }
 
-export function Skeleton({ className, variant = "default" }: SkeletonProps) {
+export function Skeleton({ className, variant = "default", style }: SkeletonProps) {
   return (
     <div
+      style={style}
       className={cn(
         "rounded-md bg-muted",
         variant === "shimmer" ? "skeleton-base" : "animate-pulse",

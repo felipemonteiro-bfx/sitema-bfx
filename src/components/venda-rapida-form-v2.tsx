@@ -343,7 +343,7 @@ export default function VendaRapidaFormV2({
               </Label>
               <DateInput
                 value={dataVenda}
-                onChange={(e) => setDataVenda(e.target.value)}
+                onChange={(v) => setDataVenda(v)}
                 required
               />
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/utils";
@@ -82,7 +83,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
       setSelectedIds([]);
     } catch (error) {
       console.error("Erro na antecipação:", error);
-      alert("Ocorreu um erro ao processar a antecipação.");
+      toast.error("Ocorreu um erro ao processar a antecipação.");
     } finally {
       setIsProcessing(false);
     }

@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+interface Props {
+  vendedores: string[];
+}
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -10,7 +14,7 @@ import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-export default function CommissionsDashboardClient() {
+export default function CommissionsDashboardClient({ vendedores: vendedoresFromDb }: Props) {
   const [loading, setLoading] = useState(true);
   const [commissions, setCommissions] = useState<any[]>([]);
   const [details, setDetails] = useState<any[]>([]);
@@ -48,7 +52,7 @@ export default function CommissionsDashboardClient() {
   }, [vendedorFiltro, dataInicio, dataFim]);
 
   const totalComissoes = commissions.reduce((sum, item) => sum + item.valorComissao, 0);
-  const vendedores = ["all", "Vendedor Um", "Vendedor Dois"];
+  const vendedores = ["all", ...(vendedoresFromDb || [])];
   const vendedoresOptions = vendedores.map((v) => ({
     value: v,
     label: v === "all" ? "Todos os Vendedores" : v,
@@ -86,11 +90,11 @@ export default function CommissionsDashboardClient() {
             </div>
             <div className="space-y-2">
               <Label>Data Início</Label>
-              <DateInput value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+              <DateInput value={dataInicio} onChange={(v) => setDataInicio(v)} />
             </div>
             <div className="space-y-2">
               <Label>Data Fim</Label>
-              <DateInput value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+              <DateInput value={dataFim} onChange={(v) => setDataFim(v)} />
             </div>
           </div>
         </CardContent>

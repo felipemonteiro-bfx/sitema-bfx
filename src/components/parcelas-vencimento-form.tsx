@@ -89,7 +89,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
                 <Label className="text-xs text-muted-foreground">Vencimento</Label>
                 <DateInput
                   value={parcela.dataVencimento}
-                  onChange={(e) => handleDataChange(index, e.target.value)}
+                  onChange={(v) => handleDataChange(index, v)}
                   required
                 />
               </div>

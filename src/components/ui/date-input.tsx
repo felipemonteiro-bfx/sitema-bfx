@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/popover"
 
 export interface DateInputProps {
+  id?: string
   name?: string
   defaultValue?: string
   value?: string
@@ -21,10 +22,11 @@ export interface DateInputProps {
   className?: string
   "aria-label"?: string
   disabled?: boolean
+  required?: boolean
 }
 
 const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
-  ({ name, defaultValue, value, onChange, className, disabled, ...props }, ref) => {
+  ({ id, name, defaultValue, value, onChange, className, disabled, required, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const [date, setDate] = React.useState<Date | undefined>(() => {
       const initialValue = value || defaultValue
@@ -74,9 +76,11 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         </PopoverContent>
         <input
           ref={ref}
+          id={id}
           type="hidden"
           name={name}
           value={inputValue}
+          required={required}
           {...props}
         />
       </Popover>

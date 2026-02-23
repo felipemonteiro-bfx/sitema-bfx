@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -29,7 +30,7 @@ export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
           formData.append('id', vendaId.toString());
           await deleteAction(formData);
         } catch (error) {
-          alert("Erro ao excluir venda.");
+          toast.error("Erro ao excluir venda.");
         } finally {
           setLoading(false);
         }

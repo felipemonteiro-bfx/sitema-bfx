@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
+import { vendaV2Schema } from "@/lib/validations/venda";
+import { createAuditLog } from "@/lib/audit";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -53,52 +55,56 @@ export async function criarVenda(formData: FormData) {
  */
 export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{ vendaId: number }>> {
   try {
-    const data = String(formData.get("data") || "");
-    const vendedor = String(formData.get("vendedor") || "");
-    const clienteId = Number(formData.get("clienteId") || 0);
-    const frete = Number(formData.get("frete") || 0);
-    const envio = Number(formData.get("envio") || 0);
-    const parcelas = Number(formData.get("parcelas") || 1);
-    const temNota = formData.get("temNota") === "true";
-    const taxaNota = Number(formData.get("taxaNota") || 5.97);
-
-    // Parse produtos (JSON)
     const produtosJson = formData.get("produtos");
     if (!produtosJson) {
       return errorResponse("Nenhum produto informado");
     }
 
-    const produtos: Array<{
-      produtoNome: string;
-      custoProduto: number;
-      valorVenda: number;
-      quantidade: number;
-      subtotal: number;
-    }> = JSON.parse(String(produtosJson));
-
-    if (produtos.length === 0) {
-      return errorResponse("Adicione pelo menos um produto");
+    let produtos: Array<{ produtoNome: string; custoProduto: number; valorVenda: number; quantidade: number; subtotal: number }>;
+    try {
+      produtos = JSON.parse(String(produtosJson));
+    } catch {
+      return errorResponse("Dados de produtos inválidos");
     }
 
-    // Parse parcelas com datas (opcional)
     const parcelasJson = formData.get("parcelasVencimento");
-    const parcelasVencimento: Array<{
-      numeroParcela: number;
-      dataVencimento: string;
-      valorParcela: number;
-    }> = parcelasJson ? JSON.parse(String(parcelasJson)) : [];
-
-    // Validações
-    if (!data || !vendedor || !clienteId) {
-      return errorResponse("Preencha todos os campos obrigatórios");
+    let parcelasVencimento: Array<{ numeroParcela: number; dataVencimento: string; valorParcela: number }> = [];
+    if (parcelasJson) {
+      try {
+        parcelasVencimento = JSON.parse(String(parcelasJson));
+      } catch {
+        return errorResponse("Dados de parcelas inválidos");
+      }
     }
+
+    const raw = {
+      data: String(formData.get("data") || ""),
+      vendedor: String(formData.get("vendedor") || ""),
+      clienteId: Number(formData.get("clienteId") || 0),
+      frete: Number(formData.get("frete") || 0),
+      envio: Number(formData.get("envio") || 0),
+      parcelas: Number(formData.get("parcelas") || 1),
+      temNota: formData.get("temNota") === "true",
+      taxaNota: Number(formData.get("taxaNota") || 5.97),
+      produtos,
+      parcelasVencimento: parcelasVencimento.length > 0 ? parcelasVencimento : undefined,
+    };
+
+    const parsed = vendaV2Schema.safeParse(raw);
+    if (!parsed.success) {
+      const firstError = parsed.error.flatten().fieldErrors;
+      const msg = Object.values(firstError).flat().find(Boolean) || parsed.error.message;
+      return errorResponse(String(msg || "Dados inválidos"));
+    }
+
+    const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
 
     // Cálculos totais
-    const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);
+    const subtotalProdutos = produtosValidados.reduce((sum, p) => sum + p.subtotal, 0);
     const totalVenda = subtotalProdutos + frete;
     const valorDescontoNota = temNota ? (subtotalProdutos * taxaNota) / 100 : 0;
     const custoTotal =
-      produtos.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0) + envio + valorDescontoNota;
+      produtosValidados.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0) + envio + valorDescontoNota;
     const lucroLiquido = totalVenda - custoTotal;
     const valorParcela = parcelas > 0 ? totalVenda / parcelas : 0;
 
@@ -107,14 +113,14 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
       // 1. Criar venda principal
       const vendaCriada = await tx.venda.create({
         data: {
-          dataVenda: new Date(data),
+          dataVenda: new Date(dataStr),
           vendedor,
           clienteId,
           // Campos deprecated (para compatibilidade)
-          produtoNome: produtos[0]?.produtoNome || "",
-          custoProduto: produtos[0]?.custoProduto || 0,
-          quantidade: produtos[0]?.quantidade || 1,
-          valorVenda: produtos[0]?.valorVenda || 0,
+          produtoNome: produtosValidados[0]?.produtoNome || "",
+          custoProduto: produtosValidados[0]?.custoProduto || 0,
+          quantidade: produtosValidados[0]?.quantidade || 1,
+          valorVenda: produtosValidados[0]?.valorVenda || 0,
           // Campos novos
           valorFrete: frete,
           custoEnvio: envio,
@@ -129,7 +135,7 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
 
       // 2. Criar itens da venda
       await tx.itemVenda.createMany({
-        data: produtos.map((p) => ({
+        data: produtosValidados.map((p) => ({
           vendaId: vendaCriada.id,
           produtoNome: p.produtoNome,
           custoProduto: p.custoProduto,
@@ -140,9 +146,9 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
       });
 
       // 3. Criar parcelas com datas (se informado)
-      if (parcelasVencimento.length > 0) {
+      if (parcelasValidadas && parcelasValidadas.length > 0) {
         await tx.parcelaVencimento.createMany({
-          data: parcelasVencimento.map((p) => ({
+          data: parcelasValidadas.map((p) => ({
             vendaId: vendaCriada.id,
             numeroParcela: p.numeroParcela,
             dataVencimento: new Date(p.dataVencimento),
@@ -178,6 +184,8 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
     revalidatePath("/venda-rapida");
     revalidatePath("/historico");
     revalidatePath("/dashboard");
+
+    await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
 
     return successResponse(`Venda #${venda.id} criada com sucesso!`, { vendaId: venda.id });
   } catch (error) {

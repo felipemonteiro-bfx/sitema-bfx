@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -55,7 +56,7 @@ export default function ImportacaoClient() {
         setLoading(false);
       },
       error: () => {
-        alert("Erro ao ler arquivo CSV.");
+        toast.error("Erro ao ler arquivo CSV.");
         setLoading(false);
       }
     });
@@ -75,7 +76,7 @@ export default function ImportacaoClient() {
     // Validação básica
     const invalid = data.some(row => !row.cliente || !row.produto || isNaN(Number(row.valor)));
     if (invalid) {
-      alert("Existem campos obrigatórios vazios ou valores numéricos inválidos na tabela. Por favor, corrija antes de subir.");
+      toast.warning("Existem campos obrigatórios vazios ou valores numéricos inválidos na tabela. Por favor, corrija antes de subir.");
       return;
     }
 
@@ -90,14 +91,14 @@ export default function ImportacaoClient() {
       });
 
       if (res.ok) {
-        alert("Importação concluída com sucesso!");
+        toast.success("Importação concluída com sucesso!");
         setData([]);
         window.location.reload();
       } else {
-        alert("Erro ao salvar dados no servidor.");
+        toast.error("Erro ao salvar dados no servidor.");
       }
     } catch (error) {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão.");
     } finally {
       setSaving(false);
     }
@@ -157,7 +158,7 @@ export default function ImportacaoClient() {
                       <TableCell className="p-1">
                         <DateInput
                           value={row.dataVenda}
-                          onChange={(e) => updateCell(row.id, 'dataVenda', e.target.value)}
+                          onChange={(v) => updateCell(row.id, 'dataVenda', v)}
                           className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1"
                         />
                       </TableCell>

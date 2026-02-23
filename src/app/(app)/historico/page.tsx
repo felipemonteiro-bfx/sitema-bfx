@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,6 +13,7 @@ import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
+import { createAuditLog } from "@/lib/audit";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -85,6 +86,7 @@ async function updateVenda(formData: FormData) {
       ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
     },
   });
+  await createAuditLog("venda:update", { vendaId: id, valor, quantidade, lucro });
   revalidatePath("/historico");
 }
 
@@ -93,6 +95,7 @@ async function deleteVenda(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   if (!id) return;
   await prisma.venda.delete({ where: { id } });
+  await createAuditLog("venda:delete", { vendaId: id });
   revalidatePath("/historico");
 }
 
