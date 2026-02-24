@@ -265,7 +265,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           <CardTitle>Filtro avançado</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6 items-center">
             <DateInput
               name="from"
               defaultValue={start.toISOString().slice(0, 10)}

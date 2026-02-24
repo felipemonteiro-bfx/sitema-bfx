@@ -64,7 +64,7 @@ export function FormSelect({
   };
 
   return (
-    <div className="min-h-10 overflow-hidden">
+    <div className="h-10 overflow-hidden">
       <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
