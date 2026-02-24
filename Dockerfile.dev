@@ -1,0 +1,15 @@
+FROM node:20-bullseye-slim
+
+WORKDIR /app
+
+# Install Yarn
+RUN corepack enable && corepack prepare yarn@stable --activate
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+COPY . .
+
+ENV NODE_ENV=development
+EXPOSE 3000
+
+CMD ["yarn", "dev"]

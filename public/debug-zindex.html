@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Z-Index Debug</title>
+  <script>
+    window.addEventListener('load', () => {
+      // Função para encontrar elementos com z-index
+      function findZIndexElements() {
+        const allElements = document.querySelectorAll('*');
+        const zIndexElements = [];
+
+        allElements.forEach(el => {
+          const style = window.getComputedStyle(el);
+          const zIndex = style.zIndex;
+          const position = style.position;
+          const transform = style.transform;
+
+          if (zIndex !== 'auto' || transform !== 'none' || position !== 'static') {
+            zIndexElements.push({
+              element: el,
+              tag: el.tagName,
+              className: el.className,
+              zIndex: zIndex,
+              position: position,
+              transform: transform,
+              overflow: style.overflow
+            });
+          }
+        });
+
+        return zIndexElements.sort((a, b) => parseInt(b.zIndex) - parseInt(a.zIndex));
+      }
+
+      // Log elementos com z-index
+      console.log('=== ELEMENTOS COM Z-INDEX ===');
+      const elements = findZIndexElements();
+      elements.slice(0, 20).forEach(item => {
+        console.log(`Z-Index: ${item.zIndex}, Tag: ${item.tag}, Position: ${item.position}, Class: ${item.className.substring(0, 50)}`);
+      });
+
+      // Encontrar dropdowns
+      console.log('\n=== DROPDOWNS AUTOCOMPLETE ===');
+      const dropdowns = document.querySelectorAll('[class*="absolute"][class*="z-"]');
+      dropdowns.forEach(dd => {
+        const style = window.getComputedStyle(dd);
+        console.log('Dropdown:', {
+          classes: dd.className,
+          zIndex: style.zIndex,
+          position: style.position,
+          display: style.display,
+          visibility: style.visibility
+        });
+      });
+
+      // Verificar stacking contexts
+      console.log('\n=== STACKING CONTEXTS (transform, opacity, filter) ===');
+      const stackingContexts = Array.from(document.querySelectorAll('*')).filter(el => {
+        const style = window.getComputedStyle(el);
+        return style.transform !== 'none' ||
+               parseFloat(style.opacity) < 1 ||
+               style.filter !== 'none' ||
+               style.isolation === 'isolate';
+      });
+
+      stackingContexts.forEach(ctx => {
+        const style = window.getComputedStyle(ctx);
+        console.log(`Stacking Context: ${ctx.tagName}.${ctx.className.substring(0, 40)}`, {
+          transform: style.transform,
+          opacity: style.opacity,
+          filter: style.filter,
+          isolation: style.isolation
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Z-Index Debug</h1>
+  <p>Abra o console do navegador para ver os resultados.</p>
+  <p>Execute este script em: <code>http://localhost:3000/venda-rapida</code></p>
+  <p>Cole o script no console e pressione Enter.</p>
+</body>
+</html>
