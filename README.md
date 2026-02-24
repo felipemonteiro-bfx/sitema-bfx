@@ -122,6 +122,8 @@ Sempre que houver novas migrações em `prisma/migrations`, rode **uma vez** no 
    npm run db:migrate
    ```
 
+   Se der erro *"Could not find Prisma Schema"*, rode a partir da pasta do projeto (onde existe `prisma/schema.prisma`) ou use: `cd .next\standalone` e depois `npx prisma migrate deploy --schema prisma/schema.prisma` com a mesma `DATABASE_URL`.
+
 ### 4. Deploy
 
 - Após o push no branch de produção, a Vercel faz o build (`npm run build`, que já roda `prisma generate`).
