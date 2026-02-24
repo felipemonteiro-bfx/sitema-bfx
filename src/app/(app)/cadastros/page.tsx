@@ -145,8 +145,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const editClienteId = sp.editCliente ? Number(sp.editCliente) : 0;
   const editProdutoId = sp.editProduto ? Number(sp.editProduto) : 0;
 
-  const editClienteData = editClienteId ? await prisma.cliente.findUnique({ where: { id: editClienteId } }) : null;
-  const editProdutoData = editProdutoId ? await prisma.produto.findUnique({ where: { id: editProdutoId }, include: { fornecedor: true } }) : null;
+  const editClienteData = editClienteId ? await prisma.cliente.findUnique({
+    where: { id: editClienteId },
+    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true },
+  }) : null;
+  const editProdutoData = editProdutoId ? await prisma.produto.findUnique({
+    where: { id: editProdutoId },
+    select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+  }) : null;
 
   const buildUrl = (params: Partial<Search>) => {
     const newParams = { ...sp, ...params };
@@ -157,7 +163,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     return `/cadastros?${search.toString()}`;
   };
 
-  const clientes = await prisma.cliente.findMany({ 
+  const clientes = await prisma.cliente.findMany({
     where: sp.q_clientes ? {
       OR: [
         { nome: { contains: sp.q_clientes, mode: 'insensitive' } },
@@ -165,10 +171,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         { cnpj: { contains: sp.q_clientes, mode: 'insensitive' } },
       ]
     } : {},
-    orderBy: { nome: "asc" } 
+    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true },
+    orderBy: { nome: "asc" }
   });
 
-  const produtos = await prisma.produto.findMany({ 
+  const produtos = await prisma.produto.findMany({
     where: sp.q_produtos ? {
       OR: [
         { nome: { contains: sp.q_produtos, mode: 'insensitive' } },
@@ -176,10 +183,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         { categoria: { contains: sp.q_produtos, mode: 'insensitive' } },
       ]
     } : {},
-    include: { 
-      fornecedor: true 
-    },
-    orderBy: { nome: "asc" } 
+    select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+    orderBy: { nome: "asc" }
   });
 
   const empresas = await prisma.empresaParceira.findMany({ 
