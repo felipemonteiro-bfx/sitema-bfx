@@ -93,23 +93,26 @@ export async function GET(req: Request) {
 
   const isNumeric = /^\d+$/.test(idParam);
   const venda = isNumeric
-    ? await prisma.venda.findUnique({
-        where: { id: Number(idParam) },
-        include: { parcelasVencimento: { orderBy: { numeroParcela: "asc" } } },
-      })
-    : await prisma.venda.findUnique({
-        where: { uuid: idParam },
-        include: { parcelasVencimento: { orderBy: { numeroParcela: "asc" } } },
-      });
+    ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
+    : await prisma.venda.findUnique({ where: { uuid: idParam } });
   if (!venda) return new Response("Venda não encontrada", { status: 404 });
+
+  // Fetch parcelas separately with fallback to avoid crashing if table missing
+  let parcelasVenc: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] = [];
+  try {
+    parcelasVenc = await prisma.parcelaVencimento.findMany({
+      where: { vendaId: venda.id },
+      orderBy: { numeroParcela: "asc" },
+      select: { numeroParcela: true, dataVencimento: true, valorParcela: true },
+    });
+  } catch {
+    // Table may not exist in older environments
+  }
 
   const cliente = venda.clienteId
     ? await prisma.cliente.findUnique({ where: { id: venda.clienteId } })
     : null;
   const cfg = await prisma.config.findFirst();
-
-  // Calculate dynamic page height
-  const parcelasVenc = venda.parcelasVencimento ?? [];
   const numParcelas = parcelasVenc.length;
   const rowHeight = 22;
   const tabelaParcelasHeight = numParcelas > 0 ? 40 + rowHeight + numParcelas * rowHeight : 0; // label + header + rows
