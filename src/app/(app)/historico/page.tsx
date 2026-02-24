@@ -185,6 +185,15 @@ function parseDateEnd(dateStr: string) {
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
+  try {
+  return await HistoricoPage({ searchParams });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return <div style={{padding:20,color:"red",fontFamily:"monospace",whiteSpace:"pre-wrap"}}><strong>ERRO /historico:</strong>{"\n"}{msg}</div>;
+  }
+}
+
+async function HistoricoPage({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const today = new Date();
   const start = sp.from ? parseDateStart(sp.from) : new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
