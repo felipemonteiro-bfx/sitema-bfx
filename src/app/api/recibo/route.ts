@@ -1,7 +1,7 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { readFile } from "fs/promises"; // Added readFile
-import path from "path"; // Added path
+import { readFile } from "fs/promises";
+import path from "path";
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -33,6 +33,59 @@ function fillTemplate(template: string, data: Record<string, string>) {
   return template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? "");
 }
 
+function drawTableRow(
+  page: any,
+  font: any,
+  fontBold: any,
+  isHeader: boolean,
+  cols: { label: string; x: number; width: number }[],
+  values: string[],
+  rowY: number,
+  rowHeight: number,
+  tableLeft: number,
+  tableWidth: number,
+) {
+  const bgColor = isHeader ? rgb(0.18, 0.24, 0.34) : rgb(1, 1, 1);
+  const textColor = isHeader ? rgb(1, 1, 1) : rgb(0.2, 0.2, 0.22);
+  const textFont = isHeader ? fontBold : font;
+  const fontSize = 9;
+
+  page.drawRectangle({
+    x: tableLeft,
+    y: rowY - rowHeight,
+    width: tableWidth,
+    height: rowHeight,
+    color: bgColor,
+  });
+
+  for (let i = 0; i < cols.length; i++) {
+    const col = cols[i];
+    const cellText = values[i] ?? "";
+    // Right-align numeric columns (Dias=0, Valor=3)
+    const rightAlign = i === 0 || i === 3;
+    let textX = col.x + 5;
+    if (rightAlign) {
+      const w = (isHeader ? fontBold : font).widthOfTextAtSize(cellText, fontSize);
+      textX = col.x + col.width - w - 5;
+    }
+    page.drawText(cellText, {
+      x: textX,
+      y: rowY - rowHeight + 7,
+      size: fontSize,
+      font: textFont,
+      color: textColor,
+    });
+  }
+
+  // Row bottom border
+  page.drawLine({
+    start: { x: tableLeft, y: rowY - rowHeight },
+    end: { x: tableLeft + tableWidth, y: rowY - rowHeight },
+    thickness: 0.4,
+    color: rgb(0.8, 0.82, 0.86),
+  });
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const idParam = (searchParams.get("id") || "").trim();
@@ -40,142 +93,100 @@ export async function GET(req: Request) {
 
   const isNumeric = /^\d+$/.test(idParam);
   const venda = isNumeric
-    ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
-    : await prisma.venda.findUnique({ where: { uuid: idParam } });
+    ? await prisma.venda.findUnique({
+        where: { id: Number(idParam) },
+        include: { parcelasVencimento: { orderBy: { numeroParcela: "asc" } } },
+      })
+    : await prisma.venda.findUnique({
+        where: { uuid: idParam },
+        include: { parcelasVencimento: { orderBy: { numeroParcela: "asc" } } },
+      });
   if (!venda) return new Response("Venda não encontrada", { status: 404 });
+
   const cliente = venda.clienteId
     ? await prisma.cliente.findUnique({ where: { id: venda.clienteId } })
     : null;
   const cfg = await prisma.config.findFirst();
 
+  // Calculate dynamic page height
+  const parcelasVenc = venda.parcelasVencimento ?? [];
+  const numParcelas = parcelasVenc.length;
+  const rowHeight = 22;
+  const tabelaParcelasHeight = numParcelas > 0 ? 40 + rowHeight + numParcelas * rowHeight : 0; // label + header + rows
+  const extraHeight = Math.max(0, tabelaParcelasHeight - 100); // base template assumed ~100px for parcelas area
+  const pageHeight = 842 + extraHeight;
+
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([595, 842]);
+  const page = pdf.addPage([595, pageHeight]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
   const marginX = 40;
-  let y = 792;
+  let y = pageHeight - 50;
   const contentWidth = 515;
+  const centerX = 595 / 2;
 
+  // ── Logo ────────────────────────────────────────────────────────────────────
   let logoImage = null;
   let logoDims = { width: 0, height: 0 };
-  const logoHeight = 50; // Desired logo height
+  const logoHeight = 50;
 
   if (cfg?.logoPath) {
     try {
       const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath);
       const logoBytes = await readFile(logoFullPath);
       const imageType = path.extname(cfg.logoPath).toLowerCase();
-
-      if (imageType === ".png") {
-        logoImage = await pdf.embedPng(logoBytes);
-      } else if (imageType === ".jpg" || imageType === ".jpeg") {
-        logoImage = await pdf.embedJpg(logoBytes);
-      }
-
+      if (imageType === ".png") logoImage = await pdf.embedPng(logoBytes);
+      else if (imageType === ".jpg" || imageType === ".jpeg") logoImage = await pdf.embedJpg(logoBytes);
       if (logoImage) {
         const aspectRatio = logoImage.width / logoImage.height;
         logoDims.height = logoHeight;
         logoDims.width = logoHeight * aspectRatio;
       }
-    } catch (error) {
-      console.error("Failed to load or embed logo:", error);
-      // Continue without logo if there's an error
+    } catch {
+      // Continue without logo
     }
   }
 
-  // Header
-  page.drawRectangle({ x: 0, y: 752, width: 595, height: 90, color: rgb(0.96, 0.97, 0.98) });
-  
-  const centerX = 595 / 2;
+  // ── Header ──────────────────────────────────────────────────────────────────
+  const headerTop = pageHeight - 50;
+  page.drawRectangle({ x: 0, y: headerTop - 40, width: 595, height: 90, color: rgb(0.96, 0.97, 0.98) });
 
   if (logoImage) {
     const logoX = centerX - logoDims.width / 2;
-    page.drawImage(logoImage, {
-      x: logoX,
-      y: 785,
-      width: logoDims.width,
-      height: logoDims.height,
-    });
-
+    page.drawImage(logoImage, { x: logoX, y: headerTop - 5, width: logoDims.width, height: logoDims.height });
     const title = "BFX Manager";
-    const titleWidth = fontBold.widthOfTextAtSize(title, 14);
     page.drawText(title, {
-      x: centerX - titleWidth / 2,
-      y: 768,
-      size: 14,
-      font: fontBold,
-      color: rgb(0.1, 0.1, 0.12),
-    });
-
-    const subtitle = "Recibo de Venda";
-    const subtitleWidth = font.widthOfTextAtSize(subtitle, 10);
-    page.drawText(subtitle, {
-      x: centerX - subtitleWidth / 2,
-      y: 756,
-      size: 10,
-      font,
-      color: rgb(0.35, 0.38, 0.42),
-    });
-
-    page.drawText(`Recibo #${venda.id}`, {
-      x: 470,
-      y: 820,
-      size: 9,
-      font: fontBold,
-      color: rgb(0.2, 0.24, 0.3),
-    });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, {
-      x: 470,
-      y: 808,
-      size: 8,
-      font,
-      color: rgb(0.35, 0.38, 0.42),
-    });
-  } else {
-    page.drawText("BFX Manager", {
-      x: marginX,
-      y: 805,
-      size: 16,
-      font: fontBold,
-      color: rgb(0.1, 0.1, 0.12),
+      x: centerX - fontBold.widthOfTextAtSize(title, 14) / 2,
+      y: headerTop - 22,
+      size: 14, font: fontBold, color: rgb(0.1, 0.1, 0.12),
     });
     page.drawText("Recibo de Venda", {
-      x: marginX,
-      y: 783,
-      size: 12,
-      font,
-      color: rgb(0.35, 0.38, 0.42),
+      x: centerX - font.widthOfTextAtSize("Recibo de Venda", 10) / 2,
+      y: headerTop - 34,
+      size: 10, font, color: rgb(0.35, 0.38, 0.42),
     });
-    page.drawText(`Recibo #${venda.id}`, {
-      x: 420,
-      y: 805,
-      size: 11,
-      font: fontBold,
-      color: rgb(0.2, 0.24, 0.3),
-    });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, {
-      x: 420,
-      y: 785,
-      size: 10,
-      font,
-      color: rgb(0.35, 0.38, 0.42),
-    });
+    page.drawText(`Recibo #${venda.id}`, { x: 470, y: headerTop + 10, size: 9, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
+    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
+  } else {
+    page.drawText("BFX Manager", { x: marginX, y: headerTop + 5, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+    page.drawText("Recibo de Venda", { x: marginX, y: headerTop - 17, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Recibo #${venda.id}`, { x: 420, y: headerTop + 5, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
+    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
   }
-  
-  y = 730;
 
-  // Section: Customer & Sale
+  y = headerTop - 60;
+
+  // ── Detalhes ────────────────────────────────────────────────────────────────
   page.drawText("Detalhes da venda", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
   const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
-  const details = [
+  for (const line of [
     `Cliente: ${cliente?.nome || "N/D"}`,
     `Documento: ${clienteDoc}`,
     `Vendedor: ${venda.vendedor || "N/D"}`,
     `Produto: ${venda.produtoNome || "N/D"}`,
-  ];
-  for (const line of details) {
+  ]) {
     page.drawText(line, { x: marginX, y, size: 11, font, color: rgb(0.2, 0.2, 0.22) });
     y -= 16;
   }
@@ -184,21 +195,20 @@ export async function GET(req: Request) {
   page.drawRectangle({ x: marginX, y, width: contentWidth, height: 1, color: rgb(0.9, 0.92, 0.95) });
   y -= 18;
 
-  // Section: Values
+  // ── Valores ─────────────────────────────────────────────────────────────────
   page.drawText("Valores", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
   const valor = venda.valorVenda || 0;
   const frete = venda.valorFrete || 0;
   const total = valor + frete;
-  const parcelas = venda.parcelas || 1;
-  const parcela = venda.valorParcela || (parcelas > 0 ? total / parcelas : total);
-  const rows = [
+  const nParcelas = venda.parcelas || 1;
+  const valorParc = venda.valorParcela || (nParcelas > 0 ? total / nParcelas : total);
+  for (const [label, val] of [
     ["Valor do produto", formatBRL(valor)],
     ["Frete", formatBRL(frete)],
     ["Total", formatBRL(total)],
-    [`Parcelas (${parcelas}x)`, formatBRL(parcela)],
-  ];
-  for (const [label, val] of rows) {
+    [`Parcelas (${nParcelas}x)`, formatBRL(valorParc)],
+  ] as [string, string][]) {
     page.drawText(label, { x: marginX, y, size: 11, font, color: rgb(0.2, 0.2, 0.22) });
     page.drawText(val, { x: 420, y, size: 11, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
     y -= 16;
@@ -208,7 +218,93 @@ export async function GET(req: Request) {
   page.drawRectangle({ x: marginX, y, width: contentWidth, height: 1, color: rgb(0.9, 0.92, 0.95) });
   y -= 18;
 
-  // Section: Terms
+  // ── Tabela de Parcelas ───────────────────────────────────────────────────────
+  if (numParcelas > 0) {
+    page.drawText("Parcelas", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+    y -= 16;
+
+    // Determina forma de pagamento
+    const formaPag = venda.boleto
+      ? `Boleto ${numParcelas}x`
+      : venda.descontoEmFolha
+        ? `Desconto em Folha ${numParcelas}x`
+        : `À Vista`;
+
+    // Definição de colunas: [label, largura]
+    const colDefs: { label: string; width: number }[] = [
+      { label: "Dias",              width: 48  },
+      { label: "Data vencimento",   width: 115 },
+      { label: "Forma de pagamento",width: 182 },
+      { label: "Valor",             width: 90  },
+      { label: "Observação",        width: 80  },
+    ];
+    const tableWidth = contentWidth; // 515
+    const tableLeft = marginX;
+
+    // Calcula x inicial de cada coluna
+    const cols = colDefs.map((c, i) => ({
+      label: c.label,
+      width: c.width,
+      x: tableLeft + colDefs.slice(0, i).reduce((acc, d) => acc + d.width, 0),
+    }));
+
+    // Cabeçalho
+    drawTableRow(page, font, fontBold, true, cols, cols.map(c => c.label), y, rowHeight, tableLeft, tableWidth);
+    y -= rowHeight;
+
+    // Linhas de dados
+    for (let i = 0; i < parcelasVenc.length; i++) {
+      const pv = parcelasVenc[i];
+      const dias = Math.round(
+        (pv.dataVencimento.getTime() - venda.dataVenda.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      // Fundo alternado
+      if (i % 2 !== 0) {
+        page.drawRectangle({
+          x: tableLeft, y: y - rowHeight,
+          width: tableWidth, height: rowHeight,
+          color: rgb(0.97, 0.97, 0.98),
+        });
+      }
+
+      drawTableRow(
+        page, font, fontBold, false, cols,
+        [String(dias), formatDate(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""],
+        y, rowHeight, tableLeft, tableWidth,
+      );
+      y -= rowHeight;
+    }
+
+    // Borda externa da tabela
+    const tableBodyHeight = (numParcelas + 1) * rowHeight;
+    page.drawRectangle({
+      x: tableLeft,
+      y: y,
+      width: tableWidth,
+      height: tableBodyHeight,
+      borderColor: rgb(0.7, 0.73, 0.78),
+      borderWidth: 0.6,
+    });
+
+    // Linhas verticais dos separadores de coluna
+    let colX = tableLeft;
+    for (let i = 0; i < cols.length - 1; i++) {
+      colX += cols[i].width;
+      page.drawLine({
+        start: { x: colX, y: y },
+        end: { x: colX, y: y + tableBodyHeight },
+        thickness: 0.4,
+        color: rgb(0.8, 0.82, 0.86),
+      });
+    }
+
+    y -= 18;
+    page.drawRectangle({ x: marginX, y, width: contentWidth, height: 1, color: rgb(0.9, 0.92, 0.95) });
+    y -= 18;
+  }
+
+  // ── Termos e condições ───────────────────────────────────────────────────────
   const defaultTemplate =
     "RECIBO Eu, {CLIENTE}, mat. {MATRICULA}, confirmo a compra de: {PRODUTO}. Valor: R$ {VALOR} em {PARCELAS}x Estou ciente de que esse valor será descontado parceladamente na minha remuneração do mês seguinte à data da compra. Entendo que este desconto será efetuado de acordo com as regras e políticas estabelecidas na parceria da BFXSHOP e empresa conveniada. Além disso, estou ciente de que, em caso de rescisão do meu contrato de trabalho com a minha empresa, o valor remanescente, se houver, será descontado integralmente do valor a que eu tiver direito em minha rescisão, conforme previsto na legislação vigente. Esta autorização é concedida de livre e espontânea vontade, sem qualquer forma de coação ou pressão por parte da empresa.";
   const template = cfg?.modeloContrato || defaultTemplate;
@@ -217,43 +313,32 @@ export async function GET(req: Request) {
     MATRICULA: cliente?.matricula || "N/D",
     PRODUTO: venda.produtoNome || "N/D",
     VALOR: formatBRL(total).replace("R$", "").trim(),
-    PARCELAS: String(parcelas),
+    PARCELAS: String(nParcelas),
   });
 
   page.drawText("Termos e condições", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 16;
-  const lines = wrapText(contrato, font, 10.5, contentWidth);
-  for (const line of lines) {
+  for (const line of wrapText(contrato, font, 10.5, contentWidth)) {
     page.drawText(line, { x: marginX, y, size: 10.5, font, color: rgb(0.25, 0.25, 0.28) });
     y -= 14;
   }
 
-  // Footer Note
+  // ── Rodapé ───────────────────────────────────────────────────────────────────
   page.drawText("Documento gerado automaticamente pelo BFX Manager.", {
-    x: marginX,
-    y: 110,
-    size: 8,
-    font,
-    color: rgb(0.5, 0.5, 0.5),
+    x: marginX, y: 110, size: 8, font, color: rgb(0.5, 0.5, 0.5),
   });
 
-  // Signature Section
   const signatureY = 70;
   page.drawLine({
     start: { x: centerX - 100, y: signatureY },
     end: { x: centerX + 100, y: signatureY },
-    thickness: 1,
-    color: rgb(0.1, 0.1, 0.1),
+    thickness: 1, color: rgb(0.1, 0.1, 0.1),
   });
-  
   const signatureText = `Assinatura: ${cliente?.nome || "________________________"}`;
-  const sigWidth = font.widthOfTextAtSize(signatureText, 10);
   page.drawText(signatureText, {
-    x: centerX - sigWidth / 2,
+    x: centerX - font.widthOfTextAtSize(signatureText, 10) / 2,
     y: signatureY - 15,
-    size: 10,
-    font,
-    color: rgb(0.1, 0.1, 0.1),
+    size: 10, font, color: rgb(0.1, 0.1, 0.1),
   });
 
   const pdfBytes = await pdf.save();
@@ -265,4 +350,3 @@ export async function GET(req: Request) {
     },
   });
 }
-
