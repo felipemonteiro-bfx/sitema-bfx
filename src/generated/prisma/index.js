@@ -282,7 +282,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\Administrador\\Desktop\\Sistema BFX\\src\\generated\\prisma",
+      "value": "C:\\Users\\softlive\\Documents\\softlive\\sitema-bfx\\src\\generated\\prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -296,7 +296,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\Administrador\\Desktop\\Sistema BFX\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\softlive\\Documents\\softlive\\sitema-bfx\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -310,6 +310,7 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
