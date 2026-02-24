@@ -117,7 +117,10 @@ export async function GET(req: Request) {
   }
 
   const cliente = venda.clienteId
-    ? await prisma.cliente.findUnique({ where: { id: venda.clienteId } })
+    ? await prisma.cliente.findUnique({
+        where: { id: venda.clienteId },
+        select: { id: true, nome: true, cpf: true, cnpj: true, matricula: true },
+      })
     : null;
   const cfg = await prisma.config.findFirst();
   const numParcelas = parcelasVenc.length;
