@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Terminal de Vendas - Dropdown Z-Index', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3000/venda-rapida');
+    await page.goto('http://localhost:3008/venda-rapida');
     await page.waitForLoadState('networkidle');
   });
 

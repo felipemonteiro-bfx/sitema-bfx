@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# Prisma generated (temp from failed generate)
+*.dll.node.tmp*
+
 # next.js
 /.next/
 /out/

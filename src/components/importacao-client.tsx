@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,11 +28,14 @@ export default function ImportacaoClient() {
   const [data, setData] = useState<RowData[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setFileName(file.name);
     setLoading(true);
     Papa.parse(file, {
       header: true,
@@ -111,14 +114,27 @@ export default function ImportacaoClient() {
           <CardTitle>1. Selecionar Arquivo</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
-            <Input 
-              type="file" 
-              accept=".csv" 
-              onChange={handleFileUpload} 
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileUpload}
               disabled={loading || saving}
-              className="max-w-xs cursor-pointer"
+              className="sr-only"
+              aria-label="Selecionar arquivo CSV"
             />
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading || saving}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Escolher arquivo
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {fileName ? fileName : "Nenhum arquivo escolhido"}
+            </span>
             {loading && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">O sistema aceita ponto e vírgula (;) como separador padrão do Excel.</p>

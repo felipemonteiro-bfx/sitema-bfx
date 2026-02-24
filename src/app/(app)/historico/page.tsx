@@ -14,6 +14,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
+import { getAsaasConfig, getOrCreateCustomer, createBoletoPayment } from "@/lib/asaas";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -25,6 +26,8 @@ type Search = {
   vendedor?: string; 
   produto?: string;
   cliente?: string;
+  descontoFolha?: string;
+  boleto?: string;
   page?: string;
 };
 
@@ -39,7 +42,11 @@ async function updateVenda(formData: FormData) {
   const custo = Number(formData.get("custo_prod") || 0);
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
-  
+  let descontoEmFolha = formData.get("descontoEmFolha") === "on";
+  let boleto = formData.get("boleto") === "on";
+  // Apenas um: desconto em folha ou boleto (nunca os dois)
+  if (descontoEmFolha && boleto) boleto = false;
+
   const file = formData.get("comprovante") as File | null;
 
   if (!id || !data) return;
@@ -51,21 +58,26 @@ async function updateVenda(formData: FormData) {
 
   let comprovantePath: string | undefined = undefined;
 
+  const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
   if (file && file.size > 0 && file.name) {
-    try {
-      const uploadDir = path.join(process.cwd(), "public/uploads/recibos");
-      if (!fs.existsSync(uploadDir)) {
-        await mkdir(uploadDir, { recursive: true });
+    const ext = path.extname(file.name).toLowerCase();
+    if (allowedExtensions.includes(ext)) {
+      try {
+        const uploadDir = path.join(process.cwd(), "public/uploads/recibos");
+        if (!fs.existsSync(uploadDir)) {
+          await mkdir(uploadDir, { recursive: true });
+        }
+
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const baseName = path.basename(file.name, ext).replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "") || "anexo";
+        const filename = `${id}-${Date.now()}-${baseName}${ext}`;
+        const filePath = path.join(uploadDir, filename);
+
+        await writeFile(filePath, buffer);
+        comprovantePath = `/uploads/recibos/${filename}`;
+      } catch (error) {
+        console.error("Erro ao fazer upload do comprovante:", error);
       }
-
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const filename = `${id}-${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-      const filePath = path.join(uploadDir, filename);
-
-      await writeFile(filePath, buffer);
-      comprovantePath = `/uploads/recibos/${filename}`;
-    } catch (error) {
-      console.error("Erro ao fazer upload do comprovante:", error);
     }
   }
 
@@ -83,6 +95,8 @@ async function updateVenda(formData: FormData) {
       temNota,
       taxaNota,
       lucroLiquido: lucro,
+      descontoEmFolha,
+      boleto,
       ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
     },
   });
@@ -99,11 +113,82 @@ async function deleteVenda(formData: FormData) {
   revalidatePath("/historico");
 }
 
+async function gerarBoletoAsaas(formData: FormData) {
+  "use server";
+  const vendaId = Number(formData.get("vendaId") || 0);
+  if (!vendaId || !getAsaasConfig()) return;
+  const venda = await prisma.venda.findUnique({
+    where: { id: vendaId },
+    include: {
+      cliente: true,
+      parcelasVencimento: { orderBy: { numeroParcela: "asc" }, take: 1 },
+    },
+  });
+  if (!venda || !venda.boleto || venda.boletoUrl || !venda.clienteId || !venda.cliente) return;
+  const cliente = venda.cliente;
+  if (!cliente.cpf && !cliente.cnpj) return;
+  try {
+    const totalVenda =
+      ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
+    const firstDue =
+      venda.parcelasVencimento[0]?.dataVencimento?.toISOString().slice(0, 10) ||
+      (() => {
+        const d = new Date();
+        if ((venda.parcelas || 1) > 1) {
+          d.setMonth(d.getMonth() + 1);
+          d.setDate(10);
+        } else {
+          d.setDate(d.getDate() + 3);
+        }
+        return d.toISOString().slice(0, 10);
+      })();
+    const clienteAsaas = cliente as { asaasCustomerId?: string | null };
+    const asaasCustomerId = await getOrCreateCustomer(
+      {
+        id: cliente.id,
+        nome: cliente.nome,
+        cpf: cliente.cpf,
+        cnpj: cliente.cnpj,
+        email: cliente.email,
+        telefone: cliente.telefone,
+        asaasCustomerId: clienteAsaas.asaasCustomerId ?? null,
+      },
+      prisma
+    );
+    const parcelas = venda.parcelas || 1;
+    const payment = await createBoletoPayment({
+      customerId: asaasCustomerId,
+      value: totalVenda,
+      dueDate: firstDue,
+      ...(parcelas > 1 && { installmentCount: parcelas, totalValue: totalVenda }),
+      description: `Venda #${venda.id}`,
+      externalReference: String(venda.id),
+    });
+    await prisma.venda.update({
+      where: { id: vendaId },
+      data: { asaasPaymentId: payment.id, boletoUrl: payment.bankSlipUrl || null },
+    });
+  } catch (err) {
+    console.error("Erro ao gerar boleto Asaas (retry):", err);
+  }
+  revalidatePath("/historico");
+}
+
+function parseDateStart(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
+}
+
+function parseDateEnd(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999);
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const today = new Date();
-  const start = sp.from ? new Date(sp.from) : new Date(today.getFullYear(), today.getMonth(), 1);
-  const end = sp.to ? new Date(sp.to) : today;
+  const start = sp.from ? parseDateStart(sp.from) : new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
+  const end = sp.to ? parseDateEnd(sp.to) : new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
   const editId = sp.edit ? Number(sp.edit) : 0;
   const page = Number(sp.page || 1);
   const pageSize = 10;
@@ -117,6 +202,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
     produtoNome: sp.produto && sp.produto !== "all" ? sp.produto : undefined,
     clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
+    descontoEmFolha: sp.descontoFolha === "1" ? true : sp.descontoFolha === "0" ? false : undefined,
+    boleto: sp.boleto === "1" ? true : sp.boleto === "0" ? false : undefined,
   };
 
   const totalVendas = await prisma.venda.count({ where });
@@ -193,6 +280,24 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ...produtos.map((p) => ({ value: p.nome, label: p.nome })),
               ]}
             />
+            <FormSelect
+              name="descontoFolha"
+              defaultValue={sp.descontoFolha || "all"}
+              options={[
+                { value: "all", label: "Desconto folha (Todos)" },
+                { value: "1", label: "Desconto folha (Sim)" },
+                { value: "0", label: "Desconto folha (Não)" },
+              ]}
+            />
+            <FormSelect
+              name="boleto"
+              defaultValue={sp.boleto || "all"}
+              options={[
+                { value: "all", label: "Boleto (Todos)" },
+                { value: "1", label: "Boleto (Sim)" },
+                { value: "0", label: "Boleto (Não)" },
+              ]}
+            />
             <input type="hidden" name="page" value="1" />
             <button className={cn(buttonVariants(), "cursor-pointer")}>Filtrar</button>
           </form>
@@ -215,6 +320,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead className="text-center">Qtd</TableHead>
                 <TableHead className="text-right">Valor Total</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
+                <TableHead className="text-center">Desconto folha</TableHead>
+                <TableHead className="text-center">Boleto</TableHead>
                 <TableHead className="text-center">Assinado</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -222,7 +329,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                     Sem dados para os filtros selecionados.
                   </TableCell>
                 </TableRow>
@@ -240,6 +347,42 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell className="text-center">
                       {v.temNota ? (
                         <span className="text-success font-bold" title={`Taxa: ${v.taxaNota}%`}>✓</span>
+                      ) : (
+                        <span className="text-muted-foreground opacity-30">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {v.descontoEmFolha ? (
+                        <span className="text-success font-bold">✓</span>
+                      ) : (
+                        <span className="text-muted-foreground opacity-30">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {v.boleto ? (
+                        (() => {
+                          const boletoUrl = (v as { boletoUrl?: string | null }).boletoUrl;
+                          return boletoUrl ? (
+                            <a
+                              href={boletoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0")}
+                            >
+                              Ver boleto
+                            </a>
+                          ) : (
+                          <span className="flex flex-col items-center gap-1">
+                            <span className="text-amber-600 text-xs">Pendente</span>
+                            <form action={gerarBoletoAsaas} className="inline">
+                              <input type="hidden" name="vendaId" value={v.id} />
+                              <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs")}>
+                                Gerar boleto
+                              </button>
+                            </form>
+                          </span>
+                          );
+                        })()
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}
@@ -314,7 +457,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <p className="text-sm text-muted-foreground">Ajuste os dados e salve para atualizar o Histórico.</p>
           </CardHeader>
           <CardContent>
-            <form action={updateVenda} className="grid gap-4 md:grid-cols-3">
+            <form action={updateVenda} method="post" encType="multipart/form-data" className="grid gap-4 md:grid-cols-3">
               <input type="hidden" name="id" value={editVenda.id} />
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Data da venda</label>
@@ -322,7 +465,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Vendedor</label>
-                <Input name="vendedor" defaultValue={editVenda.vendedor || ""} />
+                <FormSelect
+                  name="vendedor"
+                  defaultValue={editVenda.vendedor || ""}
+                  options={[
+                    ...(editVenda.vendedor && !vendedores.some((v) => (v.nomeExibicao || v.username) === editVenda.vendedor)
+                      ? [{ value: editVenda.vendedor, label: editVenda.vendedor }]
+                      : []),
+                    ...vendedores.map((v) => ({
+                      value: String(v.nomeExibicao || v.username),
+                      label: String(v.nomeExibicao || v.username),
+                    })),
+                  ]}
+                  placeholder="Selecione o vendedor"
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Produto</label>
@@ -352,9 +508,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF)</label>
+                <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</label>
                 <div className="flex flex-col gap-2">
-                  <Input type="file" name="comprovante" accept="application/pdf" className="h-10 px-2 pt-1.5" />
+                  <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
                   {editVenda.comprovantePdf ? (
                     <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-md border border-emerald-100">
                       <CheckCircle2 className="h-3 w-3" />
@@ -385,6 +541,33 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </label>
               </div>
 
+              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
+                <input 
+                  type="checkbox" 
+                  name="descontoEmFolha" 
+                  id="edit-descontoEmFolha" 
+                  defaultChecked={editVenda.descontoEmFolha ?? false}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer">
+                  Desconto em folha
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
+                <input 
+                  type="checkbox" 
+                  name="boleto" 
+                  id="edit-boleto" 
+                  defaultChecked={editVenda.boleto ?? false}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer">
+                  Boleto
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opções: desconto em folha ou boleto.</p>
+
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Taxa da Nota (%)</label>
                 <Input 
@@ -396,11 +579,28 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </div>
 
               <div className="md:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar alterações</button>
                   <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
                     Baixar recibo PDF
                   </a>
+                  {(editVenda as { boletoUrl?: string | null }).boletoUrl ? (
+                    <a
+                      href={(editVenda as { boletoUrl: string }).boletoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                    >
+                      Ver boleto Asaas
+                    </a>
+                  ) : editVenda.boleto ? (
+                    <form action={gerarBoletoAsaas} className="inline">
+                      <input type="hidden" name="vendaId" value={editVenda.id} />
+                      <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+                        Gerar boleto Asaas
+                      </button>
+                    </form>
+                  ) : null}
                 </div>
                 <DeleteVendaButton vendaId={editVenda.id} deleteAction={deleteVenda} />
               </div>

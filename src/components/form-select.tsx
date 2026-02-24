@@ -64,7 +64,7 @@ export function FormSelect({
   };
 
   return (
-    <div>
+    <div className="min-h-10 overflow-hidden">
       <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -74,12 +74,12 @@ export function FormSelect({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "h-10 w-full justify-between gap-2 text-left font-normal",
+              "h-10 max-h-10 w-full justify-between gap-2 overflow-hidden box-border text-left font-normal [&_svg]:flex-shrink-0",
               !value && "text-muted-foreground",
               className
             )}
           >
-            <span className="truncate">{selected?.label ?? placeholder}</span>
+            <span className="min-w-0 truncate">{selected?.label ?? placeholder}</span>
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>

@@ -61,6 +61,8 @@ export const vendaV2Schema = z.object({
   taxaNota: z.number().min(0).max(100, "Taxa de nota deve ser entre 0 e 100"),
   produtos: z.array(produtoItemSchema).min(1, "Adicione pelo menos um produto"),
   parcelasVencimento: z.array(parcelaVencimentoSchema).optional(),
+  descontoEmFolha: z.boolean().optional().default(false),
+  boleto: z.boolean().optional().default(false),
 })
 
 export type VendaV2FormData = z.infer<typeof vendaV2Schema>

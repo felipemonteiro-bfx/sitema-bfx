@@ -167,12 +167,12 @@ export async function runAiWithActions(
       const venda = execResult as { uuid?: string; id?: number };
       const token = venda.uuid ?? String(venda.id ?? "");
       if (token) {
-        const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
         links.push({ label: "Recibo PDF", url: `${baseUrl}/api/recibo?id=${token}` });
       }
     }
     if (ctx.executeAction.name === "gerar_catalogo_produtos") {
-      const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
       const search = (ctx.executeAction.params?.search as string | undefined) || "";
       const url = search
         ? `${baseUrl}/api/catalogo?q=${encodeURIComponent(search)}`

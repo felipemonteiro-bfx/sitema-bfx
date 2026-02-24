@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "vendas" ADD COLUMN IF NOT EXISTS "desconto_em_folha" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "vendas" ADD COLUMN IF NOT EXISTS "boleto" BOOLEAN NOT NULL DEFAULT false;

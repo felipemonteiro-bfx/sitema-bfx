@@ -6,6 +6,11 @@ import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
 import { vendaV2Schema } from "@/lib/validations/venda";
 import { createAuditLog } from "@/lib/audit";
+import {
+  getAsaasConfig,
+  getOrCreateCustomer,
+  createBoletoPayment,
+} from "@/lib/asaas";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -53,7 +58,9 @@ export async function criarVenda(formData: FormData) {
 /**
  * Nova action com suporte a múltiplos produtos e parcelas com datas
  */
-export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{ vendaId: number }>> {
+export async function criarVendaV2(
+  formData: FormData
+): Promise<ActionResponse<{ vendaId: number; boletoUrl?: string }>> {
   try {
     const produtosJson = formData.get("produtos");
     if (!produtosJson) {
@@ -88,6 +95,8 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
       taxaNota: Number(formData.get("taxaNota") || 5.97),
       produtos,
       parcelasVencimento: parcelasVencimento.length > 0 ? parcelasVencimento : undefined,
+      descontoEmFolha: formData.get("descontoEmFolha") === "true",
+      boleto: formData.get("boleto") === "true",
     };
 
     const parsed = vendaV2Schema.safeParse(raw);
@@ -98,6 +107,10 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
     }
 
     const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
+    // Apenas um: desconto em folha ou boleto (nunca os dois)
+    let descontoEmFolha = parsed.data.descontoEmFolha ?? false;
+    let boleto = parsed.data.boleto ?? false;
+    if (descontoEmFolha && boleto) boleto = false;
 
     // Cálculos totais
     const subtotalProdutos = produtosValidados.reduce((sum, p) => sum + p.subtotal, 0);
@@ -130,6 +143,8 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
           antecipada: 1,
           temNota,
           taxaNota,
+          descontoEmFolha: descontoEmFolha ?? false,
+          boleto: boleto ?? false,
         },
       });
 
@@ -187,7 +202,81 @@ export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{
 
     await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
 
-    return successResponse(`Venda #${venda.id} criada com sucesso!`, { vendaId: venda.id });
+    let boletoUrl: string | undefined;
+
+    if (boleto && getAsaasConfig() && clienteId) {
+      try {
+        const cliente = await prisma.cliente.findUnique({
+          where: { id: clienteId },
+          select: {
+            id: true,
+            nome: true,
+            cpf: true,
+            cnpj: true,
+            email: true,
+            telefone: true,
+            asaasCustomerId: true,
+          },
+        });
+        if (cliente && (cliente.cpf || cliente.cnpj)) {
+          const asaasCustomerId = await getOrCreateCustomer(
+            {
+              id: cliente.id,
+              nome: cliente.nome,
+              cpf: cliente.cpf,
+              cnpj: cliente.cnpj,
+              email: cliente.email,
+              telefone: cliente.telefone,
+              asaasCustomerId: cliente.asaasCustomerId,
+            },
+            prisma
+          );
+          let firstDueDate: string;
+          if (parcelasValidadas && parcelasValidadas.length > 0) {
+            firstDueDate = parcelasValidadas[0].dataVencimento.slice(0, 10);
+          } else if (parcelas > 1) {
+            const d = new Date();
+            d.setMonth(d.getMonth() + 1);
+            d.setDate(10);
+            firstDueDate = d.toISOString().slice(0, 10);
+          } else {
+            const d = new Date();
+            d.setDate(d.getDate() + 3);
+            firstDueDate = d.toISOString().slice(0, 10);
+          }
+          const payment = await createBoletoPayment({
+            customerId: asaasCustomerId,
+            value: totalVenda,
+            dueDate: firstDueDate,
+            ...(parcelas > 1 && {
+              installmentCount: parcelas,
+              totalValue: totalVenda,
+            }),
+            description: `Venda #${venda.id}`,
+            externalReference: String(venda.id),
+          });
+          await prisma.venda.update({
+            where: { id: venda.id },
+            data: {
+              asaasPaymentId: payment.id,
+              boletoUrl: payment.bankSlipUrl || null,
+            },
+          });
+          boletoUrl = payment.bankSlipUrl || undefined;
+        }
+      } catch (err) {
+        console.error("Erro ao gerar boleto Asaas:", err);
+        return successResponse(
+          `Venda #${venda.id} criada. Falha ao gerar boleto no Asaas; tente gerar pelo histórico.`,
+          { vendaId: venda.id }
+        );
+      }
+    }
+
+    return successResponse(`Venda #${venda.id} criada com sucesso!`, {
+      vendaId: venda.id,
+      ...(boletoUrl && { boletoUrl }),
+    });
   } catch (error) {
     console.error("Erro ao criar venda:", error);
     return errorResponse("Erro ao processar a venda. Tente novamente.");

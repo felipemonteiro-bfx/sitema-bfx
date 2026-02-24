@@ -9,8 +9,8 @@
 docker compose up --build
 ```
 
-Aplicacao: `http://localhost:3000`
-Streamlit legado (via proxy + layout): `http://localhost:3000/streamlit`
+Aplicacao: `http://localhost:3008`
+Streamlit legado (via proxy + layout): `http://localhost:3008/streamlit`
 
 Login inicial:
 - usuario: `admin`

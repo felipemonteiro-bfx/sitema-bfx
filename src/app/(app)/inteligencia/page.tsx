@@ -47,7 +47,7 @@ async function askAi(formData: FormData) {
     const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
     const proto = headerList.get("x-forwarded-proto") ?? "http";
     const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3000");
+      process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3008");
 
     const results: string[] = [];
     const links: { label: string; url: string }[] = [];
@@ -104,7 +104,7 @@ async function confirmAi(formData: FormData) {
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
   const proto = headerList.get("x-forwarded-proto") ?? "http";
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3000");
+    process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3008");
 
   const results: string[] = [];
   const links: { label: string; url: string }[] = [];

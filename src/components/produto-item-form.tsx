@@ -23,9 +23,10 @@ interface Props {
   onUpdate: (index: number, item: ProdutoItem) => void;
   onRemove: (index: number) => void;
   canRemove: boolean;
+  hasError?: boolean;
 }
 
-export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove }: Props) {
+export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, hasError }: Props) {
   const [produtoQuery, setProdutoQuery] = useState(item.produtoNome);
   const [produtoSuggestions, setProdutoSuggestions] = useState<{
     id: number;
@@ -94,7 +95,14 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove }: 
   const margem = item.valorVenda > 0 ? (lucro / (item.valorVenda * item.quantidade)) * 100 : 0;
 
   return (
-    <Card variant="elevated" className={cn("relative overflow-visible border-primary/20 transition-all hover:border-primary/40", produtoSuggestions.length > 0 && "z-10")}>
+    <Card
+      variant="elevated"
+      className={cn(
+        "relative overflow-visible border-primary/20 transition-all hover:border-primary/40",
+        produtoSuggestions.length > 0 && "z-10",
+        hasError && "border-destructive border-2",
+      )}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
@@ -123,14 +131,20 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove }: 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Produto Nome */}
           <div className="space-y-2 relative lg:col-span-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Produto
+            <Label
+              className={cn(
+                "text-xs font-bold uppercase tracking-wider",
+                hasError ? "text-destructive" : "text-muted-foreground",
+              )}
+            >
+              Produto {hasError && "(obrigatório)"}
             </Label>
             <Input
               value={produtoQuery}
               onChange={(e) => setProdutoQuery(e.target.value)}
               placeholder="Digite o nome do produto"
               required
+              className={hasError ? "border-destructive border-2" : ""}
             />
             {produtoSuggestions.length > 0 && (
               <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">

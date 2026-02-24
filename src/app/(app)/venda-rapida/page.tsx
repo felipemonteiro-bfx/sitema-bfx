@@ -51,7 +51,7 @@ export default async function Page() {
               </a>
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
-                  `Segue seu recibo: http://localhost:3000/api/recibo?id=${ultima.id}`
+                  `Segue seu recibo: http://localhost:3008/api/recibo?id=${ultima.id}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"

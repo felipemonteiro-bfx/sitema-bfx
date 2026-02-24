@@ -20,7 +20,7 @@ services:
       - ./:/app
       - /app/node_modules
     ports:
-      - "3000:3000"
+      - "3008:3008"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/bfx?schema=public
       SESSION_SECRET: change-me

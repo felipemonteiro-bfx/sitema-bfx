@@ -45,7 +45,7 @@ interface Props {
   parcelasOptions: { value: string; label: string }[];
   onSubmit: (
     formData: FormData,
-  ) => Promise<ActionResponse<{ vendaId: number }>>;
+  ) => Promise<ActionResponse<{ vendaId: number; boletoUrl?: string }>>;
 }
 
 export default function VendaRapidaFormV2({
@@ -54,6 +54,12 @@ export default function VendaRapidaFormV2({
   onSubmit,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    data?: boolean;
+    vendedor?: boolean;
+    cliente?: boolean;
+    produtoIndices?: number[];
+  }>({});
 
   // Form states
   const [dataVenda, setDataVenda] = useState(
@@ -96,6 +102,8 @@ export default function VendaRapidaFormV2({
   const [envio, setEnvio] = useState("0");
   const [temNota, setTemNota] = useState(false);
   const [taxaNota, setTaxaNota] = useState("5.97");
+  const [descontoEmFolha, setDescontoEmFolha] = useState(false);
+  const [boleto, setBoleto] = useState(false);
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
@@ -108,6 +116,26 @@ export default function VendaRapidaFormV2({
   } | null>(null);
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Limpar erro do campo ao editar
+  useEffect(() => {
+    setValidationErrors((prev) => {
+      const next = { ...prev };
+      if (dataVenda && prev.data) next.data = false;
+      if (vendedor?.trim() && prev.vendedor) next.vendedor = false;
+      if (selectedCliente && prev.cliente) next.cliente = false;
+      if (prev.produtoIndices?.length) {
+        const stillInvalid = prev.produtoIndices.filter((i) => {
+          const p = produtos[i];
+          if (!p) return false;
+          const ok = p.produtoNome?.trim() && p.custoProduto >= 0 && p.valorVenda >= 0 && p.quantidade >= 1;
+          return !ok;
+        });
+        next.produtoIndices = stillInvalid.length > 0 ? stillInvalid : undefined;
+      }
+      return next;
+    });
+  }, [dataVenda, vendedor, selectedCliente, produtos]);
 
   // Cliente Autocomplete
   useEffect(() => {
@@ -262,26 +290,56 @@ export default function VendaRapidaFormV2({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const errors: typeof validationErrors = {};
+    const msgs: string[] = [];
+
+    if (!dataVenda || isNaN(new Date(dataVenda).getTime())) {
+      errors.data = true;
+      msgs.push("Data da venda");
+    }
+    if (!vendedor?.trim()) {
+      errors.vendedor = true;
+      msgs.push("Vendedor");
+    }
     if (!selectedCliente) {
-      toast.warning("Selecione um cliente para continuar.");
+      errors.cliente = true;
+      msgs.push("Cliente");
+    }
+
+    const produtoIndices: number[] = [];
+    produtos.forEach((p, i) => {
+      const faltaNome = !p.produtoNome?.trim();
+      const custoInvalido = p.custoProduto < 0;
+      const valorInvalido = p.valorVenda < 0;
+      const qtdInvalida = p.quantidade < 1;
+      if (faltaNome || custoInvalido || valorInvalido || qtdInvalida) {
+        produtoIndices.push(i);
+        if (faltaNome) msgs.push(`Produto #${i + 1} (nome)`);
+        else if (valorInvalido || custoInvalido || qtdInvalida) msgs.push(`Produto #${i + 1} (preencha valores)`);
+      }
+    });
+    if (produtoIndices.length) errors.produtoIndices = produtoIndices;
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      toast.error("Preencha os campos obrigatórios: " + msgs.join(", "));
       return;
     }
 
-    if (produtos.some((p) => !p.produtoNome)) {
-      toast.warning("Preencha o nome de todos os produtos.");
-      return;
-    }
-
+    setValidationErrors({});
     setLoading(true);
     const formData = new FormData();
     formData.append("data", dataVenda);
     formData.append("vendedor", vendedor);
-    formData.append("clienteId", selectedCliente.id.toString());
+    formData.append("clienteId", selectedCliente!.id.toString());
     formData.append("frete", frete);
     formData.append("envio", envio);
     formData.append("parcelas", parcelas);
     formData.append("temNota", String(temNota));
     formData.append("taxaNota", taxaNota);
+    formData.append("descontoEmFolha", String(descontoEmFolha));
+    formData.append("boleto", String(boleto));
 
     // Produtos (JSON)
     formData.append("produtos", JSON.stringify(produtos));
@@ -311,9 +369,19 @@ export default function VendaRapidaFormV2({
         setEnvio("0");
         setParcelas("1");
         setTemNota(false);
+        setDescontoEmFolha(false);
+        setBoleto(false);
         setParcelasVencimento([]);
         setProdutoParaSugestoes(null);
-        toast.success(result.message || "Venda realizada com sucesso!");
+        const boletoUrl = result.data?.boletoUrl;
+        toast.success(result.message || "Venda realizada com sucesso!", {
+          ...(boletoUrl && {
+            action: {
+              label: "Abrir boleto",
+              onClick: () => window.open(boletoUrl, "_blank"),
+            },
+          }),
+        });
       } else {
         toast.error(result.error || "Erro ao finalizar venda.");
       }
@@ -328,7 +396,13 @@ export default function VendaRapidaFormV2({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Seção 1: Contexto da Venda */}
-      <Card variant="elevated" className="border-primary/20">
+      <Card
+        variant="elevated"
+        className={cn(
+          "border-primary/20 transition-colors",
+          (validationErrors.data || validationErrors.vendedor) && "border-destructive border-2",
+        )}
+      >
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Calendar className="h-4 w-4 text-primary" />
@@ -338,18 +412,29 @@ export default function VendaRapidaFormV2({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Data da Venda
+              <Label
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  validationErrors.data ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                Data da Venda {validationErrors.data && "(obrigatório)"}
               </Label>
               <DateInput
                 value={dataVenda}
                 onChange={(v) => setDataVenda(v)}
                 required
+                className={validationErrors.data ? "border-destructive border-2" : ""}
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Vendedor Responsável
+              <Label
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  validationErrors.vendedor ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                Vendedor Responsável {validationErrors.vendedor && "(obrigatório)"}
               </Label>
               <FormSelect
                 name="vendedor"
@@ -357,6 +442,7 @@ export default function VendaRapidaFormV2({
                 value={vendedor}
                 onValueChange={setVendedor}
                 placeholder="Selecione o vendedor"
+                className={validationErrors.vendedor ? "border-destructive [&_button]:border-destructive [&_button]:border-2" : ""}
               />
             </div>
           </div>
@@ -367,8 +453,9 @@ export default function VendaRapidaFormV2({
       <Card
         variant="elevated"
         className={cn(
-          "border-info/20",
+          "border-info/20 transition-colors",
           clienteSuggestions.length > 0 && "z-10",
+          validationErrors.cliente && "border-destructive border-2",
         )}
       >
         <CardHeader className="pb-3">
@@ -379,14 +466,20 @@ export default function VendaRapidaFormV2({
         </CardHeader>
         <CardContent>
           <div className="space-y-2 relative">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Buscar Cliente
+            <Label
+              className={cn(
+                "text-xs font-bold uppercase tracking-wider",
+                validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
+              )}
+            >
+              Buscar Cliente {validationErrors.cliente && "(obrigatório)"}
             </Label>
             <Input
               value={clienteQuery}
               onChange={(e) => setClienteQuery(e.target.value)}
               placeholder="Digite o nome do cliente"
               required
+              className={validationErrors.cliente ? "border-destructive border-2" : ""}
             />
             {clienteSuggestions.length > 0 && (
               <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -464,6 +557,7 @@ export default function VendaRapidaFormV2({
             onUpdate={updateProduto}
             onRemove={removeProduto}
             canRemove={produtos.length > 1}
+            hasError={validationErrors.produtoIndices?.includes(index)}
           />
         ))}
       </div>
@@ -522,6 +616,37 @@ export default function VendaRapidaFormV2({
                 />
               )}
             </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-6 mt-4 pt-4 border-t">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={descontoEmFolha}
+                onCheckedChange={(checked) => {
+                  if (checked === true) {
+                    setDescontoEmFolha(true);
+                    setBoleto(false);
+                  } else {
+                    setDescontoEmFolha(false);
+                  }
+                }}
+              />
+              <Label className="text-sm font-medium cursor-pointer">Desconto em folha</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={boleto}
+                onCheckedChange={(checked) => {
+                  if (checked === true) {
+                    setBoleto(true);
+                    setDescontoEmFolha(false);
+                  } else {
+                    setBoleto(false);
+                  }
+                }}
+              />
+              <Label className="text-sm font-medium cursor-pointer">Boleto</Label>
+            </div>
+            <p className="text-xs text-muted-foreground w-full">Apenas uma das opções: desconto em folha ou boleto.</p>
           </div>
         </CardContent>
       </Card>
@@ -645,9 +770,7 @@ export default function VendaRapidaFormV2({
       <div className="flex justify-end">
         <Button
           type="submit"
-          disabled={
-            loading || !selectedCliente || produtos.some((p) => !p.produtoNome)
-          }
+          disabled={loading}
           variant="success"
           size="lg"
           className="px-12 text-base font-bold shadow-lg hover:shadow-xl"
