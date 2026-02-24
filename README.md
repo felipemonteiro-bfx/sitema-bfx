@@ -135,6 +135,11 @@ O `vercel.json` define um Cron que chama `/api/cron/cleanup-uploads` todo doming
 
 **Nota:** O `output: "standalone"` do Next.js é ignorado na Vercel; o deploy usa o modo padrão da plataforma.
 
+### Automação (CI e dependências)
+
+- **GitHub Actions:** em todo push/PR para `main` e `nextjs-migration` roda lint e build (`.github/workflows/ci.yml`). Falha de build impede merge se configurado como required.
+- **Dependabot:** abre PRs semanais (segunda-feira) para atualizar dependências npm e GitHub Actions (`.github/dependabot.yml`). Revise e faça merge quando quiser.
+
 ## Importar dados do SQLite (Streamlit)
 
 O banco legado do Streamlit fica em `streamlit/bfx_sistema.db`. Para importar tudo para o Postgres:
