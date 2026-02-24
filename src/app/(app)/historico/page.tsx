@@ -193,9 +193,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const page = Number(sp.page || 1);
   const pageSize = 10;
 
-  const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
-  const produtos = await prisma.produto.findMany({ orderBy: { nome: "asc" } });
-  const clientes = await prisma.cliente.findMany({ orderBy: { nome: "asc" } });
+  const vendedores = await prisma.usuario.findMany({ select: { id: true, username: true, nomeExibicao: true }, orderBy: { nomeExibicao: "asc" } });
+  const produtos = await prisma.produto.findMany({ select: { nome: true }, orderBy: { nome: "asc" } });
+  const clientes = await prisma.cliente.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } });
 
   const where = {
     dataVenda: { gte: start, lte: end },
@@ -214,12 +214,35 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     orderBy: { dataVenda: "desc" },
     skip: (page - 1) * pageSize,
     take: pageSize,
-    include: {
-      cliente: { select: { nome: true } }
-    }
+    select: {
+      id: true,
+      dataVenda: true,
+      vendedor: true,
+      produtoNome: true,
+      quantidade: true,
+      valorVenda: true,
+      valorFrete: true,
+      temNota: true,
+      taxaNota: true,
+      descontoEmFolha: true,
+      boleto: true,
+      comprovantePdf: true,
+      asaasPaymentId: true,
+      boletoUrl: true,
+      cliente: { select: { nome: true } },
+    },
   });
 
-  const editVenda = editId ? await prisma.venda.findUnique({ where: { id: editId } }) : null;
+  const editVenda = editId ? await prisma.venda.findUnique({
+    where: { id: editId },
+    select: {
+      id: true, dataVenda: true, vendedor: true, produtoNome: true,
+      quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
+      custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
+      descontoEmFolha: true, boleto: true, comprovantePdf: true,
+      asaasPaymentId: true, boletoUrl: true,
+    },
+  }) : null;
 
   const buildUrl = (params: Partial<Search>) => {
     const newParams = { ...sp, ...params };
@@ -361,7 +384,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell className="text-center">
                       {v.boleto ? (
                         (() => {
-                          const boletoUrl = (v as { boletoUrl?: string | null }).boletoUrl;
+                          const boletoUrl = v.boletoUrl;
                           return boletoUrl ? (
                             <a
                               href={boletoUrl}
@@ -584,9 +607,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
                     Baixar recibo PDF
                   </a>
-                  {(editVenda as { boletoUrl?: string | null }).boletoUrl ? (
+                  {editVenda.boletoUrl ? (
                     <a
-                      href={(editVenda as { boletoUrl: string }).boletoUrl}
+                      href={editVenda.boletoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
