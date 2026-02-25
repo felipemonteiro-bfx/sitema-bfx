@@ -1,5 +1,5 @@
 # BFX Manager - Comandos automatizados
-.PHONY: up down build migrate sync-vendas sync-vendas-hoje import-all
+.PHONY: up down build migrate sync-vendas sync-vendas-hoje import-all k8s-rollout
 
 # Sobe Docker (db + app) com migrate automático
 up:
@@ -28,3 +28,8 @@ sync-vendas:
 # Importação completa do SQLite (clientes, produtos, vendas, etc)
 import-all:
 	node prisma/import_sqlite.js
+
+# Força o K8s a puxar nova imagem (deploy/bfx ou k8s)
+k8s-rollout:
+	kubectl rollout restart deployment/bfx-app 2>/dev/null || kubectl rollout restart deployment/sitema-bfx -n sitema-bfx
+	kubectl rollout status deployment/bfx-app 2>/dev/null || kubectl rollout status deployment/sitema-bfx -n sitema-bfx
