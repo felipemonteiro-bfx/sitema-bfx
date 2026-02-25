@@ -108,7 +108,7 @@ export async function criarVendaV2(
 
     const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
     // Apenas um: desconto em folha ou boleto (nunca os dois)
-    let descontoEmFolha = parsed.data.descontoEmFolha ?? false;
+    const descontoEmFolha = parsed.data.descontoEmFolha ?? false;
     let boleto = parsed.data.boleto ?? false;
     if (descontoEmFolha && boleto) boleto = false;
 

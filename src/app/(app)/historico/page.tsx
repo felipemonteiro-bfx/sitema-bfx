@@ -14,8 +14,8 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
-import { getAsaasConfig } from "@/lib/asaas";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -43,9 +43,8 @@ async function updateVenda(formData: FormData) {
   const custo = Number(formData.get("custo_prod") || 0);
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
-  let descontoEmFolha = formData.get("descontoEmFolha") === "on";
+  const descontoEmFolha = formData.get("descontoEmFolha") === "on";
   let boleto = formData.get("boleto") === "on";
-  // Apenas um: desconto em folha ou boleto (nunca os dois)
   if (descontoEmFolha && boleto) boleto = false;
 
   const file = formData.get("comprovante") as File | null;
@@ -113,7 +112,7 @@ async function updateVendaV2(formData: FormData): Promise<{ success: boolean; er
   const envio = Number(formData.get("envio") || 0);
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
-  let descontoEmFolha = formData.get("descontoEmFolha") === "on";
+  const descontoEmFolha = formData.get("descontoEmFolha") === "on";
   let boleto = formData.get("boleto") === "on";
   if (descontoEmFolha && boleto) boleto = false;
 

@@ -24,6 +24,63 @@ function formatDateBr(dateStr: string) {
   }).format(new Date(dateStr));
 }
 
+function TableBoletos({
+  items,
+  emptyMessage,
+  linkLabel = "Ver boleto",
+}: {
+  items: AsaasPaymentListItem[];
+  emptyMessage: string;
+  linkLabel?: string;
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow className="bg-muted/30">
+          <TableHead>Descrição</TableHead>
+          <TableHead>Vencimento</TableHead>
+          <TableHead className="text-right">Valor</TableHead>
+          <TableHead className="w-[100px]"></TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+              {emptyMessage}
+            </TableCell>
+          </TableRow>
+        ) : (
+          items.map((p) => (
+            <TableRow key={p.id}>
+              <TableCell className="font-medium">
+                {p.description || `Cobrança ${p.id.slice(-8)}`}
+              </TableCell>
+              <TableCell>{formatDateBr(p.dueDate)}</TableCell>
+              <TableCell className="text-right font-medium tabular-nums">
+                {formatBRL(p.value)}
+              </TableCell>
+              <TableCell>
+                {p.bankSlipUrl && (
+                  <a
+                    href={p.bankSlipUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    {linkLabel}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
+  );
+}
+
 export default async function BoletosPage() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
@@ -82,61 +139,6 @@ export default async function BoletosPage() {
     orderBy: { dataVenda: "desc" },
     include: { cliente: { select: { nome: true, empresa: true } } },
   });
-
-  const TableBoletos = ({
-    items,
-    emptyMessage,
-    linkLabel = "Ver boleto",
-  }: {
-    items: AsaasPaymentListItem[];
-    emptyMessage: string;
-    linkLabel?: string;
-  }) => (
-    <Table>
-      <TableHeader>
-        <TableRow className="bg-muted/30">
-          <TableHead>Descrição</TableHead>
-          <TableHead>Vencimento</TableHead>
-          <TableHead className="text-right">Valor</TableHead>
-          <TableHead className="w-[100px]"></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {items.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-              {emptyMessage}
-            </TableCell>
-          </TableRow>
-        ) : (
-          items.map((p) => (
-            <TableRow key={p.id}>
-              <TableCell className="font-medium">
-                {p.description || `Cobrança ${p.id.slice(-8)}`}
-              </TableCell>
-              <TableCell>{formatDateBr(p.dueDate)}</TableCell>
-              <TableCell className="text-right font-medium tabular-nums">
-                {formatBRL(p.value)}
-              </TableCell>
-              <TableCell>
-                {p.bankSlipUrl && (
-                  <a
-                    href={p.bankSlipUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    {linkLabel}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-  );
 
   return (
     <div className="space-y-6">

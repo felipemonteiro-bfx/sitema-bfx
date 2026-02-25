@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
-import { formatBRL } from "@/lib/utils";
+import { formatBRL, cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
