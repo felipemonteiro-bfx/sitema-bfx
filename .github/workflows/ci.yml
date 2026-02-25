@@ -4,6 +4,9 @@ name: CI
 on:
   push:
     branches: [main, nextjs-migration]
+    paths-ignore:
+      - deploy/**
+      - k8s/**
   pull_request:
     branches: [main, nextjs-migration]
 
