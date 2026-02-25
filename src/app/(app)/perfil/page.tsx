@@ -2,6 +2,7 @@ import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { MaskedInput } from "@/components/masked-input";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { revalidatePath } from "next/cache";
 import { formatBRL, cn } from "@/lib/utils";
@@ -58,7 +59,7 @@ export default async function Page() {
               <input type="hidden" name="id" value={user.id} />
               <Input name="nome" defaultValue={user.nomeExibicao || ""} placeholder="Nome" aria-label="Nome" />
               <Input name="email" defaultValue={user.email || ""} placeholder="Email" aria-label="Email" />
-              <Input name="telefone" defaultValue={user.telefone || ""} placeholder="Telefone" aria-label="Telefone" />
+              <MaskedInput name="telefone" mask="phone" defaultValue={user.telefone || ""} aria-label="Telefone" />
               <Input name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" aria-label="Endereço" />
               <Input name="senha" defaultValue={user.password} placeholder="Senha" aria-label="Senha" />
               <button className={cn(buttonVariants(), "md:col-span-2 bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Alterações</button>

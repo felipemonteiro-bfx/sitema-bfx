@@ -7,7 +7,7 @@ import { CheckCircle2, AlertCircle, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const inputVariants = cva(
-  "flex h-10 w-full rounded-lg border-2 bg-background px-3 py-2 text-sm shadow-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+  "flex h-10 w-full rounded-lg border-2 bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:text-foreground dark:border-input",
   {
     variants: {
       state: {

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/currency-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -55,11 +56,11 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     crossSell: { id: number; nome: string; valorVenda: number; label: string }[]
   } | null>(null);
 
-  const [custo, setCusto] = useState('');
-  const [valor, setValor] = useState('');
+  const [custo, setCusto] = useState(0);
+  const [valor, setValor] = useState(0);
   const [quantidade, setQuantidade] = useState('1');
-  const [frete, setFrete] = useState('0');
-  const [envio, setEnvio] = useState('0');
+  const [frete, setFrete] = useState(0);
+  const [envio, setEnvio] = useState(0);
   const [temNota, setTemNota] = useState(false);
   const [taxaNota, setTaxaNota] = useState('5.97');
 
@@ -110,19 +111,19 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   const selectProduto = (p: { id: number; nome: string; valorVenda?: number; custoPadrao?: number; custoProduto?: number }) => {
     setSelectedProduto(p);
     setProdutoQuery(p.nome);
-    setCusto(p.custoPadrao?.toString() || p.custoProduto?.toString() || '');
-    setValor(p.valorVenda?.toString() || '');
+    setCusto(p.custoPadrao ?? p.custoProduto ?? 0);
+    setValor(p.valorVenda ?? 0);
     setProdutoSuggestions([]);
   };
 
   const adicionarProduto = () => {
-    if (!produtoQuery || !valor || !custo) {
+    if (!produtoQuery || (valor === 0 && custo === 0)) {
       toast.warning("Preencha produto, custo e valor antes de adicionar");
       return;
     }
 
-    const numValor = Number(valor) || 0;
-    const numCusto = Number(custo) || 0;
+    const numValor = valor;
+    const numCusto = custo;
     const numQuantidade = Number(quantidade) || 1;
 
     const novoProduto: ProdutoItem = {
@@ -138,8 +139,8 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     // Reset product fields
     setProdutoQuery('');
     setSelectedProduto(null);
-    setCusto('');
-    setValor('');
+    setCusto(0);
+    setValor(0);
     setQuantidade('1');
     setAiSuggestions(null);
   };
@@ -149,11 +150,11 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
   };
 
   // Cálculos em tempo real
-  const numValor = Number(valor) || 0;
-  const numCusto = Number(custo) || 0;
+  const numValor = valor;
+  const numCusto = custo;
   const numQuantidade = Number(quantidade) || 1;
-  const numFrete = Number(frete) || 0;
-  const numEnvio = Number(envio) || 0;
+  const numFrete = frete;
+  const numEnvio = envio;
   const numParcelas = Number(parcelas) || 1;
   const numTaxaNota = Number(taxaNota) || 0;
 
@@ -254,13 +255,13 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     let produtosParaEnviar = [...produtos];
 
     // Se tem produto atual preenchido, adicionar à lista
-    if (produtoQuery && valor && custo) {
+    if (produtoQuery && (valor || custo)) {
       produtosParaEnviar.push({
         produtoNome: produtoQuery,
-        custoProduto: Number(custo),
-        valorVenda: Number(valor),
+        custoProduto: custo,
+        valorVenda: valor,
         quantidade: Number(quantidade),
-        subtotal: Number(valor) * Number(quantidade),
+        subtotal: valor * Number(quantidade),
       });
     }
 
@@ -268,8 +269,8 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     formData.append('data', dataVenda);
     formData.append('vendedor', vendedor);
     formData.append('clienteId', selectedCliente.id.toString());
-    formData.append('frete', frete);
-    formData.append('envio', envio);
+    formData.append('frete', String(frete));
+    formData.append('envio', String(envio));
     formData.append('parcelas', parcelas);
     formData.append('temNota', String(temNota));
     formData.append('taxaNota', taxaNota);
@@ -289,11 +290,11 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         setSelectedCliente(null);
         setProdutoQuery('');
         setSelectedProduto(null);
-        setCusto('');
-        setValor('');
+        setCusto(0);
+        setValor(0);
         setQuantidade('1');
-        setFrete('0');
-        setEnvio('0');
+        setFrete(0);
+        setEnvio(0);
         setTemNota(false);
         setProdutos([]);
         toast.success(result.message || "Venda realizada com sucesso!");
@@ -340,7 +341,10 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         </div>
 
         {/* Seção 2: Identificação do Cliente */}
-        <Card className="border-none shadow-sm bg-white dark:bg-card overflow-visible">
+        <Card className={cn(
+          "border-none shadow-sm bg-white dark:bg-card overflow-visible",
+          clienteSuggestions.length > 0 && "relative z-[100]"
+        )}>
           <CardHeader className="pb-3 px-4 pt-4">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
               <User className="h-4 w-4 text-blue-600" /> Cliente
@@ -365,7 +369,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               </div>
 
               {clienteSuggestions.length > 0 && (
-                <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
+                <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-white dark:bg-card border border-border rounded-lg shadow-xl max-h-60 overflow-auto animate-in fade-in zoom-in-95">
                   {clienteSuggestions.map((c) => (
                     <div
                       key={c.id}
@@ -461,7 +465,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               )}
 
               {/* Botão Adicionar Produto */}
-              {produtoQuery && valor && custo && (
+              {produtoQuery && (valor || custo) && (
                 <Button
                   type="button"
                   onClick={adicionarProduto}
@@ -521,10 +525,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground">Preço Unit.</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
-                  <Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} className="pl-9 font-bold" required />
-                </div>
+                <CurrencyInput value={valor} onChange={setValor} className="font-bold" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground">Qtd</Label>
@@ -536,27 +537,18 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground">Frete Cobrado</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
-                  <Input type="number" step="0.01" value={frete} onChange={(e) => setFrete(e.target.value)} className="pl-9" />
-                </div>
+                <CurrencyInput value={frete} onChange={setFrete} />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground">Custo Unit.</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
-                  <Input type="number" step="0.01" value={custo} onChange={(e) => setCusto(e.target.value)} className="pl-9 text-red-600" />
-                </div>
+                <CurrencyInput value={custo} onChange={setCusto} className="text-red-600" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground">Custo Envio</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-bold">R$</span>
-                  <Input type="number" step="0.01" value={envio} onChange={(e) => setEnvio(e.target.value)} className="pl-9 text-red-600" />
-                </div>
+                <CurrencyInput value={envio} onChange={setEnvio} className="text-red-600" />
               </div>
               <div className="col-span-1 md:col-span-2 space-y-1">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground flex items-center gap-1.5">
@@ -661,7 +653,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
               </div>
 
               <Button
-                disabled={loading || !selectedCliente || (produtos.length === 0 && (!produtoQuery || !valor || !custo))}
+                disabled={loading || !selectedCliente || (produtos.length === 0 && (!produtoQuery || (!valor && !custo)))}
                 type="submit"
                 className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-black text-lg shadow-[0_4px_20px_rgba(16,185,129,0.3)] transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >

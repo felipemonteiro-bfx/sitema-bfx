@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
 import AntecipacaoClient from "@/components/antecipacao-client";
 
+export const dynamic = "force-dynamic";
+
 async function antecipar(formData: FormData) {
   "use server";
   const ids = formData.getAll("id").map((v) => Number(v));

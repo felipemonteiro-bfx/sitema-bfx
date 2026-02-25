@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, Package } from "lucide-react";
 import { formatBRL, cn } from "@/lib/utils";
+import { CurrencyInput } from "@/components/currency-input";
 
 interface ProdutoItem {
   id: string; // ID temporário para o frontend
@@ -147,7 +148,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               className={hasError ? "border-destructive border-2" : ""}
             />
             {produtoSuggestions.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto">
                 {produtoSuggestions.map((p) => (
                   <button
                     key={p.id}
@@ -172,12 +173,9 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Custo Unit.
             </Label>
-            <Input
-              type="number"
-              step="0.01"
+            <CurrencyInput
               value={item.custoProduto}
-              onChange={(e) => handleChange("custoProduto", Number(e.target.value))}
-              required
+              onChange={(v) => handleChange("custoProduto", v)}
             />
           </div>
 
@@ -186,12 +184,9 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Valor Unit.
             </Label>
-            <Input
-              type="number"
-              step="0.01"
+            <CurrencyInput
               value={item.valorVenda}
-              onChange={(e) => handleChange("valorVenda", Number(e.target.value))}
-              required
+              onChange={(v) => handleChange("valorVenda", v)}
             />
           </div>
 

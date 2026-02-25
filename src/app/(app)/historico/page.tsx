@@ -8,13 +8,14 @@ import { formatBRL, cn } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
+import { EditVendaFormClient } from "@/components/edit-venda-form-client";
 import { DateInput } from "@/components/ui/date-input";
-import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
-import { getAsaasConfig, getOrCreateCustomer, createBoletoPayment } from "@/lib/asaas";
+import { getAsaasConfig } from "@/lib/asaas";
+import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -104,73 +105,109 @@ async function updateVenda(formData: FormData) {
   revalidatePath("/historico");
 }
 
+async function updateVendaV2(formData: FormData): Promise<{ success: boolean; error?: string }> {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  const dataStr = String(formData.get("data") || "");
+  const frete = Number(formData.get("frete") || 0);
+  const envio = Number(formData.get("envio") || 0);
+  const temNota = formData.get("temNota") === "on";
+  const taxaNota = Number(formData.get("taxaNota") || 5.97);
+  let descontoEmFolha = formData.get("descontoEmFolha") === "on";
+  let boleto = formData.get("boleto") === "on";
+  if (descontoEmFolha && boleto) boleto = false;
+
+  const produtosJson = formData.get("produtos");
+  if (!produtosJson || !id || !dataStr) {
+    return { success: false, error: "Dados inválidos" };
+  }
+
+  let produtos: Array<{ produtoNome: string; custoProduto: number; valorVenda: number; quantidade: number; subtotal: number }>;
+  try {
+    produtos = JSON.parse(String(produtosJson));
+  } catch {
+    return { success: false, error: "Dados de produtos inválidos" };
+  }
+
+  if (!Array.isArray(produtos) || produtos.length === 0) {
+    return { success: false, error: "Nenhum produto informado" };
+  }
+
+  const subtotalProdutos = produtos.reduce((s, p) => s + p.subtotal, 0);
+  const totalVenda = subtotalProdutos + frete;
+  const valorDescontoNota = temNota ? (subtotalProdutos * taxaNota) / 100 : 0;
+  const custoTotal =
+    produtos.reduce((s, p) => s + p.custoProduto * p.quantidade, 0) + envio + valorDescontoNota;
+  const lucroLiquido = totalVenda - custoTotal;
+  const parcelas = Number(formData.get("parcelas") || 1);
+  const valorParcela = parcelas > 0 ? totalVenda / parcelas : 0;
+
+  const file = formData.get("comprovante") as File | null;
+  let comprovantePath: string | undefined;
+  const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
+  if (file && file.size > 0 && file.name) {
+    const ext = path.extname(file.name).toLowerCase();
+    if (allowedExtensions.includes(ext)) {
+      try {
+        const uploadDir = path.join(process.cwd(), "public/uploads/recibos");
+        if (!fs.existsSync(uploadDir)) await mkdir(uploadDir, { recursive: true });
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const baseName = path.basename(file.name, ext).replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "") || "anexo";
+        const filename = `${id}-${Date.now()}-${baseName}${ext}`;
+        await writeFile(path.join(uploadDir, filename), buffer);
+        comprovantePath = `/uploads/recibos/${filename}`;
+      } catch (e) {
+        console.error("Erro upload comprovante:", e);
+      }
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.itemVenda.deleteMany({ where: { vendaId: id } });
+    await tx.itemVenda.createMany({
+      data: produtos.map((p) => ({
+        vendaId: id,
+        produtoNome: p.produtoNome,
+        custoProduto: p.custoProduto,
+        valorVenda: p.valorVenda,
+        quantidade: p.quantidade,
+        subtotal: p.subtotal,
+      })),
+    });
+    await tx.venda.update({
+      where: { id },
+      data: {
+        dataVenda: new Date(dataStr),
+        vendedor: String(formData.get("vendedor") || ""),
+        produtoNome: produtos[0]?.produtoNome || "",
+        custoProduto: produtos[0]?.custoProduto || 0,
+        quantidade: produtos[0]?.quantidade || 1,
+        valorVenda: produtos[0]?.valorVenda || 0,
+        valorFrete: frete,
+        custoEnvio: envio,
+        parcelas,
+        valorParcela,
+        lucroLiquido,
+        temNota,
+        taxaNota,
+        descontoEmFolha,
+        boleto,
+        ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
+      },
+    });
+  });
+
+  await createAuditLog("venda:update", { vendaId: id, total: totalVenda, lucro: lucroLiquido });
+  revalidatePath("/historico");
+  return { success: true };
+}
+
 async function deleteVenda(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
   if (!id) return;
   await prisma.venda.delete({ where: { id } });
   await createAuditLog("venda:delete", { vendaId: id });
-  revalidatePath("/historico");
-}
-
-async function gerarBoletoAsaas(formData: FormData) {
-  "use server";
-  const vendaId = Number(formData.get("vendaId") || 0);
-  if (!vendaId || !getAsaasConfig()) return;
-  const venda = await prisma.venda.findUnique({
-    where: { id: vendaId },
-    include: {
-      cliente: true,
-      parcelasVencimento: { orderBy: { numeroParcela: "asc" }, take: 1 },
-    },
-  });
-  if (!venda || !venda.boleto || venda.boletoUrl || !venda.clienteId || !venda.cliente) return;
-  const cliente = venda.cliente;
-  if (!cliente.cpf && !cliente.cnpj) return;
-  try {
-    const totalVenda =
-      ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
-    const firstDue =
-      venda.parcelasVencimento[0]?.dataVencimento?.toISOString().slice(0, 10) ||
-      (() => {
-        const d = new Date();
-        if ((venda.parcelas || 1) > 1) {
-          d.setMonth(d.getMonth() + 1);
-          d.setDate(10);
-        } else {
-          d.setDate(d.getDate() + 3);
-        }
-        return d.toISOString().slice(0, 10);
-      })();
-    const clienteAsaas = cliente as { asaasCustomerId?: string | null };
-    const asaasCustomerId = await getOrCreateCustomer(
-      {
-        id: cliente.id,
-        nome: cliente.nome,
-        cpf: cliente.cpf,
-        cnpj: cliente.cnpj,
-        email: cliente.email,
-        telefone: cliente.telefone,
-        asaasCustomerId: clienteAsaas.asaasCustomerId ?? null,
-      },
-      prisma
-    );
-    const parcelas = venda.parcelas || 1;
-    const payment = await createBoletoPayment({
-      customerId: asaasCustomerId,
-      value: totalVenda,
-      dueDate: firstDue,
-      ...(parcelas > 1 && { installmentCount: parcelas, totalValue: totalVenda }),
-      description: `Venda #${venda.id}`,
-      externalReference: String(venda.id),
-    });
-    await prisma.venda.update({
-      where: { id: vendaId },
-      data: { asaasPaymentId: payment.id, boletoUrl: payment.bankSlipUrl || null },
-    });
-  } catch (err) {
-    console.error("Erro ao gerar boleto Asaas (retry):", err);
-  }
   revalidatePath("/historico");
 }
 
@@ -241,6 +278,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       descontoEmFolha: true, boleto: true, comprovantePdf: true,
       asaasPaymentId: true, boletoUrl: true,
+      itens: {
+        select: {
+          produtoNome: true, custoProduto: true, valorVenda: true,
+          quantidade: true, subtotal: true,
+        },
+      },
     },
   }) : null;
 
@@ -484,167 +527,37 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       </Card>
 
       {editVenda && (
-        <Card id="editar-venda" className="scroll-mt-24">
-          <CardHeader className="space-y-1">
-            <CardTitle>Editando venda #{editVenda.id}</CardTitle>
-            <p className="text-sm text-muted-foreground">Ajuste os dados e salve para atualizar o Histórico.</p>
-          </CardHeader>
-          <CardContent>
-            <form action={updateVenda} method="post" encType="multipart/form-data" className="grid gap-4 md:grid-cols-3">
-              <input type="hidden" name="id" value={editVenda.id} />
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Data da venda</label>
-                <DateInput name="data" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Vendedor</label>
-                <FormSelect
-                  name="vendedor"
-                  defaultValue={editVenda.vendedor || ""}
-                  options={[
-                    ...(editVenda.vendedor && !vendedores.some((v) => (v.nomeExibicao || v.username) === editVenda.vendedor)
-                      ? [{ value: editVenda.vendedor, label: editVenda.vendedor }]
-                      : []),
-                    ...vendedores.map((v) => ({
-                      value: String(v.nomeExibicao || v.username),
-                      label: String(v.nomeExibicao || v.username),
-                    })),
-                  ]}
-                  placeholder="Selecione o vendedor"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Produto</label>
-                <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Quantidade</label>
-                <Input name="quantidade" type="number" min="1" defaultValue={editVenda.quantidade || 1} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Valor Unitário</label>
-                <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Frete ao cliente</label>
-                <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Custo de envio</label>
-                <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
-                <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
-              </div>
-              
-              <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</label>
-                <div className="flex flex-col gap-2">
-                  <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
-                  {editVenda.comprovantePdf ? (
-                    <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-md border border-emerald-100">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Comprovante já enviado. 
-                      <a href={editVenda.comprovantePdf} target="_blank" className="font-bold underline flex items-center gap-1">
-                        Ver atual <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 px-2 py-1.5 rounded-md border border-amber-100 animate-pulse">
-                      <AlertCircle className="h-3 w-3" />
-                      <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
-                <input 
-                  type="checkbox" 
-                  name="temNota" 
-                  id="edit-temNota" 
-                  defaultChecked={editVenda.temNota}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer">
-                  Com Nota Fiscal
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
-                <input 
-                  type="checkbox" 
-                  name="descontoEmFolha" 
-                  id="edit-descontoEmFolha" 
-                  defaultChecked={editVenda.descontoEmFolha ?? false}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer">
-                  Desconto em folha
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
-                <input 
-                  type="checkbox" 
-                  name="boleto" 
-                  id="edit-boleto" 
-                  defaultChecked={editVenda.boleto ?? false}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer">
-                  Boleto
-                </label>
-              </div>
-              <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opções: desconto em folha ou boleto.</p>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Taxa da Nota (%)</label>
-                <Input 
-                  name="taxaNota" 
-                  type="number" 
-                  step="0.01" 
-                  defaultValue={editVenda.taxaNota || 5.97} 
-                />
-              </div>
-
-              <div className="md:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar alterações</button>
-                  <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
-                    Recibo de Venda
-                  </a>
-                  {editVenda.descontoEmFolha && (
-                    <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}&tipo=autorizacao`}>
-                      Autorização (Desconto em Folha)
-                    </a>
-                  )}
-                  {editVenda.boletoUrl ? (
-                    <a
-                      href={editVenda.boletoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-                    >
-                      Ver boleto Asaas
-                    </a>
-                  ) : editVenda.boleto ? (
-                    <form action={gerarBoletoAsaas} className="inline">
-                      <input type="hidden" name="vendaId" value={editVenda.id} />
-                      <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                        Gerar boleto Asaas
-                      </button>
-                    </form>
-                  ) : null}
-                </div>
-                <DeleteVendaButton vendaId={editVenda.id} deleteAction={deleteVenda} />
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <EditVendaFormClient
+          editVenda={{
+            id: editVenda.id,
+            dataVenda: editVenda.dataVenda,
+            vendedor: editVenda.vendedor,
+            valorFrete: editVenda.valorFrete ?? 0,
+            custoEnvio: editVenda.custoEnvio ?? 0,
+            parcelas: editVenda.parcelas,
+            temNota: editVenda.temNota,
+            taxaNota: editVenda.taxaNota ?? 5.97,
+            descontoEmFolha: editVenda.descontoEmFolha ?? false,
+            boleto: editVenda.boleto ?? false,
+            comprovantePdf: editVenda.comprovantePdf,
+            boletoUrl: editVenda.boletoUrl,
+            itens: editVenda.itens?.length
+              ? editVenda.itens
+              : editVenda.produtoNome
+                ? [{
+                    produtoNome: editVenda.produtoNome,
+                    custoProduto: editVenda.custoProduto ?? 0,
+                    valorVenda: editVenda.valorVenda ?? 0,
+                    quantidade: editVenda.quantidade ?? 1,
+                    subtotal: (editVenda.valorVenda ?? 0) * (editVenda.quantidade ?? 1),
+                  }]
+                : [],
+          }}
+          vendedores={vendedores}
+          updateAction={updateVendaV2}
+          deleteAction={deleteVenda}
+          gerarBoletoAction={gerarBoletoAsaas}
+        />
       )}
     </div>
   );

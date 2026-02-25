@@ -23,6 +23,7 @@ import { ProdutoItemForm } from "@/components/produto-item-form";
 import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
+import { CurrencyInput } from "@/components/currency-input";
 import type { ActionResponse } from "@/lib/action-response";
 
 interface ProdutoItem {
@@ -104,8 +105,8 @@ export default function VendaRapidaFormV2({
   ]);
 
   // Outras despesas
-  const [frete, setFrete] = useState("0");
-  const [envio, setEnvio] = useState("0");
+  const [frete, setFrete] = useState(0);
+  const [envio, setEnvio] = useState(0);
   const [temNota, setTemNota] = useState(false);
   const [taxaNota, setTaxaNota] = useState("5.97");
   const [descontoEmFolha, setDescontoEmFolha] = useState(false);
@@ -193,8 +194,8 @@ export default function VendaRapidaFormV2({
 
   // Cálculos totais
   const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);
-  const numFrete = Number(frete) || 0;
-  const numEnvio = Number(envio) || 0;
+  const numFrete = frete;
+  const numEnvio = envio;
   const numTaxaNota = Number(taxaNota) || 0;
   const numParcelas = Number(parcelas) || 1;
 
@@ -239,8 +240,8 @@ export default function VendaRapidaFormV2({
       toast.error("Cliente sem endereço cadastrado. Cadastre o endereço do cliente.");
       return;
     }
-    if (!uberPickupAddress) {
-      toast.error("Endereço de retirada não configurado. Defina UBER_PICKUP_ADDRESS_JSON.");
+    if (!uberEnabled || !uberPickupAddress) {
+      toast.error("Uber Direct não configurado. Configure UBER_DIRECT_CUSTOMER_ID, UBER_DIRECT_TOKEN e UBER_PICKUP_ADDRESS_JSON no servidor.");
       return;
     }
     const orderValue = produtos.reduce((s, p) => s + p.subtotal, 0);
@@ -286,7 +287,7 @@ export default function VendaRapidaFormV2({
         toast.error(data?.error || "Erro ao obter cotação Uber.");
         return;
       }
-      setFrete(String(data.fee?.toFixed(2) ?? "0"));
+      setFrete(data.fee ?? 0);
       toast.success(`Frete Uber: R$ ${(data.fee ?? 0).toFixed(2)} (${data.duration ?? "?"} min)`);
     } catch (err) {
       console.error(err);
@@ -427,8 +428,8 @@ export default function VendaRapidaFormV2({
     formData.append("data", dataVenda);
     formData.append("vendedor", vendedor);
     formData.append("clienteId", selectedCliente!.id.toString());
-    formData.append("frete", frete);
-    formData.append("envio", envio);
+    formData.append("frete", String(frete));
+    formData.append("envio", String(envio));
     formData.append("parcelas", parcelas);
     formData.append("temNota", String(temNota));
     formData.append("taxaNota", taxaNota);
@@ -459,8 +460,8 @@ export default function VendaRapidaFormV2({
             subtotal: 0,
           },
         ]);
-        setFrete("0");
-        setEnvio("0");
+        setFrete(0);
+        setEnvio(0);
         setParcelas("1");
         setTemNota(false);
         setDescontoEmFolha(false);
@@ -547,8 +548,8 @@ export default function VendaRapidaFormV2({
       <Card
         variant="elevated"
         className={cn(
-          "border-info/20 transition-colors",
-          clienteSuggestions.length > 0 && "z-10",
+          "border-info/20 transition-colors overflow-visible",
+          clienteSuggestions.length > 0 && "relative z-[100]",
           validationErrors.cliente && "border-destructive border-2",
         )}
       >
@@ -558,8 +559,8 @@ export default function VendaRapidaFormV2({
             Cliente
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2 relative">
+        <CardContent className="overflow-visible">
+          <div className="relative">
             <Label
               className={cn(
                 "text-xs font-bold uppercase tracking-wider",
@@ -576,7 +577,7 @@ export default function VendaRapidaFormV2({
               className={validationErrors.cliente ? "border-destructive border-2" : ""}
             />
             {clienteSuggestions.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
                 {clienteSuggestions.map((c) => (
                   <button
                     key={c.id}
@@ -677,43 +678,32 @@ export default function VendaRapidaFormV2({
                 Frete (Cobrado)
               </Label>
               <div className="flex gap-2">
-                <Input
-                  type="number"
-                  step="0.01"
+                <CurrencyInput
                   value={frete}
-                  onChange={(e) => setFrete(e.target.value)}
-                  placeholder="0.00"
+                  onChange={setFrete}
                   className="flex-1"
                 />
-                {uberEnabled && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={cotarFreteUber}
-                    disabled={uberQuoteLoading || !selectedCliente}
-                    title={!selectedCliente ? "Selecione um cliente" : "Cotar frete Uber Direct"}
-                  >
-                    {uberQuoteLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Uber"
-                    )}
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={cotarFreteUber}
+                  disabled={uberQuoteLoading || !selectedCliente}
+                  title={!selectedCliente ? "Selecione um cliente" : "Cotar frete Uber Direct"}
+                >
+                  {uberQuoteLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Uber"
+                  )}
+                </Button>
               </div>
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Envio (Custo)
               </Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={envio}
-                onChange={(e) => setEnvio(e.target.value)}
-                placeholder="0.00"
-              />
+              <CurrencyInput value={envio} onChange={setEnvio} />
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">

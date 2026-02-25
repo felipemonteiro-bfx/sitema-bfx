@@ -471,7 +471,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             custoEnvio: parsedParams.custoEnvio || 0,
             parcelas: parsedParams.parcelas || 1,
             valorParcela: (parsedParams.valorVenda || 0) / (parsedParams.parcelas || 1),
-            antecipada: parsedParams.antecipada ?? 1,
+            antecipada: parsedParams.antecipada ?? 0,
           },
         });
         break;

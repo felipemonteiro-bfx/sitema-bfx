@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/currency-input";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
@@ -38,12 +39,12 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
   const isEdit = Boolean(produto && onUpdateAction);
 
   const [nome, setNome] = useState('');
-  const [custo, setCusto] = useState('');
+  const [custo, setCusto] = useState(0);
   const [estoque, setEstoque] = useState('0');
   const [marca, setMarca] = useState('');
   const [categoria, setCategoria] = useState('');
   const [ncm, setNcm] = useState('');
-  const [valor, setValor] = useState('');
+  const [valor, setValor] = useState(0);
   const [imagemPath, setImagemPath] = useState('');
   const [fornecedorId, setFornecedorId] = useState('');
 
@@ -61,12 +62,12 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
   useEffect(() => {
     if (produto) {
       setNome(produto.nome || '');
-      setCusto(produto.custoPadrao != null ? String(produto.custoPadrao) : '');
+      setCusto(produto.custoPadrao ?? 0);
       setEstoque(produto.qtdEstoque != null ? String(produto.qtdEstoque) : '0');
       setMarca(produto.marca || '');
       setCategoria(produto.categoria || '');
       setNcm(produto.ncm || '');
-      setValor(produto.valorVenda != null ? String(produto.valorVenda) : '');
+      setValor(produto.valorVenda ?? 0);
       setImagemPath(produto.imagem || '');
       setFornecedorId(produto.fornecedorId != null ? String(produto.fornecedorId) : '');
     }
@@ -158,11 +159,11 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
     setIsSubmitting(true);
     const formData = new FormData();
     formData.append('nome', nome);
-    formData.append('custo', custo);
+    formData.append('custo', String(custo));
     formData.append('marca', marca);
     formData.append('categoria', categoria);
     formData.append('ncm', ncm);
-    formData.append('valor', valor);
+    formData.append('valor', String(valor));
     formData.append('estoque', estoque);
     formData.append('imagem', imagemPath);
     formData.append('fornecedorId', fornecedorId);
@@ -180,12 +181,12 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
       } else if (!isEdit) {
         toast.success("Produto cadastrado com sucesso!");
         setNome('');
-        setCusto('');
+        setCusto(0);
         setEstoque('0');
         setMarca('');
         setCategoria('');
         setNcm('');
-        setValor('');
+        setValor(0);
         setImagemPath('');
         setFornecedorId('');
         setSuggestions([]);
@@ -258,12 +259,12 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
           <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Custo (R$)</Label>
-              <Input type="number" value={custo} onChange={(e) => setCusto(e.target.value)} placeholder="0,00" />
+              <CurrencyInput value={custo} onChange={setCusto} />
             </div>
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Valor de Venda (R$)</Label>
-              <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="0,00" />
+              <CurrencyInput value={valor} onChange={setValor} />
             </div>
 
             <div className="space-y-1">

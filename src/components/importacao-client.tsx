@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
-import { Loader2, AlertCircle, CheckCircle2, Trash2 } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import Papa from "papaparse";
 
 interface RowData {
@@ -28,6 +28,7 @@ export default function ImportacaoClient() {
   const [data, setData] = useState<RowData[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,6 +72,34 @@ export default function ImportacaoClient() {
 
   const removeRow = (id: string) => {
     setData(prev => prev.filter(row => row.id !== id));
+  };
+
+  const sugerirComIA = async () => {
+    if (data.length === 0) return;
+    setSuggesting(true);
+    try {
+      const res = await fetch("/api/importacao/sugerir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const { data: suggested } = await res.json();
+        if (Array.isArray(suggested) && suggested.length > 0) {
+          setData(suggested.map((r: RowData & { id?: string }) => ({
+            ...r,
+            id: r.id ?? Math.random().toString(36).substr(2, 9),
+          })));
+          toast.success("IA aplicou sugestões. Revise os dados antes de confirmar.");
+        }
+      } else {
+        toast.error("Não foi possível processar com IA. Verifique a chave Gemini em Configurações.");
+      }
+    } catch {
+      toast.error("Erro de conexão ao processar com IA.");
+    } finally {
+      setSuggesting(false);
+    }
   };
 
   const finalizeImport = async () => {
@@ -148,10 +177,22 @@ export default function ImportacaoClient() {
               <CardTitle className="text-primary">2. Validar e Editar Dados</CardTitle>
               <p className="text-sm text-muted-foreground italic">Edite as células abaixo se necessário antes de confirmar.</p>
             </div>
-            <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90">
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-              Subir {data.length} Vendas
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={sugerirComIA}
+                disabled={suggesting || saving}
+                className="border-amber-300 text-amber-700 hover:bg-amber-50"
+              >
+                {suggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                Sugerir com IA
+              </Button>
+              <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90">
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                Subir {data.length} Vendas
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border bg-white overflow-hidden overflow-x-auto">

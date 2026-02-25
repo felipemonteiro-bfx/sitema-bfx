@@ -64,7 +64,7 @@ model Venda {
   valorParcela       Float?    @map("valor_parcela")
   taxaFinanceiraValor Float?   @map("taxa_financeira_valor")
   lucroLiquido       Float?    @map("lucro_liquido")
-  antecipada         Int?      @default(1)
+  antecipada         Int?      @default(0)
   excedeuLimite      Int?      @default(0) @map("excedeu_limite")
   temNota            Boolean   @default(false) @map("tem_nota")
   taxaNota           Float?    @default(5.97) @map("taxa_nota")

@@ -7,6 +7,8 @@ import { formatBRL, cn } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FormSelect } from "@/components/form-select";
+import { MaskedInput } from "@/components/masked-input";
+import { CurrencyInput } from "@/components/currency-input";
 import { QueryTabs } from "@/components/query-tabs";
 import ProdutoFormClient from "@/components/produto-form-client";
 import Image from "next/image";
@@ -249,15 +251,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Renda/Faturamento</div>
-                          <Input name="renda" placeholder="Renda/Faturamento" type="number" aria-label="Renda" />
+                          <CurrencyInput name="renda" aria-label="Renda" />
                         </div>
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">WhatsApp</div>
-                          <Input name="telefone" placeholder="WhatsApp" aria-label="WhatsApp" />
+                          <MaskedInput name="telefone" mask="phone" aria-label="WhatsApp" />
                         </div>
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">CEP</div>
-                          <Input name="cep" placeholder="CEP" aria-label="CEP" />
+                          <MaskedInput name="cep" mask="cep" aria-label="CEP" />
                         </div>
                       </div>
                       <div className="grid gap-3 md:grid-cols-2">
@@ -363,15 +365,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </div>
                           <div className="space-y-1">
                             <div className="text-xs font-semibold text-muted-foreground">Renda/Faturamento</div>
-                            <Input name="renda" defaultValue={editClienteData.renda || ""} placeholder="Renda/Faturamento" type="number" aria-label="Renda" />
+                            <CurrencyInput name="renda" defaultValue={editClienteData.renda ?? 0} aria-label="Renda" />
                           </div>
                           <div className="space-y-1">
                             <div className="text-xs font-semibold text-muted-foreground">WhatsApp</div>
-                            <Input name="telefone" defaultValue={editClienteData.telefone || ""} placeholder="WhatsApp" aria-label="WhatsApp" />
+                            <MaskedInput name="telefone" mask="phone" defaultValue={editClienteData.telefone || ""} aria-label="WhatsApp" />
                           </div>
                           <div className="space-y-1">
                             <div className="text-xs font-semibold text-muted-foreground">CEP</div>
-                            <Input name="cep" defaultValue={editClienteData.cep || ""} placeholder="CEP" aria-label="CEP" />
+                            <MaskedInput name="cep" mask="cep" defaultValue={editClienteData.cep || ""} aria-label="CEP" />
                           </div>
                         </div>
                         <div className="grid gap-3 md:grid-cols-2">
@@ -538,7 +540,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
-                          <Input name="telefone" placeholder="(00) 00000-0000" aria-label="Telefone" />
+                          <MaskedInput name="telefone" mask="phone" aria-label="Telefone" />
                         </div>
                       </div>
                       <div className="flex items-center justify-end">
@@ -615,7 +617,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <div className="grid gap-3 md:grid-cols-2">
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
-                          <Input name="tel" placeholder="Telefone RH" aria-label="Telefone RH" />
+                          <MaskedInput name="tel" mask="phone" aria-label="Telefone RH" />
                         </div>
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Email RH</div>

@@ -17,11 +17,21 @@ export default async function Page() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const today = format(now, "yyyy-MM-dd");
   const monthStartStr = format(monthStart, "yyyy-MM-dd");
-  const empresas = await prisma.empresaParceira.findMany({ orderBy: { nome: "asc" } });
+  const [empresas, fornecedores] = await Promise.all([
+    prisma.empresaParceira.findMany({ orderBy: { nome: "asc" } }),
+    prisma.fornecedor.findMany({ select: { nome: true } }),
+  ]);
+  const nomesFornecedores = new Set(fornecedores.map((f) => f.nome.toLowerCase()));
   const extraEmpresas = ["Amazonfive", "Gimam"];
   const empresaOptions = [
-    ...empresas.map((e) => e.nome),
-    ...extraEmpresas.filter((name) => !empresas.some((e) => e.nome.toLowerCase() === name.toLowerCase())),
+    ...empresas
+      .map((e) => e.nome)
+      .filter((nome) => !nomesFornecedores.has(nome.toLowerCase())),
+    ...extraEmpresas.filter(
+      (name) =>
+        !empresas.some((e) => e.nome.toLowerCase() === name.toLowerCase()) &&
+        !nomesFornecedores.has(name.toLowerCase()),
+    ),
   ];
 
   const formatDateBR = (value: string) =>
@@ -93,19 +103,41 @@ export default async function Page() {
           <CardHeader>
             <CardTitle className="text-blue-900">Outros Relatórios</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <a 
-              href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}`}
-              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
-            >
-              Inadimplência (CSV)
-            </a>
-            <a 
-              href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}`}
-              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
-            >
-              Margem por Produto (CSV)
-            </a>
+          <CardContent className="space-y-3">
+            <div className="space-y-1">
+              <div className="text-xs font-semibold text-muted-foreground">Inadimplência</div>
+              <div className="flex gap-2">
+                <a 
+                  href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=csv`}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                >
+                  CSV
+                </a>
+                <a 
+                  href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=pdf`}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                >
+                  PDF
+                </a>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-xs font-semibold text-muted-foreground">Margem por Produto</div>
+              <div className="flex gap-2">
+                <a 
+                  href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=csv`}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                >
+                  CSV
+                </a>
+                <a 
+                  href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=pdf`}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                >
+                  PDF
+                </a>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

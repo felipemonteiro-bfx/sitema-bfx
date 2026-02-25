@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,12 +8,17 @@ import { Input } from "@/components/ui/input";
 export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setFile(event.target.files[0]);
+      const f = event.target.files[0];
+      setFile(f);
+      // Preview local do arquivo selecionado
+      setPreviewUrl(URL.createObjectURL(f));
     } else {
       setFile(null);
+      setPreviewUrl(null);
     }
   };
 
@@ -36,7 +40,6 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
 
       if (response.ok) {
         toast.success("Logo enviada com sucesso!");
-        // For simplicity, reload the page to show the new logo and revalidate data
         window.location.reload();
       } else {
         const errorData = await response.json();
@@ -50,21 +53,24 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
     }
   };
 
+  const displayUrl = previewUrl || (currentLogoPath ? (currentLogoPath.startsWith("/") ? currentLogoPath : `/${currentLogoPath}`) : null);
+
   return (
     <div className="space-y-4">
-      {currentLogoPath && (
-        <div>
-          <h3 className="text-sm font-medium mb-2">Logo atual:</h3>
-          <div className="relative w-32 h-32 border rounded-md overflow-hidden p-2">
-            <Image
-              src={currentLogoPath}
-              alt="Current Logo"
-              layout="fill"
-              objectFit="contain"
+      <div>
+        <h3 className="text-sm font-medium mb-2">Logo atual:</h3>
+        <div className="relative w-32 h-32 border rounded-md overflow-hidden p-2 bg-muted/30 flex items-center justify-center">
+          {displayUrl ? (
+            <img
+              src={displayUrl}
+              alt="Logo atual"
+              className="max-w-full max-h-full object-contain"
             />
-          </div>
+          ) : (
+            <span className="text-xs text-muted-foreground text-center">Nenhuma logo cadastrada</span>
+          )}
         </div>
-      )}
+      </div>
       <div>
         <label htmlFor="logo-upload" className="block text-sm font-medium text-gray-700">
           Carregar nova logo

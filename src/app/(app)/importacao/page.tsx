@@ -21,7 +21,9 @@ export default async function Page() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Importação Inteligente</h1>
-          <p className="text-sm text-muted-foreground">Revise e edite os dados do arquivo antes de confirmar a subida.</p>
+          <p className="text-sm text-muted-foreground">
+            Revise e edite os dados do arquivo antes de confirmar. Use &quot;Sugerir com IA&quot; para padronizar clientes, produtos e preencher campos em branco.
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">

@@ -1,9 +1,19 @@
 import { prisma } from "@/lib/db";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+
+function formatBRL(value: number) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+function formatDate(d: Date) {
+  return new Intl.DateTimeFormat("pt-BR").format(d);
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
+  const format = (searchParams.get("format") || "csv").toLowerCase();
 
   const start = from
     ? new Date(from + "T00:00:00")
@@ -44,19 +54,71 @@ export async function GET(req: Request) {
     return {
       produto,
       quantidade: d.quantidade,
-      custoTotal: d.custoTotal.toFixed(2),
-      receitaTotal: d.receitaTotal.toFixed(2),
-      lucro: lucro.toFixed(2),
+      custoTotal: d.custoTotal,
+      receitaTotal: d.receitaTotal,
+      lucro,
       margemPct: margem.toFixed(1),
     };
   });
 
-  rows.sort((a, b) => parseFloat(b.lucro) - parseFloat(a.lucro));
+  rows.sort((a, b) => b.lucro - a.lucro);
 
-  const header =
-    "Produto,Quantidade,Custo Total,Receita Total,Lucro,Margem (%)\n";
+  if (format === "pdf") {
+    const pdfDoc = await PDFDocument.create();
+    let page = pdfDoc.addPage([595, 842]);
+    const { width, height } = page.getSize();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: rgb(0.07, 0.15, 0.3) });
+    page.drawText("MARGEM POR PRODUTO", {
+      x: 40, y: height - 45, size: 18, font: fontBold, color: rgb(1, 1, 1),
+    });
+    page.drawText(`Período: ${formatDate(start)} até ${formatDate(end)}`, {
+      x: 40, y: height - 65, size: 10, font, color: rgb(0.9, 0.9, 0.9),
+    });
+
+    const colX = [40, 220, 280, 360, 440, 500];
+    const headers = ["Produto", "Qtd", "Custo", "Receita", "Lucro", "Margem"];
+    const tableTop = height - 115;
+    page.drawRectangle({ x: 30, y: tableTop - 5, width: width - 60, height: 20, color: rgb(0.95, 0.95, 0.95) });
+    headers.forEach((h, i) => {
+      page.drawText(h, { x: colX[i], y: tableTop, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
+    });
+
+    let y = tableTop - 22;
+
+    for (const r of rows) {
+      if (y < 50) {
+        page = pdfDoc.addPage([595, 842]);
+        y = height - 50;
+      }
+      page.drawText(r.produto.substring(0, 28), { x: colX[0], y, size: 8, font });
+      page.drawText(String(r.quantidade), { x: colX[1], y, size: 8, font });
+      page.drawText(formatBRL(r.custoTotal), { x: colX[2], y, size: 8, font });
+      page.drawText(formatBRL(r.receitaTotal), { x: colX[3], y, size: 8, font });
+      page.drawText(formatBRL(r.lucro), { x: colX[4], y, size: 8, font });
+      page.drawText(`${r.margemPct}%`, { x: colX[5], y, size: 8, font });
+      y -= 16;
+    }
+
+    const totalLucro = rows.reduce((s, r) => s + r.lucro, 0);
+    y -= 15;
+    page.drawRectangle({ x: 30, y: y - 10, width: width - 60, height: 25, color: rgb(0.07, 0.15, 0.3) });
+    page.drawText(`Lucro total: ${formatBRL(totalLucro)} | ${rows.length} produto(s)`, { x: 40, y, size: 11, font: fontBold, color: rgb(1, 1, 1) });
+
+    const pdfBytes = await pdfDoc.save();
+    return new Response(Buffer.from(pdfBytes), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'attachment; filename="relatorio_margem_produto.pdf"',
+      },
+    });
+  }
+
+  const header = "Produto,Quantidade,Custo Total,Receita Total,Lucro,Margem (%)\n";
   const lines = rows.map((r) =>
-    [r.produto, r.quantidade, r.custoTotal, r.receitaTotal, r.lucro, r.margemPct].join(",")
+    [r.produto, r.quantidade, r.custoTotal.toFixed(2), r.receitaTotal.toFixed(2), r.lucro.toFixed(2), r.margemPct].join(",")
   );
   const csv = header + lines.join("\n");
 

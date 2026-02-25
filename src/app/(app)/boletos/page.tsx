@@ -1,5 +1,7 @@
+import { prisma } from "@/lib/db";
 import { getAsaasConfig, listPayments } from "@/lib/asaas";
 import { requireAdmin } from "@/lib/guards";
+import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { formatBRL } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,6 +13,7 @@ import {
   CheckCircle2,
   ExternalLink,
 } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button-variants";
 import type { AsaasPaymentListItem } from "@/lib/asaas";
 
 function formatDateBr(dateStr: string) {
@@ -73,6 +76,12 @@ export default async function BoletosPage() {
   const totalVencidos = vencidos.reduce((s, p) => s + p.value, 0);
   const totalAVencer = aVencer.reduce((s, p) => s + p.value, 0);
   const totalPagos = pagos.reduce((s, p) => s + p.value, 0);
+
+  const vendasPendentesBoleto = await prisma.venda.findMany({
+    where: { boleto: true, boletoUrl: null },
+    orderBy: { dataVenda: "desc" },
+    include: { cliente: { select: { nome: true, empresa: true } } },
+  });
 
   const TableBoletos = ({
     items,
@@ -224,25 +233,77 @@ export default async function BoletosPage() {
       </div>
 
       <Card className="border-primary/20">
-        <CardContent className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold">Gerar boleto manualmente</p>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="h-5 w-5 text-primary" />
+            Gerar boleto manualmente
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Vendas com opção boleto e sem boleto gerado. Clique em &quot;Gerar boleto&quot; para criar no Asaas.
+          </p>
+        </CardHeader>
+        <CardContent>
+          {vendasPendentesBoleto.length === 0 ? (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 rounded-lg border border-dashed border-border bg-muted/30 px-4">
               <p className="text-sm text-muted-foreground">
-                Vendas com opção boleto podem ser geradas pelo Histórico
+                Nenhuma venda pendente de boleto. Vendas com opção boleto também aparecem no Histórico.
+              </p>
+              <Link
+                href="/historico?boleto=1"
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Ir para Histórico
+                <ExternalLink className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30">
+                      <TableHead>Data</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Produto</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="w-[120px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {vendasPendentesBoleto.map((v) => {
+                      const total = ((v.valorVenda || 0) * (v.quantidade || 1)) + (v.valorFrete || 0);
+                      return (
+                        <TableRow key={v.id}>
+                          <TableCell className="font-medium">
+                            {formatDateBr(v.dataVenda.toISOString().slice(0, 10))}
+                          </TableCell>
+                          <TableCell>{v.cliente?.nome ?? "—"}</TableCell>
+                          <TableCell>{v.produtoNome ?? "—"}</TableCell>
+                          <TableCell className="text-right tabular-nums font-medium">
+                            {formatBRL(total)}
+                          </TableCell>
+                          <TableCell>
+                            <form action={gerarBoletoAsaas} className="inline">
+                              <input type="hidden" name="vendaId" value={v.id} />
+                              <button
+                                type="submit"
+                                className={buttonVariants({ variant: "default", size: "sm" })}
+                              >
+                                Gerar boleto
+                              </button>
+                            </form>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O cliente precisa ter CPF ou CNPJ cadastrado para gerar o boleto no Asaas.
               </p>
             </div>
-          </div>
-          <Link
-            href="/historico?boleto=1"
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
-          >
-            Ir para Histórico
-            <ExternalLink className="h-4 w-4" />
-          </Link>
+          )}
         </CardContent>
       </Card>
     </div>
