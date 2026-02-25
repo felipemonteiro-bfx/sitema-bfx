@@ -1,0 +1,23 @@
+---
+description: Fluxo padrão quando o usuário pedir "atualizar tudo" ou "atualize tudo"
+globs:
+alwaysApply: false
+---
+
+# Padrão "Atualizar Tudo" (BFX Sistema)
+
+Quando o usuário pedir para **atualizar tudo**, executar o seguinte fluxo:
+
+1. **Commit** das alterações pendentes (se houver) com mensagem descritiva
+2. **Push** para `origin main`
+3. **Atualizar manifests de deploy**:
+   - Obter o SHA do último commit: `git rev-parse HEAD`
+   - Atualizar `deploy/bfx/.argocd-source-sistema-bfx.yaml` com a imagem ECR: `730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop:<SHA_COMPLETO>`
+   - Atualizar `deploy/bfx/app.yaml` com a mesma imagem
+   - Atualizar `k8s/deployment.yaml` com a mesma imagem
+4. **Commit e push** das alterações de deploy
+5. **Aplicar no K8s**: `kubectl apply -k deploy/bfx`
+6. **Rollout restart**: `kubectl rollout restart deployment/bfx-app -n bfx`
+7. Aguardar: `kubectl rollout status deployment/bfx-app -n bfx --timeout=120s`
+
+Observação: aguardar o CI e "Build and Push Docker" passarem antes de atualizar os manifests com o novo SHA.
