@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - deploy/**
       - k8s/**
+      - .github/**
   pull_request:
     branches: [main, nextjs-migration]
 
@@ -25,21 +26,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "yarn"
+          cache: "npm"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci || npm install
 
       - name: Lint
-        run: yarn run lint
+        run: npm run lint
         continue-on-error: true
 
       - name: Generate Prisma Client
-        run: yarn prisma generate
+        run: npx prisma generate
         env:
           DATABASE_URL: ${{ env.BUILD_DATABASE_URL }}
 
       - name: Build
-        run: yarn build
+        run: npm run build
         env:
           DATABASE_URL: ${{ env.BUILD_DATABASE_URL }}

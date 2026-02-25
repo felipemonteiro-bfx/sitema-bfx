@@ -8,6 +8,7 @@ on:
     paths-ignore:
       - deploy/**
       - k8s/**
+      - .github/**
 
 env:
   AWS_REGION: sa-east-1
