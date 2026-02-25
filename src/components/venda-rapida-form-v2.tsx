@@ -13,6 +13,7 @@ import {
   Plus,
   CreditCard,
   Truck,
+  AlertTriangle,
 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
@@ -24,6 +25,7 @@ import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
 import { CurrencyInput } from "@/components/currency-input";
+import { Badge } from "@/components/ui/badge";
 import type { ActionResponse } from "@/lib/action-response";
 
 interface ProdutoItem {
@@ -133,6 +135,14 @@ export default function VendaRapidaFormV2({
     valorVenda?: number;
   } | null>(null);
 
+  // Limite e margem disponível do cliente
+  const [limiteData, setLimiteData] = useState<{
+    margemTotal: number;
+    comprometimentoAtual: number;
+    margemDisponivel: number;
+    tetoParcelaMax: number;
+  } | null>(null);
+
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Limpar erro do campo ao editar
@@ -192,6 +202,21 @@ export default function VendaRapidaFormV2({
       .catch(() => setUberEnabled(false));
   }, []);
 
+  // Consulta de Limite ao selecionar cliente
+  useEffect(() => {
+    if (selectedCliente) {
+      fetch(`/api/clientes/${selectedCliente.id}/limite`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.margemTotal !== undefined) setLimiteData(data);
+          else setLimiteData(null);
+        })
+        .catch(() => setLimiteData(null));
+    } else {
+      setLimiteData(null);
+    }
+  }, [selectedCliente]);
+
   // Cálculos totais
   const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);
   const numFrete = frete;
@@ -215,6 +240,11 @@ export default function VendaRapidaFormV2({
   );
   const comissaoPct = selectedVendedorData?.comissaoPct || 0;
   const valorComissao = (lucroBruto * comissaoPct) / 100;
+
+  const valorParcela = numParcelas > 0 ? totalVenda / numParcelas : 0;
+  const excedeuMargem = limiteData
+    ? valorParcela > limiteData.margemDisponivel + 1
+    : false;
 
   // Handlers
   const addProduto = () => {
@@ -436,6 +466,9 @@ export default function VendaRapidaFormV2({
     formData.append("descontoEmFolha", String(descontoEmFolha));
     formData.append("boleto", String(boleto));
 
+    const excedeuLimite = limiteData && valorParcela > limiteData.margemDisponivel + 1 ? 1 : 0;
+    formData.append("excedeuLimite", String(excedeuLimite));
+
     // Produtos (JSON)
     formData.append("produtos", JSON.stringify(produtos));
 
@@ -629,6 +662,72 @@ export default function VendaRapidaFormV2({
           produtoSelecionado={produtoParaSugestoes}
           onAddProduto={addProdutoSugerido}
         />
+      )}
+
+      {/* Seção 2.6: Limite e Margem Disponível */}
+      {selectedCliente && limiteData && (
+        <Card
+          className={cn(
+            "border-2 transition-colors",
+            excedeuMargem
+              ? "bg-amber-50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30"
+              : "bg-emerald-50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/30"
+          )}
+        >
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Limite e Margem
+              </span>
+              {excedeuMargem && (
+                <Badge variant="secondary" className="bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
+                  Excede disponível
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <div className="text-[10px] font-bold uppercase text-muted-foreground">Limite</div>
+                <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.margemTotal)}</div>
+              </div>
+              <div>
+                <div className="text-[10px] font-bold uppercase text-muted-foreground">Comprometido</div>
+                <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.comprometimentoAtual)}</div>
+              </div>
+              <div>
+                <div className="text-[10px] font-bold uppercase text-muted-foreground">Disponível</div>
+                <div
+                  className={cn(
+                    "text-sm font-bold",
+                    limiteData.margemDisponivel > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                  )}
+                >
+                  {formatBRL(limiteData.margemDisponivel)}
+                </div>
+              </div>
+            </div>
+            <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div
+                className={cn("h-full transition-all", excedeuMargem ? "bg-amber-500" : "bg-emerald-500")}
+                style={{
+                  width: `${Math.min(100, limiteData.margemTotal > 0 ? (limiteData.comprometimentoAtual / limiteData.margemTotal) * 100 : 0)}%`,
+                }}
+              />
+            </div>
+            {excedeuMargem && (
+              <div className="flex items-start gap-2 text-xs text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-900/30">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  Parcela ({formatBRL(valorParcela)}) excede o valor disponível ({formatBRL(limiteData.margemDisponivel)}).
+                  A venda será registrada com indicação de excedeu limite.
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Seção 3: Produtos */}

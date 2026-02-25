@@ -15,7 +15,7 @@ import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -265,6 +265,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       comprovantePdf: true,
       asaasPaymentId: true,
       boletoUrl: true,
+      excedeuLimite: true,
       cliente: { select: { nome: true } },
     },
   });
@@ -388,13 +389,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead className="text-center">Desconto folha</TableHead>
                 <TableHead className="text-center">Boleto</TableHead>
                 <TableHead className="text-center">Assinado</TableHead>
+                <TableHead className="text-center" title="Parcela excedeu o limite disponível">Excedeu</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                     Sem dados para os filtros selecionados.
                   </TableCell>
                 </TableRow>
@@ -457,6 +459,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
                       ) : (
                         <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {v.excedeuLimite === 1 ? (
+                        <AlertTriangle
+                          className="h-4 w-4 text-amber-500 mx-auto"
+                          title="Parcela excedeu o limite disponível"
+                        />
+                      ) : (
+                        <span className="text-muted-foreground opacity-30">—</span>
                       )}
                     </TableCell>
                     <TableCell>

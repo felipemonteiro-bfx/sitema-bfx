@@ -17,7 +17,7 @@ import { Search, Pencil } from "lucide-react";
 import Link from "next/link";
 import { createAuditLog } from "@/lib/audit";
 
-type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string };
+type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string };
 
 async function addCliente(formData: FormData) {
   "use server";
@@ -127,6 +127,27 @@ async function addFornecedor(formData: FormData) {
   revalidatePath("/cadastros");
 }
 
+async function updateFornecedor(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  const nome = String(formData.get("nome") || "");
+  if (!id || !nome) return;
+  try {
+    await prisma.fornecedor.update({
+      where: { id },
+      data: {
+        nome,
+        telefone: String(formData.get("telefone") || ""),
+      },
+    });
+    await createAuditLog("fornecedor:update", { fornecedorId: id, nome });
+    revalidatePath("/cadastros");
+    redirect("/cadastros?tab=fornecedores");
+  } catch (e) {
+    revalidatePath("/cadastros");
+  }
+}
+
 async function addEmpresa(formData: FormData) {
   "use server";
   const nome = String(formData.get("nome") || "");
@@ -146,6 +167,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const sp = await searchParams;
   const editClienteId = sp.editCliente ? Number(sp.editCliente) : 0;
   const editProdutoId = sp.editProduto ? Number(sp.editProduto) : 0;
+  const editFornecedorId = sp.editFornecedor ? Number(sp.editFornecedor) : 0;
 
   const editClienteData = editClienteId ? await prisma.cliente.findUnique({
     where: { id: editClienteId },
@@ -154,6 +176,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const editProdutoData = editProdutoId ? await prisma.produto.findUnique({
     where: { id: editProdutoId },
     select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+  }) : null;
+  const editFornecedorData = editFornecedorId ? await prisma.fornecedor.findUnique({
+    where: { id: editFornecedorId },
+    select: { id: true, nome: true, telefone: true },
   }) : null;
 
   const buildUrl = (params: Partial<Search>) => {
@@ -210,7 +236,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         <p className="text-sm text-muted-foreground">Base de clientes, produtos, fornecedores e empresas.</p>
       </div>
       <QueryTabs
-        defaultTab={sp.tab || (sp.editProduto ? "produtos" : sp.editCliente ? "clientes" : "clientes")}
+        defaultTab={sp.tab || (sp.editProduto ? "produtos" : sp.editFornecedor ? "fornecedores" : sp.editCliente ? "clientes" : "clientes")}
         tabs={[
           {
             value: "clientes",
@@ -569,12 +595,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <TableRow>
                           <TableHead>Nome</TableHead>
                           <TableHead>Telefone</TableHead>
+                          <TableHead className="w-[80px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {fornecedores.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                            <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                               Sem fornecedores cadastrados.
                             </TableCell>
                           </TableRow>
@@ -583,6 +610,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <TableRow key={f.id}>
                               <TableCell className="font-medium">{f.nome}</TableCell>
                               <TableCell>{f.telefone}</TableCell>
+                              <TableCell>
+                                <Link
+                                  href={buildUrl({ tab: "fornecedores", editFornecedor: String(f.id) })}
+                                  className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                                  title="Editar"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Link>
+                              </TableCell>
                             </TableRow>
                           ))
                         )}
@@ -590,6 +626,34 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </Table>
                   </CardContent>
                 </Card>
+                {editFornecedorData && (
+                  <Card id="editar-fornecedor" className="mt-4 scroll-mt-24">
+                    <CardHeader>
+                      <CardTitle className="text-blue-900">Editando fornecedor #{editFornecedorData.id}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <form action={updateFornecedor} className="grid gap-4">
+                        <input type="hidden" name="id" value={editFornecedorData.id} />
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="space-y-1">
+                            <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
+                            <Input name="nome" defaultValue={editFornecedorData.nome} placeholder="Razão Social ou Nome" aria-label="Nome" />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
+                            <MaskedInput name="telefone" mask="phone" defaultValue={editFornecedorData.telefone || ""} aria-label="Telefone" />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-end gap-2">
+                          <Link href={buildUrl({ tab: "fornecedores", editFornecedor: undefined })} className={buttonVariants({ variant: "outline" })}>
+                            Cancelar
+                          </Link>
+                          <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alterações</button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
               </>
             ),
           },

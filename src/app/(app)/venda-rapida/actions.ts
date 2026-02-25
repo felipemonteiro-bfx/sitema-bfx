@@ -141,6 +141,7 @@ export async function criarVendaV2(
           valorParcela,
           lucroLiquido,
           antecipada: 0,
+          excedeuLimite: formData.get("excedeuLimite") === "1" ? 1 : 0,
           temNota,
           taxaNota,
           descontoEmFolha: descontoEmFolha ?? false,
