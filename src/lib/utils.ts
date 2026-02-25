@@ -45,6 +45,17 @@ export function maskCep(val?: string | null) {
   return `${v.slice(0, 5)}-${v.slice(5)}`;
 }
 
+/**
+ * Calcula o primeiro vencimento do boleto/parcela:
+ * - Compra até dia 20 → dia 10 do próximo mês
+ * - Compra após dia 20 → dia 10 do mês subsequente (dois meses à frente)
+ */
+export function calcularPrimeiroVencimento(dataCompra: Date): Date {
+  const dia = dataCompra.getDate();
+  const mesesAFrente = dia <= 20 ? 1 : 2;
+  return new Date(dataCompra.getFullYear(), dataCompra.getMonth() + mesesAFrente, 10);
+}
+
 export function sugerirNcm(nome?: string | null) {
   if (!nome) return "";
   const n = nome.toLowerCase();

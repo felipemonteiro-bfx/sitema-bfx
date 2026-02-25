@@ -12,6 +12,7 @@ import {
   getOrCreateCustomer,
   createBoletoPayment,
 } from "@/lib/asaas";
+import { calcularPrimeiroVencimento } from "@/lib/utils";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -178,13 +179,10 @@ export async function criarVendaV2(
           })),
         });
       } else if (parcelas > 1) {
-        // Gerar parcelas automaticamente se não informado
-        const hoje = new Date();
+        // Gerar parcelas automaticamente: regra dia 20
+        const primeiroVenc = calcularPrimeiroVencimento(new Date(dataStr));
         const parcelasAuto = Array.from({ length: parcelas }).map((_, i) => {
-          const dataVenc = new Date(hoje);
-          dataVenc.setMonth(dataVenc.getMonth() + i + 1);
-          dataVenc.setDate(10); // Padrão: dia 10
-
+          const dataVenc = new Date(primeiroVenc.getFullYear(), primeiroVenc.getMonth() + i, 10);
           return {
             vendaId: vendaCriada.id,
             numeroParcela: i + 1,
@@ -258,14 +256,9 @@ export async function criarVendaV2(
           let firstDueDate: string;
           if (parcelasValidadas && parcelasValidadas.length > 0) {
             firstDueDate = parcelasValidadas[0].dataVencimento.slice(0, 10);
-          } else if (parcelas > 1) {
-            const d = new Date();
-            d.setMonth(d.getMonth() + 1);
-            d.setDate(10);
-            firstDueDate = d.toISOString().slice(0, 10);
           } else {
-            const d = new Date();
-            d.setDate(d.getDate() + 3);
+            // Regra: até dia 20 → dia 10 do próximo mês; após dia 20 → mês subsequente
+            const d = calcularPrimeiroVencimento(new Date(dataStr));
             firstDueDate = d.toISOString().slice(0, 10);
           }
           const payment = await createBoletoPayment({
