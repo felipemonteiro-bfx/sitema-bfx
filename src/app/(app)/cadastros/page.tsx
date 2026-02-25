@@ -523,6 +523,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                       alt={p.nome} 
                                       fill 
                                       className="object-cover"
+                                      unoptimized={p.imagem.startsWith("http")}
                                     />
                                   </div>
                                 ) : (

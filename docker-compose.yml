@@ -1,4 +1,17 @@
 services:
+  minio:
+    image: minio/minio:latest
+    container_name: bfx_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - bfx_minio:/data
+    command: server /data --console-address ":9001"
+
   db:
     image: postgres:16-alpine
     container_name: bfx_db
@@ -30,11 +43,20 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/bfx?schema=public
       SESSION_SECRET: change-me
       PORT: 3008
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: produtos
+      MINIO_PUBLIC_URL: http://localhost:9000
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_started
     command: sh -c "npx prisma generate && npx prisma migrate deploy && yarn dev"
 
 volumes:
   bfx_pg:
     name: bfx_pg_data
+  bfx_minio:
+    name: bfx_minio_data

@@ -22,6 +22,7 @@ type Props = {
 function normalizarPathImagem(path: string | null | undefined): string | null {
   if (!path || typeof path !== "string" || !path.trim()) return null;
   const p = path.trim();
+  if (p.startsWith("http://") || p.startsWith("https://")) return p;
   return p.startsWith("/") ? p : `/${p}`;
 }
 

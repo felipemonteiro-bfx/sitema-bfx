@@ -2,14 +2,29 @@
 
 ## Desenvolvimento local
 
-1. Copie o `.env.example` para `.env` e ajuste se necessario.
-2. Suba o Postgres e a app:
+1. Copie o `.env.example` para `.env.local` e ajuste se necessário.
+2. Suba MinIO (imagens) e Postgres:
 
 ```bash
-docker compose up --build
+yarn db:minio    # MinIO em localhost:9000 (console: 9001)
+yarn db:start    # Postgres
 ```
 
-Aplicacao: `http://localhost:3008`
+3. Execute as migrações e suba a app:
+
+```bash
+yarn db:migrate
+yarn dev
+```
+
+**Ou via Docker (stack completo):**
+
+```bash
+yarn docker:up
+```
+
+Aplicação: `http://localhost:3008`  
+MinIO Console: `http://localhost:9001` (minioadmin/minioadmin)
 Streamlit legado (via proxy + layout): `http://localhost:3008/streamlit`
 
 Login inicial:
@@ -81,6 +96,11 @@ Em **Settings** → **Environment Variables** adicione (Production e Preview, se
 | `SESSION_SECRET` | Sim | Chave secreta para sessão JWT (mín. 32 caracteres). |
 | `NEXT_PUBLIC_APP_URL` | Não (recomendado) | URL pública do app (ex.: `https://sitema-bfx.vercel.app`). |
 | `CRON_SECRET` | Não | Secret para o Cron de limpeza de uploads (domingo 03:00 UTC). Defina para o Cron da Vercel autorizar. |
+| `MINIO_ENDPOINT` | Não* | URL do MinIO (ex.: `http://localhost:9000`). Sem isso, imagens vão para `public/uploads/produtos`. |
+| `MINIO_ACCESS_KEY` | Não* | Chave de acesso MinIO. |
+| `MINIO_SECRET_KEY` | Não* | Chave secreta MinIO. |
+| `MINIO_BUCKET` | Não | Bucket (default: `produtos`). |
+| `MINIO_PUBLIC_URL` | Não | URL pública para acessar imagens (ex.: `http://localhost:9000`). |
 | `ASAAS_API_KEY` | Não | Chave da API Asaas para geração de boleto. Sem isso, boleto fica desabilitado. |
 | `ASAAS_ENV` | Não | `sandbox` ou `production` (default: sandbox). |
 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou compatível) para rotas de AI/chat, se usadas. |

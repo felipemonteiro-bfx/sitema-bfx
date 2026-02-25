@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
 import { Loader2, Camera, CheckCircle2, AlertCircle, Tag } from "lucide-react";
-import Image from 'next/image';
 
 type ProdutoEdit = {
   id: number;
@@ -46,6 +45,7 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
   const [ncm, setNcm] = useState('');
   const [valor, setValor] = useState(0);
   const [imagemPath, setImagemPath] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fornecedorId, setFornecedorId] = useState('');
 
   const [isUploading, setIsUploading] = useState(false);
@@ -69,9 +69,17 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
       setNcm(produto.ncm || '');
       setValor(produto.valorVenda ?? 0);
       setImagemPath(produto.imagem || '');
+      setPreviewUrl(null);
       setFornecedorId(produto.fornecedorId != null ? String(produto.fornecedorId) : '');
     }
   }, [produto?.id]);
+
+  // Limpar object URL ao desmontar
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   // Autocomplete e verificação de duplicidade
   useEffect(() => {
@@ -132,6 +140,11 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Preview instantâneo antes do upload
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const objUrl = URL.createObjectURL(file);
+    setPreviewUrl(objUrl);
+
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -142,8 +155,12 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
         body: formData
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.filePath) {
         setImagemPath(data.filePath);
+        URL.revokeObjectURL(objUrl);
+        setPreviewUrl(null);
+      } else {
+        toast.error(data.error || "Falha no upload da imagem.");
       }
     } catch (error) {
       toast.error("Erro no upload da imagem.");
@@ -188,6 +205,8 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
         setNcm('');
         setValor(0);
         setImagemPath('');
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
         setFornecedorId('');
         setSuggestions([]);
         setIsDuplicate(false);
@@ -206,19 +225,18 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
         <div className="md:col-span-1 space-y-4">
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-muted-foreground">Imagem do Produto</Label>
-            <div className="relative w-full aspect-square rounded-xl border border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition">
-              {imagemPath ? (
-                <Image
-                  src={imagemPath}
+            <div className="relative w-full aspect-square rounded-xl border border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition overflow-hidden">
+              {(previewUrl || imagemPath) ? (
+                <img
+                  src={previewUrl || imagemPath}
                   alt="Produto"
-                  fill
-                  className="object-cover rounded-xl"
+                  className="absolute inset-0 w-full h-full object-cover rounded-xl"
                 />
               ) : (
                 <Camera className="h-10 w-10 text-muted-foreground" />
               )}
             </div>
-            <Input type="file" onChange={handleImageUpload} disabled={isUploading} />
+            <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
           </div>
         </div>
 
