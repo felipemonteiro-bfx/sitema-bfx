@@ -29,7 +29,7 @@ sync-vendas:
 import-all:
 	node prisma/import_sqlite.js
 
-# Força o K8s a puxar nova imagem (deploy/bfx ou k8s)
+# Força o K8s a puxar nova imagem (deploy/bfx)
 k8s-rollout:
-	kubectl rollout restart deployment/bfx-app 2>/dev/null || kubectl rollout restart deployment/sitema-bfx -n sitema-bfx
-	kubectl rollout status deployment/bfx-app 2>/dev/null || kubectl rollout status deployment/sitema-bfx -n sitema-bfx
+	kubectl rollout restart deployment/bfx-app -n bfx
+	kubectl rollout status deployment/bfx-app -n bfx
