@@ -211,8 +211,10 @@ async function main() {
       data: config.map((c) => ({
         id: c.id,
         modeloContrato: c.modelo_contrato,
+        modeloReciboVenda: c.modelo_recibo_venda ?? null,
         logoPath: c.logo_path,
         openaiKey: c.openai_key,
+        geminiKey: c.gemini_key ?? null,
       })),
       skipDuplicates: true,
     });

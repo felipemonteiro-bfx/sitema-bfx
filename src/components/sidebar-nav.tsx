@@ -42,6 +42,7 @@ type MenuGroup = {
 
 const iconMap: Record<string, LucideIcon> = {
   "/dashboard": BarChart3,
+  "/boletos": ReceiptText,
   "/financeiro": Wallet,
   "/prudent": ReceiptText,
   "/inteligencia": Brain,
@@ -186,7 +187,7 @@ export function SidebarNav({ menu }: { menu: MenuItem[] }) {
     {
       label: "Gestão",
       items: menu.filter(item => 
-        ["/financeiro", "/prudent", "/cadastros", "/gestao-rh"].includes(item.href)
+        ["/financeiro", "/boletos", "/prudent", "/cadastros", "/gestao-rh"].includes(item.href)
       ),
     },
     {

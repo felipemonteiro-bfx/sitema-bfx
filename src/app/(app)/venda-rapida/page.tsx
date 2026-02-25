@@ -42,13 +42,23 @@ export default async function Page() {
               <div className="text-sm font-black text-foreground leading-none">{formatBRL(totalUltima)}</div>
             </div>
             <Separator orientation="vertical" className="h-8 mx-2" />
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <a
                 href={`/api/recibo?id=${ultima.id}`}
                 className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
+                title="Recibo de Venda de Mercadoria"
               >
                 Recibo
               </a>
+              {ultima.descontoEmFolha && (
+                <a
+                  href={`/api/recibo?id=${ultima.id}&tipo=autorizacao`}
+                  className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
+                  title="Autorização de Desconto em Folha"
+                >
+                  Autorização
+                </a>
+              )}
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
                   `Segue seu recibo: http://localhost:3008/api/recibo?id=${ultima.id}`

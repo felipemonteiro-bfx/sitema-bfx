@@ -201,6 +201,7 @@ exports.Prisma.ParcelaVencimentoScalarFieldEnum = {
 exports.Prisma.ConfigScalarFieldEnum = {
   id: 'id',
   modeloContrato: 'modeloContrato',
+  modeloReciboVenda: 'modeloReciboVenda',
   logoPath: 'logoPath',
   openaiKey: 'openaiKey',
   geminiKey: 'geminiKey'

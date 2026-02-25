@@ -114,9 +114,10 @@ model ParcelaVencimento {
 }
 
 model Config {
-  id             Int     @id @default(autoincrement())
-  modeloContrato String? @map("modelo_contrato")
-  logoPath       String? @map("logo_path")
+  id                 Int     @id @default(autoincrement())
+  modeloContrato     String? @map("modelo_contrato")      // Autorização de desconto em folha
+  modeloReciboVenda  String? @map("modelo_recibo_venda")  // Recibo padrão de venda de mercadoria
+  logoPath           String? @map("logo_path")
   openaiKey      String? @map("openai_key")
   geminiKey      String? @map("gemini_key")
 

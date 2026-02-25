@@ -5,11 +5,13 @@ WORKDIR /app
 # Install Yarn
 RUN corepack enable && corepack prepare yarn@stable --activate
 COPY package.json yarn.lock ./
+COPY prisma ./prisma
 RUN yarn install --frozen-lockfile
 
 COPY . .
 
 ENV NODE_ENV=development
-EXPOSE 3000
+ENV PORT=3008
+EXPOSE 3008
 
 CMD ["yarn", "dev"]

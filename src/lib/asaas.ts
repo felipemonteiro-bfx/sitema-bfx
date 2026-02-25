@@ -51,6 +51,47 @@ export type CreateBoletoResult = {
   bankSlipUrl: string;
 };
 
+/** Cobrança retornada pela API de listagem do Asaas */
+export type AsaasPaymentListItem = {
+  id: string;
+  value: number;
+  dueDate: string;
+  status: string;
+  customer?: string;
+  description?: string;
+  bankSlipUrl?: string;
+  externalReference?: string;
+  paymentDate?: string;
+};
+
+type AsaasPaymentsListResponse = {
+  data?: AsaasPaymentListItem[];
+  totalCount?: number;
+  limit?: number;
+  offset?: number;
+};
+
+/** Lista cobranças do Asaas com filtros. */
+export async function listPayments(config: AsaasConfig, params: {
+  billingType?: "BOLETO" | "CREDIT_CARD" | "DEBIT_CARD" | "PIX" | "UNDEFINED";
+  status?: "PENDING" | "RECEIVED" | "CONFIRMED" | "OVERDUE" | "RECEIVED_IN_CASH" | "REFUNDED" | "RECEIVED_IN_CASH_UNDONE";
+  limit?: number;
+  offset?: number;
+}): Promise<{ data: AsaasPaymentListItem[]; totalCount: number }> {
+  const qs = new URLSearchParams();
+  if (params.billingType) qs.set("billingType", params.billingType);
+  if (params.status) qs.set("status", params.status);
+  if (params.limit != null) qs.set("limit", String(params.limit));
+  if (params.offset != null) qs.set("offset", String(params.offset));
+  const query = qs.toString();
+  const path = `/v3/payments${query ? `?${query}` : ""}`;
+  const res = await asaasFetch<AsaasPaymentsListResponse>(config, path);
+  return {
+    data: res.data || [],
+    totalCount: res.totalCount ?? 0,
+  };
+}
+
 type AsaasCustomerResponse = {
   id: string;
   name?: string;

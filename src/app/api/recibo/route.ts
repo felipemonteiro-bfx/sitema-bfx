@@ -86,9 +86,16 @@ function drawTableRow(
   });
 }
 
+const DEFAULT_RECIBO_VENDA =
+  "Declaro ter recebido o(s) produto(s) acima descrito(s) e estar ciente das condições da compra. Este documento serve como comprovante de venda de mercadoria.";
+
+const DEFAULT_AUTORIZACAO =
+  "RECIBO Eu, {CLIENTE}, mat. {MATRICULA}, confirmo a compra de: {PRODUTO}. Valor: R$ {VALOR} em {PARCELAS}x Estou ciente de que esse valor será descontado parceladamente na minha remuneração do mês seguinte à data da compra. Entendo que este desconto será efetuado de acordo com as regras e políticas estabelecidas na parceria da BFXSHOP e empresa conveniada. Além disso, estou ciente de que, em caso de rescisão do meu contrato de trabalho com a minha empresa, o valor remanescente, se houver, será descontado integralmente do valor a que eu tiver direito em minha rescisão, conforme previsto na legislação vigente. Esta autorização é concedida de livre e espontânea vontade, sem qualquer forma de coação ou pressão por parte da empresa.";
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const idParam = (searchParams.get("id") || "").trim();
+  const tipo = (searchParams.get("tipo") || "venda").toLowerCase(); // "venda" | "autorizacao"
   if (!idParam) return new Response("ID inválido", { status: 400 });
 
   const isNumeric = /^\d+$/.test(idParam);
@@ -164,16 +171,18 @@ export async function GET(req: Request) {
       y: headerTop - 22,
       size: 14, font: fontBold, color: rgb(0.1, 0.1, 0.12),
     });
-    page.drawText("Recibo de Venda", {
-      x: centerX - font.widthOfTextAtSize("Recibo de Venda", 10) / 2,
+    const subtitulo = tipo === "autorizacao" ? "Autorização de Desconto em Folha" : "Recibo de Venda";
+    page.drawText(subtitulo, {
+      x: centerX - font.widthOfTextAtSize(subtitulo, 10) / 2,
       y: headerTop - 34,
       size: 10, font, color: rgb(0.35, 0.38, 0.42),
     });
     page.drawText(`Recibo #${venda.id}`, { x: 470, y: headerTop + 10, size: 9, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
     page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
   } else {
+    const subtituloFallback = tipo === "autorizacao" ? "Autorização de Desconto em Folha" : "Recibo de Venda";
     page.drawText("BFX Manager", { x: marginX, y: headerTop + 5, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
-    page.drawText("Recibo de Venda", { x: marginX, y: headerTop - 17, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(subtituloFallback, { x: marginX, y: headerTop - 17, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
     page.drawText(`Recibo #${venda.id}`, { x: 420, y: headerTop + 5, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
     page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
   }
@@ -184,7 +193,9 @@ export async function GET(req: Request) {
   page.drawText("Detalhes da venda", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
   const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
+  const dataCompraFormatada = formatDate(venda.dataVenda);
   for (const line of [
+    `Data da compra: ${dataCompraFormatada}`,
     `Cliente: ${cliente?.nome || "N/D"}`,
     `Documento: ${clienteDoc}`,
     `Vendedor: ${venda.vendedor || "N/D"}`,
@@ -308,18 +319,21 @@ export async function GET(req: Request) {
   }
 
   // ── Termos e condições ───────────────────────────────────────────────────────
-  const defaultTemplate =
-    "RECIBO Eu, {CLIENTE}, mat. {MATRICULA}, confirmo a compra de: {PRODUTO}. Valor: R$ {VALOR} em {PARCELAS}x Estou ciente de que esse valor será descontado parceladamente na minha remuneração do mês seguinte à data da compra. Entendo que este desconto será efetuado de acordo com as regras e políticas estabelecidas na parceria da BFXSHOP e empresa conveniada. Além disso, estou ciente de que, em caso de rescisão do meu contrato de trabalho com a minha empresa, o valor remanescente, se houver, será descontado integralmente do valor a que eu tiver direito em minha rescisão, conforme previsto na legislação vigente. Esta autorização é concedida de livre e espontânea vontade, sem qualquer forma de coação ou pressão por parte da empresa.";
-  const template = cfg?.modeloContrato || defaultTemplate;
-  const contrato = fillTemplate(template, {
+  const placeholderData = {
     CLIENTE: cliente?.nome || "N/D",
     MATRICULA: cliente?.matricula || "N/D",
     PRODUTO: venda.produtoNome || "N/D",
     VALOR: formatBRL(total).replace("R$", "").trim(),
     PARCELAS: String(nParcelas),
-  });
+    DATA: dataCompraFormatada,
+  };
+  const contrato =
+    tipo === "autorizacao"
+      ? fillTemplate(cfg?.modeloContrato || DEFAULT_AUTORIZACAO, placeholderData)
+      : fillTemplate(cfg?.modeloReciboVenda || DEFAULT_RECIBO_VENDA, placeholderData);
 
-  page.drawText("Termos e condições", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
+  const secaoTitulo = tipo === "autorizacao" ? "Autorização" : "Termos e condições";
+  page.drawText(secaoTitulo, { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 16;
   for (const line of wrapText(contrato, font, 10.5, contentWidth)) {
     page.drawText(line, { x: marginX, y, size: 10.5, font, color: rgb(0.25, 0.25, 0.28) });
@@ -349,7 +363,7 @@ export async function GET(req: Request) {
   return new Response(Buffer.from(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="recibo_${venda.id}.pdf"`,
+      "Content-Disposition": `attachment; filename="recibo_${tipo === "autorizacao" ? "autorizacao_" : ""}${venda.id}.pdf"`,
     },
   });
 }

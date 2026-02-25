@@ -428,9 +428,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <a 
                           href={`/api/recibo?id=${v.id}`}
                           className={buttonVariants({ variant: "ghost", size: "sm" })}
+                          title="Recibo de Venda"
                         >
-                          PDF
+                          Recibo
                         </a>
+                        {v.descontoEmFolha && (
+                          <a 
+                            href={`/api/recibo?id=${v.id}&tipo=autorizacao`}
+                            className={buttonVariants({ variant: "ghost", size: "sm" })}
+                            title="Autorização de Desconto em Folha"
+                          >
+                            Autorização
+                          </a>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -605,8 +615,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <div className="flex flex-wrap items-center gap-3">
                   <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar alterações</button>
                   <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
-                    Baixar recibo PDF
+                    Recibo de Venda
                   </a>
+                  {editVenda.descontoEmFolha && (
+                    <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}&tipo=autorizacao`}>
+                      Autorização (Desconto em Folha)
+                    </a>
+                  )}
                   {editVenda.boletoUrl ? (
                     <a
                       href={editVenda.boletoUrl}

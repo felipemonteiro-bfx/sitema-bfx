@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 
 const adminMenu = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/boletos", label: "Boletos" },
   { href: "/financeiro", label: "Financeiro & DRE" },
   { href: "/prudent", label: "Prudent (Antecipação)" },
   { href: "/inteligencia", label: "BFX Intelligence", isNew: true },

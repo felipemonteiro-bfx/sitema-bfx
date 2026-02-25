@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - bfx_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
@@ -24,9 +29,11 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/bfx?schema=public
       SESSION_SECRET: change-me
+      PORT: 3008
     depends_on:
-      - db
-    command: sh -c "npx prisma generate && yarn dev"
+      db:
+        condition: service_healthy
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && yarn dev"
 
 volumes:
   bfx_pg:

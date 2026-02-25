@@ -42,23 +42,35 @@ function parseVendors(value: string | undefined) {
     .filter(Boolean);
 }
 
+function parseDateStart(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
+}
+
+function parseDateEnd(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999);
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
   const sp = await searchParams;
   const today = new Date();
-  const start = sp.from ? new Date(sp.from) : new Date(today.getFullYear(), today.getMonth(), 1);
-  const end = sp.to ? new Date(sp.to) : today;
+  const start = sp.from ? parseDateStart(sp.from) : new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
+  const end = sp.to ? parseDateEnd(sp.to) : new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
 
   const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
   const vendedorList = vendedores.map((v) => v.nomeExibicao || v.username).filter(Boolean) as string[];
   const selectedVendors = parseVendors(sp.vendors);
-  const vendorsFilter = selectedVendors.length ? selectedVendors : vendedorList;
+  const hasVendedorFilter = sp.vendors !== undefined && sp.vendors !== "";
+  const isSubsetOfVendedores = selectedVendors.length > 0 && selectedVendors.length < vendedorList.length;
+  const vendorsFilter = hasVendedorFilter && isSubsetOfVendedores ? selectedVendors : undefined;
 
   const vendas = await prisma.venda.findMany({
     where: {
       dataVenda: { gte: start, lte: end },
-      vendedor: { in: vendorsFilter.length ? vendorsFilter : undefined },
+      vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
   });
 
@@ -165,7 +177,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 id="filter-vendors"
                 name="vendors"
                 vendors={vendedorList}
-                defaultSelected={vendorsFilter}
+                defaultSelected={vendorsFilter ?? vendedorList}
               />
             </div>
             <Button type="submit" className="h-10 gap-2">

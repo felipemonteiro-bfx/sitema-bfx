@@ -14,6 +14,7 @@ const dummyData = {
   PRODUTO: "Produto Exemplo",
   VALOR: "1.234,56",
   PARCELAS: "12",
+  DATA: new Intl.DateTimeFormat("pt-BR").format(new Date()),
 };
 
 function fillTemplate(template: string, data: Record<string, string>) {

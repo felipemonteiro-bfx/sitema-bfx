@@ -8230,6 +8230,7 @@ export namespace Prisma {
   export type ConfigMinAggregateOutputType = {
     id: number | null
     modeloContrato: string | null
+    modeloReciboVenda: string | null
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
@@ -8238,6 +8239,7 @@ export namespace Prisma {
   export type ConfigMaxAggregateOutputType = {
     id: number | null
     modeloContrato: string | null
+    modeloReciboVenda: string | null
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
@@ -8246,6 +8248,7 @@ export namespace Prisma {
   export type ConfigCountAggregateOutputType = {
     id: number
     modeloContrato: number
+    modeloReciboVenda: number
     logoPath: number
     openaiKey: number
     geminiKey: number
@@ -8264,6 +8267,7 @@ export namespace Prisma {
   export type ConfigMinAggregateInputType = {
     id?: true
     modeloContrato?: true
+    modeloReciboVenda?: true
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
@@ -8272,6 +8276,7 @@ export namespace Prisma {
   export type ConfigMaxAggregateInputType = {
     id?: true
     modeloContrato?: true
+    modeloReciboVenda?: true
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
@@ -8280,6 +8285,7 @@ export namespace Prisma {
   export type ConfigCountAggregateInputType = {
     id?: true
     modeloContrato?: true
+    modeloReciboVenda?: true
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
@@ -8375,6 +8381,7 @@ export namespace Prisma {
   export type ConfigGroupByOutputType = {
     id: number
     modeloContrato: string | null
+    modeloReciboVenda: string | null
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
@@ -8402,6 +8409,7 @@ export namespace Prisma {
   export type ConfigSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     modeloContrato?: boolean
+    modeloReciboVenda?: boolean
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
@@ -8410,6 +8418,7 @@ export namespace Prisma {
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     modeloContrato?: boolean
+    modeloReciboVenda?: boolean
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
@@ -8418,6 +8427,7 @@ export namespace Prisma {
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     modeloContrato?: boolean
+    modeloReciboVenda?: boolean
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
@@ -8426,12 +8436,13 @@ export namespace Prisma {
   export type ConfigSelectScalar = {
     id?: boolean
     modeloContrato?: boolean
+    modeloReciboVenda?: boolean
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "logoPath" | "openaiKey" | "geminiKey", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -8439,6 +8450,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: number
       modeloContrato: string | null
+      modeloReciboVenda: string | null
       logoPath: string | null
       openaiKey: string | null
       geminiKey: string | null
@@ -8867,6 +8879,7 @@ export namespace Prisma {
   interface ConfigFieldRefs {
     readonly id: FieldRef<"Config", 'Int'>
     readonly modeloContrato: FieldRef<"Config", 'String'>
+    readonly modeloReciboVenda: FieldRef<"Config", 'String'>
     readonly logoPath: FieldRef<"Config", 'String'>
     readonly openaiKey: FieldRef<"Config", 'String'>
     readonly geminiKey: FieldRef<"Config", 'String'>
@@ -16708,6 +16721,7 @@ export namespace Prisma {
   export const ConfigScalarFieldEnum: {
     id: 'id',
     modeloContrato: 'modeloContrato',
+    modeloReciboVenda: 'modeloReciboVenda',
     logoPath: 'logoPath',
     openaiKey: 'openaiKey',
     geminiKey: 'geminiKey'
@@ -17375,6 +17389,7 @@ export namespace Prisma {
     NOT?: ConfigWhereInput | ConfigWhereInput[]
     id?: IntFilter<"Config"> | number
     modeloContrato?: StringNullableFilter<"Config"> | string | null
+    modeloReciboVenda?: StringNullableFilter<"Config"> | string | null
     logoPath?: StringNullableFilter<"Config"> | string | null
     openaiKey?: StringNullableFilter<"Config"> | string | null
     geminiKey?: StringNullableFilter<"Config"> | string | null
@@ -17383,6 +17398,7 @@ export namespace Prisma {
   export type ConfigOrderByWithRelationInput = {
     id?: SortOrder
     modeloContrato?: SortOrderInput | SortOrder
+    modeloReciboVenda?: SortOrderInput | SortOrder
     logoPath?: SortOrderInput | SortOrder
     openaiKey?: SortOrderInput | SortOrder
     geminiKey?: SortOrderInput | SortOrder
@@ -17394,6 +17410,7 @@ export namespace Prisma {
     OR?: ConfigWhereInput[]
     NOT?: ConfigWhereInput | ConfigWhereInput[]
     modeloContrato?: StringNullableFilter<"Config"> | string | null
+    modeloReciboVenda?: StringNullableFilter<"Config"> | string | null
     logoPath?: StringNullableFilter<"Config"> | string | null
     openaiKey?: StringNullableFilter<"Config"> | string | null
     geminiKey?: StringNullableFilter<"Config"> | string | null
@@ -17402,6 +17419,7 @@ export namespace Prisma {
   export type ConfigOrderByWithAggregationInput = {
     id?: SortOrder
     modeloContrato?: SortOrderInput | SortOrder
+    modeloReciboVenda?: SortOrderInput | SortOrder
     logoPath?: SortOrderInput | SortOrder
     openaiKey?: SortOrderInput | SortOrder
     geminiKey?: SortOrderInput | SortOrder
@@ -17418,6 +17436,7 @@ export namespace Prisma {
     NOT?: ConfigScalarWhereWithAggregatesInput | ConfigScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"Config"> | number
     modeloContrato?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    modeloReciboVenda?: StringNullableWithAggregatesFilter<"Config"> | string | null
     logoPath?: StringNullableWithAggregatesFilter<"Config"> | string | null
     openaiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
     geminiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
@@ -18363,6 +18382,7 @@ export namespace Prisma {
 
   export type ConfigCreateInput = {
     modeloContrato?: string | null
+    modeloReciboVenda?: string | null
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
@@ -18371,6 +18391,7 @@ export namespace Prisma {
   export type ConfigUncheckedCreateInput = {
     id?: number
     modeloContrato?: string | null
+    modeloReciboVenda?: string | null
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
@@ -18378,6 +18399,7 @@ export namespace Prisma {
 
   export type ConfigUpdateInput = {
     modeloContrato?: NullableStringFieldUpdateOperationsInput | string | null
+    modeloReciboVenda?: NullableStringFieldUpdateOperationsInput | string | null
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18386,6 +18408,7 @@ export namespace Prisma {
   export type ConfigUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     modeloContrato?: NullableStringFieldUpdateOperationsInput | string | null
+    modeloReciboVenda?: NullableStringFieldUpdateOperationsInput | string | null
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18394,6 +18417,7 @@ export namespace Prisma {
   export type ConfigCreateManyInput = {
     id?: number
     modeloContrato?: string | null
+    modeloReciboVenda?: string | null
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
@@ -18401,6 +18425,7 @@ export namespace Prisma {
 
   export type ConfigUpdateManyMutationInput = {
     modeloContrato?: NullableStringFieldUpdateOperationsInput | string | null
+    modeloReciboVenda?: NullableStringFieldUpdateOperationsInput | string | null
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18409,6 +18434,7 @@ export namespace Prisma {
   export type ConfigUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     modeloContrato?: NullableStringFieldUpdateOperationsInput | string | null
+    modeloReciboVenda?: NullableStringFieldUpdateOperationsInput | string | null
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -19464,6 +19490,7 @@ export namespace Prisma {
   export type ConfigCountOrderByAggregateInput = {
     id?: SortOrder
     modeloContrato?: SortOrder
+    modeloReciboVenda?: SortOrder
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
@@ -19476,6 +19503,7 @@ export namespace Prisma {
   export type ConfigMaxOrderByAggregateInput = {
     id?: SortOrder
     modeloContrato?: SortOrder
+    modeloReciboVenda?: SortOrder
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
@@ -19484,6 +19512,7 @@ export namespace Prisma {
   export type ConfigMinOrderByAggregateInput = {
     id?: SortOrder
     modeloContrato?: SortOrder
+    modeloReciboVenda?: SortOrder
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
