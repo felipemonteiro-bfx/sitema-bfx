@@ -18,7 +18,7 @@ spec:
       containers:
         - name: app
           # ECR (account 730335375436, repo bfx/bfx-shop)
-          image: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop:26f8b4beb28614ce4ad4035da90ac7d60ea14d00
+          image: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop:97943b3cf206d0fcbc32056e31128df4757730eb
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
