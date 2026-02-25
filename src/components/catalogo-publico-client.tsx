@@ -19,6 +19,35 @@ type Props = {
   produtos: Produto[];
 };
 
+function normalizarPathImagem(path: string | null | undefined): string | null {
+  if (!path || typeof path !== "string" || !path.trim()) return null;
+  const p = path.trim();
+  return p.startsWith("/") ? p : `/${p}`;
+}
+
+function ProdutoImagem({ src, alt }: { src: string | null; alt: string }) {
+  const [erro, setErro] = useState(false);
+  const mostrarFallback = !src || erro;
+  if (mostrarFallback) {
+    return (
+      <div className="flex h-full items-center justify-center text-slate-300 dark:text-slate-600">
+        <span className="text-sm font-medium italic">Sem foto</span>
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      className="object-cover transition-transform duration-300 group-hover:scale-105"
+      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+      onError={() => setErro(true)}
+      unoptimized={src.startsWith("http")}
+    />
+  );
+}
+
 export function CatalogoPublicoClient({ produtos }: Props) {
   const [query, setQuery] = useState("");
 
@@ -55,25 +84,15 @@ export function CatalogoPublicoClient({ produtos }: Props) {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filtrados.map((p) => (
+          {filtrados.map((p) => {
+            const imgPath = normalizarPathImagem(p.imagem);
+            return (
             <article
               key={p.id}
               className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:border-blue-200 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-800"
             >
               <div className="relative aspect-square bg-slate-100 dark:bg-slate-800">
-                {p.imagem ? (
-                  <Image
-                    src={p.imagem}
-                    alt={p.nome}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-slate-300 dark:text-slate-600">
-                    <span className="text-sm font-medium italic">Sem foto</span>
-                  </div>
-                )}
+                <ProdutoImagem src={imgPath} alt={p.nome} />
                 {p.categoria && (
                   <span className="absolute left-3 top-3 rounded-lg bg-blue-900/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white dark:bg-blue-600/90">
                     {p.categoria}
@@ -96,7 +115,8 @@ export function CatalogoPublicoClient({ produtos }: Props) {
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

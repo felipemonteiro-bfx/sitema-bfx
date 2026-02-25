@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getAsaasConfig, listPayments } from "@/lib/asaas";
 import { requireAdmin } from "@/lib/guards";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
+import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { formatBRL } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -285,15 +286,13 @@ export default async function BoletosPage() {
                             {formatBRL(total)}
                           </TableCell>
                           <TableCell>
-                            <form action={gerarBoletoAsaas} className="inline">
-                              <input type="hidden" name="vendaId" value={v.id} />
-                              <button
-                                type="submit"
-                                className={buttonVariants({ variant: "default", size: "sm" })}
-                              >
-                                Gerar boleto
-                              </button>
-                            </form>
+                            <GerarBoletoButton
+                              vendaId={v.id}
+                              gerarBoletoAction={gerarBoletoAsaas}
+                              className={buttonVariants({ variant: "default", size: "sm" })}
+                            >
+                              Gerar boleto
+                            </GerarBoletoButton>
                           </TableCell>
                         </TableRow>
                       );

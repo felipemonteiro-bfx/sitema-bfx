@@ -8,10 +8,15 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 
-/** Gera boleto Asaas para uma venda com opção boleto e sem boletoUrl. */
-export async function gerarBoletoAsaas(formData: FormData) {
+export type GerarBoletoResult = { success: boolean; error?: string };
+
+/** Gera boleto Asaas para uma venda com opção boleto e sem boletoUrl. Retorna erro legível para o usuário. */
+export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoResult> {
   const vendaId = Number(formData.get("vendaId") || 0);
-  if (!vendaId || !getAsaasConfig()) return;
+  if (!vendaId) return { success: false, error: "ID da venda inválido." };
+  if (!getAsaasConfig()) {
+    return { success: false, error: "Asaas não configurado. Configure ASAAS_API_KEY no servidor." };
+  }
 
   const venda = await prisma.venda.findUnique({
     where: { id: vendaId },
@@ -21,9 +26,17 @@ export async function gerarBoletoAsaas(formData: FormData) {
     },
   });
 
-  if (!venda || !venda.boleto || venda.boletoUrl || !venda.clienteId || !venda.cliente) return;
+  if (!venda) return { success: false, error: "Venda não encontrada." };
+  if (!venda.boleto) return { success: false, error: "Esta venda não está marcada como boleto." };
+  if (venda.boletoUrl) return { success: false, error: "Boleto já foi gerado." };
+  if (!venda.clienteId || !venda.cliente) return { success: false, error: "Cliente não vinculado à venda." };
   const cliente = venda.cliente;
-  if (!cliente.cpf && !cliente.cnpj) return;
+  if (!cliente.cpf && !cliente.cnpj) {
+    return {
+      success: false,
+      error: `O cliente "${cliente.nome}" precisa ter CPF ou CNPJ cadastrado. Edite em Cadastros → Clientes.`,
+    };
+  }
 
   try {
     const totalVenda =
@@ -69,10 +82,15 @@ export async function gerarBoletoAsaas(formData: FormData) {
       where: { id: vendaId },
       data: { asaasPaymentId: payment.id, boletoUrl: payment.bankSlipUrl || null },
     });
+    revalidatePath("/historico");
+    revalidatePath("/boletos");
+    return { success: true };
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     console.error("Erro ao gerar boleto Asaas:", err);
+    return {
+      success: false,
+      error: errMsg || "Falha ao gerar boleto no Asaas. Tente novamente.",
+    };
   }
-
-  revalidatePath("/historico");
-  revalidatePath("/boletos");
 }

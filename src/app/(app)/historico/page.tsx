@@ -17,6 +17,7 @@ import { createAuditLog } from "@/lib/audit";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { CheckCircle2, AlertCircle, AlertTriangle, Printer } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
+import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -259,6 +260,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       quantidade: true,
       valorVenda: true,
       valorFrete: true,
+      itens: { select: { subtotal: true } },
       temNota: true,
       taxaNota: true,
       descontoEmFolha: true,
@@ -413,7 +415,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell>{v.produtoNome}</TableCell>
                     <TableCell className="text-center font-medium">{v.quantidade || 1}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatBRL(((v.valorVenda || 0) * (v.quantidade || 1)) + (v.valorFrete || 0))}
+                      {formatBRL(
+                        (v.itens?.length
+                          ? v.itens.reduce((s, i) => s + i.subtotal, 0)
+                          : (v.valorVenda || 0) * (v.quantidade || 1)
+                        ) + (v.valorFrete || 0)
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
@@ -445,12 +452,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           ) : (
                           <span className="flex flex-col items-center gap-1">
                             <span className="text-amber-600 text-xs">Pendente</span>
-                            <form action={gerarBoletoAsaas} className="inline">
-                              <input type="hidden" name="vendaId" value={v.id} />
-                              <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs")}>
-                                Gerar boleto
-                              </button>
-                            </form>
+                            <GerarBoletoButton
+                              vendaId={v.id}
+                              gerarBoletoAction={gerarBoletoAsaas}
+                              className="text-xs"
+                            >
+                              Gerar boleto
+                            </GerarBoletoButton>
                           </span>
                           );
                         })()

@@ -12,6 +12,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { CurrencyInput } from "@/components/currency-input";
 import { ProdutoItemForm } from "@/components/produto-item-form";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
+import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { formatBRL, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, ExternalLink, Plus } from "lucide-react";
@@ -56,7 +57,7 @@ type Props = {
   vendedores: { nomeExibicao: string | null; username: string }[];
   updateAction: (formData: FormData) => Promise<{ success?: boolean; error?: string }>;
   deleteAction: (formData: FormData) => Promise<void>;
-  gerarBoletoAction?: (formData: FormData) => Promise<void>;
+  gerarBoletoAction?: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
 };
 
 function buildProdutosFromVenda(v: EditVendaData): ProdutoItem[] {
@@ -356,12 +357,7 @@ export function EditVendaFormClient({
                   Ver boleto Asaas
                 </a>
               ) : editVenda.boleto && gerarBoletoAction ? (
-                <form action={gerarBoletoAction} className="inline">
-                  <input type="hidden" name="vendaId" value={editVenda.id} />
-                  <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                    Gerar boleto Asaas
-                  </button>
-                </form>
+                <GerarBoletoButton vendaId={editVenda.id} gerarBoletoAction={gerarBoletoAction} />
               ) : null}
             </div>
             <DeleteVendaButton vendaId={editVenda.id} deleteAction={deleteAction} />

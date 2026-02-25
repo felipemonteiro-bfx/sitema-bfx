@@ -181,6 +181,16 @@ exports.Prisma.VendaScalarFieldEnum = {
   boletoUrl: 'boletoUrl'
 };
 
+exports.Prisma.DocumentoScalarFieldEnum = {
+  id: 'id',
+  vendaId: 'vendaId',
+  tipo: 'tipo',
+  mimeType: 'mimeType',
+  conteudo: 'conteudo',
+  tamanhoBytes: 'tamanhoBytes',
+  criadoEm: 'criadoEm'
+};
+
 exports.Prisma.ItemVendaScalarFieldEnum = {
   id: 'id',
   vendaId: 'vendaId',
@@ -291,6 +301,7 @@ exports.Prisma.ModelName = {
   Cliente: 'Cliente',
   Produto: 'Produto',
   Venda: 'Venda',
+  Documento: 'Documento',
   ItemVenda: 'ItemVenda',
   ParcelaVencimento: 'ParcelaVencimento',
   Config: 'Config',

@@ -81,6 +81,8 @@ export default function VendaRapidaFormV2({
     endereco?: string | null;
     cep?: string | null;
     telefone?: string | null;
+    cpf?: string | null;
+    cnpj?: string | null;
   } | null>(null);
   const [clienteSuggestions, setClienteSuggestions] = useState<
     {
@@ -685,6 +687,8 @@ export default function VendaRapidaFormV2({
                         endereco: c.endereco,
                         cep: c.cep,
                         telefone: c.telefone,
+                        cpf: c.cpf,
+                        cnpj: c.cnpj,
                       });
                       setClienteQuery(c.nome);
                       setClienteSuggestions([]);
@@ -917,6 +921,14 @@ export default function VendaRapidaFormV2({
               />
               <Label className="text-sm font-medium cursor-pointer">Boleto</Label>
             </div>
+            {boleto && selectedCliente && !selectedCliente.cpf && !selectedCliente.cnpj && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-200 text-sm">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>
+                  O cliente &quot;{selectedCliente.nome}&quot; não tem CPF ou CNPJ cadastrado. Cadastre em Cadastros → Clientes para poder gerar boleto no Asaas.
+                </span>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground w-full">Apenas uma das opções: desconto em folha ou boleto.</p>
           </div>
         </CardContent>

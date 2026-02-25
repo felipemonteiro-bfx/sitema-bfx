@@ -210,7 +210,14 @@ export async function criarVendaV2(
 
     let boletoUrl: string | undefined;
 
-    if (boleto && getAsaasConfig() && clienteId) {
+    if (boleto && clienteId) {
+      const asaasConfig = getAsaasConfig();
+      if (!asaasConfig) {
+        return successResponse(
+          `Venda #${venda.id} criada. Configure ASAAS_API_KEY no servidor para gerar boletos.`,
+          { vendaId: venda.id }
+        );
+      }
       try {
         const cliente = await prisma.cliente.findUnique({
           where: { id: clienteId },
@@ -224,8 +231,19 @@ export async function criarVendaV2(
             asaasCustomerId: true,
           },
         });
-        if (cliente && (cliente.cpf || cliente.cnpj)) {
-          const asaasCustomerId = await getOrCreateCustomer(
+        if (!cliente) {
+          return successResponse(
+            `Venda #${venda.id} criada. Cliente não encontrado para gerar boleto.`,
+            { vendaId: venda.id }
+          );
+        }
+        if (!cliente.cpf && !cliente.cnpj) {
+          return successResponse(
+            `Venda #${venda.id} criada. O cliente "${cliente.nome}" precisa ter CPF ou CNPJ cadastrado para gerar boleto no Asaas. Cadastre em Cadastros → Clientes.`,
+            { vendaId: venda.id }
+          );
+        }
+        const asaasCustomerId = await getOrCreateCustomer(
             {
               id: cliente.id,
               nome: cliente.nome,
@@ -269,11 +287,11 @@ export async function criarVendaV2(
             },
           });
           boletoUrl = payment.bankSlipUrl || undefined;
-        }
       } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
         console.error("Erro ao gerar boleto Asaas:", err);
         return successResponse(
-          `Venda #${venda.id} criada. Falha ao gerar boleto no Asaas; tente gerar pelo histórico.`,
+          `Venda #${venda.id} criada. Falha ao gerar boleto no Asaas: ${errMsg}. Tente gerar manualmente pelo Histórico de Vendas.`,
           { vendaId: venda.id }
         );
       }

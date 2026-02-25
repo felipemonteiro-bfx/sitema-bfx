@@ -30,6 +30,11 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
       onChange?.(parsed);
     };
 
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      e.target.select();
+      props.onFocus?.(e);
+    };
+
     return (
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium pointer-events-none">
@@ -47,6 +52,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
           name={undefined}
           value={displayValue}
           onChange={handleChange}
+          onFocus={handleFocus}
           placeholder={props.placeholder ?? "0,00"}
           className={(props.className ?? "") + " pl-10"}
           inputMode="decimal"
