@@ -3,5 +3,6 @@ pandas
 fpdf
 python-dateutil
 requests
-openai
 matplotlib
+python-dotenv
+google-generativeai

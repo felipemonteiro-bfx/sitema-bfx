@@ -24,12 +24,12 @@ except ImportError:
 ASAAS_API_KEY = os.getenv("ASAAS_API_KEY") or os.getenv("ASAAS_API_KEY".lower())
 ASAAS_ENV = (os.getenv("ASAAS_ENV") or os.getenv("ASAAS_ENV".lower()) or "sandbox").strip().lower()
 
-# Tenta importar OpenAI
+# IA: usa apenas Gemini (Google Generative AI)
 try:
-    from openai import OpenAI
-    HAS_OPENAI = True
+    import google.generativeai as genai
+    HAS_GEMINI = True
 except ImportError:
-    HAS_OPENAI = False
+    HAS_GEMINI = False
 
 # ==============================================================================
 # 1. CONFIGURAÇÃO VISUAL
@@ -98,6 +98,7 @@ def init_db():
     force_add_column('vendas', 'forma_pagamento', 'TEXT')
     force_add_column('vendas', 'asaas_boleto_json', 'TEXT')
     force_add_column('config', 'openai_key', 'TEXT')
+    force_add_column('config', 'gemini_key', 'TEXT')
 
     try:
         c.execute("UPDATE usuarios SET password = '123' WHERE username = 'bruno'")
@@ -447,14 +448,16 @@ def get_ai_context():
     return f"Resumo Financeiro: Receita {format_brl(dre['Receita'])}, Lucro {format_brl(dre['(=) Lucro Líquido'])}."
 
 def run_ai_chat(prompt):
-    if not HAS_OPENAI: return "Biblioteca OpenAI não instalada. Digite `pip install openai` no terminal."
-    api_key = conn.execute("SELECT openai_key FROM config").fetchone()
-    if not api_key or not api_key[0]: return "Por favor, adicione sua Chave de API da OpenAI (ou Groq) no menu Configurações."
-    client = OpenAI(api_key=api_key[0], base_url="https://api.groq.com/openai/v1") 
+    if not HAS_GEMINI: return "Biblioteca não instalada. Digite `pip install google-generativeai` no terminal."
+    api_key = os.getenv("GOOGLE_GENERATIVE_AI_API_KEY") or (conn.execute("SELECT gemini_key FROM config").fetchone() or (None,))[0]
+    if not api_key: return "Configure GOOGLE_GENERATIVE_AI_API_KEY no .env ou adicione a chave Gemini no menu Configurações."
     try:
-        completion = client.chat.completions.create(model="llama3-8b-8192", messages=[{"role": "system", "content": f"Contexto: {get_ai_context()}"}, {"role": "user", "content": prompt}])
-        return completion.choices[0].message.content
-    except Exception as e: return f"Erro na IA: {e}"
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        ctx = get_ai_context()
+        resp = model.generate_content(f"Contexto: {ctx}\n\nPergunta do usuário: {prompt}")
+        return resp.text if resp.text else "Resposta vazia."
+    except Exception as e: return f"Erro na IA (Gemini): {e}"
 
 # ==============================================================================
 # 7. CONTEÚDO PRINCIPAL
@@ -672,20 +675,24 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
 
 elif menu == "🏦 Prudent (Antecipação)" and role == 'admin':
     st.subheader("🏦 Central de Antecipação de Recebíveis")
-    q_pend = """SELECT id, data_venda, produto_nome, valor_venda, parcelas, valor_parcela FROM vendas WHERE antecipada = 0"""
+    q_pend = """SELECT id, data_venda, produto_nome, valor_venda, parcelas, valor_parcela, antecipada FROM vendas ORDER BY data_venda DESC, id DESC"""
     df_pend = pd.read_sql(q_pend, conn)
     if not df_pend.empty:
+        df_pend['Status'] = df_pend['antecipada'].apply(lambda x: 'Antecipada' if x == 1 else 'Pendente')
         df_pend['Selecionar'] = False
         edited_df = st.data_editor(df_pend, column_config={"Selecionar": st.column_config.CheckboxColumn(required=True)}, hide_index=True, use_container_width=True)
         sel_rows = edited_df[edited_df['Selecionar'] == True]
-        total_ant = sel_rows['valor_venda'].sum()
-        st.divider(); c1, c2 = st.columns(2); c1.metric("Total Selecionado", format_brl(total_ant))
+        pendentes_sel = sel_rows[sel_rows['antecipada'] == 0] if 'antecipada' in sel_rows.columns else sel_rows
+        total_ant = pendentes_sel['valor_venda'].sum() if not pendentes_sel.empty else 0
+        st.divider(); c1, c2 = st.columns(2); c1.metric("Total Selecionado (pendentes)", format_brl(total_ant))
         if c2.button("💰 ANTECIPAR SELECIONADOS", type="primary"):
-            ids = sel_rows['id'].tolist()
+            ids = pendentes_sel['id'].tolist() if not pendentes_sel.empty else []
             if ids:
                 conn.execute(f"UPDATE vendas SET antecipada=1 WHERE id IN ({','.join(map(str, ids))})"); conn.commit()
                 st.success(f"{len(ids)} vendas antecipadas com sucesso!"); time.sleep(1); st.rerun()
-    else: st.success("🎉 Nenhuma venda pendente de antecipação.")
+            elif not sel_rows.empty:
+                st.info("Selecione vendas com status 'Pendente' para antecipar.")
+    else: st.info("Nenhuma venda cadastrada.")
 
 elif menu == "📥 Importação" and role == 'admin':
     st.subheader("📥 Importação de Vendas em Massa")
@@ -753,7 +760,7 @@ elif menu == "Venda Rápida":
         if st.button("💾 FINALIZAR VENDA", type="primary"):
             try:
                 conn.execute("""INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada, forma_pagamento, asaas_boleto_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                             (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 1, forma_db, None))
+                             (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 0, forma_db, None))
                 conn.commit()
                 last_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
                 boletos_list = []

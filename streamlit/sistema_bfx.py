@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -16,12 +15,24 @@ import requests
 import calendar
 import json
 
-# Tenta importar OpenAI
+# Carregar .env se existir (para ASAAS no Streamlit) — tenta raiz do projeto e pasta streamlit
 try:
-    from openai import OpenAI
-    HAS_OPENAI = True
+    from dotenv import load_dotenv
+    load_dotenv()
+    _root_env = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
+    if os.path.isfile(_root_env):
+        load_dotenv(_root_env)
 except ImportError:
-    HAS_OPENAI = False
+    pass
+ASAAS_API_KEY = os.getenv("ASAAS_API_KEY") or os.getenv("ASAAS_API_KEY".lower())
+ASAAS_ENV = (os.getenv("ASAAS_ENV") or os.getenv("ASAAS_ENV".lower()) or "sandbox").strip().lower()
+
+# IA: usa apenas Gemini (Google Generative AI)
+try:
+    import google.generativeai as genai
+    HAS_GEMINI = True
+except ImportError:
+    HAS_GEMINI = False
 
 # ==============================================================================
 # 1. CONFIGURAÇÃO VISUAL
@@ -87,7 +98,10 @@ def init_db():
     force_add_column('clientes', 'tipo', 'TEXT')
     force_add_column('produtos', 'valor_venda', 'REAL DEFAULT 0')
     force_add_column('vendas', 'comprovante_pdf', 'TEXT')
+    force_add_column('vendas', 'forma_pagamento', 'TEXT')
+    force_add_column('vendas', 'asaas_boleto_json', 'TEXT')
     force_add_column('config', 'openai_key', 'TEXT')
+    force_add_column('config', 'gemini_key', 'TEXT')
 
     try:
         c.execute("UPDATE usuarios SET password = '123' WHERE username = 'bruno'")
@@ -123,6 +137,63 @@ def mask_cep(val):
 def clean_str(val): return re.sub(r'\D', '', str(val)) if val else ""
 def format_brl(v): return f"R$ {v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if v else "R$ 0,00"
 def gerar_link_zap(tel, msg): return f"https://wa.me/{clean_str(tel)}?text={urllib.parse.quote(msg)}" if tel else None
+
+def criar_boletos_asaas(cliente_dados, valor_total, parcelas, valor_parcela, data_primeiro_vencimento, descricao="Venda BFX"):
+    """Cria cliente no Asaas, cobrança parcelada em boleto e retorna lista [{parcela, dueDate, bankSlipUrl, id}, ...]. Em erro retorna (None, mensagem_erro)."""
+    if not ASAAS_API_KEY:
+        return None, "ASAAS_API_KEY não configurada."
+    base = "https://api.asaas.com/v3" if ASAAS_ENV == "production" else "https://sandbox.asaas.com/api/v3"
+    headers = {"access_token": ASAAS_API_KEY, "Content-Type": "application/json"}
+    cpf_cnpj = clean_str(cliente_dados.get("cpf") or cliente_dados.get("cnpj") or "")
+    if not cpf_cnpj:
+        return None, "Cliente sem CPF/CNPJ cadastrado."
+    nome = (cliente_dados.get("nome") or cliente_dados.get("c") or "").strip() or "Cliente"
+    tel = clean_str(cliente_dados.get("telefone") or "")
+    payload_customer = {"name": nome[:100], "cpfCnpj": cpf_cnpj, "phone": tel[:20] if tel else None}
+    payload_customer = {k: v for k, v in payload_customer.items() if v is not None}
+    try:
+        r_c = requests.post(f"{base}/customers", headers=headers, json=payload_customer, timeout=15)
+        r_c.raise_for_status()
+        customer_id = r_c.json().get("id")
+        if not customer_id:
+            return None, "Resposta Asaas sem ID do cliente."
+    except requests.RequestException as e:
+        err = getattr(e, "response", None)
+        msg = err.text if err else str(e)
+        try:
+            j = err.json() if err else {}
+            msg = j.get("errors", [{}])[0].get("description", msg) if isinstance(j.get("errors"), list) else msg
+        except Exception:
+            pass
+        return None, f"Asaas (cliente): {msg}"
+    due = data_primeiro_vencimento.strftime("%Y-%m-%d") if hasattr(data_primeiro_vencimento, "strftime") else str(data_primeiro_vencimento)[:10]
+    payload_pay = {"customer": customer_id, "billingType": "BOLETO", "installmentCount": parcelas, "installmentValue": round(float(valor_parcela), 2), "dueDate": due, "description": descricao[:500]}
+    try:
+        r_p = requests.post(f"{base}/payments", headers=headers, json=payload_pay, timeout=15)
+        r_p.raise_for_status()
+        data = r_p.json()
+        installment_id = data.get("installment")
+        if not installment_id:
+            return None, "Resposta Asaas sem ID do parcelamento."
+    except requests.RequestException as e:
+        err = getattr(e, "response", None)
+        msg = err.text if err else str(e)
+        try:
+            j = err.json() if err else {}
+            msg = j.get("errors", [{}])[0].get("description", msg) if isinstance(j.get("errors"), list) else msg
+        except Exception:
+            pass
+        return None, f"Asaas (cobrança): {msg}"
+    try:
+        r_list = requests.get(f"{base}/installments/{installment_id}/payments", headers=headers, timeout=15)
+        r_list.raise_for_status()
+        lista = r_list.json().get("data", [])
+    except requests.RequestException as e:
+        return None, f"Asaas (listar parcelas): {getattr(e, 'response', e)}"
+    out = []
+    for p in lista:
+        out.append({"parcela": p.get("installmentNumber", len(out) + 1), "dueDate": p.get("dueDate", ""), "bankSlipUrl": p.get("bankSlipUrl") or "", "id": p.get("id", "")})
+    return out, None
 
 def sugerir_ncm(nome_prod):
     if not nome_prod: return ""
@@ -264,6 +335,13 @@ def gerar_pdf(dados, tipo="recibo", texto_custom=None):
         final = txt.replace("{CLIENTE}", str(dados['c'])).replace("{VALOR}", f"{dados['v']:,.2f}").replace("{PRODUTO}", str(dados['p'])).replace("{PARCELAS}", str(dados['pa'])).replace("{EMPRESA_PARCEIRA}", str(dados['e'])).replace("{MATRICULA}", str(dados.get('m',''))).replace("{CPF}", str(doc_id))
         pdf.set_font("Arial", '', 10); pdf.multi_cell(0, 5, final); pdf.ln(15)
         pdf.line(20, pdf.get_y(), 190, pdf.get_y()); pdf.cell(0, 5, "Assinatura Cliente", 0, 1, 'C')
+    elif tipo == "recibo_padrao":
+        doc_id = dados.get('cpf') if dados.get('cpf') else dados.get('cnpj', '')
+        pdf.set_font("Arial", 'B', 11); pdf.cell(0, 8, "  1. IDENTIFICAÇÃO", 1, 1, 'L')
+        pdf.set_font("Arial", '', 10); pdf.multi_cell(0, 6, f"Nome/Razão Social: {dados['c']}\nCPF/CNPJ: {doc_id}\nEmpresa/Vínculo: {dados['e']}"); pdf.ln(5)
+        pdf.set_font("Arial", 'B', 11); pdf.cell(0, 8, "  2. DETALHES", 1, 1, 'L')
+        pdf.set_font("Arial", '', 10); pdf.multi_cell(0, 6, f"Produto: {dados['p']}\nTotal: {format_brl(dados['v']+dados.get('frete',0))}\nParcelas: {dados['pa']}x de {format_brl(dados['vp'])}"); pdf.ln(5)
+        pdf.ln(5); pdf.set_font("Arial", '', 9); pdf.cell(0, 5, "Documento de comprovante de compra.", 0, 1, 'C')
     elif tipo == "rh":
         pdf.set_font("Arial",'B',14); pdf.cell(0,10,f"Relatório de Descontos - {dados['empresa']}",0,1,'C')
         pdf.set_font("Arial",'',12); pdf.cell(0,10,f"Referência: {dados['mes']}",0,1,'C'); pdf.ln(5)
@@ -373,14 +451,16 @@ def get_ai_context():
     return f"Resumo Financeiro: Receita {format_brl(dre['Receita'])}, Lucro {format_brl(dre['(=) Lucro Líquido'])}."
 
 def run_ai_chat(prompt):
-    if not HAS_OPENAI: return "Biblioteca OpenAI não instalada. Digite `pip install openai` no terminal."
-    api_key = conn.execute("SELECT openai_key FROM config").fetchone()
-    if not api_key or not api_key[0]: return "Por favor, adicione sua Chave de API da OpenAI (ou Groq) no menu Configurações."
-    client = OpenAI(api_key=api_key[0], base_url="https://api.groq.com/openai/v1") 
+    if not HAS_GEMINI: return "Biblioteca não instalada. Digite `pip install google-generativeai` no terminal."
+    api_key = os.getenv("GOOGLE_GENERATIVE_AI_API_KEY") or (conn.execute("SELECT gemini_key FROM config").fetchone() or (None,))[0]
+    if not api_key: return "Configure GOOGLE_GENERATIVE_AI_API_KEY no .env ou adicione a chave Gemini no menu Configurações."
     try:
-        completion = client.chat.completions.create(model="llama3-8b-8192", messages=[{"role": "system", "content": f"Contexto: {get_ai_context()}"}, {"role": "user", "content": prompt}])
-        return completion.choices[0].message.content
-    except Exception as e: return f"Erro na IA: {e}"
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        ctx = get_ai_context()
+        resp = model.generate_content(f"Contexto: {ctx}\n\nPergunta do usuário: {prompt}")
+        return resp.text if resp.text else "Resposta vazia."
+    except Exception as e: return f"Erro na IA (Gemini): {e}"
 
 # ==============================================================================
 # 7. CONTEÚDO PRINCIPAL
@@ -521,7 +601,7 @@ if menu == "Dashboard" and role == 'admin':
 
 elif menu == "🤖 BFX Intelligence (IA)" and role == 'admin':
     st.subheader("🤖 Assistente Virtual de Negócios")
-    st.info("Pergunte sobre estratégias, peça e-mails de cobrança ou tire dúvidas gerais. (Requer Chave API em Configurações)")
+    st.info("Pergunte sobre estratégias, peça e-mails de cobrança ou tire dúvidas gerais. (Requer Chave Gemini em .env ou Configurações)")
     if "messages" not in st.session_state: st.session_state.messages = []
     for message in st.session_state.messages:
         with st.chat_message(message["role"]): st.markdown(message["content"])
@@ -598,20 +678,24 @@ elif menu == "💰 Financeiro & DRE" and role == 'admin':
 
 elif menu == "🏦 Prudent (Antecipação)" and role == 'admin':
     st.subheader("🏦 Central de Antecipação de Recebíveis")
-    q_pend = """SELECT id, data_venda, produto_nome, valor_venda, parcelas, valor_parcela FROM vendas WHERE antecipada = 0"""
+    q_pend = """SELECT id, data_venda, produto_nome, valor_venda, parcelas, valor_parcela, antecipada FROM vendas ORDER BY data_venda DESC, id DESC"""
     df_pend = pd.read_sql(q_pend, conn)
     if not df_pend.empty:
+        df_pend['Status'] = df_pend['antecipada'].apply(lambda x: 'Antecipada' if x == 1 else 'Pendente')
         df_pend['Selecionar'] = False
         edited_df = st.data_editor(df_pend, column_config={"Selecionar": st.column_config.CheckboxColumn(required=True)}, hide_index=True, use_container_width=True)
         sel_rows = edited_df[edited_df['Selecionar'] == True]
-        total_ant = sel_rows['valor_venda'].sum()
-        st.divider(); c1, c2 = st.columns(2); c1.metric("Total Selecionado", format_brl(total_ant))
+        pendentes_sel = sel_rows[sel_rows['antecipada'] == 0] if 'antecipada' in sel_rows.columns else sel_rows
+        total_ant = pendentes_sel['valor_venda'].sum() if not pendentes_sel.empty else 0
+        st.divider(); c1, c2 = st.columns(2); c1.metric("Total Selecionado (pendentes)", format_brl(total_ant))
         if c2.button("💰 ANTECIPAR SELECIONADOS", type="primary"):
-            ids = sel_rows['id'].tolist()
+            ids = pendentes_sel['id'].tolist() if not pendentes_sel.empty else []
             if ids:
                 conn.execute(f"UPDATE vendas SET antecipada=1 WHERE id IN ({','.join(map(str, ids))})"); conn.commit()
                 st.success(f"{len(ids)} vendas antecipadas com sucesso!"); time.sleep(1); st.rerun()
-    else: st.success("🎉 Nenhuma venda pendente de antecipação.")
+            elif not sel_rows.empty:
+                st.info("Selecione vendas com status 'Pendente' para antecipar.")
+    else: st.info("Nenhuma venda cadastrada.")
 
 elif menu == "📥 Importação" and role == 'admin':
     st.subheader("📥 Importação de Vendas em Massa")
@@ -662,6 +746,11 @@ elif menu == "Venda Rápida":
         frete_cobrado = k2.number_input("Frete (Cobrado Cliente)", value=None, placeholder="0.00", step=0.01)
         custo_envio = k3.number_input("Custo Envio (Logística)", value=None, placeholder="0.00", step=0.01, help="Quanto você paga para enviar. Não aparece para o cliente.")
         parc = st.selectbox("Qtd Parcelas", range(1,13))
+        opcoes_pagamento = ["Desconto em folha"]
+        if ASAAS_API_KEY:
+            opcoes_pagamento.append("Boleto")
+        forma_pag = st.selectbox("Forma de pagamento", opcoes_pagamento)
+        forma_db = "boleto" if forma_pag == "Boleto" else "desconto_folha"
         v_safe = val or 0.0; f_safe = frete_cobrado or 0.0; c_safe = custo_envio or 0.0
         total_venda = v_safe + f_safe
         val_parc = total_venda / parc if parc > 0 else 0
@@ -673,22 +762,52 @@ elif menu == "Venda Rápida":
         s3.metric("Faturamento Total", format_brl(total_venda))
         if st.button("💾 FINALIZAR VENDA", type="primary"):
             try:
-                conn.execute("INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada) VALUES (?,?,?,?,?,?,?,?,?,?,?)", 
-                             (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 1))
-                conn.commit(); st.success("Venda Realizada!"); st.session_state['vf'] = {'c':cli, 'v':v_safe, 'p':" + ".join(prods), 'vp':val_parc, 'pa':parc, 'frete':f_safe, 'e':dcli['empresa'], 'cpf':dcli.get('cpf') or dcli.get('cnpj'), 'm':dcli.get('matricula','')}
+                conn.execute("""INSERT INTO vendas (data_venda, vendedor, cliente_id, produto_nome, custo_produto, valor_venda, valor_frete, custo_envio, parcelas, valor_parcela, antecipada, forma_pagamento, asaas_boleto_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                             (dt, vend, int(dcli['id']), " + ".join(prods), custo, v_safe, f_safe, custo_envio or 0.0, parc, val_parc, 0, forma_db, None))
+                conn.commit()
+                last_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                boletos_list = []
+                if forma_db == "boleto":
+                    primeiro_venc = (datetime.now() + timedelta(days=5)).date()
+                    cliente_asaas = {"nome": dcli.get("nome") or cli, "c": cli, "cpf": dcli.get("cpf"), "cnpj": dcli.get("cnpj"), "telefone": dcli.get("telefone")}
+                    boletos_list, err = criar_boletos_asaas(cliente_asaas, total_venda, parc, val_parc, primeiro_venc, descricao=f"Venda BFX #{last_id}")
+                    if err:
+                        st.warning(f"Venda salva, mas boleto não gerado: {err}")
+                    elif boletos_list:
+                        conn.execute("UPDATE vendas SET asaas_boleto_json = ? WHERE id = ?", (json.dumps(boletos_list), last_id))
+                        conn.commit()
+                st.success("Venda Realizada!")
+                st.session_state['vf'] = {'c': cli, 'v': v_safe, 'p': " + ".join(prods), 'vp': val_parc, 'pa': parc, 'frete': f_safe, 'e': dcli['empresa'], 'cpf': dcli.get('cpf') or dcli.get('cnpj'), 'm': dcli.get('matricula', ''), 'forma_pagamento': forma_db, 'boletos': boletos_list}
                 time.sleep(0.5); st.rerun()
             except Exception as e:
                 if "no such column" in str(e):
                     st.warning("Atualizando banco de dados... Tente novamente em 2 segundos.")
-                    try: conn.execute("ALTER TABLE vendas ADD COLUMN lucro_liquido REAL DEFAULT 0"); conn.commit()
+                    try:
+                        conn.execute("ALTER TABLE vendas ADD COLUMN lucro_liquido REAL DEFAULT 0"); conn.commit()
+                        conn.execute("ALTER TABLE vendas ADD COLUMN forma_pagamento TEXT"); conn.commit()
+                        conn.execute("ALTER TABLE vendas ADD COLUMN asaas_boleto_json TEXT"); conn.commit()
                     except: pass
                     time.sleep(2); st.rerun()
                 else: st.error(f"Erro na venda: {e}")
         if 'vf' in st.session_state:
-            st.divider(); c_pdf, c_zap = st.columns(2)
-            pdf = gerar_pdf(st.session_state['vf'], "recibo")
-            c_pdf.download_button("📥 Baixar PDF", data=pdf, file_name="recibo.pdf", mime="application/pdf", use_container_width=True)
-            msg = f"Olá {st.session_state['vf']['c']}, segue seu comprovante."
+            vf = st.session_state['vf']
+            st.divider()
+            boletos = vf.get('boletos') or []
+            if boletos:
+                st.markdown("**📄 Boletos**")
+                cols_b = st.columns(min(len(boletos), 4))
+                for i, b in enumerate(boletos):
+                    url = b.get("bankSlipUrl") or ""
+                    with cols_b[i % len(cols_b)]:
+                        if url:
+                            st.link_button(f"📥 Boleto Parcela {b.get('parcela', i+1)}", url, use_container_width=True)
+                st.markdown("---")
+            c_recibo, c_padrao, c_zap = st.columns(3)
+            pdf_recibo = gerar_pdf(vf, "recibo")
+            c_recibo.download_button("📥 Recibo e Autorização (Desconto em Folha)", data=pdf_recibo, file_name="recibo_autorizacao.pdf", mime="application/pdf", use_container_width=True)
+            pdf_padrao = gerar_pdf(vf, "recibo_padrao")
+            c_padrao.download_button("📥 Recibo Padrão", data=pdf_padrao, file_name="recibo_padrao.pdf", mime="application/pdf", use_container_width=True)
+            msg = f"Olá {vf['c']}, segue seu comprovante."
             link = f"https://wa.me/{clean_str(dcli['telefone'])}?text={urllib.parse.quote(msg)}"
             c_zap.markdown(f'<a href="{link}" target="_blank" class="whatsapp-btn">🟢 Enviar no WhatsApp</a>', unsafe_allow_html=True)
 
@@ -748,12 +867,28 @@ elif menu == "Cadastros":
                 if st.form_submit_button("Salvar Produto"):
                     fid = None
                     if f_sel == "Novo Fornecedor..." and nf_n:
-                        conn.execute("INSERT INTO fornecedores (nome, telefone) VALUES (?,?)", (nf_n, clean_str(nf_t)))
-                        fid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                        # PROTEÇÃO CONTRA DUPLICIDADE DE FORNECEDOR (v114)
+                        try:
+                            conn.execute("INSERT INTO fornecedores (nome, telefone) VALUES (?,?)", (nf_n, clean_str(nf_t)))
+                            fid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                        except sqlite3.IntegrityError:
+                            # Se já existe, pega o ID do existente
+                            fid = conn.execute("SELECT id FROM fornecedores WHERE nome=?", (nf_n,)).fetchone()[0]
+                            st.toast(f"Fornecedor '{nf_n}' já existia e foi selecionado.")
+                            
                     elif f_sel != "Novo Fornecedor...": fid = df_f[df_f['nome']==f_sel].iloc[0]['id']
+                    
                     b64_img = image_to_base64(up_img)
-                    conn.execute("INSERT INTO produtos (nome, custo_padrao, marca, ncm, fornecedor_id, imagem, valor_venda) VALUES (?,?,?,?,?,?,?)", (nm, cst or 0.0, mk, ncm, fid, b64_img, val_v or 0.0))
-                    conn.commit(); st.success("Salvo!"); st.rerun()
+                    
+                    # PROTEÇÃO CONTRA PRODUTO DUPLICADO (v114)
+                    try:
+                        conn.execute("INSERT INTO produtos (nome, custo_padrao, marca, ncm, fornecedor_id, imagem, valor_venda) VALUES (?,?,?,?,?,?,?)", (nm, cst or 0.0, mk, ncm, fid, b64_img, val_v or 0.0))
+                        conn.commit(); st.success("Salvo!"); st.rerun()
+                    except sqlite3.IntegrityError:
+                        st.error(f"O produto '{nm}' já existe!")
+                    except Exception as e:
+                        st.error(f"Erro ao salvar: {e}")
+
         st.markdown("---")
         if st.button("📄 Gerar Catálogo de Produtos PDF"):
             try:
@@ -812,110 +947,6 @@ elif menu == "Cadastros":
             for i, r in edit_emp.iterrows():
                 conn.execute("UPDATE empresas_parceiras SET nome=?, responsavel_rh=?, telefone_rh=?, email_rh=? WHERE id=?", (r['nome'], r['responsavel_rh'], r['telefone_rh'], r['email_rh'], r['id']))
             conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
-
-elif menu == "👥 Gestão de RH (Equipe)" and role == 'admin':
-    st.subheader("👥 Gestão de Time")
-    t1, t2, t3 = st.tabs(["📊 Metas & Comissões", "👤 Detalhes & Senha", "➕ Contratar"])
-    with t1:
-        st.info("Edite Metas e Comissões diretamente na tabela:")
-        df_u = pd.read_sql("SELECT id, nome_exibicao, username, role, meta_mensal, comissao_pct FROM usuarios", conn)
-        edit_u = st.data_editor(df_u, column_config={"id": st.column_config.NumberColumn(disabled=True), "role": st.column_config.SelectboxColumn("Cargo", options=["admin", "vendedor"])}, hide_index=True, use_container_width=True, key="ed_u")
-        if st.button("💾 SALVAR METAS"):
-            for i, r in edit_u.iterrows():
-                conn.execute("UPDATE usuarios SET nome_exibicao=?, username=?, role=?, meta_mensal=?, comissao_pct=? WHERE id=?", (r['nome_exibicao'], r['username'], r['role'], r['meta_mensal'], r['comissao_pct'], r['id']))
-            conn.commit(); st.success("Atualizado!"); time.sleep(1); st.rerun()
-    with t2:
-        list_users = pd.read_sql("SELECT nome_exibicao FROM usuarios", conn)['nome_exibicao'].tolist()
-        sel_u = st.selectbox("Selecione o Funcionário:", list_users)
-        if sel_u:
-            du = pd.read_sql(f"SELECT * FROM usuarios WHERE nome_exibicao='{sel_u}'", conn).iloc[0]
-            with st.form("edit_u_det"):
-                c1, c2 = st.columns(2)
-                unm = c1.text_input("Nome", du['nome_exibicao']); ulogin = c2.text_input("Login", du['username'])
-                uemail = c1.text_input("Email", du.get('email','')); utel = c2.text_input("Telefone", du.get('telefone',''))
-                uend = st.text_input("Endereço", du.get('endereco',''))
-                new_pass = st.text_input("Nova Senha (Deixe em branco para manter)", type="password")
-                if st.form_submit_button("Salvar Dados"):
-                    q_up = "UPDATE usuarios SET nome_exibicao=?, username=?, email=?, telefone=?, endereco=?"
-                    params = [unm, ulogin, uemail, utel, uend]
-                    if new_pass.strip(): q_up += ", password=?"; params.append(new_pass.strip())
-                    q_up += " WHERE id=?"; params.append(int(du['id']))
-                    conn.execute(q_up, params); conn.commit(); st.success("Dados Salvos!"); time.sleep(1); st.rerun()
-            st.markdown("---")
-            if st.button(f"🗑️ DEMITIR (Excluir {sel_u})", type="primary"):
-                conn.execute("DELETE FROM usuarios WHERE id=?", (du['id'],)); conn.commit(); st.warning("Usuário removido."); time.sleep(1); st.rerun()
-    with t3:
-        with st.form("new_u"):
-            c1, c2 = st.columns(2)
-            nn = c1.text_input("Nome Completo"); nu = c2.text_input("Login Acesso")
-            np = c1.text_input("Senha Inicial", type="password"); nr = c2.selectbox("Cargo", ["vendedor", "admin"])
-            if st.form_submit_button("Cadastrar"):
-                if not nu or not nn or not np:
-                    st.error("Preencha todos os campos!")
-                else:
-                    try:
-                        conn.execute("INSERT INTO usuarios (username, password, role, nome_exibicao) VALUES (?,?,?,?)", (clean_str(nu).lower(), np, nr, nn))
-                        conn.commit()
-                        st.success(f"Usuário {nn} criado com sucesso!")
-                        time.sleep(1); st.rerun()
-                    except sqlite3.IntegrityError:
-                        st.error(f"O login '{nu}' já existe. Escolha outro.")
-                    except Exception as e:
-                        st.error(f"Erro: {e}")
-
-elif menu == "Configurações" and role == 'admin':
-    st.subheader("⚙️ Configurações do Sistema")
-    tab_mural, tab_doc, tab_api, tab_tools = st.tabs(["📢 Mural", "📄 Recibo", "🔑 IA", "🔧 Manutenção"])
-    with tab_mural:
-        st.markdown("##### Mensagem para os Vendedores")
-        try:
-            curr_msg = conn.execute("SELECT mensagem FROM avisos WHERE ativo=1 ORDER BY id DESC LIMIT 1").fetchone()
-            val_msg = curr_msg[0] if curr_msg else ""
-        except: val_msg = ""
-        new_msg = st.text_area("Digite o aviso aqui:", value=val_msg, height=100)
-        if st.button("📢 PUBLICAR AVISO"):
-            conn.execute("UPDATE avisos SET ativo=0"); conn.execute("INSERT INTO avisos (mensagem, ativo) VALUES (?, 1)", (new_msg,)); conn.commit(); st.success("Aviso atualizado!")
-    with tab_doc:
-        st.markdown("##### Personalizar Contrato/Recibo")
-        c_text, c_prev = st.columns(2)
-        with c_text:
-            try:
-                res = conn.execute("SELECT modelo_contrato FROM config").fetchone()
-                curr_text = res[0] if res else "Texto Padrão..."
-            except: curr_text = "Texto Padrão..."
-            new_text = st.text_area("Edite o texto:", value=curr_text, height=400)
-            if st.button("💾 SALVAR TEXTO"):
-                conn.execute("UPDATE config SET modelo_contrato=?", (new_text,)); conn.commit(); st.success("Texto salvo!")
-            st.divider()
-            up_logo = st.file_uploader("Trocar Logo (PNG/JPG)", type=['png','jpg'])
-            if up_logo: 
-                with open("logo.png","wb") as f: f.write(up_logo.getbuffer())
-                conn.execute("UPDATE config SET logo_path='logo.png'"); conn.commit(); st.success("Logo atualizada!")
-        with c_prev:
-            st.caption("Visualização em Tempo Real")
-            mock = {'c':'CLIENTE TESTE', 'v':1500.0, 'p':'PRODUTO X', 'vp':150.0, 'pa':10, 'frete':50.0, 'e':'EMPRESA Y', 'cpf':'000.000.000-00', 'm':'12345'}
-            pdf_prev = gerar_pdf(mock, "recibo"); b64_prev = base64.b64encode(pdf_prev).decode('latin-1')
-            st.markdown(f'<iframe src="data:application/pdf;base64,{b64_prev}" width="100%" height="600"></iframe>', unsafe_allow_html=True)
-    with tab_api:
-        st.markdown("##### Configuração da Inteligência Artificial")
-        st.info("Insira aqui sua chave da OpenAI ou Groq para ativar o assistente.")
-        curr_key = conn.execute("SELECT openai_key FROM config").fetchone()
-        val_key = curr_key[0] if curr_key and curr_key[0] else ""
-        new_key = st.text_input("API Key", value=val_key, type="password")
-        if st.button("💾 SALVAR API KEY"):
-            conn.execute("UPDATE config SET openai_key=?", (new_key,)); conn.commit(); st.success("Chave salva!")
-    with tab_tools:
-        st.markdown("##### 🔧 Ferramenta de Correção de Vendedores")
-        try:
-            count_wrong = conn.execute("SELECT COUNT(*) FROM vendas WHERE vendedor='Jaqueline'").fetchone()[0]
-            st.metric("Vendas com nome 'Jaqueline' (Errado)", count_wrong)
-            if count_wrong > 0:
-                if st.button("🛠️ Corrigir Todas para 'Jakeline'"):
-                    conn.execute("UPDATE vendas SET vendedor='Jakeline' WHERE vendedor='Jaqueline'")
-                    conn.commit()
-                    st.success(f"{count_wrong} vendas corrigidas com sucesso!"); time.sleep(1); st.rerun()
-            else: st.success("✅ Nenhuma venda com nome errado encontrada.")
-        except Exception as e: st.error(f"Erro: {e}")
 
 elif menu == "Minhas Comissões":
     st.info("Extrato disponível.")
