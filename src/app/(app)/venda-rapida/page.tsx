@@ -9,7 +9,10 @@ import { criarVendaV2 } from "./actions";
 
 export default async function Page() {
   const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
-  const ultima = await prisma.venda.findFirst({ orderBy: { id: "desc" } });
+  const ultima = await prisma.venda.findFirst({
+    orderBy: { id: "desc" },
+    include: { itens: true },
+  });
 
   const vendedorOptions = vendedores.map((v) => ({
     value: String(v.nomeExibicao || v.username),
@@ -22,7 +25,11 @@ export default async function Page() {
     label: String(i + 1),
   }));
 
-  const totalUltima = ultima ? (ultima.valorVenda || 0) + (ultima.valorFrete || 0) : 0;
+  const totalUltima = ultima
+    ? ultima.itens && ultima.itens.length > 0
+      ? ultima.itens.reduce((s, i) => s + i.subtotal, 0) + (ultima.valorFrete || 0)
+      : (ultima.valorVenda || 0) + (ultima.valorFrete || 0)
+    : 0;
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">

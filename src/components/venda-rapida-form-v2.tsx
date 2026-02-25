@@ -144,6 +144,7 @@ export default function VendaRapidaFormV2({
   } | null>(null);
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const submitLockRef = useRef(false);
 
   // Limpar erro do campo ao editar
   useEffect(() => {
@@ -416,6 +417,9 @@ export default function VendaRapidaFormV2({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+
     const errors: typeof validationErrors = {};
     const msgs: string[] = [];
 
@@ -432,16 +436,23 @@ export default function VendaRapidaFormV2({
       msgs.push("Cliente");
     }
 
+    const produtosFiltrados = produtos.filter((p) => p.produtoNome?.trim());
+    if (produtosFiltrados.length === 0) {
+      setValidationErrors((prev) => ({ ...prev, produtoIndices: produtos.map((_, i) => i) }));
+      toast.error("Adicione pelo menos um produto à venda.");
+      submitLockRef.current = false;
+      return;
+    }
+
     const produtoIndices: number[] = [];
-    produtos.forEach((p, i) => {
-      const faltaNome = !p.produtoNome?.trim();
+    produtosFiltrados.forEach((p, i) => {
       const custoInvalido = p.custoProduto < 0;
       const valorInvalido = p.valorVenda < 0;
       const qtdInvalida = p.quantidade < 1;
-      if (faltaNome || custoInvalido || valorInvalido || qtdInvalida) {
-        produtoIndices.push(i);
-        if (faltaNome) msgs.push(`Produto #${i + 1} (nome)`);
-        else if (valorInvalido || custoInvalido || qtdInvalida) msgs.push(`Produto #${i + 1} (preencha valores)`);
+      if (custoInvalido || valorInvalido || qtdInvalida) {
+        const idxOriginal = produtos.findIndex((x) => x.id === p.id);
+        if (idxOriginal >= 0) produtoIndices.push(idxOriginal);
+        msgs.push(`Produto #${i + 1} (preencha valores corretamente)`);
       }
     });
     if (produtoIndices.length) errors.produtoIndices = produtoIndices;
@@ -449,11 +460,18 @@ export default function VendaRapidaFormV2({
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       toast.error("Preencha os campos obrigatórios: " + msgs.join(", "));
+      submitLockRef.current = false;
       return;
     }
 
     setValidationErrors({});
     setLoading(true);
+
+    const subtotalFiltrado = produtosFiltrados.reduce((s, p) => s + p.subtotal, 0);
+    const totalFiltrado = subtotalFiltrado + numFrete;
+    const valorParcelaFiltrado = numParcelas > 0 ? totalFiltrado / numParcelas : 0;
+    const excedeuLimite = limiteData && valorParcelaFiltrado > limiteData.margemDisponivel + 1 ? 1 : 0;
+
     const formData = new FormData();
     formData.append("data", dataVenda);
     formData.append("vendedor", vendedor);
@@ -465,14 +483,9 @@ export default function VendaRapidaFormV2({
     formData.append("taxaNota", taxaNota);
     formData.append("descontoEmFolha", String(descontoEmFolha));
     formData.append("boleto", String(boleto));
-
-    const excedeuLimite = limiteData && valorParcela > limiteData.margemDisponivel + 1 ? 1 : 0;
     formData.append("excedeuLimite", String(excedeuLimite));
+    formData.append("produtos", JSON.stringify(produtosFiltrados));
 
-    // Produtos (JSON)
-    formData.append("produtos", JSON.stringify(produtos));
-
-    // Parcelas com datas (JSON)
     if (numParcelas > 1 && parcelasVencimento.length > 0) {
       formData.append("parcelasVencimento", JSON.stringify(parcelasVencimento));
     }
@@ -518,6 +531,7 @@ export default function VendaRapidaFormV2({
       toast.error("Erro ao finalizar venda. Tente novamente.");
     } finally {
       setLoading(false);
+      submitLockRef.current = false;
     }
   };
 
