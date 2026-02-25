@@ -7,7 +7,7 @@ const secret = new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secre
 /**
  * Rotas de API que não exigem autenticação
  */
-const PUBLIC_API_PATHS = ["/api/auth/login", "/api/auth/logout", "/api/cron"];
+const PUBLIC_API_PATHS = ["/api/auth/login", "/api/auth/logout", "/api/cron", "/api/assinatura"];
 
 function isPublicApiPath(pathname: string): boolean {
   return PUBLIC_API_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));

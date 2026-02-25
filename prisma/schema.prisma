@@ -68,18 +68,38 @@ model Venda {
   excedeuLimite      Int?      @default(0) @map("excedeu_limite")
   temNota            Boolean   @default(false) @map("tem_nota")
   taxaNota           Float?    @default(5.97) @map("taxa_nota")
-  comprovantePdf     String?   @map("comprovante_pdf")
+  comprovantePdf     String?   @map("comprovante_pdf")  // Legado: path em disco (deprecado)
   descontoEmFolha    Boolean   @default(false) @map("desconto_em_folha")
+  assinaturaToken    String?   @unique @map("assinatura_token")
+  assinaturaStatus   String?   @map("assinatura_status")   // pendente | assinado | expirado
+  assinaturaEm       DateTime? @map("assinatura_em")
   boleto             Boolean   @default(false) @map("boleto")
   asaasPaymentId     String?   @map("asaas_payment_id")
   boletoUrl          String?   @map("boleto_url")
 
   // Relacionamentos
-  cliente            Cliente?  @relation(fields: [clienteId], references: [id])
+  cliente            Cliente?   @relation(fields: [clienteId], references: [id])
   itens              ItemVenda[]
   parcelasVencimento ParcelaVencimento[]
+  documentos         Documento[]
 
   @@map("vendas")
+}
+
+model Documento {
+  id           Int      @id @default(autoincrement())
+  vendaId      Int?     @map("venda_id")
+  tipo         String   @map("tipo")       // comprovante_assinatura, nfe, contrato, etc.
+  mimeType     String   @map("mime_type")  @default("application/pdf")
+  conteudo     Bytes    @db.ByteA
+  tamanhoBytes Int      @map("tamanho_bytes")
+  criadoEm     DateTime @default(now())    @map("criado_em")
+
+  venda        Venda?   @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+
+  @@map("documentos")
+  @@index([vendaId])
+  @@index([tipo])
 }
 
 model ItemVenda {

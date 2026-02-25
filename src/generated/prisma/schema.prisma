@@ -58,21 +58,24 @@ model Venda {
   valorVenda   Float?
 
   // Novos campos para venda com múltiplos produtos
-  valorFrete          Float?  @default(0) @map("valor_frete")
-  custoEnvio          Float?  @default(0) @map("custo_envio")
+  valorFrete          Float?    @default(0) @map("valor_frete")
+  custoEnvio          Float?    @default(0) @map("custo_envio")
   parcelas            Int?
-  valorParcela        Float?  @map("valor_parcela")
-  taxaFinanceiraValor Float?  @map("taxa_financeira_valor")
-  lucroLiquido        Float?  @map("lucro_liquido")
-  antecipada          Int?    @default(1)
-  excedeuLimite       Int?    @default(0) @map("excedeu_limite")
-  temNota             Boolean @default(false) @map("tem_nota")
-  taxaNota            Float?  @default(5.97) @map("taxa_nota")
-  comprovantePdf      String? @map("comprovante_pdf")
-  descontoEmFolha     Boolean @default(false) @map("desconto_em_folha")
-  boleto              Boolean @default(false) @map("boleto")
-  asaasPaymentId      String? @map("asaas_payment_id")
-  boletoUrl           String? @map("boleto_url")
+  valorParcela        Float?    @map("valor_parcela")
+  taxaFinanceiraValor Float?    @map("taxa_financeira_valor")
+  lucroLiquido        Float?    @map("lucro_liquido")
+  antecipada          Int?      @default(0)
+  excedeuLimite       Int?      @default(0) @map("excedeu_limite")
+  temNota             Boolean   @default(false) @map("tem_nota")
+  taxaNota            Float?    @default(5.97) @map("taxa_nota")
+  comprovantePdf      String?   @map("comprovante_pdf")
+  descontoEmFolha     Boolean   @default(false) @map("desconto_em_folha")
+  assinaturaToken     String?   @unique @map("assinatura_token")
+  assinaturaStatus    String?   @map("assinatura_status") // pendente | assinado | expirado
+  assinaturaEm        DateTime? @map("assinatura_em")
+  boleto              Boolean   @default(false) @map("boleto")
+  asaasPaymentId      String?   @map("asaas_payment_id")
+  boletoUrl           String?   @map("boleto_url")
 
   // Relacionamentos
   cliente            Cliente?            @relation(fields: [clienteId], references: [id])
@@ -114,11 +117,12 @@ model ParcelaVencimento {
 }
 
 model Config {
-  id             Int     @id @default(autoincrement())
-  modeloContrato String? @map("modelo_contrato")
-  logoPath       String? @map("logo_path")
-  openaiKey      String? @map("openai_key")
-  geminiKey      String? @map("gemini_key")
+  id                Int     @id @default(autoincrement())
+  modeloContrato    String? @map("modelo_contrato") // Autorização de desconto em folha
+  modeloReciboVenda String? @map("modelo_recibo_venda") // Recibo padrão de venda de mercadoria
+  logoPath          String? @map("logo_path")
+  openaiKey         String? @map("openai_key")
+  geminiKey         String? @map("gemini_key")
 
   @@map("config")
 }

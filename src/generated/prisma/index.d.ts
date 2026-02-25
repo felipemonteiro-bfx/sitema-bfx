@@ -4539,6 +4539,9 @@ export namespace Prisma {
     taxaNota: number | null
     comprovantePdf: string | null
     descontoEmFolha: boolean | null
+    assinaturaToken: string | null
+    assinaturaStatus: string | null
+    assinaturaEm: Date | null
     boleto: boolean | null
     asaasPaymentId: string | null
     boletoUrl: string | null
@@ -4566,6 +4569,9 @@ export namespace Prisma {
     taxaNota: number | null
     comprovantePdf: string | null
     descontoEmFolha: boolean | null
+    assinaturaToken: string | null
+    assinaturaStatus: string | null
+    assinaturaEm: Date | null
     boleto: boolean | null
     asaasPaymentId: string | null
     boletoUrl: string | null
@@ -4593,6 +4599,9 @@ export namespace Prisma {
     taxaNota: number
     comprovantePdf: number
     descontoEmFolha: number
+    assinaturaToken: number
+    assinaturaStatus: number
+    assinaturaEm: number
     boleto: number
     asaasPaymentId: number
     boletoUrl: number
@@ -4656,6 +4665,9 @@ export namespace Prisma {
     taxaNota?: true
     comprovantePdf?: true
     descontoEmFolha?: true
+    assinaturaToken?: true
+    assinaturaStatus?: true
+    assinaturaEm?: true
     boleto?: true
     asaasPaymentId?: true
     boletoUrl?: true
@@ -4683,6 +4695,9 @@ export namespace Prisma {
     taxaNota?: true
     comprovantePdf?: true
     descontoEmFolha?: true
+    assinaturaToken?: true
+    assinaturaStatus?: true
+    assinaturaEm?: true
     boleto?: true
     asaasPaymentId?: true
     boletoUrl?: true
@@ -4710,6 +4725,9 @@ export namespace Prisma {
     taxaNota?: true
     comprovantePdf?: true
     descontoEmFolha?: true
+    assinaturaToken?: true
+    assinaturaStatus?: true
+    assinaturaEm?: true
     boleto?: true
     asaasPaymentId?: true
     boletoUrl?: true
@@ -4824,6 +4842,9 @@ export namespace Prisma {
     taxaNota: number | null
     comprovantePdf: string | null
     descontoEmFolha: boolean
+    assinaturaToken: string | null
+    assinaturaStatus: string | null
+    assinaturaEm: Date | null
     boleto: boolean
     asaasPaymentId: string | null
     boletoUrl: string | null
@@ -4870,6 +4891,9 @@ export namespace Prisma {
     taxaNota?: boolean
     comprovantePdf?: boolean
     descontoEmFolha?: boolean
+    assinaturaToken?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
     boleto?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
@@ -4901,6 +4925,9 @@ export namespace Prisma {
     taxaNota?: boolean
     comprovantePdf?: boolean
     descontoEmFolha?: boolean
+    assinaturaToken?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
     boleto?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
@@ -4929,6 +4956,9 @@ export namespace Prisma {
     taxaNota?: boolean
     comprovantePdf?: boolean
     descontoEmFolha?: boolean
+    assinaturaToken?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
     boleto?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
@@ -4957,12 +4987,15 @@ export namespace Prisma {
     taxaNota?: boolean
     comprovantePdf?: boolean
     descontoEmFolha?: boolean
+    assinaturaToken?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
     boleto?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
   }
 
-  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "comprovantePdf" | "descontoEmFolha" | "boleto" | "asaasPaymentId" | "boletoUrl", ExtArgs["result"]["venda"]>
+  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "comprovantePdf" | "descontoEmFolha" | "assinaturaToken" | "assinaturaStatus" | "assinaturaEm" | "boleto" | "asaasPaymentId" | "boletoUrl", ExtArgs["result"]["venda"]>
   export type VendaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
@@ -5005,6 +5038,9 @@ export namespace Prisma {
       taxaNota: number | null
       comprovantePdf: string | null
       descontoEmFolha: boolean
+      assinaturaToken: string | null
+      assinaturaStatus: string | null
+      assinaturaEm: Date | null
       boleto: boolean
       asaasPaymentId: string | null
       boletoUrl: string | null
@@ -5455,6 +5491,9 @@ export namespace Prisma {
     readonly taxaNota: FieldRef<"Venda", 'Float'>
     readonly comprovantePdf: FieldRef<"Venda", 'String'>
     readonly descontoEmFolha: FieldRef<"Venda", 'Boolean'>
+    readonly assinaturaToken: FieldRef<"Venda", 'String'>
+    readonly assinaturaStatus: FieldRef<"Venda", 'String'>
+    readonly assinaturaEm: FieldRef<"Venda", 'DateTime'>
     readonly boleto: FieldRef<"Venda", 'Boolean'>
     readonly asaasPaymentId: FieldRef<"Venda", 'String'>
     readonly boletoUrl: FieldRef<"Venda", 'String'>
@@ -16684,6 +16723,9 @@ export namespace Prisma {
     taxaNota: 'taxaNota',
     comprovantePdf: 'comprovantePdf',
     descontoEmFolha: 'descontoEmFolha',
+    assinaturaToken: 'assinaturaToken',
+    assinaturaStatus: 'assinaturaStatus',
+    assinaturaEm: 'assinaturaEm',
     boleto: 'boleto',
     asaasPaymentId: 'asaasPaymentId',
     boletoUrl: 'boletoUrl'
@@ -17116,6 +17158,9 @@ export namespace Prisma {
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
     comprovantePdf?: StringNullableFilter<"Venda"> | string | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
+    assinaturaToken?: StringNullableFilter<"Venda"> | string | null
+    assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
+    assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
@@ -17146,6 +17191,9 @@ export namespace Prisma {
     taxaNota?: SortOrderInput | SortOrder
     comprovantePdf?: SortOrderInput | SortOrder
     descontoEmFolha?: SortOrder
+    assinaturaToken?: SortOrderInput | SortOrder
+    assinaturaStatus?: SortOrderInput | SortOrder
+    assinaturaEm?: SortOrderInput | SortOrder
     boleto?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
@@ -17157,6 +17205,7 @@ export namespace Prisma {
   export type VendaWhereUniqueInput = Prisma.AtLeast<{
     id?: number
     uuid?: string
+    assinaturaToken?: string
     AND?: VendaWhereInput | VendaWhereInput[]
     OR?: VendaWhereInput[]
     NOT?: VendaWhereInput | VendaWhereInput[]
@@ -17179,13 +17228,15 @@ export namespace Prisma {
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
     comprovantePdf?: StringNullableFilter<"Venda"> | string | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
+    assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
+    assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
     itens?: ItemVendaListRelationFilter
     parcelasVencimento?: ParcelaVencimentoListRelationFilter
-  }, "id" | "uuid">
+  }, "id" | "uuid" | "assinaturaToken">
 
   export type VendaOrderByWithAggregationInput = {
     id?: SortOrder
@@ -17209,6 +17260,9 @@ export namespace Prisma {
     taxaNota?: SortOrderInput | SortOrder
     comprovantePdf?: SortOrderInput | SortOrder
     descontoEmFolha?: SortOrder
+    assinaturaToken?: SortOrderInput | SortOrder
+    assinaturaStatus?: SortOrderInput | SortOrder
+    assinaturaEm?: SortOrderInput | SortOrder
     boleto?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
@@ -17244,6 +17298,9 @@ export namespace Prisma {
     taxaNota?: FloatNullableWithAggregatesFilter<"Venda"> | number | null
     comprovantePdf?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     descontoEmFolha?: BoolWithAggregatesFilter<"Venda"> | boolean
+    assinaturaToken?: StringNullableWithAggregatesFilter<"Venda"> | string | null
+    assinaturaStatus?: StringNullableWithAggregatesFilter<"Venda"> | string | null
+    assinaturaEm?: DateTimeNullableWithAggregatesFilter<"Venda"> | Date | string | null
     boleto?: BoolWithAggregatesFilter<"Venda"> | boolean
     asaasPaymentId?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     boletoUrl?: StringNullableWithAggregatesFilter<"Venda"> | string | null
@@ -18075,6 +18132,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -18105,6 +18165,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -18132,6 +18195,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18162,6 +18228,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18191,6 +18260,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -18216,6 +18288,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18243,6 +18318,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -19233,6 +19311,9 @@ export namespace Prisma {
     taxaNota?: SortOrder
     comprovantePdf?: SortOrder
     descontoEmFolha?: SortOrder
+    assinaturaToken?: SortOrder
+    assinaturaStatus?: SortOrder
+    assinaturaEm?: SortOrder
     boleto?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
@@ -19277,6 +19358,9 @@ export namespace Prisma {
     taxaNota?: SortOrder
     comprovantePdf?: SortOrder
     descontoEmFolha?: SortOrder
+    assinaturaToken?: SortOrder
+    assinaturaStatus?: SortOrder
+    assinaturaEm?: SortOrder
     boleto?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
@@ -19304,6 +19388,9 @@ export namespace Prisma {
     taxaNota?: SortOrder
     comprovantePdf?: SortOrder
     descontoEmFolha?: SortOrder
+    assinaturaToken?: SortOrder
+    assinaturaStatus?: SortOrder
+    assinaturaEm?: SortOrder
     boleto?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
@@ -20339,6 +20426,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -20367,6 +20457,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -20425,6 +20518,9 @@ export namespace Prisma {
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
     comprovantePdf?: StringNullableFilter<"Venda"> | string | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
+    assinaturaToken?: StringNullableFilter<"Venda"> | string | null
+    assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
+    assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
@@ -20682,6 +20778,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -20711,6 +20810,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -20753,6 +20855,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20782,6 +20887,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20808,6 +20916,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -20837,6 +20948,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -20879,6 +20993,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20908,6 +21025,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21000,6 +21120,9 @@ export namespace Prisma {
     taxaNota?: number | null
     comprovantePdf?: string | null
     descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
     boleto?: boolean
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -21025,6 +21148,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21053,6 +21179,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21081,6 +21210,9 @@ export namespace Prisma {
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Label } from "@/components/ui/label";
 import {
   Loader2,
@@ -24,6 +25,7 @@ import { ProdutoItemForm } from "@/components/produto-item-form";
 import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
+import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { CurrencyInput } from "@/components/currency-input";
 import { Badge } from "@/components/ui/badge";
 import type { ActionResponse } from "@/lib/action-response";
@@ -48,7 +50,7 @@ interface Props {
   parcelasOptions: { value: string; label: string }[];
   onSubmit: (
     formData: FormData,
-  ) => Promise<ActionResponse<{ vendaId: number; boletoUrl?: string }>>;
+  ) => Promise<ActionResponse<{ vendaId: number; boletoUrl?: string; assinaturaToken?: string }>>;
 }
 
 export default function VendaRapidaFormV2({
@@ -134,6 +136,9 @@ export default function VendaRapidaFormV2({
     nome: string;
     valorVenda?: number;
   } | null>(null);
+
+  // Exibir link de assinatura imediatamente após venda com desconto em folha
+  const [successAssinaturaToken, setSuccessAssinaturaToken] = useState<string | null>(null);
 
   // Limite e margem disponível do cliente
   const [limiteData, setLimiteData] = useState<{
@@ -490,6 +495,7 @@ export default function VendaRapidaFormV2({
       formData.append("parcelasVencimento", JSON.stringify(parcelasVencimento));
     }
 
+    setSuccessAssinaturaToken(null); // Limpa card anterior ao submeter nova venda
     try {
       const result = await onSubmit(formData);
       if (result.success) {
@@ -515,11 +521,21 @@ export default function VendaRapidaFormV2({
         setParcelasVencimento([]);
         setProdutoParaSugestoes(null);
         const boletoUrl = result.data?.boletoUrl;
+        const assinaturaToken = result.data?.assinaturaToken;
+        if (assinaturaToken) setSuccessAssinaturaToken(assinaturaToken);
+        const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+        const assinaturaLink = assinaturaToken ? `${baseUrl}/assinatura/${assinaturaToken}` : null;
         toast.success(result.message || "Venda realizada com sucesso!", {
-          ...(boletoUrl && {
+          ...((boletoUrl || assinaturaLink) && {
             action: {
-              label: "Abrir boleto",
-              onClick: () => window.open(boletoUrl, "_blank"),
+              label: boletoUrl ? "Abrir boleto" : "Copiar link assinatura",
+              onClick: () => {
+                if (boletoUrl) window.open(boletoUrl, "_blank");
+                else if (assinaturaLink) {
+                  navigator.clipboard.writeText(assinaturaLink);
+                  toast.success("Link copiado! Envie ao cliente para assinar.");
+                }
+              },
             },
           }),
         });
@@ -537,6 +553,39 @@ export default function VendaRapidaFormV2({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {successAssinaturaToken && (
+        <Card className="border-success/30 bg-success/5 animate-fade-in">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-foreground">Venda registrada! Envie o link ao cliente para assinar</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  O cliente acessa o link, visualiza o documento e assina na tela.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <LinkAssinaturaButton
+                  token={successAssinaturaToken}
+                  status="pendente"
+                  label="Copiar link"
+                  showQr
+                />
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `Segue o link para assinar sua autorização: ${typeof window !== "undefined" ? window.location.origin : ""}/assinatura/${successAssinaturaToken}`
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={cn(buttonVariants({ variant: "success", size: "sm" }), "text-xs font-bold uppercase")}
+                >
+                  Enviar WhatsApp
+                </a>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Seção 1: Contexto da Venda */}
       <Card
         variant="elevated"

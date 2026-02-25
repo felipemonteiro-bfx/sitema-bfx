@@ -15,7 +15,8 @@ import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
-import { CheckCircle2, AlertCircle, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertCircle, AlertTriangle, Printer } from "lucide-react";
+import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -263,6 +264,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       descontoEmFolha: true,
       boleto: true,
       comprovantePdf: true,
+      assinaturaToken: true,
+      assinaturaStatus: true,
       asaasPaymentId: true,
       boletoUrl: true,
       excedeuLimite: true,
@@ -277,6 +280,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       descontoEmFolha: true, boleto: true, comprovantePdf: true,
+      assinaturaToken: true, assinaturaStatus: true,
       asaasPaymentId: true, boletoUrl: true,
       itens: {
         select: {
@@ -456,17 +460,34 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell className="text-center">
                       {v.comprovantePdf ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
+                        <div className="flex flex-col items-center gap-1">
+                          <span title="Documento assinado"><CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" /></span>
+                          <a
+                            href={`/api/comprovante?vendaId=${v.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-6 text-[10px] gap-1 px-2")}
+                            title="Abrir e imprimir documento assinado"
+                          >
+                            <Printer className="h-3 w-3" />
+                            Imprimir
+                          </a>
+                        </div>
+                      ) : v.descontoEmFolha && v.assinaturaToken ? (
+                        <LinkAssinaturaButton
+                          token={v.assinaturaToken}
+                          status={v.assinaturaStatus}
+                          label="Link"
+                        />
                       ) : (
-                        <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
+                        <span title="Aguardando assinatura"><AlertCircle className="h-4 w-4 text-amber-500 mx-auto" /></span>
                       )}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.excedeuLimite === 1 ? (
-                        <AlertTriangle
-                          className="h-4 w-4 text-amber-500 mx-auto"
-                          title="Parcela excedeu o limite disponível"
-                        />
+                        <span title="Parcela excedeu o limite disponível">
+                          <AlertTriangle className="h-4 w-4 text-amber-500 mx-auto" />
+                        </span>
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}
@@ -551,6 +572,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             descontoEmFolha: editVenda.descontoEmFolha ?? false,
             boleto: editVenda.boleto ?? false,
             comprovantePdf: editVenda.comprovantePdf,
+            assinaturaToken: editVenda.assinaturaToken,
+            assinaturaStatus: editVenda.assinaturaStatus,
             boletoUrl: editVenda.boletoUrl,
             itens: editVenda.itens?.length
               ? editVenda.itens

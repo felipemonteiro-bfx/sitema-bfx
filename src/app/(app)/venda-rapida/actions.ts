@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import type { ActionResponse } from "@/lib/action-response";
@@ -60,7 +61,7 @@ export async function criarVenda(formData: FormData) {
  */
 export async function criarVendaV2(
   formData: FormData
-): Promise<ActionResponse<{ vendaId: number; boletoUrl?: string }>> {
+): Promise<ActionResponse<{ vendaId: number; boletoUrl?: string; assinaturaToken?: string }>> {
   try {
     const produtosJson = formData.get("produtos");
     if (!produtosJson) {
@@ -122,6 +123,8 @@ export async function criarVendaV2(
     const valorParcela = parcelas > 0 ? totalVenda / parcelas : 0;
 
     // Criar venda com transação
+    const assinaturaToken = descontoEmFolha ? randomUUID() : undefined;
+
     const venda = await prisma.$transaction(async (tx) => {
       // 1. Criar venda principal
       const vendaCriada = await tx.venda.create({
@@ -146,6 +149,8 @@ export async function criarVendaV2(
           taxaNota,
           descontoEmFolha: descontoEmFolha ?? false,
           boleto: boleto ?? false,
+          assinaturaToken: assinaturaToken ?? undefined,
+          assinaturaStatus: descontoEmFolha ? "pendente" : undefined,
         },
       });
 
@@ -277,6 +282,7 @@ export async function criarVendaV2(
     return successResponse(`Venda #${venda.id} criada com sucesso!`, {
       vendaId: venda.id,
       ...(boletoUrl && { boletoUrl }),
+      ...(assinaturaToken && { assinaturaToken }),
     });
   } catch (error) {
     console.error("Erro ao criar venda:", error);

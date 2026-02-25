@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatBRL, cn } from "@/lib/utils";
 import VendaRapidaFormV2 from "@/components/venda-rapida-form-v2";
 import { ShoppingCart, CheckCircle2 } from "lucide-react";
+import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { Separator } from "@/components/ui/separator";
 import { criarVendaV2 } from "./actions";
 
@@ -66,9 +67,19 @@ export default async function Page() {
                   Autorização
                 </a>
               )}
+              {ultima.descontoEmFolha && ultima.assinaturaToken && (
+                <LinkAssinaturaButton
+                  token={ultima.assinaturaToken}
+                  status={ultima.assinaturaStatus}
+                  label="Link Assinatura"
+                  showQr
+                />
+              )}
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
-                  `Segue seu recibo: http://localhost:3008/api/recibo?id=${ultima.id}`
+                  ultima.descontoEmFolha && ultima.assinaturaToken
+                    ? `Segue o link para assinar sua autorização: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/assinatura/${ultima.assinaturaToken}`
+                    : `Segue seu recibo: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/api/recibo?id=${ultima.id}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"
