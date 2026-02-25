@@ -22,6 +22,8 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/bfx?schema=public"
+
 RUN yarn prisma:generate
 RUN yarn build
 
