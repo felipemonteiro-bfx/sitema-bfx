@@ -56,9 +56,9 @@ docker compose -f docker-compose.yml up --build
 
 | # | O que fazer | Onde |
 |---|-------------|------|
-| 1 | Garantir variáveis de ambiente | Vercel → **sitema-bfx** → **Settings** → **Environment Variables** |
-| 2 | Definir `NEXT_PUBLIC_APP_URL` com a URL do app (ex.: `https://sitema-bfx.vercel.app`) | Mesmo lugar; use a URL que aparece em **Visit** no deploy |
-| 3 | Rodar migrações **uma vez** no banco de produção | No seu PC: copiar `DATABASE_URL` da Vercel e rodar `npx prisma migrate deploy` (ver seção 3 abaixo) |
+| 1 | Completar **todas as chaves** de ambiente | **docs/VERCEL-TODAS-AS-CHAVES.md** (checklist) → Vercel → **sitema-bfx** → **Settings** → **Environment Variables** |
+| 2 | Garantir `DATABASE_URL` e `SESSION_SECRET` (obrigatórias); opcional: `NEXT_PUBLIC_APP_URL`, Cron, Asaas, AI | Mesmo lugar |
+| 3 | Rodar migrações **uma vez** no banco de produção | No seu PC: copiar `DATABASE_URL` da Vercel e rodar `npx prisma migrate deploy` (ver **docs/ONDE-ESTA-DATABASE-URL.md** e seção 3 abaixo) |
 | 4 | Conferir branch de produção | **Settings** → **Git** → **Production Branch** (ex.: `main`) |
 | 5 | Testar: login, uma venda com boleto, página 404 | Abrir a URL do deploy |
 
@@ -77,16 +77,22 @@ Em **Settings** → **Environment Variables** adicione (Production e Preview, se
 
 | Variável | Obrigatório | Descrição |
 |----------|-------------|-----------|
-| `DATABASE_URL` | Sim | Connection string Postgres (Vercel Postgres, Neon, Supabase). |
-| `SESSION_SECRET` | Sim | Chave secreta longa (min 32 caracteres) para sessão JWT. |
-| `ASAAS_API_KEY` | Não | Chave da API Asaas para geração de boleto. Sem isso, boleto fica desabilitado. |
-| `ASAAS_ENV` | Não | `production` ou `sandbox` (default: sandbox). |
-| `CRON_SECRET` | Não | Secret para o Cron de limpeza de uploads. Defina para o Cron da Vercel autorizar chamadas. |
+| `DATABASE_URL` | Sim | Connection string Postgres (Vercel Postgres, Neon, Supabase). Use pooler em produção se disponível. |
+| `SESSION_SECRET` | Sim | Chave secreta para sessão JWT (mín. 32 caracteres). |
 | `NEXT_PUBLIC_APP_URL` | Não (recomendado) | URL pública do app (ex.: `https://sitema-bfx.vercel.app`). |
+| `CRON_SECRET` | Não | Secret para o Cron de limpeza de uploads (domingo 03:00 UTC). Defina para o Cron da Vercel autorizar. |
+| `ASAAS_API_KEY` | Não | Chave da API Asaas para geração de boleto. Sem isso, boleto fica desabilitado. |
+| `ASAAS_ENV` | Não | `sandbox` ou `production` (default: sandbox). |
+| `OPENAI_API_KEY` | Não | Chave OpenAI (ou compatível) para rotas de AI/chat, se usadas. |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google Generative AI / Gemini para rotas de AI, se usadas. |
+
+Lista completa e detalhes: **docs/VERCEL-ENV.md** e **.env.example**.  
+**Checklist para completar todas as chaves na Vercel:** **docs/VERCEL-TODAS-AS-CHAVES.md**.
 
 ### 3. Banco e migrações
 
 - Use um Postgres acessível pela internet (ex.: [Vercel Postgres](https://vercel.com/storage/postgres), [Neon](https://neon.tech), [Supabase](https://supabase.com)).
+- **Onde está a DATABASE_URL e como rodar migrações:** **docs/ONDE-ESTA-DATABASE-URL.md**.
 
 #### Atualizar o banco da Vercel (rodar migrações)
 
@@ -135,9 +141,14 @@ O `vercel.json` define um Cron que chama `/api/cron/cleanup-uploads` todo doming
 
 **Nota:** O `output: "standalone"` do Next.js é ignorado na Vercel; o deploy usa o modo padrão da plataforma.
 
+### Kubernetes (k8s)
+
+Manifests em **`k8s/`**: Namespace, Deployment, Service, Secret/ConfigMap (exemplo) e Ingress (exemplo). Ver **k8s/README.md** para aplicar no cluster e usar as mesmas variáveis de ambiente da Vercel (docs/VERCEL-TODAS-AS-CHAVES.md).
+
 ### Automação (CI e dependências)
 
-- **GitHub Actions:** em todo push/PR para `main` e `nextjs-migration` roda lint e build (`.github/workflows/ci.yml`). Falha de build impede merge se configurado como required.
+- **GitHub Actions:** em todo push/PR roda lint e build (`.github/workflows/ci.yml`). O deploy em produção é feito pela integração Git da Vercel no push para o branch configurado.
+- **Variáveis Vercel:** checklist em **docs/VERCEL-ENV.md** (obrigatórias: `DATABASE_URL`, `SESSION_SECRET`).
 - **Dependabot:** abre PRs semanais (segunda-feira) para atualizar dependências npm e GitHub Actions (`.github/dependabot.yml`). Revise e faça merge quando quiser.
 
 ## Importar dados do SQLite (Streamlit)

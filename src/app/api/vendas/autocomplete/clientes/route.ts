@@ -25,6 +25,9 @@ export async function GET(request: NextRequest) {
         cnpj: true,
         renda: true,
         tipo: true,
+        endereco: true,
+        cep: true,
+        telefone: true,
         vendas: {
           orderBy: { dataVenda: "desc" },
           take: 1,
@@ -63,6 +66,9 @@ export async function GET(request: NextRequest) {
         cnpj: cliente.cnpj,
         renda: cliente.renda,
         tipo: cliente.tipo,
+        endereco: cliente.endereco,
+        cep: cliente.cep,
+        telefone: cliente.telefone,
         ultimaVenda: ultimaVenda
           ? {
               data: ultimaVenda.dataVenda.toISOString().split("T")[0],

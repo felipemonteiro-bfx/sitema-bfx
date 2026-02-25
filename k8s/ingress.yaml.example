@@ -1,0 +1,26 @@
+# Exemplo de Ingress (descomente e ajuste host/tls conforme seu cluster).
+# Requer um Ingress Controller (nginx, traefik, etc.).
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: sitema-bfx
+#   namespace: sitema-bfx
+#   annotations:
+#     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+# spec:
+#   ingressClassName: nginx
+#   tls:
+#     - hosts:
+#         - sitema-bfx.seudominio.com
+#       secretName: sitema-bfx-tls
+#   rules:
+#     - host: sitema-bfx.seudominio.com
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: sitema-bfx
+#                 port:
+#                   number: 80

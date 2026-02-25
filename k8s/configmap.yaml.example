@@ -1,0 +1,11 @@
+# Copie para configmap.yaml e ajuste valores não sensíveis.
+# Valores sensíveis (DATABASE_URL, SESSION_SECRET, etc.) vão no Secret.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sitema-bfx-config
+  namespace: sitema-bfx
+data:
+  # Exemplo: variáveis que não são segredos
+  # NEXT_PUBLIC_APP_URL: "https://sitema-bfx.seudominio.com"
+  # ASAAS_ENV: "sandbox"

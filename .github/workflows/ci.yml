@@ -1,4 +1,4 @@
-# CI: lint e build em todo push/PR para main e nextjs-migration
+# CI: lint e build em todo push/PR (deploy é feito pela integração Git da Vercel)
 name: CI
 
 on:
@@ -6,6 +6,11 @@ on:
     branches: [main, nextjs-migration]
   pull_request:
     branches: [main, nextjs-migration]
+
+env:
+  BUILD_DATABASE_URL: "postgresql://user:pass@localhost:5432/bfx?schema=public"
+  SESSION_SECRET: "ci-build-dummy-secret-min-32-chars-long"
+  SKIP_ENV_VALIDATION: "1"
 
 jobs:
   lint-and-build:
@@ -29,10 +34,9 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
         env:
-          DATABASE_URL: "postgresql://user:pass@localhost:5432/bfx?schema=public"
+          DATABASE_URL: ${{ env.BUILD_DATABASE_URL }}
 
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: "postgresql://user:pass@localhost:5432/bfx?schema=public"
-          SKIP_ENV_VALIDATION: "1"
+          DATABASE_URL: ${{ env.BUILD_DATABASE_URL }}

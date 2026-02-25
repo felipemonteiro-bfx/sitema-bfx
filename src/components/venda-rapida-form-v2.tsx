@@ -73,6 +73,9 @@ export default function VendaRapidaFormV2({
   const [selectedCliente, setSelectedCliente] = useState<{
     id: number;
     nome: string;
+    endereco?: string | null;
+    cep?: string | null;
+    telefone?: string | null;
   } | null>(null);
   const [clienteSuggestions, setClienteSuggestions] = useState<
     {
@@ -81,6 +84,9 @@ export default function VendaRapidaFormV2({
       cpf?: string;
       cnpj?: string;
       renda?: number | null;
+      endereco?: string | null;
+      cep?: string | null;
+      telefone?: string | null;
       ultimaVenda?: { data: string; valor: number } | null;
     }[]
   >([]);
@@ -107,6 +113,17 @@ export default function VendaRapidaFormV2({
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
+
+  // Uber Direct
+  const [uberEnabled, setUberEnabled] = useState(false);
+  const [uberPickupAddress, setUberPickupAddress] = useState<{
+    street_address: string[];
+    city: string;
+    state: string;
+    zip_code: string;
+    country: string;
+  } | null>(null);
+  const [uberQuoteLoading, setUberQuoteLoading] = useState(false);
 
   // Produto selecionado para sugestões de upsell/cross-sell
   const [produtoParaSugestoes, setProdutoParaSugestoes] = useState<{
@@ -163,6 +180,17 @@ export default function VendaRapidaFormV2({
     };
   }, [clienteQuery, selectedCliente]);
 
+  // Uber Direct status
+  useEffect(() => {
+    fetch("/api/frete/uber/status")
+      .then((r) => r.json())
+      .then((data) => {
+        setUberEnabled(!!data?.enabled);
+        setUberPickupAddress(data?.pickupAddress ?? null);
+      })
+      .catch(() => setUberEnabled(false));
+  }, []);
+
   // Cálculos totais
   const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);
   const numFrete = Number(frete) || 0;
@@ -200,6 +228,72 @@ export default function VendaRapidaFormV2({
         subtotal: 0,
       },
     ]);
+  };
+
+  const cotarFreteUber = async () => {
+    if (!selectedCliente) {
+      toast.error("Selecione um cliente para cotar o frete.");
+      return;
+    }
+    if (!selectedCliente.endereco?.trim()) {
+      toast.error("Cliente sem endereço cadastrado. Cadastre o endereço do cliente.");
+      return;
+    }
+    if (!uberPickupAddress) {
+      toast.error("Endereço de retirada não configurado. Defina UBER_PICKUP_ADDRESS_JSON.");
+      return;
+    }
+    const orderValue = produtos.reduce((s, p) => s + p.subtotal, 0);
+    if (orderValue <= 0) {
+      toast.error("Adicione ao menos um produto para cotar.");
+      return;
+    }
+
+    setUberQuoteLoading(true);
+    try {
+      const zip = (selectedCliente.cep || "").replace(/\D/g, "").slice(0, 8) || "00000000";
+      let city = "";
+      let state = "";
+      if (zip.length === 8) {
+        try {
+          const viaCep = await fetch(`https://viacep.com.br/ws/${zip}/json/`).then((r) => r.json());
+          if (viaCep?.localidade) city = viaCep.localidade;
+          if (viaCep?.uf) state = viaCep.uf;
+        } catch {
+          /* fallback sem cidade/estado */
+        }
+      }
+      const dropoffAddress = {
+        street_address: [selectedCliente.endereco!.trim()],
+        city: city || "São Paulo",
+        state: state || "SP",
+        zip_code: zip,
+        country: "BR",
+      };
+      const res = await fetch("/api/frete/uber/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pickupAddress: uberPickupAddress,
+          dropoffAddress,
+          pickupPhone: undefined,
+          dropoffPhone: selectedCliente.telefone || undefined,
+          orderValue,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Erro ao obter cotação Uber.");
+        return;
+      }
+      setFrete(String(data.fee?.toFixed(2) ?? "0"));
+      toast.success(`Frete Uber: R$ ${(data.fee ?? 0).toFixed(2)} (${data.duration ?? "?"} min)`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao cotar frete Uber.");
+    } finally {
+      setUberQuoteLoading(false);
+    }
   };
 
   const removeProduto = (index: number) => {
@@ -488,7 +582,13 @@ export default function VendaRapidaFormV2({
                     key={c.id}
                     type="button"
                     onClick={() => {
-                      setSelectedCliente(c);
+                      setSelectedCliente({
+                        id: c.id,
+                        nome: c.nome,
+                        endereco: c.endereco,
+                        cep: c.cep,
+                        telefone: c.telefone,
+                      });
                       setClienteQuery(c.nome);
                       setClienteSuggestions([]);
                       setProdutoParaSugestoes(null);
@@ -576,13 +676,32 @@ export default function VendaRapidaFormV2({
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Frete (Cobrado)
               </Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={frete}
-                onChange={(e) => setFrete(e.target.value)}
-                placeholder="0.00"
-              />
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={frete}
+                  onChange={(e) => setFrete(e.target.value)}
+                  placeholder="0.00"
+                  className="flex-1"
+                />
+                {uberEnabled && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={cotarFreteUber}
+                    disabled={uberQuoteLoading || !selectedCliente}
+                    title={!selectedCliente ? "Selecione um cliente" : "Cotar frete Uber Direct"}
+                  >
+                    {uberQuoteLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Uber"
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
