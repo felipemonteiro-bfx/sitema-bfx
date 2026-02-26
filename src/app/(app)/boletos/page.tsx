@@ -88,7 +88,7 @@ export default async function BoletosPage() {
   if (!ok) return <div>Acesso restrito.</div>;
 
   const cfg = await prisma.config.findFirst();
-  const config = getAsaasConfig(cfg);
+  const config = getAsaasConfig(cfg ?? undefined);
   if (!config) {
     return (
       <div className="space-y-6">

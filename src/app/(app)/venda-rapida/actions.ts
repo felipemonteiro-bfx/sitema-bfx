@@ -211,7 +211,7 @@ export async function criarVendaV2(
 
     if (boleto && clienteId) {
       const cfg = await prisma.config.findFirst();
-      const asaasConfig = getAsaasConfig(cfg);
+      const asaasConfig = getAsaasConfig(cfg ?? undefined);
       if (!asaasConfig) {
         return successResponse(
           `Venda #${venda.id} criada. Configure ASAAS_API_KEY no servidor para gerar boletos.`,

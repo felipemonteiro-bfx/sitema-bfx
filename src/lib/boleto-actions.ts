@@ -16,7 +16,7 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
   const vendaId = Number(formData.get("vendaId") || 0);
   if (!vendaId) return { success: false, error: "ID da venda inválido." };
   const cfg = await prisma.config.findFirst();
-  const asaasConfig = getAsaasConfig(cfg);
+  const asaasConfig = getAsaasConfig(cfg ?? undefined);
   if (!asaasConfig) {
     return { success: false, error: "Asaas não configurado. Configure em Configurações → Asaas ou ASAAS_API_KEY no servidor." };
   }
