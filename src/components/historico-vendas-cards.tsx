@@ -47,6 +47,7 @@ type Venda = {
   asaasPaymentId: string | null;
   boletoUrl: string | null;
   cliente: { nome: string } | null;
+  itens?: { produtoNome: string; quantidade: number; subtotal: number }[];
 };
 
 type Props = {
@@ -86,7 +87,10 @@ function VendaCard({
   gerarBoletoAction: (formData: FormData) => Promise<void>;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const valorTotal = ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
+  const valorTotal =
+    venda.itens && venda.itens.length > 0
+      ? venda.itens.reduce((s, i) => s + i.subtotal, 0) + (venda.valorFrete ?? 0)
+      : ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
 
   return (
     <Card variant="outline" className="overflow-hidden">
@@ -97,8 +101,14 @@ function VendaCard({
               <p className="font-medium text-foreground truncate">
                 {venda.cliente?.nome || "N/D"}
               </p>
-              <p className="text-sm text-muted-foreground truncate">
-                {venda.produtoNome || "—"}
+              <p className="text-sm text-muted-foreground truncate" title={
+                venda.itens && venda.itens.length > 0
+                  ? venda.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ""}`).join(", ")
+                  : venda.produtoNome || "—"
+              }>
+                {venda.itens && venda.itens.length > 0
+                  ? venda.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ""}`).join(", ")
+                  : venda.produtoNome || "—"}
               </p>
               <p className="text-sm tabular-nums font-semibold text-primary mt-1">
                 {formatBRL(valorTotal)}
@@ -130,7 +140,11 @@ function VendaCard({
                 <span>Vendedor</span>
                 <span className="text-foreground">{venda.vendedor || "—"}</span>
                 <span>Qtd</span>
-                <span className="text-foreground tabular-nums">{venda.quantidade || 1}</span>
+                <span className="text-foreground tabular-nums">
+                  {venda.itens && venda.itens.length > 0
+                    ? venda.itens.reduce((s, i) => s + i.quantidade, 0)
+                    : venda.quantidade || 1}
+                </span>
                 <span>Nota</span>
                 <span className="text-foreground">
                   {venda.temNota ? (

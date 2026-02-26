@@ -100,9 +100,27 @@ export async function GET(req: Request) {
 
   const isNumeric = /^\d+$/.test(idParam);
   const venda = isNumeric
-    ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
-    : await prisma.venda.findUnique({ where: { uuid: idParam } });
+    ? await prisma.venda.findUnique({
+        where: { id: Number(idParam) },
+        include: { itens: { select: { produtoNome: true, quantidade: true, subtotal: true } } },
+      })
+    : await prisma.venda.findUnique({
+        where: { uuid: idParam },
+        include: { itens: { select: { produtoNome: true, quantidade: true, subtotal: true } } },
+      });
   if (!venda) return new Response("Venda não encontrada", { status: 404 });
+
+  const subtotalProdutos =
+    venda.itens && venda.itens.length > 0
+      ? venda.itens.reduce((s, i) => s + i.subtotal, 0)
+      : (venda.valorVenda ?? 0) * (venda.quantidade ?? 1);
+  const totalVenda = subtotalProdutos + (venda.valorFrete ?? 0);
+  const listaProdutos =
+    venda.itens && venda.itens.length > 0
+      ? venda.itens
+          .map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ""}`)
+          .join(", ")
+      : venda.produtoNome ?? "N/D";
 
   // Fetch parcelas separately with fallback to avoid crashing if table missing
   let parcelasVenc: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] = [];
@@ -202,7 +220,7 @@ export async function GET(req: Request) {
     `Cliente: ${cliente?.nome || "N/D"}`,
     `Documento: ${clienteDoc}`,
     `Vendedor: ${venda.vendedor || "N/D"}`,
-    `Produto: ${venda.produtoNome || "N/D"}`,
+    `Produto(s): ${listaProdutos}`,
   ]) {
     page.drawText(line, { x: marginX, y, size: 11, font, color: rgb(0.2, 0.2, 0.22) });
     y -= 16;
@@ -215,13 +233,12 @@ export async function GET(req: Request) {
   // ── Valores ─────────────────────────────────────────────────────────────────
   page.drawText("Valores", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
-  const valor = venda.valorVenda || 0;
-  const frete = venda.valorFrete || 0;
-  const total = valor + frete;
+  const frete = venda.valorFrete ?? 0;
+  const total = totalVenda;
   const nParcelas = venda.parcelas || 1;
   const valorParc = venda.valorParcela || (nParcelas > 0 ? total / nParcelas : total);
   for (const [label, val] of [
-    ["Valor do produto", formatBRL(valor)],
+    ["Valor dos produtos", formatBRL(subtotalProdutos)],
     ["Frete", formatBRL(frete)],
     ["Total", formatBRL(total)],
     [`Parcelas (${nParcelas}x)`, formatBRL(valorParc)],
@@ -325,7 +342,7 @@ export async function GET(req: Request) {
   const placeholderData = {
     CLIENTE: cliente?.nome || "N/D",
     MATRICULA: cliente?.matricula || "N/D",
-    PRODUTO: venda.produtoNome || "N/D",
+    PRODUTO: listaProdutos,
     VALOR: formatBRL(total).replace("R$", "").trim(),
     PARCELAS: String(nParcelas),
     DATA: dataCompraFormatada,

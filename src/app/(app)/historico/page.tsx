@@ -23,6 +23,44 @@ import { getAsaasConfig, getOrCreateCustomer, createBoletoPayment } from "@/lib/
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
 
+/** Calcula valor total considerando itens (múltiplos produtos) ou campos legados */
+function valorTotalVenda(v: {
+  itens?: { subtotal: number }[];
+  valorVenda?: number | null;
+  quantidade?: number | null;
+  valorFrete?: number | null;
+}) {
+  const frete = v.valorFrete ?? 0;
+  if (v.itens && v.itens.length > 0) {
+    const subtotal = v.itens.reduce((s, i) => s + i.subtotal, 0);
+    return subtotal + frete;
+  }
+  return ((v.valorVenda ?? 0) * (v.quantidade ?? 1)) + frete;
+}
+
+/** Texto dos produtos: lista de itens ou campo legado */
+function produtosTexto(v: {
+  itens?: { produtoNome: string; quantidade: number }[];
+  produtoNome?: string | null;
+  quantidade?: number | null;
+}) {
+  if (v.itens && v.itens.length > 0) {
+    return v.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ""}`).join(", ");
+  }
+  return v.produtoNome ?? "—";
+}
+
+/** Quantidade total: soma dos itens ou campo legado */
+function quantidadeTotal(v: {
+  itens?: { quantidade: number }[];
+  quantidade?: number | null;
+}) {
+  if (v.itens && v.itens.length > 0) {
+    return v.itens.reduce((s, i) => s + i.quantidade, 0);
+  }
+  return v.quantidade ?? 1;
+}
+
 type Search = { 
   from?: string; 
   to?: string; 
@@ -126,6 +164,7 @@ async function gerarBoletoAsaas(formData: FormData) {
     include: {
       cliente: true,
       parcelasVencimento: { orderBy: { numeroParcela: "asc" }, take: 1 },
+      itens: { select: { subtotal: true } },
     },
   });
   if (!venda || !venda.boleto || venda.boletoUrl || !venda.clienteId || !venda.cliente) return;
@@ -133,7 +172,9 @@ async function gerarBoletoAsaas(formData: FormData) {
   if (!cliente.cpf && !cliente.cnpj) return;
   try {
     const totalVenda =
-      ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
+      venda.itens && venda.itens.length > 0
+        ? venda.itens.reduce((s, i) => s + i.subtotal, 0) + (venda.valorFrete ?? 0)
+        : ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
     const firstDue =
       venda.parcelasVencimento[0]?.dataVencimento?.toISOString().slice(0, 10) ||
       (() => {
@@ -234,6 +275,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       asaasPaymentId: true,
       boletoUrl: true,
       cliente: { select: { nome: true } },
+      itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
     },
   });
 
@@ -435,10 +477,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
-                    <TableCell>{v.produtoNome}</TableCell>
-                    <TableCell className="text-center font-medium">{v.quantidade || 1}</TableCell>
+                    <TableCell className="max-w-[200px]" title={produtosTexto(v)}>
+                      <span className="block truncate">{produtosTexto(v)}</span>
+                    </TableCell>
+                    <TableCell className="text-center font-medium">{quantidadeTotal(v)}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatBRL(((v.valorVenda || 0) * (v.quantidade || 1)) + (v.valorFrete || 0))}
+                      {formatBRL(valorTotalVenda(v))}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (

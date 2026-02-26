@@ -7,7 +7,7 @@ import {
   getOrCreateCustomer,
   createBoletoPayment,
 } from "@/lib/asaas";
-import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 
 export type GerarBoletoResult = { success: boolean; error?: string };
 
@@ -24,6 +24,7 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
     include: {
       cliente: true,
       parcelasVencimento: { orderBy: { numeroParcela: "asc" }, take: 1 },
+      itens: { select: { subtotal: true } },
     },
   });
 
@@ -41,7 +42,9 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
 
   try {
     const totalVenda =
-      ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
+      venda.itens && venda.itens.length > 0
+        ? venda.itens.reduce((s, i) => s + i.subtotal, 0) + (venda.valorFrete ?? 0)
+        : ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
     const firstDue =
       venda.parcelasVencimento[0]?.dataVencimento?.toISOString().slice(0, 10) ||
       (() => {
@@ -84,7 +87,8 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
       data: { asaasPaymentId: payment.id, boletoUrl: payment.bankSlipUrl || null },
     });
 
-    if (payment.bankSlipUrl && cliente.telefone) {
+    const waConfig = await getWhatsAppConfig();
+    if (waConfig?.autoBoleto && payment.bankSlipUrl && cliente.telefone) {
       const msg = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${payment.bankSlipUrl}`;
       void enviarWhatsAppTexto(cliente.telefone, msg);
     }
