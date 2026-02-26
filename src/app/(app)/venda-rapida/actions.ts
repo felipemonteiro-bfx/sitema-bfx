@@ -334,6 +334,17 @@ export async function criarVendaV2(
     });
   } catch (error) {
     console.error("Erro ao criar venda:", error);
-    return errorResponse("Erro ao processar a venda. Tente novamente.");
+    const errMsg =
+      error instanceof Error ? error.message : String(error);
+    // Mensagens seguras para exibir ao usuário (ex: Prisma FK, constraint, etc.)
+    const safeToShow =
+      errMsg.includes("Foreign key") ||
+      errMsg.includes("Unique constraint") ||
+      errMsg.includes("Cliente") ||
+      errMsg.includes("inválid") ||
+      process.env.NODE_ENV === "development";
+    return errorResponse(
+      safeToShow ? `Erro ao processar a venda: ${errMsg}` : "Erro ao processar a venda. Tente novamente."
+    );
   }
 }

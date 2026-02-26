@@ -9635,6 +9635,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas: number | null
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
+    whatsappPreAtendimento: number | null
   }
 
   export type ConfigSumAggregateOutputType = {
@@ -9650,6 +9651,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas: number | null
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
+    whatsappPreAtendimento: number | null
   }
 
   export type ConfigMinAggregateOutputType = {
@@ -9673,6 +9675,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas: number | null
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
+    whatsappPreAtendimento: number | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -9696,6 +9699,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas: number | null
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
+    whatsappPreAtendimento: number | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -9719,6 +9723,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas: number
     whatsappAutoAgradecimento: number
     whatsappDiasInativo: number
+    whatsappPreAtendimento: number
     _all: number
   }
 
@@ -9736,6 +9741,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: true
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
+    whatsappPreAtendimento?: true
   }
 
   export type ConfigSumAggregateInputType = {
@@ -9751,6 +9757,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: true
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
+    whatsappPreAtendimento?: true
   }
 
   export type ConfigMinAggregateInputType = {
@@ -9774,6 +9781,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: true
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
+    whatsappPreAtendimento?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -9797,6 +9805,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: true
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
+    whatsappPreAtendimento?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -9820,6 +9829,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: true
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
+    whatsappPreAtendimento?: true
     _all?: true
   }
 
@@ -9930,6 +9940,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas: number | null
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
+    whatsappPreAtendimento: number | null
     _count: ConfigCountAggregateOutputType | null
     _avg: ConfigAvgAggregateOutputType | null
     _sum: ConfigSumAggregateOutputType | null
@@ -9972,6 +9983,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: boolean
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
+    whatsappPreAtendimento?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -9995,6 +10007,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: boolean
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
+    whatsappPreAtendimento?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10018,6 +10031,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: boolean
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
+    whatsappPreAtendimento?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -10041,9 +10055,10 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: boolean
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
+    whatsappPreAtendimento?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -10069,6 +10084,7 @@ export namespace Prisma {
       whatsappAutoBoasVindas: number | null
       whatsappAutoAgradecimento: number | null
       whatsappDiasInativo: number | null
+      whatsappPreAtendimento: number | null
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -10512,6 +10528,7 @@ export namespace Prisma {
     readonly whatsappAutoBoasVindas: FieldRef<"Config", 'Int'>
     readonly whatsappAutoAgradecimento: FieldRef<"Config", 'Int'>
     readonly whatsappDiasInativo: FieldRef<"Config", 'Int'>
+    readonly whatsappPreAtendimento: FieldRef<"Config", 'Int'>
   }
     
 
@@ -19420,7 +19437,8 @@ export namespace Prisma {
     whatsappAutoNPS: 'whatsappAutoNPS',
     whatsappAutoBoasVindas: 'whatsappAutoBoasVindas',
     whatsappAutoAgradecimento: 'whatsappAutoAgradecimento',
-    whatsappDiasInativo: 'whatsappDiasInativo'
+    whatsappDiasInativo: 'whatsappDiasInativo',
+    whatsappPreAtendimento: 'whatsappPreAtendimento'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -20213,6 +20231,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: IntNullableFilter<"Config"> | number | null
     whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
+    whatsappPreAtendimento?: IntNullableFilter<"Config"> | number | null
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -20236,6 +20255,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: SortOrderInput | SortOrder
     whatsappAutoAgradecimento?: SortOrderInput | SortOrder
     whatsappDiasInativo?: SortOrderInput | SortOrder
+    whatsappPreAtendimento?: SortOrderInput | SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -20262,6 +20282,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: IntNullableFilter<"Config"> | number | null
     whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
+    whatsappPreAtendimento?: IntNullableFilter<"Config"> | number | null
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -20285,6 +20306,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: SortOrderInput | SortOrder
     whatsappAutoAgradecimento?: SortOrderInput | SortOrder
     whatsappDiasInativo?: SortOrderInput | SortOrder
+    whatsappPreAtendimento?: SortOrderInput | SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _avg?: ConfigAvgOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
@@ -20316,6 +20338,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: IntNullableWithAggregatesFilter<"Config"> | number | null
     whatsappAutoAgradecimento?: IntNullableWithAggregatesFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappPreAtendimento?: IntNullableWithAggregatesFilter<"Config"> | number | null
   }
 
   export type UsuarioWhereInput = {
@@ -21421,6 +21444,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: number | null
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
+    whatsappPreAtendimento?: number | null
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -21444,6 +21468,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: number | null
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
+    whatsappPreAtendimento?: number | null
   }
 
   export type ConfigUpdateInput = {
@@ -21466,6 +21491,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -21489,6 +21515,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigCreateManyInput = {
@@ -21512,6 +21539,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: number | null
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
+    whatsappPreAtendimento?: number | null
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -21534,6 +21562,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -21557,6 +21586,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type UsuarioCreateInput = {
@@ -22763,6 +22793,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: SortOrder
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
+    whatsappPreAtendimento?: SortOrder
   }
 
   export type ConfigAvgOrderByAggregateInput = {
@@ -22778,6 +22809,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: SortOrder
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
+    whatsappPreAtendimento?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -22801,6 +22833,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: SortOrder
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
+    whatsappPreAtendimento?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -22824,6 +22857,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: SortOrder
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
+    whatsappPreAtendimento?: SortOrder
   }
 
   export type ConfigSumOrderByAggregateInput = {
@@ -22839,6 +22873,7 @@ export namespace Prisma {
     whatsappAutoBoasVindas?: SortOrder
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
+    whatsappPreAtendimento?: SortOrder
   }
 
   export type UsuarioCountOrderByAggregateInput = {
