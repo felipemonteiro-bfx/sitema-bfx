@@ -48,27 +48,23 @@ async function updateCliente(formData: FormData) {
   const nome = String(formData.get("nome") || "");
   const tipo = String(formData.get("tipo") || "PF");
   if (!id || !nome) return;
-  try {
-    await prisma.cliente.update({
-      where: { id },
-      data: {
-        nome,
-        cpf: tipo === "PF" ? String(formData.get("doc") || "") : null,
-        cnpj: tipo === "PJ" ? String(formData.get("doc") || "") : null,
-        renda: Number(formData.get("renda") || 0),
-        empresa: String(formData.get("empresa") || ""),
-        telefone: String(formData.get("telefone") || ""),
-        cep: String(formData.get("cep") || ""),
-        matricula: String(formData.get("matricula") || ""),
-        tipo,
-      },
-    });
-    await createAuditLog("cliente:update", { clienteId: id, nome });
-    revalidatePath("/cadastros");
-    redirect("/cadastros?tab=clientes");
-  } catch (e) {
-    revalidatePath("/cadastros");
-  }
+  await prisma.cliente.update({
+    where: { id },
+    data: {
+      nome,
+      cpf: tipo === "PF" ? String(formData.get("doc") || "") : null,
+      cnpj: tipo === "PJ" ? String(formData.get("doc") || "") : null,
+      renda: Number(formData.get("renda") || 0),
+      empresa: String(formData.get("empresa") || ""),
+      telefone: String(formData.get("telefone") || ""),
+      cep: String(formData.get("cep") || ""),
+      matricula: String(formData.get("matricula") || ""),
+      tipo,
+    },
+  });
+  await createAuditLog("cliente:update", { clienteId: id, nome });
+  revalidatePath("/cadastros");
+  redirect("/cadastros?tab=clientes");
 }
 
 async function addProduto(formData: FormData) {
@@ -133,20 +129,16 @@ async function updateFornecedor(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   const nome = String(formData.get("nome") || "");
   if (!id || !nome) return;
-  try {
-    await prisma.fornecedor.update({
-      where: { id },
-      data: {
-        nome,
-        telefone: String(formData.get("telefone") || ""),
-      },
-    });
-    await createAuditLog("fornecedor:update", { fornecedorId: id, nome });
-    revalidatePath("/cadastros");
-    redirect("/cadastros?tab=fornecedores");
-  } catch (e) {
-    revalidatePath("/cadastros");
-  }
+  await prisma.fornecedor.update({
+    where: { id },
+    data: {
+      nome,
+      telefone: String(formData.get("telefone") || ""),
+    },
+  });
+  await createAuditLog("fornecedor:update", { fornecedorId: id, nome });
+  revalidatePath("/cadastros");
+  redirect("/cadastros?tab=fornecedores");
 }
 
 async function addEmpresa(formData: FormData) {
@@ -169,22 +161,18 @@ async function updateEmpresa(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   const nome = String(formData.get("nome") || "");
   if (!id || !nome) return;
-  try {
-    await prisma.empresaParceira.update({
-      where: { id },
-      data: {
-        nome,
-        responsavelRh: String(formData.get("rh") || ""),
-        telefoneRh: String(formData.get("tel") || ""),
-        emailRh: String(formData.get("email") || ""),
-      },
-    });
-    await createAuditLog("empresa:update", { empresaId: id, nome });
-    revalidatePath("/cadastros");
-    redirect("/cadastros?tab=empresas");
-  } catch (e) {
-    revalidatePath("/cadastros");
-  }
+  await prisma.empresaParceira.update({
+    where: { id },
+    data: {
+      nome,
+      responsavelRh: String(formData.get("rh") || ""),
+      telefoneRh: String(formData.get("tel") || ""),
+      emailRh: String(formData.get("email") || ""),
+    },
+  });
+  await createAuditLog("empresa:update", { empresaId: id, nome });
+  revalidatePath("/cadastros");
+  redirect("/cadastros?tab=empresas");
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {

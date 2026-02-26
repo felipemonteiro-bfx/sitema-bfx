@@ -10,10 +10,16 @@ export default async function AssinaturaPage({
   const { token } = await params;
   if (!token) notFound();
 
-  const venda = await prisma.venda.findUnique({
-    where: { assinaturaToken: token },
-    include: { cliente: true },
-  });
+  let venda: Awaited<ReturnType<typeof prisma.venda.findUnique>> & { cliente?: { nome: string | null } | null } | null = null;
+  try {
+    venda = await prisma.venda.findUnique({
+      where: { assinaturaToken: token },
+      include: { cliente: true },
+    });
+  } catch {
+    // Coluna assinaturaToken pode não existir em produção antiga
+    notFound();
+  }
 
   if (!venda) notFound();
 

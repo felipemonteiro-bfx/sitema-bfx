@@ -113,6 +113,7 @@ export default async function BoletosPage() {
   let vencidos: AsaasPaymentListItem[] = [];
   let aVencer: AsaasPaymentListItem[] = [];
   let pagos: AsaasPaymentListItem[] = [];
+  let asaasApiError: string | null = null;
 
   try {
     const [resOverdue, resPending, resReceived] = await Promise.all([
@@ -129,17 +130,32 @@ export default async function BoletosPage() {
     pagos = [...pagos, ...resCash.data];
   } catch (err) {
     console.error("Erro ao buscar boletos Asaas:", err);
+    asaasApiError = err instanceof Error ? err.message : "Erro ao conectar com o Asaas";
   }
 
   const totalVencidos = vencidos.reduce((s, p) => s + p.value, 0);
   const totalAVencer = aVencer.reduce((s, p) => s + p.value, 0);
   const totalPagos = pagos.reduce((s, p) => s + p.value, 0);
 
-  const vendasPendentesBoleto = await prisma.venda.findMany({
-    where: { boleto: true, boletoUrl: null },
-    orderBy: { dataVenda: "desc" },
-    include: { cliente: { select: { nome: true, empresa: true } } },
-  });
+  type VendaBoleto = {
+    id: number;
+    dataVenda: Date;
+    valorVenda: number | null;
+    quantidade: number | null;
+    valorFrete: number | null;
+    produtoNome: string | null;
+    cliente: { nome: string | null; empresa: string | null } | null;
+  };
+  let vendasPendentesBoleto: VendaBoleto[] = [];
+  try {
+    vendasPendentesBoleto = (await prisma.venda.findMany({
+      where: { boleto: true, boletoUrl: null },
+      orderBy: { dataVenda: "desc" },
+      include: { cliente: { select: { nome: true, empresa: true } } },
+    })) as VendaBoleto[];
+  } catch {
+    // Colunas boleto/boletoUrl podem não existir em ambientes antigos
+  }
 
   return (
     <div className="space-y-6">
@@ -149,6 +165,18 @@ export default async function BoletosPage() {
           Boletos emitidos pelo Asaas — vencidos, a vencer e pagos
         </p>
       </div>
+
+      {asaasApiError && (
+        <Card className="border-warning/30 bg-warning/5">
+          <CardContent className="flex items-center gap-3 py-4">
+            <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+            <div>
+              <p className="text-sm font-medium">Erro ao buscar boletos do Asaas</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{asaasApiError}</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <CardStats

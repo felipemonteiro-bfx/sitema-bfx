@@ -342,6 +342,10 @@ export async function criarVendaV2(
       errMsg.includes("Unique constraint") ||
       errMsg.includes("Cliente") ||
       errMsg.includes("inválid") ||
+      errMsg.includes("P2022") ||
+      errMsg.includes("column") ||
+      errMsg.includes("table") ||
+      errMsg.includes("relation") ||
       process.env.NODE_ENV === "development";
     return errorResponse(
       safeToShow ? `Erro ao processar a venda: ${errMsg}` : "Erro ao processar a venda. Tente novamente."

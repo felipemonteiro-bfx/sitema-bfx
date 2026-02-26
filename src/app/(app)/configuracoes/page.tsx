@@ -104,8 +104,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
   const sp = await searchParams;
-  const aviso = await prisma.aviso.findFirst({ where: { ativo: 1 }, orderBy: { id: "desc" } });
-  const cfg = await prisma.config.findFirst();
+
+  // Proteção contra colunas ausentes no banco de produção
+  let aviso: Awaited<ReturnType<typeof prisma.aviso.findFirst>> = null;
+  let cfg: Awaited<ReturnType<typeof prisma.config.findFirst>> = null;
+  try {
+    aviso = await prisma.aviso.findFirst({ where: { ativo: 1 }, orderBy: { id: "desc" } });
+  } catch {
+    // Tabela aviso pode não existir em ambientes antigos
+  }
+  try {
+    cfg = await prisma.config.findFirst();
+  } catch {
+    // Tabela config pode ter colunas ausentes em produção
+  }
 
   return (
     <div className="space-y-6">

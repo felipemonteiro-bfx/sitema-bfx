@@ -270,7 +270,7 @@ export function EditVendaFormClient({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end">
+          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
             <input
               type="checkbox"
               name="temNota"
@@ -278,11 +278,11 @@ export function EditVendaFormClient({
               defaultChecked={editVenda.temNota}
               className="h-4 w-4 rounded border-input"
             />
-            <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer">
+            <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Com Nota Fiscal
             </label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end">
+          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
             <input
               type="checkbox"
               name="descontoEmFolha"
@@ -290,11 +290,11 @@ export function EditVendaFormClient({
               defaultChecked={editVenda.descontoEmFolha ?? false}
               className="h-4 w-4 rounded border-input"
             />
-            <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer">
+            <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Desconto em folha
             </label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end">
+          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
             <input
               type="checkbox"
               name="boleto"
@@ -302,7 +302,7 @@ export function EditVendaFormClient({
               defaultChecked={editVenda.boleto ?? false}
               className="h-4 w-4 rounded border-input"
             />
-            <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer">
+            <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Boleto
             </label>
           </div>

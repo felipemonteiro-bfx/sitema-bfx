@@ -60,14 +60,30 @@ export async function GET(
       return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
     }
 
-    const vendas = await prisma.venda.findMany({
+    const vendasBase = await prisma.venda.findMany({
       where: { clienteId },
       orderBy: { dataVenda: "desc" },
       take: 20,
-      include: {
-        itens: true,
-      },
     });
+
+    // Buscar itens separadamente para compatibilidade com banco de produção
+    const itensPorVenda: Record<number, { produtoNome: string; subtotal: number }[]> = {};
+    try {
+      if (vendasBase.length > 0) {
+        const todosItens = await prisma.itemVenda.findMany({
+          where: { vendaId: { in: vendasBase.map((v) => v.id) } },
+          select: { vendaId: true, produtoNome: true, subtotal: true },
+        });
+        todosItens.forEach((item) => {
+          if (!itensPorVenda[item.vendaId]) itensPorVenda[item.vendaId] = [];
+          itensPorVenda[item.vendaId].push({ produtoNome: item.produtoNome, subtotal: item.subtotal });
+        });
+      }
+    } catch {
+      // Tabela item_venda pode não existir em ambientes antigos
+    }
+
+    const vendas = vendasBase.map((v) => ({ ...v, itens: itensPorVenda[v.id] ?? [] }));
 
     let ultimaVenda: PerfilVendasResponse["ultimaVenda"] = null;
     let ticketMedio = 0;
@@ -156,7 +172,12 @@ export async function GET(
 
     let sugestoesProativas: PerfilVendasResponse["sugestoesProativas"] = [];
 
-    const config = await prisma.config.findFirst();
+    let config: Awaited<ReturnType<typeof prisma.config.findFirst>> = null;
+    try {
+      config = await prisma.config.findFirst();
+    } catch {
+      // Tabela config pode não existir em ambientes antigos
+    }
 
     const catalogoSugestoes = await prisma.produto.findMany({
       where: {

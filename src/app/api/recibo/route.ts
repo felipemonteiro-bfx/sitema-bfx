@@ -99,16 +99,22 @@ export async function GET(req: Request) {
   if (!idParam) return new Response("ID inválido", { status: 400 });
 
   const isNumeric = /^\d+$/.test(idParam);
-  const venda = isNumeric
-    ? await prisma.venda.findUnique({
-        where: { id: Number(idParam) },
-        include: { itens: { select: { produtoNome: true, quantidade: true, subtotal: true } } },
-      })
-    : await prisma.venda.findUnique({
-        where: { uuid: idParam },
-        include: { itens: { select: { produtoNome: true, quantidade: true, subtotal: true } } },
-      });
-  if (!venda) return new Response("Venda não encontrada", { status: 404 });
+  const vendaBase = isNumeric
+    ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
+    : await prisma.venda.findUnique({ where: { uuid: idParam } });
+  if (!vendaBase) return new Response("Venda não encontrada", { status: 404 });
+
+  // Busca itens separado para não quebrar se a tabela não existir em produção
+  let vendaItens: { produtoNome: string; quantidade: number; subtotal: number }[] = [];
+  try {
+    vendaItens = await prisma.itemVenda.findMany({
+      where: { vendaId: vendaBase.id },
+      select: { produtoNome: true, quantidade: true, subtotal: true },
+    });
+  } catch {
+    // Tabela item_venda pode não existir em ambientes mais antigos
+  }
+  const venda = { ...vendaBase, itens: vendaItens };
 
   const subtotalProdutos =
     venda.itens && venda.itens.length > 0

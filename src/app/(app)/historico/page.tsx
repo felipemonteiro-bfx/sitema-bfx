@@ -19,6 +19,7 @@ import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
 import { getAsaasConfig, getOrCreateCustomer, createBoletoPayment } from "@/lib/asaas";
+import { EditParcelasSection } from "@/components/edit-parcelas-section";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -142,6 +143,40 @@ async function updateVenda(formData: FormData) {
       ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
     },
   });
+
+  // Atualizar parcelas de vencimento se enviadas pelo formulário
+  const parcelasRaw = formData.get("parcelasVencimento");
+  if (parcelasRaw) {
+    try {
+      const parcelasData = JSON.parse(String(parcelasRaw)) as { numeroParcela: number; dataVencimento: string; valorParcela: number }[];
+      if (Array.isArray(parcelasData) && parcelasData.length > 0) {
+        // Preservar status paga/dataPagamento das parcelas existentes
+        const existentes = await prisma.parcelaVencimento.findMany({
+          where: { vendaId: id },
+          select: { numeroParcela: true, paga: true, dataPagamento: true },
+        });
+        const pagasMap = new Map(existentes.map((p) => [p.numeroParcela, { paga: p.paga, dataPagamento: p.dataPagamento }]));
+
+        await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
+        await prisma.parcelaVencimento.createMany({
+          data: parcelasData.map((p) => {
+            const existente = pagasMap.get(p.numeroParcela);
+            return {
+              vendaId: id,
+              numeroParcela: p.numeroParcela,
+              dataVencimento: new Date(p.dataVencimento),
+              valorParcela: p.valorParcela,
+              paga: existente?.paga ?? false,
+              dataPagamento: existente?.dataPagamento ?? null,
+            };
+          }),
+        });
+      }
+    } catch {
+      // Tabela parcelas_vencimento pode não existir em produção antiga
+    }
+  }
+
   await createAuditLog("venda:update", { vendaId: id, valor, quantidade, lucro });
   revalidatePath("/historico");
 }
@@ -289,6 +324,25 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       asaasPaymentId: true, boletoUrl: true,
     },
   }) : null;
+
+  // Buscar parcelas existentes separadamente para compatibilidade com produção
+  let editParcelasVenc: { numeroParcela: number; dataVencimento: string; valorParcela: number }[] = [];
+  if (editVenda && (editVenda.parcelas || 1) > 1) {
+    try {
+      const raw = await prisma.parcelaVencimento.findMany({
+        where: { vendaId: editVenda.id },
+        select: { numeroParcela: true, dataVencimento: true, valorParcela: true },
+        orderBy: { numeroParcela: "asc" },
+      });
+      editParcelasVenc = raw.map((p) => ({
+        numeroParcela: p.numeroParcela,
+        dataVencimento: p.dataVencimento.toISOString().slice(0, 10),
+        valorParcela: p.valorParcela,
+      }));
+    } catch {
+      // Tabela parcelas_vencimento pode não existir em produção antiga
+    }
+  }
 
   const buildUrl = (params: Partial<Search>) => {
     const newParams = { ...sp, ...params };
@@ -648,8 +702,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
-              
+
               <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
+
+              <EditParcelasSection
+                initialParcelas={editParcelasVenc}
+                numeroParcelas={editVenda.parcelas || 1}
+                valorTotal={((editVenda.valorVenda || 0) * (editVenda.quantidade || 1)) + (editVenda.valorFrete || 0)}
+                dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
+              />
 
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</label>

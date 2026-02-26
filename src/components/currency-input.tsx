@@ -15,24 +15,40 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
     const isControlled = valueProp !== undefined;
     const initialNum = parseCurrencyBR(String(defaultValue ?? valueProp ?? ""));
     const [internalValue, setInternalValue] = React.useState(initialNum);
+    // Durante edição, armazena o texto bruto digitado pelo usuário (evita cursor pulando)
+    const [editingValue, setEditingValue] = React.useState<string | null>(null);
+    const isEditing = editingValue !== null;
 
-    const displayValue = isControlled
-      ? formatCurrencyBR(typeof valueProp === "number" ? valueProp : parseCurrencyBR(String(valueProp ?? "")))
-      : formatCurrencyBR(internalValue);
-
-    const rawValue = isControlled
+    const currentNum = isControlled
       ? (typeof valueProp === "number" ? valueProp : parseCurrencyBR(String(valueProp ?? "")))
       : internalValue;
 
+    const rawValue = currentNum;
+
+    // Exibe o texto bruto durante edição; formatado quando não está em foco
+    const displayValue = isEditing ? editingValue : formatCurrencyBR(currentNum);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const parsed = parseCurrencyBR(e.target.value);
+      const raw = e.target.value;
+      setEditingValue(raw);
+      const parsed = parseCurrencyBR(raw);
       if (!isControlled) setInternalValue(parsed);
       onChange?.(parsed);
     };
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      // Converte para string simples para facilitar a digitação (ex: "1500,00")
+      setEditingValue(currentNum > 0 ? currentNum.toFixed(2).replace(".", ",") : "");
       e.target.select();
       props.onFocus?.(e);
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      const parsed = parseCurrencyBR(editingValue ?? "");
+      if (!isControlled) setInternalValue(parsed);
+      onChange?.(parsed);
+      setEditingValue(null);
+      props.onBlur?.(e);
     };
 
     return (
@@ -53,6 +69,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
           value={displayValue}
           onChange={handleChange}
           onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder={props.placeholder ?? "0,00"}
           className={(props.className ?? "") + " pl-10"}
           inputMode="decimal"

@@ -20,11 +20,13 @@ interface Props {
   parcelas: Parcela[];
   onChange: (parcelas: Parcela[]) => void;
   dataVenda?: string; // YYYY-MM-DD — usada para calcular vencimento pela regra do dia 20
+  disableAutoInit?: boolean; // Em modo de edição com parcelas existentes, evita reinicializar
 }
 
-export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, onChange, dataVenda }: Props) {
+export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit = false }: Props) {
   // Inicializar parcelas automaticamente
   useEffect(() => {
+    if (disableAutoInit) return;
     if (numeroParcelas > 0 && (parcelas.length !== numeroParcelas || parcelas[0]?.valorParcela !== valorTotal / numeroParcelas)) {
       const dataBase = dataVenda ? new Date(dataVenda) : new Date();
       const primeiroVencimento = calcularPrimeiroVencimento(dataBase);
@@ -38,7 +40,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
       });
       onChange(novasParcelas);
     }
-  }, [numeroParcelas, valorTotal, dataVenda]);
+  }, [numeroParcelas, valorTotal, dataVenda, disableAutoInit]);
 
   const handleDataChange = (index: number, newData: string) => {
     const novasParcelas = [...parcelas];
