@@ -195,6 +195,7 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
       if (isEdit && cancelHref) {
         toast.success("Produto atualizado com sucesso!");
         router.push(cancelHref);
+        router.refresh();
       } else if (!isEdit) {
         toast.success("Produto cadastrado com sucesso!");
         setNome('');

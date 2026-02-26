@@ -45,9 +45,11 @@ async function addCliente(formData: FormData) {
 async function updateCliente(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
-  const nome = String(formData.get("nome") || "");
+  const nome = String(formData.get("nome") || "").trim();
   const tipo = String(formData.get("tipo") || "PF");
-  if (!id || !nome) return;
+  if (!id || !nome) {
+    throw new Error("Dados incompletos. Nome do cliente é obrigatório.");
+  }
   await prisma.cliente.update({
     where: { id },
     data: {
@@ -91,8 +93,10 @@ async function addProduto(formData: FormData) {
 async function updateProduto(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
-  const nome = String(formData.get("nome") || "");
-  if (!id || !nome) return;
+  const nome = String(formData.get("nome") || "").trim();
+  if (!id || !nome) {
+    throw new Error("Dados incompletos. Nome do produto é obrigatório.");
+  }
   await prisma.produto.update({
     where: { id },
     data: {

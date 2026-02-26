@@ -5,6 +5,7 @@ import { formatBRL, cn } from "@/lib/utils";
 import VendaRapidaFormV2 from "@/components/venda-rapida-form-v2";
 import { ShoppingCart, CheckCircle2 } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
+import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { Separator } from "@/components/ui/separator";
 import { criarVendaV2 } from "./actions";
 
@@ -51,21 +52,18 @@ export default async function Page() {
             </div>
             <Separator orientation="vertical" className="h-8 mx-2" />
             <div className="flex flex-wrap gap-2">
-              <a
-                href={`/api/recibo?id=${ultima.id}`}
+              <ReciboDownloadLink
+                vendaId={ultima.id}
                 className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
-                title="Recibo de Venda de Mercadoria"
-              >
-                Recibo
-              </a>
+                label="Recibo"
+              />
               {ultima.descontoEmFolha && (
-                <a
-                  href={`/api/recibo?id=${ultima.id}&tipo=autorizacao`}
+                <ReciboDownloadLink
+                  vendaId={ultima.id}
+                  tipo="autorizacao"
                   className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
-                  title="Autorização de Desconto em Folha"
-                >
-                  Autorização
-                </a>
+                  label="Autorização"
+                />
               )}
               {ultima.descontoEmFolha && ultima.assinaturaToken && (
                 <LinkAssinaturaButton

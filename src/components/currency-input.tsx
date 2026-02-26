@@ -39,7 +39,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       // Converte para string simples para facilitar a digitação (ex: "1500,00")
       setEditingValue(currentNum > 0 ? currentNum.toFixed(2).replace(".", ",") : "");
-      e.target.select();
+      // Não usar select() - permite editar posição específica sem substituir tudo
       props.onFocus?.(e);
     };
 

@@ -12,14 +12,16 @@ import { DeleteVendaButton } from "@/components/delete-venda-button";
 import { DateInput } from "@/components/ui/date-input";
 import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
 import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
+import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
 import { EditVendaSheetWrapper } from "@/components/edit-venda-sheet-wrapper";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
-import { getAsaasConfig, getOrCreateCustomer, createBoletoPayment } from "@/lib/asaas";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
+import { gerarBoletoAsaas } from "@/lib/boleto-actions";
+import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
@@ -190,70 +192,6 @@ async function deleteVenda(formData: FormData) {
   revalidatePath("/historico");
 }
 
-async function gerarBoletoAsaas(formData: FormData) {
-  "use server";
-  const vendaId = Number(formData.get("vendaId") || 0);
-  if (!vendaId || !getAsaasConfig()) return;
-  const venda = await prisma.venda.findUnique({
-    where: { id: vendaId },
-    include: {
-      cliente: true,
-      parcelasVencimento: { orderBy: { numeroParcela: "asc" }, take: 1 },
-      itens: { select: { subtotal: true } },
-    },
-  });
-  if (!venda || !venda.boleto || venda.boletoUrl || !venda.clienteId || !venda.cliente) return;
-  const cliente = venda.cliente;
-  if (!cliente.cpf && !cliente.cnpj) return;
-  try {
-    const totalVenda =
-      venda.itens && venda.itens.length > 0
-        ? venda.itens.reduce((s, i) => s + i.subtotal, 0) + (venda.valorFrete ?? 0)
-        : ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
-    const firstDue =
-      venda.parcelasVencimento[0]?.dataVencimento?.toISOString().slice(0, 10) ||
-      (() => {
-        const d = new Date();
-        if ((venda.parcelas || 1) > 1) {
-          d.setMonth(d.getMonth() + 1);
-          d.setDate(10);
-        } else {
-          d.setDate(d.getDate() + 3);
-        }
-        return d.toISOString().slice(0, 10);
-      })();
-    const clienteAsaas = cliente as { asaasCustomerId?: string | null };
-    const asaasCustomerId = await getOrCreateCustomer(
-      {
-        id: cliente.id,
-        nome: cliente.nome,
-        cpf: cliente.cpf,
-        cnpj: cliente.cnpj,
-        email: cliente.email,
-        telefone: cliente.telefone,
-        asaasCustomerId: clienteAsaas.asaasCustomerId ?? null,
-      },
-      prisma
-    );
-    const parcelas = venda.parcelas || 1;
-    const payment = await createBoletoPayment({
-      customerId: asaasCustomerId,
-      value: totalVenda,
-      dueDate: firstDue,
-      ...(parcelas > 1 && { installmentCount: parcelas, totalValue: totalVenda }),
-      description: `Venda #${venda.id}`,
-      externalReference: String(venda.id),
-    });
-    await prisma.venda.update({
-      where: { id: vendaId },
-      data: { asaasPaymentId: payment.id, boletoUrl: payment.bankSlipUrl || null },
-    });
-  } catch (err) {
-    console.error("Erro ao gerar boleto Asaas (retry):", err);
-  }
-  revalidatePath("/historico");
-}
-
 function parseDateStart(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
@@ -322,6 +260,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       descontoEmFolha: true, boleto: true, comprovantePdf: true,
       asaasPaymentId: true, boletoUrl: true,
+      itens: { select: { subtotal: true } },
     },
   }) : null;
 
@@ -568,12 +507,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           ) : (
                           <span className="flex flex-col items-center gap-1">
                             <span className="text-amber-600 text-xs">Pendente</span>
-                            <form action={gerarBoletoAsaas} className="inline">
-                              <input type="hidden" name="vendaId" value={v.id} />
-                              <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs")}>
-                                Gerar boleto
-                              </button>
-                            </form>
+                            <GerarBoletoButton
+                              vendaId={v.id}
+                              gerarBoletoAction={gerarBoletoAsaas}
+                              className="text-xs"
+                            >
+                              Gerar boleto
+                            </GerarBoletoButton>
                           </span>
                           );
                         })()
@@ -596,15 +536,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         >
                           Editar
                         </Link>
-                        <a
-                          href={`/api/recibo?id=${v.id}`}
+                        <ReciboDownloadLink
+                          vendaId={v.id}
                           className={buttonVariants({ variant: "ghost", size: "sm" })}
-                          target="_blank"
-                          rel="noreferrer"
-                          download
-                        >
-                          PDF
-                        </a>
+                          label="PDF"
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -708,7 +644,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <EditParcelasSection
                 initialParcelas={editParcelasVenc}
                 numeroParcelas={editVenda.parcelas || 1}
-                valorTotal={((editVenda.valorVenda || 0) * (editVenda.quantidade || 1)) + (editVenda.valorFrete || 0)}
+                valorTotal={valorTotalVenda(editVenda)}
                 dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
               />
 
@@ -733,41 +669,41 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
+              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
                 <input 
                   type="checkbox" 
                   name="temNota" 
                   id="edit-temNota" 
                   defaultChecked={editVenda.temNota}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
                 />
-                <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer">
+                <label htmlFor="edit-temNota" className="text-xs font-medium text-foreground leading-none cursor-pointer">
                   Com Nota Fiscal
                 </label>
               </div>
 
-              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
+              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
                 <input 
                   type="checkbox" 
                   name="descontoEmFolha" 
                   id="edit-descontoEmFolha" 
                   defaultChecked={editVenda.descontoEmFolha ?? false}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
                 />
-                <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer">
+                <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium text-foreground leading-none cursor-pointer">
                   Desconto em folha
                 </label>
               </div>
 
-              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-white self-end">
+              <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
                 <input 
                   type="checkbox" 
                   name="boleto" 
                   id="edit-boleto" 
                   defaultChecked={editVenda.boleto ?? false}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
                 />
-                <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer">
+                <label htmlFor="edit-boleto" className="text-xs font-medium text-foreground leading-none cursor-pointer">
                   Boleto
                 </label>
               </div>
@@ -786,9 +722,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <div className="md:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar alterações</button>
-                  <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`} target="_blank" rel="noreferrer" download>
-                    Baixar recibo PDF
-                  </a>
+                  <ReciboDownloadLink
+                    vendaId={editVenda.id}
+                    className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                    label="Baixar recibo PDF"
+                  />
                   {editVenda.boletoUrl ? (
                     <a
                       href={editVenda.boletoUrl}
@@ -799,12 +737,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       Ver boleto Asaas
                     </a>
                   ) : editVenda.boleto ? (
-                    <form action={gerarBoletoAsaas} className="inline">
-                      <input type="hidden" name="vendaId" value={editVenda.id} />
-                      <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                        Gerar boleto Asaas
-                      </button>
-                    </form>
+                    <GerarBoletoButton
+                      vendaId={editVenda.id}
+                      gerarBoletoAction={gerarBoletoAsaas}
+                    >
+                      Gerar boleto Asaas
+                    </GerarBoletoButton>
                   ) : null}
                 </div>
                 <DeleteVendaButton vendaId={editVenda.id} deleteAction={deleteVenda} />

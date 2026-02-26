@@ -334,9 +334,19 @@ export async function criarVendaV2(
     });
   } catch (error) {
     console.error("Erro ao criar venda:", error);
-    const errMsg =
-      error instanceof Error ? error.message : String(error);
-    // Mensagens seguras para exibir ao usuário (ex: Prisma FK, constraint, etc.)
+    const err = error as Error & { code?: string };
+    const errMsg = err?.message ?? String(error);
+
+    // Mapear erros comuns do Prisma para mensagens amigáveis
+    if (err?.code === "P2003") {
+      return errorResponse(
+        "Cliente ou vendedor inválido. Verifique se o cliente existe em Cadastros e se o vendedor está correto."
+      );
+    }
+    if (err?.code === "P2025") {
+      return errorResponse("Registro não encontrado. Atualize a página e tente novamente.");
+    }
+
     const safeToShow =
       errMsg.includes("Foreign key") ||
       errMsg.includes("Unique constraint") ||
@@ -347,6 +357,7 @@ export async function criarVendaV2(
       errMsg.includes("table") ||
       errMsg.includes("relation") ||
       process.env.NODE_ENV === "development";
+
     return errorResponse(
       safeToShow ? `Erro ao processar a venda: ${errMsg}` : "Erro ao processar a venda. Tente novamente."
     );

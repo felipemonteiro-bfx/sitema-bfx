@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { useState } from "react";
 
 const formatDateBR = (value: Date) =>
@@ -207,15 +208,11 @@ function VendaCard({
             >
               Editar
             </Link>
-            <a
-              href={`/api/recibo?id=${venda.id}`}
+            <ReciboDownloadLink
+              vendaId={venda.id}
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "touch-manipulation min-h-[44px]")}
-              target="_blank"
-              rel="noreferrer"
-              download
-            >
-              PDF
-            </a>
+              label="PDF"
+            />
           </div>
         </div>
       </CardContent>

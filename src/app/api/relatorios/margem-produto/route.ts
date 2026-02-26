@@ -108,10 +108,12 @@ export async function GET(req: Request) {
     page.drawText(`Lucro total: ${formatBRL(totalLucro)} | ${rows.length} produto(s)`, { x: 40, y, size: 11, font: fontBold, color: rgb(1, 1, 1) });
 
     const pdfBytes = await pdfDoc.save();
-    return new Response(Buffer.from(pdfBytes), {
+    return new Response(new Uint8Array(pdfBytes), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": 'attachment; filename="relatorio_margem_produto.pdf"',
+        "Cache-Control": "no-cache, no-transform",
+        "Content-Length": String(pdfBytes.length),
       },
     });
   }

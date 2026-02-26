@@ -111,10 +111,10 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
     setError(null);
 
     fetch(`/api/clientes/${clienteId}/perfil-vendas`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          setError(data.error);
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          setError(data.error || "Erro ao carregar perfil do cliente");
           setPerfil(null);
         } else {
           setPerfil(data);

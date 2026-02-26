@@ -200,10 +200,12 @@ export async function GET(req: Request) {
 
   const pdfBytes = await pdf.save();
 
-  return new Response(Buffer.from(pdfBytes), {
+  return new Response(new Uint8Array(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": "attachment; filename=\"catalogo_produtos.pdf\"",
+      "Cache-Control": "no-cache, no-transform",
+      "Content-Length": String(pdfBytes.length),
     },
   });
 }

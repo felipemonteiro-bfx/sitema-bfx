@@ -385,11 +385,15 @@ export async function GET(req: Request) {
   });
 
   const pdfBytes = await pdf.save();
+  const filename = `recibo_${tipo === "autorizacao" ? "autorizacao_" : ""}${venda.id}.pdf`;
 
-  return new Response(Buffer.from(pdfBytes), {
+  return new Response(new Uint8Array(pdfBytes), {
+    status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="recibo_${tipo === "autorizacao" ? "autorizacao_" : ""}${venda.id}.pdf"`,
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "no-cache, no-transform",
+      "Content-Length": String(pdfBytes.length),
     },
   });
 }

@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 function formatBRL(value: number) {
@@ -123,10 +123,12 @@ export async function GET(req: Request) {
 
     const pdfBytes = await pdfDoc.save();
 
-    return new Response(Buffer.from(pdfBytes), {
+    return new Response(new Uint8Array(pdfBytes), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="relatorio_vendas_${Date.now()}.pdf"`,
+        "Cache-Control": "no-cache, no-transform",
+        "Content-Length": String(pdfBytes.length),
       },
     });
   } catch (error) {

@@ -39,7 +39,8 @@ O `bfx-app-secrets` deve ter:
 
 Opcionais, conforme uso:
 
-- `CRON_SECRET`, `ASAAS_API_KEY`, `ASAAS_ENV`
+- `CRON_SECRET` – protege endpoints de cron
+- `ASAAS_API_KEY` e `ASAAS_ENV` – **obrigatórios para Dashboard de Boletos e geração de boleto**. Sem eles, a página /boletos exibe "Asaas não configurado" e o botão "Gerar boleto" retorna erro "Configure ASAAS_API_KEY no servidor".
 - `MINIO_*` – se usar MinIO para imagens
 - `EVOLUTION_*` – se usar WhatsApp
 
@@ -51,6 +52,8 @@ Opcionais, conforme uso:
 2. **Tabelas inexistentes** – Rodar `prisma migrate deploy` apontando para o mesmo Postgres (via `DATABASE_URL`).
 3. **Sessão** – Se o erro ocorrer só em certas rotas, verificar `SESSION_SECRET` e cookies.
 4. **Upload de logo** – O diretório `public/uploads` é criado automaticamente; em ambiente read-only pode falhar apenas no upload, não no carregamento da página.
+
+5. **Página Configurações** – Falha ao carregar costuma ser: banco não acessível, tabelas `avisos` ou `config` inexistentes, ou variáveis de ambiente ausentes. Use `NEXT_PUBLIC_SHOW_ERROR_DETAILS=true` para ver o erro exato.
 
 ---
 

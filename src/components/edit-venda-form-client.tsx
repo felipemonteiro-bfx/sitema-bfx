@@ -17,6 +17,7 @@ import { formatBRL, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, ExternalLink, Plus } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
+import { ReciboDownloadLink } from "@/components/recibo-download-link";
 
 type ProdutoItem = {
   id: string;
@@ -339,13 +340,18 @@ export function EditVendaFormClient({
               <button type="submit" disabled={loading} className={cn(buttonVariants(), "cursor-pointer")}>
                 {loading ? "Salvando..." : "Salvar alterações"}
               </button>
-              <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
-                Recibo de Venda
-              </a>
+              <ReciboDownloadLink
+                vendaId={editVenda.id}
+                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                label="Recibo de Venda"
+              />
               {editVenda.descontoEmFolha && (
-                <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}&tipo=autorizacao`}>
-                  Autorização (Desconto em Folha)
-                </a>
+                <ReciboDownloadLink
+                  vendaId={editVenda.id}
+                  tipo="autorizacao"
+                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                  label="Autorização (Desconto em Folha)"
+                />
               )}
               {editVenda.boletoUrl ? (
                 <a
