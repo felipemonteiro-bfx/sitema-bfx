@@ -102,8 +102,10 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
   useEffect(() => {
     if (!clienteId) {
-      setPerfil(null);
-      setSugestoesProduto(null);
+      queueMicrotask(() => {
+        setPerfil(null);
+        setSugestoesProduto(null);
+      });
       return;
     }
 
@@ -129,7 +131,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
   useEffect(() => {
     if (!produtoSelecionado?.id) {
-      setSugestoesProduto(null);
+      queueMicrotask(() => setSugestoesProduto(null));
       return;
     }
 

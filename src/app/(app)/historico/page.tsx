@@ -87,7 +87,7 @@ async function updateVenda(formData: FormData) {
   const custo = Number(formData.get("custo_prod") || 0);
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
-  let descontoEmFolha = formData.get("descontoEmFolha") === "on";
+  const descontoEmFolha = formData.get("descontoEmFolha") === "on";
   let boleto = formData.get("boleto") === "on";
   // Apenas um: desconto em folha ou boleto (nunca os dois)
   if (descontoEmFolha && boleto) boleto = false;
