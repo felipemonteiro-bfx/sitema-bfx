@@ -83,6 +83,11 @@ export type Despesa = $Result.DefaultSelection<Prisma.$DespesaPayload>
  * 
  */
 export type Aviso = $Result.DefaultSelection<Prisma.$AvisoPayload>
+/**
+ * Model WhatsAppEnvioLog
+ * 
+ */
+export type WhatsAppEnvioLog = $Result.DefaultSelection<Prisma.$WhatsAppEnvioLogPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -341,6 +346,16 @@ export class PrismaClient<
     * ```
     */
   get aviso(): Prisma.AvisoDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.whatsAppEnvioLog`: Exposes CRUD operations for the **WhatsAppEnvioLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WhatsAppEnvioLogs
+    * const whatsAppEnvioLogs = await prisma.whatsAppEnvioLog.findMany()
+    * ```
+    */
+  get whatsAppEnvioLog(): Prisma.WhatsAppEnvioLogDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -795,7 +810,8 @@ export namespace Prisma {
     Pagamento: 'Pagamento',
     AuditLog: 'AuditLog',
     Despesa: 'Despesa',
-    Aviso: 'Aviso'
+    Aviso: 'Aviso',
+    WhatsAppEnvioLog: 'WhatsAppEnvioLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -814,7 +830,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso"
+      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1854,6 +1870,80 @@ export namespace Prisma {
           }
         }
       }
+      WhatsAppEnvioLog: {
+        payload: Prisma.$WhatsAppEnvioLogPayload<ExtArgs>
+        fields: Prisma.WhatsAppEnvioLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WhatsAppEnvioLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WhatsAppEnvioLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>
+          }
+          findFirst: {
+            args: Prisma.WhatsAppEnvioLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WhatsAppEnvioLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>
+          }
+          findMany: {
+            args: Prisma.WhatsAppEnvioLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>[]
+          }
+          create: {
+            args: Prisma.WhatsAppEnvioLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>
+          }
+          createMany: {
+            args: Prisma.WhatsAppEnvioLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WhatsAppEnvioLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>[]
+          }
+          delete: {
+            args: Prisma.WhatsAppEnvioLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>
+          }
+          update: {
+            args: Prisma.WhatsAppEnvioLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.WhatsAppEnvioLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WhatsAppEnvioLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.WhatsAppEnvioLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.WhatsAppEnvioLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WhatsAppEnvioLogPayload>
+          }
+          aggregate: {
+            args: Prisma.WhatsAppEnvioLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWhatsAppEnvioLog>
+          }
+          groupBy: {
+            args: Prisma.WhatsAppEnvioLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WhatsAppEnvioLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WhatsAppEnvioLogCountArgs<ExtArgs>
+            result: $Utils.Optional<WhatsAppEnvioLogCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1964,6 +2054,7 @@ export namespace Prisma {
     auditLog?: AuditLogOmit
     despesa?: DespesaOmit
     aviso?: AvisoOmit
+    whatsAppEnvioLog?: WhatsAppEnvioLogOmit
   }
 
   /* Types for Logging */
@@ -9534,11 +9625,31 @@ export namespace Prisma {
   export type ConfigAvgAggregateOutputType = {
     id: number | null
     whatsappAutoEnabled: number | null
+    whatsappAutoRecibo: number | null
+    whatsappAutoBoleto: number | null
+    whatsappAutoLembrete: number | null
+    whatsappAutoReativacao: number | null
+    whatsappAutoAniversario: number | null
+    whatsappAutoInadimplencia: number | null
+    whatsappAutoNPS: number | null
+    whatsappAutoBoasVindas: number | null
+    whatsappAutoAgradecimento: number | null
+    whatsappDiasInativo: number | null
   }
 
   export type ConfigSumAggregateOutputType = {
     id: number | null
     whatsappAutoEnabled: number | null
+    whatsappAutoRecibo: number | null
+    whatsappAutoBoleto: number | null
+    whatsappAutoLembrete: number | null
+    whatsappAutoReativacao: number | null
+    whatsappAutoAniversario: number | null
+    whatsappAutoInadimplencia: number | null
+    whatsappAutoNPS: number | null
+    whatsappAutoBoasVindas: number | null
+    whatsappAutoAgradecimento: number | null
+    whatsappDiasInativo: number | null
   }
 
   export type ConfigMinAggregateOutputType = {
@@ -9552,6 +9663,16 @@ export namespace Prisma {
     evolutionApiKey: string | null
     evolutionInstance: string | null
     whatsappAutoEnabled: number | null
+    whatsappAutoRecibo: number | null
+    whatsappAutoBoleto: number | null
+    whatsappAutoLembrete: number | null
+    whatsappAutoReativacao: number | null
+    whatsappAutoAniversario: number | null
+    whatsappAutoInadimplencia: number | null
+    whatsappAutoNPS: number | null
+    whatsappAutoBoasVindas: number | null
+    whatsappAutoAgradecimento: number | null
+    whatsappDiasInativo: number | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -9565,6 +9686,16 @@ export namespace Prisma {
     evolutionApiKey: string | null
     evolutionInstance: string | null
     whatsappAutoEnabled: number | null
+    whatsappAutoRecibo: number | null
+    whatsappAutoBoleto: number | null
+    whatsappAutoLembrete: number | null
+    whatsappAutoReativacao: number | null
+    whatsappAutoAniversario: number | null
+    whatsappAutoInadimplencia: number | null
+    whatsappAutoNPS: number | null
+    whatsappAutoBoasVindas: number | null
+    whatsappAutoAgradecimento: number | null
+    whatsappDiasInativo: number | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -9578,6 +9709,16 @@ export namespace Prisma {
     evolutionApiKey: number
     evolutionInstance: number
     whatsappAutoEnabled: number
+    whatsappAutoRecibo: number
+    whatsappAutoBoleto: number
+    whatsappAutoLembrete: number
+    whatsappAutoReativacao: number
+    whatsappAutoAniversario: number
+    whatsappAutoInadimplencia: number
+    whatsappAutoNPS: number
+    whatsappAutoBoasVindas: number
+    whatsappAutoAgradecimento: number
+    whatsappDiasInativo: number
     _all: number
   }
 
@@ -9585,11 +9726,31 @@ export namespace Prisma {
   export type ConfigAvgAggregateInputType = {
     id?: true
     whatsappAutoEnabled?: true
+    whatsappAutoRecibo?: true
+    whatsappAutoBoleto?: true
+    whatsappAutoLembrete?: true
+    whatsappAutoReativacao?: true
+    whatsappAutoAniversario?: true
+    whatsappAutoInadimplencia?: true
+    whatsappAutoNPS?: true
+    whatsappAutoBoasVindas?: true
+    whatsappAutoAgradecimento?: true
+    whatsappDiasInativo?: true
   }
 
   export type ConfigSumAggregateInputType = {
     id?: true
     whatsappAutoEnabled?: true
+    whatsappAutoRecibo?: true
+    whatsappAutoBoleto?: true
+    whatsappAutoLembrete?: true
+    whatsappAutoReativacao?: true
+    whatsappAutoAniversario?: true
+    whatsappAutoInadimplencia?: true
+    whatsappAutoNPS?: true
+    whatsappAutoBoasVindas?: true
+    whatsappAutoAgradecimento?: true
+    whatsappDiasInativo?: true
   }
 
   export type ConfigMinAggregateInputType = {
@@ -9603,6 +9764,16 @@ export namespace Prisma {
     evolutionApiKey?: true
     evolutionInstance?: true
     whatsappAutoEnabled?: true
+    whatsappAutoRecibo?: true
+    whatsappAutoBoleto?: true
+    whatsappAutoLembrete?: true
+    whatsappAutoReativacao?: true
+    whatsappAutoAniversario?: true
+    whatsappAutoInadimplencia?: true
+    whatsappAutoNPS?: true
+    whatsappAutoBoasVindas?: true
+    whatsappAutoAgradecimento?: true
+    whatsappDiasInativo?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -9616,6 +9787,16 @@ export namespace Prisma {
     evolutionApiKey?: true
     evolutionInstance?: true
     whatsappAutoEnabled?: true
+    whatsappAutoRecibo?: true
+    whatsappAutoBoleto?: true
+    whatsappAutoLembrete?: true
+    whatsappAutoReativacao?: true
+    whatsappAutoAniversario?: true
+    whatsappAutoInadimplencia?: true
+    whatsappAutoNPS?: true
+    whatsappAutoBoasVindas?: true
+    whatsappAutoAgradecimento?: true
+    whatsappDiasInativo?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -9629,6 +9810,16 @@ export namespace Prisma {
     evolutionApiKey?: true
     evolutionInstance?: true
     whatsappAutoEnabled?: true
+    whatsappAutoRecibo?: true
+    whatsappAutoBoleto?: true
+    whatsappAutoLembrete?: true
+    whatsappAutoReativacao?: true
+    whatsappAutoAniversario?: true
+    whatsappAutoInadimplencia?: true
+    whatsappAutoNPS?: true
+    whatsappAutoBoasVindas?: true
+    whatsappAutoAgradecimento?: true
+    whatsappDiasInativo?: true
     _all?: true
   }
 
@@ -9729,6 +9920,16 @@ export namespace Prisma {
     evolutionApiKey: string | null
     evolutionInstance: string | null
     whatsappAutoEnabled: number | null
+    whatsappAutoRecibo: number | null
+    whatsappAutoBoleto: number | null
+    whatsappAutoLembrete: number | null
+    whatsappAutoReativacao: number | null
+    whatsappAutoAniversario: number | null
+    whatsappAutoInadimplencia: number | null
+    whatsappAutoNPS: number | null
+    whatsappAutoBoasVindas: number | null
+    whatsappAutoAgradecimento: number | null
+    whatsappDiasInativo: number | null
     _count: ConfigCountAggregateOutputType | null
     _avg: ConfigAvgAggregateOutputType | null
     _sum: ConfigSumAggregateOutputType | null
@@ -9761,6 +9962,16 @@ export namespace Prisma {
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
     whatsappAutoEnabled?: boolean
+    whatsappAutoRecibo?: boolean
+    whatsappAutoBoleto?: boolean
+    whatsappAutoLembrete?: boolean
+    whatsappAutoReativacao?: boolean
+    whatsappAutoAniversario?: boolean
+    whatsappAutoInadimplencia?: boolean
+    whatsappAutoNPS?: boolean
+    whatsappAutoBoasVindas?: boolean
+    whatsappAutoAgradecimento?: boolean
+    whatsappDiasInativo?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -9774,6 +9985,16 @@ export namespace Prisma {
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
     whatsappAutoEnabled?: boolean
+    whatsappAutoRecibo?: boolean
+    whatsappAutoBoleto?: boolean
+    whatsappAutoLembrete?: boolean
+    whatsappAutoReativacao?: boolean
+    whatsappAutoAniversario?: boolean
+    whatsappAutoInadimplencia?: boolean
+    whatsappAutoNPS?: boolean
+    whatsappAutoBoasVindas?: boolean
+    whatsappAutoAgradecimento?: boolean
+    whatsappDiasInativo?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -9787,6 +10008,16 @@ export namespace Prisma {
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
     whatsappAutoEnabled?: boolean
+    whatsappAutoRecibo?: boolean
+    whatsappAutoBoleto?: boolean
+    whatsappAutoLembrete?: boolean
+    whatsappAutoReativacao?: boolean
+    whatsappAutoAniversario?: boolean
+    whatsappAutoInadimplencia?: boolean
+    whatsappAutoNPS?: boolean
+    whatsappAutoBoasVindas?: boolean
+    whatsappAutoAgradecimento?: boolean
+    whatsappDiasInativo?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -9800,9 +10031,19 @@ export namespace Prisma {
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
     whatsappAutoEnabled?: boolean
+    whatsappAutoRecibo?: boolean
+    whatsappAutoBoleto?: boolean
+    whatsappAutoLembrete?: boolean
+    whatsappAutoReativacao?: boolean
+    whatsappAutoAniversario?: boolean
+    whatsappAutoInadimplencia?: boolean
+    whatsappAutoNPS?: boolean
+    whatsappAutoBoasVindas?: boolean
+    whatsappAutoAgradecimento?: boolean
+    whatsappDiasInativo?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -9818,6 +10059,16 @@ export namespace Prisma {
       evolutionApiKey: string | null
       evolutionInstance: string | null
       whatsappAutoEnabled: number | null
+      whatsappAutoRecibo: number | null
+      whatsappAutoBoleto: number | null
+      whatsappAutoLembrete: number | null
+      whatsappAutoReativacao: number | null
+      whatsappAutoAniversario: number | null
+      whatsappAutoInadimplencia: number | null
+      whatsappAutoNPS: number | null
+      whatsappAutoBoasVindas: number | null
+      whatsappAutoAgradecimento: number | null
+      whatsappDiasInativo: number | null
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -10251,6 +10502,16 @@ export namespace Prisma {
     readonly evolutionApiKey: FieldRef<"Config", 'String'>
     readonly evolutionInstance: FieldRef<"Config", 'String'>
     readonly whatsappAutoEnabled: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoRecibo: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoBoleto: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoLembrete: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoReativacao: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoAniversario: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoInadimplencia: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoNPS: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoBoasVindas: FieldRef<"Config", 'Int'>
+    readonly whatsappAutoAgradecimento: FieldRef<"Config", 'Int'>
+    readonly whatsappDiasInativo: FieldRef<"Config", 'Int'>
   }
     
 
@@ -17981,6 +18242,1043 @@ export namespace Prisma {
 
 
   /**
+   * Model WhatsAppEnvioLog
+   */
+
+  export type AggregateWhatsAppEnvioLog = {
+    _count: WhatsAppEnvioLogCountAggregateOutputType | null
+    _avg: WhatsAppEnvioLogAvgAggregateOutputType | null
+    _sum: WhatsAppEnvioLogSumAggregateOutputType | null
+    _min: WhatsAppEnvioLogMinAggregateOutputType | null
+    _max: WhatsAppEnvioLogMaxAggregateOutputType | null
+  }
+
+  export type WhatsAppEnvioLogAvgAggregateOutputType = {
+    id: number | null
+    clienteId: number | null
+    referencia: number | null
+  }
+
+  export type WhatsAppEnvioLogSumAggregateOutputType = {
+    id: number | null
+    clienteId: number | null
+    referencia: number | null
+  }
+
+  export type WhatsAppEnvioLogMinAggregateOutputType = {
+    id: number | null
+    clienteId: number | null
+    tipo: string | null
+    referencia: number | null
+    dataEnvio: Date | null
+  }
+
+  export type WhatsAppEnvioLogMaxAggregateOutputType = {
+    id: number | null
+    clienteId: number | null
+    tipo: string | null
+    referencia: number | null
+    dataEnvio: Date | null
+  }
+
+  export type WhatsAppEnvioLogCountAggregateOutputType = {
+    id: number
+    clienteId: number
+    tipo: number
+    referencia: number
+    dataEnvio: number
+    _all: number
+  }
+
+
+  export type WhatsAppEnvioLogAvgAggregateInputType = {
+    id?: true
+    clienteId?: true
+    referencia?: true
+  }
+
+  export type WhatsAppEnvioLogSumAggregateInputType = {
+    id?: true
+    clienteId?: true
+    referencia?: true
+  }
+
+  export type WhatsAppEnvioLogMinAggregateInputType = {
+    id?: true
+    clienteId?: true
+    tipo?: true
+    referencia?: true
+    dataEnvio?: true
+  }
+
+  export type WhatsAppEnvioLogMaxAggregateInputType = {
+    id?: true
+    clienteId?: true
+    tipo?: true
+    referencia?: true
+    dataEnvio?: true
+  }
+
+  export type WhatsAppEnvioLogCountAggregateInputType = {
+    id?: true
+    clienteId?: true
+    tipo?: true
+    referencia?: true
+    dataEnvio?: true
+    _all?: true
+  }
+
+  export type WhatsAppEnvioLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WhatsAppEnvioLog to aggregate.
+     */
+    where?: WhatsAppEnvioLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WhatsAppEnvioLogs to fetch.
+     */
+    orderBy?: WhatsAppEnvioLogOrderByWithRelationInput | WhatsAppEnvioLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: WhatsAppEnvioLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WhatsAppEnvioLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WhatsAppEnvioLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned WhatsAppEnvioLogs
+    **/
+    _count?: true | WhatsAppEnvioLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: WhatsAppEnvioLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: WhatsAppEnvioLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: WhatsAppEnvioLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: WhatsAppEnvioLogMaxAggregateInputType
+  }
+
+  export type GetWhatsAppEnvioLogAggregateType<T extends WhatsAppEnvioLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateWhatsAppEnvioLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWhatsAppEnvioLog[P]>
+      : GetScalarType<T[P], AggregateWhatsAppEnvioLog[P]>
+  }
+
+
+
+
+  export type WhatsAppEnvioLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WhatsAppEnvioLogWhereInput
+    orderBy?: WhatsAppEnvioLogOrderByWithAggregationInput | WhatsAppEnvioLogOrderByWithAggregationInput[]
+    by: WhatsAppEnvioLogScalarFieldEnum[] | WhatsAppEnvioLogScalarFieldEnum
+    having?: WhatsAppEnvioLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WhatsAppEnvioLogCountAggregateInputType | true
+    _avg?: WhatsAppEnvioLogAvgAggregateInputType
+    _sum?: WhatsAppEnvioLogSumAggregateInputType
+    _min?: WhatsAppEnvioLogMinAggregateInputType
+    _max?: WhatsAppEnvioLogMaxAggregateInputType
+  }
+
+  export type WhatsAppEnvioLogGroupByOutputType = {
+    id: number
+    clienteId: number
+    tipo: string
+    referencia: number | null
+    dataEnvio: Date
+    _count: WhatsAppEnvioLogCountAggregateOutputType | null
+    _avg: WhatsAppEnvioLogAvgAggregateOutputType | null
+    _sum: WhatsAppEnvioLogSumAggregateOutputType | null
+    _min: WhatsAppEnvioLogMinAggregateOutputType | null
+    _max: WhatsAppEnvioLogMaxAggregateOutputType | null
+  }
+
+  type GetWhatsAppEnvioLogGroupByPayload<T extends WhatsAppEnvioLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WhatsAppEnvioLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WhatsAppEnvioLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WhatsAppEnvioLogGroupByOutputType[P]>
+            : GetScalarType<T[P], WhatsAppEnvioLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WhatsAppEnvioLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clienteId?: boolean
+    tipo?: boolean
+    referencia?: boolean
+    dataEnvio?: boolean
+  }, ExtArgs["result"]["whatsAppEnvioLog"]>
+
+  export type WhatsAppEnvioLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clienteId?: boolean
+    tipo?: boolean
+    referencia?: boolean
+    dataEnvio?: boolean
+  }, ExtArgs["result"]["whatsAppEnvioLog"]>
+
+  export type WhatsAppEnvioLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    clienteId?: boolean
+    tipo?: boolean
+    referencia?: boolean
+    dataEnvio?: boolean
+  }, ExtArgs["result"]["whatsAppEnvioLog"]>
+
+  export type WhatsAppEnvioLogSelectScalar = {
+    id?: boolean
+    clienteId?: boolean
+    tipo?: boolean
+    referencia?: boolean
+    dataEnvio?: boolean
+  }
+
+  export type WhatsAppEnvioLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clienteId" | "tipo" | "referencia" | "dataEnvio", ExtArgs["result"]["whatsAppEnvioLog"]>
+
+  export type $WhatsAppEnvioLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WhatsAppEnvioLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      clienteId: number
+      tipo: string
+      referencia: number | null
+      dataEnvio: Date
+    }, ExtArgs["result"]["whatsAppEnvioLog"]>
+    composites: {}
+  }
+
+  type WhatsAppEnvioLogGetPayload<S extends boolean | null | undefined | WhatsAppEnvioLogDefaultArgs> = $Result.GetResult<Prisma.$WhatsAppEnvioLogPayload, S>
+
+  type WhatsAppEnvioLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<WhatsAppEnvioLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: WhatsAppEnvioLogCountAggregateInputType | true
+    }
+
+  export interface WhatsAppEnvioLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WhatsAppEnvioLog'], meta: { name: 'WhatsAppEnvioLog' } }
+    /**
+     * Find zero or one WhatsAppEnvioLog that matches the filter.
+     * @param {WhatsAppEnvioLogFindUniqueArgs} args - Arguments to find a WhatsAppEnvioLog
+     * @example
+     * // Get one WhatsAppEnvioLog
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WhatsAppEnvioLogFindUniqueArgs>(args: SelectSubset<T, WhatsAppEnvioLogFindUniqueArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one WhatsAppEnvioLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {WhatsAppEnvioLogFindUniqueOrThrowArgs} args - Arguments to find a WhatsAppEnvioLog
+     * @example
+     * // Get one WhatsAppEnvioLog
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WhatsAppEnvioLogFindUniqueOrThrowArgs>(args: SelectSubset<T, WhatsAppEnvioLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WhatsAppEnvioLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WhatsAppEnvioLogFindFirstArgs} args - Arguments to find a WhatsAppEnvioLog
+     * @example
+     * // Get one WhatsAppEnvioLog
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WhatsAppEnvioLogFindFirstArgs>(args?: SelectSubset<T, WhatsAppEnvioLogFindFirstArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WhatsAppEnvioLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WhatsAppEnvioLogFindFirstOrThrowArgs} args - Arguments to find a WhatsAppEnvioLog
+     * @example
+     * // Get one WhatsAppEnvioLog
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WhatsAppEnvioLogFindFirstOrThrowArgs>(args?: SelectSubset<T, WhatsAppEnvioLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more WhatsAppEnvioLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WhatsAppEnvioLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WhatsAppEnvioLogs
+     * const whatsAppEnvioLogs = await prisma.whatsAppEnvioLog.findMany()
+     * 
+     * // Get first 10 WhatsAppEnvioLogs
+     * const whatsAppEnvioLogs = await prisma.whatsAppEnvioLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const whatsAppEnvioLogWithIdOnly = await prisma.whatsAppEnvioLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends WhatsAppEnvioLogFindManyArgs>(args?: SelectSubset<T, WhatsAppEnvioLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a WhatsAppEnvioLog.
+     * @param {WhatsAppEnvioLogCreateArgs} args - Arguments to create a WhatsAppEnvioLog.
+     * @example
+     * // Create one WhatsAppEnvioLog
+     * const WhatsAppEnvioLog = await prisma.whatsAppEnvioLog.create({
+     *   data: {
+     *     // ... data to create a WhatsAppEnvioLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends WhatsAppEnvioLogCreateArgs>(args: SelectSubset<T, WhatsAppEnvioLogCreateArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many WhatsAppEnvioLogs.
+     * @param {WhatsAppEnvioLogCreateManyArgs} args - Arguments to create many WhatsAppEnvioLogs.
+     * @example
+     * // Create many WhatsAppEnvioLogs
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends WhatsAppEnvioLogCreateManyArgs>(args?: SelectSubset<T, WhatsAppEnvioLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WhatsAppEnvioLogs and returns the data saved in the database.
+     * @param {WhatsAppEnvioLogCreateManyAndReturnArgs} args - Arguments to create many WhatsAppEnvioLogs.
+     * @example
+     * // Create many WhatsAppEnvioLogs
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many WhatsAppEnvioLogs and only return the `id`
+     * const whatsAppEnvioLogWithIdOnly = await prisma.whatsAppEnvioLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends WhatsAppEnvioLogCreateManyAndReturnArgs>(args?: SelectSubset<T, WhatsAppEnvioLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a WhatsAppEnvioLog.
+     * @param {WhatsAppEnvioLogDeleteArgs} args - Arguments to delete one WhatsAppEnvioLog.
+     * @example
+     * // Delete one WhatsAppEnvioLog
+     * const WhatsAppEnvioLog = await prisma.whatsAppEnvioLog.delete({
+     *   where: {
+     *     // ... filter to delete one WhatsAppEnvioLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends WhatsAppEnvioLogDeleteArgs>(args: SelectSubset<T, WhatsAppEnvioLogDeleteArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one WhatsAppEnvioLog.
+     * @param {WhatsAppEnvioLogUpdateArgs} args - Arguments to update one WhatsAppEnvioLog.
+     * @example
+     * // Update one WhatsAppEnvioLog
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends WhatsAppEnvioLogUpdateArgs>(args: SelectSubset<T, WhatsAppEnvioLogUpdateArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more WhatsAppEnvioLogs.
+     * @param {WhatsAppEnvioLogDeleteManyArgs} args - Arguments to filter WhatsAppEnvioLogs to delete.
+     * @example
+     * // Delete a few WhatsAppEnvioLogs
+     * const { count } = await prisma.whatsAppEnvioLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends WhatsAppEnvioLogDeleteManyArgs>(args?: SelectSubset<T, WhatsAppEnvioLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WhatsAppEnvioLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WhatsAppEnvioLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WhatsAppEnvioLogs
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends WhatsAppEnvioLogUpdateManyArgs>(args: SelectSubset<T, WhatsAppEnvioLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WhatsAppEnvioLogs and returns the data updated in the database.
+     * @param {WhatsAppEnvioLogUpdateManyAndReturnArgs} args - Arguments to update many WhatsAppEnvioLogs.
+     * @example
+     * // Update many WhatsAppEnvioLogs
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more WhatsAppEnvioLogs and only return the `id`
+     * const whatsAppEnvioLogWithIdOnly = await prisma.whatsAppEnvioLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends WhatsAppEnvioLogUpdateManyAndReturnArgs>(args: SelectSubset<T, WhatsAppEnvioLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one WhatsAppEnvioLog.
+     * @param {WhatsAppEnvioLogUpsertArgs} args - Arguments to update or create a WhatsAppEnvioLog.
+     * @example
+     * // Update or create a WhatsAppEnvioLog
+     * const whatsAppEnvioLog = await prisma.whatsAppEnvioLog.upsert({
+     *   create: {
+     *     // ... data to create a WhatsAppEnvioLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WhatsAppEnvioLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WhatsAppEnvioLogUpsertArgs>(args: SelectSubset<T, WhatsAppEnvioLogUpsertArgs<ExtArgs>>): Prisma__WhatsAppEnvioLogClient<$Result.GetResult<Prisma.$WhatsAppEnvioLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of WhatsAppEnvioLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WhatsAppEnvioLogCountArgs} args - Arguments to filter WhatsAppEnvioLogs to count.
+     * @example
+     * // Count the number of WhatsAppEnvioLogs
+     * const count = await prisma.whatsAppEnvioLog.count({
+     *   where: {
+     *     // ... the filter for the WhatsAppEnvioLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends WhatsAppEnvioLogCountArgs>(
+      args?: Subset<T, WhatsAppEnvioLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WhatsAppEnvioLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WhatsAppEnvioLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WhatsAppEnvioLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WhatsAppEnvioLogAggregateArgs>(args: Subset<T, WhatsAppEnvioLogAggregateArgs>): Prisma.PrismaPromise<GetWhatsAppEnvioLogAggregateType<T>>
+
+    /**
+     * Group by WhatsAppEnvioLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WhatsAppEnvioLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends WhatsAppEnvioLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WhatsAppEnvioLogGroupByArgs['orderBy'] }
+        : { orderBy?: WhatsAppEnvioLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WhatsAppEnvioLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWhatsAppEnvioLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WhatsAppEnvioLog model
+   */
+  readonly fields: WhatsAppEnvioLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WhatsAppEnvioLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WhatsAppEnvioLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WhatsAppEnvioLog model
+   */
+  interface WhatsAppEnvioLogFieldRefs {
+    readonly id: FieldRef<"WhatsAppEnvioLog", 'Int'>
+    readonly clienteId: FieldRef<"WhatsAppEnvioLog", 'Int'>
+    readonly tipo: FieldRef<"WhatsAppEnvioLog", 'String'>
+    readonly referencia: FieldRef<"WhatsAppEnvioLog", 'Int'>
+    readonly dataEnvio: FieldRef<"WhatsAppEnvioLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * WhatsAppEnvioLog findUnique
+   */
+  export type WhatsAppEnvioLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * Filter, which WhatsAppEnvioLog to fetch.
+     */
+    where: WhatsAppEnvioLogWhereUniqueInput
+  }
+
+  /**
+   * WhatsAppEnvioLog findUniqueOrThrow
+   */
+  export type WhatsAppEnvioLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * Filter, which WhatsAppEnvioLog to fetch.
+     */
+    where: WhatsAppEnvioLogWhereUniqueInput
+  }
+
+  /**
+   * WhatsAppEnvioLog findFirst
+   */
+  export type WhatsAppEnvioLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * Filter, which WhatsAppEnvioLog to fetch.
+     */
+    where?: WhatsAppEnvioLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WhatsAppEnvioLogs to fetch.
+     */
+    orderBy?: WhatsAppEnvioLogOrderByWithRelationInput | WhatsAppEnvioLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WhatsAppEnvioLogs.
+     */
+    cursor?: WhatsAppEnvioLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WhatsAppEnvioLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WhatsAppEnvioLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WhatsAppEnvioLogs.
+     */
+    distinct?: WhatsAppEnvioLogScalarFieldEnum | WhatsAppEnvioLogScalarFieldEnum[]
+  }
+
+  /**
+   * WhatsAppEnvioLog findFirstOrThrow
+   */
+  export type WhatsAppEnvioLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * Filter, which WhatsAppEnvioLog to fetch.
+     */
+    where?: WhatsAppEnvioLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WhatsAppEnvioLogs to fetch.
+     */
+    orderBy?: WhatsAppEnvioLogOrderByWithRelationInput | WhatsAppEnvioLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WhatsAppEnvioLogs.
+     */
+    cursor?: WhatsAppEnvioLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WhatsAppEnvioLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WhatsAppEnvioLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WhatsAppEnvioLogs.
+     */
+    distinct?: WhatsAppEnvioLogScalarFieldEnum | WhatsAppEnvioLogScalarFieldEnum[]
+  }
+
+  /**
+   * WhatsAppEnvioLog findMany
+   */
+  export type WhatsAppEnvioLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * Filter, which WhatsAppEnvioLogs to fetch.
+     */
+    where?: WhatsAppEnvioLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WhatsAppEnvioLogs to fetch.
+     */
+    orderBy?: WhatsAppEnvioLogOrderByWithRelationInput | WhatsAppEnvioLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing WhatsAppEnvioLogs.
+     */
+    cursor?: WhatsAppEnvioLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WhatsAppEnvioLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WhatsAppEnvioLogs.
+     */
+    skip?: number
+    distinct?: WhatsAppEnvioLogScalarFieldEnum | WhatsAppEnvioLogScalarFieldEnum[]
+  }
+
+  /**
+   * WhatsAppEnvioLog create
+   */
+  export type WhatsAppEnvioLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * The data needed to create a WhatsAppEnvioLog.
+     */
+    data: XOR<WhatsAppEnvioLogCreateInput, WhatsAppEnvioLogUncheckedCreateInput>
+  }
+
+  /**
+   * WhatsAppEnvioLog createMany
+   */
+  export type WhatsAppEnvioLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WhatsAppEnvioLogs.
+     */
+    data: WhatsAppEnvioLogCreateManyInput | WhatsAppEnvioLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WhatsAppEnvioLog createManyAndReturn
+   */
+  export type WhatsAppEnvioLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many WhatsAppEnvioLogs.
+     */
+    data: WhatsAppEnvioLogCreateManyInput | WhatsAppEnvioLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WhatsAppEnvioLog update
+   */
+  export type WhatsAppEnvioLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * The data needed to update a WhatsAppEnvioLog.
+     */
+    data: XOR<WhatsAppEnvioLogUpdateInput, WhatsAppEnvioLogUncheckedUpdateInput>
+    /**
+     * Choose, which WhatsAppEnvioLog to update.
+     */
+    where: WhatsAppEnvioLogWhereUniqueInput
+  }
+
+  /**
+   * WhatsAppEnvioLog updateMany
+   */
+  export type WhatsAppEnvioLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WhatsAppEnvioLogs.
+     */
+    data: XOR<WhatsAppEnvioLogUpdateManyMutationInput, WhatsAppEnvioLogUncheckedUpdateManyInput>
+    /**
+     * Filter which WhatsAppEnvioLogs to update
+     */
+    where?: WhatsAppEnvioLogWhereInput
+    /**
+     * Limit how many WhatsAppEnvioLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WhatsAppEnvioLog updateManyAndReturn
+   */
+  export type WhatsAppEnvioLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * The data used to update WhatsAppEnvioLogs.
+     */
+    data: XOR<WhatsAppEnvioLogUpdateManyMutationInput, WhatsAppEnvioLogUncheckedUpdateManyInput>
+    /**
+     * Filter which WhatsAppEnvioLogs to update
+     */
+    where?: WhatsAppEnvioLogWhereInput
+    /**
+     * Limit how many WhatsAppEnvioLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WhatsAppEnvioLog upsert
+   */
+  export type WhatsAppEnvioLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * The filter to search for the WhatsAppEnvioLog to update in case it exists.
+     */
+    where: WhatsAppEnvioLogWhereUniqueInput
+    /**
+     * In case the WhatsAppEnvioLog found by the `where` argument doesn't exist, create a new WhatsAppEnvioLog with this data.
+     */
+    create: XOR<WhatsAppEnvioLogCreateInput, WhatsAppEnvioLogUncheckedCreateInput>
+    /**
+     * In case the WhatsAppEnvioLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WhatsAppEnvioLogUpdateInput, WhatsAppEnvioLogUncheckedUpdateInput>
+  }
+
+  /**
+   * WhatsAppEnvioLog delete
+   */
+  export type WhatsAppEnvioLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+    /**
+     * Filter which WhatsAppEnvioLog to delete.
+     */
+    where: WhatsAppEnvioLogWhereUniqueInput
+  }
+
+  /**
+   * WhatsAppEnvioLog deleteMany
+   */
+  export type WhatsAppEnvioLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WhatsAppEnvioLogs to delete
+     */
+    where?: WhatsAppEnvioLogWhereInput
+    /**
+     * Limit how many WhatsAppEnvioLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * WhatsAppEnvioLog without action
+   */
+  export type WhatsAppEnvioLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WhatsAppEnvioLog
+     */
+    select?: WhatsAppEnvioLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WhatsAppEnvioLog
+     */
+    omit?: WhatsAppEnvioLogOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -18112,7 +19410,17 @@ export namespace Prisma {
     evolutionApiUrl: 'evolutionApiUrl',
     evolutionApiKey: 'evolutionApiKey',
     evolutionInstance: 'evolutionInstance',
-    whatsappAutoEnabled: 'whatsappAutoEnabled'
+    whatsappAutoEnabled: 'whatsappAutoEnabled',
+    whatsappAutoRecibo: 'whatsappAutoRecibo',
+    whatsappAutoBoleto: 'whatsappAutoBoleto',
+    whatsappAutoLembrete: 'whatsappAutoLembrete',
+    whatsappAutoReativacao: 'whatsappAutoReativacao',
+    whatsappAutoAniversario: 'whatsappAutoAniversario',
+    whatsappAutoInadimplencia: 'whatsappAutoInadimplencia',
+    whatsappAutoNPS: 'whatsappAutoNPS',
+    whatsappAutoBoasVindas: 'whatsappAutoBoasVindas',
+    whatsappAutoAgradecimento: 'whatsappAutoAgradecimento',
+    whatsappDiasInativo: 'whatsappDiasInativo'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -18198,6 +19506,17 @@ export namespace Prisma {
   };
 
   export type AvisoScalarFieldEnum = (typeof AvisoScalarFieldEnum)[keyof typeof AvisoScalarFieldEnum]
+
+
+  export const WhatsAppEnvioLogScalarFieldEnum: {
+    id: 'id',
+    clienteId: 'clienteId',
+    tipo: 'tipo',
+    referencia: 'referencia',
+    dataEnvio: 'dataEnvio'
+  };
+
+  export type WhatsAppEnvioLogScalarFieldEnum = (typeof WhatsAppEnvioLogScalarFieldEnum)[keyof typeof WhatsAppEnvioLogScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -18884,6 +20203,16 @@ export namespace Prisma {
     evolutionApiKey?: StringNullableFilter<"Config"> | string | null
     evolutionInstance?: StringNullableFilter<"Config"> | string | null
     whatsappAutoEnabled?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoRecibo?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoBoleto?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoLembrete?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoReativacao?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoAniversario?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoInadimplencia?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoNPS?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoBoasVindas?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
+    whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -18897,6 +20226,16 @@ export namespace Prisma {
     evolutionApiKey?: SortOrderInput | SortOrder
     evolutionInstance?: SortOrderInput | SortOrder
     whatsappAutoEnabled?: SortOrderInput | SortOrder
+    whatsappAutoRecibo?: SortOrderInput | SortOrder
+    whatsappAutoBoleto?: SortOrderInput | SortOrder
+    whatsappAutoLembrete?: SortOrderInput | SortOrder
+    whatsappAutoReativacao?: SortOrderInput | SortOrder
+    whatsappAutoAniversario?: SortOrderInput | SortOrder
+    whatsappAutoInadimplencia?: SortOrderInput | SortOrder
+    whatsappAutoNPS?: SortOrderInput | SortOrder
+    whatsappAutoBoasVindas?: SortOrderInput | SortOrder
+    whatsappAutoAgradecimento?: SortOrderInput | SortOrder
+    whatsappDiasInativo?: SortOrderInput | SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -18913,6 +20252,16 @@ export namespace Prisma {
     evolutionApiKey?: StringNullableFilter<"Config"> | string | null
     evolutionInstance?: StringNullableFilter<"Config"> | string | null
     whatsappAutoEnabled?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoRecibo?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoBoleto?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoLembrete?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoReativacao?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoAniversario?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoInadimplencia?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoNPS?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoBoasVindas?: IntNullableFilter<"Config"> | number | null
+    whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
+    whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -18926,6 +20275,16 @@ export namespace Prisma {
     evolutionApiKey?: SortOrderInput | SortOrder
     evolutionInstance?: SortOrderInput | SortOrder
     whatsappAutoEnabled?: SortOrderInput | SortOrder
+    whatsappAutoRecibo?: SortOrderInput | SortOrder
+    whatsappAutoBoleto?: SortOrderInput | SortOrder
+    whatsappAutoLembrete?: SortOrderInput | SortOrder
+    whatsappAutoReativacao?: SortOrderInput | SortOrder
+    whatsappAutoAniversario?: SortOrderInput | SortOrder
+    whatsappAutoInadimplencia?: SortOrderInput | SortOrder
+    whatsappAutoNPS?: SortOrderInput | SortOrder
+    whatsappAutoBoasVindas?: SortOrderInput | SortOrder
+    whatsappAutoAgradecimento?: SortOrderInput | SortOrder
+    whatsappDiasInativo?: SortOrderInput | SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _avg?: ConfigAvgOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
@@ -18947,6 +20306,16 @@ export namespace Prisma {
     evolutionApiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
     evolutionInstance?: StringNullableWithAggregatesFilter<"Config"> | string | null
     whatsappAutoEnabled?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoRecibo?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoBoleto?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoLembrete?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoReativacao?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoAniversario?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoInadimplencia?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoNPS?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoBoasVindas?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappAutoAgradecimento?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappDiasInativo?: IntNullableWithAggregatesFilter<"Config"> | number | null
   }
 
   export type UsuarioWhereInput = {
@@ -19353,6 +20722,60 @@ export namespace Prisma {
     dataCriacao?: DateTimeWithAggregatesFilter<"Aviso"> | Date | string
     mensagem?: StringNullableWithAggregatesFilter<"Aviso"> | string | null
     ativo?: IntNullableWithAggregatesFilter<"Aviso"> | number | null
+  }
+
+  export type WhatsAppEnvioLogWhereInput = {
+    AND?: WhatsAppEnvioLogWhereInput | WhatsAppEnvioLogWhereInput[]
+    OR?: WhatsAppEnvioLogWhereInput[]
+    NOT?: WhatsAppEnvioLogWhereInput | WhatsAppEnvioLogWhereInput[]
+    id?: IntFilter<"WhatsAppEnvioLog"> | number
+    clienteId?: IntFilter<"WhatsAppEnvioLog"> | number
+    tipo?: StringFilter<"WhatsAppEnvioLog"> | string
+    referencia?: IntNullableFilter<"WhatsAppEnvioLog"> | number | null
+    dataEnvio?: DateTimeFilter<"WhatsAppEnvioLog"> | Date | string
+  }
+
+  export type WhatsAppEnvioLogOrderByWithRelationInput = {
+    id?: SortOrder
+    clienteId?: SortOrder
+    tipo?: SortOrder
+    referencia?: SortOrderInput | SortOrder
+    dataEnvio?: SortOrder
+  }
+
+  export type WhatsAppEnvioLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: WhatsAppEnvioLogWhereInput | WhatsAppEnvioLogWhereInput[]
+    OR?: WhatsAppEnvioLogWhereInput[]
+    NOT?: WhatsAppEnvioLogWhereInput | WhatsAppEnvioLogWhereInput[]
+    clienteId?: IntFilter<"WhatsAppEnvioLog"> | number
+    tipo?: StringFilter<"WhatsAppEnvioLog"> | string
+    referencia?: IntNullableFilter<"WhatsAppEnvioLog"> | number | null
+    dataEnvio?: DateTimeFilter<"WhatsAppEnvioLog"> | Date | string
+  }, "id">
+
+  export type WhatsAppEnvioLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    clienteId?: SortOrder
+    tipo?: SortOrder
+    referencia?: SortOrderInput | SortOrder
+    dataEnvio?: SortOrder
+    _count?: WhatsAppEnvioLogCountOrderByAggregateInput
+    _avg?: WhatsAppEnvioLogAvgOrderByAggregateInput
+    _max?: WhatsAppEnvioLogMaxOrderByAggregateInput
+    _min?: WhatsAppEnvioLogMinOrderByAggregateInput
+    _sum?: WhatsAppEnvioLogSumOrderByAggregateInput
+  }
+
+  export type WhatsAppEnvioLogScalarWhereWithAggregatesInput = {
+    AND?: WhatsAppEnvioLogScalarWhereWithAggregatesInput | WhatsAppEnvioLogScalarWhereWithAggregatesInput[]
+    OR?: WhatsAppEnvioLogScalarWhereWithAggregatesInput[]
+    NOT?: WhatsAppEnvioLogScalarWhereWithAggregatesInput | WhatsAppEnvioLogScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"WhatsAppEnvioLog"> | number
+    clienteId?: IntWithAggregatesFilter<"WhatsAppEnvioLog"> | number
+    tipo?: StringWithAggregatesFilter<"WhatsAppEnvioLog"> | string
+    referencia?: IntNullableWithAggregatesFilter<"WhatsAppEnvioLog"> | number | null
+    dataEnvio?: DateTimeWithAggregatesFilter<"WhatsAppEnvioLog"> | Date | string
   }
 
   export type ClienteCreateInput = {
@@ -19988,6 +21411,16 @@ export namespace Prisma {
     evolutionApiKey?: string | null
     evolutionInstance?: string | null
     whatsappAutoEnabled?: number | null
+    whatsappAutoRecibo?: number | null
+    whatsappAutoBoleto?: number | null
+    whatsappAutoLembrete?: number | null
+    whatsappAutoReativacao?: number | null
+    whatsappAutoAniversario?: number | null
+    whatsappAutoInadimplencia?: number | null
+    whatsappAutoNPS?: number | null
+    whatsappAutoBoasVindas?: number | null
+    whatsappAutoAgradecimento?: number | null
+    whatsappDiasInativo?: number | null
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -20001,6 +21434,16 @@ export namespace Prisma {
     evolutionApiKey?: string | null
     evolutionInstance?: string | null
     whatsappAutoEnabled?: number | null
+    whatsappAutoRecibo?: number | null
+    whatsappAutoBoleto?: number | null
+    whatsappAutoLembrete?: number | null
+    whatsappAutoReativacao?: number | null
+    whatsappAutoAniversario?: number | null
+    whatsappAutoInadimplencia?: number | null
+    whatsappAutoNPS?: number | null
+    whatsappAutoBoasVindas?: number | null
+    whatsappAutoAgradecimento?: number | null
+    whatsappDiasInativo?: number | null
   }
 
   export type ConfigUpdateInput = {
@@ -20013,6 +21456,16 @@ export namespace Prisma {
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
     whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoRecibo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoleto?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoLembrete?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoReativacao?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAniversario?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoInadimplencia?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoNPS?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -20026,6 +21479,16 @@ export namespace Prisma {
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
     whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoRecibo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoleto?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoLembrete?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoReativacao?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAniversario?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoInadimplencia?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoNPS?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigCreateManyInput = {
@@ -20039,6 +21502,16 @@ export namespace Prisma {
     evolutionApiKey?: string | null
     evolutionInstance?: string | null
     whatsappAutoEnabled?: number | null
+    whatsappAutoRecibo?: number | null
+    whatsappAutoBoleto?: number | null
+    whatsappAutoLembrete?: number | null
+    whatsappAutoReativacao?: number | null
+    whatsappAutoAniversario?: number | null
+    whatsappAutoInadimplencia?: number | null
+    whatsappAutoNPS?: number | null
+    whatsappAutoBoasVindas?: number | null
+    whatsappAutoAgradecimento?: number | null
+    whatsappDiasInativo?: number | null
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -20051,6 +21524,16 @@ export namespace Prisma {
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
     whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoRecibo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoleto?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoLembrete?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoReativacao?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAniversario?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoInadimplencia?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoNPS?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -20064,6 +21547,16 @@ export namespace Prisma {
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
     whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoRecibo?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoleto?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoLembrete?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoReativacao?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAniversario?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoInadimplencia?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoNPS?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoBoasVindas?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type UsuarioCreateInput = {
@@ -20474,6 +21967,59 @@ export namespace Prisma {
     dataCriacao?: DateTimeFieldUpdateOperationsInput | Date | string
     mensagem?: NullableStringFieldUpdateOperationsInput | string | null
     ativo?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type WhatsAppEnvioLogCreateInput = {
+    clienteId: number
+    tipo: string
+    referencia?: number | null
+    dataEnvio?: Date | string
+  }
+
+  export type WhatsAppEnvioLogUncheckedCreateInput = {
+    id?: number
+    clienteId: number
+    tipo: string
+    referencia?: number | null
+    dataEnvio?: Date | string
+  }
+
+  export type WhatsAppEnvioLogUpdateInput = {
+    clienteId?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    referencia?: NullableIntFieldUpdateOperationsInput | number | null
+    dataEnvio?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WhatsAppEnvioLogUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    clienteId?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    referencia?: NullableIntFieldUpdateOperationsInput | number | null
+    dataEnvio?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WhatsAppEnvioLogCreateManyInput = {
+    id?: number
+    clienteId: number
+    tipo: string
+    referencia?: number | null
+    dataEnvio?: Date | string
+  }
+
+  export type WhatsAppEnvioLogUpdateManyMutationInput = {
+    clienteId?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    referencia?: NullableIntFieldUpdateOperationsInput | number | null
+    dataEnvio?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WhatsAppEnvioLogUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    clienteId?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    referencia?: NullableIntFieldUpdateOperationsInput | number | null
+    dataEnvio?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -21207,11 +22753,31 @@ export namespace Prisma {
     evolutionApiKey?: SortOrder
     evolutionInstance?: SortOrder
     whatsappAutoEnabled?: SortOrder
+    whatsappAutoRecibo?: SortOrder
+    whatsappAutoBoleto?: SortOrder
+    whatsappAutoLembrete?: SortOrder
+    whatsappAutoReativacao?: SortOrder
+    whatsappAutoAniversario?: SortOrder
+    whatsappAutoInadimplencia?: SortOrder
+    whatsappAutoNPS?: SortOrder
+    whatsappAutoBoasVindas?: SortOrder
+    whatsappAutoAgradecimento?: SortOrder
+    whatsappDiasInativo?: SortOrder
   }
 
   export type ConfigAvgOrderByAggregateInput = {
     id?: SortOrder
     whatsappAutoEnabled?: SortOrder
+    whatsappAutoRecibo?: SortOrder
+    whatsappAutoBoleto?: SortOrder
+    whatsappAutoLembrete?: SortOrder
+    whatsappAutoReativacao?: SortOrder
+    whatsappAutoAniversario?: SortOrder
+    whatsappAutoInadimplencia?: SortOrder
+    whatsappAutoNPS?: SortOrder
+    whatsappAutoBoasVindas?: SortOrder
+    whatsappAutoAgradecimento?: SortOrder
+    whatsappDiasInativo?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -21225,6 +22791,16 @@ export namespace Prisma {
     evolutionApiKey?: SortOrder
     evolutionInstance?: SortOrder
     whatsappAutoEnabled?: SortOrder
+    whatsappAutoRecibo?: SortOrder
+    whatsappAutoBoleto?: SortOrder
+    whatsappAutoLembrete?: SortOrder
+    whatsappAutoReativacao?: SortOrder
+    whatsappAutoAniversario?: SortOrder
+    whatsappAutoInadimplencia?: SortOrder
+    whatsappAutoNPS?: SortOrder
+    whatsappAutoBoasVindas?: SortOrder
+    whatsappAutoAgradecimento?: SortOrder
+    whatsappDiasInativo?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -21238,11 +22814,31 @@ export namespace Prisma {
     evolutionApiKey?: SortOrder
     evolutionInstance?: SortOrder
     whatsappAutoEnabled?: SortOrder
+    whatsappAutoRecibo?: SortOrder
+    whatsappAutoBoleto?: SortOrder
+    whatsappAutoLembrete?: SortOrder
+    whatsappAutoReativacao?: SortOrder
+    whatsappAutoAniversario?: SortOrder
+    whatsappAutoInadimplencia?: SortOrder
+    whatsappAutoNPS?: SortOrder
+    whatsappAutoBoasVindas?: SortOrder
+    whatsappAutoAgradecimento?: SortOrder
+    whatsappDiasInativo?: SortOrder
   }
 
   export type ConfigSumOrderByAggregateInput = {
     id?: SortOrder
     whatsappAutoEnabled?: SortOrder
+    whatsappAutoRecibo?: SortOrder
+    whatsappAutoBoleto?: SortOrder
+    whatsappAutoLembrete?: SortOrder
+    whatsappAutoReativacao?: SortOrder
+    whatsappAutoAniversario?: SortOrder
+    whatsappAutoInadimplencia?: SortOrder
+    whatsappAutoNPS?: SortOrder
+    whatsappAutoBoasVindas?: SortOrder
+    whatsappAutoAgradecimento?: SortOrder
+    whatsappDiasInativo?: SortOrder
   }
 
   export type UsuarioCountOrderByAggregateInput = {
@@ -21502,6 +23098,42 @@ export namespace Prisma {
   export type AvisoSumOrderByAggregateInput = {
     id?: SortOrder
     ativo?: SortOrder
+  }
+
+  export type WhatsAppEnvioLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    clienteId?: SortOrder
+    tipo?: SortOrder
+    referencia?: SortOrder
+    dataEnvio?: SortOrder
+  }
+
+  export type WhatsAppEnvioLogAvgOrderByAggregateInput = {
+    id?: SortOrder
+    clienteId?: SortOrder
+    referencia?: SortOrder
+  }
+
+  export type WhatsAppEnvioLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    clienteId?: SortOrder
+    tipo?: SortOrder
+    referencia?: SortOrder
+    dataEnvio?: SortOrder
+  }
+
+  export type WhatsAppEnvioLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    clienteId?: SortOrder
+    tipo?: SortOrder
+    referencia?: SortOrder
+    dataEnvio?: SortOrder
+  }
+
+  export type WhatsAppEnvioLogSumOrderByAggregateInput = {
+    id?: SortOrder
+    clienteId?: SortOrder
+    referencia?: SortOrder
   }
 
   export type VendaCreateNestedManyWithoutClienteInput = {

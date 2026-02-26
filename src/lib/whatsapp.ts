@@ -10,6 +10,16 @@ export type WhatsAppConfig = {
   apiKey: string;
   instance: string;
   enabled: boolean;
+  autoRecibo: boolean;
+  autoBoleto: boolean;
+  autoLembrete: boolean;
+  autoReativacao: boolean;
+  autoAniversario: boolean;
+  autoInadimplencia: boolean;
+  autoNPS: boolean;
+  autoBoasVindas: boolean;
+  autoAgradecimento: boolean;
+  diasInativo: number;
 };
 
 /** Obtém configuração do WhatsApp (Evolution API) - prioriza Config do DB, fallback para env. */
@@ -25,9 +35,34 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig | null> {
     cfg?.whatsappAutoEnabled !== undefined
       ? cfg.whatsappAutoEnabled === 1
       : process.env.WHATSAPP_AUTO_ENABLED !== "0";
+  const autoRecibo = cfg?.whatsappAutoRecibo !== 0;
+  const autoBoleto = cfg?.whatsappAutoBoleto !== 0;
+  const autoLembrete = cfg?.whatsappAutoLembrete !== 0;
+  const autoReativacao = cfg?.whatsappAutoReativacao === 1;
+  const autoAniversario = cfg?.whatsappAutoAniversario === 1;
+  const autoInadimplencia = cfg?.whatsappAutoInadimplencia === 1;
+  const autoNPS = cfg?.whatsappAutoNPS === 1;
+  const autoBoasVindas = cfg?.whatsappAutoBoasVindas === 1;
+  const autoAgradecimento = cfg?.whatsappAutoAgradecimento === 1;
+  const diasInativo = cfg?.whatsappDiasInativo ?? 60;
 
   if (!url || !key || !instance || !enabled) return null;
-  return { baseUrl: url.replace(/\/$/, ""), apiKey: key, instance, enabled };
+  return {
+    baseUrl: url.replace(/\/$/, ""),
+    apiKey: key,
+    instance,
+    enabled,
+    autoRecibo,
+    autoBoleto,
+    autoLembrete,
+    autoReativacao,
+    autoAniversario,
+    autoInadimplencia,
+    autoNPS,
+    autoBoasVindas,
+    autoAgradecimento,
+    diasInativo,
+  };
 }
 
 /** Normaliza telefone para formato 55DDD9XXXXXXXX (sem + ou espaços). */

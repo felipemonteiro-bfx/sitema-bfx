@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 import { formatBRL } from "@/lib/utils";
 
-const DIAS_ANTES = 2; // Enviar lembrete X dias antes do vencimento
+const DIAS_ANTES = 2; // Enviar lembrete X dias antes (inclui 2 dias e 1 dia = última chance)
 
 function formatDateBr(d: Date) {
   return d.toLocaleDateString("pt-BR", {
@@ -25,6 +25,11 @@ export async function GET(req: Request) {
   }
 
   try {
+    const waConfig = await getWhatsAppConfig();
+    if (!waConfig?.autoLembrete) {
+      return NextResponse.json({ ok: true, enviados: 0, total: 0, desativado: true });
+    }
+
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const limite = new Date(hoje);
@@ -35,12 +40,11 @@ export async function GET(req: Request) {
       where: {
         paga: false,
         dataVencimento: { gte: hoje, lte: limite },
+        venda: { boleto: true },
       },
       include: {
         venda: {
-          include: {
-            cliente: { select: { nome: true, telefone: true } },
-          },
+          include: { cliente: { select: { nome: true, telefone: true } } },
         },
       },
     });
@@ -53,7 +57,19 @@ export async function GET(req: Request) {
       if (!telefone) continue;
 
       const clienteNome = p.venda.cliente?.nome ?? "Cliente";
-      const msg = `Olá ${clienteNome}! Lembrete: a parcela ${p.numeroParcela} de ${p.venda.parcelas || 1} da venda #${p.venda.id} vence em ${formatDateBr(p.dataVencimento)}. Valor: ${formatBRL(p.valorParcela)}.`;
+      const amanha = new Date(hoje);
+      amanha.setDate(amanha.getDate() + 1);
+      const venceAmanha =
+        p.dataVencimento.getDate() === amanha.getDate() &&
+        p.dataVencimento.getMonth() === amanha.getMonth() &&
+        p.dataVencimento.getFullYear() === amanha.getFullYear();
+
+      let msg = venceAmanha
+        ? `Atenção, ${clienteNome}! Sua parcela ${p.numeroParcela} de ${p.venda.parcelas || 1} da venda #${p.venda.id} vence AMANHÃ. Valor: ${formatBRL(p.valorParcela)}. Evite atraso!`
+        : `Olá ${clienteNome}! Lembrete: a parcela ${p.numeroParcela} de ${p.venda.parcelas || 1} da venda #${p.venda.id} vence em ${formatDateBr(p.dataVencimento)}. Valor: ${formatBRL(p.valorParcela)}.`;
+      if (p.venda.boletoUrl) {
+        msg += `\n\nBoleto: ${p.venda.boletoUrl}`;
+      }
 
       const ok = await enviarWhatsAppTexto(telefone, msg);
       if (ok) enviados++;

@@ -221,7 +221,17 @@ exports.Prisma.ConfigScalarFieldEnum = {
   evolutionApiUrl: 'evolutionApiUrl',
   evolutionApiKey: 'evolutionApiKey',
   evolutionInstance: 'evolutionInstance',
-  whatsappAutoEnabled: 'whatsappAutoEnabled'
+  whatsappAutoEnabled: 'whatsappAutoEnabled',
+  whatsappAutoRecibo: 'whatsappAutoRecibo',
+  whatsappAutoBoleto: 'whatsappAutoBoleto',
+  whatsappAutoLembrete: 'whatsappAutoLembrete',
+  whatsappAutoReativacao: 'whatsappAutoReativacao',
+  whatsappAutoAniversario: 'whatsappAutoAniversario',
+  whatsappAutoInadimplencia: 'whatsappAutoInadimplencia',
+  whatsappAutoNPS: 'whatsappAutoNPS',
+  whatsappAutoBoasVindas: 'whatsappAutoBoasVindas',
+  whatsappAutoAgradecimento: 'whatsappAutoAgradecimento',
+  whatsappDiasInativo: 'whatsappDiasInativo'
 };
 
 exports.Prisma.UsuarioScalarFieldEnum = {
@@ -285,6 +295,14 @@ exports.Prisma.AvisoScalarFieldEnum = {
   ativo: 'ativo'
 };
 
+exports.Prisma.WhatsAppEnvioLogScalarFieldEnum = {
+  id: 'id',
+  clienteId: 'clienteId',
+  tipo: 'tipo',
+  referencia: 'referencia',
+  dataEnvio: 'dataEnvio'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -315,7 +333,8 @@ exports.Prisma.ModelName = {
   Pagamento: 'Pagamento',
   AuditLog: 'AuditLog',
   Despesa: 'Despesa',
-  Aviso: 'Aviso'
+  Aviso: 'Aviso',
+  WhatsAppEnvioLog: 'WhatsAppEnvioLog'
 };
 
 /**

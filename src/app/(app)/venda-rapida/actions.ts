@@ -13,7 +13,7 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
-import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -291,22 +291,39 @@ export async function criarVendaV2(
       }
     }
 
-    // Envio automático WhatsApp (recibo ou link assinatura, e boleto se gerado)
+    // Envio automático WhatsApp - conforme config: recibo/assinatura, boleto, boas-vindas
+    const waConfig = await getWhatsAppConfig();
     if (clienteId) {
       const cliente = await prisma.cliente.findUnique({
         where: { id: clienteId },
-        select: { telefone: true },
+        select: { nome: true, telefone: true },
       });
       if (cliente?.telefone) {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
-        let mensagem =
-          descontoEmFolha && assinaturaToken
-            ? `Olá! Segue o link para assinar sua autorização de desconto em folha: ${baseUrl}/assinatura/${assinaturaToken}`
-            : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}`;
-        if (boletoUrl) {
-          mensagem += `\n\nSeu boleto: ${boletoUrl}`;
+        let mensagem = "";
+        if (waConfig?.autoRecibo) {
+          mensagem =
+            descontoEmFolha && assinaturaToken
+              ? `Olá! Segue o link para assinar sua autorização de desconto em folha: ${baseUrl}/assinatura/${assinaturaToken}`
+              : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}`;
+          if (boletoUrl && waConfig.autoBoleto) {
+            mensagem += `\n\nSeu boleto: ${boletoUrl}`;
+          }
+        } else if (boletoUrl && waConfig?.autoBoleto) {
+          mensagem = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${boletoUrl}`;
         }
-        void enviarWhatsAppTexto(cliente.telefone, mensagem);
+        if (mensagem) void enviarWhatsAppTexto(cliente.telefone, mensagem);
+
+        // Boas-vindas para cliente novo (primeira compra)
+        if (waConfig?.autoBoasVindas) {
+          const totalVendas = await prisma.venda.count({
+            where: { clienteId },
+          });
+          if (totalVendas === 1) {
+            const msgBoasVindas = `Bem-vindo(a), ${cliente.nome ?? "Cliente"}! Obrigado pela primeira compra. Em caso de dúvidas, estamos à disposição.`;
+            void enviarWhatsAppTexto(cliente.telefone, msgBoasVindas);
+          }
+        }
       }
     }
 

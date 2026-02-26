@@ -63,12 +63,32 @@ async function saveWhatsApp(formData: FormData) {
   const key = String(formData.get("evolutionApiKey") || "").trim();
   const instance = String(formData.get("evolutionInstance") || "bfx").trim() || "bfx";
   const enabled = formData.get("whatsappAutoEnabled") === "on" ? 1 : 0;
+  const autoRecibo = formData.get("whatsappAutoRecibo") === "on" ? 1 : 0;
+  const autoBoleto = formData.get("whatsappAutoBoleto") === "on" ? 1 : 0;
+  const autoLembrete = formData.get("whatsappAutoLembrete") === "on" ? 1 : 0;
+  const autoReativacao = formData.get("whatsappAutoReativacao") === "on" ? 1 : 0;
+  const autoAniversario = formData.get("whatsappAutoAniversario") === "on" ? 1 : 0;
+  const autoInadimplencia = formData.get("whatsappAutoInadimplencia") === "on" ? 1 : 0;
+  const autoNPS = formData.get("whatsappAutoNPS") === "on" ? 1 : 0;
+  const autoBoasVindas = formData.get("whatsappAutoBoasVindas") === "on" ? 1 : 0;
+  const autoAgradecimento = formData.get("whatsappAutoAgradecimento") === "on" ? 1 : 0;
+  const diasInativo = Math.max(30, Math.min(365, Number(formData.get("whatsappDiasInativo") || 60) || 60));
   const cfg = await prisma.config.findFirst();
   const data = {
     evolutionApiUrl: url || null,
     evolutionApiKey: key || null,
     evolutionInstance: instance,
     whatsappAutoEnabled: enabled,
+    whatsappAutoRecibo: autoRecibo,
+    whatsappAutoBoleto: autoBoleto,
+    whatsappAutoLembrete: autoLembrete,
+    whatsappAutoReativacao: autoReativacao,
+    whatsappAutoAniversario: autoAniversario,
+    whatsappAutoInadimplencia: autoInadimplencia,
+    whatsappAutoNPS: autoNPS,
+    whatsappAutoBoasVindas: autoBoasVindas,
+    whatsappAutoAgradecimento: autoAgradecimento,
+    whatsappDiasInativo: diasInativo,
   };
   if (cfg) {
     await prisma.config.update({ where: { id: cfg.id }, data });
@@ -231,8 +251,137 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         className="rounded border-border"
                       />
                       <label htmlFor="whatsappAutoEnabled" className="text-sm font-medium">
-                        Envios automáticos ativados
+                        Envios automáticos ativados (master)
                       </label>
+                    </div>
+                    <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+                      <div className="text-xs font-semibold text-muted-foreground">
+                        O que enviar automaticamente
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoRecibo"
+                            name="whatsappAutoRecibo"
+                            defaultChecked={cfg?.whatsappAutoRecibo !== 0}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoRecibo" className="text-sm">
+                            Recibo ou link de assinatura após venda
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoBoleto"
+                            name="whatsappAutoBoleto"
+                            defaultChecked={cfg?.whatsappAutoBoleto !== 0}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoBoleto" className="text-sm">
+                            Link do boleto ao gerar (manual ou venda)
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoLembrete"
+                            name="whatsappAutoLembrete"
+                            defaultChecked={cfg?.whatsappAutoLembrete !== 0}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoLembrete" className="text-sm">
+                            Lembrete de parcelas (boleto, 1–2 dias antes)
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoInadimplencia"
+                            name="whatsappAutoInadimplencia"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoInadimplencia === 1}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoInadimplencia" className="text-sm">
+                            Parcela vencida (lembrete inadimplência)
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoReativacao"
+                            name="whatsappAutoReativacao"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoReativacao === 1}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoReativacao" className="text-sm">
+                            Reativação clientes inativos
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            id="whatsappDiasInativo"
+                            name="whatsappDiasInativo"
+                            min={30}
+                            max={365}
+                            defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappDiasInativo) || 60)}
+                            className="h-8 w-16 rounded border border-border px-2 text-sm"
+                          />
+                          <label htmlFor="whatsappDiasInativo" className="text-sm">
+                            dias sem compra para reativação
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoAniversario"
+                            name="whatsappAutoAniversario"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAniversario === 1}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoAniversario" className="text-sm">
+                            Parabéns no aniversário
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoBoasVindas"
+                            name="whatsappAutoBoasVindas"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoBoasVindas === 1}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoBoasVindas" className="text-sm">
+                            Boas-vindas cliente novo
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoAgradecimento"
+                            name="whatsappAutoAgradecimento"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAgradecimento === 1}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoAgradecimento" className="text-sm">
+                            Agradecimento pós-venda (1 dia depois)
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="whatsappAutoNPS"
+                            name="whatsappAutoNPS"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoNPS === 1}
+                            className="rounded border-border"
+                          />
+                          <label htmlFor="whatsappAutoNPS" className="text-sm">
+                            Pesquisa satisfação (7 dias após compra)
+                          </label>
+                        </div>
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Alternativa: use variáveis de ambiente EVOLUTION_API_URL, EVOLUTION_API_KEY e
