@@ -19,6 +19,7 @@ import {
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
+import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
@@ -253,6 +254,14 @@ export default function VendaRapidaFormV2({
   const excedeuMargem = limiteData
     ? valorParcela > limiteData.margemDisponivel + 1
     : false;
+
+  // Sugestão automática de parcelas (apenas desconto em folha)
+  useEffect(() => {
+    if (descontoEmFolha && totalVenda > 0) {
+      const sugerido = sugerirParcelasDescontoEmFolha(totalVenda);
+      setParcelas(String(sugerido));
+    }
+  }, [descontoEmFolha, totalVenda]);
 
   // Handlers
   const addProduto = () => {
