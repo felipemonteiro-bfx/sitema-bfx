@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -21,26 +22,31 @@ export async function GET(req: Request) {
     include: {
       cliente: {
         select: { empresa: true, nome: true }
-      }
+      },
+      itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
     },
     orderBy: { dataVenda: "desc" },
   });
 
   const header = "Data,Vendedor,Empresa,Cliente,Produto,Valor,Frete,Total,Parcelas,ValorParcela\n";
-  const lines = vendas.map((v) =>
-    [
+  const lines = vendas.map((v) => {
+    const total = valorTotalVenda(v);
+    const subtotalProd = v.itens?.length
+      ? v.itens.reduce((s, i) => s + i.subtotal, 0)
+      : (v.valorVenda ?? 0) * (v.quantidade ?? 1);
+    return [
       v.dataVenda.toISOString().slice(0, 10),
       v.vendedor || "",
       v.cliente?.empresa || "N/D",
       v.cliente?.nome || "N/D",
-      v.produtoNome || "",
-      v.valorVenda || 0,
+      produtosTexto(v),
+      subtotalProd,
       v.valorFrete || 0,
-      (v.valorVenda || 0) + (v.valorFrete || 0),
+      total,
       v.parcelas || 0,
       v.valorParcela || 0,
-    ].join(",")
-  );
+    ].join(",");
+  });
   const csv = header + lines.join("\n");
 
   return new Response(csv, {

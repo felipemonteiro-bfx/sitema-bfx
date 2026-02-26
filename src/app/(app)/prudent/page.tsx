@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
@@ -31,6 +32,7 @@ export default async function Page() {
           email: true,
         },
       },
+      itens: { select: { subtotal: true } },
     },
   });
 
@@ -72,7 +74,7 @@ export default async function Page() {
     id: v.id,
     dataVenda: v.dataVenda,
     produtoNome: v.produtoNome,
-    valorVenda: v.valorVenda,
+    valorVenda: valorTotalVenda(v),
     parcelas: v.parcelas,
     empresaConveniada: v.cliente?.empresa || null,
   }));

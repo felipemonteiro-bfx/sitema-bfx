@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
             id: true,
             dataVenda: true,
             valorVenda: true,
+            quantidade: true,
             valorFrete: true,
             itens: {
               select: {
@@ -51,12 +53,7 @@ export async function GET(request: NextRequest) {
       let valorUltimaVenda = 0;
 
       if (ultimaVenda) {
-        if (ultimaVenda.itens && ultimaVenda.itens.length > 0) {
-          valorUltimaVenda = ultimaVenda.itens.reduce((sum, item) => sum + item.subtotal, 0);
-        } else {
-          valorUltimaVenda = ultimaVenda.valorVenda || 0;
-        }
-        valorUltimaVenda += ultimaVenda.valorFrete || 0;
+        valorUltimaVenda = valorTotalVenda(ultimaVenda);
       }
 
       return {

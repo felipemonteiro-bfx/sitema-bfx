@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
             empresa: true,
           },
         },
+        itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
       },
       orderBy: { dataVenda: "desc" },
     });
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
       const doc = v.cliente?.cpf || v.cliente?.cnpj || "N/D";
       const email = v.cliente?.email || "N/D";
       const empresa = v.cliente?.empresa || "Sem empresa";
-      const valorTotal = (v.valorVenda || 0) + (v.valorFrete || 0);
+      const valorTotal = valorTotalVenda(v);
 
       totalGeral += valorTotal;
       totaisPorEmpresa[empresa] = (totaisPorEmpresa[empresa] || 0) + valorTotal;
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
         `"${doc}"`,
         `"${email}"`,
         `"${empresa}"`,
-        `"${v.produtoNome || "N/A"}"`,
+        `"${produtosTexto(v)}"`,
         valorTotal.toFixed(2),
         v.parcelas || 1,
         v.valorParcela?.toFixed(2) || (valorTotal / (v.parcelas || 1)).toFixed(2),

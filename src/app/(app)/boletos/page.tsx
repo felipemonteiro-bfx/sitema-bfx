@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { getAsaasConfig, listPayments } from "@/lib/asaas";
 import { requireAdmin } from "@/lib/guards";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
@@ -144,6 +145,7 @@ export default async function BoletosPage() {
     quantidade: number | null;
     valorFrete: number | null;
     produtoNome: string | null;
+    itens?: { subtotal: number }[];
     cliente: { nome: string | null; empresa: string | null } | null;
   };
   let vendasPendentesBoleto: VendaBoleto[] = [];
@@ -151,7 +153,10 @@ export default async function BoletosPage() {
     vendasPendentesBoleto = (await prisma.venda.findMany({
       where: { boleto: true, boletoUrl: null },
       orderBy: { dataVenda: "desc" },
-      include: { cliente: { select: { nome: true, empresa: true } } },
+      include: {
+        cliente: { select: { nome: true, empresa: true } },
+        itens: { select: { subtotal: true } },
+      },
     })) as VendaBoleto[];
   } catch {
     // Colunas boleto/boletoUrl podem não existir em ambientes antigos
@@ -302,7 +307,7 @@ export default async function BoletosPage() {
                   </TableHeader>
                   <TableBody>
                     {vendasPendentesBoleto.map((v) => {
-                      const total = ((v.valorVenda || 0) * (v.quantidade || 1)) + (v.valorFrete || 0);
+                      const total = valorTotalVenda(v);
                       return (
                         <TableRow key={v.id}>
                           <TableCell className="font-medium">

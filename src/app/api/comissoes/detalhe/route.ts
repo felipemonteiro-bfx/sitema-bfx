@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@/generated/prisma';
+import { valorTotalVenda, produtosTexto } from '@/lib/venda-utils';
 
 const prisma = new PrismaClient();
 
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
             nome: true,
           },
         },
+        itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
       },
       orderBy: {
         dataVenda: 'desc',
@@ -69,8 +71,8 @@ export async function GET(request: NextRequest) {
         data: venda.dataVenda,
         vendedor: venda.vendedor,
         cliente: venda.cliente?.nome || 'N/A',
-        produto: venda.produtoNome,
-        valorVenda: venda.valorVenda,
+        produto: produtosTexto(venda),
+        valorVenda: valorTotalVenda(venda),
         lucroLiquido: venda.lucroLiquido,
         percentualComissao: percentual,
         valorComissao: parseFloat(valorComissao.toFixed(2)),

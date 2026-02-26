@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 function formatBRL(value: number) {
@@ -33,6 +34,7 @@ export async function GET(req: Request) {
       },
       include: {
         cliente: { select: { nome: true, empresa: true } },
+        itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
       },
       orderBy: { dataVenda: "desc" },
     });
@@ -89,12 +91,12 @@ export async function GET(req: Request) {
         y = height - 50;
       }
 
-      const valorTotal = (v.valorVenda || 0) + (v.valorFrete || 0);
+      const valorTotal = valorTotalVenda(v);
       totalValor += valorTotal;
 
       page.drawText(formatDate(v.dataVenda), { x: colX[0], y, size: 9, font });
       page.drawText(v.cliente?.nome?.substring(0, 20) || "N/D", { x: colX[1], y, size: 9, font });
-      page.drawText(v.produtoNome?.substring(0, 18) || "N/A", { x: colX[2], y, size: 9, font });
+      page.drawText(produtosTexto(v).substring(0, 18) || "N/A", { x: colX[2], y, size: 9, font });
       page.drawText(v.vendedor || "N/D", { x: colX[3], y, size: 9, font });
       page.drawText(formatBRL(valorTotal), { x: colX[4], y, size: 9, font });
       page.drawText(v.temNota ? "C/ Nota" : "S/ Nota", {

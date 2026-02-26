@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises";
 import path from "path";
@@ -95,7 +96,10 @@ export async function generateReciboPdf(
   vendaId: number,
   tipo: "venda" | "autorizacao" = "autorizacao"
 ): Promise<Uint8Array> {
-  const venda = await prisma.venda.findUnique({ where: { id: vendaId } });
+  const venda = await prisma.venda.findUnique({
+    where: { id: vendaId },
+    include: { itens: { select: { subtotal: true, produtoNome: true, quantidade: true } } },
+  });
   if (!venda) throw new Error("Venda não encontrada");
 
   let parcelasVenc: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] = [];
@@ -186,9 +190,11 @@ export async function generateReciboPdf(
 
   const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
   const dataCompraFormatada = formatDate(venda.dataVenda);
-  const valor = venda.valorVenda || 0;
-  const frete = venda.valorFrete || 0;
-  const total = valor + frete;
+  const total = valorTotalVenda(venda);
+  const subtotalProd = venda.itens?.length
+    ? venda.itens.reduce((s, i) => s + i.subtotal, 0)
+    : (venda.valorVenda ?? 0) * (venda.quantidade ?? 1);
+  const frete = venda.valorFrete ?? 0;
   const nParcelas = venda.parcelas || 1;
   const valorParc = venda.valorParcela || (nParcelas > 0 ? total / nParcelas : total);
 
@@ -199,7 +205,7 @@ export async function generateReciboPdf(
     `Cliente: ${cliente?.nome || "N/D"}`,
     `Documento: ${clienteDoc}`,
     `Vendedor: ${venda.vendedor || "N/D"}`,
-    `Produto: ${venda.produtoNome || "N/D"}`,
+    `Produto: ${produtosTexto(venda)}`,
   ]) {
     page.drawText(line, { x: marginX, y, size: 11, font, color: rgb(0.2, 0.2, 0.22) });
     y -= 16;
@@ -212,7 +218,7 @@ export async function generateReciboPdf(
   page.drawText("Valores", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
   for (const [label, val] of [
-    ["Valor do produto", formatBRL(valor)],
+    ["Valor do produto", formatBRL(subtotalProd)],
     ["Frete", formatBRL(frete)],
     ["Total", formatBRL(total)],
     [`Parcelas (${nParcelas}x)`, formatBRL(valorParc)],

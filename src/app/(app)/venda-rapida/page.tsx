@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatBRL, cn } from "@/lib/utils";
@@ -27,11 +28,7 @@ export default async function Page() {
     label: String(i + 1),
   }));
 
-  const totalUltima = ultima
-    ? ultima.itens && ultima.itens.length > 0
-      ? ultima.itens.reduce((s, i) => s + i.subtotal, 0) + (ultima.valorFrete || 0)
-      : (ultima.valorVenda || 0) + (ultima.valorFrete || 0)
-    : 0;
+  const totalUltima = ultima ? valorTotalVenda(ultima) : 0;
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { addMonths, format } from "date-fns";
 
 export async function calcularDre(mesAno: string) {
@@ -17,18 +18,19 @@ export async function calcularDre(mesAno: string) {
         lt: fim 
       } 
     },
+    include: { itens: { select: { subtotal: true } } },
   });
 
   console.log(`Vendas encontradas: ${vendas.length}`);
 
-  const receita = vendas.reduce((s, v) => s + (v.valorVenda || 0) + (v.valorFrete || 0), 0);
+  const receita = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
   const cmv = vendas.reduce((s, v) => s + (v.custoProduto || 0), 0);
   const freteReal = vendas.reduce((s, v) => s + (v.custoEnvio || 0), 0);
 
   const vendasPorVendedor = new Map<string, number>();
   for (const v of vendas) {
     const key = v.vendedor || "Sem Vendedor";
-    vendasPorVendedor.set(key, (vendasPorVendedor.get(key) || 0) + (v.valorVenda || 0) + (v.valorFrete || 0));
+    vendasPorVendedor.set(key, (vendasPorVendedor.get(key) || 0) + valorTotalVenda(v));
   }
 
   const usuarios = await prisma.usuario.findMany();

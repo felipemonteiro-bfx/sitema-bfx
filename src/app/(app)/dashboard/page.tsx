@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
@@ -72,10 +73,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       dataVenda: { gte: start, lte: end },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
+    include: { itens: { select: { subtotal: true } } },
   });
 
-  const fat = vendas.reduce((s, v) => s + (v.valorVenda || 0), 0);
+  const totalReceita = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
   const frete = vendas.reduce((s, v) => s + (v.valorFrete || 0), 0);
+  const fat = totalReceita - frete;
   const lucro = vendas.reduce((s, v) => s + (v.lucroLiquido || 0), 0);
   const peds = vendas.length;
   const tik = peds ? (fat + frete) / peds : 0;
@@ -85,7 +88,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   for (const v of vendas) {
     const key = v.vendedor || "Sem Vendedor";
     porVend[key] ||= { total: 0, lucro: 0, vendas: 0 };
-    porVend[key].total += (v.valorVenda || 0) + (v.valorFrete || 0);
+    porVend[key].total += valorTotalVenda(v);
     porVend[key].lucro += v.lucroLiquido || 0;
     porVend[key].vendas += 1;
   }
@@ -118,12 +121,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const date6m = new Date(today.getFullYear(), today.getMonth() - 5, 1);
   const vendasEvo = await prisma.venda.findMany({
     where: { dataVenda: { gte: date6m } },
+    include: { itens: { select: { subtotal: true } } },
   });
   const evoMap = new Map<string, { total: number; lucro: number }>();
   for (const v of vendasEvo) {
     const key = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(v.dataVenda);
     const item = evoMap.get(key) || { total: 0, lucro: 0 };
-    item.total += v.valorVenda || 0;
+    item.total += valorTotalVenda(v);
     item.lucro += v.lucroLiquido || 0;
     evoMap.set(key, item);
   }
