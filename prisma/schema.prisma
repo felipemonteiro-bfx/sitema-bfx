@@ -154,6 +154,7 @@ model Config {
   whatsappAutoBoasVindas   Int?    @default(0) @map("whatsapp_auto_boas_vindas")   // Boas-vindas cliente novo
   whatsappAutoAgradecimento Int?   @default(0) @map("whatsapp_auto_agradecimento") // Agradecimento 1 dia após venda
   whatsappDiasInativo      Int?    @default(60) @map("whatsapp_dias_inativo")      // Dias sem compra para reativação
+  whatsappPreAtendimento   Int?    @default(0) @map("whatsapp_pre_atendimento")    // 1=IA pré-atende quem manda msg no WhatsApp
 
   @@map("config")
 }

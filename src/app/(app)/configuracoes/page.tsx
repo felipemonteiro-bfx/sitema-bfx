@@ -72,6 +72,7 @@ async function saveWhatsApp(formData: FormData) {
   const autoNPS = formData.get("whatsappAutoNPS") === "on" ? 1 : 0;
   const autoBoasVindas = formData.get("whatsappAutoBoasVindas") === "on" ? 1 : 0;
   const autoAgradecimento = formData.get("whatsappAutoAgradecimento") === "on" ? 1 : 0;
+  const preAtendimento = formData.get("whatsappPreAtendimento") === "on" ? 1 : 0;
   const diasInativo = Math.max(30, Math.min(365, Number(formData.get("whatsappDiasInativo") || 60) || 60));
   const cfg = await prisma.config.findFirst();
   const data = {
@@ -89,6 +90,7 @@ async function saveWhatsApp(formData: FormData) {
     whatsappAutoBoasVindas: autoBoasVindas,
     whatsappAutoAgradecimento: autoAgradecimento,
     whatsappDiasInativo: diasInativo,
+    whatsappPreAtendimento: preAtendimento,
   };
   if (cfg) {
     await prisma.config.update({ where: { id: cfg.id }, data });
@@ -382,6 +384,24 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                       </div>
+                    </div>
+                    <div className="space-y-1 rounded-lg border border-border bg-muted/30 p-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="whatsappPreAtendimento"
+                          name="whatsappPreAtendimento"
+                          defaultChecked={(cfg as Record<string, unknown>)?.whatsappPreAtendimento === 1}
+                          className="rounded border-border"
+                        />
+                        <label htmlFor="whatsappPreAtendimento" className="text-sm font-medium">
+                          Pré-atendimento por IA
+                        </label>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-6">
+                        Quem mandar mensagem no WhatsApp é atendido por uma IA com acesso ao catálogo de produtos.
+                        Configure o webhook na Evolution para apontar para esta aplicação.
+                      </p>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Alternativa: use variáveis de ambiente EVOLUTION_API_URL, EVOLUTION_API_KEY e
