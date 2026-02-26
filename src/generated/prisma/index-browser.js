@@ -218,6 +218,8 @@ exports.Prisma.ConfigScalarFieldEnum = {
   logoPath: 'logoPath',
   openaiKey: 'openaiKey',
   geminiKey: 'geminiKey',
+  asaasApiKey: 'asaasApiKey',
+  asaasEnv: 'asaasEnv',
   evolutionApiUrl: 'evolutionApiUrl',
   evolutionApiKey: 'evolutionApiKey',
   evolutionInstance: 'evolutionInstance',

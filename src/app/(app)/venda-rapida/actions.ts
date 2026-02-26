@@ -210,7 +210,8 @@ export async function criarVendaV2(
     let boletoUrl: string | undefined;
 
     if (boleto && clienteId) {
-      const asaasConfig = getAsaasConfig();
+      const cfg = await prisma.config.findFirst();
+      const asaasConfig = getAsaasConfig(cfg);
       if (!asaasConfig) {
         return successResponse(
           `Venda #${venda.id} criada. Configure ASAAS_API_KEY no servidor para gerar boletos.`,
@@ -252,7 +253,8 @@ export async function criarVendaV2(
               telefone: cliente.telefone,
               asaasCustomerId: cliente.asaasCustomerId,
             },
-            prisma
+            prisma,
+            asaasConfig
           );
           let firstDueDate: string;
           if (parcelasValidadas && parcelasValidadas.length > 0) {
@@ -272,7 +274,7 @@ export async function criarVendaV2(
             }),
             description: `Venda #${venda.id}`,
             externalReference: String(venda.id),
-          });
+          }, asaasConfig);
           await prisma.venda.update({
             where: { id: venda.id },
             data: {

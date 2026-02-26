@@ -15,8 +15,10 @@ export type GerarBoletoResult = { success: boolean; error?: string };
 export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoResult> {
   const vendaId = Number(formData.get("vendaId") || 0);
   if (!vendaId) return { success: false, error: "ID da venda inválido." };
-  if (!getAsaasConfig()) {
-    return { success: false, error: "Asaas não configurado. Configure ASAAS_API_KEY no servidor." };
+  const cfg = await prisma.config.findFirst();
+  const asaasConfig = getAsaasConfig(cfg);
+  if (!asaasConfig) {
+    return { success: false, error: "Asaas não configurado. Configure em Configurações → Asaas ou ASAAS_API_KEY no servidor." };
   }
 
   const venda = await prisma.venda.findUnique({
@@ -69,7 +71,8 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
         telefone: cliente.telefone,
         asaasCustomerId: clienteAsaas.asaasCustomerId ?? null,
       },
-      prisma
+      prisma,
+      asaasConfig
     );
 
     const parcelas = venda.parcelas || 1;
@@ -80,7 +83,7 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
       ...(parcelas > 1 && { installmentCount: parcelas, totalValue: totalVenda }),
       description: `Venda #${venda.id}`,
       externalReference: String(venda.id),
-    });
+    }, asaasConfig);
 
     await prisma.venda.update({
       where: { id: vendaId },

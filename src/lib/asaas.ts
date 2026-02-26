@@ -11,10 +11,15 @@ export type AsaasConfig = {
   apiKey: string;
 };
 
-export function getAsaasConfig(): AsaasConfig | null {
-  const apiKey = process.env.ASAAS_API_KEY?.trim();
+/** dbConfig: opcional, de Config (asaasApiKey, asaasEnv). Se ausente, usa ASAAS_API_KEY e ASAAS_ENV do env. */
+export function getAsaasConfig(
+  dbConfig?: { asaasApiKey?: string | null; asaasEnv?: string | null }
+): AsaasConfig | null {
+  const apiKey =
+    (dbConfig?.asaasApiKey?.trim() || process.env.ASAAS_API_KEY?.trim()) ?? "";
   if (!apiKey) return null;
-  const env = process.env.ASAAS_ENV?.toLowerCase();
+  const env =
+    (dbConfig?.asaasEnv?.toLowerCase() || process.env.ASAAS_ENV?.toLowerCase()) ?? "";
   const baseUrl =
     env === "production" ? ASAAS_BASE_PRODUCTION : ASAAS_BASE_SANDBOX;
   return { baseUrl, apiKey };
@@ -151,11 +156,12 @@ async function asaasFetch<T>(
  */
 export async function getOrCreateCustomer(
   cliente: ClienteForAsaas,
-  prisma: { cliente: { update: (args: { where: { id: number }; data: { asaasCustomerId: string } }) => Promise<unknown> } }
+  prisma: { cliente: { update: (args: { where: { id: number }; data: { asaasCustomerId: string } }) => Promise<unknown> } },
+  asaasConfig?: AsaasConfig | null
 ): Promise<string> {
   if (cliente.asaasCustomerId) return cliente.asaasCustomerId;
 
-  const config = getAsaasConfig();
+  const config = asaasConfig ?? getAsaasConfig();
   if (!config) throw new Error("Asaas não configurado (ASAAS_API_KEY).");
 
   const cpfCnpj = onlyNumbers(cliente.cpf || cliente.cnpj || "");
@@ -207,9 +213,10 @@ export async function getOrCreateCustomer(
  * Para parcelado: installmentCount + totalValue (ou installmentValue) + dueDate (primeiro vencimento).
  */
 export async function createBoletoPayment(
-  params: CreateBoletoParams
+  params: CreateBoletoParams,
+  asaasConfig?: AsaasConfig | null
 ): Promise<CreateBoletoResult> {
-  const config = getAsaasConfig();
+  const config = asaasConfig ?? getAsaasConfig();
   if (!config) throw new Error("Asaas não configurado (ASAAS_API_KEY).");
 
   const body: Record<string, unknown> = {

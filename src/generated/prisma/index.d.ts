@@ -9661,6 +9661,8 @@ export namespace Prisma {
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
+    asaasApiKey: string | null
+    asaasEnv: string | null
     evolutionApiUrl: string | null
     evolutionApiKey: string | null
     evolutionInstance: string | null
@@ -9685,6 +9687,8 @@ export namespace Prisma {
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
+    asaasApiKey: string | null
+    asaasEnv: string | null
     evolutionApiUrl: string | null
     evolutionApiKey: string | null
     evolutionInstance: string | null
@@ -9709,6 +9713,8 @@ export namespace Prisma {
     logoPath: number
     openaiKey: number
     geminiKey: number
+    asaasApiKey: number
+    asaasEnv: number
     evolutionApiUrl: number
     evolutionApiKey: number
     evolutionInstance: number
@@ -9767,6 +9773,8 @@ export namespace Prisma {
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
+    asaasApiKey?: true
+    asaasEnv?: true
     evolutionApiUrl?: true
     evolutionApiKey?: true
     evolutionInstance?: true
@@ -9791,6 +9799,8 @@ export namespace Prisma {
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
+    asaasApiKey?: true
+    asaasEnv?: true
     evolutionApiUrl?: true
     evolutionApiKey?: true
     evolutionInstance?: true
@@ -9815,6 +9825,8 @@ export namespace Prisma {
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
+    asaasApiKey?: true
+    asaasEnv?: true
     evolutionApiUrl?: true
     evolutionApiKey?: true
     evolutionInstance?: true
@@ -9926,6 +9938,8 @@ export namespace Prisma {
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
+    asaasApiKey: string | null
+    asaasEnv: string | null
     evolutionApiUrl: string | null
     evolutionApiKey: string | null
     evolutionInstance: string | null
@@ -9969,6 +9983,8 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    asaasApiKey?: boolean
+    asaasEnv?: boolean
     evolutionApiUrl?: boolean
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
@@ -9993,6 +10009,8 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    asaasApiKey?: boolean
+    asaasEnv?: boolean
     evolutionApiUrl?: boolean
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
@@ -10017,6 +10035,8 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    asaasApiKey?: boolean
+    asaasEnv?: boolean
     evolutionApiUrl?: boolean
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
@@ -10041,6 +10061,8 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    asaasApiKey?: boolean
+    asaasEnv?: boolean
     evolutionApiUrl?: boolean
     evolutionApiKey?: boolean
     evolutionInstance?: boolean
@@ -10058,7 +10080,7 @@ export namespace Prisma {
     whatsappPreAtendimento?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -10070,6 +10092,8 @@ export namespace Prisma {
       logoPath: string | null
       openaiKey: string | null
       geminiKey: string | null
+      asaasApiKey: string | null
+      asaasEnv: string | null
       evolutionApiUrl: string | null
       evolutionApiKey: string | null
       evolutionInstance: string | null
@@ -10514,6 +10538,8 @@ export namespace Prisma {
     readonly logoPath: FieldRef<"Config", 'String'>
     readonly openaiKey: FieldRef<"Config", 'String'>
     readonly geminiKey: FieldRef<"Config", 'String'>
+    readonly asaasApiKey: FieldRef<"Config", 'String'>
+    readonly asaasEnv: FieldRef<"Config", 'String'>
     readonly evolutionApiUrl: FieldRef<"Config", 'String'>
     readonly evolutionApiKey: FieldRef<"Config", 'String'>
     readonly evolutionInstance: FieldRef<"Config", 'String'>
@@ -19424,6 +19450,8 @@ export namespace Prisma {
     logoPath: 'logoPath',
     openaiKey: 'openaiKey',
     geminiKey: 'geminiKey',
+    asaasApiKey: 'asaasApiKey',
+    asaasEnv: 'asaasEnv',
     evolutionApiUrl: 'evolutionApiUrl',
     evolutionApiKey: 'evolutionApiKey',
     evolutionInstance: 'evolutionInstance',
@@ -20217,6 +20245,8 @@ export namespace Prisma {
     logoPath?: StringNullableFilter<"Config"> | string | null
     openaiKey?: StringNullableFilter<"Config"> | string | null
     geminiKey?: StringNullableFilter<"Config"> | string | null
+    asaasApiKey?: StringNullableFilter<"Config"> | string | null
+    asaasEnv?: StringNullableFilter<"Config"> | string | null
     evolutionApiUrl?: StringNullableFilter<"Config"> | string | null
     evolutionApiKey?: StringNullableFilter<"Config"> | string | null
     evolutionInstance?: StringNullableFilter<"Config"> | string | null
@@ -20241,6 +20271,8 @@ export namespace Prisma {
     logoPath?: SortOrderInput | SortOrder
     openaiKey?: SortOrderInput | SortOrder
     geminiKey?: SortOrderInput | SortOrder
+    asaasApiKey?: SortOrderInput | SortOrder
+    asaasEnv?: SortOrderInput | SortOrder
     evolutionApiUrl?: SortOrderInput | SortOrder
     evolutionApiKey?: SortOrderInput | SortOrder
     evolutionInstance?: SortOrderInput | SortOrder
@@ -20268,6 +20300,8 @@ export namespace Prisma {
     logoPath?: StringNullableFilter<"Config"> | string | null
     openaiKey?: StringNullableFilter<"Config"> | string | null
     geminiKey?: StringNullableFilter<"Config"> | string | null
+    asaasApiKey?: StringNullableFilter<"Config"> | string | null
+    asaasEnv?: StringNullableFilter<"Config"> | string | null
     evolutionApiUrl?: StringNullableFilter<"Config"> | string | null
     evolutionApiKey?: StringNullableFilter<"Config"> | string | null
     evolutionInstance?: StringNullableFilter<"Config"> | string | null
@@ -20292,6 +20326,8 @@ export namespace Prisma {
     logoPath?: SortOrderInput | SortOrder
     openaiKey?: SortOrderInput | SortOrder
     geminiKey?: SortOrderInput | SortOrder
+    asaasApiKey?: SortOrderInput | SortOrder
+    asaasEnv?: SortOrderInput | SortOrder
     evolutionApiUrl?: SortOrderInput | SortOrder
     evolutionApiKey?: SortOrderInput | SortOrder
     evolutionInstance?: SortOrderInput | SortOrder
@@ -20324,6 +20360,8 @@ export namespace Prisma {
     logoPath?: StringNullableWithAggregatesFilter<"Config"> | string | null
     openaiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
     geminiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    asaasApiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    asaasEnv?: StringNullableWithAggregatesFilter<"Config"> | string | null
     evolutionApiUrl?: StringNullableWithAggregatesFilter<"Config"> | string | null
     evolutionApiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
     evolutionInstance?: StringNullableWithAggregatesFilter<"Config"> | string | null
@@ -21430,6 +21468,8 @@ export namespace Prisma {
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
+    asaasApiKey?: string | null
+    asaasEnv?: string | null
     evolutionApiUrl?: string | null
     evolutionApiKey?: string | null
     evolutionInstance?: string | null
@@ -21454,6 +21494,8 @@ export namespace Prisma {
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
+    asaasApiKey?: string | null
+    asaasEnv?: string | null
     evolutionApiUrl?: string | null
     evolutionApiKey?: string | null
     evolutionInstance?: string | null
@@ -21477,6 +21519,8 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasEnv?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21501,6 +21545,8 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasEnv?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21525,6 +21571,8 @@ export namespace Prisma {
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
+    asaasApiKey?: string | null
+    asaasEnv?: string | null
     evolutionApiUrl?: string | null
     evolutionApiKey?: string | null
     evolutionInstance?: string | null
@@ -21548,6 +21596,8 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasEnv?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21572,6 +21622,8 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasEnv?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
     evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22779,6 +22831,8 @@ export namespace Prisma {
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
+    asaasApiKey?: SortOrder
+    asaasEnv?: SortOrder
     evolutionApiUrl?: SortOrder
     evolutionApiKey?: SortOrder
     evolutionInstance?: SortOrder
@@ -22819,6 +22873,8 @@ export namespace Prisma {
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
+    asaasApiKey?: SortOrder
+    asaasEnv?: SortOrder
     evolutionApiUrl?: SortOrder
     evolutionApiKey?: SortOrder
     evolutionInstance?: SortOrder
@@ -22843,6 +22899,8 @@ export namespace Prisma {
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
+    asaasApiKey?: SortOrder
+    asaasEnv?: SortOrder
     evolutionApiUrl?: SortOrder
     evolutionApiKey?: SortOrder
     evolutionInstance?: SortOrder

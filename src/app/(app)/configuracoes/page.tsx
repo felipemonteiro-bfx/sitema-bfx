@@ -57,6 +57,21 @@ async function saveApiKey(formData: FormData) {
   revalidatePath("/configuracoes");
 }
 
+async function saveAsaas(formData: FormData) {
+  "use server";
+  const apiKey = String(formData.get("asaasApiKey") || "").trim() || null;
+  const env = String(formData.get("asaasEnv") || "sandbox").trim();
+  const asaasEnv = env === "production" ? "production" : "sandbox";
+  const cfg = await prisma.config.findFirst();
+  const data = { asaasApiKey: apiKey, asaasEnv };
+  if (cfg) {
+    await prisma.config.update({ where: { id: cfg.id }, data });
+  } else {
+    await prisma.config.create({ data });
+  }
+  revalidatePath("/configuracoes");
+}
+
 async function saveWhatsApp(formData: FormData) {
   "use server";
   const url = String(formData.get("evolutionApiUrl") || "").trim();
@@ -181,6 +196,51 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       previewLabel="Prévia da Autorização de Desconto em Folha"
                     />
                   </div>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: "asaas",
+            label: "Asaas",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Integração Asaas (Boletos)</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Configure a API Key do Asaas para geração de boletos. As chaves aqui têm prioridade sobre
+                    as variáveis de ambiente ASAAS_API_KEY e ASAAS_ENV.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveAsaas} className="space-y-4">
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">API Key</div>
+                      <Input
+                        name="asaasApiKey"
+                        type="password"
+                        placeholder={(cfg as { asaasApiKey?: string | null })?.asaasApiKey ? "•••••••• (salva)" : "$aas_xxxxxxxxxxxxxxxx"}
+                      />
+                      {(cfg as { asaasApiKey?: string | null })?.asaasApiKey && (
+                        <div className="text-xs text-muted-foreground">Chave Asaas salva.</div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">Ambiente</div>
+                      <select
+                        name="asaasEnv"
+                        defaultValue={(cfg as { asaasEnv?: string | null })?.asaasEnv || "sandbox"}
+                        className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                      >
+                        <option value="sandbox">Sandbox (testes)</option>
+                        <option value="production">Produção</option>
+                      </select>
+                      <div className="text-xs text-muted-foreground">
+                        Use sandbox para testes; produção para boletos reais.
+                      </div>
+                    </div>
+                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                  </form>
                 </CardContent>
               </Card>
             ),
@@ -412,8 +472,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <p className="text-xs text-muted-foreground pl-6">
                         Quem mandar mensagem no WhatsApp é atendido por uma IA com acesso ao catálogo de produtos.
-                        Configure o webhook na Evolution para apontar para esta aplicação.
+                        Configure o webhook MESSAGES_UPSERT na Evolution API para:
                       </p>
+                      <div className="pl-6 flex flex-wrap items-center gap-2">
+                        <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
+                          {(() => {
+                            const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://seu-dominio.com";
+                            return `${base}/api/webhooks/evolution`;
+                          })()}
+                        </code>
+                        <span className="text-xs text-muted-foreground">
+                          (defina NEXT_PUBLIC_APP_URL no .env)
+                        </span>
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Alternativa: use variáveis de ambiente EVOLUTION_API_URL, EVOLUTION_API_KEY e

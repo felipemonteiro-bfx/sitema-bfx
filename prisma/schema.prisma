@@ -140,6 +140,8 @@ model Config {
   logoPath              String? @map("logo_path")
   openaiKey             String? @map("openai_key")
   geminiKey             String? @map("gemini_key")
+  asaasApiKey           String? @map("asaas_api_key")         // API Key do Asaas (boletos)
+  asaasEnv              String? @map("asaas_env")             // sandbox | production
   evolutionApiUrl       String? @map("evolution_api_url")
   evolutionApiKey       String? @map("evolution_api_key")
   evolutionInstance     String? @map("evolution_instance")    // Nome da instância na Evolution API

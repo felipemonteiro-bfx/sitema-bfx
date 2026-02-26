@@ -87,7 +87,8 @@ export default async function BoletosPage() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
 
-  const config = getAsaasConfig();
+  const cfg = await prisma.config.findFirst();
+  const config = getAsaasConfig(cfg);
   if (!config) {
     return (
       <div className="space-y-6">
@@ -102,8 +103,8 @@ export default async function BoletosPage() {
             <AlertTriangle className="h-12 w-12 text-warning mb-4" />
             <h3 className="text-lg font-semibold mb-2">Asaas não configurado</h3>
             <p className="text-sm text-muted-foreground max-w-md">
-              Configure a variável de ambiente ASAAS_API_KEY para visualizar o dashboard de boletos.
-              Os boletos são gerados pela integração com o Asaas.
+              Configure em Configurações → Asaas ou a variável de ambiente ASAAS_API_KEY para visualizar
+              o dashboard de boletos. Os boletos são gerados pela integração com o Asaas.
             </p>
           </CardContent>
         </Card>
