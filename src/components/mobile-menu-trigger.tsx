@@ -8,7 +8,7 @@ export function MobileMenuTrigger({ children }: { children: React.ReactNode }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Abrir menu" className="cursor-pointer">
+        <Button variant="outline" size="icon" aria-label="Abrir menu" className="cursor-pointer touch-manipulation min-h-[44px] min-w-[44px]">
           <span className="text-lg leading-none">≡</span>
         </Button>
       </SheetTrigger>

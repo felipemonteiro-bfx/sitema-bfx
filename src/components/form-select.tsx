@@ -64,7 +64,7 @@ export function FormSelect({
   };
 
   return (
-    <div className="h-10 overflow-hidden">
+    <div className="min-h-10 overflow-hidden">
       <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -74,7 +74,8 @@ export function FormSelect({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "h-10 max-h-10 w-full justify-between gap-2 overflow-hidden box-border text-left font-normal [&_svg]:flex-shrink-0",
+              "min-h-10 h-auto py-2 w-full justify-between gap-2 overflow-hidden box-border text-left font-normal [&_svg]:flex-shrink-0 touch-manipulation",
+              "sm:max-h-10 sm:py-0 sm:min-h-0 sm:h-10",
               !value && "text-muted-foreground",
               className
             )}
@@ -95,7 +96,7 @@ export function FormSelect({
               />
             </div>
           )}
-          <div className="max-h-72 overflow-y-auto overscroll-contain pr-1">
+          <div className="max-h-[min(18rem,50vh)] overflow-y-auto overscroll-contain pr-1">
             {filtered.length === 0 ? (
               <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum resultado.</div>
             ) : (

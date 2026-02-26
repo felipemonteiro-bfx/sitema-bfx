@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,6 +11,9 @@ import { FormSelect } from "@/components/form-select";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
 import { DateInput } from "@/components/ui/date-input";
 import { AlertCircle, CheckCircle2, ExternalLink } from "lucide-react";
+import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
+import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
+import { EditVendaSheetWrapper } from "@/components/edit-venda-sheet-wrapper";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
@@ -264,8 +268,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         <CardHeader>
           <CardTitle>Filtro avançado</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6 items-center">
+        <CardContent className="space-y-4">
+          <form className="hidden md:grid gap-3 sm:grid-cols-2 lg:grid-cols-6 items-center">
             <DateInput
               name="from"
               defaultValue={start.toISOString().slice(0, 10)}
@@ -324,6 +328,69 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <input type="hidden" name="page" value="1" />
             <button className={cn(buttonVariants(), "cursor-pointer")}>Filtrar</button>
           </form>
+          <HistoricoFiltroSheet>
+            <form className="grid gap-4 grid-cols-1">
+              <DateInput
+                name="from"
+                defaultValue={start.toISOString().slice(0, 10)}
+                aria-label="Data inicial"
+              />
+              <DateInput
+                name="to"
+                defaultValue={end.toISOString().slice(0, 10)}
+                aria-label="Data final"
+              />
+              <FormSelect
+                name="vendedor"
+                defaultValue={sp.vendedor || "all"}
+                options={[
+                  { value: "all", label: "Vendedor (Todos)" },
+                  ...vendedores.map((v) => ({
+                    value: String(v.nomeExibicao || v.username),
+                    label: String(v.nomeExibicao || v.username),
+                  })),
+                ]}
+              />
+              <FormSelect
+                name="cliente"
+                defaultValue={sp.cliente || "all"}
+                options={[
+                  { value: "all", label: "Cliente (Todos)" },
+                  ...clientes.map((c) => ({ value: String(c.id), label: c.nome })),
+                ]}
+              />
+              <FormSelect
+                name="produto"
+                defaultValue={sp.produto || "all"}
+                options={[
+                  { value: "all", label: "Produto (Todos)" },
+                  ...produtos.map((p) => ({ value: p.nome, label: p.nome })),
+                ]}
+              />
+              <FormSelect
+                name="descontoFolha"
+                defaultValue={sp.descontoFolha || "all"}
+                options={[
+                  { value: "all", label: "Desconto folha (Todos)" },
+                  { value: "1", label: "Desconto folha (Sim)" },
+                  { value: "0", label: "Desconto folha (Não)" },
+                ]}
+              />
+              <FormSelect
+                name="boleto"
+                defaultValue={sp.boleto || "all"}
+                options={[
+                  { value: "all", label: "Boleto (Todos)" },
+                  { value: "1", label: "Boleto (Sim)" },
+                  { value: "0", label: "Boleto (Não)" },
+                ]}
+              />
+              <input type="hidden" name="page" value="1" />
+              <button type="submit" className={cn(buttonVariants(), "cursor-pointer w-full touch-manipulation min-h-[44px]")}>
+                Aplicar filtros
+              </button>
+            </form>
+          </HistoricoFiltroSheet>
         </CardContent>
       </Card>
 
@@ -333,6 +400,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           <div className="text-xs text-muted-foreground">Página {page} de {totalPages || 1}</div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <HistoricoVendasCards
+            vendas={vendas}
+            searchParams={sp}
+            gerarBoletoAction={gerarBoletoAsaas}
+          />
+          <div className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -441,15 +514,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               )}
             </TableBody>
           </Table>
+          </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t pt-4">
-              <div className="text-xs text-muted-foreground">Mostrando {vendas.length} de {totalVendas} resultados</div>
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t pt-4">
+              <div className="text-xs text-muted-foreground order-2 sm:order-1">Mostrando {vendas.length} de {totalVendas} resultados</div>
+              <div className="flex items-center gap-2 order-1 sm:order-2">
                 {page > 1 ? (
                   <Link 
                     href={buildUrl({ page: (page - 1).toString() })}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
                   >
                     Anterior
                   </Link>
@@ -461,7 +535,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {page < totalPages ? (
                   <Link 
                     href={buildUrl({ page: (page + 1).toString() })}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
                   >
                     Próxima
                   </Link>
@@ -477,13 +551,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       </Card>
 
       {editVenda && (
-        <Card id="editar-venda" className="scroll-mt-24">
-          <CardHeader className="space-y-1">
-            <CardTitle>Editando venda #{editVenda.id}</CardTitle>
-            <p className="text-sm text-muted-foreground">Ajuste os dados e salve para atualizar o Histórico.</p>
-          </CardHeader>
-          <CardContent>
-            <form action={updateVenda} method="post" encType="multipart/form-data" className="grid gap-4 md:grid-cols-3">
+        <Suspense fallback={null}>
+        <EditVendaSheetWrapper
+          editId={editVenda.id}
+          title={`Editando venda #${editVenda.id}`}
+          description="Ajuste os dados e salve para atualizar o Histórico."
+        >
+          <form action={updateVenda} method="post" encType="multipart/form-data" className="grid gap-4 md:grid-cols-3">
               <input type="hidden" name="id" value={editVenda.id} />
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Data da venda</label>
@@ -631,8 +705,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <DeleteVendaButton vendaId={editVenda.id} deleteAction={deleteVenda} />
               </div>
             </form>
-          </CardContent>
-        </Card>
+        </EditVendaSheetWrapper>
+        </Suspense>
       )}
     </div>
   );

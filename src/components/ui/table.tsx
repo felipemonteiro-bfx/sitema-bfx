@@ -26,7 +26,7 @@ interface TableProps
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, variant, stickyHeader, ...props }, ref) => (
-    <div className="relative w-full overflow-auto custom-scrollbar rounded-lg">
+    <div className="relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-lg">
       <table
         ref={ref}
         className={cn(tableVariants({ variant }), className)}

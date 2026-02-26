@@ -54,12 +54,12 @@ export default async function AppLayout({
         </aside>
         <main className="flex-1 min-w-0 rounded-2xl border border-border bg-card px-4 py-5 shadow-lg backdrop-blur-sm transition-all duration-300 dark:shadow-[var(--shadow-md)] lg:px-8 lg:py-7 animate-fade-in">
           <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <MobileMenuTrigger>
                 <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
               </MobileMenuTrigger>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-foreground">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="text-sm font-medium text-foreground truncate max-w-[120px] sm:max-w-[160px]">
                   {session.nomeExibicao || session.username}
                 </span>
                 <Badge variant={session.role === "admin" ? "info" : "secondary"} size="sm">

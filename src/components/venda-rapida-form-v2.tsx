@@ -672,7 +672,7 @@ export default function VendaRapidaFormV2({
               onChange={(e) => setClienteQuery(e.target.value)}
               placeholder="Digite o nome do cliente"
               required
-              className={validationErrors.cliente ? "border-destructive border-2" : ""}
+              className={cn("min-h-[44px] touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
             />
             {clienteSuggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
@@ -755,7 +755,7 @@ export default function VendaRapidaFormV2({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-[10px] font-bold uppercase text-muted-foreground">Limite</div>
                 <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.margemTotal)}</div>
@@ -976,7 +976,7 @@ export default function VendaRapidaFormV2({
           <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Subtotal Produtos
@@ -1013,7 +1013,7 @@ export default function VendaRapidaFormV2({
 
           <Separator />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Custo Total

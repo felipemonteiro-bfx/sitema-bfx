@@ -662,6 +662,11 @@
   background: var(--muted-foreground);
 }
 
+/* Table horizontal scroll - smooth touch on iOS */
+.table-scroll-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ========================================
    BENTO GRID LAYOUT
    ======================================== */
