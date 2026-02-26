@@ -93,13 +93,14 @@ const DEFAULT_AUTORIZACAO =
   "RECIBO Eu, {CLIENTE}, mat. {MATRICULA}, confirmo a compra de: {PRODUTO}. Valor: R$ {VALOR} em {PARCELAS}x. Data: {DATA}. Estou ciente de que esse valor será descontado parceladamente na minha remuneração do mês seguinte à data da compra. Entendo que este desconto será efetuado de acordo com as regras e políticas estabelecidas na parceria da BFXSHOP e empresa conveniada. Além disso, estou ciente de que, em caso de rescisão do meu contrato de trabalho com a minha empresa, o valor remanescente, se houver, será descontado integralmente do valor a que eu tiver direito em minha rescisão, conforme previsto na legislação vigente. Esta autorização é concedida de livre e espontânea vontade, sem qualquer forma de coação ou pressão por parte da empresa.";
 
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const idParam = (searchParams.get("id") || "").trim();
-  const tipo = (searchParams.get("tipo") || "venda").toLowerCase(); // "venda" | "autorizacao"
-  if (!idParam) return new Response("ID inválido", { status: 400 });
+  try {
+    const { searchParams } = new URL(req.url);
+    const idParam = (searchParams.get("id") || "").trim();
+    const tipo = (searchParams.get("tipo") || "venda").toLowerCase(); // "venda" | "autorizacao"
+    if (!idParam) return new Response("ID inválido", { status: 400 });
 
-  const isNumeric = /^\d+$/.test(idParam);
-  const vendaBase = isNumeric
+    const isNumeric = /^\d+$/.test(idParam);
+    const vendaBase = isNumeric
     ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
     : await prisma.venda.findUnique({ where: { uuid: idParam } });
   if (!vendaBase) return new Response("Venda não encontrada", { status: 404 });
@@ -146,7 +147,13 @@ export async function GET(req: Request) {
         select: { id: true, nome: true, cpf: true, cnpj: true, matricula: true },
       })
     : null;
-  const cfg = await prisma.config.findFirst();
+
+  let cfg: Awaited<ReturnType<typeof prisma.config.findFirst>> = null;
+  try {
+    cfg = await prisma.config.findFirst();
+  } catch {
+    // Config pode falhar se colunas novas ainda não existirem (rodar prisma migrate deploy)
+  }
   const numParcelas = parcelasVenc.length;
   const rowHeight = 22;
   const tabelaParcelasHeight = numParcelas > 0 ? 40 + rowHeight + numParcelas * rowHeight : 0; // label + header + rows
@@ -396,4 +403,9 @@ export async function GET(req: Request) {
       "Content-Length": String(pdfBytes.length),
     },
   });
+  } catch (err) {
+    console.error("Erro ao gerar recibo PDF:", err);
+    const msg = err instanceof Error ? err.message : "Erro interno";
+    return new Response(`Erro ao gerar recibo: ${msg}`, { status: 500 });
+  }
 }
