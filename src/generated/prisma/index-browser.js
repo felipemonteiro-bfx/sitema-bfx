@@ -217,7 +217,11 @@ exports.Prisma.ConfigScalarFieldEnum = {
   modeloReciboVenda: 'modeloReciboVenda',
   logoPath: 'logoPath',
   openaiKey: 'openaiKey',
-  geminiKey: 'geminiKey'
+  geminiKey: 'geminiKey',
+  evolutionApiUrl: 'evolutionApiUrl',
+  evolutionApiKey: 'evolutionApiKey',
+  evolutionInstance: 'evolutionInstance',
+  whatsappAutoEnabled: 'whatsappAutoEnabled'
 };
 
 exports.Prisma.UsuarioScalarFieldEnum = {

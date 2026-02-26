@@ -20,8 +20,11 @@ Marque cada linha após preencher. Use **Production** (e **Preview** se quiser o
 | 9 | `MINIO_PUBLIC_URL` | Não* | URL pública para imagens (ex.: `https://minio.seudominio.com`) | ☐ |
 | 10 | `ASAAS_API_KEY` | Não | Chave da API Asaas (painel Asaas → Integrações → API) | ☐ |
 | 11 | `ASAAS_ENV` | Não | `sandbox` ou `production` | ☐ |
-| 12 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou Groq/compatível) se usar rotas de AI/chat | ☐ |
-| 13 | `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google AI Studio (Gemini) se usar rotas de AI | ☐ |
+| 12 | `EVOLUTION_API_URL` | Não | URL da Evolution API (envio automático WhatsApp). Ex.: `http://seu-servidor:8080` | ☐ |
+| 13 | `EVOLUTION_API_KEY` | Não | API Key da Evolution API (mesmo do container) | ☐ |
+| 14 | `EVOLUTION_INSTANCE` | Não | Nome da instância (default: `bfx`) | ☐ |
+| 15 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou Groq/compatível) se usar rotas de AI/chat | ☐ |
+| 16 | `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google AI Studio (Gemini) se usar rotas de AI | ☐ |
 
 \* Necessário só se quiser que o Cron da Vercel execute a limpeza de uploads com sucesso.
 
@@ -38,6 +41,9 @@ Marque cada linha após preencher. Use **Production** (e **Preview** se quiser o
 | **MINIO_*** | MinIO self-hosted ou serviço S3-compatible. Sem isso, imagens vão para `public/uploads`. |
 | **ASAAS_API_KEY** | [Asaas](https://www.asaas.com) → Conta → Integrações → API. |
 | **ASAAS_ENV** | `sandbox` para testes; `production` para produção. |
+| **EVOLUTION_API_URL** | URL do servidor onde a Evolution API está (ex.: `http://localhost:8080` local, ou URL pública em produção). |
+| **EVOLUTION_API_KEY** | Mesmo valor de AUTHENTICATION_API_KEY no container Evolution. |
+| **EVOLUTION_INSTANCE** | Nome da instância criada na Evolution API (ex.: `bfx`). |
 | **OPENAI_API_KEY** | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) ou provedor compatível. |
 | **GOOGLE_GENERATIVE_AI_API_KEY** | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey). |
 
@@ -50,7 +56,8 @@ Marque cada linha após preencher. Use **Production** (e **Preview** se quiser o
 3. **CRON_SECRET** (se for usar o Cron de limpeza).
 4. **MINIO_*** (se for usar MinIO para imagens de produtos).
 5. **ASAAS_API_KEY** e **ASAAS_ENV** (se for usar boleto).
-6. **OPENAI_API_KEY** e **GOOGLE_GENERATIVE_AI_API_KEY** (se for usar rotas de AI).
+6. **EVOLUTION_API_URL**, **EVOLUTION_API_KEY** e **EVOLUTION_INSTANCE** (se for usar envio automático WhatsApp).
+7. **OPENAI_API_KEY** e **GOOGLE_GENERATIVE_AI_API_KEY** (se for usar rotas de AI).
 
 ---
 

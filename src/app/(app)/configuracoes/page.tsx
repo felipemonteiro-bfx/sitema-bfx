@@ -57,6 +57,27 @@ async function saveApiKey(formData: FormData) {
   revalidatePath("/configuracoes");
 }
 
+async function saveWhatsApp(formData: FormData) {
+  "use server";
+  const url = String(formData.get("evolutionApiUrl") || "").trim();
+  const key = String(formData.get("evolutionApiKey") || "").trim();
+  const instance = String(formData.get("evolutionInstance") || "bfx").trim() || "bfx";
+  const enabled = formData.get("whatsappAutoEnabled") === "on" ? 1 : 0;
+  const cfg = await prisma.config.findFirst();
+  const data = {
+    evolutionApiUrl: url || null,
+    evolutionApiKey: key || null,
+    evolutionInstance: instance,
+    whatsappAutoEnabled: enabled,
+  };
+  if (cfg) {
+    await prisma.config.update({ where: { id: cfg.id }, data });
+  } else {
+    await prisma.config.create({ data });
+  }
+  revalidatePath("/configuracoes");
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
@@ -151,6 +172,72 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <div className="text-xs text-muted-foreground">Chave Gemini salva.</div>
                       )}
                     </div>
+                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                  </form>
+                </CardContent>
+              </Card>
+            ),
+          },
+          {
+            value: "whatsapp",
+            label: "WhatsApp",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Integração WhatsApp (Evolution API)</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Configure a Evolution API para envio automático de recibos, links de assinatura, boletos e lembretes
+                    de parcelas. Solução gratuita e open-source.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveWhatsApp} className="space-y-4">
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">URL da Evolution API</div>
+                      <Input
+                        name="evolutionApiUrl"
+                        placeholder="https://sua-evolution.exemplo.com"
+                        defaultValue={cfg?.evolutionApiUrl ?? ""}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">API Key</div>
+                      <Input
+                        name="evolutionApiKey"
+                        type="password"
+                        placeholder={cfg?.evolutionApiKey ? "•••••••• (salva)" : "Chave da Evolution API"}
+                      />
+                      {cfg?.evolutionApiKey && (
+                        <div className="text-xs text-muted-foreground">Chave salva.</div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-muted-foreground">Nome da instância</div>
+                      <Input
+                        name="evolutionInstance"
+                        placeholder="bfx"
+                        defaultValue={cfg?.evolutionInstance ?? "bfx"}
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        Nome da instância criada na Evolution API (ex.: bfx).
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="whatsappAutoEnabled"
+                        name="whatsappAutoEnabled"
+                        defaultChecked={cfg?.whatsappAutoEnabled !== 0}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="whatsappAutoEnabled" className="text-sm font-medium">
+                        Envios automáticos ativados
+                      </label>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Alternativa: use variáveis de ambiente EVOLUTION_API_URL, EVOLUTION_API_KEY e
+                      EVOLUTION_INSTANCE.
+                    </p>
                     <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
                   </form>
                 </CardContent>

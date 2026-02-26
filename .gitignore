@@ -59,3 +59,4 @@ k8s/secret.yaml
 *.local
 bfx_sistema.db
 *.tmp*
+whatsapp-qrcode.html

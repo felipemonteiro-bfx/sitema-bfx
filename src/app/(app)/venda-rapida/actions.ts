@@ -13,6 +13,7 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
+import { enviarWhatsAppTexto } from "@/lib/whatsapp";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -287,6 +288,25 @@ export async function criarVendaV2(
           `Venda #${venda.id} criada. Falha ao gerar boleto no Asaas: ${errMsg}. Tente gerar manualmente pelo Histórico de Vendas.`,
           { vendaId: venda.id }
         );
+      }
+    }
+
+    // Envio automático WhatsApp (recibo ou link assinatura, e boleto se gerado)
+    if (clienteId) {
+      const cliente = await prisma.cliente.findUnique({
+        where: { id: clienteId },
+        select: { telefone: true },
+      });
+      if (cliente?.telefone) {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
+        let mensagem =
+          descontoEmFolha && assinaturaToken
+            ? `Olá! Segue o link para assinar sua autorização de desconto em folha: ${baseUrl}/assinatura/${assinaturaToken}`
+            : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}`;
+        if (boletoUrl) {
+          mensagem += `\n\nSeu boleto: ${boletoUrl}`;
+        }
+        void enviarWhatsAppTexto(cliente.telefone, mensagem);
       }
     }
 

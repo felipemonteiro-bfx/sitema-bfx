@@ -17,7 +17,9 @@
     "db:sync-vendas-hoje": "node scripts/sync-vendas-hoje.js",
     "docker:up": "docker compose up -d minio db && sleep 3 && npm run db:migrate && docker compose up -d app",
     "db:minio": "docker compose up -d minio",
-    "docker:build": "docker compose build"
+    "docker:build": "docker compose build",
+    "evolution:up": "docker compose -f docker-compose.evolution.yml up -d",
+    "evolution:down": "docker compose -f docker-compose.evolution.yml down"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.20",

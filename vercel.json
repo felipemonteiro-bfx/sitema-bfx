@@ -1,8 +1,6 @@
 {
   "crons": [
-    {
-      "path": "/api/cron/cleanup-uploads",
-      "schedule": "0 3 * * 0"
-    }
+    {"path": "/api/cron/cleanup-uploads", "schedule": "0 3 * * 0"},
+    {"path": "/api/cron/lembrete-parcelas", "schedule": "0 11 * * *"}
   ]
 }

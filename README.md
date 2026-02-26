@@ -23,6 +23,12 @@ yarn dev
 yarn docker:up
 ```
 
+**WhatsApp (Evolution API):** Para envio automático de recibo, boleto e lembretes:
+```bash
+yarn evolution:up
+```
+Depois acesse http://localhost:8080/manager, crie a instância `bfx` e escaneie o QR Code. Ver **docs/WHATSAPP-EVOLUTION.md**.
+
 Aplicação: `http://localhost:3008`  
 MinIO Console: `http://localhost:9001` (minioadmin/minioadmin)
 Streamlit legado (via proxy + layout): `http://localhost:3008/streamlit`
@@ -103,6 +109,9 @@ Em **Settings** → **Environment Variables** adicione (Production e Preview, se
 | `MINIO_PUBLIC_URL` | Não | URL pública para acessar imagens (ex.: `http://localhost:9000`). |
 | `ASAAS_API_KEY` | Não | Chave da API Asaas para geração de boleto. Sem isso, boleto fica desabilitado. |
 | `ASAAS_ENV` | Não | `sandbox` ou `production` (default: sandbox). |
+| `EVOLUTION_API_URL` | Não | URL da Evolution API para envio automático WhatsApp (recibo, boleto, lembretes). |
+| `EVOLUTION_API_KEY` | Não | API Key da Evolution API. |
+| `EVOLUTION_INSTANCE` | Não | Nome da instância (default: `bfx`). |
 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou compatível) para rotas de AI/chat, se usadas. |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google Generative AI / Gemini para rotas de AI, se usadas. |
 

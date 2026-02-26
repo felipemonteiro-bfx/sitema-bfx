@@ -7,6 +7,7 @@ import {
   getOrCreateCustomer,
   createBoletoPayment,
 } from "@/lib/asaas";
+import { enviarWhatsAppTexto } from "@/lib/whatsapp";
 
 export type GerarBoletoResult = { success: boolean; error?: string };
 
@@ -82,6 +83,12 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
       where: { id: vendaId },
       data: { asaasPaymentId: payment.id, boletoUrl: payment.bankSlipUrl || null },
     });
+
+    if (payment.bankSlipUrl && cliente.telefone) {
+      const msg = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${payment.bankSlipUrl}`;
+      void enviarWhatsAppTexto(cliente.telefone, msg);
+    }
+
     revalidatePath("/historico");
     revalidatePath("/boletos");
     return { success: true };

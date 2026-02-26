@@ -17,6 +17,9 @@ Arquivo **`.env`** ou **`.env.local`** na raiz do projeto. Copie de `.env.exampl
 | `CRON_SECRET` | Não | Secret para o endpoint de Cron (limpeza de uploads). |
 | `ASAAS_API_KEY` | Não | Chave API Asaas para geração de boleto. |
 | `ASAAS_ENV` | Não | `sandbox` ou `production`. |
+| `EVOLUTION_API_URL` | Não | URL da Evolution API (envio automático WhatsApp). Ex.: `http://localhost:8080` |
+| `EVOLUTION_API_KEY` | Não | API Key da Evolution API (mesmo valor de AUTHENTICATION_API_KEY no container). |
+| `EVOLUTION_INSTANCE` | Não | Nome da instância (default: `bfx`). |
 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou compatível) para rotas de AI/chat, se usadas. |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google Generative AI / Gemini para rotas de AI, se usadas. |
 
@@ -36,8 +39,11 @@ Configure em **Vercel → sitema-bfx → Settings → Environment Variables**.
 | 4 | `CRON_SECRET` | Não* | Secret para o Cron de limpeza de uploads (domingo 03:00 UTC). | String aleatória |
 | 5 | `ASAAS_API_KEY` | Não | Chave API Asaas para geração de boleto. | Chave do painel Asaas |
 | 6 | `ASAAS_ENV` | Não | Ambiente Asaas: `sandbox` ou `production`. | `sandbox` |
-| 7 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou compatível) para rotas de AI/chat, se usadas. | `sk-...` |
-| 8 | `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google Generative AI / Gemini para rotas de AI, se usadas. | Do Google AI Studio |
+| 7 | `EVOLUTION_API_URL` | Não | URL da Evolution API (WhatsApp). | `http://seu-servidor:8080` |
+| 8 | `EVOLUTION_API_KEY` | Não | API Key da Evolution API. | Mesmo do container Evolution |
+| 9 | `EVOLUTION_INSTANCE` | Não | Nome da instância (ex.: `bfx`). | `bfx` |
+| 10 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou compatível) para rotas de AI/chat, se usadas. | `sk-...` |
+| 11 | `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google Generative AI / Gemini para rotas de AI, se usadas. | Do Google AI Studio |
 
 \* Necessário para o Cron da Vercel chamar `/api/cron/cleanup-uploads` com sucesso.
 
@@ -45,7 +51,7 @@ Configure em **Vercel → sitema-bfx → Settings → Environment Variables**.
 
 1. **Vercel** → projeto **sitema-bfx** → **Settings** → **Environment Variables**.
 2. Para **Production** (e **Preview** se quiser): confira que existem **`DATABASE_URL`** e **`SESSION_SECRET`**.
-3. Opcional: `NEXT_PUBLIC_APP_URL`, `CRON_SECRET`, `ASAAS_API_KEY`, `ASAAS_ENV`, `OPENAI_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`.
+3. Opcional: `NEXT_PUBLIC_APP_URL`, `CRON_SECRET`, `ASAAS_API_KEY`, `ASAAS_ENV`, `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE`, `OPENAI_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`.
 
 ### Onde obter valores
 

@@ -9533,10 +9533,12 @@ export namespace Prisma {
 
   export type ConfigAvgAggregateOutputType = {
     id: number | null
+    whatsappAutoEnabled: number | null
   }
 
   export type ConfigSumAggregateOutputType = {
     id: number | null
+    whatsappAutoEnabled: number | null
   }
 
   export type ConfigMinAggregateOutputType = {
@@ -9546,6 +9548,10 @@ export namespace Prisma {
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
+    evolutionApiUrl: string | null
+    evolutionApiKey: string | null
+    evolutionInstance: string | null
+    whatsappAutoEnabled: number | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -9555,6 +9561,10 @@ export namespace Prisma {
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
+    evolutionApiUrl: string | null
+    evolutionApiKey: string | null
+    evolutionInstance: string | null
+    whatsappAutoEnabled: number | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -9564,16 +9574,22 @@ export namespace Prisma {
     logoPath: number
     openaiKey: number
     geminiKey: number
+    evolutionApiUrl: number
+    evolutionApiKey: number
+    evolutionInstance: number
+    whatsappAutoEnabled: number
     _all: number
   }
 
 
   export type ConfigAvgAggregateInputType = {
     id?: true
+    whatsappAutoEnabled?: true
   }
 
   export type ConfigSumAggregateInputType = {
     id?: true
+    whatsappAutoEnabled?: true
   }
 
   export type ConfigMinAggregateInputType = {
@@ -9583,6 +9599,10 @@ export namespace Prisma {
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
+    evolutionApiUrl?: true
+    evolutionApiKey?: true
+    evolutionInstance?: true
+    whatsappAutoEnabled?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -9592,6 +9612,10 @@ export namespace Prisma {
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
+    evolutionApiUrl?: true
+    evolutionApiKey?: true
+    evolutionInstance?: true
+    whatsappAutoEnabled?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -9601,6 +9625,10 @@ export namespace Prisma {
     logoPath?: true
     openaiKey?: true
     geminiKey?: true
+    evolutionApiUrl?: true
+    evolutionApiKey?: true
+    evolutionInstance?: true
+    whatsappAutoEnabled?: true
     _all?: true
   }
 
@@ -9697,6 +9725,10 @@ export namespace Prisma {
     logoPath: string | null
     openaiKey: string | null
     geminiKey: string | null
+    evolutionApiUrl: string | null
+    evolutionApiKey: string | null
+    evolutionInstance: string | null
+    whatsappAutoEnabled: number | null
     _count: ConfigCountAggregateOutputType | null
     _avg: ConfigAvgAggregateOutputType | null
     _sum: ConfigSumAggregateOutputType | null
@@ -9725,6 +9757,10 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    evolutionApiUrl?: boolean
+    evolutionApiKey?: boolean
+    evolutionInstance?: boolean
+    whatsappAutoEnabled?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -9734,6 +9770,10 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    evolutionApiUrl?: boolean
+    evolutionApiKey?: boolean
+    evolutionInstance?: boolean
+    whatsappAutoEnabled?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -9743,6 +9783,10 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    evolutionApiUrl?: boolean
+    evolutionApiKey?: boolean
+    evolutionInstance?: boolean
+    whatsappAutoEnabled?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -9752,9 +9796,13 @@ export namespace Prisma {
     logoPath?: boolean
     openaiKey?: boolean
     geminiKey?: boolean
+    evolutionApiUrl?: boolean
+    evolutionApiKey?: boolean
+    evolutionInstance?: boolean
+    whatsappAutoEnabled?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -9766,6 +9814,10 @@ export namespace Prisma {
       logoPath: string | null
       openaiKey: string | null
       geminiKey: string | null
+      evolutionApiUrl: string | null
+      evolutionApiKey: string | null
+      evolutionInstance: string | null
+      whatsappAutoEnabled: number | null
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -10195,6 +10247,10 @@ export namespace Prisma {
     readonly logoPath: FieldRef<"Config", 'String'>
     readonly openaiKey: FieldRef<"Config", 'String'>
     readonly geminiKey: FieldRef<"Config", 'String'>
+    readonly evolutionApiUrl: FieldRef<"Config", 'String'>
+    readonly evolutionApiKey: FieldRef<"Config", 'String'>
+    readonly evolutionInstance: FieldRef<"Config", 'String'>
+    readonly whatsappAutoEnabled: FieldRef<"Config", 'Int'>
   }
     
 
@@ -18052,7 +18108,11 @@ export namespace Prisma {
     modeloReciboVenda: 'modeloReciboVenda',
     logoPath: 'logoPath',
     openaiKey: 'openaiKey',
-    geminiKey: 'geminiKey'
+    geminiKey: 'geminiKey',
+    evolutionApiUrl: 'evolutionApiUrl',
+    evolutionApiKey: 'evolutionApiKey',
+    evolutionInstance: 'evolutionInstance',
+    whatsappAutoEnabled: 'whatsappAutoEnabled'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -18820,6 +18880,10 @@ export namespace Prisma {
     logoPath?: StringNullableFilter<"Config"> | string | null
     openaiKey?: StringNullableFilter<"Config"> | string | null
     geminiKey?: StringNullableFilter<"Config"> | string | null
+    evolutionApiUrl?: StringNullableFilter<"Config"> | string | null
+    evolutionApiKey?: StringNullableFilter<"Config"> | string | null
+    evolutionInstance?: StringNullableFilter<"Config"> | string | null
+    whatsappAutoEnabled?: IntNullableFilter<"Config"> | number | null
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -18829,6 +18893,10 @@ export namespace Prisma {
     logoPath?: SortOrderInput | SortOrder
     openaiKey?: SortOrderInput | SortOrder
     geminiKey?: SortOrderInput | SortOrder
+    evolutionApiUrl?: SortOrderInput | SortOrder
+    evolutionApiKey?: SortOrderInput | SortOrder
+    evolutionInstance?: SortOrderInput | SortOrder
+    whatsappAutoEnabled?: SortOrderInput | SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -18841,6 +18909,10 @@ export namespace Prisma {
     logoPath?: StringNullableFilter<"Config"> | string | null
     openaiKey?: StringNullableFilter<"Config"> | string | null
     geminiKey?: StringNullableFilter<"Config"> | string | null
+    evolutionApiUrl?: StringNullableFilter<"Config"> | string | null
+    evolutionApiKey?: StringNullableFilter<"Config"> | string | null
+    evolutionInstance?: StringNullableFilter<"Config"> | string | null
+    whatsappAutoEnabled?: IntNullableFilter<"Config"> | number | null
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -18850,6 +18922,10 @@ export namespace Prisma {
     logoPath?: SortOrderInput | SortOrder
     openaiKey?: SortOrderInput | SortOrder
     geminiKey?: SortOrderInput | SortOrder
+    evolutionApiUrl?: SortOrderInput | SortOrder
+    evolutionApiKey?: SortOrderInput | SortOrder
+    evolutionInstance?: SortOrderInput | SortOrder
+    whatsappAutoEnabled?: SortOrderInput | SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _avg?: ConfigAvgOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
@@ -18867,6 +18943,10 @@ export namespace Prisma {
     logoPath?: StringNullableWithAggregatesFilter<"Config"> | string | null
     openaiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
     geminiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    evolutionApiUrl?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    evolutionApiKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    evolutionInstance?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    whatsappAutoEnabled?: IntNullableWithAggregatesFilter<"Config"> | number | null
   }
 
   export type UsuarioWhereInput = {
@@ -19904,6 +19984,10 @@ export namespace Prisma {
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
+    evolutionApiUrl?: string | null
+    evolutionApiKey?: string | null
+    evolutionInstance?: string | null
+    whatsappAutoEnabled?: number | null
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -19913,6 +19997,10 @@ export namespace Prisma {
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
+    evolutionApiUrl?: string | null
+    evolutionApiKey?: string | null
+    evolutionInstance?: string | null
+    whatsappAutoEnabled?: number | null
   }
 
   export type ConfigUpdateInput = {
@@ -19921,6 +20009,10 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
+    whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -19930,6 +20022,10 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
+    whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigCreateManyInput = {
@@ -19939,6 +20035,10 @@ export namespace Prisma {
     logoPath?: string | null
     openaiKey?: string | null
     geminiKey?: string | null
+    evolutionApiUrl?: string | null
+    evolutionApiKey?: string | null
+    evolutionInstance?: string | null
+    whatsappAutoEnabled?: number | null
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -19947,6 +20047,10 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
+    whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -19956,6 +20060,10 @@ export namespace Prisma {
     logoPath?: NullableStringFieldUpdateOperationsInput | string | null
     openaiKey?: NullableStringFieldUpdateOperationsInput | string | null
     geminiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionApiKey?: NullableStringFieldUpdateOperationsInput | string | null
+    evolutionInstance?: NullableStringFieldUpdateOperationsInput | string | null
+    whatsappAutoEnabled?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type UsuarioCreateInput = {
@@ -21095,10 +21203,15 @@ export namespace Prisma {
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
+    evolutionApiUrl?: SortOrder
+    evolutionApiKey?: SortOrder
+    evolutionInstance?: SortOrder
+    whatsappAutoEnabled?: SortOrder
   }
 
   export type ConfigAvgOrderByAggregateInput = {
     id?: SortOrder
+    whatsappAutoEnabled?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -21108,6 +21221,10 @@ export namespace Prisma {
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
+    evolutionApiUrl?: SortOrder
+    evolutionApiKey?: SortOrder
+    evolutionInstance?: SortOrder
+    whatsappAutoEnabled?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -21117,10 +21234,15 @@ export namespace Prisma {
     logoPath?: SortOrder
     openaiKey?: SortOrder
     geminiKey?: SortOrder
+    evolutionApiUrl?: SortOrder
+    evolutionApiKey?: SortOrder
+    evolutionInstance?: SortOrder
+    whatsappAutoEnabled?: SortOrder
   }
 
   export type ConfigSumOrderByAggregateInput = {
     id?: SortOrder
+    whatsappAutoEnabled?: SortOrder
   }
 
   export type UsuarioCountOrderByAggregateInput = {
