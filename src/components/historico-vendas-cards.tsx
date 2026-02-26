@@ -54,7 +54,7 @@ type Venda = {
 type Props = {
   vendas: Venda[];
   searchParams: SearchParams;
-  gerarBoletoAction: (formData: FormData) => Promise<void>;
+  gerarBoletoAction: (formData: FormData) => Promise<unknown>;
 };
 
 export function HistoricoVendasCards({ vendas, searchParams, gerarBoletoAction }: Props) {
@@ -85,7 +85,7 @@ function VendaCard({
 }: {
   venda: Venda;
   buildUrl: (p: Partial<SearchParams>) => string;
-  gerarBoletoAction: (formData: FormData) => Promise<void>;
+  gerarBoletoAction: (formData: FormData) => Promise<unknown>;
 }) {
   const [expanded, setExpanded] = useState(false);
   const valorTotal =
@@ -175,7 +175,12 @@ function VendaCard({
                         Ver boleto
                       </a>
                     ) : (
-                      <form action={gerarBoletoAction} className="inline">
+                      <form
+                        action={async (fd) => {
+                          await gerarBoletoAction(fd);
+                        }}
+                        className="inline"
+                      >
                         <input type="hidden" name="vendaId" value={venda.id} />
                         <button
                           type="submit"
