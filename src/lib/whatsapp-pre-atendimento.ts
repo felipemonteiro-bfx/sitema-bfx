@@ -50,10 +50,9 @@ export async function gerarRespostaPreAtendimento(
   const search = mensagemCliente.trim().length > 2 ? mensagemCliente.trim() : undefined;
   const catalogo = await obterCatalogoParaIA(search);
 
-  const provider = "gemini" as const;
+  const provider = "gemini";
   const cfg = await prisma.config.findFirst();
-  if (provider === "openai" && !cfg?.openaiKey) return "Chave OpenAI não configurada.";
-  if (provider === "gemini" && !cfg?.geminiKey) return "Chave Gemini não configurada.";
+  if (!cfg?.geminiKey) return "Chave Gemini não configurada.";
 
   const ctx = nomeContato ? `Cliente: ${nomeContato}. ` : "";
   const userPrompt = `${ctx}Mensagem recebida: "${mensagemCliente}"

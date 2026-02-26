@@ -10,14 +10,15 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const [showDetails, setShowDetails] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     console.error("[Error Boundary]", error);
   }, [error]);
 
-  const isDev = process.env.NODE_ENV === "development";
-  const showDetails = isDev || process.env.NEXT_PUBLIC_SHOW_ERROR_DETAILS === "true";
+  const canShowDetails =
+    process.env.NODE_ENV === "development" ||
+    process.env.NEXT_PUBLIC_SHOW_ERROR_DETAILS === "true";
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
@@ -25,16 +26,16 @@ export default function Error({
       <div className="text-sm text-muted-foreground">
         Ocorreu um erro ao carregar esta página. Tente novamente.
       </div>
-      {showDetails && (
+      {canShowDetails && (
         <div className="w-full max-w-md space-y-2 text-left">
           <button
             type="button"
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={() => setExpanded(!expanded)}
             className="text-xs font-medium text-muted-foreground hover:text-foreground"
           >
-            {showDetails ? "Ocultar detalhes" : "Mostrar detalhes do erro"}
+            {expanded ? "Ocultar detalhes" : "Mostrar detalhes do erro"}
           </button>
-          {showDetails && (
+          {expanded && (
             <pre className="max-h-40 overflow-auto rounded border border-border bg-muted/50 p-3 text-xs">
               {error.message}
               {error.digest && `\n\nDigest: ${error.digest}`}
