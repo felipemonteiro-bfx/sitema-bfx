@@ -72,13 +72,27 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
         </div>
       </div>
       <div>
-        <label htmlFor="logo-upload" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="logo-upload" className="block text-sm font-medium text-foreground">
           Carregar nova logo
         </label>
-        <div className="mt-1 flex items-center space-x-2">
-          <Input id="logo-upload" type="file" accept="image/*" onChange={handleFileChange} />
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          <label className="cursor-pointer">
+            <span className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+              Escolher arquivo
+            </span>
+            <Input
+              id="logo-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="sr-only"
+            />
+          </label>
+          <span className="text-sm text-muted-foreground">
+            {file ? file.name : "Nenhum arquivo selecionado"}
+          </span>
           <Button onClick={handleUpload} disabled={!file || isUploading}>
-            {isUploading ? "Enviando..." : "Upload Logo"}
+            {isUploading ? "Enviando..." : "Enviar logo"}
           </Button>
         </div>
       </div>

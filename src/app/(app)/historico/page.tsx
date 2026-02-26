@@ -202,6 +202,8 @@ function parseDateEnd(dateStr: string) {
   return new Date(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999);
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const today = new Date();
@@ -215,10 +217,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const produtos = await prisma.produto.findMany({ select: { nome: true }, orderBy: { nome: "asc" } });
   const clientes = await prisma.cliente.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } });
 
+  const produtoFilter = sp.produto && sp.produto !== "all" ? sp.produto : undefined;
   const where = {
     dataVenda: { gte: start, lte: end },
     vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
-    produtoNome: sp.produto && sp.produto !== "all" ? sp.produto : undefined,
+    ...(produtoFilter && {
+      OR: [
+        { produtoNome: produtoFilter },
+        { itens: { some: { produtoNome: produtoFilter } } },
+      ],
+    }),
     clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
     descontoEmFolha: sp.descontoFolha === "1" ? true : sp.descontoFolha === "0" ? false : undefined,
     boleto: sp.boleto === "1" ? true : sp.boleto === "0" ? false : undefined,
@@ -229,7 +237,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const vendas = await prisma.venda.findMany({
     where,
-    orderBy: { dataVenda: "desc" },
+    orderBy: [{ dataVenda: "desc" }, { id: "desc" }],
     skip: (page - 1) * pageSize,
     take: pageSize,
     select: {
@@ -248,7 +256,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       asaasPaymentId: true,
       boletoUrl: true,
       cliente: { select: { nome: true } },
-      itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+      itens: {
+        select: { produtoNome: true, quantidade: true, subtotal: true },
+        orderBy: { id: "asc" },
+      },
     },
   });
 

@@ -12,11 +12,11 @@ export function MobileMenuTrigger({ children }: { children: React.ReactNode }) {
           <span className="text-lg leading-none">≡</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-4">
-        <SheetHeader>
+      <SheetContent side="left" className="flex w-72 flex-col overflow-hidden p-4">
+        <SheetHeader className="shrink-0">
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
-        <div className="mt-4">
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto">
           {children}
         </div>
       </SheetContent>

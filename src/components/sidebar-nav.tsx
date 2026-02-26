@@ -207,7 +207,7 @@ export function SidebarNav({ menu }: { menu: MenuItem[] }) {
   let itemIndex = 0;
 
   return (
-    <nav className="flex flex-1 flex-col gap-4 overflow-y-auto custom-scrollbar">
+    <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto custom-scrollbar">
       {groups.map((group, groupIndex) => {
         const startIndex = itemIndex;
         itemIndex += group.items.length;
