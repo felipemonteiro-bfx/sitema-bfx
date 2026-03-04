@@ -1,51 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { importacaoBatchSchema } from "@/lib/validations/importacao";
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.json();
-    if (!Array.isArray(data)) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    const raw = await request.json();
+    if (!Array.isArray(raw)) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
 
-    for (const row of data) {
-      const clienteNome = String(row.cliente || "").trim();
-      if (!clienteNome) continue;
-
-      // 1. Garantir que o cliente existe
-      let cliente = await prisma.cliente.findFirst({ where: { nome: clienteNome } });
-      if (!cliente) {
-        cliente = await prisma.cliente.create({ data: { nome: clienteNome, tipo: "PF" } });
-      }
-
-      const valorVenda = Number(row.valor || 0);
-      const frete = Number(row.frete || 0);
-      const custoEnvio = Number(row.envio || 0);
-      const custoProduto = Number(row.custo || 0);
-      const parcelas = Number(row.parcelas || 1);
-      
-      const total = valorVenda + frete;
-      const valorParcela = parcelas > 0 ? total / parcelas : 0;
-      
-      // Cálculo básico de lucro para importação (pode ser refinado se necessário)
-      const lucro = total - (custoProduto + custoEnvio);
-
-      // 2. Criar a venda
-      await prisma.venda.create({
-        data: {
-          dataVenda: new Date(row.dataVenda),
-          vendedor: row.vendedor || "",
-          clienteId: cliente.id,
-          produtoNome: row.produto || "",
-          custoProduto,
-          valorVenda,
-          valorFrete: frete,
-          custoEnvio,
-          parcelas,
-          valorParcela,
-          lucroLiquido: lucro,
-          antecipada: row.antecipada ? 1 : 0,
-        },
-      });
+    const parsed = importacaoBatchSchema.safeParse(raw);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      const msg = first?.path?.length ? `${first.path.join(".")}: ${first.message}` : first?.message ?? "Dados inválidos";
+      return NextResponse.json({ error: msg }, { status: 400 });
     }
+
+    const data = parsed.data;
+
+    await prisma.$transaction(async (tx) => {
+      for (const row of data) {
+        const clienteNome = row.cliente.trim();
+        if (!clienteNome) continue;
+
+        let cliente = await tx.cliente.findFirst({ where: { nome: clienteNome } });
+        if (!cliente) {
+          cliente = await tx.cliente.create({ data: { nome: clienteNome, tipo: "PF" } });
+        }
+
+        const valorVenda = row.valor;
+        const frete = row.frete ?? 0;
+        const custoEnvio = row.envio ?? 0;
+        const custoProduto = row.custo ?? 0;
+        const parcelas = row.parcelas ?? 1;
+        const total = valorVenda + frete;
+        const valorParcela = parcelas > 0 ? total / parcelas : 0;
+        const lucro = total - (custoProduto + custoEnvio);
+
+        await tx.venda.create({
+          data: {
+            dataVenda: row.dataVenda,
+            vendedor: row.vendedor || "",
+            clienteId: cliente.id,
+            produtoNome: row.produto || "",
+            custoProduto,
+            valorVenda,
+            valorFrete: frete,
+            custoEnvio,
+            parcelas,
+            valorParcela,
+            lucroLiquido: lucro,
+            antecipada: row.antecipada ? 1 : 0,
+          },
+        });
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

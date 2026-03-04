@@ -149,10 +149,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Target className="h-6 w-6 text-primary dark:text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                <h1 className="page-title-gradient text-2xl font-bold tracking-tight">
                   Dashboard Executivo
                 </h1>
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="gradient-bar mt-2" />
+                <p className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                   <Calendar className="h-4 w-4" />
                   {formatDate(start)} — {formatDate(end)}
                 </p>

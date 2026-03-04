@@ -1,14 +1,7 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR").format(d);
-}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -55,7 +48,7 @@ export async function GET(req: Request) {
       font: fontBold,
       color: rgb(1, 1, 1),
     });
-    page.drawText(`Período: ${formatDate(start)} até ${formatDate(end)}`, {
+    page.drawText(`Período: ${formatDateBR(start)} até ${formatDateBR(end)}`, {
       x: 40,
       y: height - 65,
       size: 10,
@@ -94,7 +87,7 @@ export async function GET(req: Request) {
       const valorTotal = valorTotalVenda(v);
       totalValor += valorTotal;
 
-      page.drawText(formatDate(v.dataVenda), { x: colX[0], y, size: 9, font });
+      page.drawText(formatDateBR(v.dataVenda), { x: colX[0], y, size: 9, font });
       page.drawText(v.cliente?.nome?.substring(0, 20) || "N/D", { x: colX[1], y, size: 9, font });
       page.drawText(produtosTexto(v).substring(0, 18) || "N/A", { x: colX[2], y, size: 9, font });
       page.drawText(v.vendedor || "N/D", { x: colX[3], y, size: 9, font });

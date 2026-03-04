@@ -78,6 +78,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(clientesComResumo);
   } catch (error) {
     console.error("Erro no autocomplete de clientes:", error);
-    return NextResponse.json({ error: "Failed to fetch customers" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao buscar clientes." }, { status: 500 });
   }
 }

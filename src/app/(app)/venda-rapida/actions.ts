@@ -14,6 +14,7 @@ import {
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
+import { signReciboId } from "@/lib/recibo-url";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -307,7 +308,7 @@ export async function criarVendaV2(
           mensagem =
             descontoEmFolha && assinaturaToken
               ? `Olá! Segue o link para assinar sua autorização de desconto em folha: ${baseUrl}/assinatura/${assinaturaToken}`
-              : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}`;
+              : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}&sig=${signReciboId(venda.id)}`;
           if (boletoUrl && waConfig.autoBoleto) {
             mensagem += `\n\nSeu boleto: ${boletoUrl}`;
           }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Props {
@@ -37,6 +38,13 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
 
       const commData = await commRes.json();
       const detailsData = await detailsRes.json();
+
+      if (!commRes.ok) {
+        toast.error(commData?.error ?? "Erro ao buscar comissões.");
+      }
+      if (!detailsRes.ok) {
+        toast.error(detailsData?.error ?? "Erro ao buscar detalhes de comissões.");
+      }
 
       setCommissions(Array.isArray(commData) ? commData : []);
       setDetails(Array.isArray(detailsData) ? detailsData : []);

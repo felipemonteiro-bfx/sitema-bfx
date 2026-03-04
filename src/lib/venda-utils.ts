@@ -27,3 +27,16 @@ export function produtosTexto(v: {
   }
   return v.produtoNome ?? "—";
 }
+
+/**
+ * Quantidade total: soma dos itens ou campo legado.
+ */
+export function quantidadeTotal(v: {
+  itens?: { quantidade: number }[];
+  quantidade?: number | null;
+}): number {
+  if (v.itens && v.itens.length > 0) {
+    return v.itens.reduce((s, i) => s + i.quantidade, 0);
+  }
+  return v.quantidade ?? 1;
+}

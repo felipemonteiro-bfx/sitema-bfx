@@ -34,6 +34,15 @@ function normalizarTelefone(jid: string): string {
 
 export async function POST(req: Request) {
   try {
+    const cfg = await prisma.config.findFirst();
+    const apiKey = cfg?.evolutionApiKey?.trim() || process.env.EVOLUTION_API_KEY?.trim();
+    if (apiKey) {
+      const incomingKey = req.headers.get("apikey") || req.headers.get("x-evolution-apikey");
+      if (incomingKey !== apiKey) {
+        return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+      }
+    }
+
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ ok: true }, { status: 200 });
 
@@ -61,7 +70,6 @@ export async function POST(req: Request) {
     const telefone = normalizarTelefone(jid);
     const nomeContato = typeof d.pushName === "string" ? d.pushName : undefined;
 
-    const cfg = await prisma.config.findFirst();
     const preAtendimentoAtivo = cfg?.whatsappPreAtendimento === 1;
     if (!preAtendimentoAtivo) return NextResponse.json({ ok: true }, { status: 200 });
 

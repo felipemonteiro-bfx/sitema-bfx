@@ -1,15 +1,10 @@
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { verifyReciboSig } from "@/lib/recibo-url";
+import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises";
 import path from "path";
-
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR").format(d);
-}
 
 function wrapText(text: string, font: any, size: number, maxWidth: number) {
   const words = text.split(/\s+/);
@@ -96,14 +91,22 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const idParam = (searchParams.get("id") || "").trim();
+    const sig = searchParams.get("sig") || "";
     const tipo = (searchParams.get("tipo") || "venda").toLowerCase(); // "venda" | "autorizacao"
-    if (!idParam) return new Response("ID inválido", { status: 400 });
+    if (!idParam)
+      return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+
+    // Quando sig está presente (link WhatsApp), validar assinatura
+    if (sig && !verifyReciboSig(idParam, sig)) {
+      return NextResponse.json({ error: "Link inválido ou expirado." }, { status: 401 });
+    }
 
     const isNumeric = /^\d+$/.test(idParam);
     const vendaBase = isNumeric
     ? await prisma.venda.findUnique({ where: { id: Number(idParam) } })
     : await prisma.venda.findUnique({ where: { uuid: idParam } });
-  if (!vendaBase) return new Response("Venda não encontrada", { status: 404 });
+  if (!vendaBase)
+    return NextResponse.json({ error: "Venda não encontrada" }, { status: 404 });
 
   // Busca itens separado para não quebrar se a tabela não existir em produção
   let vendaItens: { produtoNome: string; quantidade: number; subtotal: number }[] = [];
@@ -212,13 +215,13 @@ export async function GET(req: Request) {
       size: 10, font, color: rgb(0.35, 0.38, 0.42),
     });
     page.drawText(`Recibo #${venda.id}`, { x: 470, y: headerTop + 10, size: 9, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Data: ${formatDateBR(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
   } else {
     const subtituloFallback = tipo === "autorizacao" ? "Autorização de Desconto em Folha" : "Recibo de Venda";
     page.drawText("BFX Manager", { x: marginX, y: headerTop + 5, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
     page.drawText(subtituloFallback, { x: marginX, y: headerTop - 17, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
     page.drawText(`Recibo #${venda.id}`, { x: 420, y: headerTop + 5, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Data: ${formatDateBR(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
   }
 
   y = headerTop - 60;
@@ -227,7 +230,7 @@ export async function GET(req: Request) {
   page.drawText("Detalhes da venda", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
   const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
-  const dataCompraFormatada = formatDate(venda.dataVenda);
+  const dataCompraFormatada = formatDateBR(venda.dataVenda);
   for (const line of [
     `Data da compra: ${dataCompraFormatada}`,
     `Cliente: ${cliente?.nome || "N/D"}`,
@@ -317,7 +320,7 @@ export async function GET(req: Request) {
 
       drawTableRow(
         page, font, fontBold, false, cols,
-        [String(dias), formatDate(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""],
+        [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""],
         y, rowHeight, tableLeft, tableWidth,
       );
       y -= rowHeight;
@@ -406,6 +409,9 @@ export async function GET(req: Request) {
   } catch (err) {
     console.error("Erro ao gerar recibo PDF:", err);
     const msg = err instanceof Error ? err.message : "Erro interno";
-    return new Response(`Erro ao gerar recibo: ${msg}`, { status: 500 });
+    return NextResponse.json(
+      { error: `Erro ao gerar recibo: ${msg}` },
+      { status: 500 }
+    );
   }
 }

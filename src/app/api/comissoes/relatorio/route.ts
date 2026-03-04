@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/db';
+import { valorTotalVenda, produtosTexto } from '@/lib/venda-utils';
+import { buildComissoesWhere } from '@/lib/comissoes-utils';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const vendedorFiltro = searchParams.get('vendedor');
-    const dataInicioStr = searchParams.get('dataInicio');
-    const dataFimStr = searchParams.get('dataFim');
+    const where = buildComissoesWhere(searchParams);
 
-    // Construir filtros
-    const where: any = {};
-    if (vendedorFiltro) where.vendedor = vendedorFiltro;
-    if (dataInicioStr || dataFimStr) {
-      where.dataVenda = {};
-      if (dataInicioStr) where.dataVenda.gte = new Date(dataInicioStr);
-      if (dataFimStr) where.dataVenda.lte = new Date(dataFimStr);
-    }
-
-    // Buscar dados
+    // Buscar dados (incluir itens para valorTotalVenda/produtosTexto)
     const vendas = await prisma.venda.findMany({
       where,
-      include: { cliente: { select: { nome: true } } },
+      include: {
+        cliente: { select: { nome: true } },
+        itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
+      },
       orderBy: { dataVenda: 'desc' }
     });
 
@@ -44,12 +36,15 @@ export async function GET(request: NextRequest) {
         ? (venda.lucroLiquido * pct) / 100
         : 0;
 
+      const totalVenda = valorTotalVenda(venda);
+      const produtos = produtosTexto(venda);
+
       const row = [
         venda.dataVenda.toISOString().split('T')[0],
         `"${venda.vendedor || 'N/A'}"`,
         `"${venda.cliente?.nome || 'N/A'}"`,
-        `"${venda.produtoNome || 'N/A'}"`,
-        venda.valorVenda?.toFixed(2) || '0.00',
+        `"${produtos}"`,
+        totalVenda.toFixed(2),
         venda.lucroLiquido?.toFixed(2) || '0.00',
         pct?.toString() || '0',
         valorComissao.toFixed(2)
@@ -67,8 +62,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erro ao gerar relatório:', error);
-    return NextResponse.json({ error: 'Failed to generate report' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
+    return NextResponse.json({ error: 'Erro ao gerar relatório.' }, { status: 500 });
   }
 }

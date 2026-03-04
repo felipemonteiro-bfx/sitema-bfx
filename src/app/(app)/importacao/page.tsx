@@ -20,8 +20,9 @@ export default async function Page() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Importação Inteligente</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="page-title-gradient text-2xl font-semibold">Importação Inteligente</h1>
+          <div className="gradient-bar mt-2" />
+          <p className="text-sm text-muted-foreground mt-2">
             Revise e edite os dados do arquivo antes de confirmar. Use &quot;Sugerir com IA&quot; para padronizar clientes, produtos e preencher campos em branco.
           </p>
         </div>

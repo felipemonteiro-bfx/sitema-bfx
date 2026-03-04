@@ -6,13 +6,10 @@
 import { prisma } from "@/lib/db";
 import { runAi } from "@/lib/ai";
 import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { formatBRL } from "@/lib/utils";
 
 const MAX_RESPONSE_CHARS = 1500;
 const CATALOG_LIMIT = 80;
-
-function formatBRL(val: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
-}
 
 /** Monta resumo do catálogo para contexto da IA */
 export async function obterCatalogoParaIA(search?: string): Promise<string> {

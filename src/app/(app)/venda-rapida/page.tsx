@@ -9,6 +9,7 @@ import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { Separator } from "@/components/ui/separator";
 import { criarVendaV2 } from "./actions";
+import { signReciboId } from "@/lib/recibo-url";
 
 export default async function Page() {
   const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
@@ -34,8 +35,9 @@ export default async function Page() {
     <div className="space-y-8 max-w-[1400px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">Terminal de Vendas</h1>
-          <p className="text-muted-foreground font-medium">PDV Inteligente BFX Intelligence</p>
+          <h1 className="page-title-gradient text-3xl font-black tracking-tight">Terminal de Vendas</h1>
+          <div className="gradient-bar mt-2" />
+          <p className="text-muted-foreground font-medium mt-2">PDV Inteligente BFX Intelligence</p>
         </div>
 
         {ultima && (
@@ -74,7 +76,7 @@ export default async function Page() {
                 href={`https://wa.me/?text=${encodeURIComponent(
                   ultima.descontoEmFolha && ultima.assinaturaToken
                     ? `Segue o link para assinar sua autorização: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/assinatura/${ultima.assinaturaToken}`
-                    : `Segue seu recibo: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/api/recibo?id=${ultima.id}`
+                    : `Segue seu recibo: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/api/recibo?id=${ultima.id}&sig=${signReciboId(ultima.id)}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"

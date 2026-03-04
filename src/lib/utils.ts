@@ -17,6 +17,11 @@ export function formatBRL(value?: number | null) {
   }).format(v);
 }
 
+export function formatDateBR(value: Date | string): string {
+  const d = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("pt-BR").format(d);
+}
+
 export function maskCpf(val?: string | null) {
   const v = cleanStr(val || "");
   if (v.length !== 11) return val || "";

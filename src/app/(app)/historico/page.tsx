@@ -22,47 +22,10 @@ import { createAuditLog } from "@/lib/audit";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
+import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-utils";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
-
-/** Calcula valor total considerando itens (múltiplos produtos) ou campos legados */
-function valorTotalVenda(v: {
-  itens?: { subtotal: number }[];
-  valorVenda?: number | null;
-  quantidade?: number | null;
-  valorFrete?: number | null;
-}) {
-  const frete = v.valorFrete ?? 0;
-  if (v.itens && v.itens.length > 0) {
-    const subtotal = v.itens.reduce((s, i) => s + i.subtotal, 0);
-    return subtotal + frete;
-  }
-  return ((v.valorVenda ?? 0) * (v.quantidade ?? 1)) + frete;
-}
-
-/** Texto dos produtos: lista de itens ou campo legado */
-function produtosTexto(v: {
-  itens?: { produtoNome: string; quantidade: number }[];
-  produtoNome?: string | null;
-  quantidade?: number | null;
-}) {
-  if (v.itens && v.itens.length > 0) {
-    return v.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ""}`).join(", ");
-  }
-  return v.produtoNome ?? "—";
-}
-
-/** Quantidade total: soma dos itens ou campo legado */
-function quantidadeTotal(v: {
-  itens?: { quantidade: number }[];
-  quantidade?: number | null;
-}) {
-  if (v.itens && v.itens.length > 0) {
-    return v.itens.reduce((s, i) => s + i.quantidade, 0);
-  }
-  return v.quantidade ?? 1;
-}
 
 type Search = { 
   from?: string; 

@@ -1,16 +1,9 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises";
 import path from "path";
-
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR").format(d);
-}
 
 function wrapText(text: string, font: { widthOfTextAtSize: (t: string, s: number) => number }, size: number, maxWidth: number) {
   const words = text.split(/\s+/);
@@ -177,19 +170,19 @@ export async function generateReciboPdf(
       color: rgb(0.35, 0.38, 0.42),
     });
     page.drawText(`Recibo #${venda.id}`, { x: 470, y: headerTop + 10, size: 9, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Data: ${formatDateBR(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
   } else {
     const subtituloFallback = tipo === "autorizacao" ? "Autorização de Desconto em Folha" : "Recibo de Venda";
     page.drawText("BFX Manager", { x: marginX, y: headerTop + 5, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
     page.drawText(subtituloFallback, { x: marginX, y: headerTop - 17, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
     page.drawText(`Recibo #${venda.id}`, { x: 420, y: headerTop + 5, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Data: ${formatDateBR(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
   }
 
   y = headerTop - 60;
 
   const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
-  const dataCompraFormatada = formatDate(venda.dataVenda);
+  const dataCompraFormatada = formatDateBR(venda.dataVenda);
   const total = valorTotalVenda(venda);
   const subtotalProd = venda.itens?.length
     ? venda.itens.reduce((s, i) => s + i.subtotal, 0)
@@ -281,7 +274,7 @@ export async function generateReciboPdf(
         fontBold,
         false,
         cols,
-        [String(dias), formatDate(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""],
+        [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""],
         y,
         rowHeight,
         tableLeft,

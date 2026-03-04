@@ -1,32 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
+import { prisma } from '@/lib/db';
 import { valorTotalVenda, produtosTexto } from '@/lib/venda-utils';
-
-const prisma = new PrismaClient();
+import { buildComissoesWhere } from '@/lib/comissoes-utils';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const vendedorFiltro = searchParams.get('vendedor');
-    const dataInicioStr = searchParams.get('dataInicio');
-    const dataFimStr = searchParams.get('dataFim');
-
-    // Construir filtros para o Prisma
-    const where: any = {};
-
-    if (vendedorFiltro) {
-      where.vendedor = vendedorFiltro;
-    }
-
-    if (dataInicioStr || dataFimStr) {
-      where.dataVenda = {};
-      if (dataInicioStr) {
-        where.dataVenda.gte = new Date(dataInicioStr);
-      }
-      if (dataFimStr) {
-        where.dataVenda.lte = new Date(dataFimStr);
-      }
-    }
+    const where = buildComissoesWhere(searchParams);
 
     // Buscar vendas com detalhes
     const vendas = await prisma.venda.findMany({
@@ -82,8 +62,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(detalhes);
   } catch (error) {
     console.error('Erro ao buscar detalhes de comissões:', error);
-    return NextResponse.json({ error: 'Failed to fetch commission details' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
+    return NextResponse.json({ error: 'Erro ao buscar detalhes de comissões.' }, { status: 500 });
   }
 }

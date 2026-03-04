@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
@@ -30,6 +30,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(produtos);
   } catch (error) {
     console.error("Erro no autocomplete de produtos:", error);
-    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao buscar produtos." }, { status: 500 });
   }
 }

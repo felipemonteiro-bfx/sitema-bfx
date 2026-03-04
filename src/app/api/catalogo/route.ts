@@ -1,11 +1,8 @@
 import { prisma } from "@/lib/db";
+import { formatBRL } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises";
 import path from "path";
-
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
 
 function wrapText(text: string, font: any, size: number, maxWidth: number) {
   const words = text.split(/\s+/);

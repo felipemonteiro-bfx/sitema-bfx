@@ -40,8 +40,9 @@ export default async function Page() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Relatórios</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="page-title-gradient text-2xl font-semibold">Relatórios</h1>
+        <div className="gradient-bar mt-2" />
+        <p className="text-sm text-muted-foreground mt-2">
           Gere exportações rápidas e compartilhe com o time financeiro.
         </p>
       </div>

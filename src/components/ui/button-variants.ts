@@ -7,6 +7,8 @@ export const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg active:scale-[0.98] dark:shadow-[var(--shadow-sm)] dark:hover:shadow-[var(--shadow-md)]",
+        gradient:
+          "bg-gradient-to-r from-rose-500 via-rose-600 to-violet-600 text-white shadow-md hover:from-rose-600 hover:via-rose-700 hover:to-violet-700 hover:shadow-lg active:scale-[0.98] dark:shadow-[var(--shadow-sm)]",
         destructive:
           "bg-destructive text-destructive-foreground shadow-md hover:bg-destructive/90 hover:shadow-lg active:scale-[0.98] dark:shadow-[var(--shadow-sm)] dark:hover:shadow-[var(--shadow-md)]",
         success:

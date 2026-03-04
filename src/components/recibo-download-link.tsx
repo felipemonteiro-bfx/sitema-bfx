@@ -38,8 +38,15 @@ export function ReciboDownloadLink({
       const res = await fetch(url, { credentials: "include" });
 
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `Erro ${res.status}`);
+        const ct = res.headers.get("content-type") || "";
+        let msg: string;
+        if (ct.includes("application/json")) {
+          const data = await res.json();
+          msg = data?.error ?? `Erro ${res.status}`;
+        } else {
+          msg = (await res.text()) || `Erro ${res.status}`;
+        }
+        throw new Error(msg);
       }
 
       const blob = await res.blob();

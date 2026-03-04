@@ -80,6 +80,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Erro ao gerar relatório de antecipação:", error);
-    return NextResponse.json({ error: "Failed to generate report" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao gerar relatório." }, { status: 500 });
   }
 }
