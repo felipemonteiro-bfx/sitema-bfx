@@ -215,8 +215,9 @@ function VendaCard({
             </Link>
             <ReciboDownloadLink
               vendaId={venda.id}
+              tipo={venda.descontoEmFolha ? "autorizacao" : "venda"}
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "touch-manipulation min-h-[44px]")}
-              label="PDF"
+              label={venda.descontoEmFolha ? "Autorização" : "PDF"}
             />
           </div>
         </div>

@@ -342,17 +342,10 @@ export function EditVendaFormClient({
               </button>
               <ReciboDownloadLink
                 vendaId={editVenda.id}
+                tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}
                 className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                label="Recibo de Venda"
+                label={editVenda.descontoEmFolha ? "Autorização" : "Recibo de Venda"}
               />
-              {editVenda.descontoEmFolha && (
-                <ReciboDownloadLink
-                  vendaId={editVenda.id}
-                  tipo="autorizacao"
-                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                  label="Autorização (Desconto em Folha)"
-                />
-              )}
               {editVenda.boletoUrl ? (
                 <a
                   href={editVenda.boletoUrl}

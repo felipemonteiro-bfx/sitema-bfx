@@ -512,8 +512,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </Link>
                         <ReciboDownloadLink
                           vendaId={v.id}
+                          tipo={v.descontoEmFolha ? "autorizacao" : "venda"}
                           className={buttonVariants({ variant: "ghost", size: "sm" })}
-                          label="PDF"
+                          label={v.descontoEmFolha ? "Autorização" : "PDF"}
                         />
                       </div>
                     </TableCell>
@@ -698,8 +699,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar alterações</button>
                   <ReciboDownloadLink
                     vendaId={editVenda.id}
+                    tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}
                     className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                    label="Baixar recibo PDF"
+                    label={editVenda.descontoEmFolha ? "Autorização" : "Baixar recibo PDF"}
                   />
                   {editVenda.boletoUrl ? (
                     <a

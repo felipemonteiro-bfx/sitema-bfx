@@ -53,17 +53,10 @@ export default async function Page() {
             <div className="flex flex-wrap gap-2">
               <ReciboDownloadLink
                 vendaId={ultima.id}
+                tipo={ultima.descontoEmFolha ? "autorizacao" : "venda"}
                 className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
-                label="Recibo"
+                label={ultima.descontoEmFolha ? "Autorização" : "Recibo"}
               />
-              {ultima.descontoEmFolha && (
-                <ReciboDownloadLink
-                  vendaId={ultima.id}
-                  tipo="autorizacao"
-                  className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
-                  label="Autorização"
-                />
-              )}
               {ultima.descontoEmFolha && ultima.assinaturaToken && (
                 <LinkAssinaturaButton
                   token={ultima.assinaturaToken}
@@ -76,7 +69,7 @@ export default async function Page() {
                 href={`https://wa.me/?text=${encodeURIComponent(
                   ultima.descontoEmFolha && ultima.assinaturaToken
                     ? `Segue o link para assinar sua autorização: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/assinatura/${ultima.assinaturaToken}`
-                    : `Segue seu recibo: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/api/recibo?id=${ultima.id}&sig=${signReciboId(ultima.id)}`
+                    : `Segue seu recibo: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/api/recibo?id=${ultima.id}&sig=${signReciboId(ultima.id)}${ultima.descontoEmFolha ? "&tipo=autorizacao" : ""}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"

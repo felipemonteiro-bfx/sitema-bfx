@@ -92,7 +92,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const idParam = (searchParams.get("id") || "").trim();
     const sig = searchParams.get("sig") || "";
-    const tipo = (searchParams.get("tipo") || "venda").toLowerCase(); // "venda" | "autorizacao"
+    let tipo = (searchParams.get("tipo") || "").toLowerCase() as string; // "venda" | "autorizacao"
     if (!idParam)
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
 
@@ -107,6 +107,11 @@ export async function GET(req: Request) {
     : await prisma.venda.findUnique({ where: { uuid: idParam } });
   if (!vendaBase)
     return NextResponse.json({ error: "Venda não encontrada" }, { status: 404 });
+
+  // Inferir tipo pela venda quando não informado na query
+  if (tipo !== "autorizacao" && tipo !== "venda") {
+    tipo = vendaBase.descontoEmFolha ? "autorizacao" : "venda";
+  }
 
   // Busca itens separado para não quebrar se a tabela não existir em produção
   let vendaItens: { produtoNome: string; quantidade: number; subtotal: number }[] = [];

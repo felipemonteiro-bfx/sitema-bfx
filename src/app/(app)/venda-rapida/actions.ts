@@ -308,7 +308,7 @@ export async function criarVendaV2(
           mensagem =
             descontoEmFolha && assinaturaToken
               ? `Olá! Segue o link para assinar sua autorização de desconto em folha: ${baseUrl}/assinatura/${assinaturaToken}`
-              : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}&sig=${signReciboId(venda.id)}`;
+              : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}&sig=${signReciboId(venda.id)}${descontoEmFolha ? "&tipo=autorizacao" : ""}`;
           if (boletoUrl && waConfig.autoBoleto) {
             mensagem += `\n\nSeu boleto: ${boletoUrl}`;
           }
