@@ -73,7 +73,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       return (
         <div className="relative">
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <div className="pointer-events-none absolute left-3 top-1/2 inline-flex h-4 w-4 -translate-y-1/2 items-center justify-center text-muted-foreground">
               {leftIcon}
             </div>
           )}
@@ -89,7 +89,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             {...props}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <div className="absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center gap-1">
             {showClearButton && (
               <button
                 type="button"
@@ -102,7 +102,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             )}
             {StateIcon}
             {rightIcon && !StateIcon && (
-              <span className="text-muted-foreground pointer-events-none">{rightIcon}</span>
+              <span className="pointer-events-none inline-flex h-4 w-4 items-center justify-center text-muted-foreground">{rightIcon}</span>
             )}
           </div>
         </div>

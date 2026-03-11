@@ -53,7 +53,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
 
     return (
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium pointer-events-none">
+        <span className="pointer-events-none absolute left-3 top-1/2 inline-flex h-4 min-w-5 -translate-y-1/2 items-center justify-start text-sm font-medium text-muted-foreground">
           R$
         </span>
         <input
