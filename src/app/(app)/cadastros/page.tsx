@@ -11,6 +11,7 @@ import { MaskedInput } from "@/components/masked-input";
 import { CurrencyInput } from "@/components/currency-input";
 import { QueryTabs } from "@/components/query-tabs";
 import ProdutoFormClient from "@/components/produto-form-client";
+import ProdutoEditDialog from "@/components/produto-edit-dialog";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Search, Pencil } from "lucide-react";
@@ -553,20 +554,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </CardContent>
                 </Card>
                 {editProdutoData && (
-                  <Card id="editar-produto" className="mt-4 scroll-mt-24">
-                    <CardHeader>
-                      <CardTitle className="text-blue-900">Editando produto #{editProdutoData.id}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ProdutoFormClient
-                        produto={editProdutoData}
-                        onSuccessAction={addProduto}
-                        onUpdateAction={updateProduto}
-                        fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
-                        cancelHref={buildUrl({ tab: "produtos", editProduto: undefined })}
-                      />
-                    </CardContent>
-                  </Card>
+                  <ProdutoEditDialog
+                    produto={editProdutoData}
+                    onSuccessAction={addProduto}
+                    onUpdateAction={updateProduto}
+                    fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
+                    cancelHref={buildUrl({ tab: "produtos", editProduto: undefined })}
+                  />
                 )}
               </>
             ),
