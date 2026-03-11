@@ -19,25 +19,25 @@ import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string };
 
-function normalizeProductName(value: FormDataEntryValue | null) {
+function normalizeUppercase(value: FormDataEntryValue | null) {
   return String(value || "").trim().toLocaleUpperCase("pt-BR");
 }
 
 async function addCliente(formData: FormData) {
   "use server";
-  const nome = String(formData.get("nome") || "");
+  const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!nome) return;
   const cliente = await prisma.cliente.create({
     data: {
       nome,
-      cpf: tipo === "PF" ? String(formData.get("doc") || "") : null,
-      cnpj: tipo === "PJ" ? String(formData.get("doc") || "") : null,
+      cpf: tipo === "PF" ? normalizeUppercase(formData.get("doc")) : null,
+      cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
       renda: Number(formData.get("renda") || 0),
-      empresa: String(formData.get("empresa") || ""),
-      telefone: String(formData.get("telefone") || ""),
-      cep: String(formData.get("cep") || ""),
-      matricula: String(formData.get("matricula") || ""),
+      empresa: normalizeUppercase(formData.get("empresa")),
+      telefone: normalizeUppercase(formData.get("telefone")),
+      cep: normalizeUppercase(formData.get("cep")),
+      matricula: normalizeUppercase(formData.get("matricula")),
       tipo,
     },
   });
@@ -48,7 +48,7 @@ async function addCliente(formData: FormData) {
 async function updateCliente(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
-  const nome = String(formData.get("nome") || "").trim();
+  const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!id || !nome) {
     throw new Error("Dados incompletos. Nome do cliente é obrigatório.");
@@ -57,13 +57,13 @@ async function updateCliente(formData: FormData) {
     where: { id },
     data: {
       nome,
-      cpf: tipo === "PF" ? String(formData.get("doc") || "") : null,
-      cnpj: tipo === "PJ" ? String(formData.get("doc") || "") : null,
+      cpf: tipo === "PF" ? normalizeUppercase(formData.get("doc")) : null,
+      cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
       renda: Number(formData.get("renda") || 0),
-      empresa: String(formData.get("empresa") || ""),
-      telefone: String(formData.get("telefone") || ""),
-      cep: String(formData.get("cep") || ""),
-      matricula: String(formData.get("matricula") || ""),
+      empresa: normalizeUppercase(formData.get("empresa")),
+      telefone: normalizeUppercase(formData.get("telefone")),
+      cep: normalizeUppercase(formData.get("cep")),
+      matricula: normalizeUppercase(formData.get("matricula")),
       tipo,
     },
   });
@@ -74,15 +74,15 @@ async function updateCliente(formData: FormData) {
 
 async function addProduto(formData: FormData) {
   "use server";
-  const nome = normalizeProductName(formData.get("nome"));
+  const nome = normalizeUppercase(formData.get("nome"));
   if (!nome) return;
   const produto = await prisma.produto.create({
     data: {
       nome,
       custoPadrao: Number(formData.get("custo") || 0),
-      marca: String(formData.get("marca") || ""),
-      categoria: String(formData.get("categoria") || ""),
-      ncm: String(formData.get("ncm") || ""),
+      marca: normalizeUppercase(formData.get("marca")),
+      categoria: normalizeUppercase(formData.get("categoria")),
+      ncm: normalizeUppercase(formData.get("ncm")),
       valorVenda: Number(formData.get("valor") || 0),
       qtdEstoque: Number(formData.get("estoque") || 0),
       imagem: String(formData.get("imagem") || ""),
@@ -96,7 +96,7 @@ async function addProduto(formData: FormData) {
 async function updateProduto(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
-  const nome = normalizeProductName(formData.get("nome"));
+  const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) {
     throw new Error("Dados incompletos. Nome do produto é obrigatório.");
   }
@@ -105,9 +105,9 @@ async function updateProduto(formData: FormData) {
     data: {
       nome,
       custoPadrao: Number(formData.get("custo") || 0),
-      marca: String(formData.get("marca") || ""),
-      categoria: String(formData.get("categoria") || ""),
-      ncm: String(formData.get("ncm") || ""),
+      marca: normalizeUppercase(formData.get("marca")),
+      categoria: normalizeUppercase(formData.get("categoria")),
+      ncm: normalizeUppercase(formData.get("ncm")),
       valorVenda: Number(formData.get("valor") || 0),
       qtdEstoque: Number(formData.get("estoque") || 0),
       imagem: String(formData.get("imagem") || ""),
@@ -120,12 +120,12 @@ async function updateProduto(formData: FormData) {
 
 async function addFornecedor(formData: FormData) {
   "use server";
-  const nome = String(formData.get("nome") || "");
+  const nome = normalizeUppercase(formData.get("nome"));
   if (!nome) return;
   await prisma.fornecedor.create({
     data: {
       nome,
-      telefone: String(formData.get("telefone") || ""),
+      telefone: normalizeUppercase(formData.get("telefone")),
     },
   });
   revalidatePath("/cadastros");
@@ -134,13 +134,13 @@ async function addFornecedor(formData: FormData) {
 async function updateFornecedor(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
-  const nome = String(formData.get("nome") || "");
+  const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) return;
   await prisma.fornecedor.update({
     where: { id },
     data: {
       nome,
-      telefone: String(formData.get("telefone") || ""),
+      telefone: normalizeUppercase(formData.get("telefone")),
     },
   });
   await createAuditLog("fornecedor:update", { fornecedorId: id, nome });
@@ -150,14 +150,14 @@ async function updateFornecedor(formData: FormData) {
 
 async function addEmpresa(formData: FormData) {
   "use server";
-  const nome = String(formData.get("nome") || "");
+  const nome = normalizeUppercase(formData.get("nome"));
   if (!nome) return;
   await prisma.empresaParceira.create({
     data: {
       nome,
-      responsavelRh: String(formData.get("rh") || ""),
-      telefoneRh: String(formData.get("tel") || ""),
-      emailRh: String(formData.get("email") || ""),
+      responsavelRh: normalizeUppercase(formData.get("rh")),
+      telefoneRh: normalizeUppercase(formData.get("tel")),
+      emailRh: normalizeUppercase(formData.get("email")),
     },
   });
   revalidatePath("/cadastros");
@@ -166,15 +166,15 @@ async function addEmpresa(formData: FormData) {
 async function updateEmpresa(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
-  const nome = String(formData.get("nome") || "");
+  const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) return;
   await prisma.empresaParceira.update({
     where: { id },
     data: {
       nome,
-      responsavelRh: String(formData.get("rh") || ""),
-      telefoneRh: String(formData.get("tel") || ""),
-      emailRh: String(formData.get("email") || ""),
+      responsavelRh: normalizeUppercase(formData.get("rh")),
+      telefoneRh: normalizeUppercase(formData.get("tel")),
+      emailRh: normalizeUppercase(formData.get("email")),
     },
   });
   await createAuditLog("empresa:update", { empresaId: id, nome });
@@ -280,7 +280,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle className="text-blue-900">Novo Cliente</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form action={addCliente} className="grid gap-4">
+                    <form action={addCliente} className="grid gap-4 [&_input]:uppercase">
                       <div className="grid gap-3 md:grid-cols-3">
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Nome/Razão Social</div>
@@ -335,7 +335,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Card className="mt-4">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-blue-900">Clientes</CardTitle>
-                    <form className="relative w-full max-w-sm">
+                    <form className="relative w-full max-w-sm [&_input]:uppercase">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         name="q_clientes" 
@@ -393,7 +393,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <CardTitle className="text-blue-900">Editando cliente #{editClienteData.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <form action={updateCliente} className="grid gap-4">
+                      <form action={updateCliente} className="grid gap-4 [&_input]:uppercase">
                         <input type="hidden" name="id" value={editClienteData.id} />
                         <div className="grid gap-3 md:grid-cols-3">
                           <div className="space-y-1">
@@ -511,7 +511,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle className="text-blue-900">Novo Fornecedor</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form action={addFornecedor} className="grid gap-4">
+                    <form action={addFornecedor} className="grid gap-4 [&_input]:uppercase">
                       <div className="grid gap-3 md:grid-cols-2">
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
@@ -531,7 +531,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Card className="mt-4">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-blue-900">Fornecedores Cadastrados</CardTitle>
-                    <form className="relative w-full max-w-sm">
+                    <form className="relative w-full max-w-sm [&_input]:uppercase">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         name="q_fornecedores" 
@@ -585,7 +585,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <CardTitle className="text-blue-900">Editando fornecedor #{editFornecedorData.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <form action={updateFornecedor} className="grid gap-4">
+                      <form action={updateFornecedor} className="grid gap-4 [&_input]:uppercase">
                         <input type="hidden" name="id" value={editFornecedorData.id} />
                         <div className="grid gap-3 md:grid-cols-2">
                           <div className="space-y-1">
@@ -620,7 +620,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle className="text-blue-900">Nova Empresa</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <form action={addEmpresa} className="grid gap-4">
+                    <form action={addEmpresa} className="grid gap-4 [&_input]:uppercase">
                       <div className="grid gap-3 md:grid-cols-2">
                         <div className="space-y-1">
                           <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
@@ -650,7 +650,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Card className="mt-4">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-blue-900">Empresas Parceiras</CardTitle>
-                    <form className="relative w-full max-w-sm">
+                    <form className="relative w-full max-w-sm [&_input]:uppercase">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         name="q_empresas" 
@@ -706,7 +706,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <CardTitle className="text-blue-900">Editando empresa #{editEmpresaData.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <form action={updateEmpresa} className="grid gap-4">
+                      <form action={updateEmpresa} className="grid gap-4 [&_input]:uppercase">
                         <input type="hidden" name="id" value={editEmpresaData.id} />
                         <div className="grid gap-3 md:grid-cols-2">
                           <div className="space-y-1">

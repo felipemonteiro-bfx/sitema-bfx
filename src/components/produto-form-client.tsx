@@ -27,6 +27,7 @@ type ProdutoEdit = {
 };
 
 const normalizeProductName = (value: string) => value.toLocaleUpperCase("pt-BR");
+const normalizeCadastroText = (value: string) => value.toLocaleUpperCase("pt-BR");
 
 interface Props {
   produto?: ProdutoEdit | null;
@@ -87,9 +88,9 @@ export default function ProdutoFormClient({
       setNome(normalizeProductName(produto.nome || ''));
       setCusto(produto.custoPadrao ?? 0);
       setEstoque(produto.qtdEstoque != null ? String(produto.qtdEstoque) : '0');
-      setMarca(produto.marca || '');
-      setCategoria(produto.categoria || '');
-      setNcm(produto.ncm || '');
+      setMarca(normalizeCadastroText(produto.marca || ''));
+      setCategoria(normalizeCadastroText(produto.categoria || ''));
+      setNcm(normalizeCadastroText(produto.ncm || ''));
       setValor(produto.valorVenda ?? 0);
       setImagemPath(produto.imagem || '');
       setPreviewUrl(null);
@@ -199,9 +200,9 @@ export default function ProdutoFormClient({
     const formData = new FormData();
     formData.append('nome', normalizedNome);
     formData.append('custo', String(custo));
-    formData.append('marca', marca);
-    formData.append('categoria', categoria);
-    formData.append('ncm', ncm);
+    formData.append('marca', normalizeCadastroText(marca.trim()));
+    formData.append('categoria', normalizeCadastroText(categoria.trim()));
+    formData.append('ncm', normalizeCadastroText(ncm.trim()));
     formData.append('valor', String(valor));
     formData.append('estoque', estoque);
     formData.append('imagem', imagemPath);
@@ -294,9 +295,10 @@ export default function ProdutoFormClient({
               <Label className="text-xs font-semibold text-muted-foreground">Categoria</Label>
               <Input
                 value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
+                onChange={(e) => setCategoria(normalizeCadastroText(e.target.value))}
                 placeholder="Ex: Eletrônicos"
                 list={categoryListId}
+                className="uppercase"
               />
               <datalist id={categoryListId}>
                 {filteredCategorias.map((item) => (
@@ -310,7 +312,7 @@ export default function ProdutoFormClient({
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Marca</Label>
-              <Input value={marca} onChange={(e) => setMarca(e.target.value)} placeholder="Marca" />
+              <Input value={marca} onChange={(e) => setMarca(normalizeCadastroText(e.target.value))} placeholder="Marca" className="uppercase" />
             </div>
           </div>
 
@@ -345,7 +347,7 @@ export default function ProdutoFormClient({
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">NCM</Label>
-              <Input value={ncm} onChange={(e) => setNcm(e.target.value)} placeholder="8 dígitos" maxLength={8} />
+              <Input value={ncm} onChange={(e) => setNcm(normalizeCadastroText(e.target.value))} placeholder="8 dígitos" maxLength={8} className="uppercase" />
               <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 p-2">
                 <div className="flex items-center gap-2 text-[11px] uppercase text-muted-foreground">
                   <Tag className="h-3.5 w-3.5" />
