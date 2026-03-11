@@ -11,9 +11,7 @@ import { MaskedInput } from "@/components/masked-input";
 import { CurrencyInput } from "@/components/currency-input";
 import { QueryTabs } from "@/components/query-tabs";
 import ProdutoFormClient from "@/components/produto-form-client";
-import ProdutoEditDialog from "@/components/produto-edit-dialog";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
+import ProdutosTabClient from "@/components/produtos-tab-client";
 import { Search, Pencil } from "lucide-react";
 import { LinkCatalogoButton } from "@/components/link-catalogo-button";
 import Link from "next/link";
@@ -474,94 +472,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <Card className="mt-4">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-blue-900">Produtos</CardTitle>
-                    <form className="relative w-full max-w-sm">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        name="q_produtos" 
-                        placeholder="Pesquisar produtos..." 
-                        defaultValue={sp.q_produtos}
-                        className="pl-9 h-9" 
-                      />
-                      <input type="hidden" name="tab" value="produtos" />
-                    </form>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[80px]">Foto</TableHead>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Categoria</TableHead>
-                          <TableHead>Marca/Fornecedor</TableHead>
-                          <TableHead>NCM</TableHead>
-                          <TableHead className="text-right">Valor</TableHead>
-                          <TableHead className="w-[80px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {produtos.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                              Sem produtos cadastrados.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          produtos.map((p) => (
-                            <TableRow key={p.id}>
-                              <TableCell>
-                                {p.imagem ? (
-                                  <div className="relative w-10 h-10 border rounded overflow-hidden">
-                                    <Image 
-                                      src={p.imagem} 
-                                      alt={p.nome} 
-                                      fill 
-                                      className="object-cover"
-                                      unoptimized={p.imagem.startsWith("http")}
-                                    />
-                                  </div>
-                                ) : (
-                                  <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-[10px] text-muted-foreground">
-                                    Sem foto
-                                  </div>
-                                )}
-                              </TableCell>
-                              <TableCell className="font-medium">{p.nome}</TableCell>
-                              <TableCell>
-                                <Badge variant="secondary" className="font-normal">{p.categoria || "N/A"}</Badge>
-                              </TableCell>
-                              <TableCell>
-                                <div className="text-xs font-semibold">{p.marca}</div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  {p.fornecedor?.nome || "Sem fornecedor"}
-                                </div>
-                              </TableCell>
-                              <TableCell className="font-mono text-xs">{p.ncm}</TableCell>
-                              <TableCell className="text-right tabular-nums font-semibold">{formatBRL(p.valorVenda || 0)}</TableCell>
-                              <TableCell>
-                                <Link
-                                  href={buildUrl({ tab: "produtos", editProduto: String(p.id) })}
-                                  className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
-                                  title="Editar"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                    <ProdutosTabClient
+                      produtos={produtos}
+                      fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
+                      searchQuery={sp.q_produtos}
+                      initialProduto={editProdutoData}
+                      onCreateAction={addProduto}
+                      onUpdateAction={updateProduto}
+                    />
                   </CardContent>
                 </Card>
-                {editProdutoData && (
-                  <ProdutoEditDialog
-                    produto={editProdutoData}
-                    onSuccessAction={addProduto}
-                    onUpdateAction={updateProduto}
-                    fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
-                    cancelHref={buildUrl({ tab: "produtos", editProduto: undefined })}
-                  />
-                )}
               </>
             ),
           },

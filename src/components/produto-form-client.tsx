@@ -31,9 +31,19 @@ interface Props {
   onUpdateAction?: (formData: FormData) => Promise<void>;
   fornecedores: { id: number; nome: string }[];
   cancelHref?: string;
+  onCancel?: () => void;
+  onEditSuccess?: () => void;
 }
 
-export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAction, fornecedores, cancelHref }: Props) {
+export default function ProdutoFormClient({
+  produto,
+  onSuccessAction,
+  onUpdateAction,
+  fornecedores,
+  cancelHref,
+  onCancel,
+  onEditSuccess,
+}: Props) {
   const router = useRouter();
   const isEdit = Boolean(produto && onUpdateAction);
 
@@ -192,7 +202,10 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
 
     try {
       await action(formData);
-      if (isEdit && cancelHref) {
+      if (isEdit && onEditSuccess) {
+        toast.success("Produto atualizado com sucesso!");
+        onEditSuccess();
+      } else if (isEdit && cancelHref) {
         toast.success("Produto atualizado com sucesso!");
         router.push(cancelHref);
         router.refresh();
@@ -339,11 +352,15 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        {cancelHref && (
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+        ) : cancelHref ? (
           <a href={cancelHref} className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}>
             Cancelar
           </a>
-        )}
+        ) : null}
         <Button disabled={isSubmitting || isUploading || isDuplicate} type="submit" className="bg-primary hover:bg-primary/90">
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
           {isEdit ? "Atualizar Produto" : "Cadastrar Produto"}
