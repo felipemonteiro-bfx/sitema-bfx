@@ -39,6 +39,7 @@ type ProdutoListItem = ProdutoEdit & {
 interface Props {
   produtos: ProdutoListItem[];
   fornecedores: { id: number; nome: string }[];
+  categoriasExistentes?: string[];
   searchQuery?: string;
   initialProduto?: ProdutoEdit | null;
   onCreateAction: (formData: FormData) => Promise<void>;
@@ -48,6 +49,7 @@ interface Props {
 export default function ProdutosTabClient({
   produtos,
   fornecedores,
+  categoriasExistentes = [],
   searchQuery,
   initialProduto,
   onCreateAction,
@@ -194,6 +196,7 @@ export default function ProdutosTabClient({
               onSuccessAction={onCreateAction}
               onUpdateAction={onUpdateAction}
               fornecedores={fornecedores}
+              categoriasExistentes={categoriasExistentes}
               onCancel={handleCloseModal}
               onEditSuccess={handleEditSuccess}
             />

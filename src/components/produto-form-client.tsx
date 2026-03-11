@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useId, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ interface Props {
   onSuccessAction: (formData: FormData) => Promise<void>;
   onUpdateAction?: (formData: FormData) => Promise<void>;
   fornecedores: { id: number; nome: string }[];
+  categoriasExistentes?: string[];
   cancelHref?: string;
   onCancel?: () => void;
   onEditSuccess?: () => void;
@@ -40,12 +41,15 @@ export default function ProdutoFormClient({
   onSuccessAction,
   onUpdateAction,
   fornecedores,
+  categoriasExistentes = [],
   cancelHref,
   onCancel,
   onEditSuccess,
 }: Props) {
   const router = useRouter();
   const isEdit = Boolean(produto && onUpdateAction);
+  const normalizeProductName = (value: string) => value.toLocaleUpperCase("pt-BR");
+  const categoryListId = useId();
 
   const [nome, setNome] = useState('');
   const [custo, setCusto] = useState(0);
@@ -65,13 +69,21 @@ export default function ProdutoFormClient({
   const [ncmSuggestions, setNcmSuggestions] = useState<{ codigo: string; descricao: string }[]>([]);
   const [isSearchingNcm, setIsSearchingNcm] = useState(false);
 
+  const filteredCategorias = useMemo(() => {
+    const query = categoria.trim().toLocaleLowerCase("pt-BR");
+    if (!query) return categoriasExistentes.slice(0, 12);
+    return categoriasExistentes
+      .filter((item) => item.toLocaleLowerCase("pt-BR").includes(query))
+      .slice(0, 12);
+  }, [categoria, categoriasExistentes]);
+
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const ncmTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Preencher formulário no modo edição
   useEffect(() => {
     if (produto) {
-      setNome(produto.nome || '');
+      setNome(normalizeProductName(produto.nome || ''));
       setCusto(produto.custoPadrao ?? 0);
       setEstoque(produto.qtdEstoque != null ? String(produto.qtdEstoque) : '0');
       setMarca(produto.marca || '');
@@ -108,7 +120,7 @@ export default function ProdutoFormClient({
         setSuggestions(data.matches || []);
         // No modo edição, ignorar duplicidade se o nome for o mesmo do produto atual
         const dup = data.isDuplicate || false;
-        setIsDuplicate(isEdit && produto && nome === produto.nome ? false : dup);
+        setIsDuplicate(isEdit && produto && nome === normalizeProductName(produto.nome) ? false : dup);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
       }
@@ -181,11 +193,12 @@ export default function ProdutoFormClient({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome) return;
+    const normalizedNome = normalizeProductName(nome.trim());
+    if (!normalizedNome) return;
 
     setIsSubmitting(true);
     const formData = new FormData();
-    formData.append('nome', nome);
+    formData.append('nome', normalizedNome);
     formData.append('custo', String(custo));
     formData.append('marca', marca);
     formData.append('categoria', categoria);
@@ -261,9 +274,9 @@ export default function ProdutoFormClient({
               <div className="relative">
                 <Input
                   value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  onChange={(e) => setNome(normalizeProductName(e.target.value))}
                   placeholder="Ex: Teclado Mecânico RGB"
-                  className={isDuplicate ? "border-amber-500" : ""}
+                  className={cn("uppercase", isDuplicate ? "border-amber-500" : "")}
                 />
                 {isDuplicate && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-amber-600">
@@ -279,7 +292,20 @@ export default function ProdutoFormClient({
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Categoria</Label>
-              <Input value={categoria} onChange={(e) => setCategoria(e.target.value)} placeholder="Ex: Eletrônicos" />
+              <Input
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                placeholder="Ex: Eletrônicos"
+                list={categoryListId}
+              />
+              <datalist id={categoryListId}>
+                {filteredCategorias.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
+              <div className="text-[11px] text-muted-foreground">
+                Sugere categorias já cadastradas, mas você pode digitar uma nova se precisar.
+              </div>
             </div>
 
             <div className="space-y-1">

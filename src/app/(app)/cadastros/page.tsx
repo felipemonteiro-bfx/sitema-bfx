@@ -19,6 +19,10 @@ import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string };
 
+function normalizeProductName(value: FormDataEntryValue | null) {
+  return String(value || "").trim().toLocaleUpperCase("pt-BR");
+}
+
 async function addCliente(formData: FormData) {
   "use server";
   const nome = String(formData.get("nome") || "");
@@ -70,7 +74,7 @@ async function updateCliente(formData: FormData) {
 
 async function addProduto(formData: FormData) {
   "use server";
-  const nome = String(formData.get("nome") || "");
+  const nome = normalizeProductName(formData.get("nome"));
   if (!nome) return;
   const produto = await prisma.produto.create({
     data: {
@@ -92,7 +96,7 @@ async function addProduto(formData: FormData) {
 async function updateProduto(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
-  const nome = String(formData.get("nome") || "").trim();
+  const nome = normalizeProductName(formData.get("nome"));
   if (!id || !nome) {
     throw new Error("Dados incompletos. Nome do produto é obrigatório.");
   }
@@ -234,6 +238,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
     orderBy: { nome: "asc" }
   });
+
+  const categoriasExistentes = Array.from(
+    new Set(
+      produtos
+        .map((produto) => produto.categoria?.trim())
+        .filter((categoria): categoria is string => Boolean(categoria))
+    )
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
   const empresas = await prisma.empresaParceira.findMany({ 
     where: sp.q_empresas ? {
@@ -466,6 +478,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <ProdutoFormClient 
                       onSuccessAction={addProduto} 
                       fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
+                      categoriasExistentes={categoriasExistentes}
                     />
                   </CardContent>
                 </Card>
@@ -477,6 +490,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <ProdutosTabClient
                       produtos={produtos}
                       fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
+                      categoriasExistentes={categoriasExistentes}
                       searchQuery={sp.q_produtos}
                       initialProduto={editProdutoData}
                       onCreateAction={addProduto}
