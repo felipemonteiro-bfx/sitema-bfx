@@ -81,7 +81,9 @@ export function FormSelect({
             )}
           >
             <span className="min-w-0 truncate">{selected?.label ?? placeholder}</span>
-            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-muted-foreground">
+              <ChevronsUpDown className="h-4 w-4 opacity-50" />
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2.5">

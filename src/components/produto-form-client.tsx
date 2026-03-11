@@ -389,8 +389,12 @@ export default function ProdutoFormClient({
             Cancelar
           </a>
         ) : null}
-        <Button disabled={isSubmitting || isUploading || isDuplicate} type="submit" className="bg-primary hover:bg-primary/90">
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+        <Button
+          disabled={isSubmitting || isUploading || isDuplicate}
+          type="submit"
+          className="bg-primary hover:bg-primary/90"
+          leftIcon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+        >
           {isEdit ? "Atualizar Produto" : "Cadastrar Produto"}
         </Button>
       </div>
