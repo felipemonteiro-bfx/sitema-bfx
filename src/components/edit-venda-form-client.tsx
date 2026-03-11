@@ -161,7 +161,7 @@ export function EditVendaFormClient({
       }
       toast.success("Venda atualizada com sucesso!");
       router.refresh();
-    } catch (err) {
+    } catch {
       toast.error("Erro ao salvar alterações.");
     } finally {
       setLoading(false);

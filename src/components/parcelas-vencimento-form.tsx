@@ -40,7 +40,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
       });
       onChange(novasParcelas);
     }
-  }, [numeroParcelas, valorTotal, dataVenda, disableAutoInit]);
+  }, [numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit]);
 
   const handleDataChange = (index: number, newData: string) => {
     const novasParcelas = [...parcelas];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, QrCode } from "lucide-react";
 import { toast } from "sonner";
@@ -72,7 +73,7 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
           </div>
           {showQr && qrVisible && (
             <div className="mt-2 rounded-lg border border-border bg-card p-2">
-              <img src={qrUrl} alt="QR Code" width={120} height={120} className="rounded" />
+              <Image src={qrUrl} alt="QR Code" width={120} height={120} unoptimized className="rounded" />
               <p className="text-[10px] text-muted-foreground mt-1 text-center">Cliente escaneia para assinar</p>
             </div>
           )}

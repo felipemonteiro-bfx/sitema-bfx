@@ -10,7 +10,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  BarChart3,
   Brain,
   FileText,
   FolderPlus,

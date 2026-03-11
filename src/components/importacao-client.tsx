@@ -5,9 +5,8 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
-import { Loader2, AlertCircle, CheckCircle2, Trash2, Sparkles } from "lucide-react";
+import { Loader2, CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import Papa from "papaparse";
 
 interface RowData {
@@ -43,7 +42,7 @@ export default function ImportacaoClient() {
       skipEmptyLines: true,
       delimiter: ";", // Comum no Excel brasileiro
       complete: (results) => {
-        const mapped = (results.data as any[]).map((row, index) => ({
+        const mapped = (results.data as Record<string, string | undefined>[]).map((row) => ({
           id: Math.random().toString(36).substr(2, 9),
           dataVenda: row["Data (AAAA-MM-DD)"] || row["Data"] || new Date().toISOString().slice(0, 10),
           vendedor: row["Vendedor"] || "",
@@ -129,7 +128,7 @@ export default function ImportacaoClient() {
       } else {
         toast.error("Erro ao salvar dados no servidor.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro de conexão.");
     } finally {
       setSaving(false);

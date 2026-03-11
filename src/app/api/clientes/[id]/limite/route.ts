@@ -52,7 +52,7 @@ export async function GET(
       margemDisponivel,
       tetoParcelaMax
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erro ao consultar limite" }, { status: 500 });
   }
 }

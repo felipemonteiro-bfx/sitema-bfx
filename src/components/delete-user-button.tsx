@@ -25,7 +25,7 @@ Esta ação não poderá ser desfeita.`)) {
       const formData = new FormData();
       formData.append('id', userId.toString());
       await deleteAction(formData);
-    } catch (error) {
+    } catch {
       toast.error("Erro ao remover usuário.");
     } finally {
       setLoading(false);

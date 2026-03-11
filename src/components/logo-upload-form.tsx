@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,10 +62,12 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
         <h3 className="text-sm font-medium mb-2">Logo atual:</h3>
         <div className="relative w-32 h-32 border rounded-md overflow-hidden p-2 bg-muted/30 flex items-center justify-center">
           {displayUrl ? (
-            <img
+            <Image
               src={displayUrl}
               alt="Logo atual"
-              className="max-w-full max-h-full object-contain"
+              fill
+              unoptimized
+              className="object-contain p-2"
             />
           ) : (
             <span className="text-xs text-muted-foreground text-center">Nenhuma logo cadastrada</span>

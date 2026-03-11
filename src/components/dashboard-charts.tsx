@@ -6,7 +6,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -53,24 +52,6 @@ function TopTooltip({ active, payload }: { active?: boolean; payload?: any[] }) 
         <Package className="h-3.5 w-3.5" />
         <span className="text-sm">{item.value} unidades vendidas</span>
       </div>
-    </div>
-  );
-}
-
-function CustomLegend({ payload }: any) {
-  return (
-    <div className="flex items-center justify-center gap-6 mt-4">
-      {payload.map((entry: any, index: number) => (
-        <div key={index} className="flex items-center gap-2">
-          <div
-            className="h-3 w-3 rounded-sm"
-            style={{ backgroundColor: entry.color }}
-          />
-          <span className="text-xs font-medium text-muted-foreground">
-            {entry.dataKey === "total" ? "Faturamento" : "Lucro"}
-          </span>
-        </div>
-      ))}
     </div>
   );
 }

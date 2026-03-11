@@ -180,7 +180,7 @@ export async function GET(req: Request) {
 
   // ── Logo ────────────────────────────────────────────────────────────────────
   let logoImage = null;
-  let logoDims = { width: 0, height: 0 };
+  const logoDims = { width: 0, height: 0 };
   const logoHeight = 50;
 
   if (cfg?.logoPath) {

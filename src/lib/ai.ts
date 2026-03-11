@@ -67,7 +67,9 @@ function inferReadOnlyActions(prompt: string) {
       if (r.name === "listar_vendas" || r.name === "listar_despesas") {
         return { name: r.name, params: baseParams };
       }
-      const { from, to, ...rest } = baseParams;
+      const rest = { ...baseParams };
+      delete rest.from;
+      delete rest.to;
       return { name: r.name, params: rest };
     });
   return actions.filter((a) => readOnlyActions.has(a.name));

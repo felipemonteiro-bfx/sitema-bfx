@@ -69,7 +69,7 @@ export async function GET(req: Request) {
 
   const cfg = await prisma.config.findFirst();
   let logoImage = null;
-  let logoDims = { width: 0, height: 0 };
+  const logoDims = { width: 0, height: 0 };
 
   if (cfg?.logoPath) {
     const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath);

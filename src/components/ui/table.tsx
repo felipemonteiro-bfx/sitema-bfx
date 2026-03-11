@@ -29,7 +29,7 @@ const Table = React.forwardRef<HTMLTableElement, TableProps>(
     <div className="relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-lg">
       <table
         ref={ref}
-        className={cn(tableVariants({ variant }), className)}
+        className={cn(tableVariants({ variant }), stickyHeader && "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10", className)}
         {...props}
       />
     </div>

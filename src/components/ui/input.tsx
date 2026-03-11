@@ -128,6 +128,7 @@ interface SearchInputProps extends Omit<InputProps, "leftIcon" | "type"> {
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   ({ className, onSearch, onClear, ...props }, ref) => {
+    void onSearch
     return (
       <Input
         ref={ref}

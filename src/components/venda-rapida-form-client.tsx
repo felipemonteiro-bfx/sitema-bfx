@@ -252,7 +252,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
     setLoading(true);
 
     // Preparar lista de produtos
-    let produtosParaEnviar = [...produtos];
+    const produtosParaEnviar = [...produtos];
 
     // Se tem produto atual preenchido, adicionar à lista
     if (produtoQuery && (valor || custo)) {

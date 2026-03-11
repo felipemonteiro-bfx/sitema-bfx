@@ -29,7 +29,7 @@ export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
           const formData = new FormData();
           formData.append('id', vendaId.toString());
           await deleteAction(formData);
-        } catch (error) {
+        } catch {
           toast.error("Erro ao excluir venda.");
         } finally {
           setLoading(false);

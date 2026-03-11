@@ -1,19 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface Props {
-  vendedores: string[];
-}
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+
+interface Props {
+  vendedores: string[];
+}
 
 export default function CommissionsDashboardClient({ vendedores: vendedoresFromDb }: Props) {
   const [loading, setLoading] = useState(true);
@@ -23,7 +22,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
   const [dataInicio, setDataInicio] = useState<string>('');
   const [dataFim, setDataFim] = useState<string>('');
 
-  const fetchCommissions = async () => {
+  const fetchCommissions = useCallback(async () => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
@@ -53,11 +52,11 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
     } finally {
       setLoading(false);
     }
-  };
+  }, [vendedorFiltro, dataInicio, dataFim]);
 
   useEffect(() => {
     fetchCommissions();
-  }, [vendedorFiltro, dataInicio, dataFim]);
+  }, [fetchCommissions]);
 
   const totalComissoes = commissions.reduce((sum, item) => sum + item.valorComissao, 0);
   const vendedores = ["all", ...(vendedoresFromDb || [])];

@@ -27,7 +27,6 @@ function fillTemplate(template: string, data: Record<string, string>) {
   return template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? "");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function drawTableRow(
   page: any,
   font: { widthOfTextAtSize: (t: string, s: number) => number },
@@ -127,7 +126,7 @@ export async function generateReciboPdf(
   const centerX = 595 / 2;
 
   let logoImage: Awaited<ReturnType<PDFDocument["embedPng"]>> | Awaited<ReturnType<PDFDocument["embedJpg"]>> | null = null;
-  let logoDims = { width: 0, height: 0 };
+  const logoDims = { width: 0, height: 0 };
   const logoHeight = 50;
 
   if (cfg?.logoPath) {

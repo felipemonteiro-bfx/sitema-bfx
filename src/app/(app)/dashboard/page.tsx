@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Separator } from "@/components/ui/separator";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { DateInput } from "@/components/ui/date-input";

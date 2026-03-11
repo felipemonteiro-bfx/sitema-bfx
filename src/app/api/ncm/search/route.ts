@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   try {
     const items = await searchNcm(q, 12);
     return NextResponse.json({ items });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ items: [], error: "Falha ao buscar NCM" }, { status: 200 });
   }
 }

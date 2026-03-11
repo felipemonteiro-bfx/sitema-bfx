@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useId, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
@@ -24,6 +25,8 @@ type ProdutoEdit = {
   imagem: string | null;
   fornecedorId: number | null;
 };
+
+const normalizeProductName = (value: string) => value.toLocaleUpperCase("pt-BR");
 
 interface Props {
   produto?: ProdutoEdit | null;
@@ -48,7 +51,6 @@ export default function ProdutoFormClient({
 }: Props) {
   const router = useRouter();
   const isEdit = Boolean(produto && onUpdateAction);
-  const normalizeProductName = (value: string) => value.toLocaleUpperCase("pt-BR");
   const categoryListId = useId();
 
   const [nome, setNome] = useState('');
@@ -63,7 +65,6 @@ export default function ProdutoFormClient({
   const [fornecedorId, setFornecedorId] = useState('');
 
   const [isUploading, setIsUploading] = useState(false);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ncmSuggestions, setNcmSuggestions] = useState<{ codigo: string; descricao: string }[]>([]);
@@ -94,7 +95,7 @@ export default function ProdutoFormClient({
       setPreviewUrl(null);
       setFornecedorId(produto.fornecedorId != null ? String(produto.fornecedorId) : '');
     }
-  }, [produto?.id]);
+  }, [produto]);
 
   // Limpar object URL ao desmontar
   useEffect(() => {
@@ -106,7 +107,6 @@ export default function ProdutoFormClient({
   // Autocomplete e verificação de duplicidade
   useEffect(() => {
     if (nome.length < 2) {
-      setSuggestions([]);
       setIsDuplicate(false);
       return;
     }
@@ -117,12 +117,11 @@ export default function ProdutoFormClient({
       try {
         const res = await fetch(`/api/produtos/autocomplete?q=${encodeURIComponent(nome)}`);
         const data = await res.json();
-        setSuggestions(data.matches || []);
         // No modo edição, ignorar duplicidade se o nome for o mesmo do produto atual
         const dup = data.isDuplicate || false;
         setIsDuplicate(isEdit && produto && nome === normalizeProductName(produto.nome) ? false : dup);
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
+      } catch {
+        setIsDuplicate(false);
       }
     }, 500);
 
@@ -145,7 +144,7 @@ export default function ProdutoFormClient({
         const res = await fetch(`/api/ncm/search?q=${encodeURIComponent(nome)}`);
         const data = await res.json();
         setNcmSuggestions(Array.isArray(data.items) ? data.items : []);
-      } catch (error) {
+      } catch {
         setNcmSuggestions([]);
       } finally {
         setIsSearchingNcm(false);
@@ -184,7 +183,7 @@ export default function ProdutoFormClient({
       } else {
         toast.error(data.error || "Falha no upload da imagem.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro no upload da imagem.");
     } finally {
       setIsUploading(false);
@@ -235,11 +234,10 @@ export default function ProdutoFormClient({
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
         setFornecedorId('');
-        setSuggestions([]);
         setIsDuplicate(false);
         setNcmSuggestions([]);
       }
-    } catch (err) {
+    } catch {
       toast.error("Erro ao salvar. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -252,12 +250,14 @@ export default function ProdutoFormClient({
         <div className="md:col-span-1 space-y-4">
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-muted-foreground">Imagem do Produto</Label>
-            <div className="relative w-full aspect-square rounded-xl border border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition overflow-hidden">
+              <div className="relative w-full aspect-square rounded-xl border border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition overflow-hidden">
               {(previewUrl || imagemPath) ? (
-                <img
+                <Image
                   src={previewUrl || imagemPath}
                   alt="Produto"
-                  className="absolute inset-0 w-full h-full object-cover rounded-xl"
+                  fill
+                  unoptimized
+                  className="absolute inset-0 object-cover rounded-xl"
                 />
               ) : (
                 <Camera className="h-10 w-10 text-muted-foreground" />

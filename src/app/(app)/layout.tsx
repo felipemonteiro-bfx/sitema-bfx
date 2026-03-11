@@ -6,7 +6,7 @@ import { SidebarNav } from "@/components/sidebar-nav";
 import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, LayoutDashboard } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
