@@ -346,7 +346,7 @@ export async function GET(req: Request) {
 
     const maxLines = Math.max(clienteLines.length, vendaInfoLines.length);
     const infoHeaderH = lineH + 10;
-    const bodyH       = maxLines * lineH + 16;
+    const bodyH       = maxLines * lineH + 22;
     const blockH      = infoHeaderH + bodyH;
     const blockTopY   = y;
 
@@ -392,7 +392,7 @@ export async function GET(req: Request) {
 
     // coluna esquerda: Cliente — tudo alinhado à esquerda a partir de colLeftX
     for (let i = 0; i < clienteLines.length; i++) {
-      const ly = bodyTopY - i * lineH - lineH / 2 - 1;
+      const ly = bodyTopY - i * lineH - lineH / 2 - 7;
       const cl = clienteLines[i];
       if (cl.bold) {
         page.drawText(cl.value, {
@@ -412,7 +412,7 @@ export async function GET(req: Request) {
 
     // coluna direita: Informações da venda — tudo alinhado à esquerda a partir de colRightX
     for (let i = 0; i < vendaInfoLines.length; i++) {
-      const ly = bodyTopY - i * lineH - lineH / 2 - 1;
+      const ly = bodyTopY - i * lineH - lineH / 2 - 7;
       const { label, value } = vendaInfoLines[i];
       const labelPart = label + ": ";
       page.drawText(labelPart, {
