@@ -344,6 +344,13 @@ export async function GET(req: Request) {
       ...(vendaBase.boleto          ? [{ label: "Pagamento", value: "Boleto" }]            : []),
     ];
 
+    // largura fixa do label na coluna esquerda (maior label + ":" + espaço)
+    const labelsEsquerda = clienteLines.filter(l => !l.bold && l.label).map(l => l.label!);
+    const maxLeftLabelW = labelsEsquerda.length
+      ? Math.max(...labelsEsquerda.map(l => font.widthOfTextAtSize(l + ":", infoSize))) + 6
+      : 0;
+    const leftValueX = colLeftX + maxLeftLabelW + 4;
+
     // largura fixa do label na coluna direita (maior label + ":" + espaço)
     const maxLabelW = Math.max(...vendaInfoLines.map(l => font.widthOfTextAtSize(l.label + ":", infoSize))) + 10;
     const valueX = colRightX + maxLabelW + 4;
@@ -413,15 +420,17 @@ export async function GET(req: Request) {
           x: colLeftX, y: ly, size: 9.5, font: fontBold, color: rgb(0.08, 0.1, 0.15),
         });
       } else {
-        const labelPart = cl.label ? cl.label + ": " : "";
+        const labelPart = cl.label ? cl.label + ":" : "";
         if (labelPart) {
+          const lw = font.widthOfTextAtSize(labelPart, infoSize);
+          // label right-aligned até leftValueX
           page.drawText(labelPart, {
-            x: colLeftX, y: ly, size: infoSize, font, color: rgb(0.45, 0.47, 0.52),
+            x: leftValueX - lw - 4, y: ly, size: infoSize, font, color: rgb(0.45, 0.47, 0.52),
           });
         }
-        const lw = font.widthOfTextAtSize(labelPart, infoSize);
+        // value left-aligned a partir de leftValueX
         page.drawText(cl.value, {
-          x: colLeftX + lw, y: ly, size: infoSize, font: fontBold, color: rgb(0.18, 0.2, 0.26),
+          x: leftValueX, y: ly, size: infoSize, font: fontBold, color: rgb(0.18, 0.2, 0.26),
         });
       }
     }
