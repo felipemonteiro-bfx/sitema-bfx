@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
         nome: true,
         custoPadrao: true,
         valorVenda: true,
-        marca: true
+        marca: true,
+        qtdEstoque: true
       }
     });
 

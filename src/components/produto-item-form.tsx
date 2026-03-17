@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { X, Package } from "lucide-react";
+import { X, Package, AlertTriangle } from "lucide-react";
 import { formatBRL, cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/currency-input";
 
@@ -34,7 +34,9 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     nome: string;
     valorVenda?: number;
     custoPadrao?: number;
+    qtdEstoque?: number | null;
   }[]>([]);
+  const [estoqueDisponivel, setEstoqueDisponivel] = useState<number | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Autocomplete de produtos
@@ -67,9 +69,11 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     nome: string;
     valorVenda?: number;
     custoPadrao?: number;
+    qtdEstoque?: number | null;
   }) => {
     setProdutoQuery(p.nome);
     setProdutoSuggestions([]);
+    setEstoqueDisponivel(p.qtdEstoque ?? null);
 
     const newItem: ProdutoItem = {
       ...item,
@@ -82,7 +86,13 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
   };
 
   const handleChange = (field: keyof ProdutoItem, value: number | string) => {
-    const newItem = { ...item, [field]: value };
+    let newItem = { ...item, [field]: value };
+
+    // Limitar quantidade ao estoque disponível
+    if (field === "quantidade" && estoqueDisponivel !== null && estoqueDisponivel > 0) {
+      const qtd = Math.min(Number(value), estoqueDisponivel);
+      newItem = { ...newItem, quantidade: qtd };
+    }
 
     // Recalcular subtotal
     if (field === "quantidade" || field === "valorVenda") {
@@ -94,6 +104,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
 
   const lucro = (item.valorVenda * item.quantidade) - (item.custoProduto * item.quantidade);
   const margem = item.valorVenda > 0 ? (lucro / (item.valorVenda * item.quantidade)) * 100 : 0;
+  const semEstoque = estoqueDisponivel !== null && estoqueDisponivel <= 0;
 
   return (
     <Card
@@ -132,17 +143,36 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Produto Nome */}
           <div className="space-y-2 relative lg:col-span-2">
-            <Label
-              className={cn(
-                "text-xs font-bold uppercase tracking-wider",
-                hasError ? "text-destructive" : "text-muted-foreground",
+            <div className="flex items-center justify-between">
+              <Label
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  hasError ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                Produto {hasError && "(obrigatório)"}
+              </Label>
+              {estoqueDisponivel !== null && (
+                <span
+                  className={cn(
+                    "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                    semEstoque
+                      ? "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400"
+                      : estoqueDisponivel <= 5
+                      ? "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
+                      : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                  )}
+                >
+                  {semEstoque ? "Sem estoque" : `Estoque: ${estoqueDisponivel}`}
+                </span>
               )}
-            >
-              Produto {hasError && "(obrigatório)"}
-            </Label>
+            </div>
             <Input
               value={produtoQuery}
-              onChange={(e) => setProdutoQuery(e.target.value)}
+              onChange={(e) => {
+                setProdutoQuery(e.target.value);
+                setEstoqueDisponivel(null);
+              }}
               placeholder="Digite o nome do produto"
               required
               className={hasError ? "border-destructive border-2" : ""}
@@ -156,7 +186,23 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                     onClick={() => handleProdutoSelect(p)}
                     className="w-full px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer text-sm"
                   >
-                    <div className="font-medium">{p.nome}</div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{p.nome}</span>
+                      {p.qtdEstoque !== undefined && p.qtdEstoque !== null && (
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shrink-0",
+                            p.qtdEstoque <= 0
+                              ? "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400"
+                              : p.qtdEstoque <= 5
+                              ? "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
+                              : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                          )}
+                        >
+                          {p.qtdEstoque <= 0 ? "Sem estoque" : `${p.qtdEstoque} un`}
+                        </span>
+                      )}
+                    </div>
                     {p.valorVenda && (
                       <div className="text-xs text-muted-foreground">
                         {formatBRL(p.valorVenda)}
@@ -193,11 +239,14 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           {/* Quantidade */}
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Qtd
+              Qtd {estoqueDisponivel !== null && estoqueDisponivel > 0 && (
+                <span className="text-muted-foreground font-normal">/ {estoqueDisponivel}</span>
+              )}
             </Label>
             <Input
               type="number"
               min="1"
+              max={estoqueDisponivel !== null && estoqueDisponivel > 0 ? estoqueDisponivel : undefined}
               value={item.quantidade}
               onChange={(e) => handleChange("quantidade", Number(e.target.value))}
               required
@@ -205,7 +254,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           </div>
 
           {/* Resumo */}
-          <div className="lg:col-span-3 flex items-center gap-4 pt-2 border-t border-border">
+          <div className="lg:col-span-3 flex flex-wrap items-center gap-4 pt-2 border-t border-border">
             <div className="text-sm">
               <span className="text-muted-foreground">Subtotal: </span>
               <span className="font-bold text-foreground">{formatBRL(item.subtotal)}</span>
@@ -218,6 +267,12 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               <span className="text-muted-foreground">Margem: </span>
               <span className="font-bold text-info">{margem.toFixed(1)}%</span>
             </div>
+            {semEstoque && (
+              <div className="flex items-center gap-1.5 text-xs text-red-700 dark:text-red-400">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                Produto sem estoque disponível
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
