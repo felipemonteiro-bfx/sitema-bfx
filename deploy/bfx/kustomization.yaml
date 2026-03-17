@@ -10,3 +10,7 @@ resources:
   - app.yaml
   - ingress.yaml
   - cronjob-cleanup-uploads.yaml
+
+images:
+  - name: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop
+    newTag: 938b273a5a683c4828cbfb088c9f69d44e8e842d

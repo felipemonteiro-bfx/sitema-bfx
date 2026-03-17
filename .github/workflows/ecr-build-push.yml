@@ -19,7 +19,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -36,11 +36,32 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push
+        id: build
         env:
-          IMAGE_TAG_SHA: ${{ github.sha }}
-          IMAGE_TAG_LATEST: latest
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
-          docker build -t "$IMAGE_URI:$IMAGE_TAG_SHA" -t "$IMAGE_URI:$IMAGE_TAG_LATEST" -f Dockerfile .
-          docker push "$IMAGE_URI:$IMAGE_TAG_SHA"
-          docker push "$IMAGE_URI:$IMAGE_TAG_LATEST"
+          docker build -t "$IMAGE_URI:$IMAGE_TAG" -t "$IMAGE_URI:latest" -f Dockerfile .
+          docker push "$IMAGE_URI:$IMAGE_TAG"
+          docker push "$IMAGE_URI:latest"
+          echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update image tag
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd deploy/bfx
+          kustomize edit set image ${{ steps.build.outputs.image_uri }}:$IMAGE_TAG
+
+      - name: Commit and push
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/bfx/kustomization.yaml
+          git commit -m "build: automatic update of sistema-bfx"
+          git push
