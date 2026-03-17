@@ -253,11 +253,22 @@ export async function GET(req: Request) {
     // Contrato
     const contratoLineCount = wrapText(contrato, font, 9.5, contentW).length;
 
+    const footerLines: [string, string, boolean][] = [
+      ["N° de itens", String(vendaItens.length), false],
+      ["Soma das Qtdes", String(somaQtd), false],
+      ["Total de produtos", formatBRL(subtotalProdutos), false],
+      ...(frete > 0 ? [["Frete", formatBRL(frete), false] as [string, string, boolean]] : []),
+      ["Total do pedido", formatBRL(totalVenda), true],
+    ];
+    const footerRowH = 18;
+    const footerH = footerLines.length * footerRowH + 4;
+
     const estimatedH =
       100 + // header
-      220 + // info block cliente/vendedor (inclui totais)
+      120 + // info block cliente/vendedor
       30  + // separador + titulo itens
       itemTableH +
+      footerH +
       parcelasTableH +
       50  + // separador + titulo termos
       contratoLineCount * 13 +
@@ -332,11 +343,6 @@ export async function GET(req: Request) {
       { label: "Parcelas:", value: `${nParcelas}x` },
       ...(vendaBase.descontoEmFolha ? [{ label: "Pagamento:", value: "Desconto em folha" }] : []),
       ...(vendaBase.boleto ? [{ label: "Pagamento:", value: "Boleto" }] : []),
-      { label: "N° de itens:", value: String(vendaItens.length) },
-      { label: "Soma das Qtdes:", value: String(somaQtd) },
-      { label: "Total de produtos:", value: formatBRL(subtotalProdutos) },
-      ...(frete > 0 ? [{ label: "Frete:", value: formatBRL(frete) }] : []),
-      { label: "Total do pedido:", value: formatBRL(totalVenda) },
     ];
 
     const maxInfoLines = Math.max(clienteLines.length, vendaInfoLines.length);
@@ -393,10 +399,56 @@ export async function GET(req: Request) {
       y -= rh;
     }
 
-    drawTableBorder(page, itemCols, itemTableTopY + headerRowH, itemTableH);
-    y -= 12;
+    // ── Footer de Totais (dentro da tabela) ──────────────────────────────────
+    const tableRight = marginX + contentW;
+    const valColX = tableRight - 87; // início da coluna Total
 
-    y -= 12;
+    // linha separadora entre itens e footer
+    page.drawLine({
+      start: { x: marginX, y },
+      end: { x: tableRight, y },
+      thickness: 0.6, color: rgb(0.7, 0.73, 0.78),
+    });
+
+    // fundo do footer
+    page.drawRectangle({
+      x: marginX, y: y - footerH,
+      width: contentW, height: footerH,
+      color: rgb(0.975, 0.978, 0.985),
+    });
+
+    let fy = y - 6;
+    for (const [label, val, bold] of footerLines) {
+      const f = bold ? fontBold : font;
+      const isTotal = bold;
+      if (isTotal) {
+        // linha separadora antes do Total do pedido
+        page.drawLine({
+          start: { x: marginX, y: fy + footerRowH - 2 },
+          end: { x: tableRight, y: fy + footerRowH - 2 },
+          thickness: 0.4, color: rgb(0.82, 0.85, 0.9),
+        });
+      }
+      const labelW = f.widthOfTextAtSize(label, 8.5);
+      const valW = f.widthOfTextAtSize(val, 8.5);
+      page.drawText(label, {
+        x: valColX - labelW - 10,
+        y: fy, size: 8.5, font: f,
+        color: isTotal ? rgb(0.1, 0.15, 0.25) : rgb(0.35, 0.38, 0.44),
+      });
+      page.drawText(val, {
+        x: tableRight - valW - CELL_PAD,
+        y: fy, size: 8.5, font: f,
+        color: isTotal ? rgb(0.1, 0.15, 0.25) : rgb(0.2, 0.22, 0.28),
+      });
+      fy -= footerRowH;
+    }
+
+    y -= footerH;
+
+    // borda da tabela englobando header + linhas + footer
+    drawTableBorder(page, itemCols, itemTableTopY + headerRowH, itemTableH + footerH);
+    y -= 14;
 
     // ── Tabela de Parcelas ────────────────────────────────────────────────────
     if (numParcelas > 0) {
