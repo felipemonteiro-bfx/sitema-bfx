@@ -344,8 +344,8 @@ export async function GET(req: Request) {
       ...(vendaBase.boleto          ? [{ label: "Pagamento", value: "Boleto" }]            : []),
     ];
 
-    // largura fixa do label na coluna direita (maior label + espaço)
-    const maxLabelW = Math.max(...vendaInfoLines.map(l => font.widthOfTextAtSize(l.label, infoSize))) + 6;
+    // largura fixa do label na coluna direita (maior label + ":" + espaço)
+    const maxLabelW = Math.max(...vendaInfoLines.map(l => font.widthOfTextAtSize(l.label + ":", infoSize))) + 10;
     const valueX = colRightX + maxLabelW + 4;
 
     const maxLines = Math.max(clienteLines.length, vendaInfoLines.length);
@@ -426,14 +426,15 @@ export async function GET(req: Request) {
       }
     }
 
-    // coluna direita: Informações da venda (labels right-aligned, values left-aligned)
+    // coluna direita: Informações da venda (labels right-aligned com ":", values left-aligned)
     for (let i = 0; i < vendaInfoLines.length; i++) {
       const ly = bodyTopY - i * lineH - lineH / 2 - 1;
       const { label, value } = vendaInfoLines[i];
-      const lw = font.widthOfTextAtSize(label, infoSize);
+      const labelWithColon = label + ":";
+      const lw = font.widthOfTextAtSize(labelWithColon, infoSize);
       // label right-aligned até valueX
-      page.drawText(label, {
-        x: valueX - lw - 4, y: ly, size: infoSize, font, color: rgb(0.45, 0.47, 0.52),
+      page.drawText(labelWithColon, {
+        x: valueX - lw - 6, y: ly, size: infoSize, font, color: rgb(0.45, 0.47, 0.52),
       });
       // value left-aligned a partir de valueX
       page.drawText(value, {
@@ -583,7 +584,7 @@ export async function GET(req: Request) {
     });
     y -= contratoLineCount * contratoLineH;
 
-    y -= 24;
+    y -= 48;
 
     // ── Assinatura ────────────────────────────────────────────────────────────
     const sigLineW = 220;
