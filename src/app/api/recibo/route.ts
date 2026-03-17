@@ -78,7 +78,12 @@ function drawTableRow(
   values: string[], y: number, rowH: number, shade: boolean
 ) {
   const tableW = cols.reduce((s, c) => s + c.width, 0);
-  // sem fundo nas linhas — apenas separadores
+  if (shade) {
+    page.drawRectangle({
+      x: cols[0].x, y: y - rowH, width: tableW, height: rowH,
+      color: rgb(0.96, 0.97, 0.98),
+    });
+  }
   for (let i = 0; i < cols.length; i++) {
     const col = cols[i];
     const val = values[i] ?? "";
@@ -383,17 +388,7 @@ export async function GET(req: Request) {
       thickness: 0.6, color: rgb(0.78, 0.82, 0.88),
     });
 
-    // linhas de fundo alternadas (zebra mais visível)
-    for (let i = 0; i < maxLines; i++) {
-      if (i % 2 === 0) {
-        page.drawRectangle({
-          x: marginX - 4,
-          y: bodyTopY - (i + 1) * lineH - 5,
-          width: contentW + 8, height: lineH,
-          color: rgb(0.965, 0.968, 0.976),
-        });
-      }
-    }
+
 
     // coluna esquerda: Cliente — tudo alinhado à esquerda a partir de colLeftX
     for (let i = 0; i < clienteLines.length; i++) {
