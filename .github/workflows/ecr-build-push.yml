@@ -10,6 +10,10 @@ on:
       - k8s/**
       - .github/**
 
+concurrency:
+  group: ecr-build-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   AWS_REGION: sa-east-1
   ECR_REPOSITORY: bfx/bfx-shop
@@ -64,4 +68,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add deploy/bfx/kustomization.yaml
           git commit -m "build: automatic update of sistema-bfx"
+          git pull --rebase origin ${{ github.ref_name }}
           git push
