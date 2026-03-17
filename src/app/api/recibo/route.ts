@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyReciboSig } from "@/lib/recibo-url";
 import { formatBRL, formatDateBR } from "@/lib/utils";
-import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage, breakTextIntoLines } from "pdf-lib";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -250,8 +250,11 @@ export async function GET(req: Request) {
     // Parcelas (linhas fixas — conteúdo sempre cabe)
     const parcelasTableH = numParcelas > 0 ? (numParcelas + 1) * headerRowH + 36 : 0;
 
-    // Contrato
-    const contratoLineCount = wrapText(contrato, font, 9.5, contentW).length;
+    // Contrato (usa breakTextIntoLines nativo do pdf-lib)
+    const contratoFontSize = 9.5;
+    const contratoLineH    = Math.ceil(font.heightAtSize(contratoFontSize) * 1.45);
+    const contratoLines    = breakTextIntoLines(contrato, [" "], contentW, t => font.widthOfTextAtSize(t, contratoFontSize));
+    const contratoLineCount = contratoLines.length;
 
     const footerLines: [string, string, boolean][] = [
       ["N° de itens", String(vendaItens.length), false],
@@ -271,7 +274,7 @@ export async function GET(req: Request) {
       footerH +
       parcelasTableH +
       50  + // separador + titulo termos
-      contratoLineCount * 13 +
+      contratoLineCount * contratoLineH +
       80;   // assinatura + rodapé
 
     const pageHeight = Math.max(842, estimatedH);
@@ -325,8 +328,6 @@ export async function GET(req: Request) {
     const colDivX = marginX + contentW / 2 + 8; // divisor vertical
     const colLeftX = marginX + 6;
     const colRightX = colDivX + 10;
-    const blockRight = marginX + contentW + 4;
-
     const clienteLines = [
       { label: null,         value: cliente?.nome || "N/D",                          bold: true  },
       { label: "CPF/CNPJ",  value: cliente?.cpf || cliente?.cnpj || null,            bold: false },
@@ -563,10 +564,16 @@ export async function GET(req: Request) {
     page.drawText(secaoTitulo, { x: marginX, y, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
     y -= 14;
 
-    for (const line of wrapText(contrato, font, 9.5, contentW)) {
-      page.drawText(line, { x: marginX, y, size: 9.5, font, color: rgb(0.25, 0.27, 0.32) });
-      y -= 13;
-    }
+    // Renderiza texto com quebra automática nativa do pdf-lib
+    page.drawText(contrato, {
+      x: marginX, y,
+      size: contratoFontSize, font,
+      color: rgb(0.25, 0.27, 0.32),
+      lineHeight: contratoLineH,
+      maxWidth: contentW,
+      wordBreaks: [" "],
+    });
+    y -= contratoLineCount * contratoLineH;
 
     y -= 24;
 
