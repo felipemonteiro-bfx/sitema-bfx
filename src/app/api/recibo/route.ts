@@ -255,14 +255,13 @@ export async function GET(req: Request) {
 
     const estimatedH =
       100 + // header
-      100 + // info block cliente/vendedor
+      220 + // info block cliente/vendedor (inclui totais)
       30  + // separador + titulo itens
       itemTableH +
-      70  + // totals box
       parcelasTableH +
       50  + // separador + titulo termos
       contratoLineCount * 13 +
-      130;  // obs internas + rodapé
+      80;   // assinatura + rodapé
 
     const pageHeight = Math.max(842, estimatedH);
 
@@ -333,20 +332,25 @@ export async function GET(req: Request) {
       { label: "Parcelas:", value: `${nParcelas}x` },
       ...(vendaBase.descontoEmFolha ? [{ label: "Pagamento:", value: "Desconto em folha" }] : []),
       ...(vendaBase.boleto ? [{ label: "Pagamento:", value: "Boleto" }] : []),
+      { label: "N° de itens:", value: String(vendaItens.length) },
+      { label: "Soma das Qtdes:", value: String(somaQtd) },
+      { label: "Total de produtos:", value: formatBRL(subtotalProdutos) },
+      ...(frete > 0 ? [{ label: "Frete:", value: formatBRL(frete) }] : []),
+      { label: "Total do pedido:", value: formatBRL(totalVenda) },
     ];
 
     const maxInfoLines = Math.max(clienteLines.length, vendaInfoLines.length);
     const startY = y;
 
     page.drawRectangle({
-      x: marginX - 4, y: startY - maxInfoLines * lineH - 6,
-      width: contentW + 8, height: maxInfoLines * lineH + 8,
+      x: marginX - 4, y: startY - maxInfoLines * lineH - 12,
+      width: contentW + 8, height: maxInfoLines * lineH + 16,
       color: rgb(0.985, 0.987, 0.992),
       borderColor: rgb(0.88, 0.9, 0.94), borderWidth: 0.5,
     });
     page.drawLine({
       start: { x: colRight - 10, y: startY + 2 },
-      end: { x: colRight - 10, y: startY - maxInfoLines * lineH - 4 },
+      end: { x: colRight - 10, y: startY - maxInfoLines * lineH - 10 },
       thickness: 0.5, color: rgb(0.86, 0.88, 0.92),
     });
 
@@ -363,7 +367,7 @@ export async function GET(req: Request) {
       drawLabel(page, font, fontBold, vendaInfoLines[i].label, vendaInfoLines[i].value, colRight, startY - i * lineH - 2, infoSize);
     }
 
-    y = startY - maxInfoLines * lineH - 18;
+    y = startY - maxInfoLines * lineH - 24;
 
     // ── Separador + Título Itens ──────────────────────────────────────────────
     page.drawLine({ start: { x: marginX, y }, end: { x: 595 - marginX, y }, thickness: 0.5, color: rgb(0.82, 0.85, 0.9) });
@@ -392,32 +396,7 @@ export async function GET(req: Request) {
     drawTableBorder(page, itemCols, itemTableTopY + headerRowH, itemTableH);
     y -= 12;
 
-    // ── Totais (box direita) ──────────────────────────────────────────────────
-    const totalsX = marginX + contentW - 200;
-    const totalsW = 200;
-    const totalsLines: [string, string, boolean][] = [
-      ["N° de itens", String(vendaItens.length), false],
-      ["Soma das Qtdes", String(somaQtd), false],
-      ["Total de produtos", formatBRL(subtotalProdutos), false],
-      ...(frete > 0 ? [["Frete", formatBRL(frete), false] as [string, string, boolean]] : []),
-      ["Total do pedido", formatBRL(totalVenda), true],
-    ];
-    const totalBoxH = totalsLines.length * 18 + 12;
-
-    page.drawRectangle({
-      x: totalsX, y: y - totalBoxH, width: totalsW, height: totalBoxH,
-      color: rgb(0.97, 0.98, 0.99), borderColor: rgb(0.82, 0.85, 0.9), borderWidth: 0.6,
-    });
-
-    let ty = y - 8;
-    for (const [label, val, bold] of totalsLines) {
-      const valW = (bold ? fontBold : font).widthOfTextAtSize(val, 9);
-      page.drawText(label, { x: totalsX + 8, y: ty, size: 9, font: bold ? fontBold : font, color: rgb(0.35, 0.38, 0.44) });
-      page.drawText(val, { x: totalsX + totalsW - valW - 8, y: ty, size: 9, font: bold ? fontBold : font, color: bold ? rgb(0.1, 0.15, 0.25) : rgb(0.2, 0.22, 0.28) });
-      ty -= 18;
-    }
-
-    y -= totalBoxH + 18;
+    y -= 12;
 
     // ── Tabela de Parcelas ────────────────────────────────────────────────────
     if (numParcelas > 0) {
@@ -470,21 +449,22 @@ export async function GET(req: Request) {
       y -= 13;
     }
 
-    y -= 16;
+    y -= 24;
 
-    // ── Observações Internas ──────────────────────────────────────────────────
-    page.drawText("Observações Internas", { x: marginX, y, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
-    y -= 18;
-
-    for (const label of ["CIENTE:", "NOME:", "CPF:"]) {
-      page.drawText(label, { x: marginX, y, size: 9, font: fontBold, color: rgb(0.3, 0.33, 0.38) });
-      page.drawLine({
-        start: { x: marginX + 52, y: y - 2 },
-        end: { x: marginX + 52 + 160, y: y - 2 },
-        thickness: 0.8, color: rgb(0.3, 0.33, 0.38),
-      });
-      y -= 20;
-    }
+    // ── Assinatura ────────────────────────────────────────────────────────────
+    const sigLineW = 220;
+    const sigLineX = 595 / 2 - sigLineW / 2;
+    page.drawLine({
+      start: { x: sigLineX, y },
+      end: { x: sigLineX + sigLineW, y },
+      thickness: 0.8, color: rgb(0.2, 0.22, 0.28),
+    });
+    const sigText = "Assinatura do Cliente";
+    page.drawText(sigText, {
+      x: sigLineX + (sigLineW - font.widthOfTextAtSize(sigText, 8.5)) / 2,
+      y: y - 13,
+      size: 8.5, font, color: rgb(0.4, 0.43, 0.5),
+    });
 
     // ── Rodapé ────────────────────────────────────────────────────────────────
     page.drawLine({ start: { x: marginX, y: 32 }, end: { x: 595 - marginX, y: 32 }, thickness: 0.4, color: rgb(0.82, 0.85, 0.9) });

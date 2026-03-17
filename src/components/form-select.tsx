@@ -80,8 +80,10 @@ export function FormSelect({
               className
             )}
           >
-            <span className="min-w-0 truncate">{selected?.label ?? placeholder}</span>
-            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+            <span className="flex w-full min-w-0 items-center justify-between gap-2">
+              <span className="min-w-0 truncate">{selected?.label ?? placeholder}</span>
+              <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2.5">
