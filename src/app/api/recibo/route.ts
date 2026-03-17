@@ -18,7 +18,17 @@ function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): 
       line = test;
     } else {
       if (line) lines.push(line);
-      line = word;
+      // Se a palavra sozinha for maior que o maxWidth, força quebra por caracteres
+      let remaining = word;
+      while (font.widthOfTextAtSize(remaining, size) > maxWidth) {
+        let chunk = remaining;
+        while (chunk.length > 1 && font.widthOfTextAtSize(chunk, size) > maxWidth) {
+          chunk = chunk.slice(0, -1);
+        }
+        lines.push(chunk);
+        remaining = remaining.slice(chunk.length);
+      }
+      line = remaining;
     }
   }
   if (line) lines.push(line);
@@ -31,9 +41,22 @@ function fillTemplate(template: string, data: Record<string, string>): string {
 
 type ColDef = { label: string; x: number; width: number; align?: "left" | "right" | "center" };
 
-function drawTableHeader(
-  page: PDFPage, font: PDFFont, cols: ColDef[], y: number, rowH: number
-) {
+const CELL_PAD = 5;   // padding horizontal por lado
+const ROW_LINE_H = 11; // altura de cada linha de texto dentro da célula
+const ROW_V_PAD = 7;   // padding vertical total (top + bottom)
+const MIN_ROW_H = 22;  // altura mínima da linha
+
+function calcRowHeight(values: string[], cols: ColDef[], font: PDFFont): number {
+  let maxLines = 1;
+  for (let i = 0; i < cols.length; i++) {
+    const available = cols[i].width - CELL_PAD * 2;
+    const lines = wrapText(values[i] ?? "", font, 9, available);
+    maxLines = Math.max(maxLines, lines.length);
+  }
+  return Math.max(maxLines * ROW_LINE_H + ROW_V_PAD, MIN_ROW_H);
+}
+
+function drawTableHeader(page: PDFPage, font: PDFFont, cols: ColDef[], y: number, rowH: number) {
   page.drawRectangle({
     x: cols[0].x, y: y - rowH,
     width: cols.reduce((s, c) => s + c.width, 0), height: rowH,
@@ -42,23 +65,12 @@ function drawTableHeader(
   for (const col of cols) {
     const w = font.widthOfTextAtSize(col.label, 8);
     const textX = col.align === "right"
-      ? col.x + col.width - w - 4
+      ? col.x + col.width - w - CELL_PAD
       : col.align === "center"
       ? col.x + (col.width - w) / 2
-      : col.x + 4;
+      : col.x + CELL_PAD;
     page.drawText(col.label, { x: textX, y: y - rowH + 7, size: 8, font, color: rgb(1, 1, 1) });
   }
-}
-
-function truncateText(text: string, font: PDFFont, size: number, maxWidth: number): string {
-  const padding = 8; // left + right
-  const available = maxWidth - padding;
-  if (font.widthOfTextAtSize(text, size) <= available) return text;
-  let truncated = text;
-  while (truncated.length > 0 && font.widthOfTextAtSize(truncated + "…", size) > available) {
-    truncated = truncated.slice(0, -1);
-  }
-  return truncated + "…";
 }
 
 function drawTableRow(
@@ -74,15 +86,26 @@ function drawTableRow(
   }
   for (let i = 0; i < cols.length; i++) {
     const col = cols[i];
-    const rawVal = values[i] ?? "";
-    const val = truncateText(rawVal, font, 9, col.width);
-    const w = font.widthOfTextAtSize(val, 9);
-    const textX = col.align === "right"
-      ? col.x + col.width - w - 4
-      : col.align === "center"
-      ? col.x + (col.width - w) / 2
-      : col.x + 4;
-    page.drawText(val, { x: textX, y: y - rowH + 7, size: 9, font, color: rgb(0.2, 0.2, 0.22) });
+    const val = values[i] ?? "";
+    const available = col.width - CELL_PAD * 2;
+    const lines = wrapText(val, font, 9, available);
+    // Centralizar verticalmente o bloco de texto na célula
+    const blockH = lines.length * ROW_LINE_H;
+    const startY = y - (rowH - blockH) / 2 - ROW_LINE_H + 3;
+
+    for (let j = 0; j < lines.length; j++) {
+      const lineText = lines[j];
+      const lw = font.widthOfTextAtSize(lineText, 9);
+      const textX = col.align === "right"
+        ? col.x + col.width - lw - CELL_PAD
+        : col.align === "center"
+        ? col.x + (col.width - lw) / 2
+        : col.x + CELL_PAD;
+      page.drawText(lineText, {
+        x: textX, y: startY - j * ROW_LINE_H,
+        size: 9, font, color: rgb(0.2, 0.2, 0.22),
+      });
+    }
   }
   page.drawLine({
     start: { x: cols[0].x, y: y - rowH },
@@ -91,18 +114,17 @@ function drawTableRow(
   });
 }
 
-function drawTableBorder(page: PDFPage, cols: ColDef[], topY: number, rows: number, rowH: number) {
+function drawTableBorder(page: PDFPage, cols: ColDef[], topY: number, totalH: number) {
   const tableW = cols.reduce((s, c) => s + c.width, 0);
-  const tableH = rows * rowH;
   page.drawRectangle({
-    x: cols[0].x, y: topY - tableH, width: tableW, height: tableH,
+    x: cols[0].x, y: topY - totalH, width: tableW, height: totalH,
     borderColor: rgb(0.7, 0.73, 0.78), borderWidth: 0.6,
   });
   let colX = cols[0].x;
   for (let i = 0; i < cols.length - 1; i++) {
     colX += cols[i].width;
     page.drawLine({
-      start: { x: colX, y: topY - tableH },
+      start: { x: colX, y: topY - totalH },
       end: { x: colX, y: topY },
       thickness: 0.4, color: rgb(0.82, 0.84, 0.88),
     });
@@ -153,7 +175,6 @@ export async function GET(req: Request) {
       });
     } catch { /* fallback */ }
 
-    // Fallback para vendas antigas sem itens
     if (!vendaItens.length && vendaBase.produtoNome) {
       const val = vendaBase.valorVenda ?? 0;
       const qtd = vendaBase.quantidade ?? 1;
@@ -184,16 +205,9 @@ export async function GET(req: Request) {
     const frete = vendaBase.valorFrete ?? 0;
     const totalVenda = subtotalProdutos + frete;
     const nParcelas = vendaBase.parcelas || 1;
-    const valorParc = vendaBase.valorParcela || (nParcelas > 0 ? totalVenda / nParcelas : totalVenda);
     const somaQtd = vendaItens.reduce((s, i) => s + i.quantidade, 0);
     const numParcelas = parcelasVenc.length;
 
-    // ── Dimensões dinâmicas ───────────────────────────────────────────────────
-    const rowH = 22;
-    const prodRowsH = (vendaItens.length + 1) * rowH; // header + rows
-    const parcelasRowsH = numParcelas > 0 ? (numParcelas + 1) * rowH + 36 : 0;
-
-    // Estima texto de autorização
     const placeholderData = {
       CLIENTE: cliente?.nome || "N/D",
       MATRICULA: cliente?.matricula || "N/D",
@@ -206,29 +220,53 @@ export async function GET(req: Request) {
       ? fillTemplate(cfg?.modeloContrato || DEFAULT_AUTORIZACAO, placeholderData)
       : fillTemplate(cfg?.modeloReciboVenda || DEFAULT_RECIBO_VENDA, placeholderData);
 
-    // Calcula altura do PDF de forma conservadora
-    const contratoLines = Math.ceil(contrato.length / 80) + 4;
-    const estimatedH =
-      100 + // header
-      80  + // info block cliente/vendedor
-      20  + // separator
-      prodRowsH +
-      60  + // totals box
-      parcelasRowsH +
-      50  + // termos title + padding
-      contratoLines * 14 +
-      120;  // signature + footer
-
-    const pageHeight = Math.max(842, estimatedH);
-
-    // ── PDF Setup ─────────────────────────────────────────────────────────────
+    // ── PDF Setup — fontes primeiro para calcular alturas reais ───────────────
     const pdf = await PDFDocument.create();
-    const page = pdf.addPage([595, pageHeight]);
     const font = await pdf.embedFont(StandardFonts.Helvetica);
     const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
     const marginX = 36;
     const contentW = 595 - marginX * 2; // 523
+    const headerRowH = 22;
+
+    // Definição de colunas dos itens
+    const itemCols: ColDef[] = [
+      { label: "Descrição do produto/serviço", x: marginX,       width: 232, align: "left"   },
+      { label: "Un.",                           x: marginX + 232, width: 34,  align: "center" },
+      { label: "Qtd.",                          x: marginX + 266, width: 42,  align: "right"  },
+      { label: "Valor unitário",                x: marginX + 308, width: 92,  align: "right"  },
+      { label: "Total",                         x: marginX + 400, width: 87,  align: "right"  },
+    ];
+
+    // Calcular altura real de cada linha de item com wrap
+    const itemRowHeights = vendaItens.map(item =>
+      calcRowHeight(
+        [item.produtoNome, "UN", String(item.quantidade), formatBRL(item.valorVenda), formatBRL(item.subtotal)],
+        itemCols, font
+      )
+    );
+    const itemTableH = headerRowH + itemRowHeights.reduce((s, h) => s + h, 0);
+
+    // Parcelas (linhas fixas — conteúdo sempre cabe)
+    const parcelasTableH = numParcelas > 0 ? (numParcelas + 1) * headerRowH + 36 : 0;
+
+    // Contrato
+    const contratoLineCount = wrapText(contrato, font, 9.5, contentW).length;
+
+    const estimatedH =
+      100 + // header
+      100 + // info block cliente/vendedor
+      30  + // separador + titulo itens
+      itemTableH +
+      70  + // totals box
+      parcelasTableH +
+      50  + // separador + titulo termos
+      contratoLineCount * 13 +
+      130;  // obs internas + rodapé
+
+    const pageHeight = Math.max(842, estimatedH);
+
+    const page = pdf.addPage([595, pageHeight]);
     let y = pageHeight - 28;
 
     // ── Logo & Header ─────────────────────────────────────────────────────────
@@ -258,7 +296,6 @@ export async function GET(req: Request) {
       page.drawText("BFX Manager", { x: marginX, y: pageHeight - 38, size: 18, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
     }
 
-    // Título + número do pedido (direita)
     const docTitle = tipo === "autorizacao" ? "Autorização de Desconto em Folha" : "Pedido de Venda";
     const pedidoLabel = `Pedido ${vendaBase.id}`;
     page.drawText(docTitle, {
@@ -278,24 +315,16 @@ export async function GET(req: Request) {
     const infoSize = 9;
     const lineH = 14;
 
-    // Título "Cliente"
     page.drawText("Cliente", { x: colLeft, y, size: 10, font: fontBold, color: rgb(0.18, 0.24, 0.34) });
     page.drawText("Informações da venda", { x: colRight, y, size: 10, font: fontBold, color: rgb(0.18, 0.24, 0.34) });
     y -= lineH + 2;
 
-    // Dados do cliente
-    const clienteNome = cliente?.nome || "N/D";
-    const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
-    const clienteEnd = cliente?.endereco || "";
-    const clienteCep = cliente?.cep ? `CEP: ${cliente.cep}` : "";
-    const clienteEmp = cliente?.empresa || "";
-
     const clienteLines = [
-      clienteNome,
-      clienteDoc ? `CPF/CNPJ: ${clienteDoc}` : null,
-      clienteEmp ? `Empresa: ${clienteEmp}` : null,
-      clienteEnd || null,
-      clienteCep || null,
+      cliente?.nome || "N/D",
+      (cliente?.cpf || cliente?.cnpj) ? `CPF/CNPJ: ${cliente?.cpf || cliente?.cnpj}` : null,
+      cliente?.empresa ? `Empresa: ${cliente.empresa}` : null,
+      cliente?.endereco || null,
+      cliente?.cep ? `CEP: ${cliente.cep}` : null,
     ].filter(Boolean) as string[];
 
     const vendaInfoLines = [
@@ -306,21 +335,18 @@ export async function GET(req: Request) {
       ...(vendaBase.boleto ? [{ label: "Pagamento:", value: "Boleto" }] : []),
     ];
 
-    const maxLines = Math.max(clienteLines.length, vendaInfoLines.length);
+    const maxInfoLines = Math.max(clienteLines.length, vendaInfoLines.length);
     const startY = y;
 
-    // Background info block
     page.drawRectangle({
-      x: marginX - 4, y: startY - maxLines * lineH - 6,
-      width: contentW + 8, height: maxLines * lineH + 8,
+      x: marginX - 4, y: startY - maxInfoLines * lineH - 6,
+      width: contentW + 8, height: maxInfoLines * lineH + 8,
       color: rgb(0.985, 0.987, 0.992),
       borderColor: rgb(0.88, 0.9, 0.94), borderWidth: 0.5,
     });
-
-    // Linha divisória entre as colunas
     page.drawLine({
       start: { x: colRight - 10, y: startY + 2 },
-      end: { x: colRight - 10, y: startY - maxLines * lineH - 4 },
+      end: { x: colRight - 10, y: startY - maxInfoLines * lineH - 4 },
       thickness: 0.5, color: rgb(0.86, 0.88, 0.92),
     });
 
@@ -333,48 +359,37 @@ export async function GET(req: Request) {
         color: isName ? rgb(0.1, 0.12, 0.16) : rgb(0.28, 0.3, 0.35),
       });
     }
-
     for (let i = 0; i < vendaInfoLines.length; i++) {
-      const lineY = startY - i * lineH;
-      drawLabel(page, font, fontBold, vendaInfoLines[i].label, vendaInfoLines[i].value, colRight, lineY - 2, infoSize);
+      drawLabel(page, font, fontBold, vendaInfoLines[i].label, vendaInfoLines[i].value, colRight, startY - i * lineH - 2, infoSize);
     }
 
-    y = startY - maxLines * lineH - 18;
+    y = startY - maxInfoLines * lineH - 18;
 
-    // ── Separador ─────────────────────────────────────────────────────────────
+    // ── Separador + Título Itens ──────────────────────────────────────────────
     page.drawLine({ start: { x: marginX, y }, end: { x: 595 - marginX, y }, thickness: 0.5, color: rgb(0.82, 0.85, 0.9) });
     y -= 16;
-
-    // ── Tabela de Itens ───────────────────────────────────────────────────────
     page.drawText("Itens do pedido", { x: marginX, y, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
     y -= 14;
 
-    const itemCols: ColDef[] = [
-      { label: "Descrição do produto/serviço", x: marginX,       width: 232, align: "left"  },
-      { label: "Un.",                           x: marginX + 232, width: 34,  align: "center"},
-      { label: "Qtd.",                          x: marginX + 266, width: 42,  align: "right" },
-      { label: "Valor unitário",                x: marginX + 308, width: 92,  align: "right" },
-      { label: "Total",                         x: marginX + 400, width: 87,  align: "right" },
-    ];
-
-    drawTableHeader(page, fontBold, itemCols, y, rowH);
-    y -= rowH;
-    const tableTopY = y;
+    // ── Tabela de Itens ───────────────────────────────────────────────────────
+    drawTableHeader(page, fontBold, itemCols, y, headerRowH);
+    y -= headerRowH;
+    const itemTableTopY = y;
 
     for (let i = 0; i < vendaItens.length; i++) {
       const item = vendaItens[i];
+      const rh = itemRowHeights[i];
       drawTableRow(page, font, itemCols, [
         item.produtoNome,
         "UN",
         String(item.quantidade),
         formatBRL(item.valorVenda),
         formatBRL(item.subtotal),
-      ], y, rowH, i % 2 !== 0);
-      y -= rowH;
+      ], y, rh, i % 2 !== 0);
+      y -= rh;
     }
 
-    drawTableBorder(page, itemCols, tableTopY + rowH, vendaItens.length + 1, rowH);
-
+    drawTableBorder(page, itemCols, itemTableTopY + headerRowH, itemTableH);
     y -= 12;
 
     // ── Totais (box direita) ──────────────────────────────────────────────────
@@ -416,39 +431,36 @@ export async function GET(req: Request) {
         : "À Vista";
 
       const parcelaCols: ColDef[] = [
-        { label: "Dias",               x: marginX,       width: 46,  align: "right"  },
-        { label: "Data vencimento",    x: marginX + 46,  width: 110, align: "left"   },
-        { label: "Forma de pagamento", x: marginX + 156, width: 180, align: "left"   },
-        { label: "Valor",              x: marginX + 336, width: 90,  align: "right"  },
-        { label: "Observação",         x: marginX + 426, width: 61,  align: "left"   },
+        { label: "Dias",               x: marginX,       width: 46,  align: "right" },
+        { label: "Data vencimento",    x: marginX + 46,  width: 110, align: "left"  },
+        { label: "Forma de pagamento", x: marginX + 156, width: 180, align: "left"  },
+        { label: "Valor",              x: marginX + 336, width: 90,  align: "right" },
+        { label: "Observação",         x: marginX + 426, width: 61,  align: "left"  },
       ];
 
-      drawTableHeader(page, fontBold, parcelaCols, y, rowH);
-      y -= rowH;
+      drawTableHeader(page, fontBold, parcelaCols, y, headerRowH);
+      y -= headerRowH;
       const parcTableTopY = y;
+      let parcTableBodyH = 0;
 
       for (let i = 0; i < parcelasVenc.length; i++) {
         const pv = parcelasVenc[i];
         const dias = Math.round((pv.dataVencimento.getTime() - vendaBase.dataVenda.getTime()) / 86400000);
-        drawTableRow(page, font, parcelaCols, [
-          String(dias),
-          formatDateBR(pv.dataVencimento),
-          formaPag,
-          formatBRL(pv.valorParcela),
-          "",
-        ], y, rowH, i % 2 !== 0);
-        y -= rowH;
+        const rowValues = [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""];
+        const rh = calcRowHeight(rowValues, parcelaCols, font);
+        drawTableRow(page, font, parcelaCols, rowValues, y, rh, i % 2 !== 0);
+        y -= rh;
+        parcTableBodyH += rh;
       }
 
-      drawTableBorder(page, parcelaCols, parcTableTopY + rowH, parcelasVenc.length + 1, rowH);
+      drawTableBorder(page, parcelaCols, parcTableTopY + headerRowH, headerRowH + parcTableBodyH);
       y -= 18;
     }
 
-    // ── Separador ─────────────────────────────────────────────────────────────
+    // ── Separador + Observações ───────────────────────────────────────────────
     page.drawLine({ start: { x: marginX, y }, end: { x: 595 - marginX, y }, thickness: 0.5, color: rgb(0.82, 0.85, 0.9) });
     y -= 16;
 
-    // ── Observações (contrato/termos) ─────────────────────────────────────────
     const secaoTitulo = tipo === "autorizacao" ? "Observações" : "Termos e condições";
     page.drawText(secaoTitulo, { x: marginX, y, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
     y -= 14;
@@ -464,12 +476,11 @@ export async function GET(req: Request) {
     page.drawText("Observações Internas", { x: marginX, y, size: 10, font: fontBold, color: rgb(0.1, 0.15, 0.25) });
     y -= 18;
 
-    const signLineW = 160;
     for (const label of ["CIENTE:", "NOME:", "CPF:"]) {
       page.drawText(label, { x: marginX, y, size: 9, font: fontBold, color: rgb(0.3, 0.33, 0.38) });
       page.drawLine({
         start: { x: marginX + 52, y: y - 2 },
-        end: { x: marginX + 52 + signLineW, y: y - 2 },
+        end: { x: marginX + 52 + 160, y: y - 2 },
         thickness: 0.8, color: rgb(0.3, 0.33, 0.38),
       });
       y -= 20;
