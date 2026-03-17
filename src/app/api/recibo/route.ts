@@ -265,7 +265,7 @@ export async function GET(req: Request) {
 
     const estimatedH =
       100 + // header
-      120 + // info block cliente/vendedor
+      130 + // info block cliente/vendedor
       30  + // separador + titulo itens
       itemTableH +
       footerH +
@@ -319,61 +319,121 @@ export async function GET(req: Request) {
 
     y = pageHeight - headerH - 18;
 
-    // ── Bloco 2 colunas: Cliente | Venda ──────────────────────────────────────
-    const colLeft = marginX;
-    const colRight = marginX + contentW / 2 + 10;
+    // ── Bloco 2 colunas: Cliente | Informações da venda ──────────────────────
     const infoSize = 9;
-    const lineH = 14;
-
-    page.drawText("Cliente", { x: colLeft, y, size: 10, font: fontBold, color: rgb(0.18, 0.24, 0.34) });
-    page.drawText("Informações da venda", { x: colRight, y, size: 10, font: fontBold, color: rgb(0.18, 0.24, 0.34) });
-    y -= lineH + 2;
+    const lineH = 15;
+    const colDivX = marginX + contentW / 2 + 8; // divisor vertical
+    const colLeftX = marginX + 6;
+    const colRightX = colDivX + 10;
+    const blockRight = marginX + contentW + 4;
 
     const clienteLines = [
-      cliente?.nome || "N/D",
-      (cliente?.cpf || cliente?.cnpj) ? `CPF/CNPJ: ${cliente?.cpf || cliente?.cnpj}` : null,
-      cliente?.empresa ? `Empresa: ${cliente.empresa}` : null,
-      cliente?.endereco || null,
-      cliente?.cep ? `CEP: ${cliente.cep}` : null,
-    ].filter(Boolean) as string[];
+      { label: null,         value: cliente?.nome || "N/D",                          bold: true  },
+      { label: "CPF/CNPJ",  value: cliente?.cpf || cliente?.cnpj || null,            bold: false },
+      { label: "Empresa",   value: cliente?.empresa || null,                          bold: false },
+      { label: "Endereço",  value: cliente?.endereco || null,                         bold: false },
+      { label: "CEP",       value: cliente?.cep || null,                              bold: false },
+    ].filter(l => l.value) as { label: string | null; value: string; bold: boolean }[];
 
     const vendaInfoLines = [
-      { label: "Vendedor:", value: vendaBase.vendedor || "N/D" },
-      { label: "Data:", value: formatDateBR(vendaBase.dataVenda) },
-      { label: "Parcelas:", value: `${nParcelas}x` },
-      ...(vendaBase.descontoEmFolha ? [{ label: "Pagamento:", value: "Desconto em folha" }] : []),
-      ...(vendaBase.boleto ? [{ label: "Pagamento:", value: "Boleto" }] : []),
+      { label: "Vendedor",  value: vendaBase.vendedor || "N/D" },
+      { label: "Data",      value: formatDateBR(vendaBase.dataVenda) },
+      { label: "Parcelas",  value: `${nParcelas}x` },
+      ...(vendaBase.descontoEmFolha ? [{ label: "Pagamento", value: "Desconto em folha" }] : []),
+      ...(vendaBase.boleto          ? [{ label: "Pagamento", value: "Boleto" }]            : []),
     ];
 
-    const maxInfoLines = Math.max(clienteLines.length, vendaInfoLines.length);
-    const startY = y;
+    // largura fixa do label na coluna direita (maior label + espaço)
+    const maxLabelW = Math.max(...vendaInfoLines.map(l => font.widthOfTextAtSize(l.label, infoSize))) + 6;
+    const valueX = colRightX + maxLabelW + 4;
 
+    const maxLines = Math.max(clienteLines.length, vendaInfoLines.length);
+    const headerH = lineH + 2;
+    const bodyH   = maxLines * lineH + 10;
+    const blockH  = headerH + bodyH;
+    const blockTopY = y;
+
+    // fundo do card
     page.drawRectangle({
-      x: marginX - 4, y: startY - maxInfoLines * lineH - 12,
-      width: contentW + 8, height: maxInfoLines * lineH + 16,
-      color: rgb(0.985, 0.987, 0.992),
-      borderColor: rgb(0.88, 0.9, 0.94), borderWidth: 0.5,
-    });
-    page.drawLine({
-      start: { x: colRight - 10, y: startY + 2 },
-      end: { x: colRight - 10, y: startY - maxInfoLines * lineH - 10 },
-      thickness: 0.5, color: rgb(0.86, 0.88, 0.92),
+      x: marginX - 4, y: blockTopY - blockH,
+      width: contentW + 8, height: blockH,
+      color: rgb(0.984, 0.986, 0.992),
+      borderColor: rgb(0.86, 0.89, 0.93), borderWidth: 0.5,
     });
 
+    // faixa de cabeçalho
+    page.drawRectangle({
+      x: marginX - 4, y: blockTopY - headerH,
+      width: contentW + 8, height: headerH,
+      color: rgb(0.18, 0.24, 0.34),
+    });
+    page.drawText("Cliente", {
+      x: colLeftX, y: blockTopY - headerH + 4,
+      size: 8.5, font: fontBold, color: rgb(1, 1, 1),
+    });
+    page.drawText("Informações da venda", {
+      x: colRightX, y: blockTopY - headerH + 4,
+      size: 8.5, font: fontBold, color: rgb(1, 1, 1),
+    });
+
+    // divisor vertical (abaixo do header)
+    const bodyTopY = blockTopY - headerH;
+    page.drawLine({
+      start: { x: colDivX, y: blockTopY - blockH + 4 },
+      end:   { x: colDivX, y: bodyTopY },
+      thickness: 0.5, color: rgb(0.82, 0.85, 0.9),
+    });
+
+    // linhas de fundo alternadas (zebra sutil)
+    for (let i = 0; i < maxLines; i++) {
+      if (i % 2 === 0) {
+        page.drawRectangle({
+          x: marginX - 4,
+          y: bodyTopY - (i + 1) * lineH - 4,
+          width: contentW + 8, height: lineH,
+          color: rgb(0.975, 0.977, 0.985),
+        });
+      }
+    }
+
+    // coluna esquerda: Cliente
     for (let i = 0; i < clienteLines.length; i++) {
-      const lineY = startY - i * lineH;
-      const isName = i === 0;
-      page.drawText(clienteLines[i], {
-        x: colLeft, y: lineY - 2, size: isName ? 10 : infoSize,
-        font: isName ? fontBold : font,
-        color: isName ? rgb(0.1, 0.12, 0.16) : rgb(0.28, 0.3, 0.35),
+      const ly = bodyTopY - i * lineH - lineH / 2 - 1;
+      const cl = clienteLines[i];
+      if (cl.bold) {
+        page.drawText(cl.value, {
+          x: colLeftX, y: ly, size: 9.5, font: fontBold, color: rgb(0.08, 0.1, 0.15),
+        });
+      } else {
+        const labelPart = cl.label ? cl.label + ": " : "";
+        if (labelPart) {
+          page.drawText(labelPart, {
+            x: colLeftX, y: ly, size: infoSize, font, color: rgb(0.45, 0.47, 0.52),
+          });
+        }
+        const lw = font.widthOfTextAtSize(labelPart, infoSize);
+        page.drawText(cl.value, {
+          x: colLeftX + lw, y: ly, size: infoSize, font: fontBold, color: rgb(0.18, 0.2, 0.26),
+        });
+      }
+    }
+
+    // coluna direita: Informações da venda (labels right-aligned, values left-aligned)
+    for (let i = 0; i < vendaInfoLines.length; i++) {
+      const ly = bodyTopY - i * lineH - lineH / 2 - 1;
+      const { label, value } = vendaInfoLines[i];
+      const lw = font.widthOfTextAtSize(label, infoSize);
+      // label right-aligned até valueX
+      page.drawText(label, {
+        x: valueX - lw - 4, y: ly, size: infoSize, font, color: rgb(0.45, 0.47, 0.52),
+      });
+      // value left-aligned a partir de valueX
+      page.drawText(value, {
+        x: valueX, y: ly, size: infoSize, font: fontBold, color: rgb(0.1, 0.13, 0.2),
       });
     }
-    for (let i = 0; i < vendaInfoLines.length; i++) {
-      drawLabel(page, font, fontBold, vendaInfoLines[i].label, vendaInfoLines[i].value, colRight, startY - i * lineH - 2, infoSize);
-    }
 
-    y = startY - maxInfoLines * lineH - 24;
+    y = blockTopY - blockH - 14;
 
     // ── Separador + Título Itens ──────────────────────────────────────────────
     page.drawLine({ start: { x: marginX, y }, end: { x: 595 - marginX, y }, thickness: 0.5, color: rgb(0.82, 0.85, 0.9) });
