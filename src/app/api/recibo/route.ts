@@ -78,10 +78,7 @@ function drawTableRow(
   values: string[], y: number, rowH: number, shade: boolean
 ) {
   const tableW = cols.reduce((s, c) => s + c.width, 0);
-  page.drawRectangle({
-    x: cols[0].x, y: y - rowH, width: tableW, height: rowH,
-    color: shade ? rgb(0.93, 0.95, 0.97) : rgb(0.98, 0.985, 0.99),
-  });
+  // sem fundo nas linhas — apenas separadores
   for (let i = 0; i < cols.length; i++) {
     const col = cols[i];
     const val = values[i] ?? "";
