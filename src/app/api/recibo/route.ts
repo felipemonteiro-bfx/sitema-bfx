@@ -263,8 +263,8 @@ export async function GET(req: Request) {
       ...(frete > 0 ? [["Frete", formatBRL(frete), false] as [string, string, boolean]] : []),
       ["Total do pedido", formatBRL(totalVenda), true],
     ];
-    const footerRowH = 18;
-    const footerH = footerLines.length * footerRowH + 4;
+    const footerRowH = 20;
+    const footerH = footerLines.length * footerRowH + 14;
 
     const estimatedH =
       100 + // header
@@ -324,9 +324,9 @@ export async function GET(req: Request) {
 
     // ── Bloco 2 colunas: Cliente | Informações da venda ──────────────────────
     const infoSize = 9;
-    const lineH = 15;
+    const lineH = 17;
     const colDivX = marginX + contentW / 2 + 8; // divisor vertical
-    const colLeftX = marginX + 6;
+    const colLeftX = marginX + 10;
     const colRightX = colDivX + 10;
     const clienteLines = [
       { label: null,         value: cliente?.nome || "N/D",                          bold: true  },
@@ -349,8 +349,8 @@ export async function GET(req: Request) {
     const valueX = colRightX + maxLabelW + 4;
 
     const maxLines = Math.max(clienteLines.length, vendaInfoLines.length);
-    const infoHeaderH = lineH + 2;
-    const bodyH       = maxLines * lineH + 10;
+    const infoHeaderH = lineH + 10;
+    const bodyH       = maxLines * lineH + 16;
     const blockH      = infoHeaderH + bodyH;
     const blockTopY   = y;
 
@@ -358,41 +358,48 @@ export async function GET(req: Request) {
     page.drawRectangle({
       x: marginX - 4, y: blockTopY - blockH,
       width: contentW + 8, height: blockH,
-      color: rgb(0.984, 0.986, 0.992),
-      borderColor: rgb(0.86, 0.89, 0.93), borderWidth: 0.5,
+      color: rgb(0.985, 0.987, 0.993),
+      borderColor: rgb(0.82, 0.85, 0.91), borderWidth: 0.6,
     });
 
-    // faixa de cabeçalho
+    // faixa de cabeçalho (altura maior)
     page.drawRectangle({
       x: marginX - 4, y: blockTopY - infoHeaderH,
       width: contentW + 8, height: infoHeaderH,
       color: rgb(0.18, 0.24, 0.34),
     });
+    // barra de acento esquerda no header
+    page.drawRectangle({
+      x: marginX - 4, y: blockTopY - infoHeaderH,
+      width: 4, height: infoHeaderH,
+      color: rgb(0.38, 0.58, 0.88),
+    });
+    const headerTextY = blockTopY - infoHeaderH + Math.round((infoHeaderH - 9) / 2);
     page.drawText("Cliente", {
-      x: colLeftX, y: blockTopY - infoHeaderH + 4,
-      size: 8.5, font: fontBold, color: rgb(1, 1, 1),
+      x: colLeftX, y: headerTextY,
+      size: 9, font: fontBold, color: rgb(1, 1, 1),
     });
     page.drawText("Informações da venda", {
-      x: colRightX, y: blockTopY - infoHeaderH + 4,
-      size: 8.5, font: fontBold, color: rgb(1, 1, 1),
+      x: colRightX, y: headerTextY,
+      size: 9, font: fontBold, color: rgb(1, 1, 1),
     });
 
     // divisor vertical (abaixo do header)
     const bodyTopY = blockTopY - infoHeaderH;
     page.drawLine({
-      start: { x: colDivX, y: blockTopY - blockH + 4 },
+      start: { x: colDivX, y: blockTopY - blockH + 6 },
       end:   { x: colDivX, y: bodyTopY },
-      thickness: 0.5, color: rgb(0.82, 0.85, 0.9),
+      thickness: 0.6, color: rgb(0.78, 0.82, 0.88),
     });
 
-    // linhas de fundo alternadas (zebra sutil)
+    // linhas de fundo alternadas (zebra mais visível)
     for (let i = 0; i < maxLines; i++) {
       if (i % 2 === 0) {
         page.drawRectangle({
           x: marginX - 4,
-          y: bodyTopY - (i + 1) * lineH - 4,
+          y: bodyTopY - (i + 1) * lineH - 5,
           width: contentW + 8, height: lineH,
-          color: rgb(0.975, 0.977, 0.985),
+          color: rgb(0.965, 0.968, 0.976),
         });
       }
     }
@@ -460,16 +467,17 @@ export async function GET(req: Request) {
       y -= rh;
     }
 
-    const tableRight = marginX + contentW;
+    const itemTableW = itemCols.reduce((s, c) => s + c.width, 0);
+    const tableRight = marginX + itemTableW;
 
     // borda da tabela cobre apenas os itens (sem footer, sem divisores cruzando o footer)
     drawTableBorder(page, itemCols, itemTableTopY + headerRowH, itemTableH);
 
-    // ── Footer de Totais — col-span full ─────────────────────────────────────
-    // fundo do footer (span total da tabela)
+    // ── Footer de Totais — col-span full, mesma largura da tabela ────────────
+    // fundo do footer
     page.drawRectangle({
       x: marginX, y: y - footerH,
-      width: contentW, height: footerH,
+      width: itemTableW, height: footerH,
       color: rgb(0.972, 0.975, 0.982),
     });
 
@@ -483,20 +491,20 @@ export async function GET(req: Request) {
     // borda externa do footer (conecta com a tabela)
     page.drawRectangle({
       x: marginX, y: y - footerH,
-      width: contentW, height: footerH,
+      width: itemTableW, height: footerH,
       borderColor: rgb(0.7, 0.73, 0.78), borderWidth: 0.6,
     });
 
-    let fy = y - 5;
+    let fy = y - 10;
     for (const [label, val, bold] of footerLines) {
       const f = bold ? fontBold : font;
       const isTotal = bold;
 
       if (isTotal) {
         page.drawLine({
-          start: { x: marginX + 4, y: fy + footerRowH - 3 },
-          end:   { x: tableRight - 4, y: fy + footerRowH - 3 },
-          thickness: 0.4, color: rgb(0.78, 0.81, 0.86),
+          start: { x: marginX + 4, y: fy + footerRowH - 4 },
+          end:   { x: tableRight - 4, y: fy + footerRowH - 4 },
+          thickness: 0.4, color: rgb(0.72, 0.75, 0.82),
         });
       }
 
@@ -505,13 +513,13 @@ export async function GET(req: Request) {
       page.drawText(label, {
         x: marginX + CELL_PAD + 2,
         y: fy, size: 8.5, font: f,
-        color: isTotal ? rgb(0.08, 0.12, 0.2) : rgb(0.35, 0.38, 0.44),
+        color: isTotal ? rgb(0.06, 0.10, 0.18) : rgb(0.38, 0.41, 0.48),
       });
       // value: right-aligned
       page.drawText(val, {
         x: tableRight - valW - CELL_PAD,
         y: fy, size: 8.5, font: f,
-        color: isTotal ? rgb(0.08, 0.12, 0.2) : rgb(0.2, 0.22, 0.28),
+        color: isTotal ? rgb(0.06, 0.10, 0.18) : rgb(0.2, 0.22, 0.28),
       });
       fy -= footerRowH;
     }
