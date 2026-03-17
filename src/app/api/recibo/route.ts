@@ -348,10 +348,10 @@ export async function GET(req: Request) {
     const valueX = colRightX + maxLabelW + 4;
 
     const maxLines = Math.max(clienteLines.length, vendaInfoLines.length);
-    const headerH = lineH + 2;
-    const bodyH   = maxLines * lineH + 10;
-    const blockH  = headerH + bodyH;
-    const blockTopY = y;
+    const infoHeaderH = lineH + 2;
+    const bodyH       = maxLines * lineH + 10;
+    const blockH      = infoHeaderH + bodyH;
+    const blockTopY   = y;
 
     // fundo do card
     page.drawRectangle({
@@ -363,21 +363,21 @@ export async function GET(req: Request) {
 
     // faixa de cabeçalho
     page.drawRectangle({
-      x: marginX - 4, y: blockTopY - headerH,
-      width: contentW + 8, height: headerH,
+      x: marginX - 4, y: blockTopY - infoHeaderH,
+      width: contentW + 8, height: infoHeaderH,
       color: rgb(0.18, 0.24, 0.34),
     });
     page.drawText("Cliente", {
-      x: colLeftX, y: blockTopY - headerH + 4,
+      x: colLeftX, y: blockTopY - infoHeaderH + 4,
       size: 8.5, font: fontBold, color: rgb(1, 1, 1),
     });
     page.drawText("Informações da venda", {
-      x: colRightX, y: blockTopY - headerH + 4,
+      x: colRightX, y: blockTopY - infoHeaderH + 4,
       size: 8.5, font: fontBold, color: rgb(1, 1, 1),
     });
 
     // divisor vertical (abaixo do header)
-    const bodyTopY = blockTopY - headerH;
+    const bodyTopY = blockTopY - infoHeaderH;
     page.drawLine({
       start: { x: colDivX, y: blockTopY - blockH + 4 },
       end:   { x: colDivX, y: bodyTopY },
