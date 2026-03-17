@@ -459,56 +459,63 @@ export async function GET(req: Request) {
       y -= rh;
     }
 
-    // ── Footer de Totais (dentro da tabela) ──────────────────────────────────
     const tableRight = marginX + contentW;
-    const valColX = tableRight - 87; // início da coluna Total
 
-    // linha separadora entre itens e footer
-    page.drawLine({
-      start: { x: marginX, y },
-      end: { x: tableRight, y },
-      thickness: 0.6, color: rgb(0.7, 0.73, 0.78),
-    });
+    // borda da tabela cobre apenas os itens (sem footer, sem divisores cruzando o footer)
+    drawTableBorder(page, itemCols, itemTableTopY + headerRowH, itemTableH);
 
-    // fundo do footer
+    // ── Footer de Totais — col-span full ─────────────────────────────────────
+    // fundo do footer (span total da tabela)
     page.drawRectangle({
       x: marginX, y: y - footerH,
       width: contentW, height: footerH,
-      color: rgb(0.975, 0.978, 0.985),
+      color: rgb(0.972, 0.975, 0.982),
     });
 
-    let fy = y - 6;
+    // linha separadora topo do footer
+    page.drawLine({
+      start: { x: marginX, y },
+      end: { x: tableRight, y },
+      thickness: 0.7, color: rgb(0.65, 0.68, 0.74),
+    });
+
+    // borda externa do footer (conecta com a tabela)
+    page.drawRectangle({
+      x: marginX, y: y - footerH,
+      width: contentW, height: footerH,
+      borderColor: rgb(0.7, 0.73, 0.78), borderWidth: 0.6,
+    });
+
+    let fy = y - 5;
     for (const [label, val, bold] of footerLines) {
       const f = bold ? fontBold : font;
       const isTotal = bold;
+
       if (isTotal) {
-        // linha separadora antes do Total do pedido
         page.drawLine({
-          start: { x: marginX, y: fy + footerRowH - 2 },
-          end: { x: tableRight, y: fy + footerRowH - 2 },
-          thickness: 0.4, color: rgb(0.82, 0.85, 0.9),
+          start: { x: marginX + 4, y: fy + footerRowH - 3 },
+          end:   { x: tableRight - 4, y: fy + footerRowH - 3 },
+          thickness: 0.4, color: rgb(0.78, 0.81, 0.86),
         });
       }
-      const labelW = f.widthOfTextAtSize(label, 8.5);
+
       const valW = f.widthOfTextAtSize(val, 8.5);
+      // label: left-aligned (col-span full)
       page.drawText(label, {
-        x: valColX - labelW - 10,
+        x: marginX + CELL_PAD + 2,
         y: fy, size: 8.5, font: f,
-        color: isTotal ? rgb(0.1, 0.15, 0.25) : rgb(0.35, 0.38, 0.44),
+        color: isTotal ? rgb(0.08, 0.12, 0.2) : rgb(0.35, 0.38, 0.44),
       });
+      // value: right-aligned
       page.drawText(val, {
         x: tableRight - valW - CELL_PAD,
         y: fy, size: 8.5, font: f,
-        color: isTotal ? rgb(0.1, 0.15, 0.25) : rgb(0.2, 0.22, 0.28),
+        color: isTotal ? rgb(0.08, 0.12, 0.2) : rgb(0.2, 0.22, 0.28),
       });
       fy -= footerRowH;
     }
 
-    y -= footerH;
-
-    // borda da tabela englobando header + linhas + footer
-    drawTableBorder(page, itemCols, itemTableTopY + headerRowH, itemTableH + footerH);
-    y -= 14;
+    y -= footerH + 14;
 
     // ── Tabela de Parcelas ────────────────────────────────────────────────────
     if (numParcelas > 0) {
