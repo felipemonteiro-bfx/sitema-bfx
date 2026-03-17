@@ -634,3 +634,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: `Erro ao gerar PDF: ${msg}` }, { status: 500 });
   }
 }
+
