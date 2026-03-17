@@ -50,6 +50,17 @@ function drawTableHeader(
   }
 }
 
+function truncateText(text: string, font: PDFFont, size: number, maxWidth: number): string {
+  const padding = 8; // left + right
+  const available = maxWidth - padding;
+  if (font.widthOfTextAtSize(text, size) <= available) return text;
+  let truncated = text;
+  while (truncated.length > 0 && font.widthOfTextAtSize(truncated + "…", size) > available) {
+    truncated = truncated.slice(0, -1);
+  }
+  return truncated + "…";
+}
+
 function drawTableRow(
   page: PDFPage, font: PDFFont, cols: ColDef[],
   values: string[], y: number, rowH: number, shade: boolean
@@ -63,7 +74,8 @@ function drawTableRow(
   }
   for (let i = 0; i < cols.length; i++) {
     const col = cols[i];
-    const val = values[i] ?? "";
+    const rawVal = values[i] ?? "";
+    const val = truncateText(rawVal, font, 9, col.width);
     const w = font.widthOfTextAtSize(val, 9);
     const textX = col.align === "right"
       ? col.x + col.width - w - 4
