@@ -74,16 +74,14 @@ export function FormSelect({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "min-h-10 h-auto py-2 w-full justify-between gap-2 overflow-hidden box-border text-left font-normal [&_svg]:flex-shrink-0 touch-manipulation",
+              "min-h-10 h-auto py-2 w-full flex items-center justify-between gap-2 overflow-hidden box-border text-left font-normal touch-manipulation",
               "sm:max-h-10 sm:py-0 sm:min-h-0 sm:h-10",
               !value && "text-muted-foreground",
               className
             )}
           >
             <span className="min-w-0 truncate">{selected?.label ?? placeholder}</span>
-            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-muted-foreground">
-              <ChevronsUpDown className="h-4 w-4 opacity-50" />
-            </span>
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2.5">
@@ -114,7 +112,7 @@ export function FormSelect({
                     onClick={() => handleValueChange(opt.value)}
                   >
                     <span className="truncate">{opt.label}</span>
-                    {opt.value === value && <Check className="h-4 w-4 opacity-80" />}
+                    {opt.value === value && <Check className="h-4 w-4 shrink-0 opacity-80" />}
                   </button>
                 ))}
               </div>
