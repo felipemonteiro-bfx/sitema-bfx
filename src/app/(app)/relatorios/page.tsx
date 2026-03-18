@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
@@ -38,7 +39,18 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-1">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Relatórios</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <h1 className="page-title-gradient text-2xl font-semibold">Relatórios</h1>
         <div className="gradient-bar mt-2" />
         <p className="text-sm text-muted-foreground mt-2">

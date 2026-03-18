@@ -5,6 +5,17 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { DateInput } from "@/components/ui/date-input";
 import { Loader2, CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import Papa from "papaparse";
@@ -28,6 +39,7 @@ export default function ImportacaoClient() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -111,8 +123,10 @@ export default function ImportacaoClient() {
       return;
     }
 
-    if (!confirm(`Confirmar a importação de ${data.length} vendas?`)) return;
+    setConfirmOpen(true);
+  };
 
+  const handleConfirmImport = async () => {
     setSaving(true);
     try {
       const res = await fetch('/api/importacao/batch', {
@@ -136,6 +150,23 @@ export default function ImportacaoClient() {
   };
 
   return (
+    <>
+    <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar importação de {data.length} vendas?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Os dados serão salvos permanentemente no sistema. Certifique-se de que as informações estão corretas antes de confirmar.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmImport}>
+            Importar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <div className="space-y-6">
       <Card>
         <CardHeader>
@@ -193,7 +224,7 @@ export default function ImportacaoClient() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border bg-white overflow-hidden overflow-x-auto">
+            <ScrollArea className="rounded-md border bg-white w-full">
               <Table>
                 <TableHeader className="bg-muted">
                   <TableRow>
@@ -273,10 +304,11 @@ export default function ImportacaoClient() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       )}
     </div>
+    </>
   );
 }

@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { DateInput } from "@/components/ui/date-input";
@@ -122,6 +123,34 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   }
   const evoData = Array.from(evoMap.entries()).map(([mes, r]) => ({ mes, total: r.total, lucro: r.lucro }));
 
+  // Quick period shortcuts
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  const todayStr = fmt(today);
+  const periodShortcuts = [
+    {
+      label: "Hoje",
+      from: todayStr,
+      to: todayStr,
+    },
+    {
+      label: "7 dias",
+      from: fmt(new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6)),
+      to: todayStr,
+    },
+    {
+      label: "Mês",
+      from: fmt(new Date(today.getFullYear(), today.getMonth(), 1)),
+      to: todayStr,
+    },
+    {
+      label: "Trimestre",
+      from: fmt(new Date(today.getFullYear(), today.getMonth() - 2, 1)),
+      to: todayStr,
+    },
+  ];
+  const currentFromStr = start.toISOString().slice(0, 10);
+  const currentToStr = end.toISOString().slice(0, 10);
+
   const avisos = await prisma.aviso.findMany({
     where: { ativo: 1 },
     orderBy: { dataCriacao: "desc" },
@@ -150,6 +179,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             </div>
           </div>
           
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap gap-1.5">
+              {periodShortcuts.map((s) => {
+                const isActive = currentFromStr === s.from && currentToStr === s.to;
+                const vendorsParam = sp.vendors ? `&vendors=${encodeURIComponent(sp.vendors)}` : "";
+                return (
+                  <Link
+                    key={s.label}
+                    href={`/dashboard?from=${s.from}&to=${s.to}${vendorsParam}`}
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "h-7 px-3 text-xs",
+                      isActive && "bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
+                    )}
+                  >
+                    {s.label}
+                  </Link>
+                );
+              })}
+            </div>
           <form className="flex flex-wrap items-end gap-3">
             <div className="space-y-1.5">
               <label htmlFor="filter-from" className="label-form">
@@ -174,11 +223,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 defaultSelected={vendorsFilter ?? vendedorList}
               />
             </div>
-            <Button type="submit" className="h-10 gap-2">
-              <Filter className="h-4 w-4" />
+            <Button type="submit" leftIcon={<Filter className="h-4 w-4" />} className="h-10">
               Filtrar
             </Button>
           </form>
+          </div>
         </CardContent>
       </Card>
 
@@ -277,7 +326,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </Badge>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-border overflow-hidden">
+                <ScrollArea className="rounded-lg border border-border">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -329,7 +378,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </TableBody>
                   </Table>
-                </div>
+                </ScrollArea>
               </CardContent>
             </Card>
 

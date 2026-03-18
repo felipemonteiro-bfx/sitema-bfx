@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { X, Package, AlertTriangle } from "lucide-react";
 import { formatBRL, cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/currency-input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ProdutoItem {
   id: string; // ID temporário para o frontend
@@ -128,15 +129,23 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
             </div>
           </div>
           {canRemove && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => onRemove(index)}
-              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemove(index)}
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    aria-label="Remover produto"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Remover produto</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 

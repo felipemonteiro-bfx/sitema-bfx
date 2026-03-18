@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
@@ -20,7 +22,6 @@ import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
-import { EditVendaItens } from "@/components/edit-venda-itens-client";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-utils";
@@ -143,58 +144,6 @@ async function updateVenda(formData: FormData) {
     }
   }
 
-  // Handle itens (multi-product)
-  const itensRaw = formData.get("itensJson");
-  if (itensRaw) {
-    try {
-      const itensData = JSON.parse(String(itensRaw)) as {
-        produtoNome: string;
-        custoProduto: number;
-        valorVenda: number;
-        quantidade: number;
-        subtotal: number;
-      }[];
-      if (Array.isArray(itensData) && itensData.length > 0) {
-        // Delete existing items and recreate
-        await prisma.itemVenda.deleteMany({ where: { vendaId: id } });
-        await prisma.itemVenda.createMany({
-          data: itensData.map((item) => ({
-            vendaId: id,
-            produtoNome: item.produtoNome,
-            custoProduto: item.custoProduto,
-            valorVenda: item.valorVenda,
-            quantidade: item.quantidade,
-            subtotal: item.subtotal,
-          })),
-        });
-
-        // Update legacy fields for backward compatibility
-        await prisma.venda.update({
-          where: { id },
-          data: {
-            produtoNome: itensData[0]?.produtoNome || "",
-            custoProduto: itensData[0]?.custoProduto || 0,
-            quantidade: itensData[0]?.quantidade || 1,
-            valorVenda: itensData[0]?.valorVenda || 0,
-          },
-        });
-
-        // Recalculate lucro from itens
-        const subtotalItens = itensData.reduce((s, i) => s + i.subtotal, 0);
-        const custoItens = itensData.reduce((s, i) => s + i.custoProduto * i.quantidade, 0);
-        const totalComFrete = subtotalItens + frete;
-        const valorDescontoNotaItens = temNota ? (subtotalItens * taxaNota) / 100 : 0;
-        const lucroRecalc = totalComFrete - (custoItens + envio + valorDescontoNotaItens);
-        await prisma.venda.update({
-          where: { id },
-          data: { lucroLiquido: lucroRecalc },
-        });
-      }
-    } catch {
-      // Fallback: itens not provided, legacy single-product update already done above
-    }
-  }
-
   await createAuditLog("venda:update", { vendaId: id, valor, quantidade, lucro });
   revalidatePath("/historico");
 }
@@ -273,7 +222,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       boletoUrl: true,
       cliente: { select: { nome: true } },
       itens: {
-        select: { produtoNome: true, quantidade: true, subtotal: true, valorVenda: true, custoProduto: true },
+        select: { produtoNome: true, quantidade: true, subtotal: true },
         orderBy: { id: "asc" },
       },
     },
@@ -287,10 +236,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       descontoEmFolha: true, boleto: true, comprovantePdf: true,
       asaasPaymentId: true, boletoUrl: true,
-      itens: {
-        select: { id: true, produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },
-        orderBy: { id: "asc" },
-      },
+      itens: { select: { subtotal: true } },
     },
   }) : null;
 
@@ -324,7 +270,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-1">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Histórico de Vendas</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <h1 className="text-2xl font-semibold">Histórico (Editar)</h1>
         <p className="text-sm text-muted-foreground">Filtre e edite vendas do período.</p>
       </div>
@@ -471,6 +428,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             gerarBoletoAction={gerarBoletoAsaas}
           />
           <div className="hidden md:block">
+          <ScrollArea className="w-full">
           <Table>
             <TableHeader>
               <TableRow>
@@ -500,26 +458,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
-                    <TableCell className="max-w-[250px]">
-                      {v.itens && v.itens.length > 1 ? (
-                        <details className="cursor-pointer">
-                          <summary className="truncate text-sm">
-                            {v.itens.length} produtos
-                          </summary>
-                          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                            {v.itens.map((item, idx) => (
-                              <li key={idx} className="flex justify-between gap-2">
-                                <span className="truncate">{item.produtoNome} ({item.quantidade}x)</span>
-                                <span className="tabular-nums shrink-0">{formatBRL(item.subtotal)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </details>
-                      ) : (
-                        <span className="block truncate" title={produtosTexto(v)}>
-                          {produtosTexto(v)}
-                        </span>
-                      )}
+                    <TableCell className="max-w-[200px]" title={produtosTexto(v)}>
+                      <span className="block truncate">{produtosTexto(v)}</span>
                     </TableCell>
                     <TableCell className="text-center font-medium">{quantidadeTotal(v)}</TableCell>
                     <TableCell className="text-right tabular-nums">
@@ -597,6 +537,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               )}
             </TableBody>
           </Table>
+          </ScrollArea>
           </div>
 
           {totalPages > 1 && (
@@ -663,25 +604,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   placeholder="Selecione o vendedor"
                 />
               </div>
-              <EditVendaItens
-                initialItens={
-                  editVenda.itens && editVenda.itens.length > 0
-                    ? editVenda.itens.map((i) => ({
-                        produtoNome: i.produtoNome,
-                        custoProduto: i.custoProduto,
-                        valorVenda: i.valorVenda,
-                        quantidade: i.quantidade,
-                        subtotal: i.subtotal,
-                      }))
-                    : [{
-                        produtoNome: editVenda.produtoNome || "",
-                        custoProduto: editVenda.custoProduto || 0,
-                        valorVenda: editVenda.valorVenda || 0,
-                        quantidade: editVenda.quantidade || 1,
-                        subtotal: (editVenda.valorVenda || 0) * (editVenda.quantidade || 1),
-                      }]
-                }
-              />
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Produto</label>
+                <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Quantidade</label>
+                <Input name="quantidade" type="number" min="1" defaultValue={editVenda.quantidade || 1} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Valor Unitário</label>
+                <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
+              </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Frete ao cliente</label>
                 <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
@@ -694,6 +628,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
+
+              <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
 
               <EditParcelasSection
                 initialParcelas={editParcelasVenc}
