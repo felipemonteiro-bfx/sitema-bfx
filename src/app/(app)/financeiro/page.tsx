@@ -271,9 +271,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </p>
                   </CardHeader>
                   <CardContent>
-                    <form action={addDespesa} className="grid gap-4 md:grid-cols-4">
+                    <form action={addDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       <input type="hidden" name="mes" value={currentMes} />
-                      <div className="space-y-1 md:col-span-2">
+                      <div className="col-span-2 space-y-1 md:col-span-2">
                         <label className="text-xs font-medium text-muted-foreground">Descrição</label>
                         <Input name="descricao" placeholder="Ex.: Aluguel, frete, comissão" aria-label="Descrição" />
                       </div>
@@ -296,9 +296,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <label className="text-xs font-medium text-muted-foreground">Data</label>
                         <DateInput name="data" aria-label="Data" />
                       </div>
-                      <div className="md:col-span-4 flex flex-wrap items-center gap-3">
+                      <div className="col-span-1 md:col-span-3 flex items-end gap-3">
                         <button className={cn(buttonVariants(), "cursor-pointer")}>Lançar despesa</button>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="hidden md:inline text-xs text-muted-foreground">
                           Campos obrigatórios para cálculo do fluxo.
                         </span>
                       </div>
@@ -312,10 +312,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <CardTitle>Editar Lançamento #{editDespesa.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <form action={updateDespesa} className="grid gap-4 md:grid-cols-4">
+                      <form action={updateDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
                         <input type="hidden" name="id" value={editDespesa.id} />
                         <input type="hidden" name="mes" value={currentMes} />
-                        <div className="space-y-1 md:col-span-2">
+                        <div className="col-span-2 space-y-1 md:col-span-2">
                           <label className="text-xs font-medium text-muted-foreground">Descrição</label>
                           <Input name="descricao" defaultValue={editDespesa.descricao || ""} aria-label="Descrição" />
                         </div>
@@ -338,9 +338,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           <label className="text-xs font-medium text-muted-foreground">Data</label>
                           <DateInput name="data" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
                         </div>
-                        <div className="md:col-span-4 flex items-center gap-2">
+                        <div className="col-span-1 md:col-span-3 flex items-end gap-2">
                           <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar Alterações</button>
-                          <Link 
+                          <Link
                             href={`/financeiro?tab=lanc&mes=${currentMes}`}
                             className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}
                           >
