@@ -73,6 +73,7 @@ None yet.
 |---|-------------|------|--------|--------|-----------|
 | 1 | all plans | 2026-02-19 | 8679000 | Verified | [1-all-plans](./quick/1-all-plans/) |
 | 2 | assinatura condicional em caso de boleto | 2026-03-18 | e053b3a | Verified | [260318-fhz-assinatura-em-caso-de-boleto](./quick/260318-fhz-assinatura-em-caso-de-boleto/) |
+| 3 | fix: Asaas header access_token → Authorization (API v3) | 2026-03-18 | 1156dfe | Verified | [260318-frp-fix-asaas-header-de-autentica-o-access-t](./quick/260318-frp-fix-asaas-header-de-autentica-o-access-t/) |
 
 ## Session Continuity
 
