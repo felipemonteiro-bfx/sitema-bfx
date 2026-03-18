@@ -52,17 +52,24 @@ None yet.
 
 ### Blockers/Concerns
 
-- Verificar se `produto-item-form.tsx` e `parcelas-vencimento-form.tsx` são reutilizáveis ou precisam ser reescritos
-- Confirmar schema Prisma suporta `ItemVenda` e `ParcelaVencimento` com campos necessários
+- Confirmar schema Prisma suporta `ParcelaVencimento` com campos necessários
+
+### Decisions
+
+- `produto-item-form.tsx` is reusable — confirmed by quick task 260318-ehq using it in EditVendaItens
+- Schema Prisma already supports `ItemVenda` with all required fields (confirmed working)
+- Multi-product editor pattern: ProdutoItemForm list + itensJson hidden input + server action parse
+- deleteMany + createMany pattern for replacing ItemVenda records
 
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
 | 1 | all plans | 2026-02-19 | 8679000 | Verified | [1-all-plans](./quick/1-all-plans/) |
+| 2 | historico: product display + multi-product editor | 2026-03-18 | c777283 | Complete | [260318-ehq](./quick/260318-ehq-hist-rico-de-venda-op-o-de-adi-o-de-prod/) |
 
 ## Session Continuity
 
-Last session: 2026-02-19
-Stopped at: Roadmap created — ready to plan Phase 1
+Last session: 2026-03-18
+Stopped at: Completed quick task 260318-ehq — historico product listing and edit form
 Resume file: None
