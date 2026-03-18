@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { FormSelect } from "@/components/form-select";
 import { FluxoCharts } from "@/components/finance-charts";
 import { QueryTabs } from "@/components/query-tabs";
@@ -24,6 +25,7 @@ async function addDespesa(formData: FormData) {
   const valor = Number(formData.get("valor") || 0);
   const tipo = String(formData.get("tipo") || "Fixa");
   const data = String(formData.get("data") || "");
+  const mes = String(formData.get("mes") || "");
   if (!descricao || !data) return;
   const despesa = await prisma.despesa.create({
     data: {
@@ -35,6 +37,7 @@ async function addDespesa(formData: FormData) {
   });
   await createAuditLog("despesa:create", { despesaId: despesa.id, descricao, valor, tipo });
   revalidatePath("/financeiro");
+  redirect(`/financeiro?tab=lanc${mes ? `&mes=${mes}` : ""}`);
 }
 
 async function updateDespesa(formData: FormData) {
@@ -44,6 +47,7 @@ async function updateDespesa(formData: FormData) {
   const valor = Number(formData.get("valor") || 0);
   const tipo = String(formData.get("tipo") || "Fixa");
   const data = String(formData.get("data") || "");
+  const mes = String(formData.get("mes") || "");
   if (!id || !descricao || !data) return;
   await prisma.despesa.update({
     where: { id },
@@ -56,15 +60,18 @@ async function updateDespesa(formData: FormData) {
   });
   await createAuditLog("despesa:update", { despesaId: id, descricao, valor, tipo });
   revalidatePath("/financeiro");
+  redirect(`/financeiro?tab=lanc${mes ? `&mes=${mes}` : ""}`);
 }
 
 async function deleteDespesa(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
+  const mes = String(formData.get("mes") || "");
   if (!id) return;
   await prisma.despesa.delete({ where: { id } });
   await createAuditLog("despesa:delete", { despesaId: id });
   revalidatePath("/financeiro");
+  redirect(`/financeiro?tab=lanc${mes ? `&mes=${mes}` : ""}`);
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
@@ -265,6 +272,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </CardHeader>
                   <CardContent>
                     <form action={addDespesa} className="grid gap-4 md:grid-cols-4">
+                      <input type="hidden" name="mes" value={currentMes} />
                       <div className="space-y-1 md:col-span-2">
                         <label className="text-xs font-medium text-muted-foreground">Descrição</label>
                         <Input name="descricao" placeholder="Ex.: Aluguel, frete, comissão" aria-label="Descrição" />
@@ -306,6 +314,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardContent>
                       <form action={updateDespesa} className="grid gap-4 md:grid-cols-4">
                         <input type="hidden" name="id" value={editDespesa.id} />
+                        <input type="hidden" name="mes" value={currentMes} />
                         <div className="space-y-1 md:col-span-2">
                           <label className="text-xs font-medium text-muted-foreground">Descrição</label>
                           <Input name="descricao" defaultValue={editDespesa.descricao || ""} aria-label="Descrição" />
@@ -383,6 +392,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                   </Link>
                                   <form action={deleteDespesa}>
                                     <input type="hidden" name="id" value={d.id} />
+                                    <input type="hidden" name="mes" value={currentMes} />
                                     <button 
                                       className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer")} 
                                       title="Excluir"
