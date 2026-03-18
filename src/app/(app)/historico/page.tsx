@@ -20,6 +20,7 @@ import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
+import { EditVendaItens } from "@/components/edit-venda-itens-client";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-utils";
@@ -139,6 +140,58 @@ async function updateVenda(formData: FormData) {
       }
     } catch {
       // Tabela parcelas_vencimento pode não existir em produção antiga
+    }
+  }
+
+  // Handle itens (multi-product)
+  const itensRaw = formData.get("itensJson");
+  if (itensRaw) {
+    try {
+      const itensData = JSON.parse(String(itensRaw)) as {
+        produtoNome: string;
+        custoProduto: number;
+        valorVenda: number;
+        quantidade: number;
+        subtotal: number;
+      }[];
+      if (Array.isArray(itensData) && itensData.length > 0) {
+        // Delete existing items and recreate
+        await prisma.itemVenda.deleteMany({ where: { vendaId: id } });
+        await prisma.itemVenda.createMany({
+          data: itensData.map((item) => ({
+            vendaId: id,
+            produtoNome: item.produtoNome,
+            custoProduto: item.custoProduto,
+            valorVenda: item.valorVenda,
+            quantidade: item.quantidade,
+            subtotal: item.subtotal,
+          })),
+        });
+
+        // Update legacy fields for backward compatibility
+        await prisma.venda.update({
+          where: { id },
+          data: {
+            produtoNome: itensData[0]?.produtoNome || "",
+            custoProduto: itensData[0]?.custoProduto || 0,
+            quantidade: itensData[0]?.quantidade || 1,
+            valorVenda: itensData[0]?.valorVenda || 0,
+          },
+        });
+
+        // Recalculate lucro from itens
+        const subtotalItens = itensData.reduce((s, i) => s + i.subtotal, 0);
+        const custoItens = itensData.reduce((s, i) => s + i.custoProduto * i.quantidade, 0);
+        const totalComFrete = subtotalItens + frete;
+        const valorDescontoNotaItens = temNota ? (subtotalItens * taxaNota) / 100 : 0;
+        const lucroRecalc = totalComFrete - (custoItens + envio + valorDescontoNotaItens);
+        await prisma.venda.update({
+          where: { id },
+          data: { lucroLiquido: lucroRecalc },
+        });
+      }
+    } catch {
+      // Fallback: itens not provided, legacy single-product update already done above
     }
   }
 
@@ -610,18 +663,25 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   placeholder="Selecione o vendedor"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Produto</label>
-                <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Quantidade</label>
-                <Input name="quantidade" type="number" min="1" defaultValue={editVenda.quantidade || 1} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Valor Unitário</label>
-                <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
-              </div>
+              <EditVendaItens
+                initialItens={
+                  editVenda.itens && editVenda.itens.length > 0
+                    ? editVenda.itens.map((i) => ({
+                        produtoNome: i.produtoNome,
+                        custoProduto: i.custoProduto,
+                        valorVenda: i.valorVenda,
+                        quantidade: i.quantidade,
+                        subtotal: i.subtotal,
+                      }))
+                    : [{
+                        produtoNome: editVenda.produtoNome || "",
+                        custoProduto: editVenda.custoProduto || 0,
+                        valorVenda: editVenda.valorVenda || 0,
+                        quantidade: editVenda.quantidade || 1,
+                        subtotal: (editVenda.valorVenda || 0) * (editVenda.quantidade || 1),
+                      }]
+                }
+              />
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Frete ao cliente</label>
                 <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
@@ -634,8 +694,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
-
-              <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
 
               <EditParcelasSection
                 initialParcelas={editParcelasVenc}
