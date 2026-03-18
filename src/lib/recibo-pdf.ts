@@ -275,7 +275,7 @@ export async function generateReciboPdf(
         fontBold,
         false,
         cols,
-        [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""],
+        [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(Math.trunc(pv.valorParcela * 100) / 100), ""],
         y,
         rowHeight,
         tableLeft,

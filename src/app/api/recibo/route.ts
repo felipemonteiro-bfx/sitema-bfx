@@ -540,7 +540,7 @@ export async function GET(req: Request) {
       for (let i = 0; i < parcelasVenc.length; i++) {
         const pv = parcelasVenc[i];
         const dias = Math.round((pv.dataVencimento.getTime() - vendaBase.dataVenda.getTime()) / 86400000);
-        const rowValues = [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""];
+        const rowValues = [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(Math.trunc(pv.valorParcela * 100) / 100), ""];
         const rh = calcRowHeight(rowValues, parcelaCols, font);
         drawTableRow(page, font, parcelaCols, rowValues, y, rh, i % 2 !== 0);
         y -= rh;
