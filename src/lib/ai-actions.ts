@@ -139,6 +139,19 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
   consulta_sql: z.object({
     sql: requiredString(),
   }),
+  consultar_parcelas_cliente: z.object({
+    clienteNome: optionalString(),
+    clienteId: optionalNumber(),
+    apenasEmAberto: toOptional(z.coerce.boolean()),
+    apenasVencidas: toOptional(z.coerce.boolean()),
+  }),
+  listar_inadimplentes: z.object({
+    diasMinimos: optionalNumber(),
+  }),
+  consultar_limite_cliente: z.object({
+    clienteNome: optionalString(),
+    clienteId: optionalNumber(),
+  }),
 };
 
 export const aiActions: AiActionDef[] = [
@@ -398,6 +411,49 @@ export const aiActions: AiActionDef[] = [
       },
     },
   },
+  {
+    name: "consultar_parcelas_cliente",
+    description:
+      "Consulta parcelas de um cliente com status de pagamento, datas de vencimento e valores. Use para responder 'quanto deve', 'quando paga', 'parcelas em aberto', 'está em dia' etc.",
+    readOnly: true,
+    roles: ["admin", "vendedor"],
+    parameters: {
+      type: "object",
+      properties: {
+        clienteNome: { type: "string", description: "Nome ou parte do nome do cliente" },
+        clienteId: { type: "number", description: "ID do cliente (alternativa ao nome)" },
+        apenasEmAberto: { type: "boolean", description: "true para listar apenas parcelas não pagas" },
+        apenasVencidas: { type: "boolean", description: "true para listar apenas parcelas vencidas (não pagas e data passada)" },
+      },
+    },
+  },
+  {
+    name: "listar_inadimplentes",
+    description:
+      "Lista todos os clientes com parcelas vencidas e não pagas, com total em aberto e dias de atraso. Use para 'quem está devendo', 'inadimplentes', 'clientes em atraso'.",
+    readOnly: true,
+    roles: ["admin", "vendedor"],
+    parameters: {
+      type: "object",
+      properties: {
+        diasMinimos: { type: "number", description: "Filtrar apenas clientes com atraso maior que N dias (padrão: 0)" },
+      },
+    },
+  },
+  {
+    name: "consultar_limite_cliente",
+    description:
+      "Consulta o limite de crédito disponível de um cliente (margem consignável, comprometimento atual). Use para 'qual o limite', 'pode comprar mais', 'quanto tem disponível'.",
+    readOnly: true,
+    roles: ["admin", "vendedor"],
+    parameters: {
+      type: "object",
+      properties: {
+        clienteNome: { type: "string", description: "Nome ou parte do nome do cliente" },
+        clienteId: { type: "number", description: "ID do cliente" },
+      },
+    },
+  },
 ];
 
 function requireAdmin(ctx: ActionContext) {
@@ -600,6 +656,131 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const rows = await prisma.$queryRawUnsafe(sql);
         const list = Array.isArray(rows) ? rows : [rows];
         result = { rows: list, count: list.length, sql };
+        break;
+      }
+      case "consultar_parcelas_cliente": {
+        // Resolver cliente por nome ou id
+        let clienteId: number | undefined = parsedParams?.clienteId ? Number(parsedParams.clienteId) : undefined;
+        let clienteNome: string | undefined;
+        if (!clienteId && parsedParams?.clienteNome) {
+          const cliente = await prisma.cliente.findFirst({
+            where: { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } },
+            select: { id: true, nome: true },
+          });
+          if (!cliente) { result = { erro: `Cliente '${parsedParams.clienteNome}' não encontrado.` }; break; }
+          clienteId = cliente.id;
+          clienteNome = cliente.nome;
+        } else if (clienteId) {
+          const cliente = await prisma.cliente.findUnique({ where: { id: clienteId }, select: { nome: true } });
+          clienteNome = cliente?.nome;
+        }
+        if (!clienteId) { result = { erro: "Informe clienteNome ou clienteId." }; break; }
+
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const parcelas = await prisma.parcelaVencimento.findMany({
+          where: {
+            venda: { clienteId },
+            ...(parsedParams?.apenasEmAberto ? { paga: false } : {}),
+            ...(parsedParams?.apenasVencidas ? { paga: false, dataVencimento: { lt: hoje } } : {}),
+          },
+          include: { venda: { select: { id: true, produtoNome: true, parcelas: true } } },
+          orderBy: { dataVencimento: "asc" },
+        });
+
+        const totalEmAberto = parcelas.filter(p => !p.paga).reduce((s, p) => s + p.valorParcela, 0);
+        const totalVencido = parcelas.filter(p => !p.paga && p.dataVencimento < hoje).reduce((s, p) => s + p.valorParcela, 0);
+        result = {
+          cliente: clienteNome,
+          totalEmAberto: Math.trunc(totalEmAberto * 100) / 100,
+          totalVencido: Math.trunc(totalVencido * 100) / 100,
+          parcelas: parcelas.map(p => ({
+            vendaId: p.venda.id,
+            produto: p.venda.produtoNome,
+            numeroParcela: `${p.numeroParcela}/${p.venda.parcelas}`,
+            dataVencimento: p.dataVencimento.toISOString().split("T")[0],
+            valor: Math.trunc(p.valorParcela * 100) / 100,
+            paga: p.paga,
+            dataPagamento: p.dataPagamento?.toISOString().split("T")[0] ?? null,
+            diasAtraso: !p.paga && p.dataVencimento < hoje
+              ? Math.floor((hoje.getTime() - p.dataVencimento.getTime()) / 86400000)
+              : 0,
+          })),
+        };
+        break;
+      }
+      case "listar_inadimplentes": {
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const diasMinimos = Number(parsedParams?.diasMinimos ?? 0);
+        const limite = new Date(hoje.getTime() - diasMinimos * 86400000);
+
+        const parcelasVencidas = await prisma.parcelaVencimento.findMany({
+          where: { paga: false, dataVencimento: { lt: limite } },
+          include: { venda: { include: { cliente: { select: { id: true, nome: true, telefone: true } } } } },
+          orderBy: { dataVencimento: "asc" },
+        });
+
+        // Agrupar por cliente
+        const porCliente = new Map<number, { nome: string; telefone: string | null; totalDevido: number; maiorAtraso: number; parcelas: number }>();
+        for (const p of parcelasVencidas) {
+          const c = p.venda.cliente;
+          if (!c) continue;
+          const dias = Math.floor((hoje.getTime() - p.dataVencimento.getTime()) / 86400000);
+          const atual = porCliente.get(c.id) ?? { nome: c.nome, telefone: c.telefone, totalDevido: 0, maiorAtraso: 0, parcelas: 0 };
+          atual.totalDevido += p.valorParcela;
+          atual.maiorAtraso = Math.max(atual.maiorAtraso, dias);
+          atual.parcelas += 1;
+          porCliente.set(c.id, atual);
+        }
+
+        result = {
+          total: porCliente.size,
+          inadimplentes: Array.from(porCliente.values())
+            .sort((a, b) => b.totalDevido - a.totalDevido)
+            .map(c => ({ ...c, totalDevido: Math.trunc(c.totalDevido * 100) / 100 })),
+        };
+        break;
+      }
+      case "consultar_limite_cliente": {
+        let clienteId: number | undefined = parsedParams?.clienteId ? Number(parsedParams.clienteId) : undefined;
+        if (!clienteId && parsedParams?.clienteNome) {
+          const cliente = await prisma.cliente.findFirst({
+            where: { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } },
+            select: { id: true },
+          });
+          if (!cliente) { result = { erro: `Cliente '${parsedParams.clienteNome}' não encontrado.` }; break; }
+          clienteId = cliente.id;
+        }
+        if (!clienteId) { result = { erro: "Informe clienteNome ou clienteId." }; break; }
+
+        const cliente = await prisma.cliente.findUnique({ where: { id: clienteId } });
+        if (!cliente) { result = { erro: "Cliente não encontrado." }; break; }
+
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        // Parcelas em aberto (comprometimento atual)
+        const parcelasEmAberto = await prisma.parcelaVencimento.findMany({
+          where: { venda: { clienteId }, paga: false, dataVencimento: { gte: hoje } },
+          select: { valorParcela: true, dataVencimento: true },
+          orderBy: { dataVencimento: "asc" },
+        });
+
+        // Comprometimento = maior valor de parcela mensal em aberto
+        const porMes = new Map<string, number>();
+        for (const p of parcelasEmAberto) {
+          const mes = p.dataVencimento.toISOString().slice(0, 7);
+          porMes.set(mes, (porMes.get(mes) ?? 0) + p.valorParcela);
+        }
+        const comprometimentoAtual = Math.max(...(porMes.size ? Array.from(porMes.values()) : [0]));
+        const margem = (cliente.renda ?? 0) * 0.35; // 35% da renda
+        const disponivel = Math.max(0, margem - comprometimentoAtual);
+
+        result = {
+          cliente: cliente.nome,
+          renda: cliente.renda ?? null,
+          margemConsignavel: Math.trunc(margem * 100) / 100,
+          comprometimentoMensalAtual: Math.trunc(comprometimentoAtual * 100) / 100,
+          limiteDisponivel: Math.trunc(disponivel * 100) / 100,
+          parcelasEmAberto: parcelasEmAberto.length,
+        };
         break;
       }
       default:
