@@ -94,6 +94,8 @@ export async function generateReciboPdf(
   });
   if (!venda) throw new Error("Venda não encontrada");
 
+  const showAssinatura = venda.boleto || venda.descontoEmFolha;
+
   let parcelasVenc: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] = [];
   try {
     parcelasVenc = await prisma.parcelaVencimento.findMany({
@@ -331,27 +333,29 @@ export async function generateReciboPdf(
 
   page.drawText("Documento gerado automaticamente pelo BFX Manager.", {
     x: marginX,
-    y: 110,
+    y: showAssinatura ? 110 : 50,
     size: 8,
     font,
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  const signatureY = 70;
-  page.drawLine({
-    start: { x: centerX - 100, y: signatureY },
-    end: { x: centerX + 100, y: signatureY },
-    thickness: 1,
-    color: rgb(0.1, 0.1, 0.1),
-  });
-  const signatureText = `Assinatura: ${cliente?.nome || "________________________"}`;
-  page.drawText(signatureText, {
-    x: centerX - font.widthOfTextAtSize(signatureText, 10) / 2,
-    y: signatureY - 15,
-    size: 10,
-    font,
-    color: rgb(0.1, 0.1, 0.1),
-  });
+  if (showAssinatura) {
+    const signatureY = 70;
+    page.drawLine({
+      start: { x: centerX - 100, y: signatureY },
+      end: { x: centerX + 100, y: signatureY },
+      thickness: 1,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+    const signatureText = `Assinatura: ${cliente?.nome || "________________________"}`;
+    page.drawText(signatureText, {
+      x: centerX - font.widthOfTextAtSize(signatureText, 10) / 2,
+      y: signatureY - 15,
+      size: 10,
+      font,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+  }
 
   return new Uint8Array(await pdf.save());
 }
