@@ -56,17 +56,14 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           <Button
             variant="outline"
             disabled={disabled}
+            rightIcon={<CalendarIcon className="opacity-50 text-muted-foreground" />}
             className={cn(
-              "w-full font-normal h-10",
+              "w-full justify-between font-normal h-10",
+              !date && "text-muted-foreground",
               className
             )}
           >
-            <span className="flex w-full min-w-0 items-center justify-between gap-2">
-              <span className={cn("min-w-0 truncate", !date && "text-muted-foreground")}>
-                {formattedDate}
-              </span>
-              <CalendarIcon className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
-            </span>
+            {formattedDate}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
