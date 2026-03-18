@@ -94,7 +94,7 @@ export async function generateReciboPdf(
   });
   if (!venda) throw new Error("Venda não encontrada");
 
-  const showAssinatura = venda.boleto || venda.descontoEmFolha;
+  const showAssinatura = venda.descontoEmFolha;
 
   let parcelasVenc: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] = [];
   try {
@@ -190,7 +190,7 @@ export async function generateReciboPdf(
     : (venda.valorVenda ?? 0) * (venda.quantidade ?? 1);
   const frete = venda.valorFrete ?? 0;
   const nParcelas = venda.parcelas || 1;
-  const valorParc = venda.valorParcela || (nParcelas > 0 ? total / nParcelas : total);
+  const valorParc = venda.valorParcela || (nParcelas > 0 ? Math.trunc((total / nParcelas) * 100) / 100 : total);
 
   page.drawText("Detalhes da venda", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;

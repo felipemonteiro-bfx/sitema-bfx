@@ -27,7 +27,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
   // Inicializar parcelas automaticamente
   useEffect(() => {
     if (disableAutoInit) return;
-    if (numeroParcelas > 0 && (parcelas.length !== numeroParcelas || parcelas[0]?.valorParcela !== valorTotal / numeroParcelas)) {
+    if (numeroParcelas > 0 && (parcelas.length !== numeroParcelas || parcelas[0]?.valorParcela !== Math.trunc((valorTotal / numeroParcelas) * 100) / 100)) {
       const dataBase = dataVenda ? new Date(dataVenda) : new Date();
       const primeiroVencimento = calcularPrimeiroVencimento(dataBase);
       const novasParcelas: Parcela[] = Array.from({ length: numeroParcelas }).map((_, i) => {
@@ -35,7 +35,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
         return {
           numeroParcela: i + 1,
           dataVencimento: dataVencimento.toISOString().split('T')[0],
-          valorParcela: valorTotal / numeroParcelas,
+          valorParcela: Math.trunc((valorTotal / numeroParcelas) * 100) / 100,
         };
       });
       onChange(novasParcelas);

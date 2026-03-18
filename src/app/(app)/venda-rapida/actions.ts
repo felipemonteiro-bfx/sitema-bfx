@@ -123,7 +123,7 @@ export async function criarVendaV2(
     const custoTotal =
       produtosValidados.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0) + envio + valorDescontoNota;
     const lucroLiquido = totalVenda - custoTotal;
-    const valorParcela = parcelas > 0 ? totalVenda / parcelas : 0;
+    const valorParcela = parcelas > 0 ? Math.trunc((totalVenda / parcelas) * 100) / 100 : 0;
 
     // Criar venda com transação
     const assinaturaToken = descontoEmFolha ? randomUUID() : undefined;

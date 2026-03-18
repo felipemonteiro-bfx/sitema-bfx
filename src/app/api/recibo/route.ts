@@ -164,7 +164,7 @@ export async function GET(req: Request) {
       : await prisma.venda.findUnique({ where: { uuid: idParam } });
     if (!vendaBase) return NextResponse.json({ error: "Venda não encontrada" }, { status: 404 });
 
-    const showAssinatura = vendaBase.boleto || vendaBase.descontoEmFolha;
+    const showAssinatura = vendaBase.descontoEmFolha;
 
     if (tipo !== "autorizacao" && tipo !== "venda")
       tipo = vendaBase.descontoEmFolha ? "autorizacao" : "venda";
