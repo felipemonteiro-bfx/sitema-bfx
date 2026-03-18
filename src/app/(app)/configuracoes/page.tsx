@@ -63,11 +63,13 @@ async function saveAsaas(formData: FormData) {
   const env = String(formData.get("asaasEnv") || "sandbox").trim();
   const asaasEnv = env === "production" ? "production" : "sandbox";
   const cfg = await prisma.config.findFirst();
-  const data = { asaasApiKey: apiKey, asaasEnv };
+  // Só sobrescreve a chave se uma nova foi digitada; preserva a existente caso contrário
+  const data: Record<string, unknown> = { asaasEnv };
+  if (apiKey !== null) data.asaasApiKey = apiKey;
   if (cfg) {
     await prisma.config.update({ where: { id: cfg.id }, data });
   } else {
-    await prisma.config.create({ data });
+    await prisma.config.create({ data: { asaasEnv } });
   }
   revalidatePath("/configuracoes");
 }
