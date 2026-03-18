@@ -471,8 +471,8 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   onClick={adicionarProduto}
                   variant="outline"
                   className="w-full mt-2 border-dashed border-2 border-primary/30 dark:border-primary/50 hover:bg-primary/10 dark:hover:bg-primary/20 hover:border-primary dark:hover:border-primary text-primary dark:text-primary hover:shadow-md transition-all duration-200"
+                  leftIcon={<Plus className="h-4 w-4" />}
                 >
-                  <Plus className="h-4 w-4 mr-2" />
                   Adicionar Produto à Venda
                 </Button>
               )}

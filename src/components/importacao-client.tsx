@@ -183,12 +183,11 @@ export default function ImportacaoClient() {
                 onClick={sugerirComIA}
                 disabled={suggesting || saving}
                 className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                leftIcon={suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               >
-                {suggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 Sugerir com IA
               </Button>
-              <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90">
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+              <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90" leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
                 Subir {data.length} Vendas
               </Button>
             </div>

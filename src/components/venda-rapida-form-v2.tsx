@@ -818,9 +818,8 @@ export default function VendaRapidaFormV2({
             onClick={addProduto}
             variant="outline"
             size="sm"
-            className="gap-2"
+            leftIcon={<Plus className="h-4 w-4" />}
           >
-            <Plus className="h-4 w-4" />
             Adicionar Produto
           </Button>
         </div>

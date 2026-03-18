@@ -203,8 +203,7 @@ export function EditVendaFormClient({
           <div className="md:col-span-3 space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-medium text-muted-foreground">Produtos da venda</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addProduto} className="gap-2">
-                <Plus className="h-4 w-4" />
+              <Button type="button" variant="outline" size="sm" onClick={addProduto} leftIcon={<Plus className="h-4 w-4" />}>
                 Adicionar produto
               </Button>
             </div>

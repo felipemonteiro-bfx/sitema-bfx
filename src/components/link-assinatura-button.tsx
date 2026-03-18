@@ -44,20 +44,11 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1"
+              className="h-7 text-xs"
               onClick={handleCopy}
+              leftIcon={copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
             >
-              {copied ? (
-                <>
-                  <Check className="h-3 w-3" />
-                  Copiado
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3 w-3" />
-                  {label}
-                </>
-              )}
+              {copied ? "Copiado" : label}
             </Button>
             {showQr && (
               <Button

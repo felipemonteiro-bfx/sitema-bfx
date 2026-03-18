@@ -35,9 +35,8 @@ export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
           setLoading(false);
         }
       }}
-      className="flex items-center gap-2"
+      leftIcon={loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
       Excluir Venda
     </Button>
   );

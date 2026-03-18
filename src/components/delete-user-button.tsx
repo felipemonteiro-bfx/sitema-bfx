@@ -39,9 +39,8 @@ Esta ação não poderá ser desfeita.`)) {
       size="sm" 
       disabled={loading}
       onClick={handleAction}
-      className="flex items-center gap-2"
+      leftIcon={loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserMinus className="h-4 w-4" />}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserMinus className="h-4 w-4" />}
       Excluir Vendedor
     </Button>
   );
