@@ -48,7 +48,7 @@ type Venda = {
   asaasPaymentId: string | null;
   boletoUrl: string | null;
   cliente: { nome: string } | null;
-  itens?: { produtoNome: string; quantidade: number; subtotal: number; valorVenda: number; custoProduto: number }[];
+  itens?: { produtoNome: string; quantidade: number; subtotal: number }[];
 };
 
 type Props = {
@@ -137,17 +137,6 @@ function VendaCard({
 
           {expanded && (
             <div className="space-y-2 border-t pt-3 text-sm">
-              {venda.itens && venda.itens.length > 0 && (
-                <div className="space-y-1.5 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Produtos</span>
-                  {venda.itens.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-xs bg-muted/50 rounded-md px-2 py-1.5">
-                      <span className="truncate mr-2">{item.produtoNome} <span className="text-muted-foreground">({item.quantidade}x)</span></span>
-                      <span className="tabular-nums font-medium shrink-0">{formatBRL(item.subtotal)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
                 <span>Vendedor</span>
                 <span className="text-foreground">{venda.vendedor || "—"}</span>
