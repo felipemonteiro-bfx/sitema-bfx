@@ -220,7 +220,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       boletoUrl: true,
       cliente: { select: { nome: true } },
       itens: {
-        select: { produtoNome: true, quantidade: true, subtotal: true },
+        select: { produtoNome: true, quantidade: true, subtotal: true, valorVenda: true, custoProduto: true },
         orderBy: { id: "asc" },
       },
     },
@@ -234,7 +234,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       descontoEmFolha: true, boleto: true, comprovantePdf: true,
       asaasPaymentId: true, boletoUrl: true,
-      itens: { select: { subtotal: true } },
+      itens: {
+        select: { id: true, produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },
+        orderBy: { id: "asc" },
+      },
     },
   }) : null;
 
@@ -444,8 +447,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
-                    <TableCell className="max-w-[200px]" title={produtosTexto(v)}>
-                      <span className="block truncate">{produtosTexto(v)}</span>
+                    <TableCell className="max-w-[250px]">
+                      {v.itens && v.itens.length > 1 ? (
+                        <details className="cursor-pointer">
+                          <summary className="truncate text-sm">
+                            {v.itens.length} produtos
+                          </summary>
+                          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                            {v.itens.map((item, idx) => (
+                              <li key={idx} className="flex justify-between gap-2">
+                                <span className="truncate">{item.produtoNome} ({item.quantidade}x)</span>
+                                <span className="tabular-nums shrink-0">{formatBRL(item.subtotal)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      ) : (
+                        <span className="block truncate" title={produtosTexto(v)}>
+                          {produtosTexto(v)}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-center font-medium">{quantidadeTotal(v)}</TableCell>
                     <TableCell className="text-right tabular-nums">
