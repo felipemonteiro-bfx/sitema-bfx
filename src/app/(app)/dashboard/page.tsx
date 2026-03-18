@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { calcularMetricasPeriodo } from "@/lib/finance";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
@@ -60,62 +61,39 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const start = sp.from ? parseDateStart(sp.from) : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1, 0, 0, 0, 0));
   const end = sp.to ? parseDateEnd(sp.to) : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59, 999));
 
-  const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
-  const vendedorList = vendedores.map((v) => v.nomeExibicao || v.username).filter(Boolean) as string[];
+  const allVendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
+  const vendedorList = allVendedores.map((v) => v.nomeExibicao || v.username).filter(Boolean) as string[];
   const selectedVendors = parseVendors(sp.vendors);
   const hasVendedorFilter = sp.vendors !== undefined && sp.vendors !== "";
   const isSubsetOfVendedores = selectedVendors.length > 0 && selectedVendors.length < vendedorList.length;
   const vendorsFilter = hasVendedorFilter && isSubsetOfVendedores ? selectedVendors : undefined;
 
-  const vendas = await prisma.venda.findMany({
+  const metrics = await calcularMetricasPeriodo(start, end, vendorsFilter);
+  const { receita: totalReceita, lucro, porVendedor } = metrics;
+  const margem = metrics.margemPct * 100;
+  const peds = metrics.totalVendas;
+  const tik = peds ? totalReceita / peds : 0;
+
+  const teamRows = Object.entries(porVendedor)
+    .map(([vendedor, r]) => ({
+      vendedor,
+      total: r.total,
+      lucro: r.lucroLiquido,
+      vendas: r.vendas,
+      ticket: r.vendas ? r.total / r.vendas : 0,
+      margem: r.total > 0 ? (r.lucroLiquido / r.total) * 100 : 0,
+    }))
+    .sort((a, b) => b.total - a.total);
+
+  const vendasProd = await prisma.venda.findMany({
     where: {
       dataVenda: { gte: start, lte: end },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
-    include: { itens: { select: { subtotal: true } } },
+    select: { produtoNome: true },
   });
-
-  const totalReceita = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-  const frete = vendas.reduce((s, v) => s + (v.valorFrete || 0), 0);
-  const fat = totalReceita - frete;
-  const peds = vendas.length;
-  const tik = peds ? (fat + frete) / peds : 0;
-
-  // Lucro alinhado com o DRE: receita - cmv - comissões - freteReal - despesas
-  const cmv = vendas.reduce((s, v) => s + (v.custoProduto || 0), 0);
-  const freteReal = vendas.reduce((s, v) => s + (v.custoEnvio || 0), 0);
-  const porVend: Record<string, { total: number; lucro: number; vendas: number }> = {};
-  for (const v of vendas) {
-    const key = v.vendedor || "Sem Vendedor";
-    porVend[key] ||= { total: 0, lucro: 0, vendas: 0 };
-    porVend[key].total += valorTotalVenda(v);
-    porVend[key].lucro += v.lucroLiquido || 0;
-    porVend[key].vendas += 1;
-  }
-  let comissoes = 0;
-  for (const [vend, r] of Object.entries(porVend)) {
-    const u = vendedores.find((x) => x.nomeExibicao === vend);
-    comissoes += r.total * ((u?.comissaoPct || 2) / 100);
-  }
-  const despesasPeriodo = await prisma.despesa.findMany({
-    where: { dataDespesa: { gte: start, lte: end } },
-  });
-  const totalDespesas = despesasPeriodo.reduce((s, d) => s + (d.valor || 0), 0);
-  const lucro = totalReceita - cmv - comissoes - freteReal - totalDespesas;
-  const margem = totalReceita > 0 ? (lucro / totalReceita) * 100 : 0;
-  const teamRows = Object.entries(porVend)
-    .map(([vendedor, r]) => ({
-      vendedor,
-      total: r.total,
-      lucro: r.lucro,
-      vendas: r.vendas,
-      ticket: r.vendas ? r.total / r.vendas : 0,
-      margem: r.total > 0 ? (r.lucro / r.total) * 100 : 0,
-    }))
-    .sort((a, b) => b.total - a.total);
-
   const prodCount: Record<string, number> = {};
-  vendas.forEach((v) => {
+  vendasProd.forEach((v) => {
     const name = v.produtoNome || "Produto";
     prodCount[name] = (prodCount[name] || 0) + 1;
   });
@@ -230,7 +208,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         </Card>
       )}
 
-      {vendas.length === 0 ? (
+      {peds === 0 ? (
         <EmptyState
           variant="sales"
           title="Nenhuma venda encontrada"
@@ -245,7 +223,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <CardStats
               title="Faturamento Total"
-              value={formatBRL(fat + frete)}
+              value={formatBRL(totalReceita)}
               description={`${peds} vendas`}
               icon={Wallet}
               color="info"
@@ -408,7 +386,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Receita</div>
-                        <div className="text-lg font-bold text-info">{formatBRL(fat + frete)}</div>
+                        <div className="text-lg font-bold text-info">{formatBRL(totalReceita)}</div>
                       </div>
                     </div>
                   </div>

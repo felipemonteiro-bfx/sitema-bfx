@@ -2,47 +2,61 @@ import { prisma } from "@/lib/db";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { addMonths, format } from "date-fns";
 
-export async function calcularDre(mesAno: string) {
-  const [ano, mes] = mesAno.split("-").map(Number);
-  
-  // Criar datas em UTC para garantir consistência com o banco de dados
-  const ini = new Date(Date.UTC(ano, mes - 1, 1, 0, 0, 0));
-  const fim = new Date(Date.UTC(ano, mes, 1, 0, 0, 0));
+export type MetricasPeriodo = {
+  receita: number;
+  cmv: number;
+  freteReal: number;
+  comissoes: number;
+  custosVar: number;
+  fixas: number;
+  variaveis: number;
+  margem: number;
+  lucro: number;
+  margemPct: number;
+  pontoEq: number;
+  totalVendas: number;
+  porVendedor: Record<string, { total: number; lucroLiquido: number; vendas: number }>;
+};
 
-  console.log(`Buscando vendas para ${mesAno} entre ${ini.toISOString()} e ${fim.toISOString()}`);
-
+/**
+ * Fonte única de cálculo de métricas financeiras para um período arbitrário.
+ * Usada pelo Dashboard Executivo e pelo DRE/Financeiro.
+ */
+export async function calcularMetricasPeriodo(
+  start: Date,
+  end: Date,
+  vendorsFilter?: string[]
+): Promise<MetricasPeriodo> {
   const vendas = await prisma.venda.findMany({
-    where: { 
-      dataVenda: { 
-        gte: ini, 
-        lt: fim 
-      } 
+    where: {
+      dataVenda: { gte: start, lte: end },
+      vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
     include: { itens: { select: { subtotal: true } } },
   });
-
-  console.log(`Vendas encontradas: ${vendas.length}`);
 
   const receita = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
   const cmv = vendas.reduce((s, v) => s + (v.custoProduto || 0), 0);
   const freteReal = vendas.reduce((s, v) => s + (v.custoEnvio || 0), 0);
 
-  const vendasPorVendedor = new Map<string, number>();
+  const porVendedor: Record<string, { total: number; lucroLiquido: number; vendas: number }> = {};
   for (const v of vendas) {
     const key = v.vendedor || "Sem Vendedor";
-    vendasPorVendedor.set(key, (vendasPorVendedor.get(key) || 0) + valorTotalVenda(v));
+    porVendedor[key] ||= { total: 0, lucroLiquido: 0, vendas: 0 };
+    porVendedor[key].total += valorTotalVenda(v);
+    porVendedor[key].lucroLiquido += v.lucroLiquido || 0;
+    porVendedor[key].vendas += 1;
   }
 
   const usuarios = await prisma.usuario.findMany();
   let comissoes = 0;
-  for (const [vend, total] of vendasPorVendedor.entries()) {
+  for (const [vend, r] of Object.entries(porVendedor)) {
     const u = usuarios.find((x) => x.nomeExibicao === vend);
-    const pct = u?.comissaoPct || 2;
-    comissoes += total * (pct / 100);
+    comissoes += r.total * ((u?.comissaoPct || 2) / 100);
   }
 
   const despesas = await prisma.despesa.findMany({
-    where: { dataDespesa: { gte: ini, lt: fim } },
+    where: { dataDespesa: { gte: start, lte: end } },
   });
   const fixas = despesas.filter((d) => d.tipo === "Fixa").reduce((s, d) => s + (d.valor || 0), 0);
   const variaveis = despesas
@@ -54,17 +68,53 @@ export async function calcularDre(mesAno: string) {
   const lucro = margem - fixas;
   const margemPct = receita > 0 ? margem / receita : 0;
   const pontoEq = margemPct > 0 ? fixas / margemPct : 0;
-  const metaGlobal = usuarios.reduce((s, u) => s + (u.metaMensal || 0), 0) || 100000;
 
   return {
     receita,
+    cmv,
+    freteReal,
+    comissoes,
     custosVar,
-    margem,
     fixas,
+    variaveis,
+    margem,
     lucro,
+    margemPct,
     pontoEq,
+    totalVendas: vendas.length,
+    porVendedor,
+  };
+}
+
+export async function calcularDre(mesAno: string) {
+  const [ano, mes] = mesAno.split("-").map(Number);
+  const ini = new Date(Date.UTC(ano, mes - 1, 1, 0, 0, 0));
+  // fim exclusivo (início do próximo mês) → fim inclusivo = último ms do mês
+  const fimInclusivo = new Date(Date.UTC(ano, mes, 1, 0, 0, 0, -1));
+
+  console.log(`Buscando vendas para ${mesAno} entre ${ini.toISOString()} e ${fimInclusivo.toISOString()}`);
+
+  const metrics = await calcularMetricasPeriodo(ini, fimInclusivo);
+
+  console.log(`Vendas encontradas: ${metrics.totalVendas}`);
+
+  const usuarios = await prisma.usuario.findMany();
+  const metaGlobal = usuarios.reduce((s, u) => s + (u.metaMensal || 0), 0) || 100000;
+
+  return {
+    receita: metrics.receita,
+    custosVar: metrics.custosVar,
+    margem: metrics.margem,
+    fixas: metrics.fixas,
+    lucro: metrics.lucro,
+    pontoEq: metrics.pontoEq,
     metaGlobal,
-    detalhe: { cmv, comissoes, variaveis, freteReal },
+    detalhe: {
+      cmv: metrics.cmv,
+      comissoes: metrics.comissoes,
+      variaveis: metrics.variaveis,
+      freteReal: metrics.freteReal,
+    },
   };
 }
 
@@ -87,7 +137,6 @@ export async function calcularFluxoCaixa(mesAno?: string) {
 
     for (const v of vendas) {
       const dv = v.dataVenda;
-      // Usar a representação ISO/UTC para comparação de mês
       const dvStr = `${dv.getUTCFullYear()}-${String(dv.getUTCMonth() + 1).padStart(2, "0")}`;
       if (v.antecipada === 1) {
         if (dvStr === mesStr) {
