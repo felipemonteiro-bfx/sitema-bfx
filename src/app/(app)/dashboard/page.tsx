@@ -44,12 +44,12 @@ function parseVendors(value: string | undefined) {
 
 function parseDateStart(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
+  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0));
 }
 
 function parseDateEnd(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999);
+  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999));
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
@@ -57,8 +57,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   if (!ok) return <div>Acesso restrito.</div>;
   const sp = await searchParams;
   const today = new Date();
-  const start = sp.from ? parseDateStart(sp.from) : new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
-  const end = sp.to ? parseDateEnd(sp.to) : new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+  const start = sp.from ? parseDateStart(sp.from) : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1, 0, 0, 0, 0));
+  const end = sp.to ? parseDateEnd(sp.to) : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59, 999));
 
   const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
   const vendedorList = vendedores.map((v) => v.nomeExibicao || v.username).filter(Boolean) as string[];
@@ -78,11 +78,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const totalReceita = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
   const frete = vendas.reduce((s, v) => s + (v.valorFrete || 0), 0);
   const fat = totalReceita - frete;
-  const lucro = vendas.reduce((s, v) => s + (v.lucroLiquido || 0), 0);
   const peds = vendas.length;
   const tik = peds ? (fat + frete) / peds : 0;
-  const margem = fat + frete > 0 ? (lucro / (fat + frete)) * 100 : 0;
 
+  // Lucro alinhado com o DRE: receita - cmv - comissões - freteReal - despesas
+  const cmv = vendas.reduce((s, v) => s + (v.custoProduto || 0), 0);
+  const freteReal = vendas.reduce((s, v) => s + (v.custoEnvio || 0), 0);
   const porVend: Record<string, { total: number; lucro: number; vendas: number }> = {};
   for (const v of vendas) {
     const key = v.vendedor || "Sem Vendedor";
@@ -91,6 +92,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     porVend[key].lucro += v.lucroLiquido || 0;
     porVend[key].vendas += 1;
   }
+  let comissoes = 0;
+  for (const [vend, r] of Object.entries(porVend)) {
+    const u = vendedores.find((x) => x.nomeExibicao === vend);
+    comissoes += r.total * ((u?.comissaoPct || 2) / 100);
+  }
+  const despesasPeriodo = await prisma.despesa.findMany({
+    where: { dataDespesa: { gte: start, lte: end } },
+  });
+  const totalDespesas = despesasPeriodo.reduce((s, d) => s + (d.valor || 0), 0);
+  const lucro = totalReceita - cmv - comissoes - freteReal - totalDespesas;
+  const margem = totalReceita > 0 ? (lucro / totalReceita) * 100 : 0;
   const teamRows = Object.entries(porVend)
     .map(([vendedor, r]) => ({
       vendedor,
