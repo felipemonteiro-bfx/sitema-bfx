@@ -1,3 +1,15 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: planning
+stopped_at: "Completed quick task 260318-fhz: assinatura condicional em caso de boleto"
+last_updated: "2026-03-18T15:16:07.774Z"
+last_activity: "2026-02-19 - Completed quick task 1: all plans"
+progress:
+  percent: 0
+---
+
 # Project State
 
 ## Project Reference
@@ -52,24 +64,18 @@ None yet.
 
 ### Blockers/Concerns
 
-- Confirmar schema Prisma suporta `ParcelaVencimento` com campos necessários
-
-### Decisions
-
-- `produto-item-form.tsx` is reusable — confirmed by quick task 260318-ehq using it in EditVendaItens
-- Schema Prisma already supports `ItemVenda` with all required fields (confirmed working)
-- Multi-product editor pattern: ProdutoItemForm list + itensJson hidden input + server action parse
-- deleteMany + createMany pattern for replacing ItemVenda records
+- Verificar se `produto-item-form.tsx` e `parcelas-vencimento-form.tsx` são reutilizáveis ou precisam ser reescritos
+- Confirmar schema Prisma suporta `ItemVenda` e `ParcelaVencimento` com campos necessários
 
 ### Quick Tasks Completed
 
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
 | 1 | all plans | 2026-02-19 | 8679000 | Verified | [1-all-plans](./quick/1-all-plans/) |
-| 2 | histórico de venda - Opção de adição de produtos - Listar os produtos vendidos | 2026-03-18 | c777283 | Verified | [260318-ehq](./quick/260318-ehq-hist-rico-de-venda-op-o-de-adi-o-de-prod/) |
+| 2 | assinatura condicional em caso de boleto | 2026-03-18 | e053b3a | Verified | [260318-fhz-assinatura-em-caso-de-boleto](./quick/260318-fhz-assinatura-em-caso-de-boleto/) |
 
 ## Session Continuity
 
-Last session: 2026-03-18
-Stopped at: Completed quick task 260318-ehq — historico product listing and edit form
+Last session: 2026-03-18T15:16:07.772Z
+Stopped at: Completed quick task 260318-fhz: assinatura condicional em caso de boleto
 Resume file: None
