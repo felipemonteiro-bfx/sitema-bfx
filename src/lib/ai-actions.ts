@@ -470,7 +470,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             valorFrete: parsedParams.valorFrete || 0,
             custoEnvio: parsedParams.custoEnvio || 0,
             parcelas: parsedParams.parcelas || 1,
-            valorParcela: (parsedParams.valorVenda || 0) / (parsedParams.parcelas || 1),
+            valorParcela: Math.trunc(((parsedParams.valorVenda || 0) / (parsedParams.parcelas || 1)) * 100) / 100,
             antecipada: parsedParams.antecipada ?? 0,
           },
         });

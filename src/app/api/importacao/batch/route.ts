@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         const custoProduto = row.custo ?? 0;
         const parcelas = row.parcelas ?? 1;
         const total = valorVenda + frete;
-        const valorParcela = parcelas > 0 ? total / parcelas : 0;
+        const valorParcela = parcelas > 0 ? Math.trunc((total / parcelas) * 100) / 100 : 0;
         const lucro = total - (custoProduto + custoEnvio);
 
         await tx.venda.create({
