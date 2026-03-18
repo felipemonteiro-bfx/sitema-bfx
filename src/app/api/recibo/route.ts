@@ -164,6 +164,8 @@ export async function GET(req: Request) {
       : await prisma.venda.findUnique({ where: { uuid: idParam } });
     if (!vendaBase) return NextResponse.json({ error: "Venda não encontrada" }, { status: 404 });
 
+    const showAssinatura = vendaBase.boleto || vendaBase.descontoEmFolha;
+
     if (tipo !== "autorizacao" && tipo !== "venda")
       tipo = vendaBase.descontoEmFolha ? "autorizacao" : "venda";
 
@@ -266,6 +268,8 @@ export async function GET(req: Request) {
     const footerRowH = 20;
     const footerH = footerLines.length * footerRowH + 14;
 
+    const assinaturaH = showAssinatura ? 80 : 30; // 30 = just footer
+
     const estimatedH =
       100 + // header
       130 + // info block cliente/vendedor
@@ -275,7 +279,7 @@ export async function GET(req: Request) {
       parcelasTableH +
       50  + // separador + titulo termos
       contratoLineCount * contratoLineH +
-      80;   // assinatura + rodapé
+      assinaturaH; // assinatura + rodapé
 
     const pageHeight = Math.max(842, estimatedH);
 
@@ -566,22 +570,23 @@ export async function GET(req: Request) {
     });
     y -= contratoLineCount * contratoLineH;
 
-    y -= 48;
-
     // ── Assinatura ────────────────────────────────────────────────────────────
-    const sigLineW = 220;
-    const sigLineX = 595 / 2 - sigLineW / 2;
-    page.drawLine({
-      start: { x: sigLineX, y },
-      end: { x: sigLineX + sigLineW, y },
-      thickness: 0.8, color: rgb(0.2, 0.22, 0.28),
-    });
-    const sigText = "Assinatura do Cliente";
-    page.drawText(sigText, {
-      x: sigLineX + (sigLineW - font.widthOfTextAtSize(sigText, 8.5)) / 2,
-      y: y - 13,
-      size: 8.5, font, color: rgb(0.4, 0.43, 0.5),
-    });
+    if (showAssinatura) {
+      y -= 48;
+      const sigLineW = 220;
+      const sigLineX = 595 / 2 - sigLineW / 2;
+      page.drawLine({
+        start: { x: sigLineX, y },
+        end: { x: sigLineX + sigLineW, y },
+        thickness: 0.8, color: rgb(0.2, 0.22, 0.28),
+      });
+      const sigText = "Assinatura do Cliente";
+      page.drawText(sigText, {
+        x: sigLineX + (sigLineW - font.widthOfTextAtSize(sigText, 8.5)) / 2,
+        y: y - 13,
+        size: 8.5, font, color: rgb(0.4, 0.43, 0.5),
+      });
+    }
 
     // ── Rodapé ────────────────────────────────────────────────────────────────
     page.drawLine({ start: { x: marginX, y: 32 }, end: { x: 595 - marginX, y: 32 }, thickness: 0.4, color: rgb(0.82, 0.85, 0.9) });
