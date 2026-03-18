@@ -66,7 +66,7 @@ None yet.
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
 | 1 | all plans | 2026-02-19 | 8679000 | Verified | [1-all-plans](./quick/1-all-plans/) |
-| 2 | historico: product display + multi-product editor | 2026-03-18 | c777283 | Complete | [260318-ehq](./quick/260318-ehq-hist-rico-de-venda-op-o-de-adi-o-de-prod/) |
+| 2 | histórico de venda - Opção de adição de produtos - Listar os produtos vendidos | 2026-03-18 | c777283 | Verified | [260318-ehq](./quick/260318-ehq-hist-rico-de-venda-op-o-de-adi-o-de-prod/) |
 
 ## Session Continuity
 
