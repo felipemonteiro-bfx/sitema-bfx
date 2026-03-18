@@ -38,6 +38,8 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
     from: optionalString(),
     to: optionalString(),
     vendedor: optionalString(),
+    clienteNome: optionalString(),
+    clienteId: optionalNumber(),
     limit: optionalNumber(),
   }),
   criar_venda: z.object({
@@ -208,7 +210,7 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
 export const aiActions: AiActionDef[] = [
   {
     name: "listar_vendas",
-    description: "Lista vendas filtrando por periodo e vendedor.",
+    description: "Lista vendas filtrando por periodo, vendedor ou cliente. Use para 'compras do cliente X', 'vendas para fulano', 'quantas vezes comprou'.",
     readOnly: true,
     roles: ["admin", "vendedor"],
     parameters: {
@@ -217,7 +219,9 @@ export const aiActions: AiActionDef[] = [
         from: { type: "string", description: "Data inicial YYYY-MM-DD" },
         to: { type: "string", description: "Data final YYYY-MM-DD" },
         vendedor: { type: "string", description: "Nome do vendedor" },
-        limit: { type: "number", description: "Limite de registros" },
+        clienteNome: { type: "string", description: "Nome ou parte do nome do cliente" },
+        clienteId: { type: "number", description: "ID do cliente" },
+        limit: { type: "number", description: "Limite de registros (padrão 50)" },
       },
     },
   },
@@ -700,14 +704,44 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const from = parsedParams?.from ? new Date(parsedParams.from) : undefined;
         const to = parsedParams?.to ? new Date(parsedParams.to) : undefined;
         const vendedor = ctx.role === "admin" ? parsedParams?.vendedor : ctx.displayName;
-        result = await prisma.venda.findMany({
+
+        // Resolver clienteId por nome se necessário
+        let clienteId: number | undefined = parsedParams?.clienteId ? Number(parsedParams.clienteId) : undefined;
+        let clienteNomeResolvido: string | undefined;
+        if (!clienteId && parsedParams?.clienteNome) {
+          const cl = await prisma.cliente.findFirst({
+            where: { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } },
+            select: { id: true, nome: true },
+          });
+          if (!cl) { result = { erro: `Cliente '${parsedParams.clienteNome}' não encontrado.` }; break; }
+          clienteId = cl.id;
+          clienteNomeResolvido = cl.nome;
+        }
+
+        const vendas = await prisma.venda.findMany({
           where: {
             dataVenda: from && to ? { gte: from, lte: to } : undefined,
             vendedor: vendedor ? { equals: vendedor } : undefined,
+            clienteId: clienteId ?? undefined,
           },
+          include: { cliente: { select: { nome: true } } },
           orderBy: { dataVenda: "desc" },
-          take: Math.min(Number(parsedParams?.limit || 20), 100),
+          take: Math.min(Number(parsedParams?.limit || 50), 200),
         });
+
+        result = {
+          total: vendas.length,
+          cliente: clienteNomeResolvido,
+          vendas: vendas.map(v => ({
+            id: v.id,
+            dataVenda: v.dataVenda.toISOString().split("T")[0],
+            cliente: v.cliente?.nome,
+            produto: v.produtoNome,
+            vendedor: v.vendedor,
+            valorTotal: valorTotalVenda(v),
+            parcelas: v.parcelas,
+          })),
+        };
         break;
       }
       case "criar_venda": {
