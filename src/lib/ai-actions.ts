@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
@@ -151,6 +153,55 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
   consultar_limite_cliente: z.object({
     clienteNome: optionalString(),
     clienteId: optionalNumber(),
+  }),
+  // Financeiro
+  resumo_financeiro: z.object({
+    mesAno: optionalString(),
+  }),
+  fluxo_caixa: z.object({
+    mesAno: optionalString(),
+  }),
+  // Fornecedores
+  listar_fornecedores: z.object({
+    search: optionalString(),
+    limit: optionalNumber(),
+  }),
+  criar_fornecedor: z.object({
+    nome: requiredString(),
+    telefone: optionalString(),
+  }),
+  // Relatórios
+  resumo_relatorio_vendas: z.object({
+    from: optionalString(),
+    to: optionalString(),
+    vendedor: optionalString(),
+    empresa: optionalString(),
+  }),
+  resumo_margem_produto: z.object({
+    limit: optionalNumber(),
+  }),
+  // Assinatura digital
+  consultar_assinaturas_pendentes: z.object({
+    vendedor: optionalString(),
+    limit: optionalNumber(),
+  }),
+  // Boletos
+  listar_boletos: z.object({
+    clienteNome: optionalString(),
+    status: optionalString(),
+    limit: optionalNumber(),
+  }),
+  // Auditoria
+  consultar_auditoria: z.object({
+    usuario: optionalString(),
+    from: optionalString(),
+    to: optionalString(),
+    limit: optionalNumber(),
+  }),
+  // Comissões
+  consultar_comissoes: z.object({
+    vendedor: optionalString(),
+    mesAno: optionalString(),
   }),
 };
 
@@ -437,6 +488,153 @@ export const aiActions: AiActionDef[] = [
       type: "object",
       properties: {
         diasMinimos: { type: "number", description: "Filtrar apenas clientes com atraso maior que N dias (padrão: 0)" },
+      },
+    },
+  },
+  // ── Financeiro ────────────────────────────────────────────────────────────
+  {
+    name: "resumo_financeiro",
+    description:
+      "Retorna DRE do mês: receita, CMV, comissões, despesas fixas/variáveis, lucro e ponto de equilíbrio. Use para 'lucro do mês', 'DRE', 'resultado financeiro', 'quanto faturamos'.",
+    readOnly: true,
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      properties: {
+        mesAno: { type: "string", description: "Mês no formato YYYY-MM (padrão: mês atual)" },
+      },
+    },
+  },
+  {
+    name: "fluxo_caixa",
+    description:
+      "Retorna projeção de fluxo de caixa dos próximos 6 meses (entradas, saídas, saldo). Use para 'fluxo de caixa', 'projeção', 'entradas e saídas'.",
+    readOnly: true,
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      properties: {
+        mesAno: { type: "string", description: "Mês de referência YYYY-MM (padrão: mês atual)" },
+      },
+    },
+  },
+  // ── Fornecedores ──────────────────────────────────────────────────────────
+  {
+    name: "listar_fornecedores",
+    description: "Lista fornecedores cadastrados.",
+    readOnly: true,
+    roles: ["admin", "vendedor"],
+    parameters: {
+      type: "object",
+      properties: {
+        search: { type: "string", description: "Filtro por nome" },
+        limit: { type: "number" },
+      },
+    },
+  },
+  {
+    name: "criar_fornecedor",
+    description: "Cria um fornecedor.",
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      required: ["nome"],
+      properties: {
+        nome: { type: "string" },
+        telefone: { type: "string" },
+      },
+    },
+  },
+  // ── Relatórios ────────────────────────────────────────────────────────────
+  {
+    name: "resumo_relatorio_vendas",
+    description:
+      "Retorna resumo de vendas por período com totais por vendedor e empresa. Use para 'relatório de vendas', 'total vendido por período', 'ranking de vendedores'.",
+    readOnly: true,
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      properties: {
+        from: { type: "string", description: "Data inicial YYYY-MM-DD" },
+        to: { type: "string", description: "Data final YYYY-MM-DD" },
+        vendedor: { type: "string" },
+        empresa: { type: "string", description: "Empresa conveniada do cliente" },
+      },
+    },
+  },
+  {
+    name: "resumo_margem_produto",
+    description:
+      "Retorna margem de lucro por produto (receita, custo, margem%). Use para 'produto mais lucrativo', 'margem por produto', 'análise de margens'.",
+    readOnly: true,
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "Top N produtos (padrão: 20)" },
+      },
+    },
+  },
+  // ── Assinatura digital ────────────────────────────────────────────────────
+  {
+    name: "consultar_assinaturas_pendentes",
+    description:
+      "Lista vendas que aguardam assinatura do cliente (descontoEmFolha pendente). Use para 'assinaturas pendentes', 'autorizações não assinadas', 'quem ainda não assinou'.",
+    readOnly: true,
+    roles: ["admin", "vendedor"],
+    parameters: {
+      type: "object",
+      properties: {
+        vendedor: { type: "string", description: "Filtrar por vendedor" },
+        limit: { type: "number" },
+      },
+    },
+  },
+  // ── Boletos ───────────────────────────────────────────────────────────────
+  {
+    name: "listar_boletos",
+    description:
+      "Lista vendas com boleto: gerado, pendente de geração ou por cliente. Use para 'boletos', 'quem tem boleto', 'boleto pendente'.",
+    readOnly: true,
+    roles: ["admin", "vendedor"],
+    parameters: {
+      type: "object",
+      properties: {
+        clienteNome: { type: "string", description: "Filtrar por nome do cliente" },
+        status: { type: "string", description: "'gerado' | 'pendente' (sem boletoUrl ainda)" },
+        limit: { type: "number" },
+      },
+    },
+  },
+  // ── Auditoria ─────────────────────────────────────────────────────────────
+  {
+    name: "consultar_auditoria",
+    description:
+      "Consulta log de auditoria do sistema (ações da IA e do sistema). Use para 'o que foi feito', 'histórico de ações', 'log do sistema'.",
+    readOnly: true,
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      properties: {
+        usuario: { type: "string", description: "Filtrar por usuário" },
+        from: { type: "string", description: "Data inicial YYYY-MM-DD" },
+        to: { type: "string", description: "Data final YYYY-MM-DD" },
+        limit: { type: "number" },
+      },
+    },
+  },
+  // ── Comissões ─────────────────────────────────────────────────────────────
+  {
+    name: "consultar_comissoes",
+    description:
+      "Consulta comissões por vendedor no mês: total vendido, % comissão, valor a receber, meta e % atingida. Use para 'minha comissão', 'quanto vou receber', 'meta do mês'.",
+    readOnly: true,
+    roles: ["admin", "vendedor"],
+    parameters: {
+      type: "object",
+      properties: {
+        vendedor: { type: "string", description: "Nome do vendedor (padrão: usuário atual)" },
+        mesAno: { type: "string", description: "YYYY-MM (padrão: mês atual)" },
       },
     },
   },
@@ -780,6 +978,221 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           comprometimentoMensalAtual: Math.trunc(comprometimentoAtual * 100) / 100,
           limiteDisponivel: Math.trunc(disponivel * 100) / 100,
           parcelasEmAberto: parcelasEmAberto.length,
+        };
+        break;
+      }
+      case "resumo_financeiro": {
+        requireAdmin(ctx);
+        const mesAno = parsedParams?.mesAno ?? new Date().toISOString().slice(0, 7);
+        const dre = await calcularDre(mesAno);
+        result = { mesAno, ...dre };
+        break;
+      }
+      case "fluxo_caixa": {
+        requireAdmin(ctx);
+        const mesAno = parsedParams?.mesAno;
+        result = await calcularFluxoCaixa(mesAno);
+        break;
+      }
+      case "listar_fornecedores":
+        result = await prisma.fornecedor.findMany({
+          where: parsedParams?.search
+            ? { nome: { contains: parsedParams.search, mode: "insensitive" } }
+            : undefined,
+          take: Math.min(Number(parsedParams?.limit || 50), 200),
+          orderBy: { nome: "asc" },
+        });
+        break;
+      case "criar_fornecedor":
+        requireAdmin(ctx);
+        result = await prisma.fornecedor.create({
+          data: { nome: parsedParams.nome, telefone: parsedParams.telefone ?? null },
+        });
+        break;
+      case "resumo_relatorio_vendas": {
+        requireAdmin(ctx);
+        const from = parsedParams?.from ? new Date(parsedParams.from) : undefined;
+        const to = parsedParams?.to ? new Date(parsedParams.to) : undefined;
+        const vendas = await prisma.venda.findMany({
+          where: {
+            dataVenda: from && to ? { gte: from, lte: to } : undefined,
+            vendedor: parsedParams?.vendedor ? { equals: parsedParams.vendedor } : undefined,
+          },
+          include: { cliente: { select: { nome: true, empresa: true } } },
+          orderBy: { dataVenda: "desc" },
+        });
+        const totalVendas = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
+        const totalCusto = vendas.reduce((s, v) => s + (v.custoProduto || 0) + (v.custoEnvio || 0), 0);
+        const porVendedor: Record<string, number> = {};
+        const porEmpresa: Record<string, number> = {};
+        for (const v of vendas) {
+          const vend = v.vendedor || "Sem Vendedor";
+          porVendedor[vend] = (porVendedor[vend] ?? 0) + valorTotalVenda(v);
+          const emp = v.cliente?.empresa || "Sem Empresa";
+          if (parsedParams?.empresa && emp !== parsedParams.empresa) continue;
+          porEmpresa[emp] = (porEmpresa[emp] ?? 0) + valorTotalVenda(v);
+        }
+        result = {
+          periodo: { from: parsedParams?.from, to: parsedParams?.to },
+          totalVendas: Math.trunc(totalVendas * 100) / 100,
+          totalCusto: Math.trunc(totalCusto * 100) / 100,
+          lucroTotal: Math.trunc((totalVendas - totalCusto) * 100) / 100,
+          quantidadeVendas: vendas.length,
+          porVendedor: Object.entries(porVendedor)
+            .sort((a, b) => b[1] - a[1])
+            .map(([nome, total]) => ({ nome, total: Math.trunc(total * 100) / 100 })),
+          porEmpresa: Object.entries(porEmpresa)
+            .sort((a, b) => b[1] - a[1])
+            .map(([nome, total]) => ({ nome, total: Math.trunc(total * 100) / 100 })),
+        };
+        break;
+      }
+      case "resumo_margem_produto": {
+        requireAdmin(ctx);
+        const limit = Math.min(Number(parsedParams?.limit || 20), 100);
+        const vendas = await prisma.venda.findMany({
+          select: { produtoNome: true, valorVenda: true, valorFrete: true, custoProduto: true, custoEnvio: true },
+        });
+        const porProduto = new Map<string, { receita: number; custo: number; qtd: number }>();
+        for (const v of vendas) {
+          const nome = v.produtoNome || "Sem Nome";
+          const rec = (v.valorVenda || 0) + (v.valorFrete || 0);
+          const cus = (v.custoProduto || 0) + (v.custoEnvio || 0);
+          const atual = porProduto.get(nome) ?? { receita: 0, custo: 0, qtd: 0 };
+          porProduto.set(nome, { receita: atual.receita + rec, custo: atual.custo + cus, qtd: atual.qtd + 1 });
+        }
+        result = Array.from(porProduto.entries())
+          .map(([nome, d]) => ({
+            nome,
+            receita: Math.trunc(d.receita * 100) / 100,
+            custo: Math.trunc(d.custo * 100) / 100,
+            lucro: Math.trunc((d.receita - d.custo) * 100) / 100,
+            margemPct: d.receita > 0 ? Math.trunc(((d.receita - d.custo) / d.receita) * 10000) / 100 : 0,
+            qtdVendas: d.qtd,
+          }))
+          .sort((a, b) => b.lucro - a.lucro)
+          .slice(0, limit);
+        break;
+      }
+      case "consultar_assinaturas_pendentes": {
+        const whereVendedor = ctx.role === "admin" ? parsedParams?.vendedor : ctx.displayName;
+        const pendentes = await prisma.venda.findMany({
+          where: {
+            descontoEmFolha: true,
+            assinaturaStatus: "pendente",
+            vendedor: whereVendedor ? { equals: whereVendedor } : undefined,
+          },
+          include: { cliente: { select: { nome: true, telefone: true } } },
+          orderBy: { dataVenda: "desc" },
+          take: Math.min(Number(parsedParams?.limit || 50), 200),
+        });
+        result = {
+          total: pendentes.length,
+          vendas: pendentes.map(v => ({
+            id: v.id,
+            dataVenda: v.dataVenda.toISOString().split("T")[0],
+            vendedor: v.vendedor,
+            cliente: v.cliente?.nome,
+            telefone: v.cliente?.telefone,
+            produto: v.produtoNome,
+            valor: valorTotalVenda(v),
+            assinaturaToken: v.assinaturaToken,
+          })),
+        };
+        break;
+      }
+      case "listar_boletos": {
+        const isGerado = parsedParams?.status === "gerado";
+        const isPendente = parsedParams?.status === "pendente";
+        const vendedorFilter = ctx.role === "admin" ? undefined : ctx.displayName;
+        const boletos = await prisma.venda.findMany({
+          where: {
+            boleto: true,
+            vendedor: vendedorFilter ? { equals: vendedorFilter } : undefined,
+            cliente: parsedParams?.clienteNome
+              ? { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } }
+              : undefined,
+            boletoUrl: isGerado ? { not: null } : isPendente ? null : undefined,
+          },
+          include: { cliente: { select: { nome: true } } },
+          orderBy: { dataVenda: "desc" },
+          take: Math.min(Number(parsedParams?.limit || 50), 200),
+        });
+        result = {
+          total: boletos.length,
+          boletos: boletos.map(v => ({
+            id: v.id,
+            dataVenda: v.dataVenda.toISOString().split("T")[0],
+            cliente: v.cliente?.nome,
+            produto: v.produtoNome,
+            valor: valorTotalVenda(v),
+            parcelas: v.parcelas,
+            boletoGerado: !!v.boletoUrl,
+            boletoUrl: v.boletoUrl ?? null,
+          })),
+        };
+        break;
+      }
+      case "consultar_auditoria": {
+        requireAdmin(ctx);
+        const from = parsedParams?.from ? new Date(parsedParams.from) : undefined;
+        const to = parsedParams?.to ? new Date(parsedParams.to) : undefined;
+        const logs = await prisma.auditLog.findMany({
+          where: {
+            usuario: parsedParams?.usuario ? { contains: parsedParams.usuario, mode: "insensitive" } : undefined,
+            dataHora: from && to ? { gte: from, lte: to } : undefined,
+          },
+          orderBy: { dataHora: "desc" },
+          take: Math.min(Number(parsedParams?.limit || 50), 200),
+        });
+        result = {
+          total: logs.length,
+          logs: logs.map(l => ({
+            id: l.id,
+            dataHora: l.dataHora.toISOString(),
+            usuario: l.usuario,
+            acao: l.acao,
+            detalhes: l.detalhes ? JSON.parse(l.detalhes) : null,
+          })),
+        };
+        break;
+      }
+      case "consultar_comissoes": {
+        const mesAno = parsedParams?.mesAno ?? new Date().toISOString().slice(0, 7);
+        const [ano, mes] = mesAno.split("-").map(Number);
+        const ini = new Date(Date.UTC(ano, mes - 1, 1));
+        const fim = new Date(Date.UTC(ano, mes, 1));
+        const vendedorFiltro = ctx.role === "admin" ? parsedParams?.vendedor : ctx.displayName;
+
+        const vendas = await prisma.venda.findMany({
+          where: {
+            dataVenda: { gte: ini, lt: fim },
+            vendedor: vendedorFiltro ? { equals: vendedorFiltro } : undefined,
+          },
+          select: { vendedor: true, valorVenda: true, valorFrete: true },
+        });
+        const usuarios = await prisma.usuario.findMany({ select: { nomeExibicao: true, comissaoPct: true, metaMensal: true } });
+        const porVendedor = new Map<string, number>();
+        for (const v of vendas) {
+          const nome = v.vendedor || "Sem Vendedor";
+          porVendedor.set(nome, (porVendedor.get(nome) ?? 0) + valorTotalVenda(v));
+        }
+        result = {
+          mesAno,
+          comissoes: Array.from(porVendedor.entries()).map(([nome, totalVendido]) => {
+            const u = usuarios.find(x => x.nomeExibicao === nome);
+            const pct = u?.comissaoPct ?? 2;
+            const meta = u?.metaMensal ?? 0;
+            const comissao = Math.trunc(totalVendido * (pct / 100) * 100) / 100;
+            return {
+              vendedor: nome,
+              totalVendido: Math.trunc(totalVendido * 100) / 100,
+              comissaoPct: pct,
+              comissaoValor: comissao,
+              meta,
+              metaAtingidaPct: meta > 0 ? Math.trunc((totalVendido / meta) * 10000) / 100 : null,
+            };
+          }).sort((a, b) => b.totalVendido - a.totalVendido),
         };
         break;
       }
