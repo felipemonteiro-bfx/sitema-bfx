@@ -128,7 +128,7 @@ async function asaasFetch<T>(
   const url = `${config.baseUrl}${path}`;
   const headers: HeadersInit = {
     "Content-Type": "application/json",
-    access_token: config.apiKey,
+    Authorization: config.apiKey,
     ...((optHeaders as Record<string, string>) || {}),
   };
   const res = await fetch(url, {
