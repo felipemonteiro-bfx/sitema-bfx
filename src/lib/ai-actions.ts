@@ -241,6 +241,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "criar_venda",
     description: "Cria uma venda.",
+    readOnly: false,
     roles: ["admin", "vendedor"],
     parameters: {
       type: "object",
@@ -275,6 +276,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "criar_cliente",
     description: "Cria um cliente.",
+    readOnly: false,
     roles: ["admin", "vendedor"],
     parameters: {
       type: "object",
@@ -309,6 +311,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "criar_produto",
     description: "Cria um produto (admin).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -339,6 +342,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "criar_despesa",
     description: "Cria despesa (admin).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -365,6 +369,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "criar_empresa",
     description: "Cria empresa parceira (admin).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -390,6 +395,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "criar_usuario",
     description: "Cria usuario (admin).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -405,6 +411,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "atualizar_usuario",
     description: "Atualiza usuario (admin).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -423,6 +430,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "atualizar_venda",
     description: "Atualiza venda (admin).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -442,6 +450,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "atualizar_despesa",
     description: "Atualiza despesa (admin).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -470,6 +479,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "consulta_sql",
     description: "Executa consulta SQL direta no banco (admin, apenas SELECT).",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
@@ -552,6 +562,7 @@ export const aiActions: AiActionDef[] = [
   {
     name: "criar_fornecedor",
     description: "Cria um fornecedor.",
+    readOnly: false,
     roles: ["admin"],
     parameters: {
       type: "object",
