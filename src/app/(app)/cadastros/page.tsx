@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatBRL, cn } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@/generated/prisma";
 import { FormSelect } from "@/components/form-select";
 import { MaskedInput } from "@/components/masked-input";
 import { CurrencyInput } from "@/components/currency-input";
@@ -17,7 +18,7 @@ import { LinkCatalogoButton } from "@/components/link-catalogo-button";
 import Link from "next/link";
 import { createAuditLog } from "@/lib/audit";
 
-type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string };
+type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string };
 
 function normalizeUppercase(value: FormDataEntryValue | null) {
   return String(value || "").trim().toLocaleUpperCase("pt-BR");
@@ -28,21 +29,26 @@ async function addCliente(formData: FormData) {
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!nome) return;
-  const cliente = await prisma.cliente.create({
-    data: {
-      nome,
-      cpf: tipo === "PF" ? normalizeUppercase(formData.get("doc")) : null,
-      cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
-      renda: Number(formData.get("renda") || 0),
-      empresa: normalizeUppercase(formData.get("empresa")),
-      telefone: normalizeUppercase(formData.get("telefone")),
-      cep: normalizeUppercase(formData.get("cep")),
-      matricula: normalizeUppercase(formData.get("matricula")),
-      tipo,
-    },
-  });
-  await createAuditLog("cliente:create", { clienteId: cliente.id, nome });
-  revalidatePath("/cadastros");
+  try {
+    const cliente = await prisma.cliente.create({
+      data: {
+        nome,
+        cpf: tipo === "PF" ? normalizeUppercase(formData.get("doc")) : null,
+        cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
+        renda: Number(formData.get("renda") || 0),
+        empresa: normalizeUppercase(formData.get("empresa")),
+        telefone: normalizeUppercase(formData.get("telefone")),
+        cep: normalizeUppercase(formData.get("cep")),
+        matricula: normalizeUppercase(formData.get("matricula")),
+        tipo,
+      },
+    });
+    await createAuditLog("cliente:create", { clienteId: cliente.id, nome });
+    revalidatePath("/cadastros");
+  } catch (e) {
+    const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+    redirect(`/cadastros?tab=clientes&error=${isUniqueError ? "nome_duplicado" : "salvar_falhou"}`);
+  }
 }
 
 async function updateCliente(formData: FormData) {
@@ -50,25 +56,28 @@ async function updateCliente(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
-  if (!id || !nome) {
-    throw new Error("Dados incompletos. Nome do cliente é obrigatório.");
+  if (!id || !nome) return;
+  try {
+    await prisma.cliente.update({
+      where: { id },
+      data: {
+        nome,
+        cpf: tipo === "PF" ? normalizeUppercase(formData.get("doc")) : null,
+        cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
+        renda: Number(formData.get("renda") || 0),
+        empresa: normalizeUppercase(formData.get("empresa")),
+        telefone: normalizeUppercase(formData.get("telefone")),
+        cep: normalizeUppercase(formData.get("cep")),
+        matricula: normalizeUppercase(formData.get("matricula")),
+        tipo,
+      },
+    });
+    await createAuditLog("cliente:update", { clienteId: id, nome });
+    revalidatePath("/cadastros");
+  } catch (e) {
+    const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+    redirect(`/cadastros?tab=clientes&editCliente=${id}&error=${isUniqueError ? "nome_duplicado" : "salvar_falhou"}`);
   }
-  await prisma.cliente.update({
-    where: { id },
-    data: {
-      nome,
-      cpf: tipo === "PF" ? normalizeUppercase(formData.get("doc")) : null,
-      cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
-      renda: Number(formData.get("renda") || 0),
-      empresa: normalizeUppercase(formData.get("empresa")),
-      telefone: normalizeUppercase(formData.get("telefone")),
-      cep: normalizeUppercase(formData.get("cep")),
-      matricula: normalizeUppercase(formData.get("matricula")),
-      tipo,
-    },
-  });
-  await createAuditLog("cliente:update", { clienteId: id, nome });
-  revalidatePath("/cadastros");
   redirect("/cadastros?tab=clientes");
 }
 
@@ -207,13 +216,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   }) : null;
 
   const buildUrl = (params: Partial<Search>) => {
-    const newParams = { ...sp, ...params };
+    const newParams = { ...sp, ...params, error: undefined };
     const search = new URLSearchParams();
     Object.entries(newParams).forEach(([k, v]) => {
       if (v) search.set(k, v);
     });
     return `/cadastros?${search.toString()}`;
   };
+
+  const errorMsg = sp.error === "nome_duplicado"
+    ? "Já existe um cliente com esse nome. Use um nome diferente."
+    : sp.error === "salvar_falhou"
+    ? "Erro ao salvar. Tente novamente."
+    : null;
 
   const clientes = await prisma.cliente.findMany({
     where: sp.q_clientes ? {
@@ -280,6 +295,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle className="text-blue-900">Novo Cliente</CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {errorMsg && !sp.editCliente && (
+                      <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {errorMsg}
+                      </div>
+                    )}
                     <form action={addCliente} className="grid gap-4 [&_input]:uppercase">
                       <div className="grid gap-3 md:grid-cols-3">
                         <div className="space-y-1">
@@ -393,6 +413,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <CardTitle className="text-blue-900">Editando cliente #{editClienteData.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
+                      {errorMsg && sp.editCliente && (
+                        <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                          {errorMsg}
+                        </div>
+                      )}
                       <form action={updateCliente} className="grid gap-4 [&_input]:uppercase">
                         <input type="hidden" name="id" value={editClienteData.id} />
                         <div className="grid gap-3 md:grid-cols-3">
