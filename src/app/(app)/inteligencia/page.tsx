@@ -188,13 +188,14 @@ async function getContextHistory(sessaoId: string) {
   // We store only assistant messages with promptOriginal, so reconstruct pairs
   const rows = await prisma.aiMensagem.findMany({
     where: { sessaoId, role: "assistant" },
-    orderBy: { criadoEm: "asc" },
+    orderBy: { criadoEm: "desc" }, // newest first, then reverse for chronological order
     take: 5, // last 5 pairs = 10 messages context
   });
+  rows.reverse(); // put back in chronological order for the AI
   // Reconstruct as conversation pairs
   const history: { role: "user" | "assistant"; content: string }[] = [];
   for (const row of rows) {
-    if (row.promptOriginal) {
+    if (row.promptOriginal && row.promptOriginal !== "Confirmação de ações") {
       history.push({ role: "user", content: row.promptOriginal });
     }
     history.push({ role: "assistant", content: row.content });
