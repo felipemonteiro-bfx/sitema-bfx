@@ -1302,6 +1302,11 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       case "atualizar_produto": {
         requireAdmin(ctx);
         const { id, ...data } = parsedParams;
+        const hasUpdate = Object.values(data).some((v) => v !== undefined);
+        if (!hasUpdate) {
+          result = { error: "Nenhum campo para atualizar foi informado." };
+          break;
+        }
         const updatedProduto = await prisma.produto.update({
           where: { id },
           data: {
@@ -1312,7 +1317,14 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             ...(data.qtdEstoque !== undefined && { qtdEstoque: data.qtdEstoque }),
           },
         });
-        result = { ok: true, produto: updatedProduto };
+        result = {
+          ok: true,
+          produto: updatedProduto.nome,
+          id: updatedProduto.id,
+          qtdEstoque: updatedProduto.qtdEstoque,
+          valorVenda: updatedProduto.valorVenda,
+          custoPadrao: updatedProduto.custoPadrao,
+        };
         break;
       }
       default:
