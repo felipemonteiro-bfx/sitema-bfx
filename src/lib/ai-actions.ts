@@ -205,6 +205,19 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
     vendedor: optionalString(),
     mesAno: optionalString(),
   }),
+  registrar_entrada_estoque: z.object({
+    produtoNome: optionalString(),
+    produtoId: optionalNumber(),
+    quantidade: requiredNumber(),
+  }),
+  atualizar_produto: z.object({
+    id: requiredNumber(),
+    custoPadrao: optionalNumber(),
+    valorVenda: optionalNumber(),
+    marca: optionalString(),
+    categoria: optionalString(),
+    qtdEstoque: optionalNumber(),
+  }),
 };
 
 export const aiActions: AiActionDef[] = [
@@ -653,6 +666,41 @@ export const aiActions: AiActionDef[] = [
       properties: {
         clienteNome: { type: "string", description: "Nome ou parte do nome do cliente" },
         clienteId: { type: "number", description: "ID do cliente" },
+      },
+    },
+  },
+  {
+    name: "registrar_entrada_estoque",
+    description:
+      "Registra entrada de produtos no estoque (adiciona quantidade). Use para 'entrada de produto', 'chegou mercadoria', 'adicionar estoque'. Requer produtoNome ou produtoId e quantidade.",
+    readOnly: false,
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      required: ["quantidade"],
+      properties: {
+        produtoNome: { type: "string", description: "Nome ou parte do nome do produto" },
+        produtoId: { type: "number", description: "ID do produto" },
+        quantidade: { type: "number", description: "Quantidade a adicionar ao estoque" },
+      },
+    },
+  },
+  {
+    name: "atualizar_produto",
+    description:
+      "Atualiza dados de um produto existente (custo, preço de venda, marca, categoria, estoque).",
+    readOnly: false,
+    roles: ["admin"],
+    parameters: {
+      type: "object",
+      required: ["id"],
+      properties: {
+        id: { type: "number", description: "ID do produto" },
+        custoPadrao: { type: "number" },
+        valorVenda: { type: "number" },
+        marca: { type: "string" },
+        categoria: { type: "string" },
+        qtdEstoque: { type: "number", description: "Quantidade absoluta em estoque" },
       },
     },
   },
@@ -1228,6 +1276,43 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             };
           }).sort((a, b) => b.totalVendido - a.totalVendido),
         };
+        break;
+      }
+      case "registrar_entrada_estoque": {
+        requireAdmin(ctx);
+        if (!parsedParams?.produtoNome && !parsedParams?.produtoId) {
+          result = { error: "Informe o nome ou ID do produto." };
+          break;
+        }
+        const where = parsedParams.produtoId
+          ? { id: parsedParams.produtoId }
+          : { nome: { contains: parsedParams.produtoNome!, mode: "insensitive" as const } };
+        const produto = await prisma.produto.findFirst({ where });
+        if (!produto) {
+          result = { error: `Produto não encontrado: ${parsedParams.produtoNome ?? parsedParams.produtoId}` };
+          break;
+        }
+        const updated = await prisma.produto.update({
+          where: { id: produto.id },
+          data: { qtdEstoque: { increment: parsedParams.quantidade } },
+        });
+        result = { ok: true, produto: updated.nome, qtdEstoqueAnterior: produto.qtdEstoque ?? 0, qtdEstoqueNova: updated.qtdEstoque };
+        break;
+      }
+      case "atualizar_produto": {
+        requireAdmin(ctx);
+        const { id, ...data } = parsedParams;
+        const updatedProduto = await prisma.produto.update({
+          where: { id },
+          data: {
+            ...(data.custoPadrao !== undefined && { custoPadrao: data.custoPadrao }),
+            ...(data.valorVenda !== undefined && { valorVenda: data.valorVenda }),
+            ...(data.marca !== undefined && { marca: data.marca }),
+            ...(data.categoria !== undefined && { categoria: data.categoria }),
+            ...(data.qtdEstoque !== undefined && { qtdEstoque: data.qtdEstoque }),
+          },
+        });
+        result = { ok: true, produto: updatedProduto };
         break;
       }
       default:
