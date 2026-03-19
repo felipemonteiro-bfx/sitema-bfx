@@ -38,8 +38,10 @@ model Produto {
   imagem     String?
   fornecedorId Int?   @map("fornecedor_id")
   qtdEstoque Int?     @default(0) @map("qtd_estoque")
+  estoqueMinimo Int?  @default(5) @map("estoque_minimo")
   valorVenda Float?   @default(0) @map("valor_venda")
   fornecedor Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  movimentacoes MovimentoEstoque[]
 
   @@map("produtos")
 }
@@ -218,4 +220,28 @@ model Aviso {
   ativo       Int?     @default(1)
 
   @@map("avisos")
+}
+
+model MovimentoEstoque {
+  id            Int      @id @default(autoincrement())
+  produtoId     Int      @map("produto_id")
+  tipo          String   // ENTRADA | SAIDA
+  quantidade    Int
+  custoUnitario Float?   @map("custo_unitario")
+  motivoTipo    String   @map("motivo_tipo") // COMPRA_COM_NOTA | COMPRA_SEM_NOTA | VENDA | AJUSTE | DEVOLUCAO | PERDA
+  observacao    String?
+  notaFiscal    String?  @map("nota_fiscal")
+  chaveNfe      String?  @map("chave_nfe")
+  fornecedorId  Int?     @map("fornecedor_id")
+  vendaId       Int?     @map("venda_id")
+  usuario       String?
+  criadoEm      DateTime @default(now()) @map("criado_em")
+
+  produto       Produto  @relation(fields: [produtoId], references: [id])
+
+  @@map("movimentos_estoque")
+  @@index([produtoId])
+  @@index([tipo])
+  @@index([criadoEm])
+  @@index([motivoTipo])
 }

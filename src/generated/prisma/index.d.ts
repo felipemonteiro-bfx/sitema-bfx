@@ -29,6 +29,11 @@ export type Produto = $Result.DefaultSelection<Prisma.$ProdutoPayload>
  */
 export type Venda = $Result.DefaultSelection<Prisma.$VendaPayload>
 /**
+ * Model Documento
+ * 
+ */
+export type Documento = $Result.DefaultSelection<Prisma.$DocumentoPayload>
+/**
  * Model ItemVenda
  * 
  */
@@ -78,6 +83,11 @@ export type Despesa = $Result.DefaultSelection<Prisma.$DespesaPayload>
  * 
  */
 export type Aviso = $Result.DefaultSelection<Prisma.$AvisoPayload>
+/**
+ * Model MovimentoEstoque
+ * 
+ */
+export type MovimentoEstoque = $Result.DefaultSelection<Prisma.$MovimentoEstoquePayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -228,6 +238,16 @@ export class PrismaClient<
   get venda(): Prisma.VendaDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.documento`: Exposes CRUD operations for the **Documento** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Documentos
+    * const documentos = await prisma.documento.findMany()
+    * ```
+    */
+  get documento(): Prisma.DocumentoDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.itemVenda`: Exposes CRUD operations for the **ItemVenda** model.
     * Example usage:
     * ```ts
@@ -326,6 +346,16 @@ export class PrismaClient<
     * ```
     */
   get aviso(): Prisma.AvisoDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.movimentoEstoque`: Exposes CRUD operations for the **MovimentoEstoque** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MovimentoEstoques
+    * const movimentoEstoques = await prisma.movimentoEstoque.findMany()
+    * ```
+    */
+  get movimentoEstoque(): Prisma.MovimentoEstoqueDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -770,6 +800,7 @@ export namespace Prisma {
     Cliente: 'Cliente',
     Produto: 'Produto',
     Venda: 'Venda',
+    Documento: 'Documento',
     ItemVenda: 'ItemVenda',
     ParcelaVencimento: 'ParcelaVencimento',
     Config: 'Config',
@@ -779,7 +810,8 @@ export namespace Prisma {
     Pagamento: 'Pagamento',
     AuditLog: 'AuditLog',
     Despesa: 'Despesa',
-    Aviso: 'Aviso'
+    Aviso: 'Aviso',
+    MovimentoEstoque: 'MovimentoEstoque'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -798,7 +830,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "cliente" | "produto" | "venda" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso"
+      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "movimentoEstoque"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1021,6 +1053,80 @@ export namespace Prisma {
           count: {
             args: Prisma.VendaCountArgs<ExtArgs>
             result: $Utils.Optional<VendaCountAggregateOutputType> | number
+          }
+        }
+      }
+      Documento: {
+        payload: Prisma.$DocumentoPayload<ExtArgs>
+        fields: Prisma.DocumentoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DocumentoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DocumentoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>
+          }
+          findFirst: {
+            args: Prisma.DocumentoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DocumentoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>
+          }
+          findMany: {
+            args: Prisma.DocumentoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>[]
+          }
+          create: {
+            args: Prisma.DocumentoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>
+          }
+          createMany: {
+            args: Prisma.DocumentoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DocumentoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>[]
+          }
+          delete: {
+            args: Prisma.DocumentoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>
+          }
+          update: {
+            args: Prisma.DocumentoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>
+          }
+          deleteMany: {
+            args: Prisma.DocumentoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DocumentoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.DocumentoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>[]
+          }
+          upsert: {
+            args: Prisma.DocumentoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DocumentoPayload>
+          }
+          aggregate: {
+            args: Prisma.DocumentoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDocumento>
+          }
+          groupBy: {
+            args: Prisma.DocumentoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DocumentoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DocumentoCountArgs<ExtArgs>
+            result: $Utils.Optional<DocumentoCountAggregateOutputType> | number
           }
         }
       }
@@ -1764,6 +1870,80 @@ export namespace Prisma {
           }
         }
       }
+      MovimentoEstoque: {
+        payload: Prisma.$MovimentoEstoquePayload<ExtArgs>
+        fields: Prisma.MovimentoEstoqueFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MovimentoEstoqueFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MovimentoEstoqueFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>
+          }
+          findFirst: {
+            args: Prisma.MovimentoEstoqueFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MovimentoEstoqueFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>
+          }
+          findMany: {
+            args: Prisma.MovimentoEstoqueFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>[]
+          }
+          create: {
+            args: Prisma.MovimentoEstoqueCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>
+          }
+          createMany: {
+            args: Prisma.MovimentoEstoqueCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MovimentoEstoqueCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>[]
+          }
+          delete: {
+            args: Prisma.MovimentoEstoqueDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>
+          }
+          update: {
+            args: Prisma.MovimentoEstoqueUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>
+          }
+          deleteMany: {
+            args: Prisma.MovimentoEstoqueDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MovimentoEstoqueUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MovimentoEstoqueUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>[]
+          }
+          upsert: {
+            args: Prisma.MovimentoEstoqueUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MovimentoEstoquePayload>
+          }
+          aggregate: {
+            args: Prisma.MovimentoEstoqueAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMovimentoEstoque>
+          }
+          groupBy: {
+            args: Prisma.MovimentoEstoqueGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MovimentoEstoqueGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MovimentoEstoqueCountArgs<ExtArgs>
+            result: $Utils.Optional<MovimentoEstoqueCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1863,6 +2043,7 @@ export namespace Prisma {
     cliente?: ClienteOmit
     produto?: ProdutoOmit
     venda?: VendaOmit
+    documento?: DocumentoOmit
     itemVenda?: ItemVendaOmit
     parcelaVencimento?: ParcelaVencimentoOmit
     config?: ConfigOmit
@@ -1873,6 +2054,7 @@ export namespace Prisma {
     auditLog?: AuditLogOmit
     despesa?: DespesaOmit
     aviso?: AvisoOmit
+    movimentoEstoque?: MovimentoEstoqueOmit
   }
 
   /* Types for Logging */
@@ -1980,17 +2162,50 @@ export namespace Prisma {
 
 
   /**
+   * Count Type ProdutoCountOutputType
+   */
+
+  export type ProdutoCountOutputType = {
+    movimentacoes: number
+  }
+
+  export type ProdutoCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    movimentacoes?: boolean | ProdutoCountOutputTypeCountMovimentacoesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ProdutoCountOutputType without action
+   */
+  export type ProdutoCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProdutoCountOutputType
+     */
+    select?: ProdutoCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ProdutoCountOutputType without action
+   */
+  export type ProdutoCountOutputTypeCountMovimentacoesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MovimentoEstoqueWhereInput
+  }
+
+
+  /**
    * Count Type VendaCountOutputType
    */
 
   export type VendaCountOutputType = {
     itens: number
     parcelasVencimento: number
+    documentos: number
   }
 
   export type VendaCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     itens?: boolean | VendaCountOutputTypeCountItensArgs
     parcelasVencimento?: boolean | VendaCountOutputTypeCountParcelasVencimentoArgs
+    documentos?: boolean | VendaCountOutputTypeCountDocumentosArgs
   }
 
   // Custom InputTypes
@@ -2016,6 +2231,13 @@ export namespace Prisma {
    */
   export type VendaCountOutputTypeCountParcelasVencimentoArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ParcelaVencimentoWhereInput
+  }
+
+  /**
+   * VendaCountOutputType without action
+   */
+  export type VendaCountOutputTypeCountDocumentosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentoWhereInput
   }
 
 
@@ -3296,6 +3518,7 @@ export namespace Prisma {
     custoPadrao: number | null
     fornecedorId: number | null
     qtdEstoque: number | null
+    estoqueMinimo: number | null
     valorVenda: number | null
   }
 
@@ -3304,6 +3527,7 @@ export namespace Prisma {
     custoPadrao: number | null
     fornecedorId: number | null
     qtdEstoque: number | null
+    estoqueMinimo: number | null
     valorVenda: number | null
   }
 
@@ -3317,6 +3541,7 @@ export namespace Prisma {
     imagem: string | null
     fornecedorId: number | null
     qtdEstoque: number | null
+    estoqueMinimo: number | null
     valorVenda: number | null
   }
 
@@ -3330,6 +3555,7 @@ export namespace Prisma {
     imagem: string | null
     fornecedorId: number | null
     qtdEstoque: number | null
+    estoqueMinimo: number | null
     valorVenda: number | null
   }
 
@@ -3343,6 +3569,7 @@ export namespace Prisma {
     imagem: number
     fornecedorId: number
     qtdEstoque: number
+    estoqueMinimo: number
     valorVenda: number
     _all: number
   }
@@ -3353,6 +3580,7 @@ export namespace Prisma {
     custoPadrao?: true
     fornecedorId?: true
     qtdEstoque?: true
+    estoqueMinimo?: true
     valorVenda?: true
   }
 
@@ -3361,6 +3589,7 @@ export namespace Prisma {
     custoPadrao?: true
     fornecedorId?: true
     qtdEstoque?: true
+    estoqueMinimo?: true
     valorVenda?: true
   }
 
@@ -3374,6 +3603,7 @@ export namespace Prisma {
     imagem?: true
     fornecedorId?: true
     qtdEstoque?: true
+    estoqueMinimo?: true
     valorVenda?: true
   }
 
@@ -3387,6 +3617,7 @@ export namespace Prisma {
     imagem?: true
     fornecedorId?: true
     qtdEstoque?: true
+    estoqueMinimo?: true
     valorVenda?: true
   }
 
@@ -3400,6 +3631,7 @@ export namespace Prisma {
     imagem?: true
     fornecedorId?: true
     qtdEstoque?: true
+    estoqueMinimo?: true
     valorVenda?: true
     _all?: true
   }
@@ -3500,6 +3732,7 @@ export namespace Prisma {
     imagem: string | null
     fornecedorId: number | null
     qtdEstoque: number | null
+    estoqueMinimo: number | null
     valorVenda: number | null
     _count: ProdutoCountAggregateOutputType | null
     _avg: ProdutoAvgAggregateOutputType | null
@@ -3532,8 +3765,11 @@ export namespace Prisma {
     imagem?: boolean
     fornecedorId?: boolean
     qtdEstoque?: boolean
+    estoqueMinimo?: boolean
     valorVenda?: boolean
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
+    movimentacoes?: boolean | Produto$movimentacoesArgs<ExtArgs>
+    _count?: boolean | ProdutoCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["produto"]>
 
   export type ProdutoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3546,6 +3782,7 @@ export namespace Prisma {
     imagem?: boolean
     fornecedorId?: boolean
     qtdEstoque?: boolean
+    estoqueMinimo?: boolean
     valorVenda?: boolean
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
   }, ExtArgs["result"]["produto"]>
@@ -3560,6 +3797,7 @@ export namespace Prisma {
     imagem?: boolean
     fornecedorId?: boolean
     qtdEstoque?: boolean
+    estoqueMinimo?: boolean
     valorVenda?: boolean
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
   }, ExtArgs["result"]["produto"]>
@@ -3574,12 +3812,15 @@ export namespace Prisma {
     imagem?: boolean
     fornecedorId?: boolean
     qtdEstoque?: boolean
+    estoqueMinimo?: boolean
     valorVenda?: boolean
   }
 
-  export type ProdutoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "custoPadrao" | "marca" | "categoria" | "ncm" | "imagem" | "fornecedorId" | "qtdEstoque" | "valorVenda", ExtArgs["result"]["produto"]>
+  export type ProdutoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "custoPadrao" | "marca" | "categoria" | "ncm" | "imagem" | "fornecedorId" | "qtdEstoque" | "estoqueMinimo" | "valorVenda", ExtArgs["result"]["produto"]>
   export type ProdutoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
+    movimentacoes?: boolean | Produto$movimentacoesArgs<ExtArgs>
+    _count?: boolean | ProdutoCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProdutoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
@@ -3592,6 +3833,7 @@ export namespace Prisma {
     name: "Produto"
     objects: {
       fornecedor: Prisma.$FornecedorPayload<ExtArgs> | null
+      movimentacoes: Prisma.$MovimentoEstoquePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -3603,6 +3845,7 @@ export namespace Prisma {
       imagem: string | null
       fornecedorId: number | null
       qtdEstoque: number | null
+      estoqueMinimo: number | null
       valorVenda: number | null
     }, ExtArgs["result"]["produto"]>
     composites: {}
@@ -3999,6 +4242,7 @@ export namespace Prisma {
   export interface Prisma__ProdutoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     fornecedor<T extends Produto$fornecedorArgs<ExtArgs> = {}>(args?: Subset<T, Produto$fornecedorArgs<ExtArgs>>): Prisma__FornecedorClient<$Result.GetResult<Prisma.$FornecedorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    movimentacoes<T extends Produto$movimentacoesArgs<ExtArgs> = {}>(args?: Subset<T, Produto$movimentacoesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4037,6 +4281,7 @@ export namespace Prisma {
     readonly imagem: FieldRef<"Produto", 'String'>
     readonly fornecedorId: FieldRef<"Produto", 'Int'>
     readonly qtdEstoque: FieldRef<"Produto", 'Int'>
+    readonly estoqueMinimo: FieldRef<"Produto", 'Int'>
     readonly valorVenda: FieldRef<"Produto", 'Float'>
   }
     
@@ -4450,6 +4695,30 @@ export namespace Prisma {
      */
     include?: FornecedorInclude<ExtArgs> | null
     where?: FornecedorWhereInput
+  }
+
+  /**
+   * Produto.movimentacoes
+   */
+  export type Produto$movimentacoesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    where?: MovimentoEstoqueWhereInput
+    orderBy?: MovimentoEstoqueOrderByWithRelationInput | MovimentoEstoqueOrderByWithRelationInput[]
+    cursor?: MovimentoEstoqueWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MovimentoEstoqueScalarFieldEnum | MovimentoEstoqueScalarFieldEnum[]
   }
 
   /**
@@ -4900,6 +5169,7 @@ export namespace Prisma {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     parcelasVencimento?: boolean | Venda$parcelasVencimentoArgs<ExtArgs>
+    documentos?: boolean | Venda$documentosArgs<ExtArgs>
     _count?: boolean | VendaCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["venda"]>
 
@@ -5000,6 +5270,7 @@ export namespace Prisma {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     parcelasVencimento?: boolean | Venda$parcelasVencimentoArgs<ExtArgs>
+    documentos?: boolean | Venda$documentosArgs<ExtArgs>
     _count?: boolean | VendaCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type VendaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5015,6 +5286,7 @@ export namespace Prisma {
       cliente: Prisma.$ClientePayload<ExtArgs> | null
       itens: Prisma.$ItemVendaPayload<ExtArgs>[]
       parcelasVencimento: Prisma.$ParcelaVencimentoPayload<ExtArgs>[]
+      documentos: Prisma.$DocumentoPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -5441,6 +5713,7 @@ export namespace Prisma {
     cliente<T extends Venda$clienteArgs<ExtArgs> = {}>(args?: Subset<T, Venda$clienteArgs<ExtArgs>>): Prisma__ClienteClient<$Result.GetResult<Prisma.$ClientePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     itens<T extends Venda$itensArgs<ExtArgs> = {}>(args?: Subset<T, Venda$itensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ItemVendaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     parcelasVencimento<T extends Venda$parcelasVencimentoArgs<ExtArgs> = {}>(args?: Subset<T, Venda$parcelasVencimentoArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ParcelaVencimentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    documentos<T extends Venda$documentosArgs<ExtArgs> = {}>(args?: Subset<T, Venda$documentosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5960,6 +6233,30 @@ export namespace Prisma {
   }
 
   /**
+   * Venda.documentos
+   */
+  export type Venda$documentosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    where?: DocumentoWhereInput
+    orderBy?: DocumentoOrderByWithRelationInput | DocumentoOrderByWithRelationInput[]
+    cursor?: DocumentoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: DocumentoScalarFieldEnum | DocumentoScalarFieldEnum[]
+  }
+
+  /**
    * Venda without action
    */
   export type VendaDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5975,6 +6272,1151 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: VendaInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Documento
+   */
+
+  export type AggregateDocumento = {
+    _count: DocumentoCountAggregateOutputType | null
+    _avg: DocumentoAvgAggregateOutputType | null
+    _sum: DocumentoSumAggregateOutputType | null
+    _min: DocumentoMinAggregateOutputType | null
+    _max: DocumentoMaxAggregateOutputType | null
+  }
+
+  export type DocumentoAvgAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+    tamanhoBytes: number | null
+  }
+
+  export type DocumentoSumAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+    tamanhoBytes: number | null
+  }
+
+  export type DocumentoMinAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+    tipo: string | null
+    mimeType: string | null
+    conteudo: Bytes | null
+    tamanhoBytes: number | null
+    criadoEm: Date | null
+  }
+
+  export type DocumentoMaxAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+    tipo: string | null
+    mimeType: string | null
+    conteudo: Bytes | null
+    tamanhoBytes: number | null
+    criadoEm: Date | null
+  }
+
+  export type DocumentoCountAggregateOutputType = {
+    id: number
+    vendaId: number
+    tipo: number
+    mimeType: number
+    conteudo: number
+    tamanhoBytes: number
+    criadoEm: number
+    _all: number
+  }
+
+
+  export type DocumentoAvgAggregateInputType = {
+    id?: true
+    vendaId?: true
+    tamanhoBytes?: true
+  }
+
+  export type DocumentoSumAggregateInputType = {
+    id?: true
+    vendaId?: true
+    tamanhoBytes?: true
+  }
+
+  export type DocumentoMinAggregateInputType = {
+    id?: true
+    vendaId?: true
+    tipo?: true
+    mimeType?: true
+    conteudo?: true
+    tamanhoBytes?: true
+    criadoEm?: true
+  }
+
+  export type DocumentoMaxAggregateInputType = {
+    id?: true
+    vendaId?: true
+    tipo?: true
+    mimeType?: true
+    conteudo?: true
+    tamanhoBytes?: true
+    criadoEm?: true
+  }
+
+  export type DocumentoCountAggregateInputType = {
+    id?: true
+    vendaId?: true
+    tipo?: true
+    mimeType?: true
+    conteudo?: true
+    tamanhoBytes?: true
+    criadoEm?: true
+    _all?: true
+  }
+
+  export type DocumentoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Documento to aggregate.
+     */
+    where?: DocumentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documentos to fetch.
+     */
+    orderBy?: DocumentoOrderByWithRelationInput | DocumentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DocumentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documentos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Documentos
+    **/
+    _count?: true | DocumentoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DocumentoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DocumentoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DocumentoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DocumentoMaxAggregateInputType
+  }
+
+  export type GetDocumentoAggregateType<T extends DocumentoAggregateArgs> = {
+        [P in keyof T & keyof AggregateDocumento]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDocumento[P]>
+      : GetScalarType<T[P], AggregateDocumento[P]>
+  }
+
+
+
+
+  export type DocumentoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DocumentoWhereInput
+    orderBy?: DocumentoOrderByWithAggregationInput | DocumentoOrderByWithAggregationInput[]
+    by: DocumentoScalarFieldEnum[] | DocumentoScalarFieldEnum
+    having?: DocumentoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DocumentoCountAggregateInputType | true
+    _avg?: DocumentoAvgAggregateInputType
+    _sum?: DocumentoSumAggregateInputType
+    _min?: DocumentoMinAggregateInputType
+    _max?: DocumentoMaxAggregateInputType
+  }
+
+  export type DocumentoGroupByOutputType = {
+    id: number
+    vendaId: number | null
+    tipo: string
+    mimeType: string
+    conteudo: Bytes
+    tamanhoBytes: number
+    criadoEm: Date
+    _count: DocumentoCountAggregateOutputType | null
+    _avg: DocumentoAvgAggregateOutputType | null
+    _sum: DocumentoSumAggregateOutputType | null
+    _min: DocumentoMinAggregateOutputType | null
+    _max: DocumentoMaxAggregateOutputType | null
+  }
+
+  type GetDocumentoGroupByPayload<T extends DocumentoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DocumentoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DocumentoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DocumentoGroupByOutputType[P]>
+            : GetScalarType<T[P], DocumentoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DocumentoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    tipo?: boolean
+    mimeType?: boolean
+    conteudo?: boolean
+    tamanhoBytes?: boolean
+    criadoEm?: boolean
+    venda?: boolean | Documento$vendaArgs<ExtArgs>
+  }, ExtArgs["result"]["documento"]>
+
+  export type DocumentoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    tipo?: boolean
+    mimeType?: boolean
+    conteudo?: boolean
+    tamanhoBytes?: boolean
+    criadoEm?: boolean
+    venda?: boolean | Documento$vendaArgs<ExtArgs>
+  }, ExtArgs["result"]["documento"]>
+
+  export type DocumentoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    tipo?: boolean
+    mimeType?: boolean
+    conteudo?: boolean
+    tamanhoBytes?: boolean
+    criadoEm?: boolean
+    venda?: boolean | Documento$vendaArgs<ExtArgs>
+  }, ExtArgs["result"]["documento"]>
+
+  export type DocumentoSelectScalar = {
+    id?: boolean
+    vendaId?: boolean
+    tipo?: boolean
+    mimeType?: boolean
+    conteudo?: boolean
+    tamanhoBytes?: boolean
+    criadoEm?: boolean
+  }
+
+  export type DocumentoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendaId" | "tipo" | "mimeType" | "conteudo" | "tamanhoBytes" | "criadoEm", ExtArgs["result"]["documento"]>
+  export type DocumentoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | Documento$vendaArgs<ExtArgs>
+  }
+  export type DocumentoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | Documento$vendaArgs<ExtArgs>
+  }
+  export type DocumentoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | Documento$vendaArgs<ExtArgs>
+  }
+
+  export type $DocumentoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Documento"
+    objects: {
+      venda: Prisma.$VendaPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      vendaId: number | null
+      tipo: string
+      mimeType: string
+      conteudo: Prisma.Bytes
+      tamanhoBytes: number
+      criadoEm: Date
+    }, ExtArgs["result"]["documento"]>
+    composites: {}
+  }
+
+  type DocumentoGetPayload<S extends boolean | null | undefined | DocumentoDefaultArgs> = $Result.GetResult<Prisma.$DocumentoPayload, S>
+
+  type DocumentoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DocumentoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DocumentoCountAggregateInputType | true
+    }
+
+  export interface DocumentoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Documento'], meta: { name: 'Documento' } }
+    /**
+     * Find zero or one Documento that matches the filter.
+     * @param {DocumentoFindUniqueArgs} args - Arguments to find a Documento
+     * @example
+     * // Get one Documento
+     * const documento = await prisma.documento.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DocumentoFindUniqueArgs>(args: SelectSubset<T, DocumentoFindUniqueArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Documento that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DocumentoFindUniqueOrThrowArgs} args - Arguments to find a Documento
+     * @example
+     * // Get one Documento
+     * const documento = await prisma.documento.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DocumentoFindUniqueOrThrowArgs>(args: SelectSubset<T, DocumentoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Documento that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentoFindFirstArgs} args - Arguments to find a Documento
+     * @example
+     * // Get one Documento
+     * const documento = await prisma.documento.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DocumentoFindFirstArgs>(args?: SelectSubset<T, DocumentoFindFirstArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Documento that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentoFindFirstOrThrowArgs} args - Arguments to find a Documento
+     * @example
+     * // Get one Documento
+     * const documento = await prisma.documento.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DocumentoFindFirstOrThrowArgs>(args?: SelectSubset<T, DocumentoFindFirstOrThrowArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Documentos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Documentos
+     * const documentos = await prisma.documento.findMany()
+     * 
+     * // Get first 10 Documentos
+     * const documentos = await prisma.documento.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const documentoWithIdOnly = await prisma.documento.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DocumentoFindManyArgs>(args?: SelectSubset<T, DocumentoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Documento.
+     * @param {DocumentoCreateArgs} args - Arguments to create a Documento.
+     * @example
+     * // Create one Documento
+     * const Documento = await prisma.documento.create({
+     *   data: {
+     *     // ... data to create a Documento
+     *   }
+     * })
+     * 
+     */
+    create<T extends DocumentoCreateArgs>(args: SelectSubset<T, DocumentoCreateArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Documentos.
+     * @param {DocumentoCreateManyArgs} args - Arguments to create many Documentos.
+     * @example
+     * // Create many Documentos
+     * const documento = await prisma.documento.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DocumentoCreateManyArgs>(args?: SelectSubset<T, DocumentoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Documentos and returns the data saved in the database.
+     * @param {DocumentoCreateManyAndReturnArgs} args - Arguments to create many Documentos.
+     * @example
+     * // Create many Documentos
+     * const documento = await prisma.documento.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Documentos and only return the `id`
+     * const documentoWithIdOnly = await prisma.documento.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DocumentoCreateManyAndReturnArgs>(args?: SelectSubset<T, DocumentoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Documento.
+     * @param {DocumentoDeleteArgs} args - Arguments to delete one Documento.
+     * @example
+     * // Delete one Documento
+     * const Documento = await prisma.documento.delete({
+     *   where: {
+     *     // ... filter to delete one Documento
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DocumentoDeleteArgs>(args: SelectSubset<T, DocumentoDeleteArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Documento.
+     * @param {DocumentoUpdateArgs} args - Arguments to update one Documento.
+     * @example
+     * // Update one Documento
+     * const documento = await prisma.documento.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DocumentoUpdateArgs>(args: SelectSubset<T, DocumentoUpdateArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Documentos.
+     * @param {DocumentoDeleteManyArgs} args - Arguments to filter Documentos to delete.
+     * @example
+     * // Delete a few Documentos
+     * const { count } = await prisma.documento.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DocumentoDeleteManyArgs>(args?: SelectSubset<T, DocumentoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Documentos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Documentos
+     * const documento = await prisma.documento.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DocumentoUpdateManyArgs>(args: SelectSubset<T, DocumentoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Documentos and returns the data updated in the database.
+     * @param {DocumentoUpdateManyAndReturnArgs} args - Arguments to update many Documentos.
+     * @example
+     * // Update many Documentos
+     * const documento = await prisma.documento.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Documentos and only return the `id`
+     * const documentoWithIdOnly = await prisma.documento.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends DocumentoUpdateManyAndReturnArgs>(args: SelectSubset<T, DocumentoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Documento.
+     * @param {DocumentoUpsertArgs} args - Arguments to update or create a Documento.
+     * @example
+     * // Update or create a Documento
+     * const documento = await prisma.documento.upsert({
+     *   create: {
+     *     // ... data to create a Documento
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Documento we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DocumentoUpsertArgs>(args: SelectSubset<T, DocumentoUpsertArgs<ExtArgs>>): Prisma__DocumentoClient<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Documentos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentoCountArgs} args - Arguments to filter Documentos to count.
+     * @example
+     * // Count the number of Documentos
+     * const count = await prisma.documento.count({
+     *   where: {
+     *     // ... the filter for the Documentos we want to count
+     *   }
+     * })
+    **/
+    count<T extends DocumentoCountArgs>(
+      args?: Subset<T, DocumentoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DocumentoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Documento.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DocumentoAggregateArgs>(args: Subset<T, DocumentoAggregateArgs>): Prisma.PrismaPromise<GetDocumentoAggregateType<T>>
+
+    /**
+     * Group by Documento.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DocumentoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DocumentoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DocumentoGroupByArgs['orderBy'] }
+        : { orderBy?: DocumentoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DocumentoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDocumentoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Documento model
+   */
+  readonly fields: DocumentoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Documento.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DocumentoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    venda<T extends Documento$vendaArgs<ExtArgs> = {}>(args?: Subset<T, Documento$vendaArgs<ExtArgs>>): Prisma__VendaClient<$Result.GetResult<Prisma.$VendaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Documento model
+   */
+  interface DocumentoFieldRefs {
+    readonly id: FieldRef<"Documento", 'Int'>
+    readonly vendaId: FieldRef<"Documento", 'Int'>
+    readonly tipo: FieldRef<"Documento", 'String'>
+    readonly mimeType: FieldRef<"Documento", 'String'>
+    readonly conteudo: FieldRef<"Documento", 'Bytes'>
+    readonly tamanhoBytes: FieldRef<"Documento", 'Int'>
+    readonly criadoEm: FieldRef<"Documento", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Documento findUnique
+   */
+  export type DocumentoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Documento to fetch.
+     */
+    where: DocumentoWhereUniqueInput
+  }
+
+  /**
+   * Documento findUniqueOrThrow
+   */
+  export type DocumentoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Documento to fetch.
+     */
+    where: DocumentoWhereUniqueInput
+  }
+
+  /**
+   * Documento findFirst
+   */
+  export type DocumentoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Documento to fetch.
+     */
+    where?: DocumentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documentos to fetch.
+     */
+    orderBy?: DocumentoOrderByWithRelationInput | DocumentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Documentos.
+     */
+    cursor?: DocumentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documentos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Documentos.
+     */
+    distinct?: DocumentoScalarFieldEnum | DocumentoScalarFieldEnum[]
+  }
+
+  /**
+   * Documento findFirstOrThrow
+   */
+  export type DocumentoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Documento to fetch.
+     */
+    where?: DocumentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documentos to fetch.
+     */
+    orderBy?: DocumentoOrderByWithRelationInput | DocumentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Documentos.
+     */
+    cursor?: DocumentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documentos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Documentos.
+     */
+    distinct?: DocumentoScalarFieldEnum | DocumentoScalarFieldEnum[]
+  }
+
+  /**
+   * Documento findMany
+   */
+  export type DocumentoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Documentos to fetch.
+     */
+    where?: DocumentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Documentos to fetch.
+     */
+    orderBy?: DocumentoOrderByWithRelationInput | DocumentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Documentos.
+     */
+    cursor?: DocumentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Documentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Documentos.
+     */
+    skip?: number
+    distinct?: DocumentoScalarFieldEnum | DocumentoScalarFieldEnum[]
+  }
+
+  /**
+   * Documento create
+   */
+  export type DocumentoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Documento.
+     */
+    data: XOR<DocumentoCreateInput, DocumentoUncheckedCreateInput>
+  }
+
+  /**
+   * Documento createMany
+   */
+  export type DocumentoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Documentos.
+     */
+    data: DocumentoCreateManyInput | DocumentoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Documento createManyAndReturn
+   */
+  export type DocumentoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * The data used to create many Documentos.
+     */
+    data: DocumentoCreateManyInput | DocumentoCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Documento update
+   */
+  export type DocumentoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Documento.
+     */
+    data: XOR<DocumentoUpdateInput, DocumentoUncheckedUpdateInput>
+    /**
+     * Choose, which Documento to update.
+     */
+    where: DocumentoWhereUniqueInput
+  }
+
+  /**
+   * Documento updateMany
+   */
+  export type DocumentoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Documentos.
+     */
+    data: XOR<DocumentoUpdateManyMutationInput, DocumentoUncheckedUpdateManyInput>
+    /**
+     * Filter which Documentos to update
+     */
+    where?: DocumentoWhereInput
+    /**
+     * Limit how many Documentos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Documento updateManyAndReturn
+   */
+  export type DocumentoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * The data used to update Documentos.
+     */
+    data: XOR<DocumentoUpdateManyMutationInput, DocumentoUncheckedUpdateManyInput>
+    /**
+     * Filter which Documentos to update
+     */
+    where?: DocumentoWhereInput
+    /**
+     * Limit how many Documentos to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Documento upsert
+   */
+  export type DocumentoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Documento to update in case it exists.
+     */
+    where: DocumentoWhereUniqueInput
+    /**
+     * In case the Documento found by the `where` argument doesn't exist, create a new Documento with this data.
+     */
+    create: XOR<DocumentoCreateInput, DocumentoUncheckedCreateInput>
+    /**
+     * In case the Documento was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DocumentoUpdateInput, DocumentoUncheckedUpdateInput>
+  }
+
+  /**
+   * Documento delete
+   */
+  export type DocumentoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
+    /**
+     * Filter which Documento to delete.
+     */
+    where: DocumentoWhereUniqueInput
+  }
+
+  /**
+   * Documento deleteMany
+   */
+  export type DocumentoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Documentos to delete
+     */
+    where?: DocumentoWhereInput
+    /**
+     * Limit how many Documentos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Documento.venda
+   */
+  export type Documento$vendaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Venda
+     */
+    select?: VendaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Venda
+     */
+    omit?: VendaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VendaInclude<ExtArgs> | null
+    where?: VendaWhereInput
+  }
+
+  /**
+   * Documento without action
+   */
+  export type DocumentoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Documento
+     */
+    select?: DocumentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Documento
+     */
+    omit?: DocumentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DocumentoInclude<ExtArgs> | null
   }
 
 
@@ -16652,6 +18094,1222 @@ export namespace Prisma {
 
 
   /**
+   * Model MovimentoEstoque
+   */
+
+  export type AggregateMovimentoEstoque = {
+    _count: MovimentoEstoqueCountAggregateOutputType | null
+    _avg: MovimentoEstoqueAvgAggregateOutputType | null
+    _sum: MovimentoEstoqueSumAggregateOutputType | null
+    _min: MovimentoEstoqueMinAggregateOutputType | null
+    _max: MovimentoEstoqueMaxAggregateOutputType | null
+  }
+
+  export type MovimentoEstoqueAvgAggregateOutputType = {
+    id: number | null
+    produtoId: number | null
+    quantidade: number | null
+    custoUnitario: number | null
+    fornecedorId: number | null
+    vendaId: number | null
+  }
+
+  export type MovimentoEstoqueSumAggregateOutputType = {
+    id: number | null
+    produtoId: number | null
+    quantidade: number | null
+    custoUnitario: number | null
+    fornecedorId: number | null
+    vendaId: number | null
+  }
+
+  export type MovimentoEstoqueMinAggregateOutputType = {
+    id: number | null
+    produtoId: number | null
+    tipo: string | null
+    quantidade: number | null
+    custoUnitario: number | null
+    motivoTipo: string | null
+    observacao: string | null
+    notaFiscal: string | null
+    chaveNfe: string | null
+    fornecedorId: number | null
+    vendaId: number | null
+    usuario: string | null
+    criadoEm: Date | null
+  }
+
+  export type MovimentoEstoqueMaxAggregateOutputType = {
+    id: number | null
+    produtoId: number | null
+    tipo: string | null
+    quantidade: number | null
+    custoUnitario: number | null
+    motivoTipo: string | null
+    observacao: string | null
+    notaFiscal: string | null
+    chaveNfe: string | null
+    fornecedorId: number | null
+    vendaId: number | null
+    usuario: string | null
+    criadoEm: Date | null
+  }
+
+  export type MovimentoEstoqueCountAggregateOutputType = {
+    id: number
+    produtoId: number
+    tipo: number
+    quantidade: number
+    custoUnitario: number
+    motivoTipo: number
+    observacao: number
+    notaFiscal: number
+    chaveNfe: number
+    fornecedorId: number
+    vendaId: number
+    usuario: number
+    criadoEm: number
+    _all: number
+  }
+
+
+  export type MovimentoEstoqueAvgAggregateInputType = {
+    id?: true
+    produtoId?: true
+    quantidade?: true
+    custoUnitario?: true
+    fornecedorId?: true
+    vendaId?: true
+  }
+
+  export type MovimentoEstoqueSumAggregateInputType = {
+    id?: true
+    produtoId?: true
+    quantidade?: true
+    custoUnitario?: true
+    fornecedorId?: true
+    vendaId?: true
+  }
+
+  export type MovimentoEstoqueMinAggregateInputType = {
+    id?: true
+    produtoId?: true
+    tipo?: true
+    quantidade?: true
+    custoUnitario?: true
+    motivoTipo?: true
+    observacao?: true
+    notaFiscal?: true
+    chaveNfe?: true
+    fornecedorId?: true
+    vendaId?: true
+    usuario?: true
+    criadoEm?: true
+  }
+
+  export type MovimentoEstoqueMaxAggregateInputType = {
+    id?: true
+    produtoId?: true
+    tipo?: true
+    quantidade?: true
+    custoUnitario?: true
+    motivoTipo?: true
+    observacao?: true
+    notaFiscal?: true
+    chaveNfe?: true
+    fornecedorId?: true
+    vendaId?: true
+    usuario?: true
+    criadoEm?: true
+  }
+
+  export type MovimentoEstoqueCountAggregateInputType = {
+    id?: true
+    produtoId?: true
+    tipo?: true
+    quantidade?: true
+    custoUnitario?: true
+    motivoTipo?: true
+    observacao?: true
+    notaFiscal?: true
+    chaveNfe?: true
+    fornecedorId?: true
+    vendaId?: true
+    usuario?: true
+    criadoEm?: true
+    _all?: true
+  }
+
+  export type MovimentoEstoqueAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MovimentoEstoque to aggregate.
+     */
+    where?: MovimentoEstoqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MovimentoEstoques to fetch.
+     */
+    orderBy?: MovimentoEstoqueOrderByWithRelationInput | MovimentoEstoqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MovimentoEstoqueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MovimentoEstoques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MovimentoEstoques.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MovimentoEstoques
+    **/
+    _count?: true | MovimentoEstoqueCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MovimentoEstoqueAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MovimentoEstoqueSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MovimentoEstoqueMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MovimentoEstoqueMaxAggregateInputType
+  }
+
+  export type GetMovimentoEstoqueAggregateType<T extends MovimentoEstoqueAggregateArgs> = {
+        [P in keyof T & keyof AggregateMovimentoEstoque]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMovimentoEstoque[P]>
+      : GetScalarType<T[P], AggregateMovimentoEstoque[P]>
+  }
+
+
+
+
+  export type MovimentoEstoqueGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MovimentoEstoqueWhereInput
+    orderBy?: MovimentoEstoqueOrderByWithAggregationInput | MovimentoEstoqueOrderByWithAggregationInput[]
+    by: MovimentoEstoqueScalarFieldEnum[] | MovimentoEstoqueScalarFieldEnum
+    having?: MovimentoEstoqueScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MovimentoEstoqueCountAggregateInputType | true
+    _avg?: MovimentoEstoqueAvgAggregateInputType
+    _sum?: MovimentoEstoqueSumAggregateInputType
+    _min?: MovimentoEstoqueMinAggregateInputType
+    _max?: MovimentoEstoqueMaxAggregateInputType
+  }
+
+  export type MovimentoEstoqueGroupByOutputType = {
+    id: number
+    produtoId: number
+    tipo: string
+    quantidade: number
+    custoUnitario: number | null
+    motivoTipo: string
+    observacao: string | null
+    notaFiscal: string | null
+    chaveNfe: string | null
+    fornecedorId: number | null
+    vendaId: number | null
+    usuario: string | null
+    criadoEm: Date
+    _count: MovimentoEstoqueCountAggregateOutputType | null
+    _avg: MovimentoEstoqueAvgAggregateOutputType | null
+    _sum: MovimentoEstoqueSumAggregateOutputType | null
+    _min: MovimentoEstoqueMinAggregateOutputType | null
+    _max: MovimentoEstoqueMaxAggregateOutputType | null
+  }
+
+  type GetMovimentoEstoqueGroupByPayload<T extends MovimentoEstoqueGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MovimentoEstoqueGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MovimentoEstoqueGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MovimentoEstoqueGroupByOutputType[P]>
+            : GetScalarType<T[P], MovimentoEstoqueGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MovimentoEstoqueSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    produtoId?: boolean
+    tipo?: boolean
+    quantidade?: boolean
+    custoUnitario?: boolean
+    motivoTipo?: boolean
+    observacao?: boolean
+    notaFiscal?: boolean
+    chaveNfe?: boolean
+    fornecedorId?: boolean
+    vendaId?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+    produto?: boolean | ProdutoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["movimentoEstoque"]>
+
+  export type MovimentoEstoqueSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    produtoId?: boolean
+    tipo?: boolean
+    quantidade?: boolean
+    custoUnitario?: boolean
+    motivoTipo?: boolean
+    observacao?: boolean
+    notaFiscal?: boolean
+    chaveNfe?: boolean
+    fornecedorId?: boolean
+    vendaId?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+    produto?: boolean | ProdutoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["movimentoEstoque"]>
+
+  export type MovimentoEstoqueSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    produtoId?: boolean
+    tipo?: boolean
+    quantidade?: boolean
+    custoUnitario?: boolean
+    motivoTipo?: boolean
+    observacao?: boolean
+    notaFiscal?: boolean
+    chaveNfe?: boolean
+    fornecedorId?: boolean
+    vendaId?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+    produto?: boolean | ProdutoDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["movimentoEstoque"]>
+
+  export type MovimentoEstoqueSelectScalar = {
+    id?: boolean
+    produtoId?: boolean
+    tipo?: boolean
+    quantidade?: boolean
+    custoUnitario?: boolean
+    motivoTipo?: boolean
+    observacao?: boolean
+    notaFiscal?: boolean
+    chaveNfe?: boolean
+    fornecedorId?: boolean
+    vendaId?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+  }
+
+  export type MovimentoEstoqueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "produtoId" | "tipo" | "quantidade" | "custoUnitario" | "motivoTipo" | "observacao" | "notaFiscal" | "chaveNfe" | "fornecedorId" | "vendaId" | "usuario" | "criadoEm", ExtArgs["result"]["movimentoEstoque"]>
+  export type MovimentoEstoqueInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produto?: boolean | ProdutoDefaultArgs<ExtArgs>
+  }
+  export type MovimentoEstoqueIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produto?: boolean | ProdutoDefaultArgs<ExtArgs>
+  }
+  export type MovimentoEstoqueIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    produto?: boolean | ProdutoDefaultArgs<ExtArgs>
+  }
+
+  export type $MovimentoEstoquePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MovimentoEstoque"
+    objects: {
+      produto: Prisma.$ProdutoPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      produtoId: number
+      tipo: string
+      quantidade: number
+      custoUnitario: number | null
+      motivoTipo: string
+      observacao: string | null
+      notaFiscal: string | null
+      chaveNfe: string | null
+      fornecedorId: number | null
+      vendaId: number | null
+      usuario: string | null
+      criadoEm: Date
+    }, ExtArgs["result"]["movimentoEstoque"]>
+    composites: {}
+  }
+
+  type MovimentoEstoqueGetPayload<S extends boolean | null | undefined | MovimentoEstoqueDefaultArgs> = $Result.GetResult<Prisma.$MovimentoEstoquePayload, S>
+
+  type MovimentoEstoqueCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MovimentoEstoqueFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MovimentoEstoqueCountAggregateInputType | true
+    }
+
+  export interface MovimentoEstoqueDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MovimentoEstoque'], meta: { name: 'MovimentoEstoque' } }
+    /**
+     * Find zero or one MovimentoEstoque that matches the filter.
+     * @param {MovimentoEstoqueFindUniqueArgs} args - Arguments to find a MovimentoEstoque
+     * @example
+     * // Get one MovimentoEstoque
+     * const movimentoEstoque = await prisma.movimentoEstoque.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MovimentoEstoqueFindUniqueArgs>(args: SelectSubset<T, MovimentoEstoqueFindUniqueArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MovimentoEstoque that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MovimentoEstoqueFindUniqueOrThrowArgs} args - Arguments to find a MovimentoEstoque
+     * @example
+     * // Get one MovimentoEstoque
+     * const movimentoEstoque = await prisma.movimentoEstoque.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MovimentoEstoqueFindUniqueOrThrowArgs>(args: SelectSubset<T, MovimentoEstoqueFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MovimentoEstoque that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MovimentoEstoqueFindFirstArgs} args - Arguments to find a MovimentoEstoque
+     * @example
+     * // Get one MovimentoEstoque
+     * const movimentoEstoque = await prisma.movimentoEstoque.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MovimentoEstoqueFindFirstArgs>(args?: SelectSubset<T, MovimentoEstoqueFindFirstArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MovimentoEstoque that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MovimentoEstoqueFindFirstOrThrowArgs} args - Arguments to find a MovimentoEstoque
+     * @example
+     * // Get one MovimentoEstoque
+     * const movimentoEstoque = await prisma.movimentoEstoque.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MovimentoEstoqueFindFirstOrThrowArgs>(args?: SelectSubset<T, MovimentoEstoqueFindFirstOrThrowArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MovimentoEstoques that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MovimentoEstoqueFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MovimentoEstoques
+     * const movimentoEstoques = await prisma.movimentoEstoque.findMany()
+     * 
+     * // Get first 10 MovimentoEstoques
+     * const movimentoEstoques = await prisma.movimentoEstoque.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const movimentoEstoqueWithIdOnly = await prisma.movimentoEstoque.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MovimentoEstoqueFindManyArgs>(args?: SelectSubset<T, MovimentoEstoqueFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MovimentoEstoque.
+     * @param {MovimentoEstoqueCreateArgs} args - Arguments to create a MovimentoEstoque.
+     * @example
+     * // Create one MovimentoEstoque
+     * const MovimentoEstoque = await prisma.movimentoEstoque.create({
+     *   data: {
+     *     // ... data to create a MovimentoEstoque
+     *   }
+     * })
+     * 
+     */
+    create<T extends MovimentoEstoqueCreateArgs>(args: SelectSubset<T, MovimentoEstoqueCreateArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MovimentoEstoques.
+     * @param {MovimentoEstoqueCreateManyArgs} args - Arguments to create many MovimentoEstoques.
+     * @example
+     * // Create many MovimentoEstoques
+     * const movimentoEstoque = await prisma.movimentoEstoque.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MovimentoEstoqueCreateManyArgs>(args?: SelectSubset<T, MovimentoEstoqueCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MovimentoEstoques and returns the data saved in the database.
+     * @param {MovimentoEstoqueCreateManyAndReturnArgs} args - Arguments to create many MovimentoEstoques.
+     * @example
+     * // Create many MovimentoEstoques
+     * const movimentoEstoque = await prisma.movimentoEstoque.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MovimentoEstoques and only return the `id`
+     * const movimentoEstoqueWithIdOnly = await prisma.movimentoEstoque.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MovimentoEstoqueCreateManyAndReturnArgs>(args?: SelectSubset<T, MovimentoEstoqueCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MovimentoEstoque.
+     * @param {MovimentoEstoqueDeleteArgs} args - Arguments to delete one MovimentoEstoque.
+     * @example
+     * // Delete one MovimentoEstoque
+     * const MovimentoEstoque = await prisma.movimentoEstoque.delete({
+     *   where: {
+     *     // ... filter to delete one MovimentoEstoque
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MovimentoEstoqueDeleteArgs>(args: SelectSubset<T, MovimentoEstoqueDeleteArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MovimentoEstoque.
+     * @param {MovimentoEstoqueUpdateArgs} args - Arguments to update one MovimentoEstoque.
+     * @example
+     * // Update one MovimentoEstoque
+     * const movimentoEstoque = await prisma.movimentoEstoque.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MovimentoEstoqueUpdateArgs>(args: SelectSubset<T, MovimentoEstoqueUpdateArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MovimentoEstoques.
+     * @param {MovimentoEstoqueDeleteManyArgs} args - Arguments to filter MovimentoEstoques to delete.
+     * @example
+     * // Delete a few MovimentoEstoques
+     * const { count } = await prisma.movimentoEstoque.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MovimentoEstoqueDeleteManyArgs>(args?: SelectSubset<T, MovimentoEstoqueDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MovimentoEstoques.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MovimentoEstoqueUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MovimentoEstoques
+     * const movimentoEstoque = await prisma.movimentoEstoque.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MovimentoEstoqueUpdateManyArgs>(args: SelectSubset<T, MovimentoEstoqueUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MovimentoEstoques and returns the data updated in the database.
+     * @param {MovimentoEstoqueUpdateManyAndReturnArgs} args - Arguments to update many MovimentoEstoques.
+     * @example
+     * // Update many MovimentoEstoques
+     * const movimentoEstoque = await prisma.movimentoEstoque.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MovimentoEstoques and only return the `id`
+     * const movimentoEstoqueWithIdOnly = await prisma.movimentoEstoque.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MovimentoEstoqueUpdateManyAndReturnArgs>(args: SelectSubset<T, MovimentoEstoqueUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MovimentoEstoque.
+     * @param {MovimentoEstoqueUpsertArgs} args - Arguments to update or create a MovimentoEstoque.
+     * @example
+     * // Update or create a MovimentoEstoque
+     * const movimentoEstoque = await prisma.movimentoEstoque.upsert({
+     *   create: {
+     *     // ... data to create a MovimentoEstoque
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MovimentoEstoque we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MovimentoEstoqueUpsertArgs>(args: SelectSubset<T, MovimentoEstoqueUpsertArgs<ExtArgs>>): Prisma__MovimentoEstoqueClient<$Result.GetResult<Prisma.$MovimentoEstoquePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MovimentoEstoques.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MovimentoEstoqueCountArgs} args - Arguments to filter MovimentoEstoques to count.
+     * @example
+     * // Count the number of MovimentoEstoques
+     * const count = await prisma.movimentoEstoque.count({
+     *   where: {
+     *     // ... the filter for the MovimentoEstoques we want to count
+     *   }
+     * })
+    **/
+    count<T extends MovimentoEstoqueCountArgs>(
+      args?: Subset<T, MovimentoEstoqueCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MovimentoEstoqueCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MovimentoEstoque.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MovimentoEstoqueAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MovimentoEstoqueAggregateArgs>(args: Subset<T, MovimentoEstoqueAggregateArgs>): Prisma.PrismaPromise<GetMovimentoEstoqueAggregateType<T>>
+
+    /**
+     * Group by MovimentoEstoque.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MovimentoEstoqueGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MovimentoEstoqueGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MovimentoEstoqueGroupByArgs['orderBy'] }
+        : { orderBy?: MovimentoEstoqueGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MovimentoEstoqueGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMovimentoEstoqueGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MovimentoEstoque model
+   */
+  readonly fields: MovimentoEstoqueFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MovimentoEstoque.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MovimentoEstoqueClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    produto<T extends ProdutoDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProdutoDefaultArgs<ExtArgs>>): Prisma__ProdutoClient<$Result.GetResult<Prisma.$ProdutoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MovimentoEstoque model
+   */
+  interface MovimentoEstoqueFieldRefs {
+    readonly id: FieldRef<"MovimentoEstoque", 'Int'>
+    readonly produtoId: FieldRef<"MovimentoEstoque", 'Int'>
+    readonly tipo: FieldRef<"MovimentoEstoque", 'String'>
+    readonly quantidade: FieldRef<"MovimentoEstoque", 'Int'>
+    readonly custoUnitario: FieldRef<"MovimentoEstoque", 'Float'>
+    readonly motivoTipo: FieldRef<"MovimentoEstoque", 'String'>
+    readonly observacao: FieldRef<"MovimentoEstoque", 'String'>
+    readonly notaFiscal: FieldRef<"MovimentoEstoque", 'String'>
+    readonly chaveNfe: FieldRef<"MovimentoEstoque", 'String'>
+    readonly fornecedorId: FieldRef<"MovimentoEstoque", 'Int'>
+    readonly vendaId: FieldRef<"MovimentoEstoque", 'Int'>
+    readonly usuario: FieldRef<"MovimentoEstoque", 'String'>
+    readonly criadoEm: FieldRef<"MovimentoEstoque", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MovimentoEstoque findUnique
+   */
+  export type MovimentoEstoqueFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * Filter, which MovimentoEstoque to fetch.
+     */
+    where: MovimentoEstoqueWhereUniqueInput
+  }
+
+  /**
+   * MovimentoEstoque findUniqueOrThrow
+   */
+  export type MovimentoEstoqueFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * Filter, which MovimentoEstoque to fetch.
+     */
+    where: MovimentoEstoqueWhereUniqueInput
+  }
+
+  /**
+   * MovimentoEstoque findFirst
+   */
+  export type MovimentoEstoqueFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * Filter, which MovimentoEstoque to fetch.
+     */
+    where?: MovimentoEstoqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MovimentoEstoques to fetch.
+     */
+    orderBy?: MovimentoEstoqueOrderByWithRelationInput | MovimentoEstoqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MovimentoEstoques.
+     */
+    cursor?: MovimentoEstoqueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MovimentoEstoques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MovimentoEstoques.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MovimentoEstoques.
+     */
+    distinct?: MovimentoEstoqueScalarFieldEnum | MovimentoEstoqueScalarFieldEnum[]
+  }
+
+  /**
+   * MovimentoEstoque findFirstOrThrow
+   */
+  export type MovimentoEstoqueFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * Filter, which MovimentoEstoque to fetch.
+     */
+    where?: MovimentoEstoqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MovimentoEstoques to fetch.
+     */
+    orderBy?: MovimentoEstoqueOrderByWithRelationInput | MovimentoEstoqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MovimentoEstoques.
+     */
+    cursor?: MovimentoEstoqueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MovimentoEstoques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MovimentoEstoques.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MovimentoEstoques.
+     */
+    distinct?: MovimentoEstoqueScalarFieldEnum | MovimentoEstoqueScalarFieldEnum[]
+  }
+
+  /**
+   * MovimentoEstoque findMany
+   */
+  export type MovimentoEstoqueFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * Filter, which MovimentoEstoques to fetch.
+     */
+    where?: MovimentoEstoqueWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MovimentoEstoques to fetch.
+     */
+    orderBy?: MovimentoEstoqueOrderByWithRelationInput | MovimentoEstoqueOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MovimentoEstoques.
+     */
+    cursor?: MovimentoEstoqueWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MovimentoEstoques from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MovimentoEstoques.
+     */
+    skip?: number
+    distinct?: MovimentoEstoqueScalarFieldEnum | MovimentoEstoqueScalarFieldEnum[]
+  }
+
+  /**
+   * MovimentoEstoque create
+   */
+  export type MovimentoEstoqueCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MovimentoEstoque.
+     */
+    data: XOR<MovimentoEstoqueCreateInput, MovimentoEstoqueUncheckedCreateInput>
+  }
+
+  /**
+   * MovimentoEstoque createMany
+   */
+  export type MovimentoEstoqueCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MovimentoEstoques.
+     */
+    data: MovimentoEstoqueCreateManyInput | MovimentoEstoqueCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MovimentoEstoque createManyAndReturn
+   */
+  export type MovimentoEstoqueCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * The data used to create many MovimentoEstoques.
+     */
+    data: MovimentoEstoqueCreateManyInput | MovimentoEstoqueCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MovimentoEstoque update
+   */
+  export type MovimentoEstoqueUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MovimentoEstoque.
+     */
+    data: XOR<MovimentoEstoqueUpdateInput, MovimentoEstoqueUncheckedUpdateInput>
+    /**
+     * Choose, which MovimentoEstoque to update.
+     */
+    where: MovimentoEstoqueWhereUniqueInput
+  }
+
+  /**
+   * MovimentoEstoque updateMany
+   */
+  export type MovimentoEstoqueUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MovimentoEstoques.
+     */
+    data: XOR<MovimentoEstoqueUpdateManyMutationInput, MovimentoEstoqueUncheckedUpdateManyInput>
+    /**
+     * Filter which MovimentoEstoques to update
+     */
+    where?: MovimentoEstoqueWhereInput
+    /**
+     * Limit how many MovimentoEstoques to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MovimentoEstoque updateManyAndReturn
+   */
+  export type MovimentoEstoqueUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * The data used to update MovimentoEstoques.
+     */
+    data: XOR<MovimentoEstoqueUpdateManyMutationInput, MovimentoEstoqueUncheckedUpdateManyInput>
+    /**
+     * Filter which MovimentoEstoques to update
+     */
+    where?: MovimentoEstoqueWhereInput
+    /**
+     * Limit how many MovimentoEstoques to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MovimentoEstoque upsert
+   */
+  export type MovimentoEstoqueUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MovimentoEstoque to update in case it exists.
+     */
+    where: MovimentoEstoqueWhereUniqueInput
+    /**
+     * In case the MovimentoEstoque found by the `where` argument doesn't exist, create a new MovimentoEstoque with this data.
+     */
+    create: XOR<MovimentoEstoqueCreateInput, MovimentoEstoqueUncheckedCreateInput>
+    /**
+     * In case the MovimentoEstoque was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MovimentoEstoqueUpdateInput, MovimentoEstoqueUncheckedUpdateInput>
+  }
+
+  /**
+   * MovimentoEstoque delete
+   */
+  export type MovimentoEstoqueDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+    /**
+     * Filter which MovimentoEstoque to delete.
+     */
+    where: MovimentoEstoqueWhereUniqueInput
+  }
+
+  /**
+   * MovimentoEstoque deleteMany
+   */
+  export type MovimentoEstoqueDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MovimentoEstoques to delete
+     */
+    where?: MovimentoEstoqueWhereInput
+    /**
+     * Limit how many MovimentoEstoques to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MovimentoEstoque without action
+   */
+  export type MovimentoEstoqueDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MovimentoEstoque
+     */
+    select?: MovimentoEstoqueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MovimentoEstoque
+     */
+    omit?: MovimentoEstoqueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MovimentoEstoqueInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -16695,6 +19353,7 @@ export namespace Prisma {
     imagem: 'imagem',
     fornecedorId: 'fornecedorId',
     qtdEstoque: 'qtdEstoque',
+    estoqueMinimo: 'estoqueMinimo',
     valorVenda: 'valorVenda'
   };
 
@@ -16732,6 +19391,19 @@ export namespace Prisma {
   };
 
   export type VendaScalarFieldEnum = (typeof VendaScalarFieldEnum)[keyof typeof VendaScalarFieldEnum]
+
+
+  export const DocumentoScalarFieldEnum: {
+    id: 'id',
+    vendaId: 'vendaId',
+    tipo: 'tipo',
+    mimeType: 'mimeType',
+    conteudo: 'conteudo',
+    tamanhoBytes: 'tamanhoBytes',
+    criadoEm: 'criadoEm'
+  };
+
+  export type DocumentoScalarFieldEnum = (typeof DocumentoScalarFieldEnum)[keyof typeof DocumentoScalarFieldEnum]
 
 
   export const ItemVendaScalarFieldEnum: {
@@ -16854,6 +19526,25 @@ export namespace Prisma {
   export type AvisoScalarFieldEnum = (typeof AvisoScalarFieldEnum)[keyof typeof AvisoScalarFieldEnum]
 
 
+  export const MovimentoEstoqueScalarFieldEnum: {
+    id: 'id',
+    produtoId: 'produtoId',
+    tipo: 'tipo',
+    quantidade: 'quantidade',
+    custoUnitario: 'custoUnitario',
+    motivoTipo: 'motivoTipo',
+    observacao: 'observacao',
+    notaFiscal: 'notaFiscal',
+    chaveNfe: 'chaveNfe',
+    fornecedorId: 'fornecedorId',
+    vendaId: 'vendaId',
+    usuario: 'usuario',
+    criadoEm: 'criadoEm'
+  };
+
+  export type MovimentoEstoqueScalarFieldEnum = (typeof MovimentoEstoqueScalarFieldEnum)[keyof typeof MovimentoEstoqueScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -16943,6 +19634,20 @@ export namespace Prisma {
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'Bytes'
+   */
+  export type BytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes'>
+    
+
+
+  /**
+   * Reference to a field of type 'Bytes[]'
+   */
+  export type ListBytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes[]'>
     
   /**
    * Deep Input Types
@@ -17064,8 +19769,10 @@ export namespace Prisma {
     imagem?: StringNullableFilter<"Produto"> | string | null
     fornecedorId?: IntNullableFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableFilter<"Produto"> | number | null
+    estoqueMinimo?: IntNullableFilter<"Produto"> | number | null
     valorVenda?: FloatNullableFilter<"Produto"> | number | null
     fornecedor?: XOR<FornecedorNullableScalarRelationFilter, FornecedorWhereInput> | null
+    movimentacoes?: MovimentoEstoqueListRelationFilter
   }
 
   export type ProdutoOrderByWithRelationInput = {
@@ -17078,8 +19785,10 @@ export namespace Prisma {
     imagem?: SortOrderInput | SortOrder
     fornecedorId?: SortOrderInput | SortOrder
     qtdEstoque?: SortOrderInput | SortOrder
+    estoqueMinimo?: SortOrderInput | SortOrder
     valorVenda?: SortOrderInput | SortOrder
     fornecedor?: FornecedorOrderByWithRelationInput
+    movimentacoes?: MovimentoEstoqueOrderByRelationAggregateInput
   }
 
   export type ProdutoWhereUniqueInput = Prisma.AtLeast<{
@@ -17095,8 +19804,10 @@ export namespace Prisma {
     imagem?: StringNullableFilter<"Produto"> | string | null
     fornecedorId?: IntNullableFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableFilter<"Produto"> | number | null
+    estoqueMinimo?: IntNullableFilter<"Produto"> | number | null
     valorVenda?: FloatNullableFilter<"Produto"> | number | null
     fornecedor?: XOR<FornecedorNullableScalarRelationFilter, FornecedorWhereInput> | null
+    movimentacoes?: MovimentoEstoqueListRelationFilter
   }, "id" | "nome">
 
   export type ProdutoOrderByWithAggregationInput = {
@@ -17109,6 +19820,7 @@ export namespace Prisma {
     imagem?: SortOrderInput | SortOrder
     fornecedorId?: SortOrderInput | SortOrder
     qtdEstoque?: SortOrderInput | SortOrder
+    estoqueMinimo?: SortOrderInput | SortOrder
     valorVenda?: SortOrderInput | SortOrder
     _count?: ProdutoCountOrderByAggregateInput
     _avg?: ProdutoAvgOrderByAggregateInput
@@ -17130,6 +19842,7 @@ export namespace Prisma {
     imagem?: StringNullableWithAggregatesFilter<"Produto"> | string | null
     fornecedorId?: IntNullableWithAggregatesFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableWithAggregatesFilter<"Produto"> | number | null
+    estoqueMinimo?: IntNullableWithAggregatesFilter<"Produto"> | number | null
     valorVenda?: FloatNullableWithAggregatesFilter<"Produto"> | number | null
   }
 
@@ -17167,6 +19880,7 @@ export namespace Prisma {
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
     itens?: ItemVendaListRelationFilter
     parcelasVencimento?: ParcelaVencimentoListRelationFilter
+    documentos?: DocumentoListRelationFilter
   }
 
   export type VendaOrderByWithRelationInput = {
@@ -17200,6 +19914,7 @@ export namespace Prisma {
     cliente?: ClienteOrderByWithRelationInput
     itens?: ItemVendaOrderByRelationAggregateInput
     parcelasVencimento?: ParcelaVencimentoOrderByRelationAggregateInput
+    documentos?: DocumentoOrderByRelationAggregateInput
   }
 
   export type VendaWhereUniqueInput = Prisma.AtLeast<{
@@ -17236,6 +19951,7 @@ export namespace Prisma {
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
     itens?: ItemVendaListRelationFilter
     parcelasVencimento?: ParcelaVencimentoListRelationFilter
+    documentos?: DocumentoListRelationFilter
   }, "id" | "uuid" | "assinaturaToken">
 
   export type VendaOrderByWithAggregationInput = {
@@ -17304,6 +20020,73 @@ export namespace Prisma {
     boleto?: BoolWithAggregatesFilter<"Venda"> | boolean
     asaasPaymentId?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     boletoUrl?: StringNullableWithAggregatesFilter<"Venda"> | string | null
+  }
+
+  export type DocumentoWhereInput = {
+    AND?: DocumentoWhereInput | DocumentoWhereInput[]
+    OR?: DocumentoWhereInput[]
+    NOT?: DocumentoWhereInput | DocumentoWhereInput[]
+    id?: IntFilter<"Documento"> | number
+    vendaId?: IntNullableFilter<"Documento"> | number | null
+    tipo?: StringFilter<"Documento"> | string
+    mimeType?: StringFilter<"Documento"> | string
+    conteudo?: BytesFilter<"Documento"> | Bytes
+    tamanhoBytes?: IntFilter<"Documento"> | number
+    criadoEm?: DateTimeFilter<"Documento"> | Date | string
+    venda?: XOR<VendaNullableScalarRelationFilter, VendaWhereInput> | null
+  }
+
+  export type DocumentoOrderByWithRelationInput = {
+    id?: SortOrder
+    vendaId?: SortOrderInput | SortOrder
+    tipo?: SortOrder
+    mimeType?: SortOrder
+    conteudo?: SortOrder
+    tamanhoBytes?: SortOrder
+    criadoEm?: SortOrder
+    venda?: VendaOrderByWithRelationInput
+  }
+
+  export type DocumentoWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: DocumentoWhereInput | DocumentoWhereInput[]
+    OR?: DocumentoWhereInput[]
+    NOT?: DocumentoWhereInput | DocumentoWhereInput[]
+    vendaId?: IntNullableFilter<"Documento"> | number | null
+    tipo?: StringFilter<"Documento"> | string
+    mimeType?: StringFilter<"Documento"> | string
+    conteudo?: BytesFilter<"Documento"> | Bytes
+    tamanhoBytes?: IntFilter<"Documento"> | number
+    criadoEm?: DateTimeFilter<"Documento"> | Date | string
+    venda?: XOR<VendaNullableScalarRelationFilter, VendaWhereInput> | null
+  }, "id">
+
+  export type DocumentoOrderByWithAggregationInput = {
+    id?: SortOrder
+    vendaId?: SortOrderInput | SortOrder
+    tipo?: SortOrder
+    mimeType?: SortOrder
+    conteudo?: SortOrder
+    tamanhoBytes?: SortOrder
+    criadoEm?: SortOrder
+    _count?: DocumentoCountOrderByAggregateInput
+    _avg?: DocumentoAvgOrderByAggregateInput
+    _max?: DocumentoMaxOrderByAggregateInput
+    _min?: DocumentoMinOrderByAggregateInput
+    _sum?: DocumentoSumOrderByAggregateInput
+  }
+
+  export type DocumentoScalarWhereWithAggregatesInput = {
+    AND?: DocumentoScalarWhereWithAggregatesInput | DocumentoScalarWhereWithAggregatesInput[]
+    OR?: DocumentoScalarWhereWithAggregatesInput[]
+    NOT?: DocumentoScalarWhereWithAggregatesInput | DocumentoScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"Documento"> | number
+    vendaId?: IntNullableWithAggregatesFilter<"Documento"> | number | null
+    tipo?: StringWithAggregatesFilter<"Documento"> | string
+    mimeType?: StringWithAggregatesFilter<"Documento"> | string
+    conteudo?: BytesWithAggregatesFilter<"Documento"> | Bytes
+    tamanhoBytes?: IntWithAggregatesFilter<"Documento"> | number
+    criadoEm?: DateTimeWithAggregatesFilter<"Documento"> | Date | string
   }
 
   export type ItemVendaWhereInput = {
@@ -17905,6 +20688,103 @@ export namespace Prisma {
     ativo?: IntNullableWithAggregatesFilter<"Aviso"> | number | null
   }
 
+  export type MovimentoEstoqueWhereInput = {
+    AND?: MovimentoEstoqueWhereInput | MovimentoEstoqueWhereInput[]
+    OR?: MovimentoEstoqueWhereInput[]
+    NOT?: MovimentoEstoqueWhereInput | MovimentoEstoqueWhereInput[]
+    id?: IntFilter<"MovimentoEstoque"> | number
+    produtoId?: IntFilter<"MovimentoEstoque"> | number
+    tipo?: StringFilter<"MovimentoEstoque"> | string
+    quantidade?: IntFilter<"MovimentoEstoque"> | number
+    custoUnitario?: FloatNullableFilter<"MovimentoEstoque"> | number | null
+    motivoTipo?: StringFilter<"MovimentoEstoque"> | string
+    observacao?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    notaFiscal?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    fornecedorId?: IntNullableFilter<"MovimentoEstoque"> | number | null
+    vendaId?: IntNullableFilter<"MovimentoEstoque"> | number | null
+    usuario?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    criadoEm?: DateTimeFilter<"MovimentoEstoque"> | Date | string
+    produto?: XOR<ProdutoScalarRelationFilter, ProdutoWhereInput>
+  }
+
+  export type MovimentoEstoqueOrderByWithRelationInput = {
+    id?: SortOrder
+    produtoId?: SortOrder
+    tipo?: SortOrder
+    quantidade?: SortOrder
+    custoUnitario?: SortOrderInput | SortOrder
+    motivoTipo?: SortOrder
+    observacao?: SortOrderInput | SortOrder
+    notaFiscal?: SortOrderInput | SortOrder
+    chaveNfe?: SortOrderInput | SortOrder
+    fornecedorId?: SortOrderInput | SortOrder
+    vendaId?: SortOrderInput | SortOrder
+    usuario?: SortOrderInput | SortOrder
+    criadoEm?: SortOrder
+    produto?: ProdutoOrderByWithRelationInput
+  }
+
+  export type MovimentoEstoqueWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: MovimentoEstoqueWhereInput | MovimentoEstoqueWhereInput[]
+    OR?: MovimentoEstoqueWhereInput[]
+    NOT?: MovimentoEstoqueWhereInput | MovimentoEstoqueWhereInput[]
+    produtoId?: IntFilter<"MovimentoEstoque"> | number
+    tipo?: StringFilter<"MovimentoEstoque"> | string
+    quantidade?: IntFilter<"MovimentoEstoque"> | number
+    custoUnitario?: FloatNullableFilter<"MovimentoEstoque"> | number | null
+    motivoTipo?: StringFilter<"MovimentoEstoque"> | string
+    observacao?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    notaFiscal?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    fornecedorId?: IntNullableFilter<"MovimentoEstoque"> | number | null
+    vendaId?: IntNullableFilter<"MovimentoEstoque"> | number | null
+    usuario?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    criadoEm?: DateTimeFilter<"MovimentoEstoque"> | Date | string
+    produto?: XOR<ProdutoScalarRelationFilter, ProdutoWhereInput>
+  }, "id">
+
+  export type MovimentoEstoqueOrderByWithAggregationInput = {
+    id?: SortOrder
+    produtoId?: SortOrder
+    tipo?: SortOrder
+    quantidade?: SortOrder
+    custoUnitario?: SortOrderInput | SortOrder
+    motivoTipo?: SortOrder
+    observacao?: SortOrderInput | SortOrder
+    notaFiscal?: SortOrderInput | SortOrder
+    chaveNfe?: SortOrderInput | SortOrder
+    fornecedorId?: SortOrderInput | SortOrder
+    vendaId?: SortOrderInput | SortOrder
+    usuario?: SortOrderInput | SortOrder
+    criadoEm?: SortOrder
+    _count?: MovimentoEstoqueCountOrderByAggregateInput
+    _avg?: MovimentoEstoqueAvgOrderByAggregateInput
+    _max?: MovimentoEstoqueMaxOrderByAggregateInput
+    _min?: MovimentoEstoqueMinOrderByAggregateInput
+    _sum?: MovimentoEstoqueSumOrderByAggregateInput
+  }
+
+  export type MovimentoEstoqueScalarWhereWithAggregatesInput = {
+    AND?: MovimentoEstoqueScalarWhereWithAggregatesInput | MovimentoEstoqueScalarWhereWithAggregatesInput[]
+    OR?: MovimentoEstoqueScalarWhereWithAggregatesInput[]
+    NOT?: MovimentoEstoqueScalarWhereWithAggregatesInput | MovimentoEstoqueScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"MovimentoEstoque"> | number
+    produtoId?: IntWithAggregatesFilter<"MovimentoEstoque"> | number
+    tipo?: StringWithAggregatesFilter<"MovimentoEstoque"> | string
+    quantidade?: IntWithAggregatesFilter<"MovimentoEstoque"> | number
+    custoUnitario?: FloatNullableWithAggregatesFilter<"MovimentoEstoque"> | number | null
+    motivoTipo?: StringWithAggregatesFilter<"MovimentoEstoque"> | string
+    observacao?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
+    notaFiscal?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
+    fornecedorId?: IntNullableWithAggregatesFilter<"MovimentoEstoque"> | number | null
+    vendaId?: IntNullableWithAggregatesFilter<"MovimentoEstoque"> | number | null
+    usuario?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
+    criadoEm?: DateTimeWithAggregatesFilter<"MovimentoEstoque"> | Date | string
+  }
+
   export type ClienteCreateInput = {
     nome: string
     renda?: number | null
@@ -18033,8 +20913,10 @@ export namespace Prisma {
     ncm?: string | null
     imagem?: string | null
     qtdEstoque?: number | null
+    estoqueMinimo?: number | null
     valorVenda?: number | null
     fornecedor?: FornecedorCreateNestedOneWithoutProdutosInput
+    movimentacoes?: MovimentoEstoqueCreateNestedManyWithoutProdutoInput
   }
 
   export type ProdutoUncheckedCreateInput = {
@@ -18047,7 +20929,9 @@ export namespace Prisma {
     imagem?: string | null
     fornecedorId?: number | null
     qtdEstoque?: number | null
+    estoqueMinimo?: number | null
     valorVenda?: number | null
+    movimentacoes?: MovimentoEstoqueUncheckedCreateNestedManyWithoutProdutoInput
   }
 
   export type ProdutoUpdateInput = {
@@ -18058,8 +20942,10 @@ export namespace Prisma {
     ncm?: NullableStringFieldUpdateOperationsInput | string | null
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
     fornecedor?: FornecedorUpdateOneWithoutProdutosNestedInput
+    movimentacoes?: MovimentoEstoqueUpdateManyWithoutProdutoNestedInput
   }
 
   export type ProdutoUncheckedUpdateInput = {
@@ -18072,7 +20958,9 @@ export namespace Prisma {
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    movimentacoes?: MovimentoEstoqueUncheckedUpdateManyWithoutProdutoNestedInput
   }
 
   export type ProdutoCreateManyInput = {
@@ -18085,6 +20973,7 @@ export namespace Prisma {
     imagem?: string | null
     fornecedorId?: number | null
     qtdEstoque?: number | null
+    estoqueMinimo?: number | null
     valorVenda?: number | null
   }
 
@@ -18096,6 +20985,7 @@ export namespace Prisma {
     ncm?: NullableStringFieldUpdateOperationsInput | string | null
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
@@ -18109,6 +20999,7 @@ export namespace Prisma {
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
@@ -18141,6 +21032,7 @@ export namespace Prisma {
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateInput = {
@@ -18173,6 +21065,7 @@ export namespace Prisma {
     boletoUrl?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUpdateInput = {
@@ -18204,6 +21097,7 @@ export namespace Prisma {
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateInput = {
@@ -18236,6 +21130,7 @@ export namespace Prisma {
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaCreateManyInput = {
@@ -18324,6 +21219,72 @@ export namespace Prisma {
     boleto?: BoolFieldUpdateOperationsInput | boolean
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type DocumentoCreateInput = {
+    tipo: string
+    mimeType?: string
+    conteudo: Bytes
+    tamanhoBytes: number
+    criadoEm?: Date | string
+    venda?: VendaCreateNestedOneWithoutDocumentosInput
+  }
+
+  export type DocumentoUncheckedCreateInput = {
+    id?: number
+    vendaId?: number | null
+    tipo: string
+    mimeType?: string
+    conteudo: Bytes
+    tamanhoBytes: number
+    criadoEm?: Date | string
+  }
+
+  export type DocumentoUpdateInput = {
+    tipo?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    conteudo?: BytesFieldUpdateOperationsInput | Bytes
+    tamanhoBytes?: IntFieldUpdateOperationsInput | number
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    venda?: VendaUpdateOneWithoutDocumentosNestedInput
+  }
+
+  export type DocumentoUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    tipo?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    conteudo?: BytesFieldUpdateOperationsInput | Bytes
+    tamanhoBytes?: IntFieldUpdateOperationsInput | number
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentoCreateManyInput = {
+    id?: number
+    vendaId?: number | null
+    tipo: string
+    mimeType?: string
+    conteudo: Bytes
+    tamanhoBytes: number
+    criadoEm?: Date | string
+  }
+
+  export type DocumentoUpdateManyMutationInput = {
+    tipo?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    conteudo?: BytesFieldUpdateOperationsInput | Bytes
+    tamanhoBytes?: IntFieldUpdateOperationsInput | number
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentoUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    tipo?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    conteudo?: BytesFieldUpdateOperationsInput | Bytes
+    tamanhoBytes?: IntFieldUpdateOperationsInput | number
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ItemVendaCreateInput = {
@@ -18928,6 +21889,114 @@ export namespace Prisma {
     ativo?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
+  export type MovimentoEstoqueCreateInput = {
+    tipo: string
+    quantidade: number
+    custoUnitario?: number | null
+    motivoTipo: string
+    observacao?: string | null
+    notaFiscal?: string | null
+    chaveNfe?: string | null
+    fornecedorId?: number | null
+    vendaId?: number | null
+    usuario?: string | null
+    criadoEm?: Date | string
+    produto: ProdutoCreateNestedOneWithoutMovimentacoesInput
+  }
+
+  export type MovimentoEstoqueUncheckedCreateInput = {
+    id?: number
+    produtoId: number
+    tipo: string
+    quantidade: number
+    custoUnitario?: number | null
+    motivoTipo: string
+    observacao?: string | null
+    notaFiscal?: string | null
+    chaveNfe?: string | null
+    fornecedorId?: number | null
+    vendaId?: number | null
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type MovimentoEstoqueUpdateInput = {
+    tipo?: StringFieldUpdateOperationsInput | string
+    quantidade?: IntFieldUpdateOperationsInput | number
+    custoUnitario?: NullableFloatFieldUpdateOperationsInput | number | null
+    motivoTipo?: StringFieldUpdateOperationsInput | string
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    produto?: ProdutoUpdateOneRequiredWithoutMovimentacoesNestedInput
+  }
+
+  export type MovimentoEstoqueUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    produtoId?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    quantidade?: IntFieldUpdateOperationsInput | number
+    custoUnitario?: NullableFloatFieldUpdateOperationsInput | number | null
+    motivoTipo?: StringFieldUpdateOperationsInput | string
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MovimentoEstoqueCreateManyInput = {
+    id?: number
+    produtoId: number
+    tipo: string
+    quantidade: number
+    custoUnitario?: number | null
+    motivoTipo: string
+    observacao?: string | null
+    notaFiscal?: string | null
+    chaveNfe?: string | null
+    fornecedorId?: number | null
+    vendaId?: number | null
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type MovimentoEstoqueUpdateManyMutationInput = {
+    tipo?: StringFieldUpdateOperationsInput | string
+    quantidade?: IntFieldUpdateOperationsInput | number
+    custoUnitario?: NullableFloatFieldUpdateOperationsInput | number | null
+    motivoTipo?: StringFieldUpdateOperationsInput | string
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MovimentoEstoqueUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    produtoId?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    quantidade?: IntFieldUpdateOperationsInput | number
+    custoUnitario?: NullableFloatFieldUpdateOperationsInput | number | null
+    motivoTipo?: StringFieldUpdateOperationsInput | string
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -19165,6 +22234,16 @@ export namespace Prisma {
     isNot?: FornecedorWhereInput | null
   }
 
+  export type MovimentoEstoqueListRelationFilter = {
+    every?: MovimentoEstoqueWhereInput
+    some?: MovimentoEstoqueWhereInput
+    none?: MovimentoEstoqueWhereInput
+  }
+
+  export type MovimentoEstoqueOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type ProdutoCountOrderByAggregateInput = {
     id?: SortOrder
     nome?: SortOrder
@@ -19175,6 +22254,7 @@ export namespace Prisma {
     imagem?: SortOrder
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
+    estoqueMinimo?: SortOrder
     valorVenda?: SortOrder
   }
 
@@ -19183,6 +22263,7 @@ export namespace Prisma {
     custoPadrao?: SortOrder
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
+    estoqueMinimo?: SortOrder
     valorVenda?: SortOrder
   }
 
@@ -19196,6 +22277,7 @@ export namespace Prisma {
     imagem?: SortOrder
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
+    estoqueMinimo?: SortOrder
     valorVenda?: SortOrder
   }
 
@@ -19209,6 +22291,7 @@ export namespace Prisma {
     imagem?: SortOrder
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
+    estoqueMinimo?: SortOrder
     valorVenda?: SortOrder
   }
 
@@ -19217,6 +22300,7 @@ export namespace Prisma {
     custoPadrao?: SortOrder
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
+    estoqueMinimo?: SortOrder
     valorVenda?: SortOrder
   }
 
@@ -19281,11 +22365,21 @@ export namespace Prisma {
     none?: ParcelaVencimentoWhereInput
   }
 
+  export type DocumentoListRelationFilter = {
+    every?: DocumentoWhereInput
+    some?: DocumentoWhereInput
+    none?: DocumentoWhereInput
+  }
+
   export type ItemVendaOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type ParcelaVencimentoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DocumentoOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -19448,6 +22542,70 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type BytesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesFilter<$PrismaModel> | Bytes
+  }
+
+  export type VendaNullableScalarRelationFilter = {
+    is?: VendaWhereInput | null
+    isNot?: VendaWhereInput | null
+  }
+
+  export type DocumentoCountOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    tipo?: SortOrder
+    mimeType?: SortOrder
+    conteudo?: SortOrder
+    tamanhoBytes?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type DocumentoAvgOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    tamanhoBytes?: SortOrder
+  }
+
+  export type DocumentoMaxOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    tipo?: SortOrder
+    mimeType?: SortOrder
+    conteudo?: SortOrder
+    tamanhoBytes?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type DocumentoMinOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    tipo?: SortOrder
+    mimeType?: SortOrder
+    conteudo?: SortOrder
+    tamanhoBytes?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type DocumentoSumOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    tamanhoBytes?: SortOrder
+  }
+
+  export type BytesWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesWithAggregatesFilter<$PrismaModel> | Bytes
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBytesFilter<$PrismaModel>
+    _max?: NestedBytesFilter<$PrismaModel>
   }
 
   export type FloatFilter<$PrismaModel = never> = {
@@ -19868,6 +23026,77 @@ export namespace Prisma {
     ativo?: SortOrder
   }
 
+  export type ProdutoScalarRelationFilter = {
+    is?: ProdutoWhereInput
+    isNot?: ProdutoWhereInput
+  }
+
+  export type MovimentoEstoqueCountOrderByAggregateInput = {
+    id?: SortOrder
+    produtoId?: SortOrder
+    tipo?: SortOrder
+    quantidade?: SortOrder
+    custoUnitario?: SortOrder
+    motivoTipo?: SortOrder
+    observacao?: SortOrder
+    notaFiscal?: SortOrder
+    chaveNfe?: SortOrder
+    fornecedorId?: SortOrder
+    vendaId?: SortOrder
+    usuario?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type MovimentoEstoqueAvgOrderByAggregateInput = {
+    id?: SortOrder
+    produtoId?: SortOrder
+    quantidade?: SortOrder
+    custoUnitario?: SortOrder
+    fornecedorId?: SortOrder
+    vendaId?: SortOrder
+  }
+
+  export type MovimentoEstoqueMaxOrderByAggregateInput = {
+    id?: SortOrder
+    produtoId?: SortOrder
+    tipo?: SortOrder
+    quantidade?: SortOrder
+    custoUnitario?: SortOrder
+    motivoTipo?: SortOrder
+    observacao?: SortOrder
+    notaFiscal?: SortOrder
+    chaveNfe?: SortOrder
+    fornecedorId?: SortOrder
+    vendaId?: SortOrder
+    usuario?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type MovimentoEstoqueMinOrderByAggregateInput = {
+    id?: SortOrder
+    produtoId?: SortOrder
+    tipo?: SortOrder
+    quantidade?: SortOrder
+    custoUnitario?: SortOrder
+    motivoTipo?: SortOrder
+    observacao?: SortOrder
+    notaFiscal?: SortOrder
+    chaveNfe?: SortOrder
+    fornecedorId?: SortOrder
+    vendaId?: SortOrder
+    usuario?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type MovimentoEstoqueSumOrderByAggregateInput = {
+    id?: SortOrder
+    produtoId?: SortOrder
+    quantidade?: SortOrder
+    custoUnitario?: SortOrder
+    fornecedorId?: SortOrder
+    vendaId?: SortOrder
+  }
+
   export type VendaCreateNestedManyWithoutClienteInput = {
     create?: XOR<VendaCreateWithoutClienteInput, VendaUncheckedCreateWithoutClienteInput> | VendaCreateWithoutClienteInput[] | VendaUncheckedCreateWithoutClienteInput[]
     connectOrCreate?: VendaCreateOrConnectWithoutClienteInput | VendaCreateOrConnectWithoutClienteInput[]
@@ -19944,6 +23173,20 @@ export namespace Prisma {
     connect?: FornecedorWhereUniqueInput
   }
 
+  export type MovimentoEstoqueCreateNestedManyWithoutProdutoInput = {
+    create?: XOR<MovimentoEstoqueCreateWithoutProdutoInput, MovimentoEstoqueUncheckedCreateWithoutProdutoInput> | MovimentoEstoqueCreateWithoutProdutoInput[] | MovimentoEstoqueUncheckedCreateWithoutProdutoInput[]
+    connectOrCreate?: MovimentoEstoqueCreateOrConnectWithoutProdutoInput | MovimentoEstoqueCreateOrConnectWithoutProdutoInput[]
+    createMany?: MovimentoEstoqueCreateManyProdutoInputEnvelope
+    connect?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+  }
+
+  export type MovimentoEstoqueUncheckedCreateNestedManyWithoutProdutoInput = {
+    create?: XOR<MovimentoEstoqueCreateWithoutProdutoInput, MovimentoEstoqueUncheckedCreateWithoutProdutoInput> | MovimentoEstoqueCreateWithoutProdutoInput[] | MovimentoEstoqueUncheckedCreateWithoutProdutoInput[]
+    connectOrCreate?: MovimentoEstoqueCreateOrConnectWithoutProdutoInput | MovimentoEstoqueCreateOrConnectWithoutProdutoInput[]
+    createMany?: MovimentoEstoqueCreateManyProdutoInputEnvelope
+    connect?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+  }
+
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
@@ -19960,6 +23203,34 @@ export namespace Prisma {
     delete?: FornecedorWhereInput | boolean
     connect?: FornecedorWhereUniqueInput
     update?: XOR<XOR<FornecedorUpdateToOneWithWhereWithoutProdutosInput, FornecedorUpdateWithoutProdutosInput>, FornecedorUncheckedUpdateWithoutProdutosInput>
+  }
+
+  export type MovimentoEstoqueUpdateManyWithoutProdutoNestedInput = {
+    create?: XOR<MovimentoEstoqueCreateWithoutProdutoInput, MovimentoEstoqueUncheckedCreateWithoutProdutoInput> | MovimentoEstoqueCreateWithoutProdutoInput[] | MovimentoEstoqueUncheckedCreateWithoutProdutoInput[]
+    connectOrCreate?: MovimentoEstoqueCreateOrConnectWithoutProdutoInput | MovimentoEstoqueCreateOrConnectWithoutProdutoInput[]
+    upsert?: MovimentoEstoqueUpsertWithWhereUniqueWithoutProdutoInput | MovimentoEstoqueUpsertWithWhereUniqueWithoutProdutoInput[]
+    createMany?: MovimentoEstoqueCreateManyProdutoInputEnvelope
+    set?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    disconnect?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    delete?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    connect?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    update?: MovimentoEstoqueUpdateWithWhereUniqueWithoutProdutoInput | MovimentoEstoqueUpdateWithWhereUniqueWithoutProdutoInput[]
+    updateMany?: MovimentoEstoqueUpdateManyWithWhereWithoutProdutoInput | MovimentoEstoqueUpdateManyWithWhereWithoutProdutoInput[]
+    deleteMany?: MovimentoEstoqueScalarWhereInput | MovimentoEstoqueScalarWhereInput[]
+  }
+
+  export type MovimentoEstoqueUncheckedUpdateManyWithoutProdutoNestedInput = {
+    create?: XOR<MovimentoEstoqueCreateWithoutProdutoInput, MovimentoEstoqueUncheckedCreateWithoutProdutoInput> | MovimentoEstoqueCreateWithoutProdutoInput[] | MovimentoEstoqueUncheckedCreateWithoutProdutoInput[]
+    connectOrCreate?: MovimentoEstoqueCreateOrConnectWithoutProdutoInput | MovimentoEstoqueCreateOrConnectWithoutProdutoInput[]
+    upsert?: MovimentoEstoqueUpsertWithWhereUniqueWithoutProdutoInput | MovimentoEstoqueUpsertWithWhereUniqueWithoutProdutoInput[]
+    createMany?: MovimentoEstoqueCreateManyProdutoInputEnvelope
+    set?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    disconnect?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    delete?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    connect?: MovimentoEstoqueWhereUniqueInput | MovimentoEstoqueWhereUniqueInput[]
+    update?: MovimentoEstoqueUpdateWithWhereUniqueWithoutProdutoInput | MovimentoEstoqueUpdateWithWhereUniqueWithoutProdutoInput[]
+    updateMany?: MovimentoEstoqueUpdateManyWithWhereWithoutProdutoInput | MovimentoEstoqueUpdateManyWithWhereWithoutProdutoInput[]
+    deleteMany?: MovimentoEstoqueScalarWhereInput | MovimentoEstoqueScalarWhereInput[]
   }
 
   export type ClienteCreateNestedOneWithoutVendasInput = {
@@ -19982,6 +23253,13 @@ export namespace Prisma {
     connect?: ParcelaVencimentoWhereUniqueInput | ParcelaVencimentoWhereUniqueInput[]
   }
 
+  export type DocumentoCreateNestedManyWithoutVendaInput = {
+    create?: XOR<DocumentoCreateWithoutVendaInput, DocumentoUncheckedCreateWithoutVendaInput> | DocumentoCreateWithoutVendaInput[] | DocumentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: DocumentoCreateOrConnectWithoutVendaInput | DocumentoCreateOrConnectWithoutVendaInput[]
+    createMany?: DocumentoCreateManyVendaInputEnvelope
+    connect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+  }
+
   export type ItemVendaUncheckedCreateNestedManyWithoutVendaInput = {
     create?: XOR<ItemVendaCreateWithoutVendaInput, ItemVendaUncheckedCreateWithoutVendaInput> | ItemVendaCreateWithoutVendaInput[] | ItemVendaUncheckedCreateWithoutVendaInput[]
     connectOrCreate?: ItemVendaCreateOrConnectWithoutVendaInput | ItemVendaCreateOrConnectWithoutVendaInput[]
@@ -19994,6 +23272,13 @@ export namespace Prisma {
     connectOrCreate?: ParcelaVencimentoCreateOrConnectWithoutVendaInput | ParcelaVencimentoCreateOrConnectWithoutVendaInput[]
     createMany?: ParcelaVencimentoCreateManyVendaInputEnvelope
     connect?: ParcelaVencimentoWhereUniqueInput | ParcelaVencimentoWhereUniqueInput[]
+  }
+
+  export type DocumentoUncheckedCreateNestedManyWithoutVendaInput = {
+    create?: XOR<DocumentoCreateWithoutVendaInput, DocumentoUncheckedCreateWithoutVendaInput> | DocumentoCreateWithoutVendaInput[] | DocumentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: DocumentoCreateOrConnectWithoutVendaInput | DocumentoCreateOrConnectWithoutVendaInput[]
+    createMany?: DocumentoCreateManyVendaInputEnvelope
+    connect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -20042,6 +23327,20 @@ export namespace Prisma {
     deleteMany?: ParcelaVencimentoScalarWhereInput | ParcelaVencimentoScalarWhereInput[]
   }
 
+  export type DocumentoUpdateManyWithoutVendaNestedInput = {
+    create?: XOR<DocumentoCreateWithoutVendaInput, DocumentoUncheckedCreateWithoutVendaInput> | DocumentoCreateWithoutVendaInput[] | DocumentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: DocumentoCreateOrConnectWithoutVendaInput | DocumentoCreateOrConnectWithoutVendaInput[]
+    upsert?: DocumentoUpsertWithWhereUniqueWithoutVendaInput | DocumentoUpsertWithWhereUniqueWithoutVendaInput[]
+    createMany?: DocumentoCreateManyVendaInputEnvelope
+    set?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    disconnect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    delete?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    connect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    update?: DocumentoUpdateWithWhereUniqueWithoutVendaInput | DocumentoUpdateWithWhereUniqueWithoutVendaInput[]
+    updateMany?: DocumentoUpdateManyWithWhereWithoutVendaInput | DocumentoUpdateManyWithWhereWithoutVendaInput[]
+    deleteMany?: DocumentoScalarWhereInput | DocumentoScalarWhereInput[]
+  }
+
   export type ItemVendaUncheckedUpdateManyWithoutVendaNestedInput = {
     create?: XOR<ItemVendaCreateWithoutVendaInput, ItemVendaUncheckedCreateWithoutVendaInput> | ItemVendaCreateWithoutVendaInput[] | ItemVendaUncheckedCreateWithoutVendaInput[]
     connectOrCreate?: ItemVendaCreateOrConnectWithoutVendaInput | ItemVendaCreateOrConnectWithoutVendaInput[]
@@ -20068,6 +23367,40 @@ export namespace Prisma {
     update?: ParcelaVencimentoUpdateWithWhereUniqueWithoutVendaInput | ParcelaVencimentoUpdateWithWhereUniqueWithoutVendaInput[]
     updateMany?: ParcelaVencimentoUpdateManyWithWhereWithoutVendaInput | ParcelaVencimentoUpdateManyWithWhereWithoutVendaInput[]
     deleteMany?: ParcelaVencimentoScalarWhereInput | ParcelaVencimentoScalarWhereInput[]
+  }
+
+  export type DocumentoUncheckedUpdateManyWithoutVendaNestedInput = {
+    create?: XOR<DocumentoCreateWithoutVendaInput, DocumentoUncheckedCreateWithoutVendaInput> | DocumentoCreateWithoutVendaInput[] | DocumentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: DocumentoCreateOrConnectWithoutVendaInput | DocumentoCreateOrConnectWithoutVendaInput[]
+    upsert?: DocumentoUpsertWithWhereUniqueWithoutVendaInput | DocumentoUpsertWithWhereUniqueWithoutVendaInput[]
+    createMany?: DocumentoCreateManyVendaInputEnvelope
+    set?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    disconnect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    delete?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    connect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+    update?: DocumentoUpdateWithWhereUniqueWithoutVendaInput | DocumentoUpdateWithWhereUniqueWithoutVendaInput[]
+    updateMany?: DocumentoUpdateManyWithWhereWithoutVendaInput | DocumentoUpdateManyWithWhereWithoutVendaInput[]
+    deleteMany?: DocumentoScalarWhereInput | DocumentoScalarWhereInput[]
+  }
+
+  export type VendaCreateNestedOneWithoutDocumentosInput = {
+    create?: XOR<VendaCreateWithoutDocumentosInput, VendaUncheckedCreateWithoutDocumentosInput>
+    connectOrCreate?: VendaCreateOrConnectWithoutDocumentosInput
+    connect?: VendaWhereUniqueInput
+  }
+
+  export type BytesFieldUpdateOperationsInput = {
+    set?: Bytes
+  }
+
+  export type VendaUpdateOneWithoutDocumentosNestedInput = {
+    create?: XOR<VendaCreateWithoutDocumentosInput, VendaUncheckedCreateWithoutDocumentosInput>
+    connectOrCreate?: VendaCreateOrConnectWithoutDocumentosInput
+    upsert?: VendaUpsertWithoutDocumentosInput
+    disconnect?: VendaWhereInput | boolean
+    delete?: VendaWhereInput | boolean
+    connect?: VendaWhereUniqueInput
+    update?: XOR<XOR<VendaUpdateToOneWithWhereWithoutDocumentosInput, VendaUpdateWithoutDocumentosInput>, VendaUncheckedUpdateWithoutDocumentosInput>
   }
 
   export type VendaCreateNestedOneWithoutItensInput = {
@@ -20146,6 +23479,20 @@ export namespace Prisma {
     update?: ProdutoUpdateWithWhereUniqueWithoutFornecedorInput | ProdutoUpdateWithWhereUniqueWithoutFornecedorInput[]
     updateMany?: ProdutoUpdateManyWithWhereWithoutFornecedorInput | ProdutoUpdateManyWithWhereWithoutFornecedorInput[]
     deleteMany?: ProdutoScalarWhereInput | ProdutoScalarWhereInput[]
+  }
+
+  export type ProdutoCreateNestedOneWithoutMovimentacoesInput = {
+    create?: XOR<ProdutoCreateWithoutMovimentacoesInput, ProdutoUncheckedCreateWithoutMovimentacoesInput>
+    connectOrCreate?: ProdutoCreateOrConnectWithoutMovimentacoesInput
+    connect?: ProdutoWhereUniqueInput
+  }
+
+  export type ProdutoUpdateOneRequiredWithoutMovimentacoesNestedInput = {
+    create?: XOR<ProdutoCreateWithoutMovimentacoesInput, ProdutoUncheckedCreateWithoutMovimentacoesInput>
+    connectOrCreate?: ProdutoCreateOrConnectWithoutMovimentacoesInput
+    upsert?: ProdutoUpsertWithoutMovimentacoesInput
+    connect?: ProdutoWhereUniqueInput
+    update?: XOR<XOR<ProdutoUpdateToOneWithWhereWithoutMovimentacoesInput, ProdutoUpdateWithoutMovimentacoesInput>, ProdutoUncheckedUpdateWithoutMovimentacoesInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -20390,6 +23737,23 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type NestedBytesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesFilter<$PrismaModel> | Bytes
+  }
+
+  export type NestedBytesWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesWithAggregatesFilter<$PrismaModel> | Bytes
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBytesFilter<$PrismaModel>
+    _max?: NestedBytesFilter<$PrismaModel>
+  }
+
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel>
     in?: number[] | ListFloatFieldRefInput<$PrismaModel>
@@ -20434,6 +23798,7 @@ export namespace Prisma {
     boletoUrl?: string | null
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutClienteInput = {
@@ -20465,6 +23830,7 @@ export namespace Prisma {
     boletoUrl?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutClienteInput = {
@@ -20542,6 +23908,45 @@ export namespace Prisma {
     create: XOR<FornecedorCreateWithoutProdutosInput, FornecedorUncheckedCreateWithoutProdutosInput>
   }
 
+  export type MovimentoEstoqueCreateWithoutProdutoInput = {
+    tipo: string
+    quantidade: number
+    custoUnitario?: number | null
+    motivoTipo: string
+    observacao?: string | null
+    notaFiscal?: string | null
+    chaveNfe?: string | null
+    fornecedorId?: number | null
+    vendaId?: number | null
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type MovimentoEstoqueUncheckedCreateWithoutProdutoInput = {
+    id?: number
+    tipo: string
+    quantidade: number
+    custoUnitario?: number | null
+    motivoTipo: string
+    observacao?: string | null
+    notaFiscal?: string | null
+    chaveNfe?: string | null
+    fornecedorId?: number | null
+    vendaId?: number | null
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type MovimentoEstoqueCreateOrConnectWithoutProdutoInput = {
+    where: MovimentoEstoqueWhereUniqueInput
+    create: XOR<MovimentoEstoqueCreateWithoutProdutoInput, MovimentoEstoqueUncheckedCreateWithoutProdutoInput>
+  }
+
+  export type MovimentoEstoqueCreateManyProdutoInputEnvelope = {
+    data: MovimentoEstoqueCreateManyProdutoInput | MovimentoEstoqueCreateManyProdutoInput[]
+    skipDuplicates?: boolean
+  }
+
   export type FornecedorUpsertWithoutProdutosInput = {
     update: XOR<FornecedorUpdateWithoutProdutosInput, FornecedorUncheckedUpdateWithoutProdutosInput>
     create: XOR<FornecedorCreateWithoutProdutosInput, FornecedorUncheckedCreateWithoutProdutosInput>
@@ -20562,6 +23967,41 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     nome?: StringFieldUpdateOperationsInput | string
     telefone?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type MovimentoEstoqueUpsertWithWhereUniqueWithoutProdutoInput = {
+    where: MovimentoEstoqueWhereUniqueInput
+    update: XOR<MovimentoEstoqueUpdateWithoutProdutoInput, MovimentoEstoqueUncheckedUpdateWithoutProdutoInput>
+    create: XOR<MovimentoEstoqueCreateWithoutProdutoInput, MovimentoEstoqueUncheckedCreateWithoutProdutoInput>
+  }
+
+  export type MovimentoEstoqueUpdateWithWhereUniqueWithoutProdutoInput = {
+    where: MovimentoEstoqueWhereUniqueInput
+    data: XOR<MovimentoEstoqueUpdateWithoutProdutoInput, MovimentoEstoqueUncheckedUpdateWithoutProdutoInput>
+  }
+
+  export type MovimentoEstoqueUpdateManyWithWhereWithoutProdutoInput = {
+    where: MovimentoEstoqueScalarWhereInput
+    data: XOR<MovimentoEstoqueUpdateManyMutationInput, MovimentoEstoqueUncheckedUpdateManyWithoutProdutoInput>
+  }
+
+  export type MovimentoEstoqueScalarWhereInput = {
+    AND?: MovimentoEstoqueScalarWhereInput | MovimentoEstoqueScalarWhereInput[]
+    OR?: MovimentoEstoqueScalarWhereInput[]
+    NOT?: MovimentoEstoqueScalarWhereInput | MovimentoEstoqueScalarWhereInput[]
+    id?: IntFilter<"MovimentoEstoque"> | number
+    produtoId?: IntFilter<"MovimentoEstoque"> | number
+    tipo?: StringFilter<"MovimentoEstoque"> | string
+    quantidade?: IntFilter<"MovimentoEstoque"> | number
+    custoUnitario?: FloatNullableFilter<"MovimentoEstoque"> | number | null
+    motivoTipo?: StringFilter<"MovimentoEstoque"> | string
+    observacao?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    notaFiscal?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    fornecedorId?: IntNullableFilter<"MovimentoEstoque"> | number | null
+    vendaId?: IntNullableFilter<"MovimentoEstoque"> | number | null
+    usuario?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    criadoEm?: DateTimeFilter<"MovimentoEstoque"> | Date | string
   }
 
   export type ClienteCreateWithoutVendasInput = {
@@ -20653,6 +24093,33 @@ export namespace Prisma {
 
   export type ParcelaVencimentoCreateManyVendaInputEnvelope = {
     data: ParcelaVencimentoCreateManyVendaInput | ParcelaVencimentoCreateManyVendaInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type DocumentoCreateWithoutVendaInput = {
+    tipo: string
+    mimeType?: string
+    conteudo: Bytes
+    tamanhoBytes: number
+    criadoEm?: Date | string
+  }
+
+  export type DocumentoUncheckedCreateWithoutVendaInput = {
+    id?: number
+    tipo: string
+    mimeType?: string
+    conteudo: Bytes
+    tamanhoBytes: number
+    criadoEm?: Date | string
+  }
+
+  export type DocumentoCreateOrConnectWithoutVendaInput = {
+    where: DocumentoWhereUniqueInput
+    create: XOR<DocumentoCreateWithoutVendaInput, DocumentoUncheckedCreateWithoutVendaInput>
+  }
+
+  export type DocumentoCreateManyVendaInputEnvelope = {
+    data: DocumentoCreateManyVendaInput | DocumentoCreateManyVendaInput[]
     skipDuplicates?: boolean
   }
 
@@ -20758,6 +24225,177 @@ export namespace Prisma {
     dataPagamento?: DateTimeNullableFilter<"ParcelaVencimento"> | Date | string | null
   }
 
+  export type DocumentoUpsertWithWhereUniqueWithoutVendaInput = {
+    where: DocumentoWhereUniqueInput
+    update: XOR<DocumentoUpdateWithoutVendaInput, DocumentoUncheckedUpdateWithoutVendaInput>
+    create: XOR<DocumentoCreateWithoutVendaInput, DocumentoUncheckedCreateWithoutVendaInput>
+  }
+
+  export type DocumentoUpdateWithWhereUniqueWithoutVendaInput = {
+    where: DocumentoWhereUniqueInput
+    data: XOR<DocumentoUpdateWithoutVendaInput, DocumentoUncheckedUpdateWithoutVendaInput>
+  }
+
+  export type DocumentoUpdateManyWithWhereWithoutVendaInput = {
+    where: DocumentoScalarWhereInput
+    data: XOR<DocumentoUpdateManyMutationInput, DocumentoUncheckedUpdateManyWithoutVendaInput>
+  }
+
+  export type DocumentoScalarWhereInput = {
+    AND?: DocumentoScalarWhereInput | DocumentoScalarWhereInput[]
+    OR?: DocumentoScalarWhereInput[]
+    NOT?: DocumentoScalarWhereInput | DocumentoScalarWhereInput[]
+    id?: IntFilter<"Documento"> | number
+    vendaId?: IntNullableFilter<"Documento"> | number | null
+    tipo?: StringFilter<"Documento"> | string
+    mimeType?: StringFilter<"Documento"> | string
+    conteudo?: BytesFilter<"Documento"> | Bytes
+    tamanhoBytes?: IntFilter<"Documento"> | number
+    criadoEm?: DateTimeFilter<"Documento"> | Date | string
+  }
+
+  export type VendaCreateWithoutDocumentosInput = {
+    uuid?: string | null
+    dataVenda: Date | string
+    vendedor?: string | null
+    produtoNome?: string | null
+    custoProduto?: number | null
+    quantidade?: number | null
+    valorVenda?: number | null
+    valorFrete?: number | null
+    custoEnvio?: number | null
+    parcelas?: number | null
+    valorParcela?: number | null
+    taxaFinanceiraValor?: number | null
+    lucroLiquido?: number | null
+    antecipada?: number | null
+    excedeuLimite?: number | null
+    temNota?: boolean
+    taxaNota?: number | null
+    comprovantePdf?: string | null
+    descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
+    boleto?: boolean
+    asaasPaymentId?: string | null
+    boletoUrl?: string | null
+    cliente?: ClienteCreateNestedOneWithoutVendasInput
+    itens?: ItemVendaCreateNestedManyWithoutVendaInput
+    parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
+  }
+
+  export type VendaUncheckedCreateWithoutDocumentosInput = {
+    id?: number
+    uuid?: string | null
+    dataVenda: Date | string
+    vendedor?: string | null
+    clienteId?: number | null
+    produtoNome?: string | null
+    custoProduto?: number | null
+    quantidade?: number | null
+    valorVenda?: number | null
+    valorFrete?: number | null
+    custoEnvio?: number | null
+    parcelas?: number | null
+    valorParcela?: number | null
+    taxaFinanceiraValor?: number | null
+    lucroLiquido?: number | null
+    antecipada?: number | null
+    excedeuLimite?: number | null
+    temNota?: boolean
+    taxaNota?: number | null
+    comprovantePdf?: string | null
+    descontoEmFolha?: boolean
+    assinaturaToken?: string | null
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
+    boleto?: boolean
+    asaasPaymentId?: string | null
+    boletoUrl?: string | null
+    itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
+    parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
+  }
+
+  export type VendaCreateOrConnectWithoutDocumentosInput = {
+    where: VendaWhereUniqueInput
+    create: XOR<VendaCreateWithoutDocumentosInput, VendaUncheckedCreateWithoutDocumentosInput>
+  }
+
+  export type VendaUpsertWithoutDocumentosInput = {
+    update: XOR<VendaUpdateWithoutDocumentosInput, VendaUncheckedUpdateWithoutDocumentosInput>
+    create: XOR<VendaCreateWithoutDocumentosInput, VendaUncheckedCreateWithoutDocumentosInput>
+    where?: VendaWhereInput
+  }
+
+  export type VendaUpdateToOneWithWhereWithoutDocumentosInput = {
+    where?: VendaWhereInput
+    data: XOR<VendaUpdateWithoutDocumentosInput, VendaUncheckedUpdateWithoutDocumentosInput>
+  }
+
+  export type VendaUpdateWithoutDocumentosInput = {
+    uuid?: NullableStringFieldUpdateOperationsInput | string | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
+    custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantidade?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    valorFrete?: NullableFloatFieldUpdateOperationsInput | number | null
+    custoEnvio?: NullableFloatFieldUpdateOperationsInput | number | null
+    parcelas?: NullableIntFieldUpdateOperationsInput | number | null
+    valorParcela?: NullableFloatFieldUpdateOperationsInput | number | null
+    taxaFinanceiraValor?: NullableFloatFieldUpdateOperationsInput | number | null
+    lucroLiquido?: NullableFloatFieldUpdateOperationsInput | number | null
+    antecipada?: NullableIntFieldUpdateOperationsInput | number | null
+    excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
+    temNota?: BoolFieldUpdateOperationsInput | boolean
+    taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
+    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
+    descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    boleto?: BoolFieldUpdateOperationsInput | boolean
+    asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    itens?: ItemVendaUpdateManyWithoutVendaNestedInput
+    parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
+  }
+
+  export type VendaUncheckedUpdateWithoutDocumentosInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uuid?: NullableStringFieldUpdateOperationsInput | string | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    clienteId?: NullableIntFieldUpdateOperationsInput | number | null
+    produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
+    custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantidade?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    valorFrete?: NullableFloatFieldUpdateOperationsInput | number | null
+    custoEnvio?: NullableFloatFieldUpdateOperationsInput | number | null
+    parcelas?: NullableIntFieldUpdateOperationsInput | number | null
+    valorParcela?: NullableFloatFieldUpdateOperationsInput | number | null
+    taxaFinanceiraValor?: NullableFloatFieldUpdateOperationsInput | number | null
+    lucroLiquido?: NullableFloatFieldUpdateOperationsInput | number | null
+    antecipada?: NullableIntFieldUpdateOperationsInput | number | null
+    excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
+    temNota?: BoolFieldUpdateOperationsInput | boolean
+    taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
+    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
+    descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    boleto?: BoolFieldUpdateOperationsInput | boolean
+    asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
+    parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
+  }
+
   export type VendaCreateWithoutItensInput = {
     uuid?: string | null
     dataVenda: Date | string
@@ -20786,6 +24424,7 @@ export namespace Prisma {
     boletoUrl?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutItensInput = {
@@ -20817,6 +24456,7 @@ export namespace Prisma {
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutItensInput = {
@@ -20863,6 +24503,7 @@ export namespace Prisma {
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutItensInput = {
@@ -20894,6 +24535,7 @@ export namespace Prisma {
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaCreateWithoutParcelasVencimentoInput = {
@@ -20924,6 +24566,7 @@ export namespace Prisma {
     boletoUrl?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutParcelasVencimentoInput = {
@@ -20955,6 +24598,7 @@ export namespace Prisma {
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutParcelasVencimentoInput = {
@@ -21001,6 +24645,7 @@ export namespace Prisma {
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutParcelasVencimentoInput = {
@@ -21032,6 +24677,7 @@ export namespace Prisma {
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type ProdutoCreateWithoutFornecedorInput = {
@@ -21042,7 +24688,9 @@ export namespace Prisma {
     ncm?: string | null
     imagem?: string | null
     qtdEstoque?: number | null
+    estoqueMinimo?: number | null
     valorVenda?: number | null
+    movimentacoes?: MovimentoEstoqueCreateNestedManyWithoutProdutoInput
   }
 
   export type ProdutoUncheckedCreateWithoutFornecedorInput = {
@@ -21054,7 +24702,9 @@ export namespace Prisma {
     ncm?: string | null
     imagem?: string | null
     qtdEstoque?: number | null
+    estoqueMinimo?: number | null
     valorVenda?: number | null
+    movimentacoes?: MovimentoEstoqueUncheckedCreateNestedManyWithoutProdutoInput
   }
 
   export type ProdutoCreateOrConnectWithoutFornecedorInput = {
@@ -21096,7 +24746,78 @@ export namespace Prisma {
     imagem?: StringNullableFilter<"Produto"> | string | null
     fornecedorId?: IntNullableFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableFilter<"Produto"> | number | null
+    estoqueMinimo?: IntNullableFilter<"Produto"> | number | null
     valorVenda?: FloatNullableFilter<"Produto"> | number | null
+  }
+
+  export type ProdutoCreateWithoutMovimentacoesInput = {
+    nome: string
+    custoPadrao?: number | null
+    marca?: string | null
+    categoria?: string | null
+    ncm?: string | null
+    imagem?: string | null
+    qtdEstoque?: number | null
+    estoqueMinimo?: number | null
+    valorVenda?: number | null
+    fornecedor?: FornecedorCreateNestedOneWithoutProdutosInput
+  }
+
+  export type ProdutoUncheckedCreateWithoutMovimentacoesInput = {
+    id?: number
+    nome: string
+    custoPadrao?: number | null
+    marca?: string | null
+    categoria?: string | null
+    ncm?: string | null
+    imagem?: string | null
+    fornecedorId?: number | null
+    qtdEstoque?: number | null
+    estoqueMinimo?: number | null
+    valorVenda?: number | null
+  }
+
+  export type ProdutoCreateOrConnectWithoutMovimentacoesInput = {
+    where: ProdutoWhereUniqueInput
+    create: XOR<ProdutoCreateWithoutMovimentacoesInput, ProdutoUncheckedCreateWithoutMovimentacoesInput>
+  }
+
+  export type ProdutoUpsertWithoutMovimentacoesInput = {
+    update: XOR<ProdutoUpdateWithoutMovimentacoesInput, ProdutoUncheckedUpdateWithoutMovimentacoesInput>
+    create: XOR<ProdutoCreateWithoutMovimentacoesInput, ProdutoUncheckedCreateWithoutMovimentacoesInput>
+    where?: ProdutoWhereInput
+  }
+
+  export type ProdutoUpdateToOneWithWhereWithoutMovimentacoesInput = {
+    where?: ProdutoWhereInput
+    data: XOR<ProdutoUpdateWithoutMovimentacoesInput, ProdutoUncheckedUpdateWithoutMovimentacoesInput>
+  }
+
+  export type ProdutoUpdateWithoutMovimentacoesInput = {
+    nome?: StringFieldUpdateOperationsInput | string
+    custoPadrao?: NullableFloatFieldUpdateOperationsInput | number | null
+    marca?: NullableStringFieldUpdateOperationsInput | string | null
+    categoria?: NullableStringFieldUpdateOperationsInput | string | null
+    ncm?: NullableStringFieldUpdateOperationsInput | string | null
+    imagem?: NullableStringFieldUpdateOperationsInput | string | null
+    qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    fornecedor?: FornecedorUpdateOneWithoutProdutosNestedInput
+  }
+
+  export type ProdutoUncheckedUpdateWithoutMovimentacoesInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    custoPadrao?: NullableFloatFieldUpdateOperationsInput | number | null
+    marca?: NullableStringFieldUpdateOperationsInput | string | null
+    categoria?: NullableStringFieldUpdateOperationsInput | string | null
+    ncm?: NullableStringFieldUpdateOperationsInput | string | null
+    imagem?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type VendaCreateManyClienteInput = {
@@ -21156,6 +24877,7 @@ export namespace Prisma {
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutClienteInput = {
@@ -21187,6 +24909,7 @@ export namespace Prisma {
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateManyWithoutClienteInput = {
@@ -21218,6 +24941,65 @@ export namespace Prisma {
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type MovimentoEstoqueCreateManyProdutoInput = {
+    id?: number
+    tipo: string
+    quantidade: number
+    custoUnitario?: number | null
+    motivoTipo: string
+    observacao?: string | null
+    notaFiscal?: string | null
+    chaveNfe?: string | null
+    fornecedorId?: number | null
+    vendaId?: number | null
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type MovimentoEstoqueUpdateWithoutProdutoInput = {
+    tipo?: StringFieldUpdateOperationsInput | string
+    quantidade?: IntFieldUpdateOperationsInput | number
+    custoUnitario?: NullableFloatFieldUpdateOperationsInput | number | null
+    motivoTipo?: StringFieldUpdateOperationsInput | string
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MovimentoEstoqueUncheckedUpdateWithoutProdutoInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    quantidade?: IntFieldUpdateOperationsInput | number
+    custoUnitario?: NullableFloatFieldUpdateOperationsInput | number | null
+    motivoTipo?: StringFieldUpdateOperationsInput | string
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MovimentoEstoqueUncheckedUpdateManyWithoutProdutoInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    quantidade?: IntFieldUpdateOperationsInput | number
+    custoUnitario?: NullableFloatFieldUpdateOperationsInput | number | null
+    motivoTipo?: StringFieldUpdateOperationsInput | string
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
+    fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
+    vendaId?: NullableIntFieldUpdateOperationsInput | number | null
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ItemVendaCreateManyVendaInput = {
     id?: number
     produtoNome: string
@@ -21234,6 +25016,15 @@ export namespace Prisma {
     valorParcela: number
     paga?: boolean
     dataPagamento?: Date | string | null
+  }
+
+  export type DocumentoCreateManyVendaInput = {
+    id?: number
+    tipo: string
+    mimeType?: string
+    conteudo: Bytes
+    tamanhoBytes: number
+    criadoEm?: Date | string
   }
 
   export type ItemVendaUpdateWithoutVendaInput = {
@@ -21288,6 +25079,32 @@ export namespace Prisma {
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type DocumentoUpdateWithoutVendaInput = {
+    tipo?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    conteudo?: BytesFieldUpdateOperationsInput | Bytes
+    tamanhoBytes?: IntFieldUpdateOperationsInput | number
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentoUncheckedUpdateWithoutVendaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    conteudo?: BytesFieldUpdateOperationsInput | Bytes
+    tamanhoBytes?: IntFieldUpdateOperationsInput | number
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DocumentoUncheckedUpdateManyWithoutVendaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    tipo?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    conteudo?: BytesFieldUpdateOperationsInput | Bytes
+    tamanhoBytes?: IntFieldUpdateOperationsInput | number
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ProdutoCreateManyFornecedorInput = {
     id?: number
     nome: string
@@ -21297,6 +25114,7 @@ export namespace Prisma {
     ncm?: string | null
     imagem?: string | null
     qtdEstoque?: number | null
+    estoqueMinimo?: number | null
     valorVenda?: number | null
   }
 
@@ -21308,7 +25126,9 @@ export namespace Prisma {
     ncm?: NullableStringFieldUpdateOperationsInput | string | null
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    movimentacoes?: MovimentoEstoqueUpdateManyWithoutProdutoNestedInput
   }
 
   export type ProdutoUncheckedUpdateWithoutFornecedorInput = {
@@ -21320,7 +25140,9 @@ export namespace Prisma {
     ncm?: NullableStringFieldUpdateOperationsInput | string | null
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    movimentacoes?: MovimentoEstoqueUncheckedUpdateManyWithoutProdutoNestedInput
   }
 
   export type ProdutoUncheckedUpdateManyWithoutFornecedorInput = {
@@ -21332,6 +25154,7 @@ export namespace Prisma {
     ncm?: NullableStringFieldUpdateOperationsInput | string | null
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
+    estoqueMinimo?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 

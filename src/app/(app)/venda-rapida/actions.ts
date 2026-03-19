@@ -166,6 +166,33 @@ export async function criarVendaV2(
         })),
       });
 
+      // 2.5 Baixa automática de estoque
+      for (const item of produtosValidados) {
+        const produto = await tx.produto.findFirst({
+          where: { nome: item.produtoNome },
+          select: { id: true, qtdEstoque: true },
+        });
+        if (produto) {
+          const novoEstoque = Math.max((produto.qtdEstoque ?? 0) - item.quantidade, 0);
+          await tx.produto.update({
+            where: { id: produto.id },
+            data: { qtdEstoque: novoEstoque },
+          });
+          await tx.movimentoEstoque.create({
+            data: {
+              produtoId: produto.id,
+              tipo: "SAIDA",
+              quantidade: item.quantidade,
+              custoUnitario: item.custoProduto,
+              motivoTipo: "VENDA",
+              observacao: `Venda #${vendaCriada.id}`,
+              vendaId: vendaCriada.id,
+              usuario: vendedor,
+            },
+          });
+        }
+      }
+
       // 3. Criar parcelas com datas (se informado)
       if (parcelasValidadas && parcelasValidadas.length > 0) {
         await tx.parcelaVencimento.createMany({
