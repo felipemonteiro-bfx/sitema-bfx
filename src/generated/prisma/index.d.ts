@@ -88,6 +88,11 @@ export type Aviso = $Result.DefaultSelection<Prisma.$AvisoPayload>
  * 
  */
 export type WhatsAppEnvioLog = $Result.DefaultSelection<Prisma.$WhatsAppEnvioLogPayload>
+/**
+ * Model AiMensagem
+ * 
+ */
+export type AiMensagem = $Result.DefaultSelection<Prisma.$AiMensagemPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -356,6 +361,16 @@ export class PrismaClient<
     * ```
     */
   get whatsAppEnvioLog(): Prisma.WhatsAppEnvioLogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.aiMensagem`: Exposes CRUD operations for the **AiMensagem** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AiMensagems
+    * const aiMensagems = await prisma.aiMensagem.findMany()
+    * ```
+    */
+  get aiMensagem(): Prisma.AiMensagemDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -811,7 +826,8 @@ export namespace Prisma {
     AuditLog: 'AuditLog',
     Despesa: 'Despesa',
     Aviso: 'Aviso',
-    WhatsAppEnvioLog: 'WhatsAppEnvioLog'
+    WhatsAppEnvioLog: 'WhatsAppEnvioLog',
+    AiMensagem: 'AiMensagem'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -830,7 +846,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog"
+      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1944,6 +1960,80 @@ export namespace Prisma {
           }
         }
       }
+      AiMensagem: {
+        payload: Prisma.$AiMensagemPayload<ExtArgs>
+        fields: Prisma.AiMensagemFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AiMensagemFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AiMensagemFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>
+          }
+          findFirst: {
+            args: Prisma.AiMensagemFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AiMensagemFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>
+          }
+          findMany: {
+            args: Prisma.AiMensagemFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>[]
+          }
+          create: {
+            args: Prisma.AiMensagemCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>
+          }
+          createMany: {
+            args: Prisma.AiMensagemCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AiMensagemCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>[]
+          }
+          delete: {
+            args: Prisma.AiMensagemDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>
+          }
+          update: {
+            args: Prisma.AiMensagemUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>
+          }
+          deleteMany: {
+            args: Prisma.AiMensagemDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AiMensagemUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AiMensagemUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>[]
+          }
+          upsert: {
+            args: Prisma.AiMensagemUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMensagemPayload>
+          }
+          aggregate: {
+            args: Prisma.AiMensagemAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAiMensagem>
+          }
+          groupBy: {
+            args: Prisma.AiMensagemGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AiMensagemGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AiMensagemCountArgs<ExtArgs>
+            result: $Utils.Optional<AiMensagemCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2055,6 +2145,7 @@ export namespace Prisma {
     despesa?: DespesaOmit
     aviso?: AvisoOmit
     whatsAppEnvioLog?: WhatsAppEnvioLogOmit
+    aiMensagem?: AiMensagemOmit
   }
 
   /* Types for Logging */
@@ -19322,6 +19413,1092 @@ export namespace Prisma {
 
 
   /**
+   * Model AiMensagem
+   */
+
+  export type AggregateAiMensagem = {
+    _count: AiMensagemCountAggregateOutputType | null
+    _avg: AiMensagemAvgAggregateOutputType | null
+    _sum: AiMensagemSumAggregateOutputType | null
+    _min: AiMensagemMinAggregateOutputType | null
+    _max: AiMensagemMaxAggregateOutputType | null
+  }
+
+  export type AiMensagemAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type AiMensagemSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type AiMensagemMinAggregateOutputType = {
+    id: number | null
+    sessaoId: string | null
+    role: string | null
+    content: string | null
+    promptOriginal: string | null
+    status: string | null
+    usuario: string | null
+    criadoEm: Date | null
+  }
+
+  export type AiMensagemMaxAggregateOutputType = {
+    id: number | null
+    sessaoId: string | null
+    role: string | null
+    content: string | null
+    promptOriginal: string | null
+    status: string | null
+    usuario: string | null
+    criadoEm: Date | null
+  }
+
+  export type AiMensagemCountAggregateOutputType = {
+    id: number
+    sessaoId: number
+    role: number
+    content: number
+    promptOriginal: number
+    actions: number
+    status: number
+    links: number
+    usuario: number
+    criadoEm: number
+    _all: number
+  }
+
+
+  export type AiMensagemAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type AiMensagemSumAggregateInputType = {
+    id?: true
+  }
+
+  export type AiMensagemMinAggregateInputType = {
+    id?: true
+    sessaoId?: true
+    role?: true
+    content?: true
+    promptOriginal?: true
+    status?: true
+    usuario?: true
+    criadoEm?: true
+  }
+
+  export type AiMensagemMaxAggregateInputType = {
+    id?: true
+    sessaoId?: true
+    role?: true
+    content?: true
+    promptOriginal?: true
+    status?: true
+    usuario?: true
+    criadoEm?: true
+  }
+
+  export type AiMensagemCountAggregateInputType = {
+    id?: true
+    sessaoId?: true
+    role?: true
+    content?: true
+    promptOriginal?: true
+    actions?: true
+    status?: true
+    links?: true
+    usuario?: true
+    criadoEm?: true
+    _all?: true
+  }
+
+  export type AiMensagemAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AiMensagem to aggregate.
+     */
+    where?: AiMensagemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMensagems to fetch.
+     */
+    orderBy?: AiMensagemOrderByWithRelationInput | AiMensagemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AiMensagemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMensagems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMensagems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AiMensagems
+    **/
+    _count?: true | AiMensagemCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AiMensagemAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AiMensagemSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AiMensagemMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AiMensagemMaxAggregateInputType
+  }
+
+  export type GetAiMensagemAggregateType<T extends AiMensagemAggregateArgs> = {
+        [P in keyof T & keyof AggregateAiMensagem]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAiMensagem[P]>
+      : GetScalarType<T[P], AggregateAiMensagem[P]>
+  }
+
+
+
+
+  export type AiMensagemGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AiMensagemWhereInput
+    orderBy?: AiMensagemOrderByWithAggregationInput | AiMensagemOrderByWithAggregationInput[]
+    by: AiMensagemScalarFieldEnum[] | AiMensagemScalarFieldEnum
+    having?: AiMensagemScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AiMensagemCountAggregateInputType | true
+    _avg?: AiMensagemAvgAggregateInputType
+    _sum?: AiMensagemSumAggregateInputType
+    _min?: AiMensagemMinAggregateInputType
+    _max?: AiMensagemMaxAggregateInputType
+  }
+
+  export type AiMensagemGroupByOutputType = {
+    id: number
+    sessaoId: string
+    role: string
+    content: string
+    promptOriginal: string | null
+    actions: JsonValue | null
+    status: string
+    links: JsonValue | null
+    usuario: string | null
+    criadoEm: Date
+    _count: AiMensagemCountAggregateOutputType | null
+    _avg: AiMensagemAvgAggregateOutputType | null
+    _sum: AiMensagemSumAggregateOutputType | null
+    _min: AiMensagemMinAggregateOutputType | null
+    _max: AiMensagemMaxAggregateOutputType | null
+  }
+
+  type GetAiMensagemGroupByPayload<T extends AiMensagemGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AiMensagemGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AiMensagemGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AiMensagemGroupByOutputType[P]>
+            : GetScalarType<T[P], AiMensagemGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AiMensagemSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sessaoId?: boolean
+    role?: boolean
+    content?: boolean
+    promptOriginal?: boolean
+    actions?: boolean
+    status?: boolean
+    links?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+  }, ExtArgs["result"]["aiMensagem"]>
+
+  export type AiMensagemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sessaoId?: boolean
+    role?: boolean
+    content?: boolean
+    promptOriginal?: boolean
+    actions?: boolean
+    status?: boolean
+    links?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+  }, ExtArgs["result"]["aiMensagem"]>
+
+  export type AiMensagemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sessaoId?: boolean
+    role?: boolean
+    content?: boolean
+    promptOriginal?: boolean
+    actions?: boolean
+    status?: boolean
+    links?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+  }, ExtArgs["result"]["aiMensagem"]>
+
+  export type AiMensagemSelectScalar = {
+    id?: boolean
+    sessaoId?: boolean
+    role?: boolean
+    content?: boolean
+    promptOriginal?: boolean
+    actions?: boolean
+    status?: boolean
+    links?: boolean
+    usuario?: boolean
+    criadoEm?: boolean
+  }
+
+  export type AiMensagemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessaoId" | "role" | "content" | "promptOriginal" | "actions" | "status" | "links" | "usuario" | "criadoEm", ExtArgs["result"]["aiMensagem"]>
+
+  export type $AiMensagemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AiMensagem"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      sessaoId: string
+      role: string
+      content: string
+      promptOriginal: string | null
+      actions: Prisma.JsonValue | null
+      status: string
+      links: Prisma.JsonValue | null
+      usuario: string | null
+      criadoEm: Date
+    }, ExtArgs["result"]["aiMensagem"]>
+    composites: {}
+  }
+
+  type AiMensagemGetPayload<S extends boolean | null | undefined | AiMensagemDefaultArgs> = $Result.GetResult<Prisma.$AiMensagemPayload, S>
+
+  type AiMensagemCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AiMensagemFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AiMensagemCountAggregateInputType | true
+    }
+
+  export interface AiMensagemDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AiMensagem'], meta: { name: 'AiMensagem' } }
+    /**
+     * Find zero or one AiMensagem that matches the filter.
+     * @param {AiMensagemFindUniqueArgs} args - Arguments to find a AiMensagem
+     * @example
+     * // Get one AiMensagem
+     * const aiMensagem = await prisma.aiMensagem.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AiMensagemFindUniqueArgs>(args: SelectSubset<T, AiMensagemFindUniqueArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AiMensagem that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AiMensagemFindUniqueOrThrowArgs} args - Arguments to find a AiMensagem
+     * @example
+     * // Get one AiMensagem
+     * const aiMensagem = await prisma.aiMensagem.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AiMensagemFindUniqueOrThrowArgs>(args: SelectSubset<T, AiMensagemFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AiMensagem that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMensagemFindFirstArgs} args - Arguments to find a AiMensagem
+     * @example
+     * // Get one AiMensagem
+     * const aiMensagem = await prisma.aiMensagem.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AiMensagemFindFirstArgs>(args?: SelectSubset<T, AiMensagemFindFirstArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AiMensagem that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMensagemFindFirstOrThrowArgs} args - Arguments to find a AiMensagem
+     * @example
+     * // Get one AiMensagem
+     * const aiMensagem = await prisma.aiMensagem.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AiMensagemFindFirstOrThrowArgs>(args?: SelectSubset<T, AiMensagemFindFirstOrThrowArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AiMensagems that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMensagemFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AiMensagems
+     * const aiMensagems = await prisma.aiMensagem.findMany()
+     * 
+     * // Get first 10 AiMensagems
+     * const aiMensagems = await prisma.aiMensagem.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const aiMensagemWithIdOnly = await prisma.aiMensagem.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AiMensagemFindManyArgs>(args?: SelectSubset<T, AiMensagemFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AiMensagem.
+     * @param {AiMensagemCreateArgs} args - Arguments to create a AiMensagem.
+     * @example
+     * // Create one AiMensagem
+     * const AiMensagem = await prisma.aiMensagem.create({
+     *   data: {
+     *     // ... data to create a AiMensagem
+     *   }
+     * })
+     * 
+     */
+    create<T extends AiMensagemCreateArgs>(args: SelectSubset<T, AiMensagemCreateArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AiMensagems.
+     * @param {AiMensagemCreateManyArgs} args - Arguments to create many AiMensagems.
+     * @example
+     * // Create many AiMensagems
+     * const aiMensagem = await prisma.aiMensagem.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AiMensagemCreateManyArgs>(args?: SelectSubset<T, AiMensagemCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AiMensagems and returns the data saved in the database.
+     * @param {AiMensagemCreateManyAndReturnArgs} args - Arguments to create many AiMensagems.
+     * @example
+     * // Create many AiMensagems
+     * const aiMensagem = await prisma.aiMensagem.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AiMensagems and only return the `id`
+     * const aiMensagemWithIdOnly = await prisma.aiMensagem.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AiMensagemCreateManyAndReturnArgs>(args?: SelectSubset<T, AiMensagemCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AiMensagem.
+     * @param {AiMensagemDeleteArgs} args - Arguments to delete one AiMensagem.
+     * @example
+     * // Delete one AiMensagem
+     * const AiMensagem = await prisma.aiMensagem.delete({
+     *   where: {
+     *     // ... filter to delete one AiMensagem
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AiMensagemDeleteArgs>(args: SelectSubset<T, AiMensagemDeleteArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AiMensagem.
+     * @param {AiMensagemUpdateArgs} args - Arguments to update one AiMensagem.
+     * @example
+     * // Update one AiMensagem
+     * const aiMensagem = await prisma.aiMensagem.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AiMensagemUpdateArgs>(args: SelectSubset<T, AiMensagemUpdateArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AiMensagems.
+     * @param {AiMensagemDeleteManyArgs} args - Arguments to filter AiMensagems to delete.
+     * @example
+     * // Delete a few AiMensagems
+     * const { count } = await prisma.aiMensagem.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AiMensagemDeleteManyArgs>(args?: SelectSubset<T, AiMensagemDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AiMensagems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMensagemUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AiMensagems
+     * const aiMensagem = await prisma.aiMensagem.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AiMensagemUpdateManyArgs>(args: SelectSubset<T, AiMensagemUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AiMensagems and returns the data updated in the database.
+     * @param {AiMensagemUpdateManyAndReturnArgs} args - Arguments to update many AiMensagems.
+     * @example
+     * // Update many AiMensagems
+     * const aiMensagem = await prisma.aiMensagem.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AiMensagems and only return the `id`
+     * const aiMensagemWithIdOnly = await prisma.aiMensagem.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AiMensagemUpdateManyAndReturnArgs>(args: SelectSubset<T, AiMensagemUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AiMensagem.
+     * @param {AiMensagemUpsertArgs} args - Arguments to update or create a AiMensagem.
+     * @example
+     * // Update or create a AiMensagem
+     * const aiMensagem = await prisma.aiMensagem.upsert({
+     *   create: {
+     *     // ... data to create a AiMensagem
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AiMensagem we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AiMensagemUpsertArgs>(args: SelectSubset<T, AiMensagemUpsertArgs<ExtArgs>>): Prisma__AiMensagemClient<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AiMensagems.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMensagemCountArgs} args - Arguments to filter AiMensagems to count.
+     * @example
+     * // Count the number of AiMensagems
+     * const count = await prisma.aiMensagem.count({
+     *   where: {
+     *     // ... the filter for the AiMensagems we want to count
+     *   }
+     * })
+    **/
+    count<T extends AiMensagemCountArgs>(
+      args?: Subset<T, AiMensagemCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AiMensagemCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AiMensagem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMensagemAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AiMensagemAggregateArgs>(args: Subset<T, AiMensagemAggregateArgs>): Prisma.PrismaPromise<GetAiMensagemAggregateType<T>>
+
+    /**
+     * Group by AiMensagem.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMensagemGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AiMensagemGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AiMensagemGroupByArgs['orderBy'] }
+        : { orderBy?: AiMensagemGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AiMensagemGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAiMensagemGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AiMensagem model
+   */
+  readonly fields: AiMensagemFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AiMensagem.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AiMensagemClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AiMensagem model
+   */
+  interface AiMensagemFieldRefs {
+    readonly id: FieldRef<"AiMensagem", 'Int'>
+    readonly sessaoId: FieldRef<"AiMensagem", 'String'>
+    readonly role: FieldRef<"AiMensagem", 'String'>
+    readonly content: FieldRef<"AiMensagem", 'String'>
+    readonly promptOriginal: FieldRef<"AiMensagem", 'String'>
+    readonly actions: FieldRef<"AiMensagem", 'Json'>
+    readonly status: FieldRef<"AiMensagem", 'String'>
+    readonly links: FieldRef<"AiMensagem", 'Json'>
+    readonly usuario: FieldRef<"AiMensagem", 'String'>
+    readonly criadoEm: FieldRef<"AiMensagem", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AiMensagem findUnique
+   */
+  export type AiMensagemFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Filter, which AiMensagem to fetch.
+     */
+    where: AiMensagemWhereUniqueInput
+  }
+
+  /**
+   * AiMensagem findUniqueOrThrow
+   */
+  export type AiMensagemFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Filter, which AiMensagem to fetch.
+     */
+    where: AiMensagemWhereUniqueInput
+  }
+
+  /**
+   * AiMensagem findFirst
+   */
+  export type AiMensagemFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Filter, which AiMensagem to fetch.
+     */
+    where?: AiMensagemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMensagems to fetch.
+     */
+    orderBy?: AiMensagemOrderByWithRelationInput | AiMensagemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AiMensagems.
+     */
+    cursor?: AiMensagemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMensagems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMensagems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AiMensagems.
+     */
+    distinct?: AiMensagemScalarFieldEnum | AiMensagemScalarFieldEnum[]
+  }
+
+  /**
+   * AiMensagem findFirstOrThrow
+   */
+  export type AiMensagemFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Filter, which AiMensagem to fetch.
+     */
+    where?: AiMensagemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMensagems to fetch.
+     */
+    orderBy?: AiMensagemOrderByWithRelationInput | AiMensagemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AiMensagems.
+     */
+    cursor?: AiMensagemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMensagems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMensagems.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AiMensagems.
+     */
+    distinct?: AiMensagemScalarFieldEnum | AiMensagemScalarFieldEnum[]
+  }
+
+  /**
+   * AiMensagem findMany
+   */
+  export type AiMensagemFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Filter, which AiMensagems to fetch.
+     */
+    where?: AiMensagemWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMensagems to fetch.
+     */
+    orderBy?: AiMensagemOrderByWithRelationInput | AiMensagemOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AiMensagems.
+     */
+    cursor?: AiMensagemWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMensagems from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMensagems.
+     */
+    skip?: number
+    distinct?: AiMensagemScalarFieldEnum | AiMensagemScalarFieldEnum[]
+  }
+
+  /**
+   * AiMensagem create
+   */
+  export type AiMensagemCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AiMensagem.
+     */
+    data: XOR<AiMensagemCreateInput, AiMensagemUncheckedCreateInput>
+  }
+
+  /**
+   * AiMensagem createMany
+   */
+  export type AiMensagemCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AiMensagems.
+     */
+    data: AiMensagemCreateManyInput | AiMensagemCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AiMensagem createManyAndReturn
+   */
+  export type AiMensagemCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * The data used to create many AiMensagems.
+     */
+    data: AiMensagemCreateManyInput | AiMensagemCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AiMensagem update
+   */
+  export type AiMensagemUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AiMensagem.
+     */
+    data: XOR<AiMensagemUpdateInput, AiMensagemUncheckedUpdateInput>
+    /**
+     * Choose, which AiMensagem to update.
+     */
+    where: AiMensagemWhereUniqueInput
+  }
+
+  /**
+   * AiMensagem updateMany
+   */
+  export type AiMensagemUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AiMensagems.
+     */
+    data: XOR<AiMensagemUpdateManyMutationInput, AiMensagemUncheckedUpdateManyInput>
+    /**
+     * Filter which AiMensagems to update
+     */
+    where?: AiMensagemWhereInput
+    /**
+     * Limit how many AiMensagems to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AiMensagem updateManyAndReturn
+   */
+  export type AiMensagemUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * The data used to update AiMensagems.
+     */
+    data: XOR<AiMensagemUpdateManyMutationInput, AiMensagemUncheckedUpdateManyInput>
+    /**
+     * Filter which AiMensagems to update
+     */
+    where?: AiMensagemWhereInput
+    /**
+     * Limit how many AiMensagems to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AiMensagem upsert
+   */
+  export type AiMensagemUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AiMensagem to update in case it exists.
+     */
+    where: AiMensagemWhereUniqueInput
+    /**
+     * In case the AiMensagem found by the `where` argument doesn't exist, create a new AiMensagem with this data.
+     */
+    create: XOR<AiMensagemCreateInput, AiMensagemUncheckedCreateInput>
+    /**
+     * In case the AiMensagem was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AiMensagemUpdateInput, AiMensagemUncheckedUpdateInput>
+  }
+
+  /**
+   * AiMensagem delete
+   */
+  export type AiMensagemDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Filter which AiMensagem to delete.
+     */
+    where: AiMensagemWhereUniqueInput
+  }
+
+  /**
+   * AiMensagem deleteMany
+   */
+  export type AiMensagemDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AiMensagems to delete
+     */
+    where?: AiMensagemWhereInput
+    /**
+     * Limit how many AiMensagems to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AiMensagem without action
+   */
+  export type AiMensagemDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -19565,12 +20742,36 @@ export namespace Prisma {
   export type WhatsAppEnvioLogScalarFieldEnum = (typeof WhatsAppEnvioLogScalarFieldEnum)[keyof typeof WhatsAppEnvioLogScalarFieldEnum]
 
 
+  export const AiMensagemScalarFieldEnum: {
+    id: 'id',
+    sessaoId: 'sessaoId',
+    role: 'role',
+    content: 'content',
+    promptOriginal: 'promptOriginal',
+    actions: 'actions',
+    status: 'status',
+    links: 'links',
+    usuario: 'usuario',
+    criadoEm: 'criadoEm'
+  };
+
+  export type AiMensagemScalarFieldEnum = (typeof AiMensagemScalarFieldEnum)[keyof typeof AiMensagemScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
   };
 
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -19587,6 +20788,15 @@ export namespace Prisma {
   };
 
   export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+  export const JsonNullValueFilter: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull,
+    AnyNull: typeof AnyNull
+  };
+
+  export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
   /**
@@ -19668,6 +20878,20 @@ export namespace Prisma {
    * Reference to a field of type 'Bytes[]'
    */
   export type ListBytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Json'
+   */
+  export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+  /**
+   * Reference to a field of type 'QueryMode'
+   */
+  export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
   /**
    * Deep Input Types
@@ -20837,6 +22061,85 @@ export namespace Prisma {
     tipo?: StringWithAggregatesFilter<"WhatsAppEnvioLog"> | string
     referencia?: IntNullableWithAggregatesFilter<"WhatsAppEnvioLog"> | number | null
     dataEnvio?: DateTimeWithAggregatesFilter<"WhatsAppEnvioLog"> | Date | string
+  }
+
+  export type AiMensagemWhereInput = {
+    AND?: AiMensagemWhereInput | AiMensagemWhereInput[]
+    OR?: AiMensagemWhereInput[]
+    NOT?: AiMensagemWhereInput | AiMensagemWhereInput[]
+    id?: IntFilter<"AiMensagem"> | number
+    sessaoId?: StringFilter<"AiMensagem"> | string
+    role?: StringFilter<"AiMensagem"> | string
+    content?: StringFilter<"AiMensagem"> | string
+    promptOriginal?: StringNullableFilter<"AiMensagem"> | string | null
+    actions?: JsonNullableFilter<"AiMensagem">
+    status?: StringFilter<"AiMensagem"> | string
+    links?: JsonNullableFilter<"AiMensagem">
+    usuario?: StringNullableFilter<"AiMensagem"> | string | null
+    criadoEm?: DateTimeFilter<"AiMensagem"> | Date | string
+  }
+
+  export type AiMensagemOrderByWithRelationInput = {
+    id?: SortOrder
+    sessaoId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    promptOriginal?: SortOrderInput | SortOrder
+    actions?: SortOrderInput | SortOrder
+    status?: SortOrder
+    links?: SortOrderInput | SortOrder
+    usuario?: SortOrderInput | SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type AiMensagemWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: AiMensagemWhereInput | AiMensagemWhereInput[]
+    OR?: AiMensagemWhereInput[]
+    NOT?: AiMensagemWhereInput | AiMensagemWhereInput[]
+    sessaoId?: StringFilter<"AiMensagem"> | string
+    role?: StringFilter<"AiMensagem"> | string
+    content?: StringFilter<"AiMensagem"> | string
+    promptOriginal?: StringNullableFilter<"AiMensagem"> | string | null
+    actions?: JsonNullableFilter<"AiMensagem">
+    status?: StringFilter<"AiMensagem"> | string
+    links?: JsonNullableFilter<"AiMensagem">
+    usuario?: StringNullableFilter<"AiMensagem"> | string | null
+    criadoEm?: DateTimeFilter<"AiMensagem"> | Date | string
+  }, "id">
+
+  export type AiMensagemOrderByWithAggregationInput = {
+    id?: SortOrder
+    sessaoId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    promptOriginal?: SortOrderInput | SortOrder
+    actions?: SortOrderInput | SortOrder
+    status?: SortOrder
+    links?: SortOrderInput | SortOrder
+    usuario?: SortOrderInput | SortOrder
+    criadoEm?: SortOrder
+    _count?: AiMensagemCountOrderByAggregateInput
+    _avg?: AiMensagemAvgOrderByAggregateInput
+    _max?: AiMensagemMaxOrderByAggregateInput
+    _min?: AiMensagemMinOrderByAggregateInput
+    _sum?: AiMensagemSumOrderByAggregateInput
+  }
+
+  export type AiMensagemScalarWhereWithAggregatesInput = {
+    AND?: AiMensagemScalarWhereWithAggregatesInput | AiMensagemScalarWhereWithAggregatesInput[]
+    OR?: AiMensagemScalarWhereWithAggregatesInput[]
+    NOT?: AiMensagemScalarWhereWithAggregatesInput | AiMensagemScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"AiMensagem"> | number
+    sessaoId?: StringWithAggregatesFilter<"AiMensagem"> | string
+    role?: StringWithAggregatesFilter<"AiMensagem"> | string
+    content?: StringWithAggregatesFilter<"AiMensagem"> | string
+    promptOriginal?: StringNullableWithAggregatesFilter<"AiMensagem"> | string | null
+    actions?: JsonNullableWithAggregatesFilter<"AiMensagem">
+    status?: StringWithAggregatesFilter<"AiMensagem"> | string
+    links?: JsonNullableWithAggregatesFilter<"AiMensagem">
+    usuario?: StringNullableWithAggregatesFilter<"AiMensagem"> | string | null
+    criadoEm?: DateTimeWithAggregatesFilter<"AiMensagem"> | Date | string
   }
 
   export type ClienteCreateInput = {
@@ -22104,6 +23407,94 @@ export namespace Prisma {
     dataEnvio?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AiMensagemCreateInput = {
+    sessaoId: string
+    role: string
+    content: string
+    promptOriginal?: string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type AiMensagemUncheckedCreateInput = {
+    id?: number
+    sessaoId: string
+    role: string
+    content: string
+    promptOriginal?: string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type AiMensagemUpdateInput = {
+    sessaoId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: StringFieldUpdateOperationsInput | string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMensagemUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessaoId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: StringFieldUpdateOperationsInput | string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMensagemCreateManyInput = {
+    id?: number
+    sessaoId: string
+    role: string
+    content: string
+    promptOriginal?: string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type AiMensagemUpdateManyMutationInput = {
+    sessaoId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: StringFieldUpdateOperationsInput | string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMensagemUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessaoId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: StringFieldUpdateOperationsInput | string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -23228,6 +24619,98 @@ export namespace Prisma {
     clienteId?: SortOrder
     referencia?: SortOrder
   }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type AiMensagemCountOrderByAggregateInput = {
+    id?: SortOrder
+    sessaoId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    promptOriginal?: SortOrder
+    actions?: SortOrder
+    status?: SortOrder
+    links?: SortOrder
+    usuario?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type AiMensagemAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type AiMensagemMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sessaoId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    promptOriginal?: SortOrder
+    status?: SortOrder
+    usuario?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type AiMensagemMinOrderByAggregateInput = {
+    id?: SortOrder
+    sessaoId?: SortOrder
+    role?: SortOrder
+    content?: SortOrder
+    promptOriginal?: SortOrder
+    status?: SortOrder
+    usuario?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type AiMensagemSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
 
   export type VendaCreateNestedManyWithoutClienteInput = {
     create?: XOR<VendaCreateWithoutClienteInput, VendaUncheckedCreateWithoutClienteInput> | VendaCreateWithoutClienteInput[] | VendaUncheckedCreateWithoutClienteInput[]
@@ -23844,6 +25327,29 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
+  }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
   export type VendaCreateWithoutClienteInput = {

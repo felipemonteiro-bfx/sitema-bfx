@@ -248,3 +248,19 @@ model WhatsAppEnvioLog {
   @@index([tipo, referencia])
   @@map("whatsapp_envio_log")
 }
+
+model AiMensagem {
+  id             Int      @id @default(autoincrement())
+  sessaoId       String   @map("sessao_id")
+  role           String
+  content        String
+  promptOriginal String?  @map("prompt_original")
+  actions        Json?
+  status         String   @default("done")
+  links          Json?
+  usuario        String?
+  criadoEm       DateTime @default(now()) @map("criado_em")
+
+  @@index([sessaoId, criadoEm])
+  @@map("ai_mensagens")
+}

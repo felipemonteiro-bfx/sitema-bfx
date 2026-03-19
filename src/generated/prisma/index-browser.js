@@ -306,9 +306,27 @@ exports.Prisma.WhatsAppEnvioLogScalarFieldEnum = {
   dataEnvio: 'dataEnvio'
 };
 
+exports.Prisma.AiMensagemScalarFieldEnum = {
+  id: 'id',
+  sessaoId: 'sessaoId',
+  role: 'role',
+  content: 'content',
+  promptOriginal: 'promptOriginal',
+  actions: 'actions',
+  status: 'status',
+  links: 'links',
+  usuario: 'usuario',
+  criadoEm: 'criadoEm'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -319,6 +337,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 
 
@@ -337,7 +361,8 @@ exports.Prisma.ModelName = {
   AuditLog: 'AuditLog',
   Despesa: 'Despesa',
   Aviso: 'Aviso',
-  WhatsAppEnvioLog: 'WhatsAppEnvioLog'
+  WhatsAppEnvioLog: 'WhatsAppEnvioLog',
+  AiMensagem: 'AiMensagem'
 };
 
 /**
