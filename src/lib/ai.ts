@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { aiActions, type ActionContext } from "@/lib/ai-actions";
 import { callMcpTool } from "@/lib/mcp";
-import { generateText, tool } from "ai";
+import { generateText, tool, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
@@ -116,12 +116,18 @@ export async function runAiWithActions(
         );
       } else if (item.name === "listar_produtos" && Array.isArray(item.result)) {
         const rows = item.result as any[];
-        const nomes = rows.slice(0, 5).map((p) => p.nome).filter(Boolean);
-        parts.push(
-          rows.length
-            ? `Produtos encontrados: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
-            : "Nenhum produto encontrado."
-        );
+        if (!rows.length) {
+          parts.push("Nenhum produto encontrado.");
+        } else {
+          const linhas = rows.slice(0, 10).map((p) => {
+            const estoque = p.qtdEstoque != null ? ` — estoque: ${p.qtdEstoque}` : "";
+            return `${p.nome}${estoque}`;
+          });
+          const totalEstoque = rows.reduce((s: number, p: any) => s + (p.qtdEstoque ?? 0), 0);
+          parts.push(
+            `Produtos encontrados: ${rows.length}. Total em estoque: ${totalEstoque}.\n${linhas.join("\n")}`
+          );
+        }
       } else if (item.name === "listar_vendas" && Array.isArray(item.result)) {
         parts.push(`Vendas encontradas: ${(item.result as any[]).length}.`);
       } else if (item.name === "listar_despesas" && Array.isArray(item.result)) {
@@ -221,6 +227,7 @@ export async function runAiWithActions(
           { role: "user", content: prompt },
         ],
         tools,
+        stopWhen: stepCountIs(5),
       });
       text = result.text ?? "";
     } catch {
@@ -235,6 +242,7 @@ export async function runAiWithActions(
               { role: "user", content: prompt },
             ],
             tools,
+            stopWhen: stepCountIs(5),
           });
           text = result.text ?? "";
         } catch {
@@ -302,6 +310,16 @@ export async function runAiWithActions(
           return items.length
             ? `Clientes encontrados: ${items.join(", ")}.`
             : "Nenhum cliente encontrado.";
+        }
+        if (a.name === "listar_produtos" && Array.isArray(a.result)) {
+          const rows = a.result as any[];
+          if (!rows.length) return "Nenhum produto encontrado.";
+          const linhas = rows.slice(0, 10).map((p: any) => {
+            const estoque = p.qtdEstoque != null ? ` — estoque: ${p.qtdEstoque}` : "";
+            return `${p.nome}${estoque}`;
+          });
+          const totalEstoque = rows.reduce((s: number, p: any) => s + (p.qtdEstoque ?? 0), 0);
+          return `Produtos encontrados: ${rows.length}. Total em estoque: ${totalEstoque}.\n${linhas.join("\n")}`;
         }
         if (a.name === "listar_despesas" && Array.isArray(a.result)) {
           return summarizeDespesas(a.result as any[]);
