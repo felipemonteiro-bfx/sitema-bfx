@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProdutoItemForm } from "@/components/produto-item-form";
 import { Button } from "@/components/ui/button";
 import { formatBRL } from "@/lib/utils";
@@ -19,6 +19,7 @@ type InitialItem = Omit<ProdutoItem, "id">;
 
 interface Props {
   initialItens: InitialItem[];
+  onTotalChange?: (total: number) => void;
 }
 
 function createEmptyItem(): ProdutoItem {
@@ -32,13 +33,19 @@ function createEmptyItem(): ProdutoItem {
   };
 }
 
-export function EditVendaItens({ initialItens }: Props) {
+export function EditVendaItens({ initialItens, onTotalChange }: Props) {
   const [itens, setItens] = useState<ProdutoItem[]>(() =>
     initialItens.map((item) => ({
       ...item,
       id: Math.random().toString(36).slice(2),
     }))
   );
+
+  const totalSubtotal = itens.reduce((s, i) => s + i.subtotal, 0);
+
+  useEffect(() => {
+    onTotalChange?.(totalSubtotal);
+  }, [totalSubtotal, onTotalChange]);
 
   const handleUpdate = (index: number, item: ProdutoItem) => {
     setItens((prev) => prev.map((it, i) => (i === index ? item : it)));
@@ -61,8 +68,6 @@ export function EditVendaItens({ initialItens }: Props) {
       quantidade,
       subtotal,
     }));
-
-  const totalSubtotal = itens.reduce((s, i) => s + i.subtotal, 0);
 
   return (
     <div className="md:col-span-3 space-y-3">

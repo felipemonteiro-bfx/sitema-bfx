@@ -21,8 +21,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
-import { EditParcelasSection } from "@/components/edit-parcelas-section";
-import { EditVendaItens } from "@/components/edit-venda-itens-client";
+import { EditVendaComParcelas } from "@/components/edit-venda-com-parcelas";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-utils";
@@ -656,7 +655,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   placeholder="Selecione o vendedor"
                 />
               </div>
-              <EditVendaItens
+              <EditVendaComParcelas
                 initialItens={
                   editVenda.itens.length > 0
                     ? editVenda.itens
@@ -668,6 +667,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         subtotal: (editVenda.valorVenda || 0) * (editVenda.quantidade || 1),
                       }]
                 }
+                initialParcelas={editParcelasVenc}
+                initialNumeroParcelas={editVenda.parcelas || 1}
+                initialTotal={valorTotalVenda(editVenda)}
+                dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
               />
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Frete ao cliente</label>
@@ -677,17 +680,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <label className="text-xs font-medium text-muted-foreground">Custo de envio</label>
                 <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
-                <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
-              </div>
-
-              <EditParcelasSection
-                initialParcelas={editParcelasVenc}
-                numeroParcelas={editVenda.parcelas || 1}
-                valorTotal={valorTotalVenda(editVenda)}
-                dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
-              />
 
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</label>
