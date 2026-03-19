@@ -195,7 +195,8 @@ async function getContextHistory(sessaoId: string) {
   // Reconstruct as conversation pairs
   const history: { role: "user" | "assistant"; content: string }[] = [];
   for (const row of rows) {
-    if (row.promptOriginal && row.promptOriginal !== "Confirmação de ações") {
+    if (row.promptOriginal === "Confirmação de ações") continue;
+    if (row.promptOriginal) {
       history.push({ role: "user", content: row.promptOriginal });
     }
     history.push({ role: "assistant", content: row.content });
