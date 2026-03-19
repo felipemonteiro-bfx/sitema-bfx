@@ -291,6 +291,7 @@ exports.Prisma.MovimentoEstoqueScalarFieldEnum = {
   motivoTipo: 'motivoTipo',
   observacao: 'observacao',
   notaFiscal: 'notaFiscal',
+  chaveNfe: 'chaveNfe',
   fornecedorId: 'fornecedorId',
   vendaId: 'vendaId',
   usuario: 'usuario',

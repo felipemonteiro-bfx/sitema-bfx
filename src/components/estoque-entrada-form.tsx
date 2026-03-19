@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { NfeKeyInput } from "@/components/nfe-key-input";
 import { Plus, Trash2 } from "lucide-react";
 
 type Produto = { id: number; nome: string; custoPadrao: number | null };
@@ -26,6 +27,8 @@ export function EstoqueEntradaForm({
 }) {
   const [temNota, setTemNota] = React.useState(false);
   const [modo, setModo] = React.useState<"unico" | "lote">("unico");
+  const [chaveNfe, setChaveNfe] = React.useState("");
+  const [chaveNfeLote, setChaveNfeLote] = React.useState("");
   const [itensLote, setItensLote] = React.useState<Array<{ produtoId: string; quantidade: string; custoUnitario: number }>>([
     { produtoId: "", quantidade: "1", custoUnitario: 0 },
   ]);
@@ -62,8 +65,12 @@ export function EstoqueEntradaForm({
       }));
     fd.set("itens", JSON.stringify(itensFormatted));
     fd.set("temNota", temNota ? "true" : "false");
+    if (temNota && chaveNfeLote.replace(/\D/g, "").length === 44) {
+      fd.set("chaveNfe", chaveNfeLote.replace(/\D/g, ""));
+    }
     await onEntradaLoteAction(fd);
     setItensLote([{ produtoId: "", quantidade: "1", custoUnitario: 0 }]);
+    setChaveNfeLote("");
   };
 
   return (
@@ -132,10 +139,13 @@ export function EstoqueEntradaForm({
             </div>
           </div>
           {temNota && (
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Número da Nota Fiscal</div>
-                <Input name="notaFiscal" placeholder="Ex: NF-e 001234" />
+            <div className="space-y-4">
+              <NfeKeyInput value={chaveNfe} onChange={setChaveNfe} />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Número da Nota Fiscal</div>
+                  <Input name="notaFiscal" placeholder="Ex: NF-e 001234" />
+                </div>
               </div>
             </div>
           )}
@@ -169,6 +179,9 @@ export function EstoqueEntradaForm({
               </div>
             )}
           </div>
+          {temNota && (
+            <NfeKeyInput value={chaveNfeLote} onChange={setChaveNfeLote} />
+          )}
 
           <div className="space-y-3">
             <div className="text-xs font-semibold text-muted-foreground">Itens</div>

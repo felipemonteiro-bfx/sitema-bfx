@@ -331,7 +331,7 @@ export default async function EstoquePage({ searchParams }: { searchParams: Prom
                           <TableHead className="text-center font-semibold">Qtd</TableHead>
                           <TableHead className="font-semibold">Motivo</TableHead>
                           <TableHead className="text-right font-semibold">Custo Unit.</TableHead>
-                          <TableHead className="font-semibold">NF</TableHead>
+                          <TableHead className="font-semibold">NF / Chave</TableHead>
                           <TableHead className="font-semibold">Usuário</TableHead>
                           <TableHead className="font-semibold">Obs</TableHead>
                         </TableRow>
@@ -370,7 +370,17 @@ export default async function EstoquePage({ searchParams }: { searchParams: Prom
                               <TableCell className="text-right tabular-nums">
                                 {m.custoUnitario ? formatBRL(m.custoUnitario) : "—"}
                               </TableCell>
-                              <TableCell className="text-xs">{m.notaFiscal || "—"}</TableCell>
+                              <TableCell className="text-xs">
+                                <div className="space-y-0.5">
+                                  {m.notaFiscal && <div className="font-medium">{m.notaFiscal}</div>}
+                                  {m.chaveNfe && (
+                                    <div className="font-mono text-[10px] text-muted-foreground max-w-[160px] truncate" title={m.chaveNfe}>
+                                      {m.chaveNfe.replace(/(\d{4})(?=\d)/g, "$1 ")}
+                                    </div>
+                                  )}
+                                  {!m.notaFiscal && !m.chaveNfe && "—"}
+                                </div>
+                              </TableCell>
                               <TableCell className="text-xs">{m.usuario || "—"}</TableCell>
                               <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
                                 {m.observacao || "—"}

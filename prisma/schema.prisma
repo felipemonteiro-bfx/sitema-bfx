@@ -231,6 +231,7 @@ model MovimentoEstoque {
   motivoTipo    String   @map("motivo_tipo") // COMPRA_COM_NOTA | COMPRA_SEM_NOTA | VENDA | AJUSTE | DEVOLUCAO | PERDA
   observacao    String?
   notaFiscal    String?  @map("nota_fiscal")
+  chaveNfe      String?  @map("chave_nfe")
   fornecedorId  Int?     @map("fornecedor_id")
   vendaId       Int?     @map("venda_id")
   usuario       String?

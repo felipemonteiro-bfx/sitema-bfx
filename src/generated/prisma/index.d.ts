@@ -18132,6 +18132,7 @@ export namespace Prisma {
     motivoTipo: string | null
     observacao: string | null
     notaFiscal: string | null
+    chaveNfe: string | null
     fornecedorId: number | null
     vendaId: number | null
     usuario: string | null
@@ -18147,6 +18148,7 @@ export namespace Prisma {
     motivoTipo: string | null
     observacao: string | null
     notaFiscal: string | null
+    chaveNfe: string | null
     fornecedorId: number | null
     vendaId: number | null
     usuario: string | null
@@ -18162,6 +18164,7 @@ export namespace Prisma {
     motivoTipo: number
     observacao: number
     notaFiscal: number
+    chaveNfe: number
     fornecedorId: number
     vendaId: number
     usuario: number
@@ -18197,6 +18200,7 @@ export namespace Prisma {
     motivoTipo?: true
     observacao?: true
     notaFiscal?: true
+    chaveNfe?: true
     fornecedorId?: true
     vendaId?: true
     usuario?: true
@@ -18212,6 +18216,7 @@ export namespace Prisma {
     motivoTipo?: true
     observacao?: true
     notaFiscal?: true
+    chaveNfe?: true
     fornecedorId?: true
     vendaId?: true
     usuario?: true
@@ -18227,6 +18232,7 @@ export namespace Prisma {
     motivoTipo?: true
     observacao?: true
     notaFiscal?: true
+    chaveNfe?: true
     fornecedorId?: true
     vendaId?: true
     usuario?: true
@@ -18329,6 +18335,7 @@ export namespace Prisma {
     motivoTipo: string
     observacao: string | null
     notaFiscal: string | null
+    chaveNfe: string | null
     fornecedorId: number | null
     vendaId: number | null
     usuario: string | null
@@ -18363,6 +18370,7 @@ export namespace Prisma {
     motivoTipo?: boolean
     observacao?: boolean
     notaFiscal?: boolean
+    chaveNfe?: boolean
     fornecedorId?: boolean
     vendaId?: boolean
     usuario?: boolean
@@ -18379,6 +18387,7 @@ export namespace Prisma {
     motivoTipo?: boolean
     observacao?: boolean
     notaFiscal?: boolean
+    chaveNfe?: boolean
     fornecedorId?: boolean
     vendaId?: boolean
     usuario?: boolean
@@ -18395,6 +18404,7 @@ export namespace Prisma {
     motivoTipo?: boolean
     observacao?: boolean
     notaFiscal?: boolean
+    chaveNfe?: boolean
     fornecedorId?: boolean
     vendaId?: boolean
     usuario?: boolean
@@ -18411,13 +18421,14 @@ export namespace Prisma {
     motivoTipo?: boolean
     observacao?: boolean
     notaFiscal?: boolean
+    chaveNfe?: boolean
     fornecedorId?: boolean
     vendaId?: boolean
     usuario?: boolean
     criadoEm?: boolean
   }
 
-  export type MovimentoEstoqueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "produtoId" | "tipo" | "quantidade" | "custoUnitario" | "motivoTipo" | "observacao" | "notaFiscal" | "fornecedorId" | "vendaId" | "usuario" | "criadoEm", ExtArgs["result"]["movimentoEstoque"]>
+  export type MovimentoEstoqueOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "produtoId" | "tipo" | "quantidade" | "custoUnitario" | "motivoTipo" | "observacao" | "notaFiscal" | "chaveNfe" | "fornecedorId" | "vendaId" | "usuario" | "criadoEm", ExtArgs["result"]["movimentoEstoque"]>
   export type MovimentoEstoqueInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     produto?: boolean | ProdutoDefaultArgs<ExtArgs>
   }
@@ -18442,6 +18453,7 @@ export namespace Prisma {
       motivoTipo: string
       observacao: string | null
       notaFiscal: string | null
+      chaveNfe: string | null
       fornecedorId: number | null
       vendaId: number | null
       usuario: string | null
@@ -18878,6 +18890,7 @@ export namespace Prisma {
     readonly motivoTipo: FieldRef<"MovimentoEstoque", 'String'>
     readonly observacao: FieldRef<"MovimentoEstoque", 'String'>
     readonly notaFiscal: FieldRef<"MovimentoEstoque", 'String'>
+    readonly chaveNfe: FieldRef<"MovimentoEstoque", 'String'>
     readonly fornecedorId: FieldRef<"MovimentoEstoque", 'Int'>
     readonly vendaId: FieldRef<"MovimentoEstoque", 'Int'>
     readonly usuario: FieldRef<"MovimentoEstoque", 'String'>
@@ -19522,6 +19535,7 @@ export namespace Prisma {
     motivoTipo: 'motivoTipo',
     observacao: 'observacao',
     notaFiscal: 'notaFiscal',
+    chaveNfe: 'chaveNfe',
     fornecedorId: 'fornecedorId',
     vendaId: 'vendaId',
     usuario: 'usuario',
@@ -20686,6 +20700,7 @@ export namespace Prisma {
     motivoTipo?: StringFilter<"MovimentoEstoque"> | string
     observacao?: StringNullableFilter<"MovimentoEstoque"> | string | null
     notaFiscal?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableFilter<"MovimentoEstoque"> | string | null
     fornecedorId?: IntNullableFilter<"MovimentoEstoque"> | number | null
     vendaId?: IntNullableFilter<"MovimentoEstoque"> | number | null
     usuario?: StringNullableFilter<"MovimentoEstoque"> | string | null
@@ -20702,6 +20717,7 @@ export namespace Prisma {
     motivoTipo?: SortOrder
     observacao?: SortOrderInput | SortOrder
     notaFiscal?: SortOrderInput | SortOrder
+    chaveNfe?: SortOrderInput | SortOrder
     fornecedorId?: SortOrderInput | SortOrder
     vendaId?: SortOrderInput | SortOrder
     usuario?: SortOrderInput | SortOrder
@@ -20721,6 +20737,7 @@ export namespace Prisma {
     motivoTipo?: StringFilter<"MovimentoEstoque"> | string
     observacao?: StringNullableFilter<"MovimentoEstoque"> | string | null
     notaFiscal?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableFilter<"MovimentoEstoque"> | string | null
     fornecedorId?: IntNullableFilter<"MovimentoEstoque"> | number | null
     vendaId?: IntNullableFilter<"MovimentoEstoque"> | number | null
     usuario?: StringNullableFilter<"MovimentoEstoque"> | string | null
@@ -20737,6 +20754,7 @@ export namespace Prisma {
     motivoTipo?: SortOrder
     observacao?: SortOrderInput | SortOrder
     notaFiscal?: SortOrderInput | SortOrder
+    chaveNfe?: SortOrderInput | SortOrder
     fornecedorId?: SortOrderInput | SortOrder
     vendaId?: SortOrderInput | SortOrder
     usuario?: SortOrderInput | SortOrder
@@ -20760,6 +20778,7 @@ export namespace Prisma {
     motivoTipo?: StringWithAggregatesFilter<"MovimentoEstoque"> | string
     observacao?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
     notaFiscal?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
     fornecedorId?: IntNullableWithAggregatesFilter<"MovimentoEstoque"> | number | null
     vendaId?: IntNullableWithAggregatesFilter<"MovimentoEstoque"> | number | null
     usuario?: StringNullableWithAggregatesFilter<"MovimentoEstoque"> | string | null
@@ -21877,6 +21896,7 @@ export namespace Prisma {
     motivoTipo: string
     observacao?: string | null
     notaFiscal?: string | null
+    chaveNfe?: string | null
     fornecedorId?: number | null
     vendaId?: number | null
     usuario?: string | null
@@ -21893,6 +21913,7 @@ export namespace Prisma {
     motivoTipo: string
     observacao?: string | null
     notaFiscal?: string | null
+    chaveNfe?: string | null
     fornecedorId?: number | null
     vendaId?: number | null
     usuario?: string | null
@@ -21906,6 +21927,7 @@ export namespace Prisma {
     motivoTipo?: StringFieldUpdateOperationsInput | string
     observacao?: NullableStringFieldUpdateOperationsInput | string | null
     notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     vendaId?: NullableIntFieldUpdateOperationsInput | number | null
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21922,6 +21944,7 @@ export namespace Prisma {
     motivoTipo?: StringFieldUpdateOperationsInput | string
     observacao?: NullableStringFieldUpdateOperationsInput | string | null
     notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     vendaId?: NullableIntFieldUpdateOperationsInput | number | null
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21937,6 +21960,7 @@ export namespace Prisma {
     motivoTipo: string
     observacao?: string | null
     notaFiscal?: string | null
+    chaveNfe?: string | null
     fornecedorId?: number | null
     vendaId?: number | null
     usuario?: string | null
@@ -21950,6 +21974,7 @@ export namespace Prisma {
     motivoTipo?: StringFieldUpdateOperationsInput | string
     observacao?: NullableStringFieldUpdateOperationsInput | string | null
     notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     vendaId?: NullableIntFieldUpdateOperationsInput | number | null
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21965,6 +21990,7 @@ export namespace Prisma {
     motivoTipo?: StringFieldUpdateOperationsInput | string
     observacao?: NullableStringFieldUpdateOperationsInput | string | null
     notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     vendaId?: NullableIntFieldUpdateOperationsInput | number | null
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
@@ -23014,6 +23040,7 @@ export namespace Prisma {
     motivoTipo?: SortOrder
     observacao?: SortOrder
     notaFiscal?: SortOrder
+    chaveNfe?: SortOrder
     fornecedorId?: SortOrder
     vendaId?: SortOrder
     usuario?: SortOrder
@@ -23038,6 +23065,7 @@ export namespace Prisma {
     motivoTipo?: SortOrder
     observacao?: SortOrder
     notaFiscal?: SortOrder
+    chaveNfe?: SortOrder
     fornecedorId?: SortOrder
     vendaId?: SortOrder
     usuario?: SortOrder
@@ -23053,6 +23081,7 @@ export namespace Prisma {
     motivoTipo?: SortOrder
     observacao?: SortOrder
     notaFiscal?: SortOrder
+    chaveNfe?: SortOrder
     fornecedorId?: SortOrder
     vendaId?: SortOrder
     usuario?: SortOrder
@@ -23886,6 +23915,7 @@ export namespace Prisma {
     motivoTipo: string
     observacao?: string | null
     notaFiscal?: string | null
+    chaveNfe?: string | null
     fornecedorId?: number | null
     vendaId?: number | null
     usuario?: string | null
@@ -23900,6 +23930,7 @@ export namespace Prisma {
     motivoTipo: string
     observacao?: string | null
     notaFiscal?: string | null
+    chaveNfe?: string | null
     fornecedorId?: number | null
     vendaId?: number | null
     usuario?: string | null
@@ -23966,6 +23997,7 @@ export namespace Prisma {
     motivoTipo?: StringFilter<"MovimentoEstoque"> | string
     observacao?: StringNullableFilter<"MovimentoEstoque"> | string | null
     notaFiscal?: StringNullableFilter<"MovimentoEstoque"> | string | null
+    chaveNfe?: StringNullableFilter<"MovimentoEstoque"> | string | null
     fornecedorId?: IntNullableFilter<"MovimentoEstoque"> | number | null
     vendaId?: IntNullableFilter<"MovimentoEstoque"> | number | null
     usuario?: StringNullableFilter<"MovimentoEstoque"> | string | null
@@ -24917,6 +24949,7 @@ export namespace Prisma {
     motivoTipo: string
     observacao?: string | null
     notaFiscal?: string | null
+    chaveNfe?: string | null
     fornecedorId?: number | null
     vendaId?: number | null
     usuario?: string | null
@@ -24930,6 +24963,7 @@ export namespace Prisma {
     motivoTipo?: StringFieldUpdateOperationsInput | string
     observacao?: NullableStringFieldUpdateOperationsInput | string | null
     notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     vendaId?: NullableIntFieldUpdateOperationsInput | number | null
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24944,6 +24978,7 @@ export namespace Prisma {
     motivoTipo?: StringFieldUpdateOperationsInput | string
     observacao?: NullableStringFieldUpdateOperationsInput | string | null
     notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     vendaId?: NullableIntFieldUpdateOperationsInput | number | null
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
@@ -24958,6 +24993,7 @@ export namespace Prisma {
     motivoTipo?: StringFieldUpdateOperationsInput | string
     observacao?: NullableStringFieldUpdateOperationsInput | string | null
     notaFiscal?: NullableStringFieldUpdateOperationsInput | string | null
+    chaveNfe?: NullableStringFieldUpdateOperationsInput | string | null
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     vendaId?: NullableIntFieldUpdateOperationsInput | number | null
     usuario?: NullableStringFieldUpdateOperationsInput | string | null

@@ -14,6 +14,7 @@ export async function registrarEntradaEstoque(formData: FormData) {
   const custoUnitario = Number(formData.get("custoUnitario") || 0);
   const temNota = formData.get("temNota") === "true";
   const notaFiscal = String(formData.get("notaFiscal") || "").trim();
+  const chaveNfe = String(formData.get("chaveNfe") || "").replace(/\D/g, "").trim();
   const fornecedorId = formData.get("fornecedorId") ? Number(formData.get("fornecedorId")) : null;
   const observacao = String(formData.get("observacao") || "").trim();
 
@@ -45,13 +46,14 @@ export async function registrarEntradaEstoque(formData: FormData) {
         motivoTipo,
         observacao: observacao || null,
         notaFiscal: temNota && notaFiscal ? notaFiscal : null,
+        chaveNfe: temNota && chaveNfe.length === 44 ? chaveNfe : null,
         fornecedorId,
         usuario,
       },
     });
   });
 
-  await createAuditLog("estoque:entrada", { produtoId, quantidade, motivoTipo, notaFiscal: notaFiscal || undefined });
+  await createAuditLog("estoque:entrada", { produtoId, quantidade, motivoTipo, notaFiscal: notaFiscal || undefined, chaveNfe: chaveNfe || undefined });
 
   revalidatePath("/estoque");
   revalidatePath("/cadastros");
@@ -118,6 +120,7 @@ export async function registrarEntradaLote(formData: FormData) {
 
   const temNota = formData.get("temNota") === "true";
   const notaFiscal = String(formData.get("notaFiscal") || "").trim();
+  const chaveNfe = String(formData.get("chaveNfe") || "").replace(/\D/g, "").trim();
   const fornecedorId = formData.get("fornecedorId") ? Number(formData.get("fornecedorId")) : null;
   const observacao = String(formData.get("observacao") || "").trim();
 
@@ -150,6 +153,7 @@ export async function registrarEntradaLote(formData: FormData) {
           motivoTipo,
           observacao: observacao || null,
           notaFiscal: temNota && notaFiscal ? notaFiscal : null,
+          chaveNfe: temNota && chaveNfe.length === 44 ? chaveNfe : null,
           fornecedorId,
           usuario,
         },
@@ -157,7 +161,7 @@ export async function registrarEntradaLote(formData: FormData) {
     }
   });
 
-  await createAuditLog("estoque:entrada_lote", { itens: itens.length, motivoTipo, notaFiscal: notaFiscal || undefined });
+  await createAuditLog("estoque:entrada_lote", { itens: itens.length, motivoTipo, notaFiscal: notaFiscal || undefined, chaveNfe: chaveNfe || undefined });
 
   revalidatePath("/estoque");
   revalidatePath("/cadastros");
