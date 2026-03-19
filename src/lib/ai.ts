@@ -42,15 +42,9 @@ export async function runAi(prompt: string, provider: "openai" | "gemini") {
   return text || "Sem resposta.";
 }
 
-export const readOnlyActions = new Set([
-  "listar_vendas",
-  "listar_clientes",
-  "listar_produtos",
-  "listar_despesas",
-  "listar_empresas",
-  "listar_usuarios",
-  "gerar_catalogo_produtos",
-]);
+export const readOnlyActions = new Set(
+  aiActions.filter((a) => a.readOnly === true).map((a) => a.name)
+);
 
 function inferReadOnlyActions(prompt: string) {
   const p = prompt.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
@@ -259,7 +253,7 @@ export async function runAiWithActions(
       }
     }
 
-    if (executed.length === 0 && isDespesasMes) {
+    if (executed.length === 0 && isDespesasMes && ctx.mode !== "plan") {
       try {
         const now = new Date();
         const from = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -357,7 +351,7 @@ export async function runAiWithActions(
     tools,
   });
 
-  if (executed.length === 0 && isDespesasMes) {
+  if (executed.length === 0 && isDespesasMes && ctx.mode !== "plan") {
     try {
       const now = new Date();
       const from = new Date(now.getFullYear(), now.getMonth(), 1);
