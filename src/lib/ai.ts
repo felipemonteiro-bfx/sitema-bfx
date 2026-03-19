@@ -28,7 +28,7 @@ export async function runAi(prompt: string, provider: "openai" | "gemini" | "lit
     const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
     const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
     const { text } = await generateText({
-      model: litellm(cfg.litellmModel || "gpt-4o-mini"),
+      model: litellm.chat(cfg.litellmModel || "gpt-4o"),
       prompt,
     });
     return text || "Sem resposta.";
@@ -203,6 +203,8 @@ export async function runAiWithActions(
     if (!cfg?.litellmUrl || !cfg?.litellmKey) return { text: "LiteLLM nao configurado.", actions: [] };
     const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
     const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
+    // .chat() força o endpoint /chat/completions em vez do /responses (Responses API)
+    const litellmModel = litellm.chat(cfg.litellmModel || "gpt-4o");
     const executed: { name: string; result: unknown }[] = [];
     const planned: { name: string; params: Record<string, unknown> }[] = [];
     const tools = Object.fromEntries(
@@ -225,8 +227,10 @@ export async function runAiWithActions(
           }),
         ])
     );
-    const { text } = await generateText({
-      model: litellm(cfg.litellmModel || "gpt-4o-mini"),
+    let text = "";
+    try {
+    const result = await generateText({
+      model: litellmModel,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         ...(ctx.history ?? []),
@@ -235,6 +239,11 @@ export async function runAiWithActions(
       tools,
       stopWhen: stepCountIs(5),
     });
+    text = result.text ?? "";
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { text: `Erro ao chamar LiteLLM: ${msg.slice(0, 200)}`, actions: [] };
+    }
     if (ctx.mode === "plan") {
       if (planned.length > 0) return { text: stripActions(text) || text, actions: planned };
       const inferred = inferReadOnlyActions(prompt);
