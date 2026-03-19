@@ -267,14 +267,68 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             value: "ia",
             label: "IA",
             content: (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Chaves de IA</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form action={saveApiKey} className="space-y-3">
-                    <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Gemini API Key</div>
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Provedor de IA</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Escolha qual IA usar no BFX Intelligence. Use LiteLLM para conectar qualquer modelo via API compatível com OpenAI.
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <form action={saveAiProvider} className="space-y-4">
+                      <div className="space-y-1">
+                        <div className="text-xs font-semibold text-muted-foreground">Provedor ativo</div>
+                        <select
+                          name="aiProvider"
+                          defaultValue={(cfg as Record<string, unknown>)?.aiProvider as string || "gemini"}
+                          className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                        >
+                          <option value="gemini">Gemini</option>
+                          <option value="openai">OpenAI</option>
+                          <option value="litellm">LiteLLM (custom)</option>
+                        </select>
+                      </div>
+                      <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                        <div className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</div>
+                        <div className="space-y-1">
+                          <div className="text-xs text-muted-foreground">URL da API</div>
+                          <Input
+                            name="litellmUrl"
+                            placeholder="https://ai.softlive.dev"
+                            defaultValue={(cfg as Record<string, unknown>)?.litellmUrl as string || ""}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs text-muted-foreground">API Key</div>
+                          <Input
+                            name="litellmKey"
+                            type="password"
+                            placeholder={(cfg as Record<string, unknown>)?.litellmKey ? "•••••••• (salva)" : "sk-..."}
+                          />
+                          {Boolean((cfg as Record<string, unknown>)?.litellmKey) && (
+                            <div className="text-xs text-muted-foreground">Chave LiteLLM salva.</div>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="text-xs text-muted-foreground">Modelo (ex: gpt-4o, llama-3-8b)</div>
+                          <Input
+                            name="litellmModel"
+                            placeholder="gpt-4o"
+                            defaultValue={(cfg as Record<string, unknown>)?.litellmModel as string || ""}
+                          />
+                        </div>
+                      </div>
+                      <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                    </form>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Gemini API Key</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <form action={saveApiKey} className="space-y-3">
                       <Input
                         name="gkey"
                         type="password"
@@ -283,72 +337,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       {cfg?.geminiKey && (
                         <div className="text-xs text-muted-foreground">Chave Gemini salva.</div>
                       )}
-                    </div>
-                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
-                  </form>
-                </CardContent>
-              </Card>
-            ),
-          },
-          {
-            value: "litellm",
-            label: "Provedor IA",
-            content: (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Provedor de IA</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Escolha qual IA usar no BFX Intelligence. Use LiteLLM para conectar qualquer modelo via API compatível com OpenAI.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <form action={saveAiProvider} className="space-y-4">
-                    <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Provedor ativo</div>
-                      <select
-                        name="aiProvider"
-                        defaultValue={(cfg as Record<string, unknown>)?.aiProvider as string || "gemini"}
-                        className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                      >
-                        <option value="gemini">Gemini (padrão)</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="litellm">LiteLLM (custom)</option>
-                      </select>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-                      <div className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</div>
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">URL da API</div>
-                        <Input
-                          name="litellmUrl"
-                          placeholder="https://ai.softlive.dev"
-                          defaultValue={(cfg as Record<string, unknown>)?.litellmUrl as string || ""}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">API Key</div>
-                        <Input
-                          name="litellmKey"
-                          type="password"
-                          placeholder={(cfg as Record<string, unknown>)?.litellmKey ? "•••••••• (salva)" : "sk-..."}
-                        />
-                        {Boolean((cfg as Record<string, unknown>)?.litellmKey) && (
-                          <div className="text-xs text-muted-foreground">Chave LiteLLM salva.</div>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground">Modelo (ex: gpt-4o-mini, llama-3-8b)</div>
-                        <Input
-                          name="litellmModel"
-                          placeholder="gpt-4o-mini"
-                          defaultValue={(cfg as Record<string, unknown>)?.litellmModel as string || ""}
-                        />
-                      </div>
-                    </div>
-                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
-                  </form>
-                </CardContent>
-              </Card>
+                      <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
             ),
           },
           {
