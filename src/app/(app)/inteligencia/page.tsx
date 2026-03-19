@@ -6,6 +6,7 @@ import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
 import { headers } from "next/headers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
+import { prisma } from "@/lib/db";
 
 async function askAi(formData: FormData) {
   "use server";
@@ -28,11 +29,14 @@ async function askAi(formData: FormData) {
   if (!prompt) return;
   const session = await getSession();
   if (!session) return;
+  const usuario = session.username;
+  const history = await getContextHistory(usuario);
   const response = await runAiWithActions(prompt, provider, {
     role: session.role as "admin" | "vendedor",
     username: session.username,
     displayName: session.nomeExibicao || session.username,
     mode: "plan",
+    history,
   });
   const plannedActions = Array.isArray(response.actions)
     ? (response.actions.filter((a) => "params" in (a as any)) as {
@@ -64,10 +68,11 @@ async function askAi(formData: FormData) {
       if (result.links?.length) links.push(...result.links);
     }
 
-    prismaMessageStore.add({
-      prompt,
-      response: results.join("\n") || response.text,
-      provider,
+    await addAssistantMessage({
+      sessaoId: usuario,
+      usuario,
+      content: results.join("\n") || response.text,
+      promptOriginal: prompt,
       status: "done",
       links,
     });
@@ -75,10 +80,11 @@ async function askAi(formData: FormData) {
     return;
   }
 
-  prismaMessageStore.add({
-    prompt,
-    response: response.text,
-    provider,
+  await addAssistantMessage({
+    sessaoId: usuario,
+    usuario,
+    content: response.text,
+    promptOriginal: prompt,
     actions: plannedActions,
     status: plannedActions && plannedActions.length > 0 ? "pending" : "done",
   });
@@ -127,10 +133,11 @@ async function confirmAi(formData: FormData) {
     }
   }
 
-  prismaMessageStore.add({
-    prompt: "Confirmação de ações",
-    response: results.join("\n"),
-    provider: "gemini",
+  await addAssistantMessage({
+    sessaoId: session.username,
+    usuario: session.username,
+    content: results.join("\n"),
+    promptOriginal: "Confirmação de ações",
     status: "done",
     links,
   });
@@ -139,35 +146,75 @@ async function confirmAi(formData: FormData) {
 
 async function clearAi() {
   "use server";
-  prismaMessageStore.data = [];
+  const session = await getSession();
+  if (!session) return;
+  await prisma.aiMensagem.deleteMany({ where: { sessaoId: session.username } });
   revalidatePath("/inteligencia");
 }
 
-const prismaMessageStore = {
-  data: [] as {
-    prompt: string;
-    response: string;
-    provider: string;
-    at: string;
-    actions?: { name: string; params: Record<string, unknown> }[];
-    status?: "pending" | "done";
-    links?: { label: string; url: string }[];
-  }[],
-  add(msg: {
-    prompt: string;
-    response: string;
-    provider: string;
-    actions?: { name: string; params: Record<string, unknown> }[];
-    status?: "pending" | "done";
-    links?: { label: string; url: string }[];
-  }) {
-    this.data.unshift({ ...msg, at: new Date().toISOString() });
-  },
-};
+async function addAssistantMessage(msg: {
+  sessaoId: string;
+  usuario: string;
+  content: string;
+  promptOriginal: string;
+  actions?: { name: string; params: Record<string, unknown> }[];
+  status?: "pending" | "done";
+  links?: { label: string; url: string }[];
+}) {
+  await prisma.aiMensagem.create({
+    data: {
+      sessaoId: msg.sessaoId,
+      usuario: msg.usuario,
+      role: "assistant",
+      content: msg.content,
+      promptOriginal: msg.promptOriginal,
+      actions: msg.actions ? (msg.actions as any) : undefined,
+      status: msg.status ?? "done",
+      links: msg.links ? (msg.links as any) : undefined,
+    },
+  });
+}
+
+async function getDisplayHistory(sessaoId: string) {
+  return prisma.aiMensagem.findMany({
+    where: { sessaoId, role: "assistant" },
+    orderBy: { criadoEm: "desc" },
+    take: 20,
+  });
+}
+
+async function getContextHistory(sessaoId: string) {
+  // Get last 10 messages (both user and assistant) for AI context
+  // We store only assistant messages with promptOriginal, so reconstruct pairs
+  const rows = await prisma.aiMensagem.findMany({
+    where: { sessaoId, role: "assistant" },
+    orderBy: { criadoEm: "asc" },
+    take: 5, // last 5 pairs = 10 messages context
+  });
+  // Reconstruct as conversation pairs
+  const history: { role: "user" | "assistant"; content: string }[] = [];
+  for (const row of rows) {
+    if (row.promptOriginal) {
+      history.push({ role: "user", content: row.promptOriginal });
+    }
+    history.push({ role: "assistant", content: row.content });
+  }
+  return history;
+}
 
 export default async function Page() {
   const formId = "intelligence-chat-form";
-  const history = prismaMessageStore.data.slice(0, 20);
+  const session = await getSession();
+  const dbRows = session ? await getDisplayHistory(session.username) : [];
+  const history = dbRows.map((m) => ({
+    prompt: m.promptOriginal ?? "",
+    response: m.content,
+    provider: "gemini",
+    at: m.criadoEm.toISOString(),
+    actions: m.actions as any,
+    status: m.status as "pending" | "done",
+    links: m.links as any,
+  }));
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
