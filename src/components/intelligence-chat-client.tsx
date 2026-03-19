@@ -3,6 +3,24 @@
 import * as React from "react";
 import { IntelligenceChatComposer } from "@/components/intelligence-chat-composer";
 
+function actionLabel(name: string): string {
+  const labels: Record<string, string> = {
+    criar_venda: "Criar venda",
+    criar_cliente: "Criar cliente",
+    criar_produto: "Cadastrar produto",
+    registrar_entrada_estoque: "Registrar entrada de estoque",
+    criar_despesa: "Criar despesa",
+    criar_empresa: "Criar empresa",
+    criar_usuario: "Criar usuário",
+    criar_fornecedor: "Criar fornecedor",
+    atualizar_venda: "Atualizar venda",
+    atualizar_produto: "Atualizar produto",
+    atualizar_usuario: "Atualizar usuário",
+    atualizar_despesa: "Atualizar despesa",
+  };
+  return labels[name] ?? name.replace(/_/g, " ");
+}
+
 type Message = {
   prompt: string;
   response: string;
@@ -17,6 +35,7 @@ type IntelligenceChatClientProps = {
   history: Message[];
   action: (formData: FormData) => Promise<void> | void;
   confirmAction: (formData: FormData) => Promise<void> | void;
+  cancelAction?: (formData: FormData) => Promise<void> | void;
   formId?: string;
 };
 
@@ -24,6 +43,7 @@ export function IntelligenceChatClient({
   history,
   action,
   confirmAction,
+  cancelAction,
   formId,
 }: IntelligenceChatClientProps) {
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
@@ -62,6 +82,13 @@ export function IntelligenceChatClient({
     const data = new FormData();
     data.set("actions", JSON.stringify(actions));
     await confirmAction(data);
+  };
+
+  const handleCancel = async (msg: Message) => {
+    if (!cancelAction) return;
+    const data = new FormData();
+    data.set("messageAt", msg.at);
+    await cancelAction(data);
   };
 
   return (
@@ -112,25 +139,44 @@ export function IntelligenceChatClient({
                     </div>
                   )}
                   {m.status === "pending" && m.actions && m.actions.length > 0 && (
-                    <div className="mt-3 space-y-2 rounded-lg border bg-background/60 p-3">
-                      <div className="text-xs font-semibold text-muted-foreground">
-                        Ações sugeridas pela IA (confirmação necessária)
+                    <div className="mt-3 space-y-3 rounded-lg border-2 border-yellow-400/40 bg-yellow-50/5 p-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold">
+                          Confirmar ação
+                        </span>
+                        <span className="rounded-full bg-yellow-100/20 px-2 py-0.5 text-[10px] font-medium text-muted-foreground border border-yellow-400/30">
+                          {m.actions.length} {m.actions.length === 1 ? "operação" : "operações"}
+                        </span>
                       </div>
-                      <ul className="space-y-1 text-xs text-muted-foreground">
+                      <ul className="space-y-2">
                         {m.actions.map((a, idx) => (
-                          <li key={`${a.name}-${idx}`}>
-                            <span className="font-medium">{a.name}</span>
-                            <span className="break-words"> — {JSON.stringify(a.params)}</span>
+                          <li key={`${a.name}-${idx}`} className="rounded-md bg-background/80 border p-2 text-xs">
+                            <div className="font-semibold text-foreground">{actionLabel(a.name)}</div>
+                            <div className="mt-1 text-muted-foreground">
+                              {Object.entries(a.params)
+                                .filter(([, v]) => v !== undefined && v !== null && v !== "")
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join(" · ")}
+                            </div>
                           </li>
                         ))}
                       </ul>
-                      <button
-                        type="button"
-                        className="mt-2 inline-flex items-center rounded-full bg-success px-3 py-1 text-xs font-semibold text-white transition-colors duration-150 hover:bg-success/90 motion-reduce:transition-none"
-                        onClick={() => handleConfirm(m.actions)}
-                      >
-                        Confirmar ações
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-full bg-success px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-success/90"
+                          onClick={() => handleConfirm(m.actions)}
+                        >
+                          Confirmar
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
+                          onClick={() => handleCancel(m)}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

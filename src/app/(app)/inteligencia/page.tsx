@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@/generated/prisma";
 
 async function askAi(formData: FormData) {
   "use server";
@@ -152,6 +153,27 @@ async function clearAi() {
   revalidatePath("/inteligencia");
 }
 
+async function cancelAi(formData: FormData) {
+  "use server";
+  const at = String(formData.get("messageAt") || "");
+  const session = await getSession();
+  if (!session || !at) return;
+  // Find and mark the pending message as done (cancelled) by matching criadoEm timestamp
+  const targetDate = new Date(at);
+  await prisma.aiMensagem.updateMany({
+    where: {
+      sessaoId: session.username,
+      status: "pending",
+      criadoEm: {
+        gte: new Date(targetDate.getTime() - 1000),
+        lte: new Date(targetDate.getTime() + 1000),
+      },
+    },
+    data: { status: "done", actions: Prisma.DbNull },
+  });
+  revalidatePath("/inteligencia");
+}
+
 async function addAssistantMessage(msg: {
   sessaoId: string;
   usuario: string;
@@ -246,6 +268,7 @@ export default async function Page() {
             history={history}
             action={askAi}
             confirmAction={confirmAi}
+            cancelAction={cancelAi}
             formId={formId}
           />
         </CardContent>
