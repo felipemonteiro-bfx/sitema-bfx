@@ -22,6 +22,7 @@ import path from "path";
 import fs from "fs";
 import { createAuditLog } from "@/lib/audit";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
+import { EditVendaItens } from "@/components/edit-venda-itens-client";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-utils";
@@ -45,11 +46,8 @@ async function updateVenda(formData: FormData) {
   "use server";
   const id = Number(formData.get("id") || 0);
   const data = String(formData.get("data") || "");
-  const valor = Number(formData.get("valor") || 0);
-  const quantidade = Number(formData.get("quantidade") || 1);
   const frete = Number(formData.get("frete") || 0);
   const envio = Number(formData.get("envio") || 0);
-  const custo = Number(formData.get("custo_prod") || 0);
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
   const descontoEmFolha = formData.get("descontoEmFolha") === "on";
@@ -57,14 +55,32 @@ async function updateVenda(formData: FormData) {
   // Apenas um: desconto em folha ou boleto (nunca os dois)
   if (descontoEmFolha && boleto) boleto = false;
 
+  // Itens do pedido (multi-produto)
+  type ItemForm = { produtoNome: string; custoProduto: number; valorVenda: number; quantidade: number; subtotal: number };
+  let itens: ItemForm[] = [];
+  const itensRaw = formData.get("itensJson");
+  if (itensRaw) {
+    try { itens = JSON.parse(String(itensRaw)); } catch { /* ignore */ }
+  }
+
+  // Fallback para venda legada (campo único)
+  const valorLegado = itens.length > 0 ? 0 : Number(formData.get("valor") || 0);
+  const quantidadeLegado = itens.length > 0 ? 0 : Number(formData.get("quantidade") || 1);
+  const custoLegado = itens.length > 0 ? 0 : Number(formData.get("custo_prod") || 0);
+
   const file = formData.get("comprovante") as File | null;
 
   if (!id || !data) return;
 
-  const subtotal = valor * quantidade;
+  const subtotal = itens.length > 0
+    ? itens.reduce((s, i) => s + i.subtotal, 0)
+    : valorLegado * quantidadeLegado;
+  const totalCusto = itens.length > 0
+    ? itens.reduce((s, i) => s + i.custoProduto * i.quantidade, 0)
+    : custoLegado * quantidadeLegado;
   const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
   const total = subtotal + frete;
-  const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
+  const lucro = total - (totalCusto + envio + valorDescontoNota);
 
   let comprovantePath: string | undefined = undefined;
 
@@ -96,9 +112,9 @@ async function updateVenda(formData: FormData) {
     data: {
       dataVenda: new Date(data),
       vendedor: String(formData.get("vendedor") || ""),
-      produtoNome: String(formData.get("produto") || ""),
-      quantidade,
-      valorVenda: valor,
+      produtoNome: itens.length > 0 ? (itens[0].produtoNome || "") : String(formData.get("produto") || ""),
+      quantidade: itens.length > 0 ? itens.reduce((s, i) => s + i.quantidade, 0) : quantidadeLegado,
+      valorVenda: itens.length > 0 ? subtotal : valorLegado,
       valorFrete: frete,
       custoEnvio: envio,
       parcelas: Number(formData.get("parcelas") || 1),
@@ -110,6 +126,21 @@ async function updateVenda(formData: FormData) {
       ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
     },
   });
+
+  // Substituir itens se itensJson foi enviado
+  if (itens.length > 0) {
+    await prisma.itemVenda.deleteMany({ where: { vendaId: id } });
+    await prisma.itemVenda.createMany({
+      data: itens.map((item) => ({
+        vendaId: id,
+        produtoNome: item.produtoNome,
+        custoProduto: item.custoProduto,
+        valorVenda: item.valorVenda,
+        quantidade: item.quantidade,
+        subtotal: item.subtotal,
+      })),
+    });
+  }
 
   // Atualizar parcelas de vencimento se enviadas pelo formulário
   const parcelasRaw = formData.get("parcelasVencimento");
@@ -144,7 +175,7 @@ async function updateVenda(formData: FormData) {
     }
   }
 
-  await createAuditLog("venda:update", { vendaId: id, valor, quantidade, lucro });
+  await createAuditLog("venda:update", { vendaId: id, subtotal, lucro });
   revalidatePath("/historico");
 }
 
@@ -236,7 +267,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       descontoEmFolha: true, boleto: true, comprovantePdf: true,
       asaasPaymentId: true, boletoUrl: true,
-      itens: { select: { subtotal: true } },
+      itens: {
+        select: { produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },
+        orderBy: { id: "asc" as const },
+      },
     },
   }) : null;
 
@@ -604,18 +638,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   placeholder="Selecione o vendedor"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Produto</label>
-                <Input name="produto" defaultValue={editVenda.produtoNome || ""} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Quantidade</label>
-                <Input name="quantidade" type="number" min="1" defaultValue={editVenda.quantidade || 1} />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Valor Unitário</label>
-                <Input name="valor" type="number" step="0.01" defaultValue={editVenda.valorVenda || 0} />
-              </div>
+              <EditVendaItens
+                initialItens={
+                  editVenda.itens.length > 0
+                    ? editVenda.itens
+                    : [{
+                        produtoNome: editVenda.produtoNome || "",
+                        custoProduto: editVenda.custoProduto || 0,
+                        valorVenda: editVenda.valorVenda || 0,
+                        quantidade: editVenda.quantidade || 1,
+                        subtotal: (editVenda.valorVenda || 0) * (editVenda.quantidade || 1),
+                      }]
+                }
+              />
               <div className="space-y-1">
                 <label className="text-xs font-medium text-muted-foreground">Frete ao cliente</label>
                 <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
@@ -628,8 +663,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
                 <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
               </div>
-
-              <input type="hidden" name="custo_prod" value={editVenda.custoProduto || 0} />
 
               <EditParcelasSection
                 initialParcelas={editParcelasVenc}
