@@ -8,6 +8,19 @@ import { z } from "zod";
 
 const toolSchema = z.object({}).passthrough();
 
+const SYSTEM_PROMPT = `Você é o assistente BFX, especialista em gestão de vendas, estoque e finanças.
+
+CAPACIDADES COMPLETAS:
+- Consultas (executam automaticamente): listar vendas, clientes, produtos, despesas, empresas, usuários; consultar parcelas, inadimplentes, limite de crédito, boletos, comissões, auditoria; resumo financeiro, fluxo de caixa, relatório de vendas, margens de produto
+- Ações de escrita (requerem confirmação do usuário): criar venda, criar cliente, cadastrar produto, registrar entrada de estoque, criar despesa, atualizar venda/produto/usuário/despesa, criar empresa/usuário/fornecedor, gerar catálogo
+
+REGRAS:
+- Responda SEMPRE em português do Brasil
+- Para consultas: execute a ação e apresente os resultados de forma clara e amigável
+- Para ações de escrita: descreva o que vai fazer, use a ferramenta (ela pedirá confirmação ao usuário)
+- Se o usuário pedir "cadastrar entrada de produto", use registrar_entrada_estoque
+- Respeite o perfil do usuário: vendedor não tem acesso a ações administrativas`;
+
 export async function runAi(prompt: string, provider: "openai" | "gemini") {
   const cfg = await prisma.config.findFirst();
   if (provider === "openai") {
@@ -82,12 +95,9 @@ export async function runAiWithActions(
     mode?: "plan" | "execute";
     executeAction?: { name: string; params: Record<string, unknown> };
     baseUrl?: string;
+    history?: { role: "user" | "assistant"; content: string }[];
   }
 ) {
-  const languageHint =
-    "Responda sempre em portugues do Brasil. " +
-    "Quando precisar criar/atualizar algo, descreva o que pretende fazer e " +
-    "inclua uma linha no final com ACTIONS: [ {\"name\":\"...\",\"params\":{...}} ].";
   const currency = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -97,13 +107,6 @@ export async function runAiWithActions(
     const total = rows.reduce((sum, item) => sum + Number(item?.valor ?? 0), 0);
     return `Despesas encontradas: ${rows.length}. Total: ${currency.format(total)}.`;
   };
-
-  if (ctx.mode === "plan") {
-    const inferred = inferReadOnlyActions(prompt);
-    if (inferred.length) {
-      return { text: "", actions: inferred };
-    }
-  }
 
   const buildToolSummary = (executed: { name: string; result: unknown }[]) => {
     if (!executed.length) return "";
@@ -191,19 +194,24 @@ export async function runAiWithActions(
 
     const google = createGoogleGenerativeAI({ apiKey: cfg.geminiKey });
     const executed: { name: string; result: unknown }[] = [];
+    const planned: { name: string; params: Record<string, unknown> }[] = [];
     const tools = Object.fromEntries(
       aiActions
         .filter((action) => action.roles?.includes(ctx.role) ?? true)
-        .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
         .map((action) => [
           action.name,
           tool({
             description: action.description,
             inputSchema: toolSchema,
             execute: async (args) => {
-              const result = await callMcpTool(action.name, args ?? {}, ctx);
-              executed.push({ name: action.name, result });
-              return result;
+              if (action.readOnly || ctx.mode === "execute") {
+                const result = await callMcpTool(action.name, args ?? {}, ctx);
+                executed.push({ name: action.name, result });
+                return result;
+              }
+              // mode === "plan" and write action: propose, don't execute
+              planned.push({ name: action.name, params: (args ?? {}) as Record<string, unknown> });
+              return `Ação "${action.name}" proposta. Aguardando confirmação do usuário para executar.`;
             },
           }),
         ])
@@ -214,7 +222,8 @@ export async function runAiWithActions(
       const result = await generateText({
         model: google("gemini-2.5-flash"),
         messages: [
-          { role: "system", content: languageHint },
+          { role: "system", content: SYSTEM_PROMPT },
+          ...(ctx.history ?? []),
           { role: "user", content: prompt },
         ],
         tools,
@@ -227,13 +236,8 @@ export async function runAiWithActions(
           const result = await generateText({
             model: openai("gpt-4o-mini"),
             messages: [
-              {
-                role: "system",
-                content:
-                  "Voce e um assistente do sistema BFX. Use as funcoes disponiveis para executar acoes. " +
-                  "Quando precisar criar/atualizar algo, descreva e inclua ACTIONS: [...] no final. " +
-                  "Responda sempre em portugues do Brasil.",
-              },
+              { role: "system", content: SYSTEM_PROMPT },
+              ...(ctx.history ?? []),
               { role: "user", content: prompt },
             ],
             tools,
@@ -274,12 +278,16 @@ export async function runAiWithActions(
     }
 
     if (ctx.mode === "plan") {
+      if (planned.length > 0) {
+        return { text: stripActions(text) || text, actions: planned };
+      }
+      // Fallback: try to infer from prompt or extract from text
       const inferred = inferReadOnlyActions(prompt);
       if (inferred.length) {
         return { text: stripActions(text), actions: inferred };
       }
-      const planned = extractActions(text);
-      return { text: stripActions(text), actions: planned };
+      const parsedActions = extractActions(text);
+      return { text: stripActions(text), actions: parsedActions };
     }
     if (text && text.trim()) {
       const summary = buildToolSummary(executed);
@@ -316,19 +324,24 @@ export async function runAiWithActions(
 
   const openai = createOpenAI({ apiKey: cfg.openaiKey });
   const executed: { name: string; result: unknown }[] = [];
+  const planned: { name: string; params: Record<string, unknown> }[] = [];
   const tools = Object.fromEntries(
     aiActions
       .filter((action) => action.roles?.includes(ctx.role) ?? true)
-      .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
       .map((action) => [
         action.name,
         tool({
           description: action.description,
           inputSchema: toolSchema,
           execute: async (args) => {
-            const result = await callMcpTool(action.name, args ?? {}, ctx);
-            executed.push({ name: action.name, result });
-            return result;
+            if (action.readOnly || ctx.mode === "execute") {
+              const result = await callMcpTool(action.name, args ?? {}, ctx);
+              executed.push({ name: action.name, result });
+              return result;
+            }
+            // mode === "plan" and write action: propose, don't execute
+            planned.push({ name: action.name, params: (args ?? {}) as Record<string, unknown> });
+            return `Ação "${action.name}" proposta. Aguardando confirmação do usuário para executar.`;
           },
         }),
       ])
@@ -337,14 +350,8 @@ export async function runAiWithActions(
   const { text } = await generateText({
     model: openai("gpt-4o-mini"),
     messages: [
-      {
-        role: "system",
-        content:
-          "Voce e um assistente do sistema BFX. Use as funcoes disponiveis para executar acoes. " +
-          "Respeite o perfil do usuario. Se for vendedor, nao tente acoes administrativas. " +
-          "Quando precisar criar/atualizar algo, descreva e inclua ACTIONS: [...] no final. " +
-          "Responda sempre em portugues do Brasil.",
-      },
+      { role: "system", content: SYSTEM_PROMPT },
+      ...(ctx.history ?? []),
       { role: "user", content: prompt },
     ],
     tools,
@@ -369,12 +376,16 @@ export async function runAiWithActions(
   }
 
   if (ctx.mode === "plan") {
+    if (planned.length > 0) {
+      return { text: stripActions(text) || text, actions: planned };
+    }
+    // Fallback: try to infer from prompt or extract from text
     const inferred = inferReadOnlyActions(prompt);
     if (inferred.length) {
       return { text: stripActions(text), actions: inferred };
     }
-    const planned = extractActions(text);
-    return { text: stripActions(text), actions: planned };
+    const parsedActions = extractActions(text);
+    return { text: stripActions(text), actions: parsedActions };
   }
   if (text && text.trim()) {
     const summary = buildToolSummary(executed);
