@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
 import { IntelligenceChatComposer } from "@/components/intelligence-chat-composer";
 
 function actionLabel(name: string): string {
@@ -46,6 +48,7 @@ export function IntelligenceChatClient({
   cancelAction,
   formId,
 }: IntelligenceChatClientProps) {
+  const router = useRouter();
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
     history,
     (state: Message[], next: Message) => [next, ...state]
@@ -75,6 +78,7 @@ export function IntelligenceChatClient({
       });
     }
     await action(formData);
+    router.refresh();
   };
 
   const handleConfirm = async (actions: Message["actions"]) => {
@@ -82,6 +86,7 @@ export function IntelligenceChatClient({
     const data = new FormData();
     data.set("actions", JSON.stringify(actions));
     await confirmAction(data);
+    router.refresh();
   };
 
   const handleCancel = async (msg: Message) => {
@@ -89,6 +94,7 @@ export function IntelligenceChatClient({
     const data = new FormData();
     data.set("messageAt", msg.at);
     await cancelAction(data);
+    router.refresh();
   };
 
   return (
@@ -124,7 +130,25 @@ export function IntelligenceChatClient({
               <div className="flex justify-start">
                 <div className="w-full max-w-[92%] rounded-2xl border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
                   <div className="text-xs font-semibold text-muted-foreground">Assistente</div>
-                  <div className="whitespace-pre-wrap break-words">{m.response}</div>
+                  <div className="space-y-1 break-words text-sm">
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => <p className="mb-1 leading-relaxed">{children}</p>,
+                        strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        h1: ({ children }) => <h1 className="text-base font-bold mt-2 mb-1">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-sm font-bold mt-2 mb-1">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-sm font-semibold mt-1 mb-0.5">{children}</h3>,
+                        ul: ({ children }) => <ul className="list-disc pl-5 space-y-0.5 my-1">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-5 space-y-0.5 my-1">{children}</ol>,
+                        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                        code: ({ children }) => <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono">{children}</code>,
+                        hr: () => <hr className="my-2 border-border" />,
+                      }}
+                    >
+                      {m.response}
+                    </ReactMarkdown>
+                  </div>
                   {m.links && m.links.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {m.links.map((link, idx) => (
