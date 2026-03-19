@@ -139,12 +139,12 @@ export function IntelligenceChatClient({
                     </div>
                   )}
                   {m.status === "pending" && m.actions && m.actions.length > 0 && (
-                    <div className="mt-3 space-y-3 rounded-lg border-2 border-yellow-400/40 bg-yellow-50/5 p-3">
+                    <div className="mt-3 space-y-3 rounded-lg border-2 border-warning/40 bg-warning/5 p-3">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold">
                           Confirmar ação
                         </span>
-                        <span className="rounded-full bg-yellow-100/20 px-2 py-0.5 text-[10px] font-medium text-muted-foreground border border-yellow-400/30">
+                        <span className="rounded-full bg-warning/20 px-2 py-0.5 text-[10px] font-medium text-warning-foreground border border-warning/30">
                           {m.actions.length} {m.actions.length === 1 ? "operação" : "operações"}
                         </span>
                       </div>
