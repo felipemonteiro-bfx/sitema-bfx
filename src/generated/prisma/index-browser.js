@@ -148,6 +148,7 @@ exports.Prisma.ProdutoScalarFieldEnum = {
   imagem: 'imagem',
   fornecedorId: 'fornecedorId',
   qtdEstoque: 'qtdEstoque',
+  estoqueMinimo: 'estoqueMinimo',
   valorVenda: 'valorVenda'
 };
 
@@ -179,6 +180,16 @@ exports.Prisma.VendaScalarFieldEnum = {
   boleto: 'boleto',
   asaasPaymentId: 'asaasPaymentId',
   boletoUrl: 'boletoUrl'
+};
+
+exports.Prisma.DocumentoScalarFieldEnum = {
+  id: 'id',
+  vendaId: 'vendaId',
+  tipo: 'tipo',
+  mimeType: 'mimeType',
+  conteudo: 'conteudo',
+  tamanhoBytes: 'tamanhoBytes',
+  criadoEm: 'criadoEm'
 };
 
 exports.Prisma.ItemVendaScalarFieldEnum = {
@@ -271,6 +282,21 @@ exports.Prisma.AvisoScalarFieldEnum = {
   ativo: 'ativo'
 };
 
+exports.Prisma.MovimentoEstoqueScalarFieldEnum = {
+  id: 'id',
+  produtoId: 'produtoId',
+  tipo: 'tipo',
+  quantidade: 'quantidade',
+  custoUnitario: 'custoUnitario',
+  motivoTipo: 'motivoTipo',
+  observacao: 'observacao',
+  notaFiscal: 'notaFiscal',
+  fornecedorId: 'fornecedorId',
+  vendaId: 'vendaId',
+  usuario: 'usuario',
+  criadoEm: 'criadoEm'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -291,6 +317,7 @@ exports.Prisma.ModelName = {
   Cliente: 'Cliente',
   Produto: 'Produto',
   Venda: 'Venda',
+  Documento: 'Documento',
   ItemVenda: 'ItemVenda',
   ParcelaVencimento: 'ParcelaVencimento',
   Config: 'Config',
@@ -300,7 +327,8 @@ exports.Prisma.ModelName = {
   Pagamento: 'Pagamento',
   AuditLog: 'AuditLog',
   Despesa: 'Despesa',
-  Aviso: 'Aviso'
+  Aviso: 'Aviso',
+  MovimentoEstoque: 'MovimentoEstoque'
 };
 
 /**

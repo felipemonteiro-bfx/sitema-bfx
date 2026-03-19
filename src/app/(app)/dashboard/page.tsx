@@ -25,7 +25,8 @@ import {
   Users,
   Package,
   Filter,
-  Megaphone
+  Megaphone,
+  BarChart3
 } from "lucide-react";
 
 type Search = {
@@ -135,6 +136,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     take: 5,
   });
 
+  const todosProdutos = await prisma.produto.findMany({
+    select: { id: true, nome: true, qtdEstoque: true, estoqueMinimo: true },
+    orderBy: { qtdEstoque: "asc" },
+  });
+  const estoqueBaixoFiltrado = todosProdutos
+    .filter((p) => (p.qtdEstoque ?? 0) <= (p.estoqueMinimo ?? 5))
+    .slice(0, 10);
+
   return (
     <div className="space-y-6">
       <Card variant="gradient" animated className="border-primary/20">
@@ -210,6 +219,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </li>
               ))}
             </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {estoqueBaixoFiltrado.length > 0 && (
+        <Card animated className="border-warning/20 bg-warning/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Package className="h-5 w-5 text-warning" />
+              Estoque Baixo — {estoqueBaixoFiltrado.length} produto(s)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {estoqueBaixoFiltrado.map((p) => (
+                <Link key={p.id} href="/estoque">
+                  <Badge
+                    variant={(p.qtdEstoque ?? 0) === 0 ? "error" : "warning"}
+                    className="text-xs py-1 px-2 cursor-pointer hover:opacity-80"
+                  >
+                    {p.nome}: {p.qtdEstoque ?? 0} un.
+                  </Badge>
+                </Link>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -455,7 +489,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link 
-                    href="/relatorios" 
+                    href="/estoque" 
                     className={cn(
                       buttonVariants({ variant: "outline" }), 
                       "justify-between h-11 hover-lift"
@@ -463,6 +497,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   >
                     <span className="flex items-center gap-2">
                       <Package className="h-4 w-4" />
+                      Estoque
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link 
+                    href="/relatorios" 
+                    className={cn(
+                      buttonVariants({ variant: "outline" }), 
+                      "justify-between h-11 hover-lift"
+                    )}
+                  >
+                    <span className="flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
                       Relatórios
                     </span>
                     <ArrowRight className="h-4 w-4" />

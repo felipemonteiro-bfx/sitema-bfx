@@ -29,17 +29,19 @@ model Cliente {
 }
 
 model Produto {
-  id           Int         @id @default(autoincrement())
-  nome         String      @unique
-  custoPadrao  Float?      @map("custo_padrao")
-  marca        String?
-  categoria    String?
-  ncm          String?
-  imagem       String?
-  fornecedorId Int?        @map("fornecedor_id")
-  qtdEstoque   Int?        @default(0) @map("qtd_estoque")
-  valorVenda   Float?      @default(0) @map("valor_venda")
-  fornecedor   Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  id            Int                @id @default(autoincrement())
+  nome          String             @unique
+  custoPadrao   Float?             @map("custo_padrao")
+  marca         String?
+  categoria     String?
+  ncm           String?
+  imagem        String?
+  fornecedorId  Int?               @map("fornecedor_id")
+  qtdEstoque    Int?               @default(0) @map("qtd_estoque")
+  estoqueMinimo Int?               @default(5) @map("estoque_minimo")
+  valorVenda    Float?             @default(0) @map("valor_venda")
+  fornecedor    Fornecedor?        @relation(fields: [fornecedorId], references: [id])
+  movimentacoes MovimentoEstoque[]
 
   @@map("produtos")
 }
@@ -68,7 +70,7 @@ model Venda {
   excedeuLimite       Int?      @default(0) @map("excedeu_limite")
   temNota             Boolean   @default(false) @map("tem_nota")
   taxaNota            Float?    @default(5.97) @map("taxa_nota")
-  comprovantePdf      String?   @map("comprovante_pdf")
+  comprovantePdf      String?   @map("comprovante_pdf") // Legado: path em disco (deprecado)
   descontoEmFolha     Boolean   @default(false) @map("desconto_em_folha")
   assinaturaToken     String?   @unique @map("assinatura_token")
   assinaturaStatus    String?   @map("assinatura_status") // pendente | assinado | expirado
@@ -81,8 +83,25 @@ model Venda {
   cliente            Cliente?            @relation(fields: [clienteId], references: [id])
   itens              ItemVenda[]
   parcelasVencimento ParcelaVencimento[]
+  documentos         Documento[]
 
   @@map("vendas")
+}
+
+model Documento {
+  id           Int      @id @default(autoincrement())
+  vendaId      Int?     @map("venda_id")
+  tipo         String   @map("tipo") // comprovante_assinatura, nfe, contrato, etc.
+  mimeType     String   @default("application/pdf") @map("mime_type")
+  conteudo     Bytes    @db.ByteA
+  tamanhoBytes Int      @map("tamanho_bytes")
+  criadoEm     DateTime @default(now()) @map("criado_em")
+
+  venda Venda? @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+
+  @@index([vendaId])
+  @@index([tipo])
+  @@map("documentos")
 }
 
 model ItemVenda {
@@ -201,4 +220,27 @@ model Aviso {
   ativo       Int?     @default(1)
 
   @@map("avisos")
+}
+
+model MovimentoEstoque {
+  id            Int      @id @default(autoincrement())
+  produtoId     Int      @map("produto_id")
+  tipo          String // ENTRADA | SAIDA
+  quantidade    Int
+  custoUnitario Float?   @map("custo_unitario")
+  motivoTipo    String   @map("motivo_tipo") // COMPRA_COM_NOTA | COMPRA_SEM_NOTA | VENDA | AJUSTE | DEVOLUCAO | PERDA
+  observacao    String?
+  notaFiscal    String?  @map("nota_fiscal")
+  fornecedorId  Int?     @map("fornecedor_id")
+  vendaId       Int?     @map("venda_id")
+  usuario       String?
+  criadoEm      DateTime @default(now()) @map("criado_em")
+
+  produto Produto @relation(fields: [produtoId], references: [id])
+
+  @@index([produtoId])
+  @@index([tipo])
+  @@index([criadoEm])
+  @@index([motivoTipo])
+  @@map("movimentos_estoque")
 }
