@@ -8,6 +8,10 @@ import { z } from "zod";
 
 const toolSchema = z.object({}).passthrough();
 
+function stripThinkTags(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+}
+
 const SYSTEM_PROMPT = `Você é o assistente BFX, especialista em gestão de vendas, estoque e finanças.
 
 CAPACIDADES COMPLETAS:
@@ -31,7 +35,7 @@ export async function runAi(prompt: string, provider: "openai" | "gemini" | "lit
       model: litellm.chat(cfg.litellmModel || "gpt-4o"),
       prompt,
     });
-    return text || "Sem resposta.";
+    return stripThinkTags(text) || "Sem resposta.";
   }
   if (provider === "openai") {
     if (!cfg?.openaiKey) return "Chave OpenAI nao configurada.";
@@ -40,7 +44,7 @@ export async function runAi(prompt: string, provider: "openai" | "gemini" | "lit
       model: openai("gpt-4o-mini"),
       prompt,
     });
-    return text || "Sem resposta.";
+    return stripThinkTags(text) || "Sem resposta.";
   }
 
   if (!cfg?.geminiKey) return "Chave Gemini nao configurada.";
@@ -239,7 +243,7 @@ export async function runAiWithActions(
       tools,
       stopWhen: stepCountIs(5),
     });
-    text = result.text ?? "";
+    text = stripThinkTags(result.text ?? "");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       return { text: `Erro ao chamar LiteLLM: ${msg.slice(0, 200)}`, actions: [] };
@@ -302,7 +306,7 @@ export async function runAiWithActions(
         tools,
         stopWhen: stepCountIs(5),
       });
-      text = result.text ?? "";
+      text = stripThinkTags(result.text ?? "");
     } catch {
       if (cfg?.openaiKey) {
         const openai = createOpenAI({ apiKey: cfg.openaiKey });
@@ -317,7 +321,7 @@ export async function runAiWithActions(
             tools,
             stopWhen: stepCountIs(5),
           });
-          text = result.text ?? "";
+          text = stripThinkTags(result.text ?? "");
         } catch {
           return {
             text:
