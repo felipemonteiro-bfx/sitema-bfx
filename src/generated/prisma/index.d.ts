@@ -9769,6 +9769,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    aiProvider: string | null
+    litellmUrl: string | null
+    litellmKey: string | null
+    litellmModel: string | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -9795,6 +9799,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    aiProvider: string | null
+    litellmUrl: string | null
+    litellmKey: string | null
+    litellmModel: string | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -9821,6 +9829,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number
     whatsappDiasInativo: number
     whatsappPreAtendimento: number
+    aiProvider: number
+    litellmUrl: number
+    litellmKey: number
+    litellmModel: number
     _all: number
   }
 
@@ -9881,6 +9893,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    aiProvider?: true
+    litellmUrl?: true
+    litellmKey?: true
+    litellmModel?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -9907,6 +9923,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    aiProvider?: true
+    litellmUrl?: true
+    litellmKey?: true
+    litellmModel?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -9933,6 +9953,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    aiProvider?: true
+    litellmUrl?: true
+    litellmKey?: true
+    litellmModel?: true
     _all?: true
   }
 
@@ -10046,6 +10070,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    aiProvider: string | null
+    litellmUrl: string | null
+    litellmKey: string | null
+    litellmModel: string | null
     _count: ConfigCountAggregateOutputType | null
     _avg: ConfigAvgAggregateOutputType | null
     _sum: ConfigSumAggregateOutputType | null
@@ -10091,6 +10119,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    aiProvider?: boolean
+    litellmUrl?: boolean
+    litellmKey?: boolean
+    litellmModel?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10117,6 +10149,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    aiProvider?: boolean
+    litellmUrl?: boolean
+    litellmKey?: boolean
+    litellmModel?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10143,6 +10179,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    aiProvider?: boolean
+    litellmUrl?: boolean
+    litellmKey?: boolean
+    litellmModel?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -10169,9 +10209,13 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    aiProvider?: boolean
+    litellmUrl?: boolean
+    litellmKey?: boolean
+    litellmModel?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento" | "aiProvider" | "litellmUrl" | "litellmKey" | "litellmModel", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -10200,6 +10244,10 @@ export namespace Prisma {
       whatsappAutoAgradecimento: number | null
       whatsappDiasInativo: number | null
       whatsappPreAtendimento: number | null
+      aiProvider: string | null
+      litellmUrl: string | null
+      litellmKey: string | null
+      litellmModel: string | null
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -10646,6 +10694,10 @@ export namespace Prisma {
     readonly whatsappAutoAgradecimento: FieldRef<"Config", 'Int'>
     readonly whatsappDiasInativo: FieldRef<"Config", 'Int'>
     readonly whatsappPreAtendimento: FieldRef<"Config", 'Int'>
+    readonly aiProvider: FieldRef<"Config", 'String'>
+    readonly litellmUrl: FieldRef<"Config", 'String'>
+    readonly litellmKey: FieldRef<"Config", 'String'>
+    readonly litellmModel: FieldRef<"Config", 'String'>
   }
     
 
@@ -20643,7 +20695,11 @@ export namespace Prisma {
     whatsappAutoBoasVindas: 'whatsappAutoBoasVindas',
     whatsappAutoAgradecimento: 'whatsappAutoAgradecimento',
     whatsappDiasInativo: 'whatsappDiasInativo',
-    whatsappPreAtendimento: 'whatsappPreAtendimento'
+    whatsappPreAtendimento: 'whatsappPreAtendimento',
+    aiProvider: 'aiProvider',
+    litellmUrl: 'litellmUrl',
+    litellmKey: 'litellmKey',
+    litellmModel: 'litellmModel'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -21486,6 +21542,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
     whatsappPreAtendimento?: IntNullableFilter<"Config"> | number | null
+    aiProvider?: StringNullableFilter<"Config"> | string | null
+    litellmUrl?: StringNullableFilter<"Config"> | string | null
+    litellmKey?: StringNullableFilter<"Config"> | string | null
+    litellmModel?: StringNullableFilter<"Config"> | string | null
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -21512,6 +21572,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrderInput | SortOrder
     whatsappDiasInativo?: SortOrderInput | SortOrder
     whatsappPreAtendimento?: SortOrderInput | SortOrder
+    aiProvider?: SortOrderInput | SortOrder
+    litellmUrl?: SortOrderInput | SortOrder
+    litellmKey?: SortOrderInput | SortOrder
+    litellmModel?: SortOrderInput | SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -21541,6 +21605,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
     whatsappPreAtendimento?: IntNullableFilter<"Config"> | number | null
+    aiProvider?: StringNullableFilter<"Config"> | string | null
+    litellmUrl?: StringNullableFilter<"Config"> | string | null
+    litellmKey?: StringNullableFilter<"Config"> | string | null
+    litellmModel?: StringNullableFilter<"Config"> | string | null
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -21567,6 +21635,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrderInput | SortOrder
     whatsappDiasInativo?: SortOrderInput | SortOrder
     whatsappPreAtendimento?: SortOrderInput | SortOrder
+    aiProvider?: SortOrderInput | SortOrder
+    litellmUrl?: SortOrderInput | SortOrder
+    litellmKey?: SortOrderInput | SortOrder
+    litellmModel?: SortOrderInput | SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _avg?: ConfigAvgOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
@@ -21601,6 +21673,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: IntNullableWithAggregatesFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableWithAggregatesFilter<"Config"> | number | null
     whatsappPreAtendimento?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    aiProvider?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    litellmUrl?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    litellmKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    litellmModel?: StringNullableWithAggregatesFilter<"Config"> | string | null
   }
 
   export type UsuarioWhereInput = {
@@ -22788,6 +22864,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
     whatsappPreAtendimento?: number | null
+    aiProvider?: string | null
+    litellmUrl?: string | null
+    litellmKey?: string | null
+    litellmModel?: string | null
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -22814,6 +22894,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
     whatsappPreAtendimento?: number | null
+    aiProvider?: string | null
+    litellmUrl?: string | null
+    litellmKey?: string | null
+    litellmModel?: string | null
   }
 
   export type ConfigUpdateInput = {
@@ -22839,6 +22923,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -22865,6 +22953,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ConfigCreateManyInput = {
@@ -22891,6 +22983,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
     whatsappPreAtendimento?: number | null
+    aiProvider?: string | null
+    litellmUrl?: string | null
+    litellmKey?: string | null
+    litellmModel?: string | null
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -22916,6 +23012,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -22942,6 +23042,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UsuarioCreateInput = {
@@ -24239,6 +24343,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    aiProvider?: SortOrder
+    litellmUrl?: SortOrder
+    litellmKey?: SortOrder
+    litellmModel?: SortOrder
   }
 
   export type ConfigAvgOrderByAggregateInput = {
@@ -24281,6 +24389,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    aiProvider?: SortOrder
+    litellmUrl?: SortOrder
+    litellmKey?: SortOrder
+    litellmModel?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -24307,6 +24419,10 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    aiProvider?: SortOrder
+    litellmUrl?: SortOrder
+    litellmKey?: SortOrder
+    litellmModel?: SortOrder
   }
 
   export type ConfigSumOrderByAggregateInput = {

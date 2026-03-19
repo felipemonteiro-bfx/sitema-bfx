@@ -157,6 +157,10 @@ model Config {
   whatsappAutoAgradecimento Int?    @default(0) @map("whatsapp_auto_agradecimento") // Agradecimento 1 dia após venda
   whatsappDiasInativo       Int?    @default(60) @map("whatsapp_dias_inativo") // Dias sem compra para reativação
   whatsappPreAtendimento    Int?    @default(0) @map("whatsapp_pre_atendimento") // 1=IA pré-atende quem manda msg no WhatsApp
+  aiProvider                String? @map("ai_provider") // gemini | openai | litellm
+  litellmUrl                String? @map("litellm_url")
+  litellmKey                String? @map("litellm_key")
+  litellmModel              String? @map("litellm_model")
 
   @@map("config")
 }

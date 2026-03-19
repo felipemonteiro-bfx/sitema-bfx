@@ -21,8 +21,18 @@ REGRAS:
 - Se o usuário pedir "cadastrar entrada de produto", use registrar_entrada_estoque
 - Respeite o perfil do usuário: vendedor não tem acesso a ações administrativas`;
 
-export async function runAi(prompt: string, provider: "openai" | "gemini") {
+export async function runAi(prompt: string, provider: "openai" | "gemini" | "litellm") {
   const cfg = await prisma.config.findFirst();
+  if (provider === "litellm") {
+    if (!cfg?.litellmUrl || !cfg?.litellmKey) return "LiteLLM nao configurado.";
+    const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
+    const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
+    const { text } = await generateText({
+      model: litellm(cfg.litellmModel || "gpt-4o-mini"),
+      prompt,
+    });
+    return text || "Sem resposta.";
+  }
   if (provider === "openai") {
     if (!cfg?.openaiKey) return "Chave OpenAI nao configurada.";
     const openai = createOpenAI({ apiKey: cfg.openaiKey });
@@ -84,7 +94,7 @@ function inferReadOnlyActions(prompt: string) {
 
 export async function runAiWithActions(
   prompt: string,
-  provider: "openai" | "gemini",
+  provider: "openai" | "gemini" | "litellm",
   ctx: ActionContext & {
     mode?: "plan" | "execute";
     executeAction?: { name: string; params: Record<string, unknown> };
@@ -186,6 +196,60 @@ export async function runAiWithActions(
     }
     const summary = buildToolSummary([{ name: ctx.executeAction.name, result: execResult }]);
     return { text: summary || "Acao executada com sucesso.", actions: [ctx.executeAction], links };
+  }
+
+  if (provider === "litellm") {
+    const cfg = await prisma.config.findFirst();
+    if (!cfg?.litellmUrl || !cfg?.litellmKey) return { text: "LiteLLM nao configurado.", actions: [] };
+    const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
+    const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
+    const executed: { name: string; result: unknown }[] = [];
+    const planned: { name: string; params: Record<string, unknown> }[] = [];
+    const tools = Object.fromEntries(
+      aiActions
+        .filter((action) => action.roles?.includes(ctx.role) ?? true)
+        .map((action) => [
+          action.name,
+          tool({
+            description: action.description,
+            inputSchema: toolSchema,
+            execute: async (args) => {
+              if (action.readOnly || ctx.mode === "execute") {
+                const result = await callMcpTool(action.name, args ?? {}, ctx);
+                executed.push({ name: action.name, result });
+                return result;
+              }
+              planned.push({ name: action.name, params: (args ?? {}) as Record<string, unknown> });
+              return `Ação "${action.name}" proposta. Aguardando confirmação do usuário para executar.`;
+            },
+          }),
+        ])
+    );
+    const { text } = await generateText({
+      model: litellm(cfg.litellmModel || "gpt-4o-mini"),
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...(ctx.history ?? []),
+        { role: "user", content: prompt },
+      ],
+      tools,
+      stopWhen: stepCountIs(5),
+    });
+    if (ctx.mode === "plan") {
+      if (planned.length > 0) return { text: stripActions(text) || text, actions: planned };
+      const inferred = inferReadOnlyActions(prompt);
+      if (inferred.length) return { text: stripActions(text), actions: inferred };
+      return { text: stripActions(text), actions: extractActions(text) };
+    }
+    if (text && text.trim()) {
+      const summary = buildToolSummary(executed);
+      if (summary && shouldAppendSummary(text)) return { text: summary, actions: executed };
+      if (summary) return { text: `${text}\n\n${summary}`, actions: executed };
+      return { text, actions: executed };
+    }
+    if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
+    const fallbackText = buildToolSummary(executed) || "Acao executada.";
+    return { text: fallbackText, actions: executed };
   }
 
   if (provider === "gemini") {

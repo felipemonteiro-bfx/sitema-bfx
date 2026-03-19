@@ -9,6 +9,15 @@ import { cn } from "@/lib/utils";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma";
 
+async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
+  try {
+    const cfg = await prisma.config.findFirst();
+    const p = (cfg as Record<string, unknown>)?.aiProvider as string | undefined;
+    if (p === "litellm" || p === "openai") return p;
+  } catch { /* ignore */ }
+  return "gemini";
+}
+
 async function askAi(formData: FormData) {
   "use server";
   const attachment = formData.get("attachment");
@@ -21,7 +30,7 @@ async function askAi(formData: FormData) {
       ? (attachment as File)
       : null;
   let prompt = String(formData.get("prompt") || "");
-  const provider = "gemini" as const;
+  const provider = await getAiProvider();
   if (!prompt && file) {
     prompt = `Arquivo anexado: ${file.name}`;
   } else if (file && file.name) {
@@ -115,9 +124,10 @@ async function confirmAi(formData: FormData) {
 
   const results: string[] = [];
   const links: { label: string; url: string }[] = [];
+  const provider = await getAiProvider();
   for (const action of actions) {
     try {
-      const result = await runAiWithActions("", "gemini", {
+      const result = await runAiWithActions("", provider, {
         role: session.role as "admin" | "vendedor",
         username: session.username,
         displayName: session.nomeExibicao || session.username,

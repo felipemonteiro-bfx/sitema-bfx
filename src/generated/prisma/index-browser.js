@@ -234,7 +234,11 @@ exports.Prisma.ConfigScalarFieldEnum = {
   whatsappAutoBoasVindas: 'whatsappAutoBoasVindas',
   whatsappAutoAgradecimento: 'whatsappAutoAgradecimento',
   whatsappDiasInativo: 'whatsappDiasInativo',
-  whatsappPreAtendimento: 'whatsappPreAtendimento'
+  whatsappPreAtendimento: 'whatsappPreAtendimento',
+  aiProvider: 'aiProvider',
+  litellmUrl: 'litellmUrl',
+  litellmKey: 'litellmKey',
+  litellmModel: 'litellmModel'
 };
 
 exports.Prisma.UsuarioScalarFieldEnum = {
