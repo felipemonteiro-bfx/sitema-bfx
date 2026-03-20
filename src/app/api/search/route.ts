@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { fuzzyFindClientes, fuzzyFindProdutos, fuzzyFindUsuarios } from "@/lib/db-search";
 
 const MAX_LIMIT = 50;
 
@@ -17,38 +17,21 @@ export async function GET(req: Request) {
   }
 
   if (type === "clientes") {
-    const clientes = await prisma.cliente.findMany({
-      where: { nome: { contains: q, mode: "insensitive" } },
-      orderBy: { nome: "asc" },
-      take: limit,
-    });
+    const clientes = await fuzzyFindClientes(q, limit);
     return NextResponse.json({
       options: clientes.map((c) => ({ value: String(c.id), label: c.nome })),
     });
   }
 
   if (type === "produtos") {
-    const produtos = await prisma.produto.findMany({
-      where: { nome: { contains: q, mode: "insensitive" } },
-      orderBy: { nome: "asc" },
-      take: limit,
-    });
+    const produtos = await fuzzyFindProdutos(q, limit);
     return NextResponse.json({
       options: produtos.map((p) => ({ value: p.nome, label: p.nome })),
     });
   }
 
   if (type === "usuarios") {
-    const usuarios = await prisma.usuario.findMany({
-      where: {
-        OR: [
-          { nomeExibicao: { contains: q, mode: "insensitive" } },
-          { username: { contains: q, mode: "insensitive" } },
-        ],
-      },
-      orderBy: { nomeExibicao: "asc" },
-      take: limit,
-    });
+    const usuarios = await fuzzyFindUsuarios(q, limit);
     return NextResponse.json({
       options: usuarios.map((u) => ({
         value: String(u.nomeExibicao || u.username),

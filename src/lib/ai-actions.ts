@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/db";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { valorTotalVenda } from "@/lib/venda-utils";
+import {
+  fuzzyFindClientes,
+  fuzzyFindProdutos,
+  fuzzyFindFornecedores,
+  fuzzyFindClienteByNome,
+  fuzzyFindProdutoByNome,
+} from "@/lib/db-search";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
@@ -769,10 +776,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         let clienteId: number | undefined = parsedParams?.clienteId ? Number(parsedParams.clienteId) : undefined;
         let clienteNomeResolvido: string | undefined;
         if (!clienteId && parsedParams?.clienteNome) {
-          const cl = await prisma.cliente.findFirst({
-            where: { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } },
-            select: { id: true, nome: true },
-          });
+          const cl = await fuzzyFindClienteByNome(parsedParams.clienteNome);
           if (!cl) { result = { erro: `Cliente '${parsedParams.clienteNome}' não encontrado.` }; break; }
           clienteId = cl.id;
           clienteNomeResolvido = cl.nome;
@@ -824,27 +828,23 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         });
         break;
       }
-      case "listar_clientes":
-        result = await prisma.cliente.findMany({
-          where: parsedParams?.search
-            ? { nome: { contains: parsedParams.search, mode: "insensitive" } }
-            : undefined,
-          take: Math.min(Number(parsedParams?.limit || 50), 200),
-          orderBy: { nome: "asc" },
-        });
+      case "listar_clientes": {
+        const limit = Math.min(Number(parsedParams?.limit || 50), 200);
+        result = parsedParams?.search
+          ? await fuzzyFindClientes(parsedParams.search, limit)
+          : await prisma.cliente.findMany({ take: limit, orderBy: { nome: "asc" } });
         break;
+      }
       case "criar_cliente":
         result = await prisma.cliente.create({ data: parsedParams });
         break;
-      case "listar_produtos":
-        result = await prisma.produto.findMany({
-          where: parsedParams?.search
-            ? { nome: { contains: parsedParams.search, mode: "insensitive" } }
-            : undefined,
-          take: Math.min(Number(parsedParams?.limit || 50), 200),
-          orderBy: { nome: "asc" },
-        });
+      case "listar_produtos": {
+        const limit = Math.min(Number(parsedParams?.limit || 50), 200);
+        result = parsedParams?.search
+          ? await fuzzyFindProdutos(parsedParams.search, limit)
+          : await prisma.produto.findMany({ take: limit, orderBy: { nome: "asc" } });
         break;
+      }
       case "criar_produto":
         requireAdmin(ctx);
         result = await prisma.produto.create({ data: parsedParams });
@@ -955,10 +955,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         let clienteId: number | undefined = parsedParams?.clienteId ? Number(parsedParams.clienteId) : undefined;
         let clienteNome: string | undefined;
         if (!clienteId && parsedParams?.clienteNome) {
-          const cliente = await prisma.cliente.findFirst({
-            where: { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } },
-            select: { id: true, nome: true },
-          });
+          const cliente = await fuzzyFindClienteByNome(parsedParams.clienteNome);
           if (!cliente) { result = { erro: `Cliente '${parsedParams.clienteNome}' não encontrado.` }; break; }
           clienteId = cliente.id;
           clienteNome = cliente.nome;
@@ -1035,10 +1032,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       case "consultar_limite_cliente": {
         let clienteId: number | undefined = parsedParams?.clienteId ? Number(parsedParams.clienteId) : undefined;
         if (!clienteId && parsedParams?.clienteNome) {
-          const cliente = await prisma.cliente.findFirst({
-            where: { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } },
-            select: { id: true },
-          });
+          const cliente = await fuzzyFindClienteByNome(parsedParams.clienteNome);
           if (!cliente) { result = { erro: `Cliente '${parsedParams.clienteNome}' não encontrado.` }; break; }
           clienteId = cliente.id;
         }
@@ -1088,15 +1082,13 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         result = await calcularFluxoCaixa(mesAno);
         break;
       }
-      case "listar_fornecedores":
-        result = await prisma.fornecedor.findMany({
-          where: parsedParams?.search
-            ? { nome: { contains: parsedParams.search, mode: "insensitive" } }
-            : undefined,
-          take: Math.min(Number(parsedParams?.limit || 50), 200),
-          orderBy: { nome: "asc" },
-        });
+      case "listar_fornecedores": {
+        const limit = Math.min(Number(parsedParams?.limit || 50), 200);
+        result = parsedParams?.search
+          ? await fuzzyFindFornecedores(parsedParams.search, limit)
+          : await prisma.fornecedor.findMany({ take: limit, orderBy: { nome: "asc" } });
         break;
+      }
       case "criar_fornecedor":
         requireAdmin(ctx);
         result = await prisma.fornecedor.create({
@@ -1199,13 +1191,14 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const isGerado = parsedParams?.status === "gerado";
         const isPendente = parsedParams?.status === "pendente";
         const vendedorFilter = ctx.role === "admin" ? undefined : ctx.displayName;
+        const clienteIdFilter = parsedParams?.clienteNome
+          ? (await fuzzyFindClienteByNome(parsedParams.clienteNome))?.id
+          : undefined;
         const boletos = await prisma.venda.findMany({
           where: {
             boleto: true,
             vendedor: vendedorFilter ? { equals: vendedorFilter } : undefined,
-            cliente: parsedParams?.clienteNome
-              ? { nome: { contains: parsedParams.clienteNome, mode: "insensitive" } }
-              : undefined,
+            clienteId: clienteIdFilter ?? undefined,
             boletoUrl: isGerado ? { not: null } : isPendente ? null : undefined,
           },
           include: { cliente: { select: { nome: true } } },
@@ -1296,10 +1289,9 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           result = { error: "Informe o nome ou ID do produto." };
           break;
         }
-        const where = parsedParams.produtoId
-          ? { id: parsedParams.produtoId }
-          : { nome: { contains: parsedParams.produtoNome!, mode: "insensitive" as const } };
-        const produto = await prisma.produto.findFirst({ where });
+        const produto = parsedParams.produtoId
+          ? await prisma.produto.findFirst({ where: { id: parsedParams.produtoId } })
+          : await fuzzyFindProdutoByNome(parsedParams.produtoNome!);
         if (!produto) {
           result = { error: `Produto não encontrado: ${parsedParams.produtoNome ?? parsedParams.produtoId}` };
           break;
