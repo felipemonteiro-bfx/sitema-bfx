@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ interface Props {
   onCreateAction: (formData: FormData) => Promise<void>;
   onUpdateAction: (formData: FormData) => Promise<void>;
   onDeleteAction: (formData: FormData) => Promise<void>;
+  onBulkDeleteAction: (ids: number[]) => Promise<void>;
 }
 
 export default function ProdutosTabClient({
@@ -67,6 +69,7 @@ export default function ProdutosTabClient({
   onCreateAction,
   onUpdateAction,
   onDeleteAction,
+  onBulkDeleteAction,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -75,6 +78,8 @@ export default function ProdutosTabClient({
   const [produtoSelecionado, setProdutoSelecionado] = useState<ProdutoEdit | null>(initialProduto ?? null);
   const [modalOpen, setModalOpen] = useState(Boolean(initialProduto));
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const produtosMap = useMemo(
     () => new Map(produtos.map((produto) => [produto.id, produto])),
@@ -112,6 +117,40 @@ export default function ProdutosTabClient({
     });
   };
 
+  const allSelected = produtos.length > 0 && selectedIds.size === produtos.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < produtos.length;
+
+  const handleSelectAll = (checked: boolean | "indeterminate") => {
+    if (checked) {
+      setSelectedIds(new Set(produtos.map((p) => p.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: number, checked: boolean | "indeterminate") => {
+    const next = new Set(selectedIds);
+    if (checked) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setSelectedIds(next);
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    try {
+      await onBulkDeleteAction(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      startTransition(() => {
+        router.refresh();
+      });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   return (
     <>
       <form className="relative w-full max-w-sm">
@@ -125,9 +164,50 @@ export default function ProdutosTabClient({
         <input type="hidden" name="tab" value="produtos" />
       </form>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2 mt-2">
+          <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={bulkDeleting}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Excluir selecionados
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir {selectedIds.size} produto(s)</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir {selectedIds.size} produto(s)? Esta acao nao pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-white hover:bg-destructive/90"
+                  disabled={bulkDeleting}
+                  onClick={handleBulkDelete}
+                >
+                  {bulkDeleting ? "Excluindo..." : "Excluir"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+            Limpar selecao
+          </Button>
+        </div>
+      )}
+
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[40px]">
+              <Checkbox
+                checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                onCheckedChange={handleSelectAll}
+              />
+            </TableHead>
             <TableHead className="w-[80px]">Foto</TableHead>
             <TableHead>Nome</TableHead>
             <TableHead>Categoria</TableHead>
@@ -140,13 +220,19 @@ export default function ProdutosTabClient({
         <TableBody>
           {produtos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                 Sem produtos cadastrados.
               </TableCell>
             </TableRow>
           ) : (
             produtos.map((p) => (
               <TableRow key={p.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds.has(p.id)}
+                    onCheckedChange={(checked) => handleSelectOne(p.id, checked)}
+                  />
+                </TableCell>
                 <TableCell>
                   {p.imagem ? (
                     <div className="relative w-10 h-10 border rounded overflow-hidden">

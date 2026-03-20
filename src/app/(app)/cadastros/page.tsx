@@ -1,22 +1,18 @@
 import { prisma } from "@/lib/db";
 import { fuzzyFindProdutos } from "@/lib/db-search";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, cn } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@/generated/prisma";
-import { FormSelect } from "@/components/form-select";
-import { MaskedInput } from "@/components/masked-input";
-import { CurrencyInput } from "@/components/currency-input";
 import { QueryTabs } from "@/components/query-tabs";
 import ProdutoFormClient from "@/components/produto-form-client";
 import ProdutosTabClient from "@/components/produtos-tab-client";
-import { Search, Pencil } from "lucide-react";
+import ClientesTabClient from "@/components/clientes-tab-client";
+import FornecedoresTabClient from "@/components/fornecedores-tab-client";
+import EmpresasTabClient from "@/components/empresas-tab-client";
 import { LinkCatalogoButton } from "@/components/link-catalogo-button";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string };
@@ -82,6 +78,17 @@ async function updateCliente(formData: FormData) {
   redirect("/cadastros?tab=clientes");
 }
 
+async function bulkDeleteClientes(ids: number[]) {
+  "use server";
+  if (!ids.length) return;
+  const clientes = await prisma.cliente.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
+  await prisma.cliente.deleteMany({ where: { id: { in: ids } } });
+  for (const c of clientes) {
+    await createAuditLog("cliente:delete", { clienteId: c.id, nome: c.nome });
+  }
+  revalidatePath("/cadastros");
+}
+
 async function addProduto(formData: FormData) {
   "use server";
   const nome = normalizeUppercase(formData.get("nome"));
@@ -108,7 +115,7 @@ async function updateProduto(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) {
-    throw new Error("Dados incompletos. Nome do produto é obrigatório.");
+    throw new Error("Dados incompletos. Nome do produto e obrigatorio.");
   }
   await prisma.produto.update({
     where: { id },
@@ -136,6 +143,17 @@ async function deleteProduto(formData: FormData) {
   if (!produto) return;
   await prisma.produto.delete({ where: { id } });
   await createAuditLog("produto:delete", { produtoId: id, nome: produto.nome });
+  revalidatePath("/cadastros");
+}
+
+async function bulkDeleteProdutos(ids: number[]) {
+  "use server";
+  if (!ids.length) return;
+  const produtos = await prisma.produto.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
+  await prisma.produto.deleteMany({ where: { id: { in: ids } } });
+  for (const p of produtos) {
+    await createAuditLog("produto:delete", { produtoId: p.id, nome: p.nome });
+  }
   revalidatePath("/cadastros");
 }
 
@@ -167,6 +185,17 @@ async function updateFornecedor(formData: FormData) {
   await createAuditLog("fornecedor:update", { fornecedorId: id, nome });
   revalidatePath("/cadastros");
   redirect("/cadastros?tab=fornecedores");
+}
+
+async function bulkDeleteFornecedores(ids: number[]) {
+  "use server";
+  if (!ids.length) return;
+  const fornecedores = await prisma.fornecedor.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
+  await prisma.fornecedor.deleteMany({ where: { id: { in: ids } } });
+  for (const f of fornecedores) {
+    await createAuditLog("fornecedor:delete", { fornecedorId: f.id, nome: f.nome });
+  }
+  revalidatePath("/cadastros");
 }
 
 async function addEmpresa(formData: FormData) {
@@ -203,6 +232,17 @@ async function updateEmpresa(formData: FormData) {
   redirect("/cadastros?tab=empresas");
 }
 
+async function bulkDeleteEmpresas(ids: number[]) {
+  "use server";
+  if (!ids.length) return;
+  const empresas = await prisma.empresaParceira.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
+  await prisma.empresaParceira.deleteMany({ where: { id: { in: ids } } });
+  for (const e of empresas) {
+    await createAuditLog("empresa:delete", { empresaId: e.id, nome: e.nome });
+  }
+  revalidatePath("/cadastros");
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const editClienteId = sp.editCliente ? Number(sp.editCliente) : 0;
@@ -227,17 +267,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     select: { id: true, nome: true, responsavelRh: true, telefoneRh: true, emailRh: true },
   }) : null;
 
-  const buildUrl = (params: Partial<Search>) => {
-    const newParams = { ...sp, ...params, error: undefined };
-    const search = new URLSearchParams();
-    Object.entries(newParams).forEach(([k, v]) => {
-      if (v) search.set(k, v);
-    });
-    return `/cadastros?${search.toString()}`;
-  };
-
   const errorMsg = sp.error === "nome_duplicado"
-    ? "Já existe um cliente com esse nome. Use um nome diferente."
+    ? "Ja existe um cliente com esse nome. Use um nome diferente."
     : sp.error === "salvar_falhou"
     ? "Erro ao salvar. Tente novamente."
     : null;
@@ -288,19 +319,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     )
   ).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-  const empresas = await prisma.empresaParceira.findMany({ 
+  const empresas = await prisma.empresaParceira.findMany({
     where: sp.q_empresas ? {
       nome: { contains: sp.q_empresas, mode: 'insensitive' }
     } : {},
-    orderBy: { nome: "asc" } 
+    orderBy: { nome: "asc" }
   });
 
-  const fornecedores = await prisma.fornecedor.findMany({ 
+  const fornecedores = await prisma.fornecedor.findMany({
     where: sp.q_fornecedores ? {
       nome: { contains: sp.q_fornecedores, mode: 'insensitive' }
     } : {},
-    orderBy: { nome: "asc" } 
+    orderBy: { nome: "asc" }
   });
+
+  const spPlain: Record<string, string | undefined> = {
+    tab: sp.tab,
+    q_clientes: sp.q_clientes,
+    q_produtos: sp.q_produtos,
+    q_fornecedores: sp.q_fornecedores,
+    q_empresas: sp.q_empresas,
+    editCliente: sp.editCliente,
+    editProduto: sp.editProduto,
+    editFornecedor: sp.editFornecedor,
+    editEmpresa: sp.editEmpresa,
+  };
 
   return (
     <div className="space-y-6">
@@ -315,193 +358,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             value: "clientes",
             label: "Clientes",
             content: (
-              <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-blue-900">Novo Cliente</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {errorMsg && !sp.editCliente && (
-                      <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                        {errorMsg}
-                      </div>
-                    )}
-                    <form action={addCliente} className="grid gap-4 [&_input]:uppercase">
-                      <div className="grid gap-3 md:grid-cols-3">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Nome/Razão Social</div>
-                          <Input name="nome" placeholder="Nome/Razão Social" aria-label="Nome" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Tipo</div>
-                          <FormSelect
-                            name="tipo"
-                            options={[
-                              { value: "PF", label: "Pessoa Física" },
-                              { value: "PJ", label: "Pessoa Jurídica" },
-                            ]}
-                            defaultValue="PF"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">CPF/CNPJ</div>
-                          <Input name="doc" placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
-                        </div>
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-4">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Matrícula</div>
-                          <Input name="matricula" placeholder="Matrícula" aria-label="Matrícula" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Renda/Faturamento</div>
-                          <CurrencyInput name="renda" aria-label="Renda" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">WhatsApp</div>
-                          <MaskedInput name="telefone" mask="phone" aria-label="WhatsApp" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">CEP</div>
-                          <MaskedInput name="cep" mask="cep" aria-label="CEP" />
-                        </div>
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Empresa/Vínculo</div>
-                          <Input name="empresa" placeholder="Empresa/Vínculo" aria-label="Empresa" />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Cliente</button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-                <Card className="mt-4">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-blue-900">Clientes</CardTitle>
-                    <form className="relative w-full max-w-sm [&_input]:uppercase">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        name="q_clientes" 
-                        placeholder="Pesquisar clientes..." 
-                        defaultValue={sp.q_clientes}
-                        className="pl-9 h-9" 
-                      />
-                      <input type="hidden" name="tab" value="clientes" />
-                    </form>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Doc</TableHead>
-                          <TableHead>Telefone</TableHead>
-                          <TableHead className="text-right">Renda</TableHead>
-                          <TableHead className="w-[80px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {clientes.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                              Sem clientes cadastrados.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          clientes.map((c) => (
-                            <TableRow key={c.id}>
-                              <TableCell className="font-medium">{c.nome}</TableCell>
-                              <TableCell>{c.cpf || c.cnpj}</TableCell>
-                              <TableCell>{c.telefone}</TableCell>
-                              <TableCell className="text-right tabular-nums">{formatBRL(c.renda || 0)}</TableCell>
-                              <TableCell>
-                                <Link
-                                  href={buildUrl({ tab: "clientes", editCliente: String(c.id) })}
-                                  className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
-                                  title="Editar"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-                {editClienteData && (
-                  <Card id="editar-cliente" className="mt-4 scroll-mt-24">
-                    <CardHeader>
-                      <CardTitle className="text-blue-900">Editando cliente #{editClienteData.id}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {errorMsg && sp.editCliente && (
-                        <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                          {errorMsg}
-                        </div>
-                      )}
-                      <form action={updateCliente} className="grid gap-4 [&_input]:uppercase">
-                        <input type="hidden" name="id" value={editClienteData.id} />
-                        <div className="grid gap-3 md:grid-cols-3">
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Nome/Razão Social</div>
-                            <Input name="nome" defaultValue={editClienteData.nome} placeholder="Nome/Razão Social" aria-label="Nome" />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Tipo</div>
-                            <FormSelect
-                              name="tipo"
-                              options={[
-                                { value: "PF", label: "Pessoa Física" },
-                                { value: "PJ", label: "Pessoa Jurídica" },
-                              ]}
-                              defaultValue={editClienteData.tipo || "PF"}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">CPF/CNPJ</div>
-                            <Input name="doc" defaultValue={editClienteData.cpf || editClienteData.cnpj || ""} placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
-                          </div>
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-4">
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Matrícula</div>
-                            <Input name="matricula" defaultValue={editClienteData.matricula || ""} placeholder="Matrícula" aria-label="Matrícula" />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Renda/Faturamento</div>
-                            <CurrencyInput name="renda" defaultValue={editClienteData.renda ?? 0} aria-label="Renda" />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">WhatsApp</div>
-                            <MaskedInput name="telefone" mask="phone" defaultValue={editClienteData.telefone || ""} aria-label="WhatsApp" />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">CEP</div>
-                            <MaskedInput name="cep" mask="cep" defaultValue={editClienteData.cep || ""} aria-label="CEP" />
-                          </div>
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Empresa/Vínculo</div>
-                            <Input name="empresa" defaultValue={editClienteData.empresa || ""} placeholder="Empresa/Vínculo" aria-label="Empresa" />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end gap-2">
-                          <Link href={buildUrl({ tab: "clientes", editCliente: undefined })} className={buttonVariants({ variant: "outline" })}>
-                            Cancelar
-                          </Link>
-                          <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alterações</button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+              <ClientesTabClient
+                clientes={clientes}
+                editClienteData={editClienteData}
+                searchQuery={sp.q_clientes}
+                errorMsg={errorMsg}
+                searchParams={spPlain}
+                onAddAction={addCliente}
+                onUpdateAction={updateCliente}
+                onBulkDeleteAction={bulkDeleteClientes}
+              />
             ),
           },
           {
@@ -510,14 +376,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             content: (
               <>
                 <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
-                  <a 
-                    href="/api/relatorios/catalogo" 
-                    target="_blank" 
+                  <a
+                    href="/api/relatorios/catalogo"
+                    target="_blank"
                     rel="noreferrer"
                     className={cn(buttonVariants({ variant: "outline" }), "border-blue-900 text-blue-900 hover:bg-blue-50")}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
-                    Gerar Catálogo (Imprimir)
+                    Gerar Catalogo (Imprimir)
                   </a>
                   <LinkCatalogoButton />
                 </div>
@@ -526,8 +392,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <CardTitle className="text-blue-900">Novo Produto</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ProdutoFormClient 
-                      onSuccessAction={addProduto} 
+                    <ProdutoFormClient
+                      onSuccessAction={addProduto}
                       fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
                       categoriasExistentes={categoriasExistentes}
                     />
@@ -547,6 +413,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       onCreateAction={addProduto}
                       onUpdateAction={updateProduto}
                       onDeleteAction={deleteProduto}
+                      onBulkDeleteAction={bulkDeleteProdutos}
                     />
                   </CardContent>
                 </Card>
@@ -557,240 +424,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             value: "fornecedores",
             label: "Fornecedores",
             content: (
-              <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-blue-900">Novo Fornecedor</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form action={addFornecedor} className="grid gap-4 [&_input]:uppercase">
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
-                          <Input name="nome" placeholder="Razão Social ou Nome" aria-label="Nome" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
-                          <MaskedInput name="telefone" mask="phone" aria-label="Telefone" />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Fornecedor</button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-                <Card className="mt-4">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-blue-900">Fornecedores Cadastrados</CardTitle>
-                    <form className="relative w-full max-w-sm [&_input]:uppercase">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        name="q_fornecedores" 
-                        placeholder="Pesquisar fornecedores..." 
-                        defaultValue={sp.q_fornecedores}
-                        className="pl-9 h-9" 
-                      />
-                      <input type="hidden" name="tab" value="fornecedores" />
-                    </form>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>Telefone</TableHead>
-                          <TableHead className="w-[80px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {fornecedores.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
-                              Sem fornecedores cadastrados.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          fornecedores.map((f) => (
-                            <TableRow key={f.id}>
-                              <TableCell className="font-medium">{f.nome}</TableCell>
-                              <TableCell>{f.telefone}</TableCell>
-                              <TableCell>
-                                <Link
-                                  href={buildUrl({ tab: "fornecedores", editFornecedor: String(f.id) })}
-                                  className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
-                                  title="Editar"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-                {editFornecedorData && (
-                  <Card id="editar-fornecedor" className="mt-4 scroll-mt-24">
-                    <CardHeader>
-                      <CardTitle className="text-blue-900">Editando fornecedor #{editFornecedorData.id}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <form action={updateFornecedor} className="grid gap-4 [&_input]:uppercase">
-                        <input type="hidden" name="id" value={editFornecedorData.id} />
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
-                            <Input name="nome" defaultValue={editFornecedorData.nome} placeholder="Razão Social ou Nome" aria-label="Nome" />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
-                            <MaskedInput name="telefone" mask="phone" defaultValue={editFornecedorData.telefone || ""} aria-label="Telefone" />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end gap-2">
-                          <Link href={buildUrl({ tab: "fornecedores", editFornecedor: undefined })} className={buttonVariants({ variant: "outline" })}>
-                            Cancelar
-                          </Link>
-                          <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alterações</button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+              <FornecedoresTabClient
+                fornecedores={fornecedores}
+                editFornecedorData={editFornecedorData}
+                searchQuery={sp.q_fornecedores}
+                searchParams={spPlain}
+                onAddAction={addFornecedor}
+                onUpdateAction={updateFornecedor}
+                onBulkDeleteAction={bulkDeleteFornecedores}
+              />
             ),
           },
           {
             value: "empresas",
             label: "Empresas",
             content: (
-              <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-blue-900">Nova Empresa</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <form action={addEmpresa} className="grid gap-4 [&_input]:uppercase">
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
-                          <Input name="nome" placeholder="Empresa" aria-label="Nome" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Responsável RH</div>
-                          <Input name="rh" placeholder="Responsável RH" aria-label="Responsável RH" />
-                        </div>
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
-                          <MaskedInput name="tel" mask="phone" aria-label="Telefone RH" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
-                          <Input name="email" placeholder="Email RH" aria-label="Email RH" />
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Empresa</button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-                <Card className="mt-4">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-blue-900">Empresas Parceiras</CardTitle>
-                    <form className="relative w-full max-w-sm [&_input]:uppercase">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        name="q_empresas" 
-                        placeholder="Pesquisar empresas..." 
-                        defaultValue={sp.q_empresas}
-                        className="pl-9 h-9" 
-                      />
-                      <input type="hidden" name="tab" value="empresas" />
-                    </form>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>RH</TableHead>
-                          <TableHead>Contato</TableHead>
-                          <TableHead className="w-[80px]"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {empresas.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                              Sem empresas cadastradas.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          empresas.map((e) => (
-                            <TableRow key={e.id}>
-                              <TableCell className="font-medium">{e.nome}</TableCell>
-                              <TableCell>{e.responsavelRh}</TableCell>
-                              <TableCell>{e.telefoneRh || e.emailRh}</TableCell>
-                              <TableCell>
-                                <Link
-                                  href={buildUrl({ tab: "empresas", editEmpresa: String(e.id) })}
-                                  className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
-                                  title="Editar"
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-                {editEmpresaData && (
-                  <Card id="editar-empresa" className="mt-4 scroll-mt-24">
-                    <CardHeader>
-                      <CardTitle className="text-blue-900">Editando empresa #{editEmpresaData.id}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <form action={updateEmpresa} className="grid gap-4 [&_input]:uppercase">
-                        <input type="hidden" name="id" value={editEmpresaData.id} />
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
-                            <Input name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-label="Nome" />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Responsável RH</div>
-                            <Input name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsável RH" aria-label="Responsável RH" />
-                          </div>
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
-                            <MaskedInput name="tel" mask="phone" defaultValue={editEmpresaData.telefoneRh || ""} aria-label="Telefone RH" />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
-                            <Input name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="Email RH" aria-label="Email RH" />
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end gap-2">
-                          <Link href={buildUrl({ tab: "empresas", editEmpresa: undefined })} className={buttonVariants({ variant: "outline" })}>
-                            Cancelar
-                          </Link>
-                          <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alterações</button>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+              <EmpresasTabClient
+                empresas={empresas}
+                editEmpresaData={editEmpresaData}
+                searchQuery={sp.q_empresas}
+                searchParams={spPlain}
+                onAddAction={addEmpresa}
+                onUpdateAction={updateEmpresa}
+                onBulkDeleteAction={bulkDeleteEmpresas}
+              />
             ),
           },
         ]}

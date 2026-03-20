@@ -1,0 +1,253 @@
+'use client';
+
+import { useState, startTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MaskedInput } from "@/components/masked-input";
+import { cn } from "@/lib/utils";
+import { Pencil, Search, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import Link from "next/link";
+
+type FornecedorListItem = {
+  id: number;
+  nome: string;
+  telefone: string | null;
+};
+
+interface Props {
+  fornecedores: FornecedorListItem[];
+  editFornecedorData?: FornecedorListItem | null;
+  searchQuery?: string;
+  searchParams: Record<string, string | undefined>;
+  onAddAction: (formData: FormData) => Promise<void>;
+  onUpdateAction: (formData: FormData) => Promise<void>;
+  onBulkDeleteAction: (ids: number[]) => Promise<void>;
+}
+
+export default function FornecedoresTabClient({
+  fornecedores,
+  editFornecedorData,
+  searchQuery,
+  searchParams: sp,
+  onAddAction,
+  onUpdateAction,
+  onBulkDeleteAction,
+}: Props) {
+  const router = useRouter();
+
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const buildUrl = (params: Record<string, string | undefined>) => {
+    const newParams = { ...sp, ...params };
+    const search = new URLSearchParams();
+    Object.entries(newParams).forEach(([k, v]) => {
+      if (v) search.set(k, v);
+    });
+    return `/cadastros?${search.toString()}`;
+  };
+
+  const allSelected = fornecedores.length > 0 && selectedIds.size === fornecedores.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < fornecedores.length;
+
+  const handleSelectAll = (checked: boolean | "indeterminate") => {
+    if (checked) {
+      setSelectedIds(new Set(fornecedores.map((f) => f.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: number, checked: boolean | "indeterminate") => {
+    const next = new Set(selectedIds);
+    if (checked) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setSelectedIds(next);
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    try {
+      await onBulkDeleteAction(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      startTransition(() => {
+        router.refresh();
+      });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-blue-900">Novo Fornecedor</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={onAddAction} className="grid gap-4 [&_input]:uppercase">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
+                <Input name="nome" placeholder="Razao Social ou Nome" aria-label="Nome" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
+                <MaskedInput name="telefone" mask="phone" aria-label="Telefone" />
+              </div>
+            </div>
+            <div className="flex items-center justify-end">
+              <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Fornecedor</button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-blue-900">Fornecedores Cadastrados</CardTitle>
+          <form className="relative w-full max-w-sm [&_input]:uppercase">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              name="q_fornecedores"
+              placeholder="Pesquisar fornecedores..."
+              defaultValue={searchQuery}
+              className="pl-9 h-9"
+            />
+            <input type="hidden" name="tab" value="fornecedores" />
+          </form>
+        </CardHeader>
+        <CardContent>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+              <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={bulkDeleting}>
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Excluir selecionados
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir {selectedIds.size} fornecedor(es)</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir {selectedIds.size} fornecedor(es)? Esta acao nao pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-white hover:bg-destructive/90"
+                      disabled={bulkDeleting}
+                      onClick={handleBulkDelete}
+                    >
+                      {bulkDeleting ? "Excluindo..." : "Excluir"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+                Limpar selecao
+              </Button>
+            </div>
+          )}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Telefone</TableHead>
+                <TableHead className="w-[80px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {fornecedores.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    Sem fornecedores cadastrados.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                fornecedores.map((f) => (
+                  <TableRow key={f.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(f.id)}
+                        onCheckedChange={(checked) => handleSelectOne(f.id, checked)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{f.nome}</TableCell>
+                    <TableCell>{f.telefone}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={buildUrl({ tab: "fornecedores", editFornecedor: String(f.id) })}
+                        className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                        title="Editar"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {editFornecedorData && (
+        <Card id="editar-fornecedor" className="mt-4 scroll-mt-24">
+          <CardHeader>
+            <CardTitle className="text-blue-900">Editando fornecedor #{editFornecedorData.id}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={onUpdateAction} className="grid gap-4 [&_input]:uppercase">
+              <input type="hidden" name="id" value={editFornecedorData.id} />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
+                  <Input name="nome" defaultValue={editFornecedorData.nome} placeholder="Razao Social ou Nome" aria-label="Nome" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
+                  <MaskedInput name="telefone" mask="phone" defaultValue={editFornecedorData.telefone || ""} aria-label="Telefone" />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <Link href={buildUrl({ tab: "fornecedores", editFornecedor: undefined })} className={buttonVariants({ variant: "outline" })}>
+                  Cancelar
+                </Link>
+                <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alteracoes</button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}

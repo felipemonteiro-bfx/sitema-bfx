@@ -1,0 +1,277 @@
+'use client';
+
+import { useState, startTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MaskedInput } from "@/components/masked-input";
+import { cn } from "@/lib/utils";
+import { Pencil, Search, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import Link from "next/link";
+
+type EmpresaListItem = {
+  id: number;
+  nome: string;
+  responsavelRh: string | null;
+  telefoneRh: string | null;
+  emailRh: string | null;
+};
+
+interface Props {
+  empresas: EmpresaListItem[];
+  editEmpresaData?: EmpresaListItem | null;
+  searchQuery?: string;
+  searchParams: Record<string, string | undefined>;
+  onAddAction: (formData: FormData) => Promise<void>;
+  onUpdateAction: (formData: FormData) => Promise<void>;
+  onBulkDeleteAction: (ids: number[]) => Promise<void>;
+}
+
+export default function EmpresasTabClient({
+  empresas,
+  editEmpresaData,
+  searchQuery,
+  searchParams: sp,
+  onAddAction,
+  onUpdateAction,
+  onBulkDeleteAction,
+}: Props) {
+  const router = useRouter();
+
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const buildUrl = (params: Record<string, string | undefined>) => {
+    const newParams = { ...sp, ...params };
+    const search = new URLSearchParams();
+    Object.entries(newParams).forEach(([k, v]) => {
+      if (v) search.set(k, v);
+    });
+    return `/cadastros?${search.toString()}`;
+  };
+
+  const allSelected = empresas.length > 0 && selectedIds.size === empresas.length;
+  const someSelected = selectedIds.size > 0 && selectedIds.size < empresas.length;
+
+  const handleSelectAll = (checked: boolean | "indeterminate") => {
+    if (checked) {
+      setSelectedIds(new Set(empresas.map((e) => e.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id: number, checked: boolean | "indeterminate") => {
+    const next = new Set(selectedIds);
+    if (checked) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setSelectedIds(next);
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    try {
+      await onBulkDeleteAction(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      startTransition(() => {
+        router.refresh();
+      });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-blue-900">Nova Empresa</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={onAddAction} className="grid gap-4 [&_input]:uppercase">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
+                <Input name="nome" placeholder="Empresa" aria-label="Nome" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Responsavel RH</div>
+                <Input name="rh" placeholder="Responsavel RH" aria-label="Responsavel RH" />
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
+                <MaskedInput name="tel" mask="phone" aria-label="Telefone RH" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
+                <Input name="email" placeholder="Email RH" aria-label="Email RH" />
+              </div>
+            </div>
+            <div className="flex items-center justify-end">
+              <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Empresa</button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-4">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-blue-900">Empresas Parceiras</CardTitle>
+          <form className="relative w-full max-w-sm [&_input]:uppercase">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              name="q_empresas"
+              placeholder="Pesquisar empresas..."
+              defaultValue={searchQuery}
+              className="pl-9 h-9"
+            />
+            <input type="hidden" name="tab" value="empresas" />
+          </form>
+        </CardHeader>
+        <CardContent>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+              <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={bulkDeleting}>
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Excluir selecionados
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir {selectedIds.size} empresa(s)</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir {selectedIds.size} empresa(s)? Esta acao nao pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-white hover:bg-destructive/90"
+                      disabled={bulkDeleting}
+                      onClick={handleBulkDelete}
+                    >
+                      {bulkDeleting ? "Excluindo..." : "Excluir"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+                Limpar selecao
+              </Button>
+            </div>
+          )}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>RH</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead className="w-[80px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {empresas.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    Sem empresas cadastradas.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                empresas.map((e) => (
+                  <TableRow key={e.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(e.id)}
+                        onCheckedChange={(checked) => handleSelectOne(e.id, checked)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{e.nome}</TableCell>
+                    <TableCell>{e.responsavelRh}</TableCell>
+                    <TableCell>{e.telefoneRh || e.emailRh}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={buildUrl({ tab: "empresas", editEmpresa: String(e.id) })}
+                        className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                        title="Editar"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {editEmpresaData && (
+        <Card id="editar-empresa" className="mt-4 scroll-mt-24">
+          <CardHeader>
+            <CardTitle className="text-blue-900">Editando empresa #{editEmpresaData.id}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={onUpdateAction} className="grid gap-4 [&_input]:uppercase">
+              <input type="hidden" name="id" value={editEmpresaData.id} />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
+                  <Input name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-label="Nome" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Responsavel RH</div>
+                  <Input name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsavel RH" aria-label="Responsavel RH" />
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
+                  <MaskedInput name="tel" mask="phone" defaultValue={editEmpresaData.telefoneRh || ""} aria-label="Telefone RH" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
+                  <Input name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="Email RH" aria-label="Email RH" />
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <Link href={buildUrl({ tab: "empresas", editEmpresa: undefined })} className={buttonVariants({ variant: "outline" })}>
+                  Cancelar
+                </Link>
+                <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alteracoes</button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
