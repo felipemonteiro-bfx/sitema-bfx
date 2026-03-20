@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, startTransition } from "react";
+import { useMemo, useState, startTransition, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import ProdutoFormClient from "@/components/produto-form-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, cn } from "@/lib/utils";
-import { Pencil, Search, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,6 +80,9 @@ export default function ProdutosTabClient({
   const [deleting, setDeleting] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [searchValue, setSearchValue] = useState(searchQuery ?? "");
+  const [isSearching, setIsSearching] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const produtosMap = useMemo(
     () => new Map(produtos.map((produto) => [produto.id, produto])),
@@ -151,18 +154,76 @@ export default function ProdutosTabClient({
     }
   };
 
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!value) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("q_produtos");
+      params.set("tab", "produtos");
+      startTransition(() => router.push(pathname + "?" + params.toString()));
+      return;
+    }
+    setIsSearching(true);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      const trimmed = value.trim();
+      if (trimmed) {
+        params.set("q_produtos", trimmed);
+      } else {
+        params.delete("q_produtos");
+      }
+      params.set("tab", "produtos");
+      startTransition(() => router.push(pathname + "?" + params.toString()));
+      setIsSearching(false);
+    }, 300);
+  }, [searchParams, pathname, router]);
+
+  const clearSearch = useCallback(() => {
+    setSearchValue("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("q_produtos");
+    params.set("tab", "produtos");
+    startTransition(() => router.push(pathname + "?" + params.toString()));
+  }, [searchParams, pathname, router]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    setSearchValue(searchQuery ?? "");
+    setIsSearching(false);
+  }, [searchQuery]);
+
   return (
     <>
-      <form className="relative w-full max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="relative w-full max-w-sm">
+        {isSearching ? (
+          <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+        ) : (
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        )}
         <Input
-          name="q_produtos"
           placeholder="Pesquisar produtos..."
-          defaultValue={searchQuery}
-          className="pl-9 h-9"
+          value={searchValue}
+          onChange={handleSearchChange}
+          className={cn("pl-9 h-9", searchValue && "pr-8")}
         />
-        <input type="hidden" name="tab" value="produtos" />
-      </form>
+        {searchValue && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
 
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2 mt-2">
@@ -221,7 +282,14 @@ export default function ProdutosTabClient({
           {produtos.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                Sem produtos cadastrados.
+                {searchQuery ? (
+                  <div className="space-y-1">
+                    <p>Nenhum produto encontrado para &quot;{searchQuery}&quot;</p>
+                    <p className="text-xs">Tente outro termo ou limpe a busca.</p>
+                  </div>
+                ) : (
+                  "Sem produtos cadastrados."
+                )}
               </TableCell>
             </TableRow>
           ) : (
