@@ -134,6 +134,7 @@ export function IntelligenceChatClient({
   formId,
 }: IntelligenceChatClientProps) {
   const router = useRouter();
+  const [confirming, setConfirming] = React.useState(false);
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
     history,
     (state: Message[], next: Message) => [next, ...state]
@@ -167,11 +168,16 @@ export function IntelligenceChatClient({
   };
 
   const handleConfirm = async (actions: Message["actions"]) => {
-    if (!actions || actions.length === 0) return;
-    const data = new FormData();
-    data.set("actions", JSON.stringify(actions));
-    await confirmAction(data);
-    router.refresh();
+    if (!actions || actions.length === 0 || confirming) return;
+    setConfirming(true);
+    try {
+      const data = new FormData();
+      data.set("actions", JSON.stringify(actions));
+      await confirmAction(data);
+      router.refresh();
+    } finally {
+      setConfirming(false);
+    }
   };
 
   const handleCancel = async (msg: Message) => {
@@ -257,10 +263,11 @@ export function IntelligenceChatClient({
                       <div className="flex gap-2">
                         <button
                           type="button"
-                          className="inline-flex items-center rounded-full bg-success px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-success/90"
+                          disabled={confirming}
+                          className="inline-flex items-center rounded-full bg-success px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => handleConfirm(m.actions)}
                         >
-                          Confirmar
+                          {confirming ? "Processando..." : "Confirmar"}
                         </button>
                         <button
                           type="button"

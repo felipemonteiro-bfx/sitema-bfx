@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { fuzzyFindProdutos } from "@/lib/db-search";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -253,17 +254,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     orderBy: { nome: "asc" }
   });
 
-  const produtos = await prisma.produto.findMany({
-    where: sp.q_produtos ? {
-      OR: [
-        { nome: { contains: sp.q_produtos, mode: 'insensitive' } },
-        { marca: { contains: sp.q_produtos, mode: 'insensitive' } },
-        { categoria: { contains: sp.q_produtos, mode: 'insensitive' } },
-      ]
-    } : {},
-    select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
-    orderBy: { nome: "asc" }
-  });
+  const produtos = sp.q_produtos
+    ? await (async () => {
+        const fuzzyResults = await fuzzyFindProdutos(sp.q_produtos!, 200);
+        const fuzzyIds = new Set(fuzzyResults.map(p => p.id));
+        const extraMatches = await prisma.produto.findMany({
+          where: {
+            id: { notIn: Array.from(fuzzyIds) },
+            OR: [
+              { marca: { contains: sp.q_produtos!, mode: 'insensitive' } },
+              { categoria: { contains: sp.q_produtos!, mode: 'insensitive' } },
+            ],
+          },
+          select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+        });
+        const fullFuzzy = await prisma.produto.findMany({
+          where: { id: { in: Array.from(fuzzyIds) } },
+          select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+          orderBy: { nome: "asc" },
+        });
+        return [...fullFuzzy, ...extraMatches];
+      })()
+    : await prisma.produto.findMany({
+        select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+        orderBy: { nome: "asc" },
+      });
 
   const categoriasExistentes = Array.from(
     new Set(
