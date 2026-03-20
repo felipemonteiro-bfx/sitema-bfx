@@ -324,7 +324,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead className="text-center">Desconto folha</TableHead>
                 <TableHead className="text-center">Boleto</TableHead>
                 <TableHead className="text-center">Assinado</TableHead>
-                <TableHead></TableHead>
+                <TableHead className="sticky right-0 bg-background"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -416,10 +416,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="sticky right-0 bg-background">
                       <div className="flex flex-wrap items-center gap-2 justify-end">
                         <Link
-                          href={buildUrl({ edit: v.id.toString() }) + "#editar-venda"}
+                          href={buildUrl({ edit: v.id.toString() })}
                           className={buttonVariants({ variant: "outline", size: "sm" })}
                         >
                           Editar
