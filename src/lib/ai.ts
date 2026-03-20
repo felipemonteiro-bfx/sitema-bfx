@@ -218,8 +218,47 @@ export async function runAiWithActions(
       } else if (item.name === "gerar_catalogo_produtos") {
         const total = (item.result as any)?.total ?? 0;
         parts.push(`Catálogo gerado com ${total} produto(s).`);
+      } else if (item.result && typeof item.result === "object" && "error" in (item.result as object)) {
+        parts.push(`⚠️ ${(item.result as any).error}`);
+      } else if (item.name === "criar_produto") {
+        const r = item.result as any;
+        parts.push(`✅ **Produto cadastrado com sucesso!**\n- **Nome:** ${r?.nome ?? "-"}\n- **Valor de venda:** ${r?.valorVenda != null ? currency.format(Number(r.valorVenda)) : "-"}\n- **Estoque:** ${r?.qtdEstoque ?? 0} unidades`);
+      } else if (item.name === "criar_cliente") {
+        const r = item.result as any;
+        parts.push(`✅ **Cliente cadastrado com sucesso!**\n- **Nome:** ${r?.nome ?? "-"}\n- **Telefone:** ${r?.telefone ?? "-"}\n- **E-mail:** ${r?.email ?? "-"}`);
+      } else if (item.name === "criar_venda") {
+        const r = item.result as any;
+        parts.push(`✅ **Venda registrada com sucesso!** (ID: ${r?.id ?? "-"})`);
+      } else if (item.name === "criar_despesa") {
+        const r = item.result as any;
+        const valor = r?.valor != null ? currency.format(Number(r.valor)) : "-";
+        parts.push(`✅ **Despesa registrada!**\n- **Descrição:** ${r?.descricao ?? "-"}\n- **Valor:** ${valor}`);
+      } else if (item.name === "criar_empresa") {
+        const r = item.result as any;
+        parts.push(`✅ **Empresa cadastrada!**\n- **Nome:** ${r?.nome ?? "-"}`);
+      } else if (item.name === "criar_usuario") {
+        const r = item.result as any;
+        parts.push(`✅ **Usuário criado!**\n- **Nome:** ${r?.nomeExibicao ?? r?.username ?? "-"}`);
+      } else if (item.name === "criar_fornecedor") {
+        const r = item.result as any;
+        parts.push(`✅ **Fornecedor cadastrado!**\n- **Nome:** ${r?.nome ?? "-"}`);
+      } else if (item.name === "atualizar_produto") {
+        const r = item.result as any;
+        parts.push(`✅ **Produto atualizado!**\n- **Nome:** ${r?.produto ?? r?.nome ?? "-"}`);
+      } else if (item.name === "atualizar_venda") {
+        const r = item.result as any;
+        parts.push(`✅ **Venda atualizada!** (ID: ${r?.id ?? "-"})`);
+      } else if (item.name === "atualizar_usuario") {
+        const r = item.result as any;
+        parts.push(`✅ **Usuário atualizado!**\n- **Nome:** ${r?.nomeExibicao ?? r?.username ?? "-"}`);
+      } else if (item.name === "atualizar_despesa") {
+        const r = item.result as any;
+        parts.push(`✅ **Despesa atualizada!**\n- **Descrição:** ${r?.descricao ?? "-"}`);
+      } else if (item.name === "registrar_entrada_estoque") {
+        const r = item.result as any;
+        parts.push(`✅ **Estoque atualizado!**\n- **Produto:** ${r?.produto ?? "-"}\n- **Estoque anterior:** ${r?.qtdEstoqueAnterior ?? 0}\n- **Estoque novo:** ${r?.qtdEstoqueNova ?? 0}`);
       } else {
-        parts.push(`Ação executada: ${item.name}.`);
+        parts.push(`✅ Ação **${item.name.replace(/_/g, " ")}** executada com sucesso.`);
       }
     }
     return parts.join("\n\n");
