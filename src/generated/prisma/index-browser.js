@@ -315,6 +315,7 @@ exports.Prisma.AiMensagemScalarFieldEnum = {
   sessaoId: 'sessaoId',
   role: 'role',
   content: 'content',
+  contextResumo: 'contextResumo',
   promptOriginal: 'promptOriginal',
   actions: 'actions',
   status: 'status',

@@ -19489,6 +19489,7 @@ export namespace Prisma {
     sessaoId: string | null
     role: string | null
     content: string | null
+    contextResumo: string | null
     promptOriginal: string | null
     status: string | null
     usuario: string | null
@@ -19500,6 +19501,7 @@ export namespace Prisma {
     sessaoId: string | null
     role: string | null
     content: string | null
+    contextResumo: string | null
     promptOriginal: string | null
     status: string | null
     usuario: string | null
@@ -19511,6 +19513,7 @@ export namespace Prisma {
     sessaoId: number
     role: number
     content: number
+    contextResumo: number
     promptOriginal: number
     actions: number
     status: number
@@ -19534,6 +19537,7 @@ export namespace Prisma {
     sessaoId?: true
     role?: true
     content?: true
+    contextResumo?: true
     promptOriginal?: true
     status?: true
     usuario?: true
@@ -19545,6 +19549,7 @@ export namespace Prisma {
     sessaoId?: true
     role?: true
     content?: true
+    contextResumo?: true
     promptOriginal?: true
     status?: true
     usuario?: true
@@ -19556,6 +19561,7 @@ export namespace Prisma {
     sessaoId?: true
     role?: true
     content?: true
+    contextResumo?: true
     promptOriginal?: true
     actions?: true
     status?: true
@@ -19656,6 +19662,7 @@ export namespace Prisma {
     sessaoId: string
     role: string
     content: string
+    contextResumo: string | null
     promptOriginal: string | null
     actions: JsonValue | null
     status: string
@@ -19688,6 +19695,7 @@ export namespace Prisma {
     sessaoId?: boolean
     role?: boolean
     content?: boolean
+    contextResumo?: boolean
     promptOriginal?: boolean
     actions?: boolean
     status?: boolean
@@ -19701,6 +19709,7 @@ export namespace Prisma {
     sessaoId?: boolean
     role?: boolean
     content?: boolean
+    contextResumo?: boolean
     promptOriginal?: boolean
     actions?: boolean
     status?: boolean
@@ -19714,6 +19723,7 @@ export namespace Prisma {
     sessaoId?: boolean
     role?: boolean
     content?: boolean
+    contextResumo?: boolean
     promptOriginal?: boolean
     actions?: boolean
     status?: boolean
@@ -19727,6 +19737,7 @@ export namespace Prisma {
     sessaoId?: boolean
     role?: boolean
     content?: boolean
+    contextResumo?: boolean
     promptOriginal?: boolean
     actions?: boolean
     status?: boolean
@@ -19735,7 +19746,7 @@ export namespace Prisma {
     criadoEm?: boolean
   }
 
-  export type AiMensagemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessaoId" | "role" | "content" | "promptOriginal" | "actions" | "status" | "links" | "usuario" | "criadoEm", ExtArgs["result"]["aiMensagem"]>
+  export type AiMensagemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessaoId" | "role" | "content" | "contextResumo" | "promptOriginal" | "actions" | "status" | "links" | "usuario" | "criadoEm", ExtArgs["result"]["aiMensagem"]>
 
   export type $AiMensagemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AiMensagem"
@@ -19745,6 +19756,7 @@ export namespace Prisma {
       sessaoId: string
       role: string
       content: string
+      contextResumo: string | null
       promptOriginal: string | null
       actions: Prisma.JsonValue | null
       status: string
@@ -20178,6 +20190,7 @@ export namespace Prisma {
     readonly sessaoId: FieldRef<"AiMensagem", 'String'>
     readonly role: FieldRef<"AiMensagem", 'String'>
     readonly content: FieldRef<"AiMensagem", 'String'>
+    readonly contextResumo: FieldRef<"AiMensagem", 'String'>
     readonly promptOriginal: FieldRef<"AiMensagem", 'String'>
     readonly actions: FieldRef<"AiMensagem", 'Json'>
     readonly status: FieldRef<"AiMensagem", 'String'>
@@ -20803,6 +20816,7 @@ export namespace Prisma {
     sessaoId: 'sessaoId',
     role: 'role',
     content: 'content',
+    contextResumo: 'contextResumo',
     promptOriginal: 'promptOriginal',
     actions: 'actions',
     status: 'status',
@@ -21089,10 +21103,11 @@ export namespace Prisma {
 
   export type ProdutoWhereUniqueInput = Prisma.AtLeast<{
     id?: number
-    nome?: string
+    nome_fornecedorId?: ProdutoNomeFornecedorIdCompoundUniqueInput
     AND?: ProdutoWhereInput | ProdutoWhereInput[]
     OR?: ProdutoWhereInput[]
     NOT?: ProdutoWhereInput | ProdutoWhereInput[]
+    nome?: StringFilter<"Produto"> | string
     custoPadrao?: FloatNullableFilter<"Produto"> | number | null
     marca?: StringNullableFilter<"Produto"> | string | null
     categoria?: StringNullableFilter<"Produto"> | string | null
@@ -21102,7 +21117,7 @@ export namespace Prisma {
     qtdEstoque?: IntNullableFilter<"Produto"> | number | null
     valorVenda?: FloatNullableFilter<"Produto"> | number | null
     fornecedor?: XOR<FornecedorNullableScalarRelationFilter, FornecedorWhereInput> | null
-  }, "id" | "nome">
+  }, "id" | "nome_fornecedorId">
 
   export type ProdutoOrderByWithAggregationInput = {
     id?: SortOrder
@@ -22147,6 +22162,7 @@ export namespace Prisma {
     sessaoId?: StringFilter<"AiMensagem"> | string
     role?: StringFilter<"AiMensagem"> | string
     content?: StringFilter<"AiMensagem"> | string
+    contextResumo?: StringNullableFilter<"AiMensagem"> | string | null
     promptOriginal?: StringNullableFilter<"AiMensagem"> | string | null
     actions?: JsonNullableFilter<"AiMensagem">
     status?: StringFilter<"AiMensagem"> | string
@@ -22160,6 +22176,7 @@ export namespace Prisma {
     sessaoId?: SortOrder
     role?: SortOrder
     content?: SortOrder
+    contextResumo?: SortOrderInput | SortOrder
     promptOriginal?: SortOrderInput | SortOrder
     actions?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -22176,6 +22193,7 @@ export namespace Prisma {
     sessaoId?: StringFilter<"AiMensagem"> | string
     role?: StringFilter<"AiMensagem"> | string
     content?: StringFilter<"AiMensagem"> | string
+    contextResumo?: StringNullableFilter<"AiMensagem"> | string | null
     promptOriginal?: StringNullableFilter<"AiMensagem"> | string | null
     actions?: JsonNullableFilter<"AiMensagem">
     status?: StringFilter<"AiMensagem"> | string
@@ -22189,6 +22207,7 @@ export namespace Prisma {
     sessaoId?: SortOrder
     role?: SortOrder
     content?: SortOrder
+    contextResumo?: SortOrderInput | SortOrder
     promptOriginal?: SortOrderInput | SortOrder
     actions?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -22210,6 +22229,7 @@ export namespace Prisma {
     sessaoId?: StringWithAggregatesFilter<"AiMensagem"> | string
     role?: StringWithAggregatesFilter<"AiMensagem"> | string
     content?: StringWithAggregatesFilter<"AiMensagem"> | string
+    contextResumo?: StringNullableWithAggregatesFilter<"AiMensagem"> | string | null
     promptOriginal?: StringNullableWithAggregatesFilter<"AiMensagem"> | string | null
     actions?: JsonNullableWithAggregatesFilter<"AiMensagem">
     status?: StringWithAggregatesFilter<"AiMensagem"> | string
@@ -23515,6 +23535,7 @@ export namespace Prisma {
     sessaoId: string
     role: string
     content: string
+    contextResumo?: string | null
     promptOriginal?: string | null
     actions?: NullableJsonNullValueInput | InputJsonValue
     status?: string
@@ -23528,6 +23549,7 @@ export namespace Prisma {
     sessaoId: string
     role: string
     content: string
+    contextResumo?: string | null
     promptOriginal?: string | null
     actions?: NullableJsonNullValueInput | InputJsonValue
     status?: string
@@ -23540,6 +23562,7 @@ export namespace Prisma {
     sessaoId?: StringFieldUpdateOperationsInput | string
     role?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
+    contextResumo?: NullableStringFieldUpdateOperationsInput | string | null
     promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
     actions?: NullableJsonNullValueInput | InputJsonValue
     status?: StringFieldUpdateOperationsInput | string
@@ -23553,6 +23576,7 @@ export namespace Prisma {
     sessaoId?: StringFieldUpdateOperationsInput | string
     role?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
+    contextResumo?: NullableStringFieldUpdateOperationsInput | string | null
     promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
     actions?: NullableJsonNullValueInput | InputJsonValue
     status?: StringFieldUpdateOperationsInput | string
@@ -23566,6 +23590,7 @@ export namespace Prisma {
     sessaoId: string
     role: string
     content: string
+    contextResumo?: string | null
     promptOriginal?: string | null
     actions?: NullableJsonNullValueInput | InputJsonValue
     status?: string
@@ -23578,6 +23603,7 @@ export namespace Prisma {
     sessaoId?: StringFieldUpdateOperationsInput | string
     role?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
+    contextResumo?: NullableStringFieldUpdateOperationsInput | string | null
     promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
     actions?: NullableJsonNullValueInput | InputJsonValue
     status?: StringFieldUpdateOperationsInput | string
@@ -23591,6 +23617,7 @@ export namespace Prisma {
     sessaoId?: StringFieldUpdateOperationsInput | string
     role?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
+    contextResumo?: NullableStringFieldUpdateOperationsInput | string | null
     promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
     actions?: NullableJsonNullValueInput | InputJsonValue
     status?: StringFieldUpdateOperationsInput | string
@@ -23834,6 +23861,11 @@ export namespace Prisma {
   export type FornecedorNullableScalarRelationFilter = {
     is?: FornecedorWhereInput | null
     isNot?: FornecedorWhereInput | null
+  }
+
+  export type ProdutoNomeFornecedorIdCompoundUniqueInput = {
+    nome: string
+    fornecedorId: number
   }
 
   export type ProdutoCountOrderByAggregateInput = {
@@ -24764,6 +24796,7 @@ export namespace Prisma {
     sessaoId?: SortOrder
     role?: SortOrder
     content?: SortOrder
+    contextResumo?: SortOrder
     promptOriginal?: SortOrder
     actions?: SortOrder
     status?: SortOrder
@@ -24781,6 +24814,7 @@ export namespace Prisma {
     sessaoId?: SortOrder
     role?: SortOrder
     content?: SortOrder
+    contextResumo?: SortOrder
     promptOriginal?: SortOrder
     status?: SortOrder
     usuario?: SortOrder
@@ -24792,6 +24826,7 @@ export namespace Prisma {
     sessaoId?: SortOrder
     role?: SortOrder
     content?: SortOrder
+    contextResumo?: SortOrder
     promptOriginal?: SortOrder
     status?: SortOrder
     usuario?: SortOrder

@@ -259,6 +259,7 @@ model AiMensagem {
   sessaoId       String   @map("sessao_id")
   role           String
   content        String
+  contextResumo  String?  @map("context_resumo")
   promptOriginal String?  @map("prompt_original")
   actions        Json?
   status         String   @default("done")

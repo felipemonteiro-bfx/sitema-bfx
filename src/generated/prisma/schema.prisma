@@ -30,7 +30,7 @@ model Cliente {
 
 model Produto {
   id           Int         @id @default(autoincrement())
-  nome         String      @unique
+  nome         String
   custoPadrao  Float?      @map("custo_padrao")
   marca        String?
   categoria    String?
@@ -41,6 +41,7 @@ model Produto {
   valorVenda   Float?      @default(0) @map("valor_venda")
   fornecedor   Fornecedor? @relation(fields: [fornecedorId], references: [id])
 
+  @@unique([nome, fornecedorId])
   @@map("produtos")
 }
 
@@ -258,6 +259,7 @@ model AiMensagem {
   sessaoId       String   @map("sessao_id")
   role           String
   content        String
+  contextResumo  String?  @map("context_resumo")
   promptOriginal String?  @map("prompt_original")
   actions        Json?
   status         String   @default("done")
