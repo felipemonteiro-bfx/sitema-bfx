@@ -127,6 +127,17 @@ async function updateProduto(formData: FormData) {
   revalidatePath("/cadastros");
 }
 
+async function deleteProduto(formData: FormData) {
+  "use server";
+  const id = Number(formData.get("id") || 0);
+  if (!id) return;
+  const produto = await prisma.produto.findUnique({ where: { id }, select: { nome: true } });
+  if (!produto) return;
+  await prisma.produto.delete({ where: { id } });
+  await createAuditLog("produto:delete", { produtoId: id, nome: produto.nome });
+  revalidatePath("/cadastros");
+}
+
 async function addFornecedor(formData: FormData) {
   "use server";
   const nome = normalizeUppercase(formData.get("nome"));
@@ -520,6 +531,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       initialProduto={editProdutoData}
                       onCreateAction={addProduto}
                       onUpdateAction={updateProduto}
+                      onDeleteAction={deleteProduto}
                     />
                   </CardContent>
                 </Card>
