@@ -97,6 +97,8 @@ function inferReadOnlyActions(prompt: string) {
   return actions.filter((a) => readOnlyActions.has(a.name));
 }
 
+type AiResult = { text: string; actions: unknown[]; links?: { label: string; url: string }[] };
+
 export async function runAiWithActions(
   prompt: string,
   provider: "openai" | "gemini" | "litellm",
@@ -106,7 +108,7 @@ export async function runAiWithActions(
     baseUrl?: string;
     history?: { role: "user" | "assistant"; content: string }[];
   }
-) {
+): Promise<AiResult> {
   const currency = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -288,8 +290,18 @@ export async function runAiWithActions(
         : `${baseUrl}/api/catalogo`;
       links.push({ label: "Catalogo de Produtos (PDF)", url });
     }
-    const summary = buildToolSummary([{ name: ctx.executeAction.name, result: execResult }]);
-    return { text: summary || "Acao executada com sucesso.", actions: [ctx.executeAction], links };
+    // Deixar a IA confirmar via MCP — ela pode consultar o banco para verificar
+    const confirmPrompt = `A ação "${ctx.executeAction.name}" foi executada com o seguinte resultado: ${JSON.stringify(execResult)}. Confirme ao usuário o que foi feito e, se achar necessário, use uma ferramenta de consulta para verificar o registro no sistema.`;
+    return runAiWithActions(confirmPrompt, provider, {
+      ...ctx,
+      mode: "plan",
+      history: [...(ctx.history ?? []), { role: "user", content: prompt }],
+      baseUrl: ctx.baseUrl,
+    }).then((r: AiResult) => ({ ...r, links, actions: [ctx.executeAction!] }))
+      .catch(() => {
+        const summary = buildToolSummary([{ name: ctx.executeAction!.name, result: execResult }]);
+        return { text: summary || "Ação executada com sucesso.", actions: [ctx.executeAction!], links };
+      });
   }
 
   if (provider === "litellm") {
