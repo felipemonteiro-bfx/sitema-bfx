@@ -90,24 +90,6 @@ function MarkdownContent({ text }: { text: string }) {
   );
 }
 
-function actionLabel(name: string): string {
-  const labels: Record<string, string> = {
-    criar_venda: "Criar venda",
-    criar_cliente: "Criar cliente",
-    criar_produto: "Cadastrar produto",
-    registrar_entrada_estoque: "Registrar entrada de estoque",
-    criar_despesa: "Criar despesa",
-    criar_empresa: "Criar empresa",
-    criar_usuario: "Criar usuário",
-    criar_fornecedor: "Criar fornecedor",
-    atualizar_venda: "Atualizar venda",
-    atualizar_produto: "Atualizar produto",
-    atualizar_usuario: "Atualizar usuário",
-    atualizar_despesa: "Atualizar despesa",
-  };
-  return labels[name] ?? name.replace(/_/g, " ");
-}
-
 type Message = {
   prompt: string;
   response: string;
@@ -121,20 +103,15 @@ type Message = {
 type IntelligenceChatClientProps = {
   history: Message[];
   action: (formData: FormData) => Promise<void> | void;
-  confirmAction: (formData: FormData) => Promise<void> | void;
-  cancelAction?: (formData: FormData) => Promise<void> | void;
   formId?: string;
 };
 
 export function IntelligenceChatClient({
   history,
   action,
-  confirmAction,
-  cancelAction,
   formId,
 }: IntelligenceChatClientProps) {
   const router = useRouter();
-  const [confirming, setConfirming] = React.useState(false);
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
     history,
     (state: Message[], next: Message) => [next, ...state]
@@ -164,27 +141,6 @@ export function IntelligenceChatClient({
       });
     }
     await action(formData);
-    router.refresh();
-  };
-
-  const handleConfirm = async (actions: Message["actions"]) => {
-    if (!actions || actions.length === 0 || confirming) return;
-    setConfirming(true);
-    try {
-      const data = new FormData();
-      data.set("actions", JSON.stringify(actions));
-      await confirmAction(data);
-      router.refresh();
-    } finally {
-      setConfirming(false);
-    }
-  };
-
-  const handleCancel = async (msg: Message) => {
-    if (!cancelAction) return;
-    const data = new FormData();
-    data.set("messageAt", msg.at);
-    await cancelAction(data);
     router.refresh();
   };
 
@@ -235,48 +191,6 @@ export function IntelligenceChatClient({
                           {link.label}
                         </a>
                       ))}
-                    </div>
-                  )}
-                  {m.status === "pending" && m.actions && m.actions.length > 0 && (
-                    <div className="mt-3 space-y-3 rounded-lg border-2 border-warning/40 bg-warning/5 p-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold">
-                          Confirmar ação
-                        </span>
-                        <span className="rounded-full bg-warning/20 px-2 py-0.5 text-[10px] font-medium text-warning-foreground border border-warning/30">
-                          {m.actions.length} {m.actions.length === 1 ? "operação" : "operações"}
-                        </span>
-                      </div>
-                      <ul className="space-y-2">
-                        {m.actions.map((a, idx) => (
-                          <li key={`${a.name}-${idx}`} className="rounded-md bg-background/80 border p-2 text-xs">
-                            <div className="font-semibold text-foreground">{actionLabel(a.name)}</div>
-                            <div className="mt-1 text-muted-foreground">
-                              {Object.entries(a.params)
-                                .filter(([, v]) => v !== undefined && v !== null && v !== "")
-                                .map(([k, v]) => `${k}: ${v}`)
-                                .join(" · ")}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={confirming}
-                          className="inline-flex items-center rounded-full bg-success px-4 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={() => handleConfirm(m.actions)}
-                        >
-                          {confirming ? "Processando..." : "Confirmar"}
-                        </button>
-                        <button
-                          type="button"
-                          className="inline-flex items-center rounded-full border px-4 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
-                          onClick={() => handleCancel(m)}
-                        >
-                          Cancelar
-                        </button>
-                      </div>
                     </div>
                   )}
                 </div>

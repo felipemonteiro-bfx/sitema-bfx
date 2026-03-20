@@ -16,7 +16,7 @@ const SYSTEM_PROMPT = `Você é o assistente BFX, especialista em gestão de ven
 
 CAPACIDADES COMPLETAS:
 - Consultas (executam automaticamente): listar vendas, clientes, produtos, despesas, empresas, usuários; consultar parcelas, inadimplentes, limite de crédito, boletos, comissões, auditoria; resumo financeiro, fluxo de caixa, relatório de vendas, margens de produto
-- Ações de escrita (requerem confirmação do usuário): criar venda, criar cliente, cadastrar produto, registrar entrada de estoque, criar despesa, atualizar venda/produto/usuário/despesa, criar empresa/usuário/fornecedor, gerar catálogo
+- Ações de escrita (executadas diretamente): criar venda, criar cliente, cadastrar produto, registrar entrada de estoque, criar despesa, atualizar venda/produto/usuário/despesa, criar empresa/usuário/fornecedor, gerar catálogo
 
 REGRAS:
 - Responda SEMPRE em português do Brasil
@@ -27,17 +27,13 @@ REGRAS:
 - Respeite o perfil do usuário: vendedor não tem acesso a ações administrativas
 
 FLUXO DE CADASTRO (acoes de escrita):
-- ANTES de propor qualquer cadastro (criar_produto, criar_cliente, criar_venda, etc.), resolva TODAS as referencias usando ferramentas de consulta:
+- ANTES de executar qualquer cadastro, resolva TODAS as referencias usando ferramentas de consulta:
   * Se o usuario menciona um fornecedor por nome, use listar_fornecedores para buscar e encontrar o ID correto
   * Se menciona um cliente por nome, use listar_clientes para encontrar o ID
   * Se menciona um produto, use listar_produtos para verificar se ja existe
-- Depois de resolver as referencias, apresente um RESUMO COMPLETO do que sera criado, incluindo:
-  * Todos os campos que serao preenchidos com seus valores
-  * Nomes resolvidos (ex: "Fornecedor: Distribuidora ABC (ID: 42)")
-  * Campos opcionais que ficaram vazios
-- Pergunte ao usuario: "Confirma o cadastro acima?"
-- Ao cadastrar produto: use listar_produtos para ver categorias e marcas existentes e SUGIRA automaticamente (ex: "as categorias existentes sao: Calcado, Roupa, Acessorio — sugiro Calcado para este produto"). NAO pergunte ao usuario "qual a categoria?" se voce pode inferir ou sugerir. Inclua TODOS os campos no cadastro (categoria, marca, custoPadrao, valorVenda, fornecedorId, qtdEstoque).
-- NAO execute a acao de escrita diretamente — apenas proponha (o sistema cuidara da confirmacao via interface)
+- Ao cadastrar produto: use listar_produtos para ver categorias e marcas existentes e escolha a mais adequada. Inclua TODOS os campos (categoria, marca, custoPadrao, valorVenda, fornecedorId, qtdEstoque).
+- Execute a acao de escrita diretamente apos resolver as referencias
+- Apresente um resumo do que foi criado apos a execucao
 - Se alguma referencia nao for encontrada (ex: fornecedor "XYZ" nao existe), informe o usuario e pergunte se deseja criar primeiro`;
 
 export async function runAi(prompt: string, provider: "openai" | "gemini" | "litellm") {
@@ -75,50 +71,12 @@ export const readOnlyActions = new Set(
   aiActions.filter((a) => a.readOnly === true).map((a) => a.name)
 );
 
-function inferReadOnlyActions(prompt: string) {
-  const p = prompt.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-  const rules: { name: string; re: RegExp }[] = [
-    { name: "listar_clientes", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(clientes?)/i },
-    { name: "listar_produtos", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(produtos?)/i },
-    { name: "listar_vendas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(vendas?)/i },
-    { name: "listar_despesas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(despesa|gasto|custos?)/i },
-    { name: "listar_empresas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(empresa|parceira)s?/i },
-    { name: "listar_usuarios", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(usuarios?|vendedores?)/i },
-    { name: "gerar_catalogo_produtos", re: /(catalogo|gerar catalogo)/i },
-  ];
-  const hasQuantos = /quantos|quantas|qtd/.test(p);
-  const limitMatch = p.match(/\b(\d{1,3})\b/);
-  const limit = !hasQuantos && limitMatch ? Number(limitMatch[1]) : undefined;
-  const dateMatches = [...p.matchAll(/\b(\d{4}-\d{2}-\d{2})\b/g)].map((m) => m[1]);
-  const dateParams =
-    dateMatches.length >= 2 ? { from: dateMatches[0], to: dateMatches[1] } : {};
-  const baseParams = {
-    ...(limit ? { limit } : {}),
-    ...dateParams,
-  };
-  const actions = rules
-    .filter((r) => r.re.test(p))
-    .map((r) => {
-      if (r.name === "gerar_catalogo_produtos") return { name: r.name, params: {} };
-      if (r.name === "listar_vendas" || r.name === "listar_despesas") {
-        return { name: r.name, params: baseParams };
-      }
-      const rest = { ...baseParams };
-      delete rest.from;
-      delete rest.to;
-      return { name: r.name, params: rest };
-    });
-  return actions.filter((a) => readOnlyActions.has(a.name));
-}
-
 type AiResult = { text: string; actions: unknown[]; links?: { label: string; url: string }[] };
 
 export async function runAiWithActions(
   prompt: string,
   provider: "openai" | "gemini" | "litellm",
   ctx: ActionContext & {
-    mode?: "plan" | "execute";
-    executeAction?: { name: string; params: Record<string, unknown> };
     baseUrl?: string;
     history?: { role: "user" | "assistant"; content: string }[];
   }
@@ -280,53 +238,36 @@ export async function runAiWithActions(
     return parts.join("\n\n");
   };
 
+  const buildLinks = (executed: { name: string; result: unknown }[]): { label: string; url: string }[] => {
+    const links: { label: string; url: string }[] = [];
+    for (const item of executed) {
+      if (item.name === "criar_venda" && item.result && typeof item.result === "object") {
+        const venda = item.result as { uuid?: string; id?: number };
+        const token = venda.uuid ?? String(venda.id ?? "");
+        if (token && ctx.baseUrl) {
+          links.push({ label: "Recibo PDF", url: `${ctx.baseUrl}/api/recibo?id=${token}` });
+        }
+      }
+      if (item.name === "gerar_catalogo_produtos" && ctx.baseUrl) {
+        links.push({ label: "Catalogo de Produtos (PDF)", url: `${ctx.baseUrl}/api/catalogo` });
+      }
+    }
+    return links;
+  };
+
   const shouldAppendSummary = (text: string) =>
     !text.trim() || /buscando|aguarde|processando|consultando/i.test(text);
   const normalizedPrompt = prompt.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
   const isDespesasMes = /despesa|gasto|gastando/.test(normalizedPrompt) && /mes/.test(normalizedPrompt);
-
-  if (ctx.mode === "execute" && ctx.executeAction) {
-    const execResult = await callMcpTool(ctx.executeAction.name, ctx.executeAction.params, ctx);
-    const links: { label: string; url: string }[] = [];
-    if (ctx.executeAction.name === "criar_venda" && execResult && typeof execResult === "object") {
-      const venda = execResult as { uuid?: string; id?: number };
-      const token = venda.uuid ?? String(venda.id ?? "");
-      if (token) {
-        const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
-        links.push({ label: "Recibo PDF", url: `${baseUrl}/api/recibo?id=${token}` });
-      }
-    }
-    if (ctx.executeAction.name === "gerar_catalogo_produtos") {
-      const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
-      const search = (ctx.executeAction.params?.search as string | undefined) || "";
-      const url = search
-        ? `${baseUrl}/api/catalogo?q=${encodeURIComponent(search)}`
-        : `${baseUrl}/api/catalogo`;
-      links.push({ label: "Catalogo de Produtos (PDF)", url });
-    }
-    // Deixar a IA confirmar via MCP — ela pode consultar o banco para verificar
-    const confirmPrompt = `A ação "${ctx.executeAction.name}" foi executada com o seguinte resultado: ${JSON.stringify(execResult)}. Confirme ao usuário o que foi feito e, se achar necessário, use uma ferramenta de consulta para verificar o registro no sistema.`;
-    return runAiWithActions(confirmPrompt, provider, {
-      ...ctx,
-      mode: "plan",
-      history: [...(ctx.history ?? []), { role: "user", content: prompt }],
-      baseUrl: ctx.baseUrl,
-    }).then((r: AiResult) => ({ ...r, links, actions: [ctx.executeAction!] }))
-      .catch(() => {
-        const summary = buildToolSummary([{ name: ctx.executeAction!.name, result: execResult }]);
-        return { text: summary || "Ação executada com sucesso.", actions: [ctx.executeAction!], links };
-      });
-  }
 
   if (provider === "litellm") {
     const cfg = await prisma.config.findFirst();
     if (!cfg?.litellmUrl || !cfg?.litellmKey) return { text: "LiteLLM nao configurado.", actions: [] };
     const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
     const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
-    // .chat() força o endpoint /chat/completions em vez do /responses (Responses API)
+    // .chat() forces the /chat/completions endpoint instead of /responses (Responses API)
     const litellmModel = litellm.chat(cfg.litellmModel || "gpt-4o");
     const executed: { name: string; result: unknown }[] = [];
-    const planned: { name: string; params: Record<string, unknown> }[] = [];
     const tools = Object.fromEntries(
       aiActions
         .filter((action) => action.roles?.includes(ctx.role) ?? true)
@@ -336,13 +277,9 @@ export async function runAiWithActions(
             description: action.description,
             inputSchema: toolSchema,
             execute: async (args) => {
-              if (action.readOnly || ctx.mode === "execute") {
-                const result = await callMcpTool(action.name, args ?? {}, ctx);
-                executed.push({ name: action.name, result });
-                return result;
-              }
-              planned.push({ name: action.name, params: (args ?? {}) as Record<string, unknown> });
-              return `Ação "${action.name}" proposta. Aguardando confirmação do usuário para executar.`;
+              const result = await callMcpTool(action.name, args ?? {}, ctx);
+              executed.push({ name: action.name, result });
+              return result;
             },
           }),
         ])
@@ -364,21 +301,16 @@ export async function runAiWithActions(
       const msg = e instanceof Error ? e.message : String(e);
       return { text: `Erro ao chamar LiteLLM: ${msg.slice(0, 200)}`, actions: [] };
     }
-    if (ctx.mode === "plan") {
-      if (planned.length > 0) return { text: stripActions(text) || text, actions: planned };
-      const inferred = inferReadOnlyActions(prompt);
-      if (inferred.length) return { text: stripActions(text), actions: inferred };
-      return { text: stripActions(text), actions: extractActions(text) };
-    }
     if (text && text.trim()) {
       const summary = buildToolSummary(executed);
-      if (summary && shouldAppendSummary(text)) return { text: summary, actions: executed };
-      if (summary) return { text: `${text}\n\n${summary}`, actions: executed };
-      return { text, actions: executed };
+      const links = buildLinks(executed);
+      if (summary && shouldAppendSummary(text)) return { text: summary, actions: executed, links };
+      if (summary) return { text: `${text}\n\n${summary}`, actions: executed, links };
+      return { text, actions: executed, links };
     }
     if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
     const fallbackText = buildToolSummary(executed) || "Acao executada.";
-    return { text: fallbackText, actions: executed };
+    return { text: fallbackText, actions: executed, links: buildLinks(executed) };
   }
 
   if (provider === "gemini") {
@@ -387,7 +319,6 @@ export async function runAiWithActions(
 
     const google = createGoogleGenerativeAI({ apiKey: cfg.geminiKey });
     const executed: { name: string; result: unknown }[] = [];
-    const planned: { name: string; params: Record<string, unknown> }[] = [];
     const tools = Object.fromEntries(
       aiActions
         .filter((action) => action.roles?.includes(ctx.role) ?? true)
@@ -397,14 +328,9 @@ export async function runAiWithActions(
             description: action.description,
             inputSchema: toolSchema,
             execute: async (args) => {
-              if (action.readOnly || ctx.mode === "execute") {
-                const result = await callMcpTool(action.name, args ?? {}, ctx);
-                executed.push({ name: action.name, result });
-                return result;
-              }
-              // mode === "plan" and write action: propose, don't execute
-              planned.push({ name: action.name, params: (args ?? {}) as Record<string, unknown> });
-              return `Ação "${action.name}" proposta. Aguardando confirmação do usuário para executar.`;
+              const result = await callMcpTool(action.name, args ?? {}, ctx);
+              executed.push({ name: action.name, result });
+              return result;
             },
           }),
         ])
@@ -454,7 +380,7 @@ export async function runAiWithActions(
       }
     }
 
-    if (executed.length === 0 && isDespesasMes && ctx.mode !== "plan") {
+    if (executed.length === 0 && isDespesasMes) {
       try {
         const now = new Date();
         const from = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -472,31 +398,20 @@ export async function runAiWithActions(
       }
     }
 
-    if (ctx.mode === "plan") {
-      if (planned.length > 0) {
-        return { text: stripActions(text) || text, actions: planned };
-      }
-      // Fallback: try to infer from prompt or extract from text
-      const inferred = inferReadOnlyActions(prompt);
-      if (inferred.length) {
-        return { text: stripActions(text), actions: inferred };
-      }
-      const parsedActions = extractActions(text);
-      return { text: stripActions(text), actions: parsedActions };
-    }
     if (text && text.trim()) {
       const summary = buildToolSummary(executed);
+      const links = buildLinks(executed);
       if (summary && shouldAppendSummary(text)) {
-        return { text: summary, actions: executed };
+        return { text: summary, actions: executed, links };
       }
       if (summary) {
-        return { text: `${text}\n\n${summary}`, actions: executed };
+        return { text: `${text}\n\n${summary}`, actions: executed, links };
       }
-      return { text, actions: executed };
+      return { text, actions: executed, links };
     }
     if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
-    return { text: buildToolSummary(executed) || "Ação executada.", actions: executed };
+    return { text: buildToolSummary(executed) || "Ação executada.", actions: executed, links: buildLinks(executed) };
   }
 
   const cfg = await prisma.config.findFirst();
@@ -504,7 +419,6 @@ export async function runAiWithActions(
 
   const openai = createOpenAI({ apiKey: cfg.openaiKey });
   const executed: { name: string; result: unknown }[] = [];
-  const planned: { name: string; params: Record<string, unknown> }[] = [];
   const tools = Object.fromEntries(
     aiActions
       .filter((action) => action.roles?.includes(ctx.role) ?? true)
@@ -514,14 +428,9 @@ export async function runAiWithActions(
           description: action.description,
           inputSchema: toolSchema,
           execute: async (args) => {
-            if (action.readOnly || ctx.mode === "execute") {
-              const result = await callMcpTool(action.name, args ?? {}, ctx);
-              executed.push({ name: action.name, result });
-              return result;
-            }
-            // mode === "plan" and write action: propose, don't execute
-            planned.push({ name: action.name, params: (args ?? {}) as Record<string, unknown> });
-            return `Ação "${action.name}" proposta. Aguardando confirmação do usuário para executar.`;
+            const result = await callMcpTool(action.name, args ?? {}, ctx);
+            executed.push({ name: action.name, result });
+            return result;
           },
         }),
       ])
@@ -537,7 +446,7 @@ export async function runAiWithActions(
     tools,
   });
 
-  if (executed.length === 0 && isDespesasMes && ctx.mode !== "plan") {
+  if (executed.length === 0 && isDespesasMes) {
     try {
       const now = new Date();
       const from = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -555,50 +464,18 @@ export async function runAiWithActions(
     }
   }
 
-  if (ctx.mode === "plan") {
-    if (planned.length > 0) {
-      return { text: stripActions(text) || text, actions: planned };
-    }
-    // Fallback: try to infer from prompt or extract from text
-    const inferred = inferReadOnlyActions(prompt);
-    if (inferred.length) {
-      return { text: stripActions(text), actions: inferred };
-    }
-    const parsedActions = extractActions(text);
-    return { text: stripActions(text), actions: parsedActions };
-  }
   if (text && text.trim()) {
     const summary = buildToolSummary(executed);
+    const links = buildLinks(executed);
     if (summary && shouldAppendSummary(text)) {
-      return { text: summary, actions: executed };
+      return { text: summary, actions: executed, links };
     }
     if (summary) {
-      return { text: `${text}\n\n${summary}`, actions: executed };
+      return { text: `${text}\n\n${summary}`, actions: executed, links };
     }
-    return { text, actions: executed };
+    return { text, actions: executed, links };
   }
   if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
-  return { text: buildToolSummary(executed) || "Ação executada.", actions: executed };
-}
-
-function extractActions(text: string) {
-  const marker = "ACTIONS:";
-  const idx = text.indexOf(marker);
-  if (idx === -1) return [];
-  const raw = text.slice(idx + marker.length).trim();
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as { name: string; params: Record<string, unknown> }[];
-  } catch {
-    // ignore
-  }
-  return [];
-}
-
-function stripActions(text: string) {
-  const marker = "ACTIONS:";
-  const idx = text.indexOf(marker);
-  if (idx === -1) return text.trim();
-  return text.slice(0, idx).trim();
+  return { text: buildToolSummary(executed) || "Ação executada.", actions: executed, links: buildLinks(executed) };
 }
