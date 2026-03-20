@@ -2,7 +2,6 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
@@ -309,7 +308,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             gerarBoletoAction={gerarBoletoAsaas}
           />
           <div className="hidden md:block">
-          <ScrollArea className="w-full">
+          <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -436,7 +435,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               )}
             </TableBody>
           </Table>
-          </ScrollArea>
+          </div>
           </div>
 
           {totalPages > 1 && (
