@@ -17,7 +17,18 @@ import { Input } from "@/components/ui/input";
 import ProdutoFormClient from "@/components/produto-form-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, cn } from "@/lib/utils";
-import { Pencil, Search } from "lucide-react";
+import { Pencil, Search, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type ProdutoEdit = {
   id: number;
@@ -44,6 +55,7 @@ interface Props {
   initialProduto?: ProdutoEdit | null;
   onCreateAction: (formData: FormData) => Promise<void>;
   onUpdateAction: (formData: FormData) => Promise<void>;
+  onDeleteAction: (formData: FormData) => Promise<void>;
 }
 
 export default function ProdutosTabClient({
@@ -54,6 +66,7 @@ export default function ProdutosTabClient({
   initialProduto,
   onCreateAction,
   onUpdateAction,
+  onDeleteAction,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -61,6 +74,7 @@ export default function ProdutosTabClient({
 
   const [produtoSelecionado, setProdutoSelecionado] = useState<ProdutoEdit | null>(initialProduto ?? null);
   const [modalOpen, setModalOpen] = useState(Boolean(initialProduto));
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   const produtosMap = useMemo(
     () => new Map(produtos.map((produto) => [produto.id, produto])),
@@ -120,7 +134,7 @@ export default function ProdutosTabClient({
             <TableHead>Marca/Fornecedor</TableHead>
             <TableHead>NCM</TableHead>
             <TableHead className="text-right">Valor</TableHead>
-            <TableHead className="w-[80px]"></TableHead>
+            <TableHead className="w-[100px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -163,15 +177,57 @@ export default function ProdutosTabClient({
                 <TableCell className="font-mono text-xs">{p.ncm}</TableCell>
                 <TableCell className="text-right tabular-nums font-semibold">{formatBRL(p.valorVenda || 0)}</TableCell>
                 <TableCell>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
-                    title="Editar"
-                    onClick={() => handleOpenProduto(p.id)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-8 px-2 text-muted-foreground hover:text-destructive"
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir produto</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir &quot;{p.nome}&quot;? Esta acao nao pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                            disabled={deleting === p.id}
+                            onClick={async () => {
+                              setDeleting(p.id);
+                              try {
+                                const fd = new FormData();
+                                fd.append("id", String(p.id));
+                                await onDeleteAction(fd);
+                                startTransition(() => { router.refresh(); });
+                              } finally {
+                                setDeleting(null);
+                              }
+                            }}
+                          >
+                            {deleting === p.id ? "Excluindo..." : "Excluir"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                      title="Editar"
+                      onClick={() => handleOpenProduto(p.id)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
