@@ -22,9 +22,22 @@ REGRAS:
 - Responda SEMPRE em português do Brasil
 - Use formatação Markdown nas respostas: **negrito** para destaques, listas com - para enumerar itens, ## para títulos de seção quando necessário
 - Para consultas: execute a ação e apresente os resultados de forma clara e amigável, usando listas e tabelas quando adequado
-- Para ações de escrita: descreva o que vai fazer, use a ferramenta (ela pedirá confirmação ao usuário)
+- Para ações de escrita: siga o FLUXO DE CADASTRO abaixo
 - Se o usuário pedir "cadastrar entrada de produto", use registrar_entrada_estoque
-- Respeite o perfil do usuário: vendedor não tem acesso a ações administrativas`;
+- Respeite o perfil do usuário: vendedor não tem acesso a ações administrativas
+
+FLUXO DE CADASTRO (acoes de escrita):
+- ANTES de propor qualquer cadastro (criar_produto, criar_cliente, criar_venda, etc.), resolva TODAS as referencias usando ferramentas de consulta:
+  * Se o usuario menciona um fornecedor por nome, use listar_fornecedores para buscar e encontrar o ID correto
+  * Se menciona um cliente por nome, use listar_clientes para encontrar o ID
+  * Se menciona um produto, use listar_produtos para verificar se ja existe
+- Depois de resolver as referencias, apresente um RESUMO COMPLETO do que sera criado, incluindo:
+  * Todos os campos que serao preenchidos com seus valores
+  * Nomes resolvidos (ex: "Fornecedor: Distribuidora ABC (ID: 42)")
+  * Campos opcionais que ficaram vazios
+- Pergunte ao usuario: "Confirma o cadastro acima?"
+- NAO execute a acao de escrita diretamente — apenas proponha (o sistema cuidara da confirmacao via interface)
+- Se alguma referencia nao for encontrada (ex: fornecedor "XYZ" nao existe), informe o usuario e pergunte se deseja criar primeiro`;
 
 export async function runAi(prompt: string, provider: "openai" | "gemini" | "litellm") {
   const cfg = await prisma.config.findFirst();
