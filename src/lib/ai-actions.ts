@@ -88,6 +88,9 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
     ncm: optionalString(),
     custoPadrao: optionalNumber(),
     valorVenda: optionalNumber(),
+    categoria: optionalString(),
+    fornecedorId: optionalNumber(),
+    qtdEstoque: optionalNumber(),
   }),
   listar_despesas: z.object({
     from: optionalString(),
@@ -318,7 +321,7 @@ export const aiActions: AiActionDef[] = [
   },
   {
     name: "criar_produto",
-    description: "Cria um produto (admin).",
+    description: "Cria um produto (admin). IMPORTANTE: sempre inclua TODOS os campos informados pelo usuario (categoria, marca, custoPadrao, valorVenda, fornecedorId, qtdEstoque). Use listar_fornecedores para resolver o fornecedorId. Use listar_produtos para ver categorias e marcas existentes e SUGIRA ao usuario (nao pergunte repetidamente).",
     readOnly: false,
     roles: ["admin"],
     parameters: {
@@ -326,10 +329,13 @@ export const aiActions: AiActionDef[] = [
       required: ["nome"],
       properties: {
         nome: { type: "string" },
-        marca: { type: "string" },
+        marca: { type: "string", description: "Marca do produto. Consulte produtos existentes para sugerir." },
         ncm: { type: "string" },
-        custoPadrao: { type: "number" },
-        valorVenda: { type: "number" },
+        custoPadrao: { type: "number", description: "Custo/preco de compra do produto" },
+        valorVenda: { type: "number", description: "Preco de venda ao consumidor" },
+        categoria: { type: "string", description: "Categoria do produto. Consulte produtos existentes para sugerir." },
+        fornecedorId: { type: "number", description: "ID do fornecedor. Use listar_fornecedores para resolver." },
+        qtdEstoque: { type: "number", description: "Quantidade inicial em estoque" },
       },
     },
   },
