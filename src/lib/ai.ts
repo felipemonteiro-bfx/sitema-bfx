@@ -117,62 +117,112 @@ export async function runAiWithActions(
     return `Despesas encontradas: ${rows.length}. Total: ${currency.format(total)}.`;
   };
 
+  const buildMarkdownTable = (headers: string[], rows: string[][]): string => {
+    const sep = headers.map(() => "---").join(" | ");
+    const header = headers.join(" | ");
+    const body = rows.map((r) => r.join(" | ")).join("\n");
+    return `| ${header} |\n| ${sep} |\n${rows.map((r) => `| ${r.join(" | ")} |`).join("\n")}`;
+  };
+
   const buildToolSummary = (executed: { name: string; result: unknown }[]) => {
     if (!executed.length) return "";
     const parts: string[] = [];
     for (const item of executed) {
       if (item.name === "listar_clientes" && Array.isArray(item.result)) {
         const rows = item.result as any[];
-        const nomes = rows.slice(0, 5).map((c) => c.nome).filter(Boolean);
-        parts.push(
-          rows.length
-            ? `Clientes encontrados: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
-            : "Nenhum cliente encontrado."
-        );
+        if (!rows.length) {
+          parts.push("Nenhum cliente encontrado.");
+        } else {
+          const tableRows = rows.slice(0, 15).map((c) => [
+            c.nome ?? "-",
+            c.telefone ?? "-",
+            c.email ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} cliente(s) encontrado(s):**\n\n${buildMarkdownTable(["Nome", "Telefone", "E-mail"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_produtos" && Array.isArray(item.result)) {
         const rows = item.result as any[];
         if (!rows.length) {
           parts.push("Nenhum produto encontrado.");
         } else {
-          const linhas = rows.slice(0, 10).map((p) => {
-            const estoque = p.qtdEstoque != null ? ` — estoque: ${p.qtdEstoque}` : "";
-            return `${p.nome}${estoque}`;
-          });
           const totalEstoque = rows.reduce((s: number, p: any) => s + (p.qtdEstoque ?? 0), 0);
+          const tableRows = rows.slice(0, 15).map((p) => [
+            p.nome ?? "-",
+            String(p.qtdEstoque ?? 0),
+            p.preco != null ? currency.format(Number(p.preco)) : "-",
+          ]);
           parts.push(
-            `Produtos encontrados: ${rows.length}. Total em estoque: ${totalEstoque}.\n${linhas.join("\n")}`
+            `**${rows.length} produto(s) — estoque total: ${totalEstoque}:**\n\n${buildMarkdownTable(["Produto", "Estoque", "Preço"], tableRows)}`
           );
         }
       } else if (item.name === "listar_vendas" && Array.isArray(item.result)) {
-        parts.push(`Vendas encontradas: ${(item.result as any[]).length}.`);
+        const rows = item.result as any[];
+        if (!rows.length) {
+          parts.push("Nenhuma venda encontrada.");
+        } else {
+          const total = rows.reduce((s, v) => s + Number(v?.valorTotal ?? 0), 0);
+          const tableRows = rows.slice(0, 15).map((v) => [
+            v.cliente?.nome ?? v.clienteNome ?? "-",
+            v.createdAt ? new Date(v.createdAt).toLocaleDateString("pt-BR") : "-",
+            v.valorTotal != null ? currency.format(Number(v.valorTotal)) : "-",
+            v.status ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} venda(s) — total: ${currency.format(total)}:**\n\n${buildMarkdownTable(["Cliente", "Data", "Valor", "Status"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_despesas" && Array.isArray(item.result)) {
-        parts.push(summarizeDespesas(item.result as any[]));
+        const rows = item.result as any[];
+        if (!rows.length) {
+          parts.push("Nenhuma despesa encontrada.");
+        } else {
+          const total = rows.reduce((s, d) => s + Number(d?.valor ?? 0), 0);
+          const tableRows = rows.slice(0, 15).map((d) => [
+            d.descricao ?? "-",
+            d.data ? new Date(d.data).toLocaleDateString("pt-BR") : "-",
+            d.valor != null ? currency.format(Number(d.valor)) : "-",
+          ]);
+          parts.push(
+            `**${rows.length} despesa(s) — total: ${currency.format(total)}:**\n\n${buildMarkdownTable(["Descrição", "Data", "Valor"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_empresas" && Array.isArray(item.result)) {
         const rows = item.result as any[];
-        const nomes = rows.slice(0, 5).map((e) => e.nome).filter(Boolean);
-        parts.push(
-          rows.length
-            ? `Empresas encontradas: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
-            : "Nenhuma empresa encontrada."
-        );
+        if (!rows.length) {
+          parts.push("Nenhuma empresa encontrada.");
+        } else {
+          const tableRows = rows.slice(0, 10).map((e) => [
+            e.nome ?? "-",
+            e.cnpj ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} empresa(s) encontrada(s):**\n\n${buildMarkdownTable(["Nome", "CNPJ"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_usuarios" && Array.isArray(item.result)) {
-        const nomes = (item.result as any[])
-          .slice(0, 5)
-          .map((u) => u.nomeExibicao || u.username)
-          .filter(Boolean);
-        parts.push(
-          nomes.length
-            ? `Usuarios encontrados: ${nomes.join(", ")}.`
-            : "Nenhum usuario encontrado."
-        );
+        const rows = item.result as any[];
+        if (!rows.length) {
+          parts.push("Nenhum usuário encontrado.");
+        } else {
+          const tableRows = rows.slice(0, 10).map((u) => [
+            u.nomeExibicao ?? u.username ?? "-",
+            u.email ?? "-",
+            u.role ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} usuário(s):**\n\n${buildMarkdownTable(["Nome", "E-mail", "Perfil"], tableRows)}`
+          );
+        }
       } else if (item.name === "gerar_catalogo_produtos") {
         const total = (item.result as any)?.total ?? 0;
-        parts.push(`Catalogo gerado com ${total} produtos.`);
+        parts.push(`Catálogo gerado com ${total} produto(s).`);
       } else {
-        parts.push(`Acao executada: ${item.name}.`);
+        parts.push(`Ação executada: ${item.name}.`);
       }
     }
-    return parts.join("\n");
+    return parts.join("\n\n");
   };
 
   const shouldAppendSummary = (text: string) =>
@@ -381,32 +431,7 @@ export async function runAiWithActions(
     }
     if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
-    const fallbackText = executed
-      .map((a) => {
-        if (a.name === "listar_clientes" && Array.isArray(a.result)) {
-          const items = (a.result as any[]).slice(0, 3).map((c) => c.nome).filter(Boolean);
-          return items.length
-            ? `Clientes encontrados: ${items.join(", ")}.`
-            : "Nenhum cliente encontrado.";
-        }
-        if (a.name === "listar_produtos" && Array.isArray(a.result)) {
-          const rows = a.result as any[];
-          if (!rows.length) return "Nenhum produto encontrado.";
-          const linhas = rows.slice(0, 10).map((p: any) => {
-            const estoque = p.qtdEstoque != null ? ` — estoque: ${p.qtdEstoque}` : "";
-            return `${p.nome}${estoque}`;
-          });
-          const totalEstoque = rows.reduce((s: number, p: any) => s + (p.qtdEstoque ?? 0), 0);
-          return `Produtos encontrados: ${rows.length}. Total em estoque: ${totalEstoque}.\n${linhas.join("\n")}`;
-        }
-        if (a.name === "listar_despesas" && Array.isArray(a.result)) {
-          return summarizeDespesas(a.result as any[]);
-        }
-        return `Acao executada: ${a.name}.`;
-      })
-      .join("\n");
-
-    return { text: fallbackText, actions: executed };
+    return { text: buildToolSummary(executed) || "Ação executada.", actions: executed };
   }
 
   const cfg = await prisma.config.findFirst();
@@ -489,22 +514,7 @@ export async function runAiWithActions(
   }
   if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
-  const fallbackText = executed
-    .map((a) => {
-      if (a.name === "listar_clientes" && Array.isArray(a.result)) {
-        const items = (a.result as any[]).slice(0, 3).map((c) => c.nome).filter(Boolean);
-        return items.length
-          ? `Clientes encontrados: ${items.join(", ")}.`
-          : "Nenhum cliente encontrado.";
-      }
-      if (a.name === "listar_despesas" && Array.isArray(a.result)) {
-        return summarizeDespesas(a.result as any[]);
-      }
-      return `Acao executada: ${a.name}.`;
-    })
-    .join("\n");
-
-  return { text: fallbackText, actions: executed };
+  return { text: buildToolSummary(executed) || "Ação executada.", actions: executed };
 }
 
 function extractActions(text: string) {
