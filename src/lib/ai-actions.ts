@@ -3,6 +3,7 @@ import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -1345,7 +1346,18 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
     await logAction("success", { params: parsedParams, result });
     return result;
   } catch (error) {
-    await logAction("error", { params, error: error instanceof Error ? error.message : String(error) });
+    const msg = error instanceof Error ? error.message : String(error);
+    await logAction("error", { params, error: msg });
+
+    if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
+      const fields = Array.isArray(error.meta?.target) ? (error.meta.target as string[]).join(", ") : String(error.meta?.target ?? "campo");
+      return { error: `Já existe um registro com o mesmo valor em: ${fields}. Verifique os dados e tente com um valor diferente.` };
+    }
+
+    if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
+      return { error: "Registro não encontrado para atualizar ou excluir." };
+    }
+
     throw error;
   }
 }
