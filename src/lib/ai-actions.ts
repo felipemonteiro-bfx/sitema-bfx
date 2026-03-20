@@ -228,6 +228,7 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
     marca: optionalString(),
     categoria: optionalString(),
     qtdEstoque: optionalNumber(),
+    fornecedorId: optionalNumber(),
   }),
 };
 
@@ -726,6 +727,7 @@ export const aiActions: AiActionDef[] = [
         marca: { type: "string" },
         categoria: { type: "string" },
         qtdEstoque: { type: "number", description: "Quantidade absoluta em estoque" },
+        fornecedorId: { type: "number", description: "ID do fornecedor. Use listar_fornecedores para resolver." },
       },
     },
   },
@@ -853,6 +855,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       }
       case "criar_produto":
         requireAdmin(ctx);
+        if (parsedParams.marca) parsedParams.marca = parsedParams.marca.toUpperCase();
         result = await prisma.produto.create({ data: parsedParams });
         break;
       case "listar_despesas":
@@ -1312,6 +1315,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       case "atualizar_produto": {
         requireAdmin(ctx);
         const { id, ...data } = parsedParams;
+        if (data.marca) data.marca = data.marca.toUpperCase();
         const hasUpdate = Object.values(data).some((v) => v !== undefined);
         if (!hasUpdate) {
           result = { error: "Nenhum campo para atualizar foi informado." };
@@ -1325,6 +1329,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             ...(data.marca !== undefined && { marca: data.marca }),
             ...(data.categoria !== undefined && { categoria: data.categoria }),
             ...(data.qtdEstoque !== undefined && { qtdEstoque: data.qtdEstoque }),
+            ...(data.fornecedorId !== undefined && { fornecedorId: data.fornecedorId }),
           },
         });
         result = {
