@@ -162,6 +162,7 @@ model Config {
   litellmUrl               String? @map("litellm_url")
   litellmKey               String? @map("litellm_key")
   litellmModel             String? @map("litellm_model")
+  litellmEnableThinking    Boolean? @default(false) @map("litellm_enable_thinking")
 
   @@map("config")
 }

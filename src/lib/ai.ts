@@ -42,9 +42,13 @@ export async function runAi(prompt: string, provider: "openai" | "gemini" | "lit
     if (!cfg?.litellmUrl || !cfg?.litellmKey) return "LiteLLM nao configurado.";
     const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
     const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
+    const litellmProviderOptions = cfg.litellmEnableThinking
+      ? { openai: { body: { chat_template_kwargs: { enable_thinking: true } } } }
+      : undefined;
     const { text } = await generateText({
       model: litellm.chat(cfg.litellmModel || "gpt-4o"),
       prompt,
+      ...(litellmProviderOptions && { providerOptions: litellmProviderOptions }),
     });
     return stripThinkTags(text) || "Sem resposta.";
   }
@@ -267,6 +271,9 @@ export async function runAiWithActions(
     const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
     // .chat() forces the /chat/completions endpoint instead of /responses (Responses API)
     const litellmModel = litellm.chat(cfg.litellmModel || "gpt-4o");
+    const litellmProviderOptions = cfg.litellmEnableThinking
+      ? { openai: { body: { chat_template_kwargs: { enable_thinking: true } } } }
+      : undefined;
     const executed: { name: string; result: unknown }[] = [];
     const tools = Object.fromEntries(
       aiActions
@@ -295,6 +302,7 @@ export async function runAiWithActions(
       ],
       tools,
       stopWhen: stepCountIs(5),
+      ...(litellmProviderOptions && { providerOptions: litellmProviderOptions }),
     });
     text = stripThinkTags(result.text ?? "");
     } catch (e) {
