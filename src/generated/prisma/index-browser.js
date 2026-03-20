@@ -238,7 +238,8 @@ exports.Prisma.ConfigScalarFieldEnum = {
   aiProvider: 'aiProvider',
   litellmUrl: 'litellmUrl',
   litellmKey: 'litellmKey',
-  litellmModel: 'litellmModel'
+  litellmModel: 'litellmModel',
+  litellmEnableThinking: 'litellmEnableThinking'
 };
 
 exports.Prisma.UsuarioScalarFieldEnum = {

@@ -135,33 +135,34 @@ model ParcelaVencimento {
 }
 
 model Config {
-  id                        Int     @id @default(autoincrement())
-  modeloContrato            String? @map("modelo_contrato") // Autorização de desconto em folha
-  modeloReciboVenda         String? @map("modelo_recibo_venda") // Recibo padrão de venda de mercadoria
-  logoPath                  String? @map("logo_path")
-  openaiKey                 String? @map("openai_key")
-  geminiKey                 String? @map("gemini_key")
-  asaasApiKey               String? @map("asaas_api_key") // API Key do Asaas (boletos)
-  asaasEnv                  String? @map("asaas_env") // sandbox | production
-  evolutionApiUrl           String? @map("evolution_api_url")
-  evolutionApiKey           String? @map("evolution_api_key")
-  evolutionInstance         String? @map("evolution_instance") // Nome da instância na Evolution API
-  whatsappAutoEnabled       Int?    @default(1) @map("whatsapp_auto_enabled") // 1=ativado, 0=desativado
-  whatsappAutoRecibo        Int?    @default(1) @map("whatsapp_auto_recibo") // Enviar recibo/assinatura ao finalizar venda
-  whatsappAutoBoleto        Int?    @default(1) @map("whatsapp_auto_boleto") // Enviar link boleto ao gerar
-  whatsappAutoLembrete      Int?    @default(1) @map("whatsapp_auto_lembrete") // Lembrete parcelas 2 dias antes
-  whatsappAutoReativacao    Int?    @default(0) @map("whatsapp_auto_reativacao") // Reativação clientes inativos
-  whatsappAutoAniversario   Int?    @default(0) @map("whatsapp_auto_aniversario") // Parabéns no aniversário
-  whatsappAutoInadimplencia Int?    @default(0) @map("whatsapp_auto_inadimplencia") // Parcela vencida
-  whatsappAutoNPS           Int?    @default(0) @map("whatsapp_auto_nps") // Pesquisa satisfação
-  whatsappAutoBoasVindas    Int?    @default(0) @map("whatsapp_auto_boas_vindas") // Boas-vindas cliente novo
-  whatsappAutoAgradecimento Int?    @default(0) @map("whatsapp_auto_agradecimento") // Agradecimento 1 dia após venda
-  whatsappDiasInativo       Int?    @default(60) @map("whatsapp_dias_inativo") // Dias sem compra para reativação
-  whatsappPreAtendimento    Int?    @default(0) @map("whatsapp_pre_atendimento") // 1=IA pré-atende quem manda msg no WhatsApp
-  aiProvider                String? @map("ai_provider") // gemini | openai | litellm
-  litellmUrl                String? @map("litellm_url")
-  litellmKey                String? @map("litellm_key")
-  litellmModel              String? @map("litellm_model")
+  id                        Int      @id @default(autoincrement())
+  modeloContrato            String?  @map("modelo_contrato") // Autorização de desconto em folha
+  modeloReciboVenda         String?  @map("modelo_recibo_venda") // Recibo padrão de venda de mercadoria
+  logoPath                  String?  @map("logo_path")
+  openaiKey                 String?  @map("openai_key")
+  geminiKey                 String?  @map("gemini_key")
+  asaasApiKey               String?  @map("asaas_api_key") // API Key do Asaas (boletos)
+  asaasEnv                  String?  @map("asaas_env") // sandbox | production
+  evolutionApiUrl           String?  @map("evolution_api_url")
+  evolutionApiKey           String?  @map("evolution_api_key")
+  evolutionInstance         String?  @map("evolution_instance") // Nome da instância na Evolution API
+  whatsappAutoEnabled       Int?     @default(1) @map("whatsapp_auto_enabled") // 1=ativado, 0=desativado
+  whatsappAutoRecibo        Int?     @default(1) @map("whatsapp_auto_recibo") // Enviar recibo/assinatura ao finalizar venda
+  whatsappAutoBoleto        Int?     @default(1) @map("whatsapp_auto_boleto") // Enviar link boleto ao gerar
+  whatsappAutoLembrete      Int?     @default(1) @map("whatsapp_auto_lembrete") // Lembrete parcelas 2 dias antes
+  whatsappAutoReativacao    Int?     @default(0) @map("whatsapp_auto_reativacao") // Reativação clientes inativos
+  whatsappAutoAniversario   Int?     @default(0) @map("whatsapp_auto_aniversario") // Parabéns no aniversário
+  whatsappAutoInadimplencia Int?     @default(0) @map("whatsapp_auto_inadimplencia") // Parcela vencida
+  whatsappAutoNPS           Int?     @default(0) @map("whatsapp_auto_nps") // Pesquisa satisfação
+  whatsappAutoBoasVindas    Int?     @default(0) @map("whatsapp_auto_boas_vindas") // Boas-vindas cliente novo
+  whatsappAutoAgradecimento Int?     @default(0) @map("whatsapp_auto_agradecimento") // Agradecimento 1 dia após venda
+  whatsappDiasInativo       Int?     @default(60) @map("whatsapp_dias_inativo") // Dias sem compra para reativação
+  whatsappPreAtendimento    Int?     @default(0) @map("whatsapp_pre_atendimento") // 1=IA pré-atende quem manda msg no WhatsApp
+  aiProvider                String?  @map("ai_provider") // gemini | openai | litellm
+  litellmUrl                String?  @map("litellm_url")
+  litellmKey                String?  @map("litellm_key")
+  litellmModel              String?  @map("litellm_model")
+  litellmEnableThinking     Boolean? @default(false) @map("litellm_enable_thinking")
 
   @@map("config")
 }

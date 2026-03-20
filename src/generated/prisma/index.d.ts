@@ -9773,6 +9773,7 @@ export namespace Prisma {
     litellmUrl: string | null
     litellmKey: string | null
     litellmModel: string | null
+    litellmEnableThinking: boolean | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -9803,6 +9804,7 @@ export namespace Prisma {
     litellmUrl: string | null
     litellmKey: string | null
     litellmModel: string | null
+    litellmEnableThinking: boolean | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -9833,6 +9835,7 @@ export namespace Prisma {
     litellmUrl: number
     litellmKey: number
     litellmModel: number
+    litellmEnableThinking: number
     _all: number
   }
 
@@ -9897,6 +9900,7 @@ export namespace Prisma {
     litellmUrl?: true
     litellmKey?: true
     litellmModel?: true
+    litellmEnableThinking?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -9927,6 +9931,7 @@ export namespace Prisma {
     litellmUrl?: true
     litellmKey?: true
     litellmModel?: true
+    litellmEnableThinking?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -9957,6 +9962,7 @@ export namespace Prisma {
     litellmUrl?: true
     litellmKey?: true
     litellmModel?: true
+    litellmEnableThinking?: true
     _all?: true
   }
 
@@ -10074,6 +10080,7 @@ export namespace Prisma {
     litellmUrl: string | null
     litellmKey: string | null
     litellmModel: string | null
+    litellmEnableThinking: boolean | null
     _count: ConfigCountAggregateOutputType | null
     _avg: ConfigAvgAggregateOutputType | null
     _sum: ConfigSumAggregateOutputType | null
@@ -10123,6 +10130,7 @@ export namespace Prisma {
     litellmUrl?: boolean
     litellmKey?: boolean
     litellmModel?: boolean
+    litellmEnableThinking?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10153,6 +10161,7 @@ export namespace Prisma {
     litellmUrl?: boolean
     litellmKey?: boolean
     litellmModel?: boolean
+    litellmEnableThinking?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10183,6 +10192,7 @@ export namespace Prisma {
     litellmUrl?: boolean
     litellmKey?: boolean
     litellmModel?: boolean
+    litellmEnableThinking?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -10213,9 +10223,10 @@ export namespace Prisma {
     litellmUrl?: boolean
     litellmKey?: boolean
     litellmModel?: boolean
+    litellmEnableThinking?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento" | "aiProvider" | "litellmUrl" | "litellmKey" | "litellmModel", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento" | "aiProvider" | "litellmUrl" | "litellmKey" | "litellmModel" | "litellmEnableThinking", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -10248,6 +10259,7 @@ export namespace Prisma {
       litellmUrl: string | null
       litellmKey: string | null
       litellmModel: string | null
+      litellmEnableThinking: boolean | null
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -10698,6 +10710,7 @@ export namespace Prisma {
     readonly litellmUrl: FieldRef<"Config", 'String'>
     readonly litellmKey: FieldRef<"Config", 'String'>
     readonly litellmModel: FieldRef<"Config", 'String'>
+    readonly litellmEnableThinking: FieldRef<"Config", 'Boolean'>
   }
     
 
@@ -20712,7 +20725,8 @@ export namespace Prisma {
     aiProvider: 'aiProvider',
     litellmUrl: 'litellmUrl',
     litellmKey: 'litellmKey',
-    litellmModel: 'litellmModel'
+    litellmModel: 'litellmModel',
+    litellmEnableThinking: 'litellmEnableThinking'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -21561,6 +21575,7 @@ export namespace Prisma {
     litellmUrl?: StringNullableFilter<"Config"> | string | null
     litellmKey?: StringNullableFilter<"Config"> | string | null
     litellmModel?: StringNullableFilter<"Config"> | string | null
+    litellmEnableThinking?: BoolNullableFilter<"Config"> | boolean | null
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -21591,6 +21606,7 @@ export namespace Prisma {
     litellmUrl?: SortOrderInput | SortOrder
     litellmKey?: SortOrderInput | SortOrder
     litellmModel?: SortOrderInput | SortOrder
+    litellmEnableThinking?: SortOrderInput | SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -21624,6 +21640,7 @@ export namespace Prisma {
     litellmUrl?: StringNullableFilter<"Config"> | string | null
     litellmKey?: StringNullableFilter<"Config"> | string | null
     litellmModel?: StringNullableFilter<"Config"> | string | null
+    litellmEnableThinking?: BoolNullableFilter<"Config"> | boolean | null
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -21654,6 +21671,7 @@ export namespace Prisma {
     litellmUrl?: SortOrderInput | SortOrder
     litellmKey?: SortOrderInput | SortOrder
     litellmModel?: SortOrderInput | SortOrder
+    litellmEnableThinking?: SortOrderInput | SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _avg?: ConfigAvgOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
@@ -21692,6 +21710,7 @@ export namespace Prisma {
     litellmUrl?: StringNullableWithAggregatesFilter<"Config"> | string | null
     litellmKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
     litellmModel?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    litellmEnableThinking?: BoolNullableWithAggregatesFilter<"Config"> | boolean | null
   }
 
   export type UsuarioWhereInput = {
@@ -22888,6 +22907,7 @@ export namespace Prisma {
     litellmUrl?: string | null
     litellmKey?: string | null
     litellmModel?: string | null
+    litellmEnableThinking?: boolean | null
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -22918,6 +22938,7 @@ export namespace Prisma {
     litellmUrl?: string | null
     litellmKey?: string | null
     litellmModel?: string | null
+    litellmEnableThinking?: boolean | null
   }
 
   export type ConfigUpdateInput = {
@@ -22947,6 +22968,7 @@ export namespace Prisma {
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -22977,6 +22999,7 @@ export namespace Prisma {
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type ConfigCreateManyInput = {
@@ -23007,6 +23030,7 @@ export namespace Prisma {
     litellmUrl?: string | null
     litellmKey?: string | null
     litellmModel?: string | null
+    litellmEnableThinking?: boolean | null
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -23036,6 +23060,7 @@ export namespace Prisma {
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -23066,6 +23091,7 @@ export namespace Prisma {
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
+    litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type UsuarioCreateInput = {
@@ -24351,6 +24377,11 @@ export namespace Prisma {
     valorParcela?: SortOrder
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type ConfigCountOrderByAggregateInput = {
     id?: SortOrder
     modeloContrato?: SortOrder
@@ -24379,6 +24410,7 @@ export namespace Prisma {
     litellmUrl?: SortOrder
     litellmKey?: SortOrder
     litellmModel?: SortOrder
+    litellmEnableThinking?: SortOrder
   }
 
   export type ConfigAvgOrderByAggregateInput = {
@@ -24425,6 +24457,7 @@ export namespace Prisma {
     litellmUrl?: SortOrder
     litellmKey?: SortOrder
     litellmModel?: SortOrder
+    litellmEnableThinking?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -24455,6 +24488,7 @@ export namespace Prisma {
     litellmUrl?: SortOrder
     litellmKey?: SortOrder
     litellmModel?: SortOrder
+    litellmEnableThinking?: SortOrder
   }
 
   export type ConfigSumOrderByAggregateInput = {
@@ -24471,6 +24505,14 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type UsuarioCountOrderByAggregateInput = {
@@ -25163,6 +25205,10 @@ export namespace Prisma {
     update?: XOR<XOR<VendaUpdateToOneWithWhereWithoutParcelasVencimentoInput, VendaUpdateWithoutParcelasVencimentoInput>, VendaUncheckedUpdateWithoutParcelasVencimentoInput>
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type ProdutoCreateNestedManyWithoutFornecedorInput = {
     create?: XOR<ProdutoCreateWithoutFornecedorInput, ProdutoUncheckedCreateWithoutFornecedorInput> | ProdutoCreateWithoutFornecedorInput[] | ProdutoUncheckedCreateWithoutFornecedorInput[]
     connectOrCreate?: ProdutoCreateOrConnectWithoutFornecedorInput | ProdutoCreateOrConnectWithoutFornecedorInput[]
@@ -25478,6 +25524,19 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
   export type NestedJsonNullableFilter<$PrismaModel = never> =
     | PatchUndefined<
