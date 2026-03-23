@@ -33,7 +33,7 @@ export async function criarVenda(formData: FormData) {
   const subtotal = valor * quantidade;
   const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
   const total = subtotal + frete;
-  const parcela = parcelas > 0 ? total / parcelas : 0;
+  const parcela = parcelas > 0 ? Math.trunc((total / parcelas) * 100) / 100 : 0;
   const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
 
   if (!data || !vendedor || !clienteId) return;
