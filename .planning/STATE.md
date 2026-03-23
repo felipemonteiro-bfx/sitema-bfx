@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed quick task 260323-k3c: stock decrement on sale create/delete + backfill endpoint"
-last_updated: "2026-03-23T17:00:00Z"
+stopped_at: "Completed quick task 260323-kp0: show custo and margem in historico vendas"
+last_updated: "2026-03-23T19:00:15.243Z"
 last_activity: 2026-03-23 - Completed quick task 260323-k3c
 progress:
   percent: 0
@@ -57,6 +57,7 @@ Recent decisions affecting current work:
 - Pending: PDV multi-produto como lista de itens (UX mais natural)
 - Pending: Datas de parcelas manuais com sugestão automática (D+30, D+60...)
 - Pending: Desconto por item em % (flexibilidade para diferentes negócios)
+- [Phase quick-260323-kp0]: Gross margin only (CMV/receita), excludes taxaNota/custoEnvio; returns null when cost data unavailable
 
 ### Pending Todos
 
@@ -87,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-23T17:00:00Z
-Stopped at: Completed quick task 260323-k3c: stock decrement on sale create/delete + backfill endpoint
+Last session: 2026-03-23T19:00:11.501Z
+Stopped at: Completed quick task 260323-kp0: show custo and margem in historico vendas
 Resume file: None
