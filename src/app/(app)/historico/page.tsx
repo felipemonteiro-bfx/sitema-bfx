@@ -319,6 +319,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-center">Qtd</TableHead>
                 <TableHead className="text-right">Valor Total</TableHead>
+                <TableHead className="text-right">Custo</TableHead>
+                <TableHead className="text-right">Margem</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
                 <TableHead className="text-center">Desconto folha</TableHead>
                 <TableHead className="text-center">Boleto</TableHead>
@@ -329,7 +331,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
                     Sem dados para os filtros selecionados.
                   </TableCell>
                 </TableRow>
@@ -363,6 +365,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell className="text-center font-medium">{quantidadeTotal(v)}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatBRL(valorTotalVenda(v))}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {custoTotalVenda(v) != null ? formatBRL(custoTotalVenda(v)!) : <span className="text-muted-foreground opacity-30">—</span>}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {(() => {
+                        const m = margemVenda(v);
+                        if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
+                        return <span className={m > 0 ? "text-emerald-600" : m === 0 ? "text-amber-500" : "text-red-500"}>{m.toFixed(1)}%</span>;
+                      })()}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (

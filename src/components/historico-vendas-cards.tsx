@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
+import { custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { useState } from "react";
 
 const formatDateBR = (value: Date) =>
@@ -48,7 +49,8 @@ type Venda = {
   asaasPaymentId: string | null;
   boletoUrl: string | null;
   cliente: { nome: string } | null;
-  itens?: { produtoNome: string; quantidade: number; subtotal: number }[];
+  custoProduto?: number | null;
+  itens?: { produtoNome: string; custoProduto: number; quantidade: number; subtotal: number }[];
 };
 
 type Props = {
@@ -145,6 +147,21 @@ function VendaCard({
                   {venda.itens && venda.itens.length > 0
                     ? venda.itens.reduce((s, i) => s + i.quantidade, 0)
                     : venda.quantidade || 1}
+                </span>
+                <span>Custo</span>
+                <span className="text-foreground tabular-nums">
+                  {custoTotalVenda(venda) != null ? formatBRL(custoTotalVenda(venda)!) : "—"}
+                </span>
+                <span>Margem</span>
+                <span className={`text-foreground tabular-nums ${(() => {
+                  const m = margemVenda(venda);
+                  if (m == null) return "opacity-50";
+                  return m > 0 ? "text-emerald-600" : m === 0 ? "text-amber-500" : "text-red-500";
+                })()}`}>
+                  {(() => {
+                    const m = margemVenda(venda);
+                    return m != null ? `${m.toFixed(1)}%` : "—";
+                  })()}
                 </span>
                 <span>Nota</span>
                 <span className="text-foreground">
