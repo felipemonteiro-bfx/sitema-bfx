@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 1 of 3 (Multi-Produto)
 Plan: 0 of ? in current phase
 Status: Ready to plan
-Last activity: 2026-03-23 - Completed quick task 260323-k3c
+Last activity: 2026-03-23 - Completed quick task 260323-kp0: mostrar custo e margem de lucro nas vendas do historico
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -85,6 +85,7 @@ None yet.
 | 11 | /api/catalogo liberated as public route (shareable PDF catalog link) | 2026-03-23 | 8457e81 | Verified | [260323-fwq-o-link-do-cat-logo-n-o-est-funcionando-r](./quick/260323-fwq-o-link-do-cat-logo-n-o-est-funcionando-r/) |
 | 12 | aba Estoque no /financeiro: capital imobilizado, potencial receita, margem, itens zerados + card Capital em Estoque no DRE | 2026-03-23 | 69e5278 | Verified | [260323-hdn-adicionar-aba-estoque-no-financeiro-com-](./quick/260323-hdn-adicionar-aba-estoque-no-financeiro-com-/) |
 | 13 | stock decrement on sale create (criarVenda, criarVendaV2, criar_venda IA) + restore on delete + backfill endpoint | 2026-03-23 | cc0379b | Verified | [260323-k3c-quando-eu-fa-ao-uma-venda-de-um-produto-](./quick/260323-k3c-quando-eu-fa-ao-uma-venda-de-um-produto-/) |
+| 14 | mostrar custo e margem de lucro nas vendas do historico | 2026-03-23 | cfe9cf1 | — | [260323-kp0-mostrar-custo-e-margem-de-lucro-nas-vend](./quick/260323-kp0-mostrar-custo-e-margem-de-lucro-nas-vend/) |
 
 ## Session Continuity
 
