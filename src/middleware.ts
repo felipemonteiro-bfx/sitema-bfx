@@ -13,6 +13,7 @@ const PUBLIC_API_PATHS = [
   "/api/cron",
   "/api/assinatura",
   "/api/webhooks",
+  "/api/catalogo",
 ];
 
 function isPublicApiPath(pathname: string): boolean {
