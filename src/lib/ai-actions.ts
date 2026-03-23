@@ -826,22 +826,36 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const custoEnvio = parsedParams.custoEnvio || 0;
         const total = valorVenda + valorFrete;
         const lucroLiquido = total - (custoProduto + custoEnvio);
-        result = await prisma.venda.create({
-          data: {
-            uuid: uuidv7(),
-            dataVenda: new Date(parsedParams.dataVenda),
-            vendedor,
-            clienteId: Number(parsedParams.clienteId),
-            produtoNome: parsedParams.produtoNome,
-            custoProduto,
-            valorVenda,
-            valorFrete,
-            custoEnvio,
-            lucroLiquido,
-            parcelas: parsedParams.parcelas || 1,
-            valorParcela: Math.trunc((valorVenda / (parsedParams.parcelas || 1)) * 100) / 100,
-            antecipada: parsedParams.antecipada ?? 0,
-          },
+        const parcelas = parsedParams.parcelas || 1;
+        result = await prisma.$transaction(async (tx) => {
+          const venda = await tx.venda.create({
+            data: {
+              uuid: uuidv7(),
+              dataVenda: new Date(parsedParams.dataVenda),
+              vendedor,
+              clienteId: Number(parsedParams.clienteId),
+              produtoNome: parsedParams.produtoNome,
+              custoProduto,
+              valorVenda,
+              valorFrete,
+              custoEnvio,
+              lucroLiquido,
+              parcelas,
+              valorParcela: Math.trunc((total / parcelas) * 100) / 100,
+              antecipada: parsedParams.antecipada ?? 0,
+            },
+          });
+          await tx.itemVenda.create({
+            data: {
+              vendaId: venda.id,
+              produtoNome: parsedParams.produtoNome || "",
+              custoProduto,
+              valorVenda,
+              quantidade: 1,
+              subtotal: valorVenda,
+            },
+          });
+          return venda;
         });
         break;
       }
