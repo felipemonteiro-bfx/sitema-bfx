@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed quick task 260323-hdn: aba Estoque no /financeiro + Capital em Estoque no DRE"
-last_updated: "2026-03-23T16:34:33Z"
-last_activity: 2026-03-23 - Completed quick task 260323-hdn
+stopped_at: "Completed quick task 260323-k3c: stock decrement on sale create/delete + backfill endpoint"
+last_updated: "2026-03-23T17:00:00Z"
+last_activity: 2026-03-23 - Completed quick task 260323-k3c
 progress:
   percent: 0
 ---
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 1 of 3 (Multi-Produto)
 Plan: 0 of ? in current phase
 Status: Ready to plan
-Last activity: 2026-03-23 - Completed quick task 260323-hdn
+Last activity: 2026-03-23 - Completed quick task 260323-k3c
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -83,9 +83,10 @@ None yet.
 | 10 | AI financial fixes: lucroLiquido in criar_venda, comissoes itens, taxaNota in cost, margem date filter | 2026-03-23 | 9104110 | Verified | [260323-dyu-busque-por-mais-poss-veis-falhas-de-l-gi](./quick/260323-dyu-busque-por-mais-poss-veis-falhas-de-l-gi/) |
 | 11 | /api/catalogo liberated as public route (shareable PDF catalog link) | 2026-03-23 | 8457e81 | Verified | [260323-fwq-o-link-do-cat-logo-n-o-est-funcionando-r](./quick/260323-fwq-o-link-do-cat-logo-n-o-est-funcionando-r/) |
 | 12 | aba Estoque no /financeiro: capital imobilizado, potencial receita, margem, itens zerados + card Capital em Estoque no DRE | 2026-03-23 | 69e5278 | Verified | [260323-hdn-adicionar-aba-estoque-no-financeiro-com-](./quick/260323-hdn-adicionar-aba-estoque-no-financeiro-com-/) |
+| 13 | stock decrement on sale create (criarVenda, criarVendaV2, criar_venda IA) + restore on delete + backfill endpoint | 2026-03-23 | cc0379b | Verified | [260323-k3c-quando-eu-fa-ao-uma-venda-de-um-produto-](./quick/260323-k3c-quando-eu-fa-ao-uma-venda-de-um-produto-/) |
 
 ## Session Continuity
 
-Last session: 2026-03-23T16:34:33Z
-Stopped at: Completed quick task 260323-hdn: aba Estoque no /financeiro + Capital em Estoque no DRE
+Last session: 2026-03-23T17:00:00Z
+Stopped at: Completed quick task 260323-k3c: stock decrement on sale create/delete + backfill endpoint
 Resume file: None
