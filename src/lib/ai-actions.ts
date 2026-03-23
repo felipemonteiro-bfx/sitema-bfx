@@ -1115,7 +1115,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           },
           include: {
             cliente: { select: { nome: true, empresa: true } },
-            itens: { select: { custoProduto: true, quantidade: true } },
+            itens: { select: { custoProduto: true, quantidade: true, subtotal: true } },
           },
           orderBy: { dataVenda: "desc" },
         });
