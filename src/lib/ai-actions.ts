@@ -191,6 +191,8 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
     empresa: optionalString(),
   }),
   resumo_margem_produto: z.object({
+    from: optionalString(),
+    to: optionalString(),
     limit: optionalNumber(),
   }),
   // Assinatura digital
@@ -1132,7 +1134,8 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             v.itens && v.itens.length > 0
               ? v.itens.reduce((si, i) => si + (i.custoProduto || 0) * (i.quantidade || 1), 0)
               : (v.custoProduto || 0);
-          return s + custoItens + (v.custoEnvio || 0);
+          const notaCost = v.temNota ? ((valorTotalVenda(v) - (v.valorFrete ?? 0)) * (v.taxaNota ?? 5.97) / 100) : 0;
+          return s + custoItens + (v.custoEnvio || 0) + notaCost;
         }, 0);
         const porVendedor: Record<string, number> = {};
         const porEmpresa: Record<string, number> = {};
@@ -1161,7 +1164,17 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       case "resumo_margem_produto": {
         requireAdmin(ctx);
         const limit = Math.min(Number(parsedParams?.limit || 20), 100);
+        const fromDate = parsedParams?.from ? new Date(parsedParams.from) : undefined;
+        const toDate = parsedParams?.to ? new Date(parsedParams.to) : undefined;
         const itens = await prisma.itemVenda.findMany({
+          where: (fromDate || toDate) ? {
+            venda: {
+              dataVenda: {
+                ...(fromDate ? { gte: fromDate } : {}),
+                ...(toDate ? { lte: toDate } : {}),
+              },
+            },
+          } : undefined,
           select: {
             produtoNome: true,
             subtotal: true,
@@ -1286,7 +1299,13 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             dataVenda: { gte: ini, lt: fim },
             vendedor: vendedorFiltro ? { equals: vendedorFiltro } : undefined,
           },
-          select: { vendedor: true, valorVenda: true, valorFrete: true },
+          select: {
+            vendedor: true,
+            valorVenda: true,
+            valorFrete: true,
+            quantidade: true,
+            itens: { select: { subtotal: true } },
+          },
         });
         const usuarios = await prisma.usuario.findMany({ select: { nomeExibicao: true, comissaoPct: true, metaMensal: true } });
         const porVendedor = new Map<string, number>();
