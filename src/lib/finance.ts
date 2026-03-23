@@ -31,6 +31,7 @@ export async function calcularMetricasPeriodo(
     where: {
       dataVenda: { gte: start, lt: end },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
+      status: { not: { in: ["cancelada", "estornada"] } },
     },
     include: { itens: { select: { subtotal: true, custoProduto: true, quantidade: true } } },
   });
@@ -134,7 +135,9 @@ export async function calcularFluxoCaixa(mesAno?: string) {
   }
 
   const rows: { mes: string; entradas: number; saidas: number; saldo: number }[] = [];
-  const vendas = await prisma.venda.findMany();
+  const vendas = await prisma.venda.findMany({
+    where: { status: { not: { in: ["cancelada", "estornada"] } } },
+  });
   const despesas = await prisma.despesa.findMany();
 
   for (let i = 0; i < 6; i++) {

@@ -4825,6 +4825,7 @@ export namespace Prisma {
     assinaturaStatus: string | null
     assinaturaEm: Date | null
     boleto: boolean | null
+    status: string | null
     asaasPaymentId: string | null
     boletoUrl: string | null
   }
@@ -4855,6 +4856,7 @@ export namespace Prisma {
     assinaturaStatus: string | null
     assinaturaEm: Date | null
     boleto: boolean | null
+    status: string | null
     asaasPaymentId: string | null
     boletoUrl: string | null
   }
@@ -4885,6 +4887,7 @@ export namespace Prisma {
     assinaturaStatus: number
     assinaturaEm: number
     boleto: number
+    status: number
     asaasPaymentId: number
     boletoUrl: number
     _all: number
@@ -4951,6 +4954,7 @@ export namespace Prisma {
     assinaturaStatus?: true
     assinaturaEm?: true
     boleto?: true
+    status?: true
     asaasPaymentId?: true
     boletoUrl?: true
   }
@@ -4981,6 +4985,7 @@ export namespace Prisma {
     assinaturaStatus?: true
     assinaturaEm?: true
     boleto?: true
+    status?: true
     asaasPaymentId?: true
     boletoUrl?: true
   }
@@ -5011,6 +5016,7 @@ export namespace Prisma {
     assinaturaStatus?: true
     assinaturaEm?: true
     boleto?: true
+    status?: true
     asaasPaymentId?: true
     boletoUrl?: true
     _all?: true
@@ -5128,6 +5134,7 @@ export namespace Prisma {
     assinaturaStatus: string | null
     assinaturaEm: Date | null
     boleto: boolean
+    status: string
     asaasPaymentId: string | null
     boletoUrl: string | null
     _count: VendaCountAggregateOutputType | null
@@ -5177,6 +5184,7 @@ export namespace Prisma {
     assinaturaStatus?: boolean
     assinaturaEm?: boolean
     boleto?: boolean
+    status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
@@ -5212,6 +5220,7 @@ export namespace Prisma {
     assinaturaStatus?: boolean
     assinaturaEm?: boolean
     boleto?: boolean
+    status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
@@ -5243,6 +5252,7 @@ export namespace Prisma {
     assinaturaStatus?: boolean
     assinaturaEm?: boolean
     boleto?: boolean
+    status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
@@ -5274,11 +5284,12 @@ export namespace Prisma {
     assinaturaStatus?: boolean
     assinaturaEm?: boolean
     boleto?: boolean
+    status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
   }
 
-  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "comprovantePdf" | "descontoEmFolha" | "assinaturaToken" | "assinaturaStatus" | "assinaturaEm" | "boleto" | "asaasPaymentId" | "boletoUrl", ExtArgs["result"]["venda"]>
+  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "comprovantePdf" | "descontoEmFolha" | "assinaturaToken" | "assinaturaStatus" | "assinaturaEm" | "boleto" | "status" | "asaasPaymentId" | "boletoUrl", ExtArgs["result"]["venda"]>
   export type VendaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
@@ -5327,6 +5338,7 @@ export namespace Prisma {
       assinaturaStatus: string | null
       assinaturaEm: Date | null
       boleto: boolean
+      status: string
       asaasPaymentId: string | null
       boletoUrl: string | null
     }, ExtArgs["result"]["venda"]>
@@ -5781,6 +5793,7 @@ export namespace Prisma {
     readonly assinaturaStatus: FieldRef<"Venda", 'String'>
     readonly assinaturaEm: FieldRef<"Venda", 'DateTime'>
     readonly boleto: FieldRef<"Venda", 'Boolean'>
+    readonly status: FieldRef<"Venda", 'String'>
     readonly asaasPaymentId: FieldRef<"Venda", 'String'>
     readonly boletoUrl: FieldRef<"Venda", 'String'>
   }
@@ -20652,6 +20665,7 @@ export namespace Prisma {
     assinaturaStatus: 'assinaturaStatus',
     assinaturaEm: 'assinaturaEm',
     boleto: 'boleto',
+    status: 'status',
     asaasPaymentId: 'asaasPaymentId',
     boletoUrl: 'boletoUrl'
   };
@@ -21196,6 +21210,7 @@ export namespace Prisma {
     assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
     assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
+    status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
@@ -21230,6 +21245,7 @@ export namespace Prisma {
     assinaturaStatus?: SortOrderInput | SortOrder
     assinaturaEm?: SortOrderInput | SortOrder
     boleto?: SortOrder
+    status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
     cliente?: ClienteOrderByWithRelationInput
@@ -21267,6 +21283,7 @@ export namespace Prisma {
     assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
     assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
+    status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
@@ -21301,6 +21318,7 @@ export namespace Prisma {
     assinaturaStatus?: SortOrderInput | SortOrder
     assinaturaEm?: SortOrderInput | SortOrder
     boleto?: SortOrder
+    status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
     _count?: VendaCountOrderByAggregateInput
@@ -21339,6 +21357,7 @@ export namespace Prisma {
     assinaturaStatus?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     assinaturaEm?: DateTimeNullableWithAggregatesFilter<"Venda"> | Date | string | null
     boleto?: BoolWithAggregatesFilter<"Venda"> | boolean
+    status?: StringWithAggregatesFilter<"Venda"> | string
     asaasPaymentId?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     boletoUrl?: StringNullableWithAggregatesFilter<"Venda"> | string | null
   }
@@ -22488,6 +22507,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
@@ -22522,6 +22542,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
@@ -22553,6 +22574,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
@@ -22587,6 +22609,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
@@ -22620,6 +22643,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
   }
@@ -22648,6 +22672,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -22678,6 +22703,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -24054,6 +24080,7 @@ export namespace Prisma {
     assinaturaStatus?: SortOrder
     assinaturaEm?: SortOrder
     boleto?: SortOrder
+    status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
   }
@@ -24101,6 +24128,7 @@ export namespace Prisma {
     assinaturaStatus?: SortOrder
     assinaturaEm?: SortOrder
     boleto?: SortOrder
+    status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
   }
@@ -24131,6 +24159,7 @@ export namespace Prisma {
     assinaturaStatus?: SortOrder
     assinaturaEm?: SortOrder
     boleto?: SortOrder
+    status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
   }
@@ -25586,6 +25615,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
@@ -25618,6 +25648,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
@@ -25680,6 +25711,7 @@ export namespace Prisma {
     assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
     assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
+    status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
   }
@@ -25996,6 +26028,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
@@ -26029,6 +26062,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
@@ -26075,6 +26109,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
@@ -26108,6 +26143,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
@@ -26138,6 +26174,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
@@ -26171,6 +26208,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
@@ -26217,6 +26255,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
@@ -26250,6 +26289,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
@@ -26280,6 +26320,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
@@ -26313,6 +26354,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
@@ -26359,6 +26401,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
@@ -26392,6 +26435,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
@@ -26488,6 +26532,7 @@ export namespace Prisma {
     assinaturaStatus?: string | null
     assinaturaEm?: Date | string | null
     boleto?: boolean
+    status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
   }
@@ -26516,6 +26561,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
@@ -26548,6 +26594,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
@@ -26580,6 +26627,7 @@ export namespace Prisma {
     assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
   }

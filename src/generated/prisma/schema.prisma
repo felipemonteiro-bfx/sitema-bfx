@@ -75,6 +75,7 @@ model Venda {
   assinaturaStatus    String?   @map("assinatura_status") // pendente | assinado | expirado
   assinaturaEm        DateTime? @map("assinatura_em")
   boleto              Boolean   @default(false) @map("boleto")
+  status              String    @default("ativa") @map("status") // "ativa" | "cancelada" | "estornada"
   asaasPaymentId      String?   @map("asaas_payment_id")
   boletoUrl           String?   @map("boleto_url")
 

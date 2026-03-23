@@ -177,6 +177,7 @@ exports.Prisma.VendaScalarFieldEnum = {
   assinaturaStatus: 'assinaturaStatus',
   assinaturaEm: 'assinaturaEm',
   boleto: 'boleto',
+  status: 'status',
   asaasPaymentId: 'asaasPaymentId',
   boletoUrl: 'boletoUrl'
 };
