@@ -75,17 +75,17 @@ export async function calcularMetricasPeriodo(
   const pontoEq = margemPct > 0 ? fixas / margemPct : 0;
 
   return {
-    receita,
-    cmv,
-    freteReal,
-    comissoes,
-    custosVar,
-    fixas,
-    variaveis,
-    margem,
-    lucro,
+    receita:     Math.round(receita     * 100) / 100,
+    cmv:         Math.round(cmv         * 100) / 100,
+    freteReal:   Math.round(freteReal   * 100) / 100,
+    comissoes:   Math.round(comissoes   * 100) / 100,
+    custosVar:   Math.round(custosVar   * 100) / 100,
+    fixas:       Math.round(fixas       * 100) / 100,
+    variaveis:   Math.round(variaveis   * 100) / 100,
+    margem:      Math.round(margem      * 100) / 100,
+    lucro:       Math.round(lucro       * 100) / 100,
     margemPct,
-    pontoEq,
+    pontoEq:     Math.round(pontoEq     * 100) / 100,
     totalVendas: vendas.length,
     porVendedor,
   };
