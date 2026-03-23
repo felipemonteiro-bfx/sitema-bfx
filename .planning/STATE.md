@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed quick task 260320-lwq: live search produtos + AI fixes + LiteLLM enable_thinking"
-last_updated: "2026-03-20T19:54:00Z"
-last_activity: "2026-03-20 - Completed quick task 260320-lwq"
+stopped_at: "Completed quick task 260323-dyu: AI financial calculation fixes (lucroLiquido, comissoes, taxaNota, margem date filter)"
+last_updated: "2026-03-23T14:12:22.114Z"
+last_activity: 2026-03-20 - Completed quick task 260320-lwq
 progress:
   percent: 0
 ---
@@ -80,9 +80,10 @@ None yet.
 | 7 | dual AI context (contextResumo) + direct write execution (no confirmation modal) | 2026-03-20 | 633adb1 | Verified | [260320-kuo-separar-redis-em-dois-contexto-ia-resumi](./quick/260320-kuo-separar-redis-em-dois-contexto-ia-resumi/) |
 | 8 | bulk delete in all cadastros tabs (clientes, produtos, fornecedores, empresas) | 2026-03-20 | 584169b | Verified | [260320-lmt-implementar-bulk-delete-na-area-de-cadas](./quick/260320-lmt-implementar-bulk-delete-na-area-de-cadas/) |
 | 9 | live search produtos (debounce/clear/empty state) + marca UPPERCASE + fornecedorId fix + LiteLLM enable_thinking | 2026-03-20 | 637058b | Verified | [260320-lwq-search-produtos-live-debounce-clear-empt](./quick/260320-lwq-search-produtos-live-debounce-clear-empt/) |
+| 10 | AI financial fixes: lucroLiquido in criar_venda, comissoes itens, taxaNota in cost, margem date filter | 2026-03-23 | 9104110 | Verified | [260323-dyu-busque-por-mais-poss-veis-falhas-de-l-gi](./quick/260323-dyu-busque-por-mais-poss-veis-falhas-de-l-gi/) |
 
 ## Session Continuity
 
-Last session: 2026-03-20T19:54:00Z
-Stopped at: Completed quick task 260320-lwq: live search produtos + AI fixes + LiteLLM enable_thinking (3 tasks, 4 files)
+Last session: 2026-03-23T14:12:22.106Z
+Stopped at: Completed quick task 260323-dyu: AI financial calculation fixes (lucroLiquido, comissoes, taxaNota, margem date filter)
 Resume file: None
