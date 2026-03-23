@@ -1113,11 +1113,20 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             dataVenda: from && to ? { gte: from, lte: to } : undefined,
             vendedor: parsedParams?.vendedor ? { equals: parsedParams.vendedor } : undefined,
           },
-          include: { cliente: { select: { nome: true, empresa: true } } },
+          include: {
+            cliente: { select: { nome: true, empresa: true } },
+            itens: { select: { custoProduto: true, quantidade: true } },
+          },
           orderBy: { dataVenda: "desc" },
         });
         const totalVendas = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-        const totalCusto = vendas.reduce((s, v) => s + (v.custoProduto || 0) + (v.custoEnvio || 0), 0);
+        const totalCusto = vendas.reduce((s, v) => {
+          const custoItens =
+            v.itens && v.itens.length > 0
+              ? v.itens.reduce((si, i) => si + (i.custoProduto || 0) * (i.quantidade || 1), 0)
+              : (v.custoProduto || 0);
+          return s + custoItens + (v.custoEnvio || 0);
+        }, 0);
         const porVendedor: Record<string, number> = {};
         const porEmpresa: Record<string, number> = {};
         for (const v of vendas) {
@@ -1145,16 +1154,21 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       case "resumo_margem_produto": {
         requireAdmin(ctx);
         const limit = Math.min(Number(parsedParams?.limit || 20), 100);
-        const vendas = await prisma.venda.findMany({
-          select: { produtoNome: true, valorVenda: true, valorFrete: true, custoProduto: true, custoEnvio: true },
+        const itens = await prisma.itemVenda.findMany({
+          select: {
+            produtoNome: true,
+            subtotal: true,
+            custoProduto: true,
+            quantidade: true,
+          },
         });
         const porProduto = new Map<string, { receita: number; custo: number; qtd: number }>();
-        for (const v of vendas) {
-          const nome = v.produtoNome || "Sem Nome";
-          const rec = (v.valorVenda || 0) + (v.valorFrete || 0);
-          const cus = (v.custoProduto || 0) + (v.custoEnvio || 0);
+        for (const i of itens) {
+          const nome = i.produtoNome || "Sem Nome";
+          const rec = i.subtotal || 0;
+          const cus = (i.custoProduto || 0) * (i.quantidade || 1);
           const atual = porProduto.get(nome) ?? { receita: 0, custo: 0, qtd: 0 };
-          porProduto.set(nome, { receita: atual.receita + rec, custo: atual.custo + cus, qtd: atual.qtd + 1 });
+          porProduto.set(nome, { receita: atual.receita + rec, custo: atual.custo + cus, qtd: atual.qtd + (i.quantidade || 1) });
         }
         result = Array.from(porProduto.entries())
           .map(([nome, d]) => ({

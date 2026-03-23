@@ -32,11 +32,16 @@ export async function calcularMetricasPeriodo(
       dataVenda: { gte: start, lte: end },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
-    include: { itens: { select: { subtotal: true } } },
+    include: { itens: { select: { subtotal: true, custoProduto: true, quantidade: true } } },
   });
 
   const receita = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-  const cmv = vendas.reduce((s, v) => s + (v.custoProduto || 0), 0);
+  const cmv = vendas.reduce((s, v) => {
+    if (v.itens && v.itens.length > 0) {
+      return s + v.itens.reduce((si, i) => si + (i.custoProduto || 0) * (i.quantidade || 1), 0);
+    }
+    return s + (v.custoProduto || 0);
+  }, 0);
   const freteReal = vendas.reduce((s, v) => s + (v.custoEnvio || 0), 0);
 
   const porVendedor: Record<string, { total: number; lucroLiquido: number; vendas: number }> = {};
