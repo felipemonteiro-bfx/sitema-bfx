@@ -29,7 +29,7 @@ export async function calcularMetricasPeriodo(
 ): Promise<MetricasPeriodo> {
   const vendas = await prisma.venda.findMany({
     where: {
-      dataVenda: { gte: start, lte: end },
+      dataVenda: { gte: start, lt: end },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
     include: { itens: { select: { subtotal: true, custoProduto: true, quantidade: true } } },
@@ -103,14 +103,8 @@ export async function calcularMetricasPeriodo(
 export async function calcularDre(mesAno: string) {
   const [ano, mes] = mesAno.split("-").map(Number);
   const ini = new Date(Date.UTC(ano, mes - 1, 1, 0, 0, 0));
-  // fim exclusivo (início do próximo mês) → fim inclusivo = último ms do mês
-  const fimInclusivo = new Date(Date.UTC(ano, mes, 1, 0, 0, 0, -1));
-
-  console.log(`Buscando vendas para ${mesAno} entre ${ini.toISOString()} e ${fimInclusivo.toISOString()}`);
-
-  const metrics = await calcularMetricasPeriodo(ini, fimInclusivo);
-
-  console.log(`Vendas encontradas: ${metrics.totalVendas}`);
+  const fim = new Date(Date.UTC(ano, mes, 1, 0, 0, 0)); // início do próximo mês (exclusivo)
+  const metrics = await calcularMetricasPeriodo(ini, fim);
 
   const usuarios = await prisma.usuario.findMany();
   const metaGlobal = usuarios.reduce((s, u) => s + (u.metaMensal || 0), 0) || 100000;

@@ -51,7 +51,10 @@ function parseDateStart(dateStr: string) {
 
 function parseDateEnd(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999));
+  // exclusivo: início do dia seguinte, para usar com lt
+  const endDate = new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0));
+  endDate.setUTCDate(endDate.getUTCDate() + 1);
+  return endDate;
 }
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
@@ -60,7 +63,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const sp = await searchParams;
   const today = new Date();
   const start = sp.from ? parseDateStart(sp.from) : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1, 0, 0, 0, 0));
-  const end = sp.to ? parseDateEnd(sp.to) : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59, 999));
+  const end = sp.to ? parseDateEnd(sp.to) : new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1, 0, 0, 0, 0));
 
   const allVendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
   const vendedorList = allVendedores.map((v) => v.nomeExibicao || v.username).filter(Boolean) as string[];
@@ -88,7 +91,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const vendasProd = await prisma.venda.findMany({
     where: {
-      dataVenda: { gte: start, lte: end },
+      dataVenda: { gte: start, lt: end },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
     select: {
