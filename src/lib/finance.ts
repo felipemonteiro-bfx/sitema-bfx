@@ -134,11 +134,39 @@ export async function calcularFluxoCaixa(mesAno?: string) {
     referenceDate = new Date(Date.UTC(ano, mes - 1, 1, 0, 0, 0));
   }
 
+  const windowStart = new Date(Date.UTC(
+    referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), 1
+  ));
+  const windowEnd = new Date(Date.UTC(
+    referenceDate.getUTCFullYear(), referenceDate.getUTCMonth() + 7, 1
+  ));
+
   const rows: { mes: string; entradas: number; saidas: number; saldo: number }[] = [];
-  const vendas = await prisma.venda.findMany({
-    where: { status: { not: { in: ["cancelada", "estornada"] } } },
+
+  // Buscar parcelas com datas reais (V2)
+  const parcelas = await prisma.parcelaVencimento.findMany({
+    where: { dataVencimento: { gte: windowStart, lt: windowEnd } },
+    select: { dataVencimento: true, valorParcela: true, vendaId: true },
   });
-  const despesas = await prisma.despesa.findMany();
+
+  // Buscar vendas sem ParcelaVencimento (V1/legadas) no período + margem
+  const vendasComParcela = new Set(parcelas.map((p) => p.vendaId));
+  const vendasLegadas = await prisma.venda.findMany({
+    where: {
+      dataVenda: { gte: windowStart, lt: windowEnd },
+      status: { not: { in: ["cancelada", "estornada"] } },
+      NOT: vendasComParcela.size > 0 ? { id: { in: Array.from(vendasComParcela) } } : undefined,
+    },
+    select: {
+      id: true, dataVenda: true, valorParcela: true, parcelas: true,
+      antecipada: true, valorVenda: true, quantidade: true, valorFrete: true,
+      itens: { select: { subtotal: true } },
+    },
+  });
+
+  const despesas = await prisma.despesa.findMany({
+    where: { dataDespesa: { gte: windowStart, lt: windowEnd } },
+  });
 
   for (let i = 0; i < 6; i++) {
     const ref = addMonths(referenceDate, i);
@@ -146,13 +174,18 @@ export async function calcularFluxoCaixa(mesAno?: string) {
     const mesNome = format(ref, "MM/yyyy");
     let entradas = 0;
 
-    for (const v of vendas) {
+    // Entradas de ParcelaVencimento reais (V2)
+    for (const p of parcelas) {
+      const pStr = format(p.dataVencimento, "yyyy-MM");
+      if (pStr === mesStr) entradas += p.valorParcela;
+    }
+
+    // Entradas de vendas legadas (V1 — sem ParcelaVencimento)
+    for (const v of vendasLegadas) {
       const dv = v.dataVenda;
       const dvStr = `${dv.getUTCFullYear()}-${String(dv.getUTCMonth() + 1).padStart(2, "0")}`;
       if (v.antecipada === 1) {
-        if (dvStr === mesStr) {
-          entradas += (v.valorParcela || 0) * (v.parcelas || 0);
-        }
+        if (dvStr === mesStr) entradas += valorTotalVenda(v);
       } else {
         const dia = dv.getUTCDate();
         const base = new Date(Date.UTC(dv.getUTCFullYear(), dv.getUTCMonth(), 1));
@@ -173,7 +206,7 @@ export async function calcularFluxoCaixa(mesAno?: string) {
       })
       .reduce((s, d) => s + (d.valor || 0), 0);
 
-    rows.push({ mes: mesNome, entradas, saidas, saldo: entradas - saidas });
+    rows.push({ mes: mesNome, entradas: Math.round(entradas * 100) / 100, saidas: Math.round(saidas * 100) / 100, saldo: Math.round((entradas - saidas) * 100) / 100 });
   }
   return rows;
 }
