@@ -818,6 +818,12 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       }
       case "criar_venda": {
         const vendedor = ctx.role === "admin" ? parsedParams?.vendedor : ctx.displayName;
+        const valorVenda = parsedParams.valorVenda || 0;
+        const valorFrete = parsedParams.valorFrete || 0;
+        const custoProduto = parsedParams.custoProduto || 0;
+        const custoEnvio = parsedParams.custoEnvio || 0;
+        const total = valorVenda + valorFrete;
+        const lucroLiquido = total - (custoProduto + custoEnvio);
         result = await prisma.venda.create({
           data: {
             uuid: uuidv7(),
@@ -825,12 +831,13 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             vendedor,
             clienteId: Number(parsedParams.clienteId),
             produtoNome: parsedParams.produtoNome,
-            custoProduto: parsedParams.custoProduto || 0,
-            valorVenda: parsedParams.valorVenda || 0,
-            valorFrete: parsedParams.valorFrete || 0,
-            custoEnvio: parsedParams.custoEnvio || 0,
+            custoProduto,
+            valorVenda,
+            valorFrete,
+            custoEnvio,
+            lucroLiquido,
             parcelas: parsedParams.parcelas || 1,
-            valorParcela: Math.trunc(((parsedParams.valorVenda || 0) / (parsedParams.parcelas || 1)) * 100) / 100,
+            valorParcela: Math.trunc((valorVenda / (parsedParams.parcelas || 1)) * 100) / 100,
             antecipada: parsedParams.antecipada ?? 0,
           },
         });
