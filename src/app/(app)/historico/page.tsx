@@ -14,7 +14,7 @@ import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
 import { EditVendaSheetWrapper } from "@/components/edit-venda-sheet-wrapper";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
-import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-utils";
+import { valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { updateVenda, deleteVenda } from "@/app/(app)/historico/actions";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 
@@ -90,6 +90,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       quantidade: true,
       valorVenda: true,
       valorFrete: true,
+      custoProduto: true,
       temNota: true,
       taxaNota: true,
       descontoEmFolha: true,
@@ -99,7 +100,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       boletoUrl: true,
       cliente: { select: { nome: true } },
       itens: {
-        select: { produtoNome: true, quantidade: true, subtotal: true },
+        select: { produtoNome: true, custoProduto: true, quantidade: true, subtotal: true },
         orderBy: { id: "asc" },
       },
     },
