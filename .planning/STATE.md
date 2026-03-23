@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed quick task 260323-dyu: AI financial calculation fixes (lucroLiquido, comissoes, taxaNota, margem date filter)"
-last_updated: "2026-03-23T14:12:22.114Z"
-last_activity: 2026-03-20 - Completed quick task 260320-lwq
+stopped_at: "Completed quick task 260323-fwq: /api/catalogo liberated as public route in middleware"
+last_updated: "2026-03-23T14:30:00.000Z"
+last_activity: 2026-03-23 - Completed quick task 260323-fwq
 progress:
   percent: 0
 ---
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 1 of 3 (Multi-Produto)
 Plan: 0 of ? in current phase
 Status: Ready to plan
-Last activity: 2026-03-20 - Completed quick task 260320-lwq
+Last activity: 2026-03-23 - Completed quick task 260323-fwq
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -81,9 +81,10 @@ None yet.
 | 8 | bulk delete in all cadastros tabs (clientes, produtos, fornecedores, empresas) | 2026-03-20 | 584169b | Verified | [260320-lmt-implementar-bulk-delete-na-area-de-cadas](./quick/260320-lmt-implementar-bulk-delete-na-area-de-cadas/) |
 | 9 | live search produtos (debounce/clear/empty state) + marca UPPERCASE + fornecedorId fix + LiteLLM enable_thinking | 2026-03-20 | 637058b | Verified | [260320-lwq-search-produtos-live-debounce-clear-empt](./quick/260320-lwq-search-produtos-live-debounce-clear-empt/) |
 | 10 | AI financial fixes: lucroLiquido in criar_venda, comissoes itens, taxaNota in cost, margem date filter | 2026-03-23 | 9104110 | Verified | [260323-dyu-busque-por-mais-poss-veis-falhas-de-l-gi](./quick/260323-dyu-busque-por-mais-poss-veis-falhas-de-l-gi/) |
+| 11 | /api/catalogo liberated as public route (shareable PDF catalog link) | 2026-03-23 | 8457e81 | Verified | [260323-fwq-o-link-do-cat-logo-n-o-est-funcionando-r](./quick/260323-fwq-o-link-do-cat-logo-n-o-est-funcionando-r/) |
 
 ## Session Continuity
 
-Last session: 2026-03-23T14:12:22.106Z
-Stopped at: Completed quick task 260323-dyu: AI financial calculation fixes (lucroLiquido, comissoes, taxaNota, margem date filter)
+Last session: 2026-03-23T14:30:00.000Z
+Stopped at: Completed quick task 260323-fwq: /api/catalogo liberated as public route in middleware
 Resume file: None
