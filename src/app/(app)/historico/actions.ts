@@ -74,7 +74,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         vendedor: String(formData.get("vendedor") || ""),
         produtoNome: itens.length > 0 ? (itens[0].produtoNome || "") : String(formData.get("produto") || ""),
         quantidade: itens.length > 0 ? itens.reduce((s, i) => s + i.quantidade, 0) : quantidadeLegado,
-        valorVenda: itens.length > 0 ? subtotal : valorLegado,
+        valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,
         valorFrete: frete,
         custoEnvio: envio,
         parcelas: Number(formData.get("parcelas") || 1),
