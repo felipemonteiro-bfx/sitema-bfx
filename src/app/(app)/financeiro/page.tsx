@@ -98,6 +98,27 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const editDespesa = editId ? await prisma.despesa.findUnique({ where: { id: editId } }) : null;
 
+  const produtos = await prisma.produto.findMany({
+    select: { nome: true, custoPadrao: true, qtdEstoque: true, valorVenda: true },
+  });
+
+  const produtosOrdenados = [...produtos].sort((a, b) => {
+    const imobA = (a.custoPadrao ?? 0) * (a.qtdEstoque ?? 0);
+    const imobB = (b.custoPadrao ?? 0) * (b.qtdEstoque ?? 0);
+    return imobB - imobA;
+  });
+
+  const estoqueImobilizado = produtos.reduce(
+    (s, p) => s + (p.custoPadrao ?? 0) * (p.qtdEstoque ?? 0), 0
+  );
+  const estoquePotencialReceita = produtos.reduce(
+    (s, p) => s + (p.valorVenda ?? 0) * (p.qtdEstoque ?? 0), 0
+  );
+  const estoqueMargemPct = estoquePotencialReceita > 0
+    ? ((estoquePotencialReceita - estoqueImobilizado) / estoquePotencialReceita) * 100
+    : 0;
+  const estoqueItensZerados = produtos.filter(p => (p.qtdEstoque ?? 0) === 0).length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -178,6 +199,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <div className="text-xs uppercase tracking-wide text-muted-foreground">Despesas Fixas</div>
                         <div className="mt-1 text-base font-semibold text-destructive">{formatBRL(dre.fixas)}</div>
                         <div className="text-xs text-muted-foreground">Operação mensal</div>
+                      </div>
+                      <div className="rounded-lg border border-dashed p-3">
+                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Capital em Estoque</div>
+                        <div className="mt-1 text-base font-semibold text-amber-600">{formatBRL(estoqueImobilizado)}</div>
+                        <div className="text-xs text-muted-foreground">Valor imobilizado em mercadoria</div>
                       </div>
                     </div>
                   </CardContent>
@@ -416,6 +442,77 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               </TableCell>
                             </TableRow>
                           ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            ),
+          },
+          {
+            value: "estoque",
+            label: "Estoque",
+            content: (
+              <>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm font-medium">Valor Imobilizado</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-semibold text-amber-600">{formatBRL(estoqueImobilizado)}</CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm font-medium">Potencial de Receita</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-semibold text-success">{formatBRL(estoquePotencialReceita)}</CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm font-medium">Margem Potencial</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-semibold">{estoqueMargemPct.toFixed(1)}%</CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm font-medium">Itens Zerados</CardTitle></CardHeader>
+                    <CardContent className="text-2xl font-semibold text-destructive">{estoqueItensZerados}</CardContent>
+                  </Card>
+                </div>
+                <Card className="mt-4">
+                  <CardHeader><CardTitle>Produtos em Estoque</CardTitle></CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Produto</TableHead>
+                          <TableHead className="text-right">Qtd</TableHead>
+                          <TableHead className="text-right">Custo unit.</TableHead>
+                          <TableHead className="text-right">Valor em estoque</TableHead>
+                          <TableHead className="text-right">Preço venda</TableHead>
+                          <TableHead className="text-right">Margem %</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {produtosOrdenados.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground">
+                              Sem produtos cadastrados.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          produtosOrdenados.map((p) => {
+                            const imob = (p.custoPadrao ?? 0) * (p.qtdEstoque ?? 0);
+                            const margem = p.valorVenda && p.valorVenda > 0
+                              ? ((p.valorVenda - (p.custoPadrao ?? 0)) / p.valorVenda) * 100
+                              : 0;
+                            return (
+                              <TableRow key={p.nome}>
+                                <TableCell className="font-medium">{p.nome}</TableCell>
+                                <TableCell className="text-right tabular-nums">{p.qtdEstoque ?? 0}</TableCell>
+                                <TableCell className="text-right tabular-nums">{formatBRL(p.custoPadrao ?? 0)}</TableCell>
+                                <TableCell className="text-right tabular-nums font-semibold text-amber-600">{formatBRL(imob)}</TableCell>
+                                <TableCell className="text-right tabular-nums">{formatBRL(p.valorVenda ?? 0)}</TableCell>
+                                <TableCell className={cn("text-right tabular-nums font-medium", margem >= 30 ? "text-success" : margem >= 15 ? "text-amber-600" : "text-destructive")}>
+                                  {margem.toFixed(1)}%
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })
                         )}
                       </TableBody>
                     </Table>
