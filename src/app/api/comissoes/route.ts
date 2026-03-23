@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { buildComissoesWhere } from '@/lib/comissoes-utils';
+import { valorTotalVenda } from '@/lib/venda-utils';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +13,10 @@ export async function GET(request: NextRequest) {
       where,
       select: {
         vendedor: true,
-        lucroLiquido: true,
+        valorVenda: true,
+        quantidade: true,
+        valorFrete: true,
+        itens: { select: { subtotal: true } },
       },
     });
 
@@ -37,10 +41,10 @@ export async function GET(request: NextRequest) {
     const comissoesPorVendedor = new Map<string, number>();
 
     vendas.forEach(venda => {
-      if (venda.vendedor && venda.lucroLiquido !== null) {
+      if (venda.vendedor) {
         const percentual = comissaoPctMap.get(venda.vendedor);
         if (percentual !== undefined) {
-          const comissao = (venda.lucroLiquido * percentual) / 100;
+          const comissao = (valorTotalVenda(venda) * percentual) / 100;
           comissoesPorVendedor.set(venda.vendedor, (comissoesPorVendedor.get(venda.vendedor) || 0) + comissao);
         }
       }

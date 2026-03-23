@@ -42,8 +42,8 @@ export async function GET(request: NextRequest) {
     // Calcular detalhes
     const detalhes = vendas.map(venda => {
       const percentual = venda.vendedor ? comissaoPctMap.get(venda.vendedor) : 0;
-      const valorComissao = (percentual !== undefined && venda.lucroLiquido !== null)
-        ? (venda.lucroLiquido * percentual) / 100
+      const valorComissao = percentual !== undefined
+        ? (valorTotalVenda(venda) * percentual) / 100
         : 0;
 
       return {

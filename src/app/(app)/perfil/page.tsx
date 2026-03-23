@@ -1,5 +1,6 @@
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MaskedInput } from "@/components/masked-input";
@@ -33,11 +34,11 @@ export default async function Page() {
   // Buscar comissões do usuário (vendedor)
   const vendas = await prisma.venda.findMany({
     where: { vendedor: user.nomeExibicao || user.username || undefined },
-    select: { lucroLiquido: true }
+    select: { valorVenda: true, quantidade: true, valorFrete: true, itens: { select: { subtotal: true } } }
   });
 
   const pct = user.comissaoPct || 0;
-  const totalComissao = vendas.reduce((sum, v) => sum + ((v.lucroLiquido || 0) * pct) / 100, 0);
+  const totalComissao = vendas.reduce((sum, v) => sum + (valorTotalVenda(v) * pct) / 100, 0);
 
   return (
     <div className="space-y-6">
