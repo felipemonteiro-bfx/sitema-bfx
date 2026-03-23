@@ -7,7 +7,7 @@ export async function checkCredito(clienteId: number, parcNova: number) {
     return { ok: true, disp: 0, tomado: 0, teto: 0 };
   }
   const teto = Math.min(cli.renda * 0.3, 475);
-  const vendas = await prisma.venda.findMany({ where: { clienteId } });
+  const vendas = await prisma.venda.findMany({ where: { clienteId, status: { not: { in: ["cancelada", "estornada"] } } } });
   let tomado = 0;
   const hoje = new Date();
   const mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);

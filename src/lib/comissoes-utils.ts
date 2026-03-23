@@ -6,7 +6,7 @@ import type { Prisma } from "@/generated/prisma";
 export function buildComissoesWhere(
   searchParams: URLSearchParams
 ): Prisma.VendaWhereInput {
-  const where: Prisma.VendaWhereInput = {};
+  const where: Prisma.VendaWhereInput = { status: { not: { in: ["cancelada", "estornada"] } } };
   const vendedorFiltro = searchParams.get("vendedor");
   const dataInicioStr = searchParams.get("dataInicio");
   const dataFimStr = searchParams.get("dataFim");

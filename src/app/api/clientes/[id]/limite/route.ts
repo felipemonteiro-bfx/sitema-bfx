@@ -23,7 +23,7 @@ export async function GET(
 
     // Buscar vendas para calcular comprometimento atual
     const vendas = await prisma.venda.findMany({
-      where: { clienteId }
+      where: { clienteId, status: { not: { in: ["cancelada", "estornada"] } } }
     });
 
     let comprometimentoAtual = 0;
