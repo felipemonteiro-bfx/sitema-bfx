@@ -91,12 +91,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       dataVenda: { gte: start, lte: end },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
-    select: { produtoNome: true },
+    select: {
+      produtoNome: true,
+      itens: { select: { produtoNome: true, quantidade: true } },
+    },
   });
   const prodCount: Record<string, number> = {};
   vendasProd.forEach((v) => {
-    const name = v.produtoNome || "Produto";
-    prodCount[name] = (prodCount[name] || 0) + 1;
+    if (v.itens && v.itens.length > 0) {
+      v.itens.forEach((i) => {
+        const name = i.produtoNome || "Produto";
+        prodCount[name] = (prodCount[name] || 0) + (i.quantidade || 1);
+      });
+    } else {
+      const name = v.produtoNome || "Produto";
+      prodCount[name] = (prodCount[name] || 0) + 1;
+    }
   });
   const topProd = Object.entries(prodCount)
     .sort((a, b) => b[1] - a[1])
