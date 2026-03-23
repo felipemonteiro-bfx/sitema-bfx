@@ -87,7 +87,8 @@ export default async function BoletosPage() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
 
-  const cfg = await prisma.config.findFirst();
+  let cfg = null;
+  try { cfg = await prisma.config.findFirst(); } catch { /* coluna ausente em ambiente antigo */ }
   const config = getAsaasConfig(cfg ?? undefined);
   if (!config) {
     return (
