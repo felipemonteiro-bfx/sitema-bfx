@@ -48,9 +48,18 @@ export async function calcularMetricasPeriodo(
   for (const v of vendas) {
     const key = v.vendedor || "Sem Vendedor";
     porVendedor[key] ||= { total: 0, lucroLiquido: 0, vendas: 0 };
-    porVendedor[key].total += valorTotalVenda(v);
-    porVendedor[key].lucroLiquido += v.lucroLiquido || 0;
+    const recVenda = valorTotalVenda(v);
+    porVendedor[key].total += recVenda;
     porVendedor[key].vendas += 1;
+
+    const cmvVenda = v.itens && v.itens.length > 0
+      ? v.itens.reduce((s, i) => s + (i.custoProduto || 0) * (i.quantidade || 1), 0)
+      : (v.custoProduto || 0);
+    const freteVenda = v.custoEnvio || 0;
+    const notaVenda = v.temNota
+      ? (recVenda - (v.valorFrete ?? 0)) * ((v.taxaNota ?? 5.97) / 100)
+      : 0;
+    porVendedor[key].lucroLiquido += recVenda - cmvVenda - freteVenda - notaVenda;
   }
 
   const usuarios = await prisma.usuario.findMany();
