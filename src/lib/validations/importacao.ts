@@ -36,6 +36,14 @@ export const importacaoRowSchema = z.object({
     .union([z.boolean(), z.number(), z.string()])
     .optional()
     .transform((v) => Boolean(v && v !== "0" && v !== 0 && String(v).toLowerCase() !== "n")),
+  temNota: z
+    .union([z.boolean(), z.number(), z.string()])
+    .optional()
+    .transform((v) => Boolean(v && v !== "0" && v !== 0 && String(v).toLowerCase() !== "n" && String(v).toLowerCase() !== "false")),
+  taxaNota: z.unknown().optional().default(5.97).transform((v) => {
+    const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
+    return isNaN(n) || n <= 0 ? 5.97 : n;
+  }),
 });
 
 export const importacaoBatchSchema = z.array(importacaoRowSchema);

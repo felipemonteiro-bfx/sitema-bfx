@@ -31,9 +31,12 @@ export async function POST(request: NextRequest) {
         const custoEnvio = row.envio ?? 0;
         const custoProduto = row.custo ?? 0;
         const parcelas = row.parcelas ?? 1;
+        const temNota = row.temNota ?? false;
+        const taxaNota = row.taxaNota ?? 5.97;
         const total = valorVenda + frete;
         const valorParcela = parcelas > 0 ? Math.trunc((total / parcelas) * 100) / 100 : 0;
-        const lucro = total - (custoProduto + custoEnvio);
+        const valorDescontoNota = temNota ? Math.trunc((valorVenda * taxaNota / 100) * 100) / 100 : 0;
+        const lucro = total - (custoProduto + custoEnvio + valorDescontoNota);
 
         await tx.venda.create({
           data: {
@@ -49,6 +52,8 @@ export async function POST(request: NextRequest) {
             valorParcela,
             lucroLiquido: lucro,
             antecipada: row.antecipada ? 1 : 0,
+            temNota,
+            taxaNota,
           },
         });
       }
