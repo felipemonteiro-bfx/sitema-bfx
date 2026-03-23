@@ -138,19 +138,40 @@ export async function calcularFluxoCaixa(mesAno?: string) {
     referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), 1
   ));
   const windowEnd = new Date(Date.UTC(
-    referenceDate.getUTCFullYear(), referenceDate.getUTCMonth() + 7, 1
+    referenceDate.getUTCFullYear(), referenceDate.getUTCMonth() + 6, 1
   ));
 
   const rows: { mes: string; entradas: number; saidas: number; saldo: number }[] = [];
 
   // Buscar parcelas com datas reais (V2)
   const parcelas = await prisma.parcelaVencimento.findMany({
-    where: { dataVencimento: { gte: windowStart, lt: windowEnd } },
+    where: {
+      dataVencimento: { gte: windowStart, lt: windowEnd },
+      venda: { status: { not: { in: ["cancelada", "estornada"] } } },
+    },
     select: { dataVencimento: true, valorParcela: true, vendaId: true },
   });
 
   // Buscar vendas sem ParcelaVencimento (V1/legadas) no período + margem
-  const vendasComParcela = new Set(parcelas.map((p) => p.vendaId));
+  // Verificar globalmente quais vendas na janela têm ParcelaVencimento
+  // (não apenas as com vencimento dentro da janela), para não confundir
+  // vendas V2 com vencimentos fora da janela como legadas V1
+  const vendasNaJanela = await prisma.venda.findMany({
+    where: { dataVenda: { gte: windowStart, lt: windowEnd } },
+    select: { id: true },
+  });
+  const idsNaJanela = vendasNaJanela.map(v => v.id);
+  const parcelasGlobais = idsNaJanela.length > 0
+    ? await prisma.parcelaVencimento.findMany({
+        where: { vendaId: { in: idsNaJanela } },
+        select: { vendaId: true },
+        distinct: ["vendaId"],
+      })
+    : [];
+  const vendasComParcela = new Set([
+    ...parcelas.map(p => p.vendaId),
+    ...parcelasGlobais.map(p => p.vendaId),
+  ]);
   const vendasLegadas = await prisma.venda.findMany({
     where: {
       dataVenda: { gte: windowStart, lt: windowEnd },
