@@ -855,6 +855,12 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
               subtotal: valorVenda,
             },
           });
+          if (parsedParams.produtoNome) {
+            await tx.produto.updateMany({
+              where: { nome: parsedParams.produtoNome },
+              data: { qtdEstoque: { decrement: 1 } },
+            });
+          }
           return venda;
         });
         break;

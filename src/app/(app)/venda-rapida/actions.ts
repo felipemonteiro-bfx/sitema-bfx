@@ -56,6 +56,12 @@ export async function criarVenda(formData: FormData) {
       taxaNota,
     },
   });
+  if (produto) {
+    await prisma.produto.updateMany({
+      where: { nome: produto },
+      data: { qtdEstoque: { decrement: quantidade } },
+    });
+  }
   revalidatePath("/venda-rapida");
 }
 
@@ -196,6 +202,14 @@ export async function criarVendaV2(
 
         await tx.parcelaVencimento.createMany({
           data: parcelasAuto,
+        });
+      }
+
+      // 4. Debitar estoque
+      for (const p of produtosValidados) {
+        await tx.produto.updateMany({
+          where: { nome: p.produtoNome },
+          data: { qtdEstoque: { decrement: p.quantidade } },
         });
       }
 
