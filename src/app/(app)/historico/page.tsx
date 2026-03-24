@@ -102,6 +102,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         select: { produtoNome: true, custoProduto: true, quantidade: true, subtotal: true },
         orderBy: { id: "asc" },
       },
+      assinaturaToken: true,
       assinatura: {
         select: {
           assinaturaStatus: true,
@@ -427,10 +428,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell className="text-center">
                       {v.assinatura?.assinaturaStatus === 'assinado' ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
-                      ) : (
-                        <Link href={`/assinatura/${v.id}`}>
-                            <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
+                      ) : v.assinaturaToken ? (
+                        <Link href={`/assinatura/${v.assinaturaToken}`} target="_blank" title="Abrir link de assinatura">
+                          <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
                         </Link>
+                      ) : (
+                        <span className="text-muted-foreground opacity-30">—</span>
                       )}
                     </TableCell>
                     <TableCell className="sticky right-0 bg-background">
