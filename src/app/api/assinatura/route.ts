@@ -85,12 +85,22 @@ export async function POST(request: NextRequest) {
     const signatureBuffer = Buffer.from(signature.split(',')[1], 'base64');
     const pngImage = await pdfDoc.embedPng(signatureBuffer);
     const page = pdfDoc.getPages()[0];
+
+    // Scale signature to fit within the signature area (200pt wide, 45pt tall max)
+    // preserving the natural aspect ratio of what was actually drawn
+    const signatureY = 70; // matches recibo-pdf.ts
+    const maxSigWidth = 200;
+    const maxSigHeight = 45;
+    const naturalW = pngImage.width;
+    const naturalH = pngImage.height;
+    const scale = Math.min(maxSigWidth / naturalW, maxSigHeight / naturalH);
+    const sigWidth = naturalW * scale;
+    const sigHeight = naturalH * scale;
     const centerX = 595 / 2;
-    const sigWidth = 150;
-    const sigHeight = 50;
+
     page.drawImage(pngImage, {
       x: centerX - sigWidth / 2,
-      y: 70 - sigHeight,  // matches signatureY = 70 in recibo-pdf.ts
+      y: signatureY - sigHeight,  // bottom of image sits at signature line
       width: sigWidth,
       height: sigHeight,
     });
