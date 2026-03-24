@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 import { Badge } from "@/components/ui/badge";
 import { LayoutDashboard } from "lucide-react";
 
@@ -68,7 +69,10 @@ export default async function AppLayout({
                 </Badge>
               </div>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <ThemeToggle />
+            </div>
           </div>
           <div className="animate-fade-in-up">
             {children}
@@ -109,7 +113,10 @@ function SidebarContent({
             </Badge>
           </div>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <ThemeToggle />
+        </div>
       </div>
       <Separator className="my-5 bg-[var(--sidebar-border)]" />
       <SidebarNav menu={menu} />
