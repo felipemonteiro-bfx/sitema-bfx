@@ -172,15 +172,12 @@ exports.Prisma.VendaScalarFieldEnum = {
   excedeuLimite: 'excedeuLimite',
   temNota: 'temNota',
   taxaNota: 'taxaNota',
-  comprovantePdf: 'comprovantePdf',
   descontoEmFolha: 'descontoEmFolha',
-  assinaturaToken: 'assinaturaToken',
-  assinaturaStatus: 'assinaturaStatus',
-  assinaturaEm: 'assinaturaEm',
   boleto: 'boleto',
   status: 'status',
   asaasPaymentId: 'asaasPaymentId',
-  boletoUrl: 'boletoUrl'
+  boletoUrl: 'boletoUrl',
+  assinaturaToken: 'assinaturaToken'
 };
 
 exports.Prisma.DocumentoScalarFieldEnum = {
@@ -327,6 +324,21 @@ exports.Prisma.AiMensagemScalarFieldEnum = {
   criadoEm: 'criadoEm'
 };
 
+exports.Prisma.AssinaturaScalarFieldEnum = {
+  id: 'id',
+  vendaId: 'vendaId',
+  assinaturaStatus: 'assinaturaStatus',
+  assinaturaEm: 'assinaturaEm'
+};
+
+exports.Prisma.NotificacaoScalarFieldEnum = {
+  id: 'id',
+  mensagem: 'mensagem',
+  lida: 'lida',
+  criadoEm: 'criadoEm',
+  link: 'link'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -370,7 +382,9 @@ exports.Prisma.ModelName = {
   Despesa: 'Despesa',
   Aviso: 'Aviso',
   WhatsAppEnvioLog: 'WhatsAppEnvioLog',
-  AiMensagem: 'AiMensagem'
+  AiMensagem: 'AiMensagem',
+  Assinatura: 'Assinatura',
+  Notificacao: 'Notificacao'
 };
 
 /**

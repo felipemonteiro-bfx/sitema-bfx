@@ -70,21 +70,20 @@ model Venda {
   excedeuLimite      Int?      @default(0) @map("excedeu_limite")
   temNota            Boolean   @default(false) @map("tem_nota")
   taxaNota           Float?    @default(5.97) @map("taxa_nota")
-  comprovantePdf     String?   @map("comprovante_pdf")  // Legado: path em disco (deprecado)
   descontoEmFolha    Boolean   @default(false) @map("desconto_em_folha")
-  assinaturaToken    String?   @unique @map("assinatura_token")
-  assinaturaStatus   String?   @map("assinatura_status")   // pendente | assinado | expirado
-  assinaturaEm       DateTime? @map("assinatura_em")
   boleto             Boolean   @default(false) @map("boleto")
   status             String    @default("ativa") @map("status") // "ativa" | "cancelada" | "estornada"
   asaasPaymentId     String?   @map("asaas_payment_id")
   boletoUrl          String?   @map("boleto_url")
+  assinaturaToken    String?   @unique @map("assinatura_token")
+
 
   // Relacionamentos
   cliente            Cliente?   @relation(fields: [clienteId], references: [id])
   itens              ItemVenda[]
   parcelasVencimento ParcelaVencimento[]
   documentos         Documento[]
+  assinatura         Assinatura?
 
   @@map("vendas")
 }
@@ -272,4 +271,24 @@ model AiMensagem {
 
   @@index([sessaoId, criadoEm])
   @@map("ai_mensagens")
+}
+
+model Assinatura {
+  id               Int       @id @default(autoincrement())
+  vendaId          Int       @unique @map("venda_id")
+  assinaturaStatus String?   @map("assinatura_status") // pendente | assinado | expirado
+  assinaturaEm     DateTime? @map("assinatura_em")
+  venda            Venda     @relation(fields: [vendaId], references: [id])
+
+  @@map("assinaturas")
+}
+
+model Notificacao {
+  id        Int      @id @default(autoincrement())
+  mensagem  String
+  lida      Boolean  @default(false)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  link      String?
+
+  @@map("notificacoes")
 }

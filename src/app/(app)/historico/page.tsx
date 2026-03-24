@@ -95,13 +95,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       taxaNota: true,
       descontoEmFolha: true,
       boleto: true,
-      comprovantePdf: true,
       asaasPaymentId: true,
       boletoUrl: true,
       cliente: { select: { nome: true } },
       itens: {
         select: { produtoNome: true, custoProduto: true, quantidade: true, subtotal: true },
         orderBy: { id: "asc" },
+      },
+      assinatura: {
+        select: {
+          assinaturaStatus: true,
+        },
       },
     },
   });
@@ -112,7 +116,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       id: true, dataVenda: true, vendedor: true, produtoNome: true,
       quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
-      descontoEmFolha: true, boleto: true, comprovantePdf: true,
+      descontoEmFolha: true, boleto: true,
       asaasPaymentId: true, boletoUrl: true,
       itens: {
         select: { produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },
@@ -421,10 +425,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      {v.comprovantePdf ? (
+                      {v.assinatura?.assinaturaStatus === 'assinado' ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
                       ) : (
-                        <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
+                        <Link href={`/assinatura/${v.id}`}>
+                            <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
+                        </Link>
                       )}
                     </TableCell>
                     <TableCell className="sticky right-0 bg-background">

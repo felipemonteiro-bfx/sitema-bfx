@@ -93,6 +93,16 @@ export type WhatsAppEnvioLog = $Result.DefaultSelection<Prisma.$WhatsAppEnvioLog
  * 
  */
 export type AiMensagem = $Result.DefaultSelection<Prisma.$AiMensagemPayload>
+/**
+ * Model Assinatura
+ * 
+ */
+export type Assinatura = $Result.DefaultSelection<Prisma.$AssinaturaPayload>
+/**
+ * Model Notificacao
+ * 
+ */
+export type Notificacao = $Result.DefaultSelection<Prisma.$NotificacaoPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -371,6 +381,26 @@ export class PrismaClient<
     * ```
     */
   get aiMensagem(): Prisma.AiMensagemDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.assinatura`: Exposes CRUD operations for the **Assinatura** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Assinaturas
+    * const assinaturas = await prisma.assinatura.findMany()
+    * ```
+    */
+  get assinatura(): Prisma.AssinaturaDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.notificacao`: Exposes CRUD operations for the **Notificacao** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Notificacaos
+    * const notificacaos = await prisma.notificacao.findMany()
+    * ```
+    */
+  get notificacao(): Prisma.NotificacaoDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -827,7 +857,9 @@ export namespace Prisma {
     Despesa: 'Despesa',
     Aviso: 'Aviso',
     WhatsAppEnvioLog: 'WhatsAppEnvioLog',
-    AiMensagem: 'AiMensagem'
+    AiMensagem: 'AiMensagem',
+    Assinatura: 'Assinatura',
+    Notificacao: 'Notificacao'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -846,7 +878,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem"
+      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem" | "assinatura" | "notificacao"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2034,6 +2066,154 @@ export namespace Prisma {
           }
         }
       }
+      Assinatura: {
+        payload: Prisma.$AssinaturaPayload<ExtArgs>
+        fields: Prisma.AssinaturaFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AssinaturaFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AssinaturaFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>
+          }
+          findFirst: {
+            args: Prisma.AssinaturaFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AssinaturaFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>
+          }
+          findMany: {
+            args: Prisma.AssinaturaFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>[]
+          }
+          create: {
+            args: Prisma.AssinaturaCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>
+          }
+          createMany: {
+            args: Prisma.AssinaturaCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AssinaturaCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>[]
+          }
+          delete: {
+            args: Prisma.AssinaturaDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>
+          }
+          update: {
+            args: Prisma.AssinaturaUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>
+          }
+          deleteMany: {
+            args: Prisma.AssinaturaDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AssinaturaUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AssinaturaUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>[]
+          }
+          upsert: {
+            args: Prisma.AssinaturaUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AssinaturaPayload>
+          }
+          aggregate: {
+            args: Prisma.AssinaturaAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAssinatura>
+          }
+          groupBy: {
+            args: Prisma.AssinaturaGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AssinaturaGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AssinaturaCountArgs<ExtArgs>
+            result: $Utils.Optional<AssinaturaCountAggregateOutputType> | number
+          }
+        }
+      }
+      Notificacao: {
+        payload: Prisma.$NotificacaoPayload<ExtArgs>
+        fields: Prisma.NotificacaoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.NotificacaoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.NotificacaoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>
+          }
+          findFirst: {
+            args: Prisma.NotificacaoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.NotificacaoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>
+          }
+          findMany: {
+            args: Prisma.NotificacaoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>[]
+          }
+          create: {
+            args: Prisma.NotificacaoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>
+          }
+          createMany: {
+            args: Prisma.NotificacaoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.NotificacaoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>[]
+          }
+          delete: {
+            args: Prisma.NotificacaoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>
+          }
+          update: {
+            args: Prisma.NotificacaoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>
+          }
+          deleteMany: {
+            args: Prisma.NotificacaoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.NotificacaoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.NotificacaoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>[]
+          }
+          upsert: {
+            args: Prisma.NotificacaoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$NotificacaoPayload>
+          }
+          aggregate: {
+            args: Prisma.NotificacaoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateNotificacao>
+          }
+          groupBy: {
+            args: Prisma.NotificacaoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<NotificacaoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.NotificacaoCountArgs<ExtArgs>
+            result: $Utils.Optional<NotificacaoCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2146,6 +2326,8 @@ export namespace Prisma {
     aviso?: AvisoOmit
     whatsAppEnvioLog?: WhatsAppEnvioLogOmit
     aiMensagem?: AiMensagemOmit
+    assinatura?: AssinaturaOmit
+    notificacao?: NotificacaoOmit
   }
 
   /* Types for Logging */
@@ -4832,15 +5014,12 @@ export namespace Prisma {
     excedeuLimite: number | null
     temNota: boolean | null
     taxaNota: number | null
-    comprovantePdf: string | null
     descontoEmFolha: boolean | null
-    assinaturaToken: string | null
-    assinaturaStatus: string | null
-    assinaturaEm: Date | null
     boleto: boolean | null
     status: string | null
     asaasPaymentId: string | null
     boletoUrl: string | null
+    assinaturaToken: string | null
   }
 
   export type VendaMaxAggregateOutputType = {
@@ -4863,15 +5042,12 @@ export namespace Prisma {
     excedeuLimite: number | null
     temNota: boolean | null
     taxaNota: number | null
-    comprovantePdf: string | null
     descontoEmFolha: boolean | null
-    assinaturaToken: string | null
-    assinaturaStatus: string | null
-    assinaturaEm: Date | null
     boleto: boolean | null
     status: string | null
     asaasPaymentId: string | null
     boletoUrl: string | null
+    assinaturaToken: string | null
   }
 
   export type VendaCountAggregateOutputType = {
@@ -4894,15 +5070,12 @@ export namespace Prisma {
     excedeuLimite: number
     temNota: number
     taxaNota: number
-    comprovantePdf: number
     descontoEmFolha: number
-    assinaturaToken: number
-    assinaturaStatus: number
-    assinaturaEm: number
     boleto: number
     status: number
     asaasPaymentId: number
     boletoUrl: number
+    assinaturaToken: number
     _all: number
   }
 
@@ -4961,15 +5134,12 @@ export namespace Prisma {
     excedeuLimite?: true
     temNota?: true
     taxaNota?: true
-    comprovantePdf?: true
     descontoEmFolha?: true
-    assinaturaToken?: true
-    assinaturaStatus?: true
-    assinaturaEm?: true
     boleto?: true
     status?: true
     asaasPaymentId?: true
     boletoUrl?: true
+    assinaturaToken?: true
   }
 
   export type VendaMaxAggregateInputType = {
@@ -4992,15 +5162,12 @@ export namespace Prisma {
     excedeuLimite?: true
     temNota?: true
     taxaNota?: true
-    comprovantePdf?: true
     descontoEmFolha?: true
-    assinaturaToken?: true
-    assinaturaStatus?: true
-    assinaturaEm?: true
     boleto?: true
     status?: true
     asaasPaymentId?: true
     boletoUrl?: true
+    assinaturaToken?: true
   }
 
   export type VendaCountAggregateInputType = {
@@ -5023,15 +5190,12 @@ export namespace Prisma {
     excedeuLimite?: true
     temNota?: true
     taxaNota?: true
-    comprovantePdf?: true
     descontoEmFolha?: true
-    assinaturaToken?: true
-    assinaturaStatus?: true
-    assinaturaEm?: true
     boleto?: true
     status?: true
     asaasPaymentId?: true
     boletoUrl?: true
+    assinaturaToken?: true
     _all?: true
   }
 
@@ -5141,15 +5305,12 @@ export namespace Prisma {
     excedeuLimite: number | null
     temNota: boolean
     taxaNota: number | null
-    comprovantePdf: string | null
     descontoEmFolha: boolean
-    assinaturaToken: string | null
-    assinaturaStatus: string | null
-    assinaturaEm: Date | null
     boleto: boolean
     status: string
     asaasPaymentId: string | null
     boletoUrl: string | null
+    assinaturaToken: string | null
     _count: VendaCountAggregateOutputType | null
     _avg: VendaAvgAggregateOutputType | null
     _sum: VendaSumAggregateOutputType | null
@@ -5191,19 +5352,17 @@ export namespace Prisma {
     excedeuLimite?: boolean
     temNota?: boolean
     taxaNota?: boolean
-    comprovantePdf?: boolean
     descontoEmFolha?: boolean
-    assinaturaToken?: boolean
-    assinaturaStatus?: boolean
-    assinaturaEm?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
+    assinaturaToken?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     parcelasVencimento?: boolean | Venda$parcelasVencimentoArgs<ExtArgs>
     documentos?: boolean | Venda$documentosArgs<ExtArgs>
+    assinatura?: boolean | Venda$assinaturaArgs<ExtArgs>
     _count?: boolean | VendaCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["venda"]>
 
@@ -5227,15 +5386,12 @@ export namespace Prisma {
     excedeuLimite?: boolean
     temNota?: boolean
     taxaNota?: boolean
-    comprovantePdf?: boolean
     descontoEmFolha?: boolean
-    assinaturaToken?: boolean
-    assinaturaStatus?: boolean
-    assinaturaEm?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
+    assinaturaToken?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
   }, ExtArgs["result"]["venda"]>
 
@@ -5259,15 +5415,12 @@ export namespace Prisma {
     excedeuLimite?: boolean
     temNota?: boolean
     taxaNota?: boolean
-    comprovantePdf?: boolean
     descontoEmFolha?: boolean
-    assinaturaToken?: boolean
-    assinaturaStatus?: boolean
-    assinaturaEm?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
+    assinaturaToken?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
   }, ExtArgs["result"]["venda"]>
 
@@ -5291,23 +5444,21 @@ export namespace Prisma {
     excedeuLimite?: boolean
     temNota?: boolean
     taxaNota?: boolean
-    comprovantePdf?: boolean
     descontoEmFolha?: boolean
-    assinaturaToken?: boolean
-    assinaturaStatus?: boolean
-    assinaturaEm?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
+    assinaturaToken?: boolean
   }
 
-  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "comprovantePdf" | "descontoEmFolha" | "assinaturaToken" | "assinaturaStatus" | "assinaturaEm" | "boleto" | "status" | "asaasPaymentId" | "boletoUrl", ExtArgs["result"]["venda"]>
+  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "descontoEmFolha" | "boleto" | "status" | "asaasPaymentId" | "boletoUrl" | "assinaturaToken", ExtArgs["result"]["venda"]>
   export type VendaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     parcelasVencimento?: boolean | Venda$parcelasVencimentoArgs<ExtArgs>
     documentos?: boolean | Venda$documentosArgs<ExtArgs>
+    assinatura?: boolean | Venda$assinaturaArgs<ExtArgs>
     _count?: boolean | VendaCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type VendaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5324,6 +5475,7 @@ export namespace Prisma {
       itens: Prisma.$ItemVendaPayload<ExtArgs>[]
       parcelasVencimento: Prisma.$ParcelaVencimentoPayload<ExtArgs>[]
       documentos: Prisma.$DocumentoPayload<ExtArgs>[]
+      assinatura: Prisma.$AssinaturaPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -5345,15 +5497,12 @@ export namespace Prisma {
       excedeuLimite: number | null
       temNota: boolean
       taxaNota: number | null
-      comprovantePdf: string | null
       descontoEmFolha: boolean
-      assinaturaToken: string | null
-      assinaturaStatus: string | null
-      assinaturaEm: Date | null
       boleto: boolean
       status: string
       asaasPaymentId: string | null
       boletoUrl: string | null
+      assinaturaToken: string | null
     }, ExtArgs["result"]["venda"]>
     composites: {}
   }
@@ -5752,6 +5901,7 @@ export namespace Prisma {
     itens<T extends Venda$itensArgs<ExtArgs> = {}>(args?: Subset<T, Venda$itensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ItemVendaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     parcelasVencimento<T extends Venda$parcelasVencimentoArgs<ExtArgs> = {}>(args?: Subset<T, Venda$parcelasVencimentoArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ParcelaVencimentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     documentos<T extends Venda$documentosArgs<ExtArgs> = {}>(args?: Subset<T, Venda$documentosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    assinatura<T extends Venda$assinaturaArgs<ExtArgs> = {}>(args?: Subset<T, Venda$assinaturaArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5800,15 +5950,12 @@ export namespace Prisma {
     readonly excedeuLimite: FieldRef<"Venda", 'Int'>
     readonly temNota: FieldRef<"Venda", 'Boolean'>
     readonly taxaNota: FieldRef<"Venda", 'Float'>
-    readonly comprovantePdf: FieldRef<"Venda", 'String'>
     readonly descontoEmFolha: FieldRef<"Venda", 'Boolean'>
-    readonly assinaturaToken: FieldRef<"Venda", 'String'>
-    readonly assinaturaStatus: FieldRef<"Venda", 'String'>
-    readonly assinaturaEm: FieldRef<"Venda", 'DateTime'>
     readonly boleto: FieldRef<"Venda", 'Boolean'>
     readonly status: FieldRef<"Venda", 'String'>
     readonly asaasPaymentId: FieldRef<"Venda", 'String'>
     readonly boletoUrl: FieldRef<"Venda", 'String'>
+    readonly assinaturaToken: FieldRef<"Venda", 'String'>
   }
     
 
@@ -6293,6 +6440,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DocumentoScalarFieldEnum | DocumentoScalarFieldEnum[]
+  }
+
+  /**
+   * Venda.assinatura
+   */
+  export type Venda$assinaturaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    where?: AssinaturaWhereInput
   }
 
   /**
@@ -20603,6 +20769,2118 @@ export namespace Prisma {
 
 
   /**
+   * Model Assinatura
+   */
+
+  export type AggregateAssinatura = {
+    _count: AssinaturaCountAggregateOutputType | null
+    _avg: AssinaturaAvgAggregateOutputType | null
+    _sum: AssinaturaSumAggregateOutputType | null
+    _min: AssinaturaMinAggregateOutputType | null
+    _max: AssinaturaMaxAggregateOutputType | null
+  }
+
+  export type AssinaturaAvgAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+  }
+
+  export type AssinaturaSumAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+  }
+
+  export type AssinaturaMinAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+    assinaturaStatus: string | null
+    assinaturaEm: Date | null
+  }
+
+  export type AssinaturaMaxAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+    assinaturaStatus: string | null
+    assinaturaEm: Date | null
+  }
+
+  export type AssinaturaCountAggregateOutputType = {
+    id: number
+    vendaId: number
+    assinaturaStatus: number
+    assinaturaEm: number
+    _all: number
+  }
+
+
+  export type AssinaturaAvgAggregateInputType = {
+    id?: true
+    vendaId?: true
+  }
+
+  export type AssinaturaSumAggregateInputType = {
+    id?: true
+    vendaId?: true
+  }
+
+  export type AssinaturaMinAggregateInputType = {
+    id?: true
+    vendaId?: true
+    assinaturaStatus?: true
+    assinaturaEm?: true
+  }
+
+  export type AssinaturaMaxAggregateInputType = {
+    id?: true
+    vendaId?: true
+    assinaturaStatus?: true
+    assinaturaEm?: true
+  }
+
+  export type AssinaturaCountAggregateInputType = {
+    id?: true
+    vendaId?: true
+    assinaturaStatus?: true
+    assinaturaEm?: true
+    _all?: true
+  }
+
+  export type AssinaturaAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Assinatura to aggregate.
+     */
+    where?: AssinaturaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Assinaturas to fetch.
+     */
+    orderBy?: AssinaturaOrderByWithRelationInput | AssinaturaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AssinaturaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Assinaturas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Assinaturas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Assinaturas
+    **/
+    _count?: true | AssinaturaCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AssinaturaAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AssinaturaSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AssinaturaMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AssinaturaMaxAggregateInputType
+  }
+
+  export type GetAssinaturaAggregateType<T extends AssinaturaAggregateArgs> = {
+        [P in keyof T & keyof AggregateAssinatura]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAssinatura[P]>
+      : GetScalarType<T[P], AggregateAssinatura[P]>
+  }
+
+
+
+
+  export type AssinaturaGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AssinaturaWhereInput
+    orderBy?: AssinaturaOrderByWithAggregationInput | AssinaturaOrderByWithAggregationInput[]
+    by: AssinaturaScalarFieldEnum[] | AssinaturaScalarFieldEnum
+    having?: AssinaturaScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AssinaturaCountAggregateInputType | true
+    _avg?: AssinaturaAvgAggregateInputType
+    _sum?: AssinaturaSumAggregateInputType
+    _min?: AssinaturaMinAggregateInputType
+    _max?: AssinaturaMaxAggregateInputType
+  }
+
+  export type AssinaturaGroupByOutputType = {
+    id: number
+    vendaId: number
+    assinaturaStatus: string | null
+    assinaturaEm: Date | null
+    _count: AssinaturaCountAggregateOutputType | null
+    _avg: AssinaturaAvgAggregateOutputType | null
+    _sum: AssinaturaSumAggregateOutputType | null
+    _min: AssinaturaMinAggregateOutputType | null
+    _max: AssinaturaMaxAggregateOutputType | null
+  }
+
+  type GetAssinaturaGroupByPayload<T extends AssinaturaGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AssinaturaGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AssinaturaGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AssinaturaGroupByOutputType[P]>
+            : GetScalarType<T[P], AssinaturaGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AssinaturaSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["assinatura"]>
+
+  export type AssinaturaSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["assinatura"]>
+
+  export type AssinaturaSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["assinatura"]>
+
+  export type AssinaturaSelectScalar = {
+    id?: boolean
+    vendaId?: boolean
+    assinaturaStatus?: boolean
+    assinaturaEm?: boolean
+  }
+
+  export type AssinaturaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendaId" | "assinaturaStatus" | "assinaturaEm", ExtArgs["result"]["assinatura"]>
+  export type AssinaturaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }
+  export type AssinaturaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }
+  export type AssinaturaIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }
+
+  export type $AssinaturaPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Assinatura"
+    objects: {
+      venda: Prisma.$VendaPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      vendaId: number
+      assinaturaStatus: string | null
+      assinaturaEm: Date | null
+    }, ExtArgs["result"]["assinatura"]>
+    composites: {}
+  }
+
+  type AssinaturaGetPayload<S extends boolean | null | undefined | AssinaturaDefaultArgs> = $Result.GetResult<Prisma.$AssinaturaPayload, S>
+
+  type AssinaturaCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AssinaturaFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AssinaturaCountAggregateInputType | true
+    }
+
+  export interface AssinaturaDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Assinatura'], meta: { name: 'Assinatura' } }
+    /**
+     * Find zero or one Assinatura that matches the filter.
+     * @param {AssinaturaFindUniqueArgs} args - Arguments to find a Assinatura
+     * @example
+     * // Get one Assinatura
+     * const assinatura = await prisma.assinatura.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AssinaturaFindUniqueArgs>(args: SelectSubset<T, AssinaturaFindUniqueArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Assinatura that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AssinaturaFindUniqueOrThrowArgs} args - Arguments to find a Assinatura
+     * @example
+     * // Get one Assinatura
+     * const assinatura = await prisma.assinatura.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AssinaturaFindUniqueOrThrowArgs>(args: SelectSubset<T, AssinaturaFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Assinatura that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AssinaturaFindFirstArgs} args - Arguments to find a Assinatura
+     * @example
+     * // Get one Assinatura
+     * const assinatura = await prisma.assinatura.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AssinaturaFindFirstArgs>(args?: SelectSubset<T, AssinaturaFindFirstArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Assinatura that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AssinaturaFindFirstOrThrowArgs} args - Arguments to find a Assinatura
+     * @example
+     * // Get one Assinatura
+     * const assinatura = await prisma.assinatura.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AssinaturaFindFirstOrThrowArgs>(args?: SelectSubset<T, AssinaturaFindFirstOrThrowArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Assinaturas that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AssinaturaFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Assinaturas
+     * const assinaturas = await prisma.assinatura.findMany()
+     * 
+     * // Get first 10 Assinaturas
+     * const assinaturas = await prisma.assinatura.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const assinaturaWithIdOnly = await prisma.assinatura.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AssinaturaFindManyArgs>(args?: SelectSubset<T, AssinaturaFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Assinatura.
+     * @param {AssinaturaCreateArgs} args - Arguments to create a Assinatura.
+     * @example
+     * // Create one Assinatura
+     * const Assinatura = await prisma.assinatura.create({
+     *   data: {
+     *     // ... data to create a Assinatura
+     *   }
+     * })
+     * 
+     */
+    create<T extends AssinaturaCreateArgs>(args: SelectSubset<T, AssinaturaCreateArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Assinaturas.
+     * @param {AssinaturaCreateManyArgs} args - Arguments to create many Assinaturas.
+     * @example
+     * // Create many Assinaturas
+     * const assinatura = await prisma.assinatura.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AssinaturaCreateManyArgs>(args?: SelectSubset<T, AssinaturaCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Assinaturas and returns the data saved in the database.
+     * @param {AssinaturaCreateManyAndReturnArgs} args - Arguments to create many Assinaturas.
+     * @example
+     * // Create many Assinaturas
+     * const assinatura = await prisma.assinatura.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Assinaturas and only return the `id`
+     * const assinaturaWithIdOnly = await prisma.assinatura.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AssinaturaCreateManyAndReturnArgs>(args?: SelectSubset<T, AssinaturaCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Assinatura.
+     * @param {AssinaturaDeleteArgs} args - Arguments to delete one Assinatura.
+     * @example
+     * // Delete one Assinatura
+     * const Assinatura = await prisma.assinatura.delete({
+     *   where: {
+     *     // ... filter to delete one Assinatura
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AssinaturaDeleteArgs>(args: SelectSubset<T, AssinaturaDeleteArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Assinatura.
+     * @param {AssinaturaUpdateArgs} args - Arguments to update one Assinatura.
+     * @example
+     * // Update one Assinatura
+     * const assinatura = await prisma.assinatura.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AssinaturaUpdateArgs>(args: SelectSubset<T, AssinaturaUpdateArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Assinaturas.
+     * @param {AssinaturaDeleteManyArgs} args - Arguments to filter Assinaturas to delete.
+     * @example
+     * // Delete a few Assinaturas
+     * const { count } = await prisma.assinatura.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AssinaturaDeleteManyArgs>(args?: SelectSubset<T, AssinaturaDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Assinaturas.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AssinaturaUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Assinaturas
+     * const assinatura = await prisma.assinatura.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AssinaturaUpdateManyArgs>(args: SelectSubset<T, AssinaturaUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Assinaturas and returns the data updated in the database.
+     * @param {AssinaturaUpdateManyAndReturnArgs} args - Arguments to update many Assinaturas.
+     * @example
+     * // Update many Assinaturas
+     * const assinatura = await prisma.assinatura.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Assinaturas and only return the `id`
+     * const assinaturaWithIdOnly = await prisma.assinatura.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AssinaturaUpdateManyAndReturnArgs>(args: SelectSubset<T, AssinaturaUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Assinatura.
+     * @param {AssinaturaUpsertArgs} args - Arguments to update or create a Assinatura.
+     * @example
+     * // Update or create a Assinatura
+     * const assinatura = await prisma.assinatura.upsert({
+     *   create: {
+     *     // ... data to create a Assinatura
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Assinatura we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AssinaturaUpsertArgs>(args: SelectSubset<T, AssinaturaUpsertArgs<ExtArgs>>): Prisma__AssinaturaClient<$Result.GetResult<Prisma.$AssinaturaPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Assinaturas.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AssinaturaCountArgs} args - Arguments to filter Assinaturas to count.
+     * @example
+     * // Count the number of Assinaturas
+     * const count = await prisma.assinatura.count({
+     *   where: {
+     *     // ... the filter for the Assinaturas we want to count
+     *   }
+     * })
+    **/
+    count<T extends AssinaturaCountArgs>(
+      args?: Subset<T, AssinaturaCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AssinaturaCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Assinatura.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AssinaturaAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AssinaturaAggregateArgs>(args: Subset<T, AssinaturaAggregateArgs>): Prisma.PrismaPromise<GetAssinaturaAggregateType<T>>
+
+    /**
+     * Group by Assinatura.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AssinaturaGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AssinaturaGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AssinaturaGroupByArgs['orderBy'] }
+        : { orderBy?: AssinaturaGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AssinaturaGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAssinaturaGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Assinatura model
+   */
+  readonly fields: AssinaturaFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Assinatura.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AssinaturaClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    venda<T extends VendaDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VendaDefaultArgs<ExtArgs>>): Prisma__VendaClient<$Result.GetResult<Prisma.$VendaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Assinatura model
+   */
+  interface AssinaturaFieldRefs {
+    readonly id: FieldRef<"Assinatura", 'Int'>
+    readonly vendaId: FieldRef<"Assinatura", 'Int'>
+    readonly assinaturaStatus: FieldRef<"Assinatura", 'String'>
+    readonly assinaturaEm: FieldRef<"Assinatura", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Assinatura findUnique
+   */
+  export type AssinaturaFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * Filter, which Assinatura to fetch.
+     */
+    where: AssinaturaWhereUniqueInput
+  }
+
+  /**
+   * Assinatura findUniqueOrThrow
+   */
+  export type AssinaturaFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * Filter, which Assinatura to fetch.
+     */
+    where: AssinaturaWhereUniqueInput
+  }
+
+  /**
+   * Assinatura findFirst
+   */
+  export type AssinaturaFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * Filter, which Assinatura to fetch.
+     */
+    where?: AssinaturaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Assinaturas to fetch.
+     */
+    orderBy?: AssinaturaOrderByWithRelationInput | AssinaturaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Assinaturas.
+     */
+    cursor?: AssinaturaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Assinaturas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Assinaturas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Assinaturas.
+     */
+    distinct?: AssinaturaScalarFieldEnum | AssinaturaScalarFieldEnum[]
+  }
+
+  /**
+   * Assinatura findFirstOrThrow
+   */
+  export type AssinaturaFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * Filter, which Assinatura to fetch.
+     */
+    where?: AssinaturaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Assinaturas to fetch.
+     */
+    orderBy?: AssinaturaOrderByWithRelationInput | AssinaturaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Assinaturas.
+     */
+    cursor?: AssinaturaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Assinaturas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Assinaturas.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Assinaturas.
+     */
+    distinct?: AssinaturaScalarFieldEnum | AssinaturaScalarFieldEnum[]
+  }
+
+  /**
+   * Assinatura findMany
+   */
+  export type AssinaturaFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * Filter, which Assinaturas to fetch.
+     */
+    where?: AssinaturaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Assinaturas to fetch.
+     */
+    orderBy?: AssinaturaOrderByWithRelationInput | AssinaturaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Assinaturas.
+     */
+    cursor?: AssinaturaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Assinaturas from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Assinaturas.
+     */
+    skip?: number
+    distinct?: AssinaturaScalarFieldEnum | AssinaturaScalarFieldEnum[]
+  }
+
+  /**
+   * Assinatura create
+   */
+  export type AssinaturaCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Assinatura.
+     */
+    data: XOR<AssinaturaCreateInput, AssinaturaUncheckedCreateInput>
+  }
+
+  /**
+   * Assinatura createMany
+   */
+  export type AssinaturaCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Assinaturas.
+     */
+    data: AssinaturaCreateManyInput | AssinaturaCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Assinatura createManyAndReturn
+   */
+  export type AssinaturaCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * The data used to create many Assinaturas.
+     */
+    data: AssinaturaCreateManyInput | AssinaturaCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Assinatura update
+   */
+  export type AssinaturaUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Assinatura.
+     */
+    data: XOR<AssinaturaUpdateInput, AssinaturaUncheckedUpdateInput>
+    /**
+     * Choose, which Assinatura to update.
+     */
+    where: AssinaturaWhereUniqueInput
+  }
+
+  /**
+   * Assinatura updateMany
+   */
+  export type AssinaturaUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Assinaturas.
+     */
+    data: XOR<AssinaturaUpdateManyMutationInput, AssinaturaUncheckedUpdateManyInput>
+    /**
+     * Filter which Assinaturas to update
+     */
+    where?: AssinaturaWhereInput
+    /**
+     * Limit how many Assinaturas to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Assinatura updateManyAndReturn
+   */
+  export type AssinaturaUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * The data used to update Assinaturas.
+     */
+    data: XOR<AssinaturaUpdateManyMutationInput, AssinaturaUncheckedUpdateManyInput>
+    /**
+     * Filter which Assinaturas to update
+     */
+    where?: AssinaturaWhereInput
+    /**
+     * Limit how many Assinaturas to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Assinatura upsert
+   */
+  export type AssinaturaUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Assinatura to update in case it exists.
+     */
+    where: AssinaturaWhereUniqueInput
+    /**
+     * In case the Assinatura found by the `where` argument doesn't exist, create a new Assinatura with this data.
+     */
+    create: XOR<AssinaturaCreateInput, AssinaturaUncheckedCreateInput>
+    /**
+     * In case the Assinatura was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AssinaturaUpdateInput, AssinaturaUncheckedUpdateInput>
+  }
+
+  /**
+   * Assinatura delete
+   */
+  export type AssinaturaDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+    /**
+     * Filter which Assinatura to delete.
+     */
+    where: AssinaturaWhereUniqueInput
+  }
+
+  /**
+   * Assinatura deleteMany
+   */
+  export type AssinaturaDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Assinaturas to delete
+     */
+    where?: AssinaturaWhereInput
+    /**
+     * Limit how many Assinaturas to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Assinatura without action
+   */
+  export type AssinaturaDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Assinatura
+     */
+    select?: AssinaturaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Assinatura
+     */
+    omit?: AssinaturaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AssinaturaInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Notificacao
+   */
+
+  export type AggregateNotificacao = {
+    _count: NotificacaoCountAggregateOutputType | null
+    _avg: NotificacaoAvgAggregateOutputType | null
+    _sum: NotificacaoSumAggregateOutputType | null
+    _min: NotificacaoMinAggregateOutputType | null
+    _max: NotificacaoMaxAggregateOutputType | null
+  }
+
+  export type NotificacaoAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type NotificacaoSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type NotificacaoMinAggregateOutputType = {
+    id: number | null
+    mensagem: string | null
+    lida: boolean | null
+    criadoEm: Date | null
+    link: string | null
+  }
+
+  export type NotificacaoMaxAggregateOutputType = {
+    id: number | null
+    mensagem: string | null
+    lida: boolean | null
+    criadoEm: Date | null
+    link: string | null
+  }
+
+  export type NotificacaoCountAggregateOutputType = {
+    id: number
+    mensagem: number
+    lida: number
+    criadoEm: number
+    link: number
+    _all: number
+  }
+
+
+  export type NotificacaoAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type NotificacaoSumAggregateInputType = {
+    id?: true
+  }
+
+  export type NotificacaoMinAggregateInputType = {
+    id?: true
+    mensagem?: true
+    lida?: true
+    criadoEm?: true
+    link?: true
+  }
+
+  export type NotificacaoMaxAggregateInputType = {
+    id?: true
+    mensagem?: true
+    lida?: true
+    criadoEm?: true
+    link?: true
+  }
+
+  export type NotificacaoCountAggregateInputType = {
+    id?: true
+    mensagem?: true
+    lida?: true
+    criadoEm?: true
+    link?: true
+    _all?: true
+  }
+
+  export type NotificacaoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Notificacao to aggregate.
+     */
+    where?: NotificacaoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Notificacaos to fetch.
+     */
+    orderBy?: NotificacaoOrderByWithRelationInput | NotificacaoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: NotificacaoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Notificacaos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Notificacaos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Notificacaos
+    **/
+    _count?: true | NotificacaoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: NotificacaoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: NotificacaoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: NotificacaoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: NotificacaoMaxAggregateInputType
+  }
+
+  export type GetNotificacaoAggregateType<T extends NotificacaoAggregateArgs> = {
+        [P in keyof T & keyof AggregateNotificacao]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateNotificacao[P]>
+      : GetScalarType<T[P], AggregateNotificacao[P]>
+  }
+
+
+
+
+  export type NotificacaoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: NotificacaoWhereInput
+    orderBy?: NotificacaoOrderByWithAggregationInput | NotificacaoOrderByWithAggregationInput[]
+    by: NotificacaoScalarFieldEnum[] | NotificacaoScalarFieldEnum
+    having?: NotificacaoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: NotificacaoCountAggregateInputType | true
+    _avg?: NotificacaoAvgAggregateInputType
+    _sum?: NotificacaoSumAggregateInputType
+    _min?: NotificacaoMinAggregateInputType
+    _max?: NotificacaoMaxAggregateInputType
+  }
+
+  export type NotificacaoGroupByOutputType = {
+    id: number
+    mensagem: string
+    lida: boolean
+    criadoEm: Date
+    link: string | null
+    _count: NotificacaoCountAggregateOutputType | null
+    _avg: NotificacaoAvgAggregateOutputType | null
+    _sum: NotificacaoSumAggregateOutputType | null
+    _min: NotificacaoMinAggregateOutputType | null
+    _max: NotificacaoMaxAggregateOutputType | null
+  }
+
+  type GetNotificacaoGroupByPayload<T extends NotificacaoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<NotificacaoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof NotificacaoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], NotificacaoGroupByOutputType[P]>
+            : GetScalarType<T[P], NotificacaoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type NotificacaoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    mensagem?: boolean
+    lida?: boolean
+    criadoEm?: boolean
+    link?: boolean
+  }, ExtArgs["result"]["notificacao"]>
+
+  export type NotificacaoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    mensagem?: boolean
+    lida?: boolean
+    criadoEm?: boolean
+    link?: boolean
+  }, ExtArgs["result"]["notificacao"]>
+
+  export type NotificacaoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    mensagem?: boolean
+    lida?: boolean
+    criadoEm?: boolean
+    link?: boolean
+  }, ExtArgs["result"]["notificacao"]>
+
+  export type NotificacaoSelectScalar = {
+    id?: boolean
+    mensagem?: boolean
+    lida?: boolean
+    criadoEm?: boolean
+    link?: boolean
+  }
+
+  export type NotificacaoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "mensagem" | "lida" | "criadoEm" | "link", ExtArgs["result"]["notificacao"]>
+
+  export type $NotificacaoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Notificacao"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      mensagem: string
+      lida: boolean
+      criadoEm: Date
+      link: string | null
+    }, ExtArgs["result"]["notificacao"]>
+    composites: {}
+  }
+
+  type NotificacaoGetPayload<S extends boolean | null | undefined | NotificacaoDefaultArgs> = $Result.GetResult<Prisma.$NotificacaoPayload, S>
+
+  type NotificacaoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<NotificacaoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: NotificacaoCountAggregateInputType | true
+    }
+
+  export interface NotificacaoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Notificacao'], meta: { name: 'Notificacao' } }
+    /**
+     * Find zero or one Notificacao that matches the filter.
+     * @param {NotificacaoFindUniqueArgs} args - Arguments to find a Notificacao
+     * @example
+     * // Get one Notificacao
+     * const notificacao = await prisma.notificacao.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends NotificacaoFindUniqueArgs>(args: SelectSubset<T, NotificacaoFindUniqueArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Notificacao that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {NotificacaoFindUniqueOrThrowArgs} args - Arguments to find a Notificacao
+     * @example
+     * // Get one Notificacao
+     * const notificacao = await prisma.notificacao.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends NotificacaoFindUniqueOrThrowArgs>(args: SelectSubset<T, NotificacaoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Notificacao that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificacaoFindFirstArgs} args - Arguments to find a Notificacao
+     * @example
+     * // Get one Notificacao
+     * const notificacao = await prisma.notificacao.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends NotificacaoFindFirstArgs>(args?: SelectSubset<T, NotificacaoFindFirstArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Notificacao that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificacaoFindFirstOrThrowArgs} args - Arguments to find a Notificacao
+     * @example
+     * // Get one Notificacao
+     * const notificacao = await prisma.notificacao.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends NotificacaoFindFirstOrThrowArgs>(args?: SelectSubset<T, NotificacaoFindFirstOrThrowArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Notificacaos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificacaoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Notificacaos
+     * const notificacaos = await prisma.notificacao.findMany()
+     * 
+     * // Get first 10 Notificacaos
+     * const notificacaos = await prisma.notificacao.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const notificacaoWithIdOnly = await prisma.notificacao.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends NotificacaoFindManyArgs>(args?: SelectSubset<T, NotificacaoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Notificacao.
+     * @param {NotificacaoCreateArgs} args - Arguments to create a Notificacao.
+     * @example
+     * // Create one Notificacao
+     * const Notificacao = await prisma.notificacao.create({
+     *   data: {
+     *     // ... data to create a Notificacao
+     *   }
+     * })
+     * 
+     */
+    create<T extends NotificacaoCreateArgs>(args: SelectSubset<T, NotificacaoCreateArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Notificacaos.
+     * @param {NotificacaoCreateManyArgs} args - Arguments to create many Notificacaos.
+     * @example
+     * // Create many Notificacaos
+     * const notificacao = await prisma.notificacao.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends NotificacaoCreateManyArgs>(args?: SelectSubset<T, NotificacaoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Notificacaos and returns the data saved in the database.
+     * @param {NotificacaoCreateManyAndReturnArgs} args - Arguments to create many Notificacaos.
+     * @example
+     * // Create many Notificacaos
+     * const notificacao = await prisma.notificacao.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Notificacaos and only return the `id`
+     * const notificacaoWithIdOnly = await prisma.notificacao.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends NotificacaoCreateManyAndReturnArgs>(args?: SelectSubset<T, NotificacaoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Notificacao.
+     * @param {NotificacaoDeleteArgs} args - Arguments to delete one Notificacao.
+     * @example
+     * // Delete one Notificacao
+     * const Notificacao = await prisma.notificacao.delete({
+     *   where: {
+     *     // ... filter to delete one Notificacao
+     *   }
+     * })
+     * 
+     */
+    delete<T extends NotificacaoDeleteArgs>(args: SelectSubset<T, NotificacaoDeleteArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Notificacao.
+     * @param {NotificacaoUpdateArgs} args - Arguments to update one Notificacao.
+     * @example
+     * // Update one Notificacao
+     * const notificacao = await prisma.notificacao.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends NotificacaoUpdateArgs>(args: SelectSubset<T, NotificacaoUpdateArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Notificacaos.
+     * @param {NotificacaoDeleteManyArgs} args - Arguments to filter Notificacaos to delete.
+     * @example
+     * // Delete a few Notificacaos
+     * const { count } = await prisma.notificacao.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends NotificacaoDeleteManyArgs>(args?: SelectSubset<T, NotificacaoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Notificacaos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificacaoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Notificacaos
+     * const notificacao = await prisma.notificacao.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends NotificacaoUpdateManyArgs>(args: SelectSubset<T, NotificacaoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Notificacaos and returns the data updated in the database.
+     * @param {NotificacaoUpdateManyAndReturnArgs} args - Arguments to update many Notificacaos.
+     * @example
+     * // Update many Notificacaos
+     * const notificacao = await prisma.notificacao.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Notificacaos and only return the `id`
+     * const notificacaoWithIdOnly = await prisma.notificacao.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends NotificacaoUpdateManyAndReturnArgs>(args: SelectSubset<T, NotificacaoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Notificacao.
+     * @param {NotificacaoUpsertArgs} args - Arguments to update or create a Notificacao.
+     * @example
+     * // Update or create a Notificacao
+     * const notificacao = await prisma.notificacao.upsert({
+     *   create: {
+     *     // ... data to create a Notificacao
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Notificacao we want to update
+     *   }
+     * })
+     */
+    upsert<T extends NotificacaoUpsertArgs>(args: SelectSubset<T, NotificacaoUpsertArgs<ExtArgs>>): Prisma__NotificacaoClient<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Notificacaos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificacaoCountArgs} args - Arguments to filter Notificacaos to count.
+     * @example
+     * // Count the number of Notificacaos
+     * const count = await prisma.notificacao.count({
+     *   where: {
+     *     // ... the filter for the Notificacaos we want to count
+     *   }
+     * })
+    **/
+    count<T extends NotificacaoCountArgs>(
+      args?: Subset<T, NotificacaoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], NotificacaoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Notificacao.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificacaoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends NotificacaoAggregateArgs>(args: Subset<T, NotificacaoAggregateArgs>): Prisma.PrismaPromise<GetNotificacaoAggregateType<T>>
+
+    /**
+     * Group by Notificacao.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {NotificacaoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends NotificacaoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: NotificacaoGroupByArgs['orderBy'] }
+        : { orderBy?: NotificacaoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, NotificacaoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetNotificacaoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Notificacao model
+   */
+  readonly fields: NotificacaoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Notificacao.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__NotificacaoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Notificacao model
+   */
+  interface NotificacaoFieldRefs {
+    readonly id: FieldRef<"Notificacao", 'Int'>
+    readonly mensagem: FieldRef<"Notificacao", 'String'>
+    readonly lida: FieldRef<"Notificacao", 'Boolean'>
+    readonly criadoEm: FieldRef<"Notificacao", 'DateTime'>
+    readonly link: FieldRef<"Notificacao", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Notificacao findUnique
+   */
+  export type NotificacaoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Filter, which Notificacao to fetch.
+     */
+    where: NotificacaoWhereUniqueInput
+  }
+
+  /**
+   * Notificacao findUniqueOrThrow
+   */
+  export type NotificacaoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Filter, which Notificacao to fetch.
+     */
+    where: NotificacaoWhereUniqueInput
+  }
+
+  /**
+   * Notificacao findFirst
+   */
+  export type NotificacaoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Filter, which Notificacao to fetch.
+     */
+    where?: NotificacaoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Notificacaos to fetch.
+     */
+    orderBy?: NotificacaoOrderByWithRelationInput | NotificacaoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Notificacaos.
+     */
+    cursor?: NotificacaoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Notificacaos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Notificacaos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Notificacaos.
+     */
+    distinct?: NotificacaoScalarFieldEnum | NotificacaoScalarFieldEnum[]
+  }
+
+  /**
+   * Notificacao findFirstOrThrow
+   */
+  export type NotificacaoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Filter, which Notificacao to fetch.
+     */
+    where?: NotificacaoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Notificacaos to fetch.
+     */
+    orderBy?: NotificacaoOrderByWithRelationInput | NotificacaoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Notificacaos.
+     */
+    cursor?: NotificacaoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Notificacaos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Notificacaos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Notificacaos.
+     */
+    distinct?: NotificacaoScalarFieldEnum | NotificacaoScalarFieldEnum[]
+  }
+
+  /**
+   * Notificacao findMany
+   */
+  export type NotificacaoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Filter, which Notificacaos to fetch.
+     */
+    where?: NotificacaoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Notificacaos to fetch.
+     */
+    orderBy?: NotificacaoOrderByWithRelationInput | NotificacaoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Notificacaos.
+     */
+    cursor?: NotificacaoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Notificacaos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Notificacaos.
+     */
+    skip?: number
+    distinct?: NotificacaoScalarFieldEnum | NotificacaoScalarFieldEnum[]
+  }
+
+  /**
+   * Notificacao create
+   */
+  export type NotificacaoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * The data needed to create a Notificacao.
+     */
+    data: XOR<NotificacaoCreateInput, NotificacaoUncheckedCreateInput>
+  }
+
+  /**
+   * Notificacao createMany
+   */
+  export type NotificacaoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Notificacaos.
+     */
+    data: NotificacaoCreateManyInput | NotificacaoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Notificacao createManyAndReturn
+   */
+  export type NotificacaoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * The data used to create many Notificacaos.
+     */
+    data: NotificacaoCreateManyInput | NotificacaoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Notificacao update
+   */
+  export type NotificacaoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * The data needed to update a Notificacao.
+     */
+    data: XOR<NotificacaoUpdateInput, NotificacaoUncheckedUpdateInput>
+    /**
+     * Choose, which Notificacao to update.
+     */
+    where: NotificacaoWhereUniqueInput
+  }
+
+  /**
+   * Notificacao updateMany
+   */
+  export type NotificacaoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Notificacaos.
+     */
+    data: XOR<NotificacaoUpdateManyMutationInput, NotificacaoUncheckedUpdateManyInput>
+    /**
+     * Filter which Notificacaos to update
+     */
+    where?: NotificacaoWhereInput
+    /**
+     * Limit how many Notificacaos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Notificacao updateManyAndReturn
+   */
+  export type NotificacaoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * The data used to update Notificacaos.
+     */
+    data: XOR<NotificacaoUpdateManyMutationInput, NotificacaoUncheckedUpdateManyInput>
+    /**
+     * Filter which Notificacaos to update
+     */
+    where?: NotificacaoWhereInput
+    /**
+     * Limit how many Notificacaos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Notificacao upsert
+   */
+  export type NotificacaoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * The filter to search for the Notificacao to update in case it exists.
+     */
+    where: NotificacaoWhereUniqueInput
+    /**
+     * In case the Notificacao found by the `where` argument doesn't exist, create a new Notificacao with this data.
+     */
+    create: XOR<NotificacaoCreateInput, NotificacaoUncheckedCreateInput>
+    /**
+     * In case the Notificacao was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<NotificacaoUpdateInput, NotificacaoUncheckedUpdateInput>
+  }
+
+  /**
+   * Notificacao delete
+   */
+  export type NotificacaoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Filter which Notificacao to delete.
+     */
+    where: NotificacaoWhereUniqueInput
+  }
+
+  /**
+   * Notificacao deleteMany
+   */
+  export type NotificacaoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Notificacaos to delete
+     */
+    where?: NotificacaoWhereInput
+    /**
+     * Limit how many Notificacaos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Notificacao without action
+   */
+  export type NotificacaoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -20673,15 +22951,12 @@ export namespace Prisma {
     excedeuLimite: 'excedeuLimite',
     temNota: 'temNota',
     taxaNota: 'taxaNota',
-    comprovantePdf: 'comprovantePdf',
     descontoEmFolha: 'descontoEmFolha',
-    assinaturaToken: 'assinaturaToken',
-    assinaturaStatus: 'assinaturaStatus',
-    assinaturaEm: 'assinaturaEm',
     boleto: 'boleto',
     status: 'status',
     asaasPaymentId: 'asaasPaymentId',
-    boletoUrl: 'boletoUrl'
+    boletoUrl: 'boletoUrl',
+    assinaturaToken: 'assinaturaToken'
   };
 
   export type VendaScalarFieldEnum = (typeof VendaScalarFieldEnum)[keyof typeof VendaScalarFieldEnum]
@@ -20868,6 +23143,27 @@ export namespace Prisma {
   };
 
   export type AiMensagemScalarFieldEnum = (typeof AiMensagemScalarFieldEnum)[keyof typeof AiMensagemScalarFieldEnum]
+
+
+  export const AssinaturaScalarFieldEnum: {
+    id: 'id',
+    vendaId: 'vendaId',
+    assinaturaStatus: 'assinaturaStatus',
+    assinaturaEm: 'assinaturaEm'
+  };
+
+  export type AssinaturaScalarFieldEnum = (typeof AssinaturaScalarFieldEnum)[keyof typeof AssinaturaScalarFieldEnum]
+
+
+  export const NotificacaoScalarFieldEnum: {
+    id: 'id',
+    mensagem: 'mensagem',
+    lida: 'lida',
+    criadoEm: 'criadoEm',
+    link: 'link'
+  };
+
+  export type NotificacaoScalarFieldEnum = (typeof NotificacaoScalarFieldEnum)[keyof typeof NotificacaoScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -21223,19 +23519,17 @@ export namespace Prisma {
     excedeuLimite?: IntNullableFilter<"Venda"> | number | null
     temNota?: BoolFilter<"Venda"> | boolean
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
-    comprovantePdf?: StringNullableFilter<"Venda"> | string | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
-    assinaturaToken?: StringNullableFilter<"Venda"> | string | null
-    assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
-    assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
+    assinaturaToken?: StringNullableFilter<"Venda"> | string | null
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
     itens?: ItemVendaListRelationFilter
     parcelasVencimento?: ParcelaVencimentoListRelationFilter
     documentos?: DocumentoListRelationFilter
+    assinatura?: XOR<AssinaturaNullableScalarRelationFilter, AssinaturaWhereInput> | null
   }
 
   export type VendaOrderByWithRelationInput = {
@@ -21258,19 +23552,17 @@ export namespace Prisma {
     excedeuLimite?: SortOrderInput | SortOrder
     temNota?: SortOrder
     taxaNota?: SortOrderInput | SortOrder
-    comprovantePdf?: SortOrderInput | SortOrder
     descontoEmFolha?: SortOrder
-    assinaturaToken?: SortOrderInput | SortOrder
-    assinaturaStatus?: SortOrderInput | SortOrder
-    assinaturaEm?: SortOrderInput | SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
+    assinaturaToken?: SortOrderInput | SortOrder
     cliente?: ClienteOrderByWithRelationInput
     itens?: ItemVendaOrderByRelationAggregateInput
     parcelasVencimento?: ParcelaVencimentoOrderByRelationAggregateInput
     documentos?: DocumentoOrderByRelationAggregateInput
+    assinatura?: AssinaturaOrderByWithRelationInput
   }
 
   export type VendaWhereUniqueInput = Prisma.AtLeast<{
@@ -21297,10 +23589,7 @@ export namespace Prisma {
     excedeuLimite?: IntNullableFilter<"Venda"> | number | null
     temNota?: BoolFilter<"Venda"> | boolean
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
-    comprovantePdf?: StringNullableFilter<"Venda"> | string | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
-    assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
-    assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
@@ -21309,6 +23598,7 @@ export namespace Prisma {
     itens?: ItemVendaListRelationFilter
     parcelasVencimento?: ParcelaVencimentoListRelationFilter
     documentos?: DocumentoListRelationFilter
+    assinatura?: XOR<AssinaturaNullableScalarRelationFilter, AssinaturaWhereInput> | null
   }, "id" | "uuid" | "assinaturaToken">
 
   export type VendaOrderByWithAggregationInput = {
@@ -21331,15 +23621,12 @@ export namespace Prisma {
     excedeuLimite?: SortOrderInput | SortOrder
     temNota?: SortOrder
     taxaNota?: SortOrderInput | SortOrder
-    comprovantePdf?: SortOrderInput | SortOrder
     descontoEmFolha?: SortOrder
-    assinaturaToken?: SortOrderInput | SortOrder
-    assinaturaStatus?: SortOrderInput | SortOrder
-    assinaturaEm?: SortOrderInput | SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
+    assinaturaToken?: SortOrderInput | SortOrder
     _count?: VendaCountOrderByAggregateInput
     _avg?: VendaAvgOrderByAggregateInput
     _max?: VendaMaxOrderByAggregateInput
@@ -21370,15 +23657,12 @@ export namespace Prisma {
     excedeuLimite?: IntNullableWithAggregatesFilter<"Venda"> | number | null
     temNota?: BoolWithAggregatesFilter<"Venda"> | boolean
     taxaNota?: FloatNullableWithAggregatesFilter<"Venda"> | number | null
-    comprovantePdf?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     descontoEmFolha?: BoolWithAggregatesFilter<"Venda"> | boolean
-    assinaturaToken?: StringNullableWithAggregatesFilter<"Venda"> | string | null
-    assinaturaStatus?: StringNullableWithAggregatesFilter<"Venda"> | string | null
-    assinaturaEm?: DateTimeNullableWithAggregatesFilter<"Venda"> | Date | string | null
     boleto?: BoolWithAggregatesFilter<"Venda"> | boolean
     status?: StringWithAggregatesFilter<"Venda"> | string
     asaasPaymentId?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     boletoUrl?: StringNullableWithAggregatesFilter<"Venda"> | string | null
+    assinaturaToken?: StringNullableWithAggregatesFilter<"Venda"> | string | null
   }
 
   export type DocumentoWhereInput = {
@@ -22295,6 +24579,112 @@ export namespace Prisma {
     criadoEm?: DateTimeWithAggregatesFilter<"AiMensagem"> | Date | string
   }
 
+  export type AssinaturaWhereInput = {
+    AND?: AssinaturaWhereInput | AssinaturaWhereInput[]
+    OR?: AssinaturaWhereInput[]
+    NOT?: AssinaturaWhereInput | AssinaturaWhereInput[]
+    id?: IntFilter<"Assinatura"> | number
+    vendaId?: IntFilter<"Assinatura"> | number
+    assinaturaStatus?: StringNullableFilter<"Assinatura"> | string | null
+    assinaturaEm?: DateTimeNullableFilter<"Assinatura"> | Date | string | null
+    venda?: XOR<VendaScalarRelationFilter, VendaWhereInput>
+  }
+
+  export type AssinaturaOrderByWithRelationInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    assinaturaStatus?: SortOrderInput | SortOrder
+    assinaturaEm?: SortOrderInput | SortOrder
+    venda?: VendaOrderByWithRelationInput
+  }
+
+  export type AssinaturaWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    vendaId?: number
+    AND?: AssinaturaWhereInput | AssinaturaWhereInput[]
+    OR?: AssinaturaWhereInput[]
+    NOT?: AssinaturaWhereInput | AssinaturaWhereInput[]
+    assinaturaStatus?: StringNullableFilter<"Assinatura"> | string | null
+    assinaturaEm?: DateTimeNullableFilter<"Assinatura"> | Date | string | null
+    venda?: XOR<VendaScalarRelationFilter, VendaWhereInput>
+  }, "id" | "vendaId">
+
+  export type AssinaturaOrderByWithAggregationInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    assinaturaStatus?: SortOrderInput | SortOrder
+    assinaturaEm?: SortOrderInput | SortOrder
+    _count?: AssinaturaCountOrderByAggregateInput
+    _avg?: AssinaturaAvgOrderByAggregateInput
+    _max?: AssinaturaMaxOrderByAggregateInput
+    _min?: AssinaturaMinOrderByAggregateInput
+    _sum?: AssinaturaSumOrderByAggregateInput
+  }
+
+  export type AssinaturaScalarWhereWithAggregatesInput = {
+    AND?: AssinaturaScalarWhereWithAggregatesInput | AssinaturaScalarWhereWithAggregatesInput[]
+    OR?: AssinaturaScalarWhereWithAggregatesInput[]
+    NOT?: AssinaturaScalarWhereWithAggregatesInput | AssinaturaScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"Assinatura"> | number
+    vendaId?: IntWithAggregatesFilter<"Assinatura"> | number
+    assinaturaStatus?: StringNullableWithAggregatesFilter<"Assinatura"> | string | null
+    assinaturaEm?: DateTimeNullableWithAggregatesFilter<"Assinatura"> | Date | string | null
+  }
+
+  export type NotificacaoWhereInput = {
+    AND?: NotificacaoWhereInput | NotificacaoWhereInput[]
+    OR?: NotificacaoWhereInput[]
+    NOT?: NotificacaoWhereInput | NotificacaoWhereInput[]
+    id?: IntFilter<"Notificacao"> | number
+    mensagem?: StringFilter<"Notificacao"> | string
+    lida?: BoolFilter<"Notificacao"> | boolean
+    criadoEm?: DateTimeFilter<"Notificacao"> | Date | string
+    link?: StringNullableFilter<"Notificacao"> | string | null
+  }
+
+  export type NotificacaoOrderByWithRelationInput = {
+    id?: SortOrder
+    mensagem?: SortOrder
+    lida?: SortOrder
+    criadoEm?: SortOrder
+    link?: SortOrderInput | SortOrder
+  }
+
+  export type NotificacaoWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: NotificacaoWhereInput | NotificacaoWhereInput[]
+    OR?: NotificacaoWhereInput[]
+    NOT?: NotificacaoWhereInput | NotificacaoWhereInput[]
+    mensagem?: StringFilter<"Notificacao"> | string
+    lida?: BoolFilter<"Notificacao"> | boolean
+    criadoEm?: DateTimeFilter<"Notificacao"> | Date | string
+    link?: StringNullableFilter<"Notificacao"> | string | null
+  }, "id">
+
+  export type NotificacaoOrderByWithAggregationInput = {
+    id?: SortOrder
+    mensagem?: SortOrder
+    lida?: SortOrder
+    criadoEm?: SortOrder
+    link?: SortOrderInput | SortOrder
+    _count?: NotificacaoCountOrderByAggregateInput
+    _avg?: NotificacaoAvgOrderByAggregateInput
+    _max?: NotificacaoMaxOrderByAggregateInput
+    _min?: NotificacaoMinOrderByAggregateInput
+    _sum?: NotificacaoSumOrderByAggregateInput
+  }
+
+  export type NotificacaoScalarWhereWithAggregatesInput = {
+    AND?: NotificacaoScalarWhereWithAggregatesInput | NotificacaoScalarWhereWithAggregatesInput[]
+    OR?: NotificacaoScalarWhereWithAggregatesInput[]
+    NOT?: NotificacaoScalarWhereWithAggregatesInput | NotificacaoScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"Notificacao"> | number
+    mensagem?: StringWithAggregatesFilter<"Notificacao"> | string
+    lida?: BoolWithAggregatesFilter<"Notificacao"> | boolean
+    criadoEm?: DateTimeWithAggregatesFilter<"Notificacao"> | Date | string
+    link?: StringNullableWithAggregatesFilter<"Notificacao"> | string | null
+  }
+
   export type ClienteCreateInput = {
     nome: string
     renda?: number | null
@@ -22527,19 +24917,17 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
   }
 
   export type VendaUncheckedCreateInput = {
@@ -22562,18 +24950,16 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
     documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaUncheckedCreateNestedOneWithoutVendaInput
   }
 
   export type VendaUpdateInput = {
@@ -22594,19 +24980,17 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateInput = {
@@ -22629,18 +25013,16 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUncheckedUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaCreateManyInput = {
@@ -22663,15 +25045,12 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
   }
 
   export type VendaUpdateManyMutationInput = {
@@ -22692,15 +25071,12 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type VendaUncheckedUpdateManyInput = {
@@ -22723,15 +25099,12 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type DocumentoCreateInput = {
@@ -23704,6 +26077,104 @@ export namespace Prisma {
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AssinaturaCreateInput = {
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
+    venda: VendaCreateNestedOneWithoutAssinaturaInput
+  }
+
+  export type AssinaturaUncheckedCreateInput = {
+    id?: number
+    vendaId: number
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
+  }
+
+  export type AssinaturaUpdateInput = {
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    venda?: VendaUpdateOneRequiredWithoutAssinaturaNestedInput
+  }
+
+  export type AssinaturaUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vendaId?: IntFieldUpdateOperationsInput | number
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AssinaturaCreateManyInput = {
+    id?: number
+    vendaId: number
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
+  }
+
+  export type AssinaturaUpdateManyMutationInput = {
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AssinaturaUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vendaId?: IntFieldUpdateOperationsInput | number
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type NotificacaoCreateInput = {
+    mensagem: string
+    lida?: boolean
+    criadoEm?: Date | string
+    link?: string | null
+  }
+
+  export type NotificacaoUncheckedCreateInput = {
+    id?: number
+    mensagem: string
+    lida?: boolean
+    criadoEm?: Date | string
+    link?: string | null
+  }
+
+  export type NotificacaoUpdateInput = {
+    mensagem?: StringFieldUpdateOperationsInput | string
+    lida?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NotificacaoUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    mensagem?: StringFieldUpdateOperationsInput | string
+    lida?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NotificacaoCreateManyInput = {
+    id?: number
+    mensagem: string
+    lida?: boolean
+    criadoEm?: Date | string
+    link?: string | null
+  }
+
+  export type NotificacaoUpdateManyMutationInput = {
+    mensagem?: StringFieldUpdateOperationsInput | string
+    lida?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NotificacaoUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    mensagem?: StringFieldUpdateOperationsInput | string
+    lida?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -24071,6 +26542,11 @@ export namespace Prisma {
     none?: DocumentoWhereInput
   }
 
+  export type AssinaturaNullableScalarRelationFilter = {
+    is?: AssinaturaWhereInput | null
+    isNot?: AssinaturaWhereInput | null
+  }
+
   export type ItemVendaOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -24103,15 +26579,12 @@ export namespace Prisma {
     excedeuLimite?: SortOrder
     temNota?: SortOrder
     taxaNota?: SortOrder
-    comprovantePdf?: SortOrder
     descontoEmFolha?: SortOrder
-    assinaturaToken?: SortOrder
-    assinaturaStatus?: SortOrder
-    assinaturaEm?: SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
+    assinaturaToken?: SortOrder
   }
 
   export type VendaAvgOrderByAggregateInput = {
@@ -24151,15 +26624,12 @@ export namespace Prisma {
     excedeuLimite?: SortOrder
     temNota?: SortOrder
     taxaNota?: SortOrder
-    comprovantePdf?: SortOrder
     descontoEmFolha?: SortOrder
-    assinaturaToken?: SortOrder
-    assinaturaStatus?: SortOrder
-    assinaturaEm?: SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
+    assinaturaToken?: SortOrder
   }
 
   export type VendaMinOrderByAggregateInput = {
@@ -24182,15 +26652,12 @@ export namespace Prisma {
     excedeuLimite?: SortOrder
     temNota?: SortOrder
     taxaNota?: SortOrder
-    comprovantePdf?: SortOrder
     descontoEmFolha?: SortOrder
-    assinaturaToken?: SortOrder
-    assinaturaStatus?: SortOrder
-    assinaturaEm?: SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
+    assinaturaToken?: SortOrder
   }
 
   export type VendaSumOrderByAggregateInput = {
@@ -24963,6 +27430,69 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
+  export type AssinaturaCountOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    assinaturaStatus?: SortOrder
+    assinaturaEm?: SortOrder
+  }
+
+  export type AssinaturaAvgOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+  }
+
+  export type AssinaturaMaxOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    assinaturaStatus?: SortOrder
+    assinaturaEm?: SortOrder
+  }
+
+  export type AssinaturaMinOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    assinaturaStatus?: SortOrder
+    assinaturaEm?: SortOrder
+  }
+
+  export type AssinaturaSumOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+  }
+
+  export type NotificacaoCountOrderByAggregateInput = {
+    id?: SortOrder
+    mensagem?: SortOrder
+    lida?: SortOrder
+    criadoEm?: SortOrder
+    link?: SortOrder
+  }
+
+  export type NotificacaoAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type NotificacaoMaxOrderByAggregateInput = {
+    id?: SortOrder
+    mensagem?: SortOrder
+    lida?: SortOrder
+    criadoEm?: SortOrder
+    link?: SortOrder
+  }
+
+  export type NotificacaoMinOrderByAggregateInput = {
+    id?: SortOrder
+    mensagem?: SortOrder
+    lida?: SortOrder
+    criadoEm?: SortOrder
+    link?: SortOrder
+  }
+
+  export type NotificacaoSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
   export type VendaCreateNestedManyWithoutClienteInput = {
     create?: XOR<VendaCreateWithoutClienteInput, VendaUncheckedCreateWithoutClienteInput> | VendaCreateWithoutClienteInput[] | VendaUncheckedCreateWithoutClienteInput[]
     connectOrCreate?: VendaCreateOrConnectWithoutClienteInput | VendaCreateOrConnectWithoutClienteInput[]
@@ -25084,6 +27614,12 @@ export namespace Prisma {
     connect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
   }
 
+  export type AssinaturaCreateNestedOneWithoutVendaInput = {
+    create?: XOR<AssinaturaCreateWithoutVendaInput, AssinaturaUncheckedCreateWithoutVendaInput>
+    connectOrCreate?: AssinaturaCreateOrConnectWithoutVendaInput
+    connect?: AssinaturaWhereUniqueInput
+  }
+
   export type ItemVendaUncheckedCreateNestedManyWithoutVendaInput = {
     create?: XOR<ItemVendaCreateWithoutVendaInput, ItemVendaUncheckedCreateWithoutVendaInput> | ItemVendaCreateWithoutVendaInput[] | ItemVendaUncheckedCreateWithoutVendaInput[]
     connectOrCreate?: ItemVendaCreateOrConnectWithoutVendaInput | ItemVendaCreateOrConnectWithoutVendaInput[]
@@ -25103,6 +27639,12 @@ export namespace Prisma {
     connectOrCreate?: DocumentoCreateOrConnectWithoutVendaInput | DocumentoCreateOrConnectWithoutVendaInput[]
     createMany?: DocumentoCreateManyVendaInputEnvelope
     connect?: DocumentoWhereUniqueInput | DocumentoWhereUniqueInput[]
+  }
+
+  export type AssinaturaUncheckedCreateNestedOneWithoutVendaInput = {
+    create?: XOR<AssinaturaCreateWithoutVendaInput, AssinaturaUncheckedCreateWithoutVendaInput>
+    connectOrCreate?: AssinaturaCreateOrConnectWithoutVendaInput
+    connect?: AssinaturaWhereUniqueInput
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -25165,6 +27707,16 @@ export namespace Prisma {
     deleteMany?: DocumentoScalarWhereInput | DocumentoScalarWhereInput[]
   }
 
+  export type AssinaturaUpdateOneWithoutVendaNestedInput = {
+    create?: XOR<AssinaturaCreateWithoutVendaInput, AssinaturaUncheckedCreateWithoutVendaInput>
+    connectOrCreate?: AssinaturaCreateOrConnectWithoutVendaInput
+    upsert?: AssinaturaUpsertWithoutVendaInput
+    disconnect?: AssinaturaWhereInput | boolean
+    delete?: AssinaturaWhereInput | boolean
+    connect?: AssinaturaWhereUniqueInput
+    update?: XOR<XOR<AssinaturaUpdateToOneWithWhereWithoutVendaInput, AssinaturaUpdateWithoutVendaInput>, AssinaturaUncheckedUpdateWithoutVendaInput>
+  }
+
   export type ItemVendaUncheckedUpdateManyWithoutVendaNestedInput = {
     create?: XOR<ItemVendaCreateWithoutVendaInput, ItemVendaUncheckedCreateWithoutVendaInput> | ItemVendaCreateWithoutVendaInput[] | ItemVendaUncheckedCreateWithoutVendaInput[]
     connectOrCreate?: ItemVendaCreateOrConnectWithoutVendaInput | ItemVendaCreateOrConnectWithoutVendaInput[]
@@ -25205,6 +27757,16 @@ export namespace Prisma {
     update?: DocumentoUpdateWithWhereUniqueWithoutVendaInput | DocumentoUpdateWithWhereUniqueWithoutVendaInput[]
     updateMany?: DocumentoUpdateManyWithWhereWithoutVendaInput | DocumentoUpdateManyWithWhereWithoutVendaInput[]
     deleteMany?: DocumentoScalarWhereInput | DocumentoScalarWhereInput[]
+  }
+
+  export type AssinaturaUncheckedUpdateOneWithoutVendaNestedInput = {
+    create?: XOR<AssinaturaCreateWithoutVendaInput, AssinaturaUncheckedCreateWithoutVendaInput>
+    connectOrCreate?: AssinaturaCreateOrConnectWithoutVendaInput
+    upsert?: AssinaturaUpsertWithoutVendaInput
+    disconnect?: AssinaturaWhereInput | boolean
+    delete?: AssinaturaWhereInput | boolean
+    connect?: AssinaturaWhereUniqueInput
+    update?: XOR<XOR<AssinaturaUpdateToOneWithWhereWithoutVendaInput, AssinaturaUpdateWithoutVendaInput>, AssinaturaUncheckedUpdateWithoutVendaInput>
   }
 
   export type VendaCreateNestedOneWithoutDocumentosInput = {
@@ -25307,6 +27869,20 @@ export namespace Prisma {
     update?: ProdutoUpdateWithWhereUniqueWithoutFornecedorInput | ProdutoUpdateWithWhereUniqueWithoutFornecedorInput[]
     updateMany?: ProdutoUpdateManyWithWhereWithoutFornecedorInput | ProdutoUpdateManyWithWhereWithoutFornecedorInput[]
     deleteMany?: ProdutoScalarWhereInput | ProdutoScalarWhereInput[]
+  }
+
+  export type VendaCreateNestedOneWithoutAssinaturaInput = {
+    create?: XOR<VendaCreateWithoutAssinaturaInput, VendaUncheckedCreateWithoutAssinaturaInput>
+    connectOrCreate?: VendaCreateOrConnectWithoutAssinaturaInput
+    connect?: VendaWhereUniqueInput
+  }
+
+  export type VendaUpdateOneRequiredWithoutAssinaturaNestedInput = {
+    create?: XOR<VendaCreateWithoutAssinaturaInput, VendaUncheckedCreateWithoutAssinaturaInput>
+    connectOrCreate?: VendaCreateOrConnectWithoutAssinaturaInput
+    upsert?: VendaUpsertWithoutAssinaturaInput
+    connect?: VendaWhereUniqueInput
+    update?: XOR<XOR<VendaUpdateToOneWithWhereWithoutAssinaturaInput, VendaUpdateWithoutAssinaturaInput>, VendaUncheckedUpdateWithoutAssinaturaInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -25638,18 +28214,16 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutClienteInput = {
@@ -25671,18 +28245,16 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
     documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaUncheckedCreateNestedOneWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutClienteInput = {
@@ -25734,15 +28306,12 @@ export namespace Prisma {
     excedeuLimite?: IntNullableFilter<"Venda"> | number | null
     temNota?: BoolFilter<"Venda"> | boolean
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
-    comprovantePdf?: StringNullableFilter<"Venda"> | string | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
-    assinaturaToken?: StringNullableFilter<"Venda"> | string | null
-    assinaturaStatus?: StringNullableFilter<"Venda"> | string | null
-    assinaturaEm?: DateTimeNullableFilter<"Venda"> | Date | string | null
     boleto?: BoolFilter<"Venda"> | boolean
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
+    assinaturaToken?: StringNullableFilter<"Venda"> | string | null
   }
 
   export type FornecedorCreateWithoutProdutosInput = {
@@ -25902,6 +28471,22 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type AssinaturaCreateWithoutVendaInput = {
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
+  }
+
+  export type AssinaturaUncheckedCreateWithoutVendaInput = {
+    id?: number
+    assinaturaStatus?: string | null
+    assinaturaEm?: Date | string | null
+  }
+
+  export type AssinaturaCreateOrConnectWithoutVendaInput = {
+    where: AssinaturaWhereUniqueInput
+    create: XOR<AssinaturaCreateWithoutVendaInput, AssinaturaUncheckedCreateWithoutVendaInput>
+  }
+
   export type ClienteUpsertWithoutVendasInput = {
     update: XOR<ClienteUpdateWithoutVendasInput, ClienteUncheckedUpdateWithoutVendasInput>
     create: XOR<ClienteCreateWithoutVendasInput, ClienteUncheckedCreateWithoutVendasInput>
@@ -26033,6 +28618,28 @@ export namespace Prisma {
     criadoEm?: DateTimeFilter<"Documento"> | Date | string
   }
 
+  export type AssinaturaUpsertWithoutVendaInput = {
+    update: XOR<AssinaturaUpdateWithoutVendaInput, AssinaturaUncheckedUpdateWithoutVendaInput>
+    create: XOR<AssinaturaCreateWithoutVendaInput, AssinaturaUncheckedCreateWithoutVendaInput>
+    where?: AssinaturaWhereInput
+  }
+
+  export type AssinaturaUpdateToOneWithWhereWithoutVendaInput = {
+    where?: AssinaturaWhereInput
+    data: XOR<AssinaturaUpdateWithoutVendaInput, AssinaturaUncheckedUpdateWithoutVendaInput>
+  }
+
+  export type AssinaturaUpdateWithoutVendaInput = {
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AssinaturaUncheckedUpdateWithoutVendaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type VendaCreateWithoutDocumentosInput = {
     uuid?: string | null
     dataVenda: Date | string
@@ -26051,18 +28658,16 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutDocumentosInput = {
@@ -26085,17 +28690,15 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaUncheckedCreateNestedOneWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutDocumentosInput = {
@@ -26132,18 +28735,16 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutDocumentosInput = {
@@ -26166,17 +28767,15 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUncheckedUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaCreateWithoutItensInput = {
@@ -26197,18 +28796,16 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutItensInput = {
@@ -26231,17 +28828,15 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
     documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaUncheckedCreateNestedOneWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutItensInput = {
@@ -26278,18 +28873,16 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutItensInput = {
@@ -26312,17 +28905,15 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUncheckedUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaCreateWithoutParcelasVencimentoInput = {
@@ -26343,18 +28934,16 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutParcelasVencimentoInput = {
@@ -26377,17 +28966,15 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaUncheckedCreateNestedOneWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutParcelasVencimentoInput = {
@@ -26424,18 +29011,16 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutParcelasVencimentoInput = {
@@ -26458,17 +29043,15 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUncheckedUpdateOneWithoutVendaNestedInput
   }
 
   export type ProdutoCreateWithoutFornecedorInput = {
@@ -26539,6 +29122,144 @@ export namespace Prisma {
     dataCompra?: DateTimeNullableFilter<"Produto"> | Date | string | null
   }
 
+  export type VendaCreateWithoutAssinaturaInput = {
+    uuid?: string | null
+    dataVenda: Date | string
+    vendedor?: string | null
+    produtoNome?: string | null
+    custoProduto?: number | null
+    quantidade?: number | null
+    valorVenda?: number | null
+    valorFrete?: number | null
+    custoEnvio?: number | null
+    parcelas?: number | null
+    valorParcela?: number | null
+    taxaFinanceiraValor?: number | null
+    lucroLiquido?: number | null
+    antecipada?: number | null
+    excedeuLimite?: number | null
+    temNota?: boolean
+    taxaNota?: number | null
+    descontoEmFolha?: boolean
+    boleto?: boolean
+    status?: string
+    asaasPaymentId?: string | null
+    boletoUrl?: string | null
+    assinaturaToken?: string | null
+    cliente?: ClienteCreateNestedOneWithoutVendasInput
+    itens?: ItemVendaCreateNestedManyWithoutVendaInput
+    parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoCreateNestedManyWithoutVendaInput
+  }
+
+  export type VendaUncheckedCreateWithoutAssinaturaInput = {
+    id?: number
+    uuid?: string | null
+    dataVenda: Date | string
+    vendedor?: string | null
+    clienteId?: number | null
+    produtoNome?: string | null
+    custoProduto?: number | null
+    quantidade?: number | null
+    valorVenda?: number | null
+    valorFrete?: number | null
+    custoEnvio?: number | null
+    parcelas?: number | null
+    valorParcela?: number | null
+    taxaFinanceiraValor?: number | null
+    lucroLiquido?: number | null
+    antecipada?: number | null
+    excedeuLimite?: number | null
+    temNota?: boolean
+    taxaNota?: number | null
+    descontoEmFolha?: boolean
+    boleto?: boolean
+    status?: string
+    asaasPaymentId?: string | null
+    boletoUrl?: string | null
+    assinaturaToken?: string | null
+    itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
+    parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
+  }
+
+  export type VendaCreateOrConnectWithoutAssinaturaInput = {
+    where: VendaWhereUniqueInput
+    create: XOR<VendaCreateWithoutAssinaturaInput, VendaUncheckedCreateWithoutAssinaturaInput>
+  }
+
+  export type VendaUpsertWithoutAssinaturaInput = {
+    update: XOR<VendaUpdateWithoutAssinaturaInput, VendaUncheckedUpdateWithoutAssinaturaInput>
+    create: XOR<VendaCreateWithoutAssinaturaInput, VendaUncheckedCreateWithoutAssinaturaInput>
+    where?: VendaWhereInput
+  }
+
+  export type VendaUpdateToOneWithWhereWithoutAssinaturaInput = {
+    where?: VendaWhereInput
+    data: XOR<VendaUpdateWithoutAssinaturaInput, VendaUncheckedUpdateWithoutAssinaturaInput>
+  }
+
+  export type VendaUpdateWithoutAssinaturaInput = {
+    uuid?: NullableStringFieldUpdateOperationsInput | string | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
+    custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantidade?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    valorFrete?: NullableFloatFieldUpdateOperationsInput | number | null
+    custoEnvio?: NullableFloatFieldUpdateOperationsInput | number | null
+    parcelas?: NullableIntFieldUpdateOperationsInput | number | null
+    valorParcela?: NullableFloatFieldUpdateOperationsInput | number | null
+    taxaFinanceiraValor?: NullableFloatFieldUpdateOperationsInput | number | null
+    lucroLiquido?: NullableFloatFieldUpdateOperationsInput | number | null
+    antecipada?: NullableIntFieldUpdateOperationsInput | number | null
+    excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
+    temNota?: BoolFieldUpdateOperationsInput | boolean
+    taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
+    descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    itens?: ItemVendaUpdateManyWithoutVendaNestedInput
+    parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUpdateManyWithoutVendaNestedInput
+  }
+
+  export type VendaUncheckedUpdateWithoutAssinaturaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uuid?: NullableStringFieldUpdateOperationsInput | string | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    clienteId?: NullableIntFieldUpdateOperationsInput | number | null
+    produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
+    custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantidade?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    valorFrete?: NullableFloatFieldUpdateOperationsInput | number | null
+    custoEnvio?: NullableFloatFieldUpdateOperationsInput | number | null
+    parcelas?: NullableIntFieldUpdateOperationsInput | number | null
+    valorParcela?: NullableFloatFieldUpdateOperationsInput | number | null
+    taxaFinanceiraValor?: NullableFloatFieldUpdateOperationsInput | number | null
+    lucroLiquido?: NullableFloatFieldUpdateOperationsInput | number | null
+    antecipada?: NullableIntFieldUpdateOperationsInput | number | null
+    excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
+    temNota?: BoolFieldUpdateOperationsInput | boolean
+    taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
+    descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    boleto?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
+    parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
+  }
+
   export type VendaCreateManyClienteInput = {
     id?: number
     uuid?: string | null
@@ -26558,15 +29279,12 @@ export namespace Prisma {
     excedeuLimite?: number | null
     temNota?: boolean
     taxaNota?: number | null
-    comprovantePdf?: string | null
     descontoEmFolha?: boolean
-    assinaturaToken?: string | null
-    assinaturaStatus?: string | null
-    assinaturaEm?: Date | string | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
+    assinaturaToken?: string | null
   }
 
   export type VendaUpdateWithoutClienteInput = {
@@ -26587,18 +29305,16 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutClienteInput = {
@@ -26620,18 +29336,16 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUncheckedUpdateOneWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateManyWithoutClienteInput = {
@@ -26653,15 +29367,12 @@ export namespace Prisma {
     excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
-    comprovantePdf?: NullableStringFieldUpdateOperationsInput | string | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
-    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    assinaturaEm?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ItemVendaCreateManyVendaInput = {
