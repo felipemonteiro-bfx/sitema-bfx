@@ -7,47 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2, AlertCircle, PenLine, X } from 'lucide-react';
 
-type ItemVenda = {
+type VendaInfo = {
   id: number;
-  produtoNome: string;
-  quantidade: number;
-  valorVenda: number;
-  subtotal: number;
+  cliente: { nome: string } | null;
 };
-
-type ParcelaVenc = {
-  numeroParcela: number;
-  dataVencimento: string;
-  valorParcela: number;
-};
-
-type VendaData = {
-  id: number;
-  dataVenda: string;
-  valorFrete?: number | null;
-  valorVenda?: number | null;
-  quantidade?: number | null;
-  parcelas?: number | null;
-  valorParcela?: number | null;
-  vendedor?: string | null;
-  descontoEmFolha?: boolean;
-  boleto?: boolean;
-  produtoNome?: string | null;
-  cliente: { nome: string; cpf?: string | null; cnpj?: string | null; matricula?: string | null } | null;
-  itens: ItemVenda[];
-  parcelasVencimento?: ParcelaVenc[];
-};
-
-const DEFAULT_AUTORIZACAO =
-  'RECIBO Eu, {CLIENTE}, mat. {MATRICULA}, confirmo a compra de: {PRODUTO}. Valor: R$ {VALOR} em {PARCELAS}x. Data: {DATA}. Estou ciente de que esse valor será descontado parceladamente na minha remuneração do mês seguinte à data da compra. Entendo que este desconto será efetuado de acordo com as regras e políticas estabelecidas na parceria da BFXSHOP e empresa conveniada. Além disso, estou ciente de que, em caso de rescisão do meu contrato de trabalho com a minha empresa, o valor remanescente, se houver, será descontado integralmente do valor a que eu tiver direito em minha rescisão, conforme previsto na legislação vigente. Esta autorização é concedida de livre e espontânea vontade, sem qualquer forma de coação ou pressão por parte da empresa.';
-
-function fillTemplate(template: string, data: Record<string, string>) {
-  return template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? '');
-}
 
 export default function AssinaturaPage() {
   const { token } = useParams();
-  const [venda, setVenda] = useState<VendaData | null>(null);
+  const [venda, setVenda] = useState<VendaInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,17 +33,16 @@ export default function AssinaturaPage() {
   }, [modalOpen]);
 
   useEffect(() => {
-    if (token) {
-      fetch(`/api/assinatura?token=${token}`)
-        .then((res) => {
-          if (res.status === 409) { setError('Esta venda já foi assinada.'); return null; }
-          if (!res.ok) throw new Error('Venda não encontrada ou erro no servidor.');
-          return res.json();
-        })
-        .then((data) => { if (data) setVenda(data); })
-        .catch(() => setError('Erro ao carregar os dados da venda.'))
-        .finally(() => setLoading(false));
-    }
+    if (!token) return;
+    fetch(`/api/assinatura?token=${token}`)
+      .then((res) => {
+        if (res.status === 409) { setError('Esta venda já foi assinada.'); return null; }
+        if (!res.ok) throw new Error('Venda não encontrada ou erro no servidor.');
+        return res.json();
+      })
+      .then((data) => { if (data) setVenda({ id: data.id, cliente: data.cliente }); })
+      .catch(() => setError('Erro ao carregar os dados da venda.'))
+      .finally(() => setLoading(false));
   }, [token]);
 
   const handleModalOk = () => {
@@ -106,13 +72,6 @@ export default function AssinaturaPage() {
       .finally(() => setSubmitting(false));
   };
 
-  const formatBRL = (val: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-
-  // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -124,7 +83,6 @@ export default function AssinaturaPage() {
     );
   }
 
-  // ── Success ───────────────────────────────────────────────────────────────
   if (isSigned) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -141,7 +99,6 @@ export default function AssinaturaPage() {
     );
   }
 
-  // ── Error (no venda) ──────────────────────────────────────────────────────
   if ((error && !venda) || !venda) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -158,214 +115,85 @@ export default function AssinaturaPage() {
     );
   }
 
-  // ── Derived values ────────────────────────────────────────────────────────
-  const subtotalProd = venda.itens?.length
-    ? venda.itens.reduce((s, i) => s + i.subtotal, 0)
-    : (venda.valorVenda ?? 0) * (venda.quantidade ?? 1);
-  const frete = venda.valorFrete ?? 0;
-  const total = subtotalProd + frete;
-  const nParcelas = venda.parcelas || 1;
-  const valorParc = venda.valorParcela || (nParcelas > 0 ? total / nParcelas : total);
-  const clienteDoc = venda.cliente?.cpf || venda.cliente?.cnpj || 'N/D';
-  const produtosTexto = venda.itens?.length
-    ? venda.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ''}`).join(', ')
-    : venda.produtoNome || 'N/D';
-  const formaPag = venda.boleto
-    ? `Boleto ${nParcelas}x`
-    : venda.descontoEmFolha
-      ? `Desconto em Folha ${nParcelas}x`
-      : 'À Vista';
-
-  const autorizacaoTexto = fillTemplate(DEFAULT_AUTORIZACAO, {
-    CLIENTE: venda.cliente?.nome || 'N/D',
-    MATRICULA: venda.cliente?.matricula || 'N/D',
-    PRODUTO: produtosTexto,
-    VALOR: formatBRL(total).replace('R$', '').trim(),
-    PARCELAS: String(nParcelas),
-    DATA: formatDate(venda.dataVenda),
-  });
-
-  const parcelas = venda.parcelasVencimento ?? [];
-
   return (
-    <div className="min-h-screen bg-gray-200 py-6 px-3">
-      {/* ── PDF-like document ───────────────────────────────────────────────── */}
-      <div className="max-w-2xl mx-auto bg-white shadow-lg text-[13px] text-gray-800" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
+    <div className="min-h-screen bg-gray-200 flex flex-col">
+      {/* PDF embed — ocupa toda a tela */}
+      <div className="flex-1 w-full" style={{ minHeight: '70vh' }}>
+        <iframe
+          src={`/api/assinatura/${token}/recibo`}
+          className="w-full h-full"
+          style={{ minHeight: '70vh', border: 'none' }}
+          title="Recibo de Autorização"
+        />
+      </div>
 
-        {/* Header — gray band */}
-        <div className="px-10 py-5" style={{ backgroundColor: '#f4f5f7' }}>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[15px] font-bold text-gray-900">BFX Manager</p>
-              <p className="text-[11px] text-gray-500 mt-0.5">Autorização de Desconto em Folha</p>
+      {/* Barra de ação fixa na parte inferior */}
+      <div className="bg-white border-t shadow-lg px-4 py-4">
+        {/* Área de assinatura */}
+        <div className="flex flex-col items-center gap-2 mb-3">
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
+            disabled={submitting}
+            className="w-full max-w-xs"
+          >
+            <div
+              className={`w-full border-2 border-dashed rounded flex items-center justify-center transition-colors min-h-[60px] ${
+                signatureDataUrl
+                  ? 'border-gray-300 bg-white'
+                  : 'border-gray-400 bg-gray-50 hover:bg-gray-100 cursor-pointer'
+              }`}
+            >
+              {signatureDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={signatureDataUrl} alt="Assinatura" className="max-h-[58px] object-contain" />
+              ) : (
+                <div className="flex items-center gap-2 text-gray-400 py-3">
+                  <PenLine className="h-5 w-5" />
+                  <span className="text-sm">Toque aqui para assinar</span>
+                </div>
+              )}
             </div>
-            <div className="text-right">
-              <p className="text-[11px] font-bold text-gray-700">Recibo #{venda.id}</p>
-              <p className="text-[10px] text-gray-500 mt-0.5">Data: {formatDate(venda.dataVenda)}</p>
-            </div>
-          </div>
+            <div className="w-full max-w-xs border-t border-gray-800 mt-1 mx-auto" />
+            <p className="text-xs text-gray-600 mt-0.5 text-center">
+              {venda.cliente?.nome || 'Assinatura do Cliente'}
+            </p>
+          </button>
         </div>
 
-        <div className="px-10 py-6 space-y-5">
-
-          {/* Detalhes da venda */}
-          <div>
-            <p className="text-[12px] font-bold text-gray-900 mb-2">Detalhes da venda</p>
-            {[
-              ['Data da compra', formatDate(venda.dataVenda)],
-              ['Cliente', venda.cliente?.nome || 'N/D'],
-              ['Documento', clienteDoc],
-              ['Vendedor', venda.vendedor || 'N/D'],
-              ['Produto', produtosTexto],
-            ].map(([label, value]) => (
-              <p key={label} className="text-[11px] text-gray-700 leading-5">
-                {label}: {value}
-              </p>
-            ))}
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-2 mb-2 text-sm text-red-600 justify-center">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{error}</span>
           </div>
+        )}
 
-          <div className="border-t border-gray-200" />
-
-          {/* Valores */}
-          <div>
-            <p className="text-[12px] font-bold text-gray-900 mb-2">Valores</p>
-            {[
-              ['Valor do produto', formatBRL(subtotalProd)],
-              ['Frete', formatBRL(frete)],
-              ['Total', formatBRL(total)],
-              [`Parcelas (${nParcelas}x)`, formatBRL(valorParc)],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between text-[11px] leading-5">
-                <span className="text-gray-700">{label}</span>
-                <span className="font-bold text-gray-900">{value}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-gray-200" />
-
-          {/* Parcelas table */}
-          {parcelas.length > 0 && (
-            <>
-              <div>
-                <p className="text-[12px] font-bold text-gray-900 mb-2">Parcelas</p>
-                <table className="w-full text-[10px] border border-gray-300">
-                  <thead>
-                    <tr style={{ backgroundColor: '#2e3d57', color: 'white' }}>
-                      <th className="text-right px-2 py-1.5 w-12">Dias</th>
-                      <th className="text-left px-2 py-1.5">Data vencimento</th>
-                      <th className="text-left px-2 py-1.5">Forma de pagamento</th>
-                      <th className="text-right px-2 py-1.5 w-20">Valor</th>
-                      <th className="text-left px-2 py-1.5 w-20">Observação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parcelas.map((pv, i) => {
-                      const dias = Math.round(
-                        (new Date(pv.dataVencimento).getTime() - new Date(venda.dataVenda).getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      );
-                      return (
-                        <tr key={pv.numeroParcela} style={{ backgroundColor: i % 2 !== 0 ? '#f8f8fa' : 'white' }}>
-                          <td className="text-right px-2 py-1 text-gray-700 border-b border-gray-200">{dias}</td>
-                          <td className="px-2 py-1 text-gray-700 border-b border-gray-200">{formatDate(pv.dataVencimento)}</td>
-                          <td className="px-2 py-1 text-gray-700 border-b border-gray-200">{formaPag}</td>
-                          <td className="text-right px-2 py-1 font-bold text-gray-900 border-b border-gray-200">{formatBRL(Math.trunc(pv.valorParcela * 100) / 100)}</td>
-                          <td className="px-2 py-1 border-b border-gray-200"></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div className="border-t border-gray-200" />
-            </>
+        {/* Buttons */}
+        <div className="flex gap-2 max-w-xs mx-auto">
+          {signatureDataUrl && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => { setSignatureDataUrl(null); sigCanvas.current?.clear(); }}
+              disabled={submitting}
+            >
+              Refazer
+            </Button>
           )}
-
-          {/* Autorização text */}
-          <div>
-            <p className="text-[12px] font-bold text-gray-900 mb-2">Autorização</p>
-            <p className="text-[10.5px] text-gray-700 leading-5 whitespace-pre-wrap">{autorizacaoTexto}</p>
-          </div>
-
-          {/* Footer note */}
-          <p className="text-[8px] text-gray-400 pt-2">
-            Documento gerado automaticamente pelo BFX Manager.
-          </p>
-
-          <div className="border-t border-gray-200" />
-
-          {/* Signature area */}
-          <div className="pb-4">
-            <div className="flex flex-col items-center gap-1 mt-2">
-              {/* Clickable signature zone */}
-              <button
-                type="button"
-                onClick={() => setModalOpen(true)}
-                disabled={submitting}
-                className="w-64 flex flex-col items-center"
-              >
-                <div
-                  className={`w-full border-2 border-dashed rounded flex items-center justify-center transition-colors min-h-[56px] ${
-                    signatureDataUrl
-                      ? 'border-gray-300 bg-white'
-                      : 'border-gray-400 bg-gray-50 hover:bg-gray-100 cursor-pointer'
-                  }`}
-                >
-                  {signatureDataUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={signatureDataUrl} alt="Assinatura" className="max-h-[54px] object-contain" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 text-gray-400 py-3">
-                      <PenLine className="h-5 w-5" />
-                      <span className="text-[10px]">Toque aqui para assinar</span>
-                    </div>
-                  )}
-                </div>
-                {/* Signature line */}
-                <div className="w-full border-t border-gray-900 mt-1" />
-                <p className="text-[10px] text-gray-700 mt-0.5">
-                  Assinatura: {venda.cliente?.nome || '________________________'}
-                </p>
-              </button>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="flex items-center gap-2 mt-3 text-sm text-red-600 justify-center">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 mt-4 justify-center">
-              {signatureDataUrl && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { setSignatureDataUrl(null); sigCanvas.current?.clear(); }}
-                  disabled={submitting}
-                >
-                  Refazer
-                </Button>
-              )}
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting || !signatureDataUrl}
-                className="px-8"
-              >
-                {submitting ? 'Enviando...' : 'Enviar Documento Assinado'}
-              </Button>
-            </div>
-          </div>
-
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting || !signatureDataUrl}
+            className="flex-1"
+          >
+            {submitting ? 'Enviando...' : 'Enviar Documento Assinado'}
+          </Button>
         </div>
       </div>
 
-      {/* ── Fullscreen signature modal ──────────────────────────────────────── */}
+      {/* Fullscreen signature modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 bg-white border-b">
