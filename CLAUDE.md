@@ -30,3 +30,4 @@
 ## Git
 - Sempre fazer `git pull --rebase` antes de push (CI faz commits automaticos no branch)
 - Branch `nextjs-migration` e ativo; nao fazer merge direto em `main` sem PR
+- **Sempre** fazer commit e push ao finalizar qualquer implementacao — nao deixar mudancas so locais
