@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
       include: {
         cliente: true,
         itens: true,
+        parcelasVencimento: { orderBy: { numeroParcela: 'asc' } },
       },
     });
 

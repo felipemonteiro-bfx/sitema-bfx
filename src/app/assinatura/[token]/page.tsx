@@ -15,13 +15,35 @@ type ItemVenda = {
   subtotal: number;
 };
 
+type ParcelaVenc = {
+  numeroParcela: number;
+  dataVencimento: string;
+  valorParcela: number;
+};
+
 type VendaData = {
   id: number;
   dataVenda: string;
   valorFrete?: number | null;
-  cliente: { nome: string } | null;
+  valorVenda?: number | null;
+  quantidade?: number | null;
+  parcelas?: number | null;
+  valorParcela?: number | null;
+  vendedor?: string | null;
+  descontoEmFolha?: boolean;
+  boleto?: boolean;
+  produtoNome?: string | null;
+  cliente: { nome: string; cpf?: string | null; cnpj?: string | null; matricula?: string | null } | null;
   itens: ItemVenda[];
+  parcelasVencimento?: ParcelaVenc[];
 };
+
+const DEFAULT_AUTORIZACAO =
+  'RECIBO Eu, {CLIENTE}, mat. {MATRICULA}, confirmo a compra de: {PRODUTO}. Valor: R$ {VALOR} em {PARCELAS}x. Data: {DATA}. Estou ciente de que esse valor será descontado parceladamente na minha remuneração do mês seguinte à data da compra. Entendo que este desconto será efetuado de acordo com as regras e políticas estabelecidas na parceria da BFXSHOP e empresa conveniada. Além disso, estou ciente de que, em caso de rescisão do meu contrato de trabalho com a minha empresa, o valor remanescente, se houver, será descontado integralmente do valor a que eu tiver direito em minha rescisão, conforme previsto na legislação vigente. Esta autorização é concedida de livre e espontânea vontade, sem qualquer forma de coação ou pressão por parte da empresa.';
+
+function fillTemplate(template: string, data: Record<string, string>) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? '');
+}
 
 export default function AssinaturaPage() {
   const { token } = useParams();
@@ -34,25 +56,20 @@ export default function AssinaturaPage() {
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const sigCanvas = useRef<SignatureCanvas>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const [canvasWidth, setCanvasWidth] = useState(300);
   const [canvasHeight, setCanvasHeight] = useState(500);
 
   useLayoutEffect(() => {
     if (!modalOpen) return;
-    // Use viewport dimensions directly since modal is fullscreen
     setCanvasWidth(window.innerWidth);
-    setCanvasHeight(window.innerHeight - 140); // subtract header + footer height
+    setCanvasHeight(window.innerHeight - 120);
   }, [modalOpen]);
 
   useEffect(() => {
     if (token) {
       fetch(`/api/assinatura?token=${token}`)
         .then((res) => {
-          if (res.status === 409) {
-            setError('Esta venda já foi assinada.');
-            return null;
-          }
+          if (res.status === 409) { setError('Esta venda já foi assinada.'); return null; }
           if (!res.ok) throw new Error('Venda não encontrada ou erro no servidor.');
           return res.json();
         })
@@ -75,10 +92,7 @@ export default function AssinaturaPage() {
   };
 
   const handleSubmit = () => {
-    if (!signatureDataUrl) {
-      setError('Por favor, assine o recibo antes de enviar.');
-      return;
-    }
+    if (!signatureDataUrl) { setError('Por favor, assine o documento antes de enviar.'); return; }
     setError(null);
     setSubmitting(true);
     fetch('/api/assinatura', {
@@ -86,33 +100,31 @@ export default function AssinaturaPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, signature: signatureDataUrl }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error('Falha ao enviar assinatura.');
-        return res.json();
-      })
+      .then((res) => { if (!res.ok) throw new Error('Falha ao enviar assinatura.'); return res.json(); })
       .then(() => setIsSigned(true))
       .catch((err) => setError(err.message))
       .finally(() => setSubmitting(false));
   };
 
-  const total = venda
-    ? venda.itens.reduce((s, i) => s + i.subtotal, 0) + (venda.valorFrete || 0)
-    : 0;
-
   const formatBRL = (val: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+  // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
-          <p className="text-muted-foreground text-sm">Carregando recibo...</p>
+          <p className="text-muted-foreground text-sm">Carregando documento...</p>
         </div>
       </div>
     );
   }
 
+  // ── Success ───────────────────────────────────────────────────────────────
   if (isSigned) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
@@ -129,7 +141,8 @@ export default function AssinaturaPage() {
     );
   }
 
-  if (error && !venda) {
+  // ── Error (no venda) ──────────────────────────────────────────────────────
+  if ((error && !venda) || !venda) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <Card className="max-w-sm w-full text-center">
@@ -137,7 +150,7 @@ export default function AssinaturaPage() {
             <AlertCircle className="h-16 w-16 text-amber-500 mx-auto" />
             <div>
               <h2 className="text-xl font-bold">Não foi possível carregar</h2>
-              <p className="text-sm text-muted-foreground mt-2">{error}</p>
+              <p className="text-sm text-muted-foreground mt-2">{error || 'Venda não encontrada.'}</p>
             </div>
           </CardContent>
         </Card>
@@ -145,195 +158,241 @@ export default function AssinaturaPage() {
     );
   }
 
-  if (!venda) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-        <Card className="max-w-sm w-full text-center">
-          <CardContent className="pt-8 pb-8">
-            <AlertCircle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
-            <p>Venda não encontrada.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // ── Derived values ────────────────────────────────────────────────────────
+  const subtotalProd = venda.itens?.length
+    ? venda.itens.reduce((s, i) => s + i.subtotal, 0)
+    : (venda.valorVenda ?? 0) * (venda.quantidade ?? 1);
+  const frete = venda.valorFrete ?? 0;
+  const total = subtotalProd + frete;
+  const nParcelas = venda.parcelas || 1;
+  const valorParc = venda.valorParcela || (nParcelas > 0 ? total / nParcelas : total);
+  const clienteDoc = venda.cliente?.cpf || venda.cliente?.cnpj || 'N/D';
+  const produtosTexto = venda.itens?.length
+    ? venda.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ''}`).join(', ')
+    : venda.produtoNome || 'N/D';
+  const formaPag = venda.boleto
+    ? `Boleto ${nParcelas}x`
+    : venda.descontoEmFolha
+      ? `Desconto em Folha ${nParcelas}x`
+      : 'À Vista';
+
+  const autorizacaoTexto = fillTemplate(DEFAULT_AUTORIZACAO, {
+    CLIENTE: venda.cliente?.nome || 'N/D',
+    MATRICULA: venda.cliente?.matricula || 'N/D',
+    PRODUTO: produtosTexto,
+    VALOR: formatBRL(total).replace('R$', '').trim(),
+    PARCELAS: String(nParcelas),
+    DATA: formatDate(venda.dataVenda),
+  });
+
+  const parcelas = venda.parcelasVencimento ?? [];
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4">
-      {/* Receipt document */}
-      <div className="max-w-lg mx-auto bg-white shadow-md rounded-sm font-mono text-sm">
-        {/* Header */}
-        <div className="border-b-2 border-black px-6 pt-6 pb-4 text-center">
-          <p className="text-xs tracking-widest uppercase text-gray-500 mb-1">Recibo de Autorização</p>
-          <h1 className="text-xl font-bold tracking-tight">DESCONTO EM FOLHA</h1>
-          <p className="text-xs text-gray-500 mt-1">Nº {String(venda.id).padStart(6, '0')}</p>
-        </div>
+    <div className="min-h-screen bg-gray-200 py-6 px-3">
+      {/* ── PDF-like document ───────────────────────────────────────────────── */}
+      <div className="max-w-2xl mx-auto bg-white shadow-lg text-[13px] text-gray-800" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>
 
-        <div className="px-6 py-4 space-y-4">
-          {/* Sale info */}
-          <div className="grid grid-cols-2 gap-1 text-xs border-b border-dashed border-gray-300 pb-3">
+        {/* Header — gray band */}
+        <div className="px-10 py-5" style={{ backgroundColor: '#f4f5f7' }}>
+          <div className="flex items-start justify-between">
             <div>
-              <span className="text-gray-500 uppercase tracking-wide">Cliente</span>
-              <p className="font-semibold mt-0.5">{venda.cliente?.nome || '—'}</p>
+              <p className="text-[15px] font-bold text-gray-900">BFX Manager</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">Autorização de Desconto em Folha</p>
             </div>
             <div className="text-right">
-              <span className="text-gray-500 uppercase tracking-wide">Data</span>
-              <p className="font-semibold mt-0.5">
-                {new Date(venda.dataVenda).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+              <p className="text-[11px] font-bold text-gray-700">Recibo #{venda.id}</p>
+              <p className="text-[10px] text-gray-500 mt-0.5">Data: {formatDate(venda.dataVenda)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-10 py-6 space-y-5">
+
+          {/* Detalhes da venda */}
+          <div>
+            <p className="text-[12px] font-bold text-gray-900 mb-2">Detalhes da venda</p>
+            {[
+              ['Data da compra', formatDate(venda.dataVenda)],
+              ['Cliente', venda.cliente?.nome || 'N/D'],
+              ['Documento', clienteDoc],
+              ['Vendedor', venda.vendedor || 'N/D'],
+              ['Produto', produtosTexto],
+            ].map(([label, value]) => (
+              <p key={label} className="text-[11px] text-gray-700 leading-5">
+                {label}: {value}
               </p>
-            </div>
+            ))}
           </div>
 
-          {/* Items */}
-          <div className="border-b border-dashed border-gray-300 pb-3">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Itens</p>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left pb-1 font-medium text-gray-500">Produto</th>
-                  <th className="text-center pb-1 font-medium text-gray-500 w-8">Qtd</th>
-                  <th className="text-right pb-1 font-medium text-gray-500">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {venda.itens.map((item) => (
-                  <tr key={item.id}>
-                    <td className="py-0.5">{item.produtoNome}</td>
-                    <td className="py-0.5 text-center text-gray-500">{item.quantidade}</td>
-                    <td className="py-0.5 text-right tabular-nums">{formatBRL(item.subtotal)}</td>
-                  </tr>
-                ))}
-                {(venda.valorFrete ?? 0) > 0 && (
-                  <tr>
-                    <td className="py-0.5 text-gray-500 italic" colSpan={2}>Frete</td>
-                    <td className="py-0.5 text-right tabular-nums">{formatBRL(venda.valorFrete!)}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="border-t border-gray-200" />
+
+          {/* Valores */}
+          <div>
+            <p className="text-[12px] font-bold text-gray-900 mb-2">Valores</p>
+            {[
+              ['Valor do produto', formatBRL(subtotalProd)],
+              ['Frete', formatBRL(frete)],
+              ['Total', formatBRL(total)],
+              [`Parcelas (${nParcelas}x)`, formatBRL(valorParc)],
+            ].map(([label, value]) => (
+              <div key={label} className="flex justify-between text-[11px] leading-5">
+                <span className="text-gray-700">{label}</span>
+                <span className="font-bold text-gray-900">{value}</span>
+              </div>
+            ))}
           </div>
 
-          {/* Total */}
-          <div className="flex justify-between items-center border-b-2 border-black pb-3">
-            <span className="font-bold uppercase tracking-wide">TOTAL</span>
-            <span className="font-bold text-lg tabular-nums">{formatBRL(total)}</span>
-          </div>
+          <div className="border-t border-gray-200" />
 
-          {/* Authorization text */}
-          <div className="text-xs text-gray-600 leading-relaxed">
-            <p>
-              Declaro que recebi os produtos acima e autorizo o desconto do valor de{' '}
-              <strong>{formatBRL(total)}</strong> em minha folha de pagamento, conforme acordado.
-            </p>
-          </div>
-
-          {/* Signature area */}
-          <div className="pt-2 pb-6">
-            <button
-              type="button"
-              onClick={() => setModalOpen(true)}
-              disabled={submitting}
-              className={`w-full border-2 border-dashed rounded-sm flex flex-col items-center justify-center transition-colors min-h-[80px] ${
-                signatureDataUrl
-                  ? 'border-gray-300 bg-white'
-                  : 'border-gray-400 bg-gray-50 hover:bg-gray-100 hover:border-gray-500 cursor-pointer'
-              }`}
-            >
-              {signatureDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={signatureDataUrl}
-                  alt="Assinatura"
-                  className="max-h-[72px] object-contain"
-                />
-              ) : (
-                <div className="flex flex-col items-center gap-1 text-gray-400 py-4">
-                  <PenLine className="h-6 w-6" />
-                  <span className="text-xs">Toque aqui para assinar</span>
-                </div>
-              )}
-            </button>
-
-            <div className="mt-1 border-t border-black pt-1">
-              <p className="text-[10px] text-center text-gray-500 uppercase tracking-wide">
-                {venda.cliente?.nome || 'Assinatura do Cliente'}
-              </p>
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
-            </div>
+          {/* Parcelas table */}
+          {parcelas.length > 0 && (
+            <>
+              <div>
+                <p className="text-[12px] font-bold text-gray-900 mb-2">Parcelas</p>
+                <table className="w-full text-[10px] border border-gray-300">
+                  <thead>
+                    <tr style={{ backgroundColor: '#2e3d57', color: 'white' }}>
+                      <th className="text-right px-2 py-1.5 w-12">Dias</th>
+                      <th className="text-left px-2 py-1.5">Data vencimento</th>
+                      <th className="text-left px-2 py-1.5">Forma de pagamento</th>
+                      <th className="text-right px-2 py-1.5 w-20">Valor</th>
+                      <th className="text-left px-2 py-1.5 w-20">Observação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parcelas.map((pv, i) => {
+                      const dias = Math.round(
+                        (new Date(pv.dataVencimento).getTime() - new Date(venda.dataVenda).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      );
+                      return (
+                        <tr key={pv.numeroParcela} style={{ backgroundColor: i % 2 !== 0 ? '#f8f8fa' : 'white' }}>
+                          <td className="text-right px-2 py-1 text-gray-700 border-b border-gray-200">{dias}</td>
+                          <td className="px-2 py-1 text-gray-700 border-b border-gray-200">{formatDate(pv.dataVencimento)}</td>
+                          <td className="px-2 py-1 text-gray-700 border-b border-gray-200">{formaPag}</td>
+                          <td className="text-right px-2 py-1 font-bold text-gray-900 border-b border-gray-200">{formatBRL(Math.trunc(pv.valorParcela * 100) / 100)}</td>
+                          <td className="px-2 py-1 border-b border-gray-200"></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="border-t border-gray-200" />
+            </>
           )}
 
-          {/* Submit */}
-          <div className="flex gap-2 pb-4">
-            {signatureDataUrl && (
+          {/* Autorização text */}
+          <div>
+            <p className="text-[12px] font-bold text-gray-900 mb-2">Autorização</p>
+            <p className="text-[10.5px] text-gray-700 leading-5 whitespace-pre-wrap">{autorizacaoTexto}</p>
+          </div>
+
+          {/* Footer note */}
+          <p className="text-[8px] text-gray-400 pt-2">
+            Documento gerado automaticamente pelo BFX Manager.
+          </p>
+
+          <div className="border-t border-gray-200" />
+
+          {/* Signature area */}
+          <div className="pb-4">
+            <div className="flex flex-col items-center gap-1 mt-2">
+              {/* Clickable signature zone */}
+              <button
+                type="button"
+                onClick={() => setModalOpen(true)}
+                disabled={submitting}
+                className="w-64 flex flex-col items-center"
+              >
+                <div
+                  className={`w-full border-2 border-dashed rounded flex items-center justify-center transition-colors min-h-[56px] ${
+                    signatureDataUrl
+                      ? 'border-gray-300 bg-white'
+                      : 'border-gray-400 bg-gray-50 hover:bg-gray-100 cursor-pointer'
+                  }`}
+                >
+                  {signatureDataUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={signatureDataUrl} alt="Assinatura" className="max-h-[54px] object-contain" />
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 text-gray-400 py-3">
+                      <PenLine className="h-5 w-5" />
+                      <span className="text-[10px]">Toque aqui para assinar</span>
+                    </div>
+                  )}
+                </div>
+                {/* Signature line */}
+                <div className="w-full border-t border-gray-900 mt-1" />
+                <p className="text-[10px] text-gray-700 mt-0.5">
+                  Assinatura: {venda.cliente?.nome || '________________________'}
+                </p>
+              </button>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="flex items-center gap-2 mt-3 text-sm text-red-600 justify-center">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 mt-4 justify-center">
+              {signatureDataUrl && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setSignatureDataUrl(null); sigCanvas.current?.clear(); }}
+                  disabled={submitting}
+                >
+                  Refazer
+                </Button>
+              )}
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => { setSignatureDataUrl(null); sigCanvas.current?.clear(); }}
-                disabled={submitting}
-                className="text-xs"
+                onClick={handleSubmit}
+                disabled={submitting || !signatureDataUrl}
+                className="px-8"
               >
-                Refazer
+                {submitting ? 'Enviando...' : 'Enviar Documento Assinado'}
               </Button>
-            )}
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={submitting || !signatureDataUrl}
-              className="flex-1"
-            >
-              {submitting ? 'Enviando...' : 'Enviar Recibo Assinado'}
-            </Button>
+            </div>
           </div>
+
         </div>
       </div>
 
-      {/* Full-screen signature modal */}
+      {/* ── Fullscreen signature modal ──────────────────────────────────────── */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col">
-          {/* Modal header */}
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 bg-white border-b">
-            <h2 className="font-semibold text-sm">Assine abaixo</h2>
+            <h2 className="font-semibold text-sm">Assine abaixo com o dedo</h2>
             <button type="button" onClick={handleModalCancel} className="p-1 rounded hover:bg-gray-100">
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          {/* Canvas area — fills remaining space */}
-          <div ref={wrapperRef} className="flex-1 bg-white overflow-hidden" style={{ touchAction: 'none' }}>
+          <div className="flex-1 bg-white overflow-hidden" style={{ touchAction: 'none' }}>
             <SignatureCanvas
               ref={sigCanvas}
               penColor="black"
               canvasProps={{
-                width: canvasWidth || 300,
-                height: canvasHeight || 500,
+                width: canvasWidth,
+                height: canvasHeight,
                 style: { display: 'block' },
               }}
             />
           </div>
 
-          {/* Modal footer */}
           <div className="flex gap-3 px-4 py-4 bg-white border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => sigCanvas.current?.clear()}
-              className="flex-1"
-            >
+            <Button type="button" variant="outline" onClick={() => sigCanvas.current?.clear()} className="flex-1">
               Limpar
             </Button>
-            <Button
-              type="button"
-              onClick={handleModalOk}
-              className="flex-1"
-            >
-              OK — Confirmar Assinatura
+            <Button type="button" onClick={handleModalOk} className="flex-1">
+              Confirmar Assinatura
             </Button>
           </div>
         </div>
