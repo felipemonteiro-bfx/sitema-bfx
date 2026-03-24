@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
+import SignatureCanvas from 'react-signature-canvas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
@@ -22,97 +23,6 @@ type VendaData = {
   itens: ItemVenda[];
 };
 
-function useSignatureCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
-  const hasStrokes = useRef(false);
-
-  const getPos = (e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const src = 'touches' in e ? e.touches[0] : e;
-    return {
-      x: (src.clientX - rect.left) * scaleX,
-      y: (src.clientY - rect.top) * scaleY,
-    };
-  };
-
-  const setupCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.scale(dpr, dpr);
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-    }
-  }, []);
-
-  const clear = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-    hasStrokes.current = false;
-  }, []);
-
-  const isEmpty = () => !hasStrokes.current;
-
-  const toDataURL = () => canvasRef.current?.toDataURL('image/png') ?? '';
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    setupCanvas();
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const start = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-      drawing.current = true;
-      const { x, y } = getPos(e, canvas);
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-    };
-    const move = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-      if (!drawing.current) return;
-      const { x, y } = getPos(e, canvas);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      hasStrokes.current = true;
-    };
-    const end = () => { drawing.current = false; };
-
-    canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', move);
-    canvas.addEventListener('mouseup', end);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove', move, { passive: false });
-    canvas.addEventListener('touchend', end);
-
-    return () => {
-      canvas.removeEventListener('mousedown', start);
-      canvas.removeEventListener('mousemove', move);
-      canvas.removeEventListener('mouseup', end);
-      canvas.removeEventListener('touchstart', start);
-      canvas.removeEventListener('touchmove', move);
-      canvas.removeEventListener('touchend', end);
-    };
-  }, [setupCanvas]);
-
-  return { canvasRef, clear, isEmpty, toDataURL };
-}
-
 export default function AssinaturaPage() {
   const { token } = useParams();
   const [venda, setVenda] = useState<VendaData | null>(null);
@@ -120,7 +30,15 @@ export default function AssinaturaPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSigned, setIsSigned] = useState(false);
-  const { canvasRef, clear, isEmpty, toDataURL } = useSignatureCanvas();
+  const sigCanvas = useRef<SignatureCanvas>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [canvasWidth, setCanvasWidth] = useState(300);
+
+  useEffect(() => {
+    if (wrapperRef.current) {
+      setCanvasWidth(wrapperRef.current.clientWidth);
+    }
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -140,7 +58,7 @@ export default function AssinaturaPage() {
   }, [token]);
 
   const handleSign = () => {
-    if (isEmpty()) {
+    if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
       setError('Por favor, assine no campo acima antes de enviar.');
       return;
     }
@@ -149,7 +67,7 @@ export default function AssinaturaPage() {
     fetch('/api/assinatura', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, signature: toDataURL() }),
+      body: JSON.stringify({ token, signature: sigCanvas.current.getTrimmedCanvas().toDataURL('image/png') }),
     })
       .then((res) => {
         if (!res.ok) throw new Error('Falha ao enviar assinatura.');
@@ -185,7 +103,7 @@ export default function AssinaturaPage() {
           <CardContent className="pt-8 pb-8 space-y-4">
             <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto" />
             <div>
-              <h2 className="text-xl font-bold text-foreground">Assinatura enviada com sucesso!</h2>
+              <h2 className="text-xl font-bold">Assinatura enviada com sucesso!</h2>
               <p className="text-sm text-muted-foreground mt-2">Você pode fechar esta página.</p>
             </div>
           </CardContent>
@@ -201,7 +119,7 @@ export default function AssinaturaPage() {
           <CardContent className="pt-8 pb-8 space-y-4">
             <AlertCircle className="h-16 w-16 text-amber-500 mx-auto" />
             <div>
-              <h2 className="text-xl font-bold text-foreground">Não foi possível carregar</h2>
+              <h2 className="text-xl font-bold">Não foi possível carregar</h2>
               <p className="text-sm text-muted-foreground mt-2">{error}</p>
             </div>
           </CardContent>
@@ -214,9 +132,9 @@ export default function AssinaturaPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-sm w-full text-center">
-          <CardContent className="pt-8 pb-8 space-y-4">
-            <AlertCircle className="h-16 w-16 text-amber-500 mx-auto" />
-            <p className="text-foreground">Venda não encontrada.</p>
+          <CardContent className="pt-8 pb-8">
+            <AlertCircle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
+            <p>Venda não encontrada.</p>
           </CardContent>
         </Card>
       </div>
@@ -232,10 +150,7 @@ export default function AssinaturaPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1 text-sm">
-              <p>
-                <span className="font-medium text-muted-foreground">Cliente:</span>{' '}
-                {venda.cliente?.nome || '—'}
-              </p>
+              <p><span className="font-medium text-muted-foreground">Cliente:</span> {venda.cliente?.nome || '—'}</p>
               <p>
                 <span className="font-medium text-muted-foreground">Data da Venda:</span>{' '}
                 {new Date(venda.dataVenda).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
@@ -262,11 +177,18 @@ export default function AssinaturaPage() {
               <p className="text-sm font-medium text-muted-foreground mb-2">
                 Assine abaixo para autorizar o desconto em folha:
               </p>
-              <canvas
-                ref={canvasRef}
-                className="w-full rounded-md border bg-white"
-                style={{ touchAction: 'none', height: '200px', display: 'block' }}
-              />
+              <div ref={wrapperRef} className="w-full rounded-md border bg-white" style={{ touchAction: 'none' }}>
+                <SignatureCanvas
+                  ref={sigCanvas}
+                  penColor="black"
+                  canvasProps={{
+                    width: canvasWidth || 300,
+                    height: 200,
+                    className: 'rounded-md',
+                    style: { width: '100%', height: '200px' },
+                  }}
+                />
+              </div>
               {error && (
                 <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -276,7 +198,7 @@ export default function AssinaturaPage() {
             </div>
 
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={clear} disabled={submitting}>
+              <Button type="button" variant="outline" onClick={() => sigCanvas.current?.clear()} disabled={submitting}>
                 Limpar
               </Button>
               <Button type="button" onClick={handleSign} disabled={submitting}>
