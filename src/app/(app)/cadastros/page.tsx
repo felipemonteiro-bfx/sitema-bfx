@@ -93,6 +93,7 @@ async function addProduto(formData: FormData) {
   "use server";
   const nome = normalizeUppercase(formData.get("nome"));
   if (!nome) return;
+  const dataCompraStr = String(formData.get("dataCompra") || "");
   const produto = await prisma.produto.create({
     data: {
       nome,
@@ -104,6 +105,7 @@ async function addProduto(formData: FormData) {
       qtdEstoque: Number(formData.get("estoque") || 0),
       imagem: String(formData.get("imagem") || ""),
       fornecedorId: formData.get("fornecedorId") ? Number(formData.get("fornecedorId")) : null,
+      dataCompra: dataCompraStr ? new Date(dataCompraStr) : null,
     },
   });
   await createAuditLog("produto:create", { produtoId: produto.id, nome });
@@ -117,6 +119,7 @@ async function updateProduto(formData: FormData) {
   if (!id || !nome) {
     throw new Error("Dados incompletos. Nome do produto e obrigatorio.");
   }
+  const dataCompraStr = String(formData.get("dataCompra") || "");
   await prisma.produto.update({
     where: { id },
     data: {
@@ -129,6 +132,7 @@ async function updateProduto(formData: FormData) {
       qtdEstoque: Number(formData.get("estoque") || 0),
       imagem: String(formData.get("imagem") || ""),
       fornecedorId: formData.get("fornecedorId") ? Number(formData.get("fornecedorId")) : null,
+      dataCompra: dataCompraStr ? new Date(dataCompraStr) : null,
     },
   });
   await createAuditLog("produto:update", { produtoId: id, nome });
@@ -256,7 +260,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   }) : null;
   const editProdutoData = editProdutoId ? await prisma.produto.findUnique({
     where: { id: editProdutoId },
-    select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+    select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, dataCompra: true, fornecedor: { select: { id: true, nome: true } } },
   }) : null;
   const editFornecedorData = editFornecedorId ? await prisma.fornecedor.findUnique({
     where: { id: editFornecedorId },
@@ -297,17 +301,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               { categoria: { contains: sp.q_produtos!, mode: 'insensitive' } },
             ],
           },
-          select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+          select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, dataCompra: true, fornecedor: { select: { id: true, nome: true } } },
         });
         const fullFuzzy = await prisma.produto.findMany({
           where: { id: { in: Array.from(fuzzyIds) } },
-          select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+          select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, dataCompra: true, fornecedor: { select: { id: true, nome: true } } },
           orderBy: { nome: "asc" },
         });
         return [...fullFuzzy, ...extraMatches];
       })()
     : await prisma.produto.findMany({
-        select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, fornecedor: { select: { id: true, nome: true } } },
+        select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, dataCompra: true, fornecedor: { select: { id: true, nome: true } } },
         orderBy: { nome: "asc" },
       });
 

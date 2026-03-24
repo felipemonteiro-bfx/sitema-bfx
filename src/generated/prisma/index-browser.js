@@ -148,7 +148,8 @@ exports.Prisma.ProdutoScalarFieldEnum = {
   imagem: 'imagem',
   fornecedorId: 'fornecedorId',
   qtdEstoque: 'qtdEstoque',
-  valorVenda: 'valorVenda'
+  valorVenda: 'valorVenda',
+  dataCompra: 'dataCompra'
 };
 
 exports.Prisma.VendaScalarFieldEnum = {

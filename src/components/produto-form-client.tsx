@@ -24,6 +24,7 @@ type ProdutoEdit = {
   qtdEstoque: number | null;
   imagem: string | null;
   fornecedorId: number | null;
+  dataCompra: Date | null;
 };
 
 const normalizeProductName = (value: string) => value.toLocaleUpperCase("pt-BR");
@@ -64,6 +65,7 @@ export default function ProdutoFormClient({
   const [imagemPath, setImagemPath] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fornecedorId, setFornecedorId] = useState('');
+  const [dataCompra, setDataCompra] = useState('');
 
   const [isUploading, setIsUploading] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
@@ -95,6 +97,7 @@ export default function ProdutoFormClient({
       setImagemPath(produto.imagem || '');
       setPreviewUrl(null);
       setFornecedorId(produto.fornecedorId != null ? String(produto.fornecedorId) : '');
+      setDataCompra(produto.dataCompra ? new Date(produto.dataCompra).toISOString().split('T')[0] : '');
     }
   }, [produto]);
 
@@ -207,6 +210,7 @@ export default function ProdutoFormClient({
     formData.append('estoque', estoque);
     formData.append('imagem', imagemPath);
     formData.append('fornecedorId', fornecedorId);
+    formData.append('dataCompra', dataCompra);
 
     const action = isEdit && onUpdateAction && produto ? onUpdateAction : onSuccessAction;
     if (isEdit && produto) {
@@ -235,6 +239,7 @@ export default function ProdutoFormClient({
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
         setFornecedorId('');
+        setDataCompra('');
         setIsDuplicate(false);
         setNcmSuggestions([]);
       }
@@ -340,6 +345,15 @@ export default function ProdutoFormClient({
                 onValueChange={setFornecedorId}
                 placeholder="Selecione o Fornecedor"
                 options={fornecedores.map((f) => ({ value: String(f.id), label: f.nome }))}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-muted-foreground">Data da Compra</Label>
+              <Input
+                type="date"
+                value={dataCompra}
+                onChange={(e) => setDataCompra(e.target.value)}
               />
             </div>
           </div>

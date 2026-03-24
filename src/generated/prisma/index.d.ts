@@ -3600,6 +3600,7 @@ export namespace Prisma {
     fornecedorId: number | null
     qtdEstoque: number | null
     valorVenda: number | null
+    dataCompra: Date | null
   }
 
   export type ProdutoMaxAggregateOutputType = {
@@ -3613,6 +3614,7 @@ export namespace Prisma {
     fornecedorId: number | null
     qtdEstoque: number | null
     valorVenda: number | null
+    dataCompra: Date | null
   }
 
   export type ProdutoCountAggregateOutputType = {
@@ -3626,6 +3628,7 @@ export namespace Prisma {
     fornecedorId: number
     qtdEstoque: number
     valorVenda: number
+    dataCompra: number
     _all: number
   }
 
@@ -3657,6 +3660,7 @@ export namespace Prisma {
     fornecedorId?: true
     qtdEstoque?: true
     valorVenda?: true
+    dataCompra?: true
   }
 
   export type ProdutoMaxAggregateInputType = {
@@ -3670,6 +3674,7 @@ export namespace Prisma {
     fornecedorId?: true
     qtdEstoque?: true
     valorVenda?: true
+    dataCompra?: true
   }
 
   export type ProdutoCountAggregateInputType = {
@@ -3683,6 +3688,7 @@ export namespace Prisma {
     fornecedorId?: true
     qtdEstoque?: true
     valorVenda?: true
+    dataCompra?: true
     _all?: true
   }
 
@@ -3783,6 +3789,7 @@ export namespace Prisma {
     fornecedorId: number | null
     qtdEstoque: number | null
     valorVenda: number | null
+    dataCompra: Date | null
     _count: ProdutoCountAggregateOutputType | null
     _avg: ProdutoAvgAggregateOutputType | null
     _sum: ProdutoSumAggregateOutputType | null
@@ -3815,6 +3822,7 @@ export namespace Prisma {
     fornecedorId?: boolean
     qtdEstoque?: boolean
     valorVenda?: boolean
+    dataCompra?: boolean
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
   }, ExtArgs["result"]["produto"]>
 
@@ -3829,6 +3837,7 @@ export namespace Prisma {
     fornecedorId?: boolean
     qtdEstoque?: boolean
     valorVenda?: boolean
+    dataCompra?: boolean
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
   }, ExtArgs["result"]["produto"]>
 
@@ -3843,6 +3852,7 @@ export namespace Prisma {
     fornecedorId?: boolean
     qtdEstoque?: boolean
     valorVenda?: boolean
+    dataCompra?: boolean
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
   }, ExtArgs["result"]["produto"]>
 
@@ -3857,9 +3867,10 @@ export namespace Prisma {
     fornecedorId?: boolean
     qtdEstoque?: boolean
     valorVenda?: boolean
+    dataCompra?: boolean
   }
 
-  export type ProdutoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "custoPadrao" | "marca" | "categoria" | "ncm" | "imagem" | "fornecedorId" | "qtdEstoque" | "valorVenda", ExtArgs["result"]["produto"]>
+  export type ProdutoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "custoPadrao" | "marca" | "categoria" | "ncm" | "imagem" | "fornecedorId" | "qtdEstoque" | "valorVenda" | "dataCompra", ExtArgs["result"]["produto"]>
   export type ProdutoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     fornecedor?: boolean | Produto$fornecedorArgs<ExtArgs>
   }
@@ -3886,6 +3897,7 @@ export namespace Prisma {
       fornecedorId: number | null
       qtdEstoque: number | null
       valorVenda: number | null
+      dataCompra: Date | null
     }, ExtArgs["result"]["produto"]>
     composites: {}
   }
@@ -4320,6 +4332,7 @@ export namespace Prisma {
     readonly fornecedorId: FieldRef<"Produto", 'Int'>
     readonly qtdEstoque: FieldRef<"Produto", 'Int'>
     readonly valorVenda: FieldRef<"Produto", 'Float'>
+    readonly dataCompra: FieldRef<"Produto", 'DateTime'>
   }
     
 
@@ -20633,7 +20646,8 @@ export namespace Prisma {
     imagem: 'imagem',
     fornecedorId: 'fornecedorId',
     qtdEstoque: 'qtdEstoque',
-    valorVenda: 'valorVenda'
+    valorVenda: 'valorVenda',
+    dataCompra: 'dataCompra'
   };
 
   export type ProdutoScalarFieldEnum = (typeof ProdutoScalarFieldEnum)[keyof typeof ProdutoScalarFieldEnum]
@@ -21112,6 +21126,7 @@ export namespace Prisma {
     fornecedorId?: IntNullableFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableFilter<"Produto"> | number | null
     valorVenda?: FloatNullableFilter<"Produto"> | number | null
+    dataCompra?: DateTimeNullableFilter<"Produto"> | Date | string | null
     fornecedor?: XOR<FornecedorNullableScalarRelationFilter, FornecedorWhereInput> | null
   }
 
@@ -21126,6 +21141,7 @@ export namespace Prisma {
     fornecedorId?: SortOrderInput | SortOrder
     qtdEstoque?: SortOrderInput | SortOrder
     valorVenda?: SortOrderInput | SortOrder
+    dataCompra?: SortOrderInput | SortOrder
     fornecedor?: FornecedorOrderByWithRelationInput
   }
 
@@ -21144,6 +21160,7 @@ export namespace Prisma {
     fornecedorId?: IntNullableFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableFilter<"Produto"> | number | null
     valorVenda?: FloatNullableFilter<"Produto"> | number | null
+    dataCompra?: DateTimeNullableFilter<"Produto"> | Date | string | null
     fornecedor?: XOR<FornecedorNullableScalarRelationFilter, FornecedorWhereInput> | null
   }, "id" | "nome_fornecedorId">
 
@@ -21158,6 +21175,7 @@ export namespace Prisma {
     fornecedorId?: SortOrderInput | SortOrder
     qtdEstoque?: SortOrderInput | SortOrder
     valorVenda?: SortOrderInput | SortOrder
+    dataCompra?: SortOrderInput | SortOrder
     _count?: ProdutoCountOrderByAggregateInput
     _avg?: ProdutoAvgOrderByAggregateInput
     _max?: ProdutoMaxOrderByAggregateInput
@@ -21179,6 +21197,7 @@ export namespace Prisma {
     fornecedorId?: IntNullableWithAggregatesFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableWithAggregatesFilter<"Produto"> | number | null
     valorVenda?: FloatNullableWithAggregatesFilter<"Produto"> | number | null
+    dataCompra?: DateTimeNullableWithAggregatesFilter<"Produto"> | Date | string | null
   }
 
   export type VendaWhereInput = {
@@ -22405,6 +22424,7 @@ export namespace Prisma {
     imagem?: string | null
     qtdEstoque?: number | null
     valorVenda?: number | null
+    dataCompra?: Date | string | null
     fornecedor?: FornecedorCreateNestedOneWithoutProdutosInput
   }
 
@@ -22419,6 +22439,7 @@ export namespace Prisma {
     fornecedorId?: number | null
     qtdEstoque?: number | null
     valorVenda?: number | null
+    dataCompra?: Date | string | null
   }
 
   export type ProdutoUpdateInput = {
@@ -22430,6 +22451,7 @@ export namespace Prisma {
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     fornecedor?: FornecedorUpdateOneWithoutProdutosNestedInput
   }
 
@@ -22444,6 +22466,7 @@ export namespace Prisma {
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ProdutoCreateManyInput = {
@@ -22457,6 +22480,7 @@ export namespace Prisma {
     fornecedorId?: number | null
     qtdEstoque?: number | null
     valorVenda?: number | null
+    dataCompra?: Date | string | null
   }
 
   export type ProdutoUpdateManyMutationInput = {
@@ -22468,6 +22492,7 @@ export namespace Prisma {
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ProdutoUncheckedUpdateManyInput = {
@@ -22481,6 +22506,7 @@ export namespace Prisma {
     fornecedorId?: NullableIntFieldUpdateOperationsInput | number | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type VendaCreateInput = {
@@ -23931,6 +23957,7 @@ export namespace Prisma {
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
     valorVenda?: SortOrder
+    dataCompra?: SortOrder
   }
 
   export type ProdutoAvgOrderByAggregateInput = {
@@ -23952,6 +23979,7 @@ export namespace Prisma {
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
     valorVenda?: SortOrder
+    dataCompra?: SortOrder
   }
 
   export type ProdutoMinOrderByAggregateInput = {
@@ -23965,6 +23993,7 @@ export namespace Prisma {
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
     valorVenda?: SortOrder
+    dataCompra?: SortOrder
   }
 
   export type ProdutoSumOrderByAggregateInput = {
@@ -26451,6 +26480,7 @@ export namespace Prisma {
     imagem?: string | null
     qtdEstoque?: number | null
     valorVenda?: number | null
+    dataCompra?: Date | string | null
   }
 
   export type ProdutoUncheckedCreateWithoutFornecedorInput = {
@@ -26463,6 +26493,7 @@ export namespace Prisma {
     imagem?: string | null
     qtdEstoque?: number | null
     valorVenda?: number | null
+    dataCompra?: Date | string | null
   }
 
   export type ProdutoCreateOrConnectWithoutFornecedorInput = {
@@ -26505,6 +26536,7 @@ export namespace Prisma {
     fornecedorId?: IntNullableFilter<"Produto"> | number | null
     qtdEstoque?: IntNullableFilter<"Produto"> | number | null
     valorVenda?: FloatNullableFilter<"Produto"> | number | null
+    dataCompra?: DateTimeNullableFilter<"Produto"> | Date | string | null
   }
 
   export type VendaCreateManyClienteInput = {
@@ -26747,6 +26779,7 @@ export namespace Prisma {
     imagem?: string | null
     qtdEstoque?: number | null
     valorVenda?: number | null
+    dataCompra?: Date | string | null
   }
 
   export type ProdutoUpdateWithoutFornecedorInput = {
@@ -26758,6 +26791,7 @@ export namespace Prisma {
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ProdutoUncheckedUpdateWithoutFornecedorInput = {
@@ -26770,6 +26804,7 @@ export namespace Prisma {
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ProdutoUncheckedUpdateManyWithoutFornecedorInput = {
@@ -26782,6 +26817,7 @@ export namespace Prisma {
     imagem?: NullableStringFieldUpdateOperationsInput | string | null
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
 

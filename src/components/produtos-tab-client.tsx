@@ -42,6 +42,7 @@ type ProdutoEdit = {
   qtdEstoque: number | null;
   imagem: string | null;
   fornecedorId: number | null;
+  dataCompra: Date | null;
 };
 
 type ProdutoListItem = ProdutoEdit & {
