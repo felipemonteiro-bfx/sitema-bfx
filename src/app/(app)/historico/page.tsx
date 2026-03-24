@@ -7,7 +7,8 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
+import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
@@ -429,9 +430,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       {v.assinatura?.assinaturaStatus === 'assinado' ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
                       ) : v.assinaturaToken ? (
-                        <Link href={`/assinatura/${v.assinaturaToken}`} target="_blank" title="Abrir link de assinatura">
-                          <AlertCircle className="h-4 w-4 text-amber-500 mx-auto" />
-                        </Link>
+                        <CopiarLinkAssinatura token={v.assinaturaToken} />
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}
