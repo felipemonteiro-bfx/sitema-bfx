@@ -11,7 +11,7 @@ import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 
 type ProdutoItem = {
   produtoNome: string;
@@ -42,7 +42,6 @@ type EditVendaData = {
   taxaNota: number | null;
   descontoEmFolha: boolean | null;
   boleto: boolean | null;
-  comprovantePdf: string | null;
   asaasPaymentId: string | null;
   boletoUrl: string | null;
   itens: ProdutoItem[];
@@ -141,20 +140,11 @@ export function EditVendaHistoricoForm({
         <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</label>
         <div className="flex flex-col gap-2">
           <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
-          {editVenda.comprovantePdf ? (
-            <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 px-2 py-1.5 rounded-md border border-emerald-100">
-              <CheckCircle2 className="h-3 w-3" />
-              Comprovante já enviado.
-              <a href={editVenda.comprovantePdf} target="_blank" className="font-bold underline flex items-center gap-1">
-                Ver atual <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 px-2 py-1.5 rounded-md border border-amber-100 animate-pulse">
-              <AlertCircle className="h-3 w-3" />
-              <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <a href={`/api/comprovante?vendaId=${editVenda.id}`} target="_blank" rel="noopener noreferrer" className="font-bold underline flex items-center gap-1 hover:text-foreground">
+              Ver comprovante assinado (se disponível) <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
         </div>
       </div>
 

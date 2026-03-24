@@ -1228,10 +1228,10 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const pendentes = await prisma.venda.findMany({
           where: {
             descontoEmFolha: true,
-            assinaturaStatus: "pendente",
+            assinatura: { assinaturaStatus: "pendente" },
             vendedor: whereVendedor ? { equals: whereVendedor } : undefined,
           },
-          include: { cliente: { select: { nome: true, telefone: true } } },
+          include: { cliente: { select: { nome: true, telefone: true } }, assinatura: true },
           orderBy: { dataVenda: "desc" },
           take: Math.min(Number(parsedParams?.limit || 50), 200),
         });

@@ -39,9 +39,8 @@ type EditVendaData = {
   taxaNota: number;
   descontoEmFolha: boolean;
   boleto: boolean;
-  comprovantePdf: string | null;
   assinaturaToken?: string | null;
-  assinaturaStatus?: string | null;
+  assinatura?: { assinaturaStatus: string | null } | null;
   boletoUrl: string | null;
   itens: Array<{
     id?: number;
@@ -238,7 +237,7 @@ export function EditVendaFormClient({
             <Label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</Label>
             <div className="flex flex-col gap-2">
               <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
-              {editVenda.comprovantePdf ? (
+              {editVenda.assinatura?.assinaturaStatus === "assinado" ? (
                 <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 px-2 py-1.5 rounded-md border border-emerald-100 dark:border-emerald-900/50">
                   <CheckCircle2 className="h-3 w-3 shrink-0" />
                   <span>Comprovante assinado.</span>
@@ -256,7 +255,7 @@ export function EditVendaFormClient({
                   </div>
                   <LinkAssinaturaButton
                     token={editVenda.assinaturaToken}
-                    status={editVenda.assinaturaStatus}
+                    status={editVenda.assinatura?.assinaturaStatus}
                     label="Copiar link de assinatura"
                     showQr
                   />

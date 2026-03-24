@@ -19,8 +19,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const [vendas, produtos, config] = await Promise.all([
-      prisma.venda.findMany({ select: { comprovantePdf: true } }),
+    const [produtos, config] = await Promise.all([
       prisma.produto.findMany({ select: { imagem: true } }),
       prisma.config.findFirst({ select: { logoPath: true } }),
     ]);
@@ -29,7 +28,6 @@ export async function GET(req: Request) {
     const addRef = (p: string) => {
       if (p) referenced.add(p.replace(/\\/g, "/"));
     };
-    vendas.forEach((v) => addRef(v.comprovantePdf ?? ""));
     produtos.forEach((p) => addRef(p.imagem ?? ""));
     if (config?.logoPath) addRef(config.logoPath);
 

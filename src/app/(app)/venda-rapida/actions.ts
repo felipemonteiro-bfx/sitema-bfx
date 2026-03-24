@@ -159,9 +159,15 @@ export async function criarVendaV2(
           descontoEmFolha: descontoEmFolha ?? false,
           boleto: boleto ?? false,
           assinaturaToken: assinaturaToken ?? undefined,
-          assinaturaStatus: descontoEmFolha ? "pendente" : undefined,
         },
       });
+
+      // 1b. Criar registro de Assinatura se desconto em folha
+      if (descontoEmFolha) {
+        await tx.assinatura.create({
+          data: { vendaId: vendaCriada.id, assinaturaStatus: "pendente" },
+        });
+      }
 
       // 2. Criar itens da venda
       await tx.itemVenda.createMany({

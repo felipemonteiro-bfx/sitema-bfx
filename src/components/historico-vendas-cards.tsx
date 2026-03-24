@@ -45,11 +45,11 @@ type Venda = {
   taxaNota: number | null;
   descontoEmFolha: boolean | null;
   boleto: boolean | null;
-  comprovantePdf: string | null;
   asaasPaymentId: string | null;
   boletoUrl: string | null;
   cliente: { nome: string } | null;
   custoProduto?: number | null;
+  assinatura?: { assinaturaStatus: string | null } | null;
   itens?: { produtoNome: string; custoProduto: number; quantidade: number; subtotal: number }[];
 };
 
@@ -213,8 +213,10 @@ function VendaCard({
                 </span>
                 <span>Assinado</span>
                 <span className="text-foreground">
-                  {venda.comprovantePdf ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  {venda.assinatura?.assinaturaStatus === "assinado" ? (
+                    <a href={`/api/comprovante?vendaId=${venda.id}`} target="_blank" rel="noopener noreferrer">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    </a>
                   ) : (
                     <AlertCircle className="h-4 w-4 text-amber-500" />
                   )}

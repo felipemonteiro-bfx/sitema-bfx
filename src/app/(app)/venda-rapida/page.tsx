@@ -15,7 +15,7 @@ export default async function Page() {
   const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
   const ultima = await prisma.venda.findFirst({
     orderBy: { id: "desc" },
-    include: { itens: true },
+    include: { itens: true, assinatura: true },
   });
 
   const vendedorOptions = vendedores.map((v) => ({
@@ -60,7 +60,7 @@ export default async function Page() {
               {ultima.descontoEmFolha && ultima.assinaturaToken && (
                 <LinkAssinaturaButton
                   token={ultima.assinaturaToken}
-                  status={ultima.assinaturaStatus}
+                  status={ultima.assinatura?.assinaturaStatus}
                   label="Link Assinatura"
                   showQr
                 />

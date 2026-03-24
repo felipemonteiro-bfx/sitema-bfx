@@ -3,9 +3,6 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import fs from "fs";
 
 export async function updateVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const id = Number(formData.get("id") || 0);
@@ -29,8 +26,6 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const quantidadeLegado = itens.length > 0 ? 0 : Number(formData.get("quantidade") || 1);
   const custoLegado = itens.length > 0 ? 0 : Number(formData.get("custo_prod") || 0);
 
-  const file = formData.get("comprovante") as File | null;
-
   if (!id || !data) return { success: false, error: "Dados inválidos." };
 
   const subtotal = itens.length > 0
@@ -42,29 +37,6 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
   const total = subtotal + frete;
   const lucro = total - (totalCusto + envio + valorDescontoNota);
-
-  let comprovantePath: string | undefined = undefined;
-
-  const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
-  if (file && file.size > 0 && file.name) {
-    const ext = path.extname(file.name).toLowerCase();
-    if (allowedExtensions.includes(ext)) {
-      try {
-        const uploadDir = path.join(process.cwd(), "public/uploads/recibos");
-        if (!fs.existsSync(uploadDir)) {
-          await mkdir(uploadDir, { recursive: true });
-        }
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const baseName = path.basename(file.name, ext).replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "") || "anexo";
-        const filename = `${id}-${Date.now()}-${baseName}${ext}`;
-        const filePath = path.join(uploadDir, filename);
-        await writeFile(filePath, buffer);
-        comprovantePath = `/uploads/recibos/${filename}`;
-      } catch (error) {
-        console.error("Erro ao fazer upload do comprovante:", error);
-      }
-    }
-  }
 
   try {
     await prisma.venda.update({
@@ -83,7 +55,6 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         lucroLiquido: lucro,
         descontoEmFolha,
         boleto,
-        ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
       },
     });
 
