@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { processarMensagemRecebida } from "@/lib/whatsapp-pre-atendimento";
+import { processarMensagemRecebida, marcarAtendimentoHumano } from "@/lib/whatsapp-pre-atendimento";
 
 function extrairTexto(msg: unknown): string | null {
   if (!msg || typeof msg !== "object") return null;
@@ -58,13 +58,20 @@ export async function POST(req: Request) {
       pushName?: string;
     };
 
+    const jid = extrairRemoteJid(d.key) || (d as { key?: { remoteJid?: string } }).key?.remoteJid;
+
     const fromMe = d.key?.fromMe === true;
-    if (fromMe) return NextResponse.json({ ok: true }, { status: 200 });
+    if (fromMe) {
+      // Admin enviou mensagem manualmente → marcar takeover humano
+      if (jid) {
+        const telefone = normalizarTelefone(jid);
+        void marcarAtendimentoHumano(telefone);
+      }
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
 
     const texto = extrairTexto(d.message);
     if (!texto || !texto.trim()) return NextResponse.json({ ok: true }, { status: 200 });
-
-    const jid = extrairRemoteJid(d.key) || (d as { key?: { remoteJid?: string } }).key?.remoteJid;
     if (!jid) return NextResponse.json({ ok: true }, { status: 200 });
 
     const telefone = normalizarTelefone(jid);

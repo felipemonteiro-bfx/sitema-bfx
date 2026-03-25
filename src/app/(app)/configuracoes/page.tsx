@@ -108,6 +108,7 @@ async function saveWhatsApp(formData: FormData) {
   const autoAgradecimento = formData.get("whatsappAutoAgradecimento") === "on" ? 1 : 0;
   const preAtendimento = formData.get("whatsappPreAtendimento") === "on" ? 1 : 0;
   const diasInativo = Math.max(30, Math.min(365, Number(formData.get("whatsappDiasInativo") || 60) || 60));
+  const takeoverMinutos = Math.max(5, Math.min(480, Number(formData.get("whatsappTakeoverMinutos") || 60) || 60));
   const cfg = await prisma.config.findFirst();
   const data = {
     evolutionApiUrl: url || null,
@@ -125,6 +126,7 @@ async function saveWhatsApp(formData: FormData) {
     whatsappAutoAgradecimento: autoAgradecimento,
     whatsappDiasInativo: diasInativo,
     whatsappPreAtendimento: preAtendimento,
+    whatsappTakeoverMinutos: takeoverMinutos,
   };
   if (cfg) {
     await prisma.config.update({ where: { id: cfg.id }, data });
@@ -553,6 +555,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                         <label htmlFor="whatsappPreAtendimento" className="text-sm font-medium">
                           Pré-atendimento por IA
+                        </label>
+                      </div>
+                      <div className="flex items-center gap-2 pl-6">
+                        <input
+                          type="number"
+                          id="whatsappTakeoverMinutos"
+                          name="whatsappTakeoverMinutos"
+                          min={5}
+                          max={480}
+                          defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappTakeoverMinutos) || 60)}
+                          className="h-8 w-16 rounded border border-border px-2 text-sm"
+                        />
+                        <label htmlFor="whatsappTakeoverMinutos" className="text-sm">
+                          minutos de pausa após atendente assumir (padrão: 60)
                         </label>
                       </div>
                       <p className="text-xs text-muted-foreground pl-6">

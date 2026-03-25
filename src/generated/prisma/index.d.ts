@@ -2555,6 +2555,7 @@ export namespace Prisma {
     endereco: string | null
     email: string | null
     asaasCustomerId: string | null
+    atendimentoHumanoAt: Date | null
   }
 
   export type ClienteMaxAggregateOutputType = {
@@ -2572,6 +2573,7 @@ export namespace Prisma {
     endereco: string | null
     email: string | null
     asaasCustomerId: string | null
+    atendimentoHumanoAt: Date | null
   }
 
   export type ClienteCountAggregateOutputType = {
@@ -2589,6 +2591,7 @@ export namespace Prisma {
     endereco: number
     email: number
     asaasCustomerId: number
+    atendimentoHumanoAt: number
     _all: number
   }
 
@@ -2618,6 +2621,7 @@ export namespace Prisma {
     endereco?: true
     email?: true
     asaasCustomerId?: true
+    atendimentoHumanoAt?: true
   }
 
   export type ClienteMaxAggregateInputType = {
@@ -2635,6 +2639,7 @@ export namespace Prisma {
     endereco?: true
     email?: true
     asaasCustomerId?: true
+    atendimentoHumanoAt?: true
   }
 
   export type ClienteCountAggregateInputType = {
@@ -2652,6 +2657,7 @@ export namespace Prisma {
     endereco?: true
     email?: true
     asaasCustomerId?: true
+    atendimentoHumanoAt?: true
     _all?: true
   }
 
@@ -2756,6 +2762,7 @@ export namespace Prisma {
     endereco: string | null
     email: string | null
     asaasCustomerId: string | null
+    atendimentoHumanoAt: Date | null
     _count: ClienteCountAggregateOutputType | null
     _avg: ClienteAvgAggregateOutputType | null
     _sum: ClienteSumAggregateOutputType | null
@@ -2792,6 +2799,7 @@ export namespace Prisma {
     endereco?: boolean
     email?: boolean
     asaasCustomerId?: boolean
+    atendimentoHumanoAt?: boolean
     vendas?: boolean | Cliente$vendasArgs<ExtArgs>
     _count?: boolean | ClienteCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cliente"]>
@@ -2811,6 +2819,7 @@ export namespace Prisma {
     endereco?: boolean
     email?: boolean
     asaasCustomerId?: boolean
+    atendimentoHumanoAt?: boolean
   }, ExtArgs["result"]["cliente"]>
 
   export type ClienteSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2828,6 +2837,7 @@ export namespace Prisma {
     endereco?: boolean
     email?: boolean
     asaasCustomerId?: boolean
+    atendimentoHumanoAt?: boolean
   }, ExtArgs["result"]["cliente"]>
 
   export type ClienteSelectScalar = {
@@ -2845,9 +2855,10 @@ export namespace Prisma {
     endereco?: boolean
     email?: boolean
     asaasCustomerId?: boolean
+    atendimentoHumanoAt?: boolean
   }
 
-  export type ClienteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "renda" | "empresa" | "matricula" | "telefone" | "cpf" | "cnpj" | "tipo" | "dataNascimento" | "cep" | "endereco" | "email" | "asaasCustomerId", ExtArgs["result"]["cliente"]>
+  export type ClienteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "renda" | "empresa" | "matricula" | "telefone" | "cpf" | "cnpj" | "tipo" | "dataNascimento" | "cep" | "endereco" | "email" | "asaasCustomerId" | "atendimentoHumanoAt", ExtArgs["result"]["cliente"]>
   export type ClienteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     vendas?: boolean | Cliente$vendasArgs<ExtArgs>
     _count?: boolean | ClienteCountOutputTypeDefaultArgs<ExtArgs>
@@ -2875,6 +2886,7 @@ export namespace Prisma {
       endereco: string | null
       email: string | null
       asaasCustomerId: string | null
+      atendimentoHumanoAt: Date | null
     }, ExtArgs["result"]["cliente"]>
     composites: {}
   }
@@ -3313,6 +3325,7 @@ export namespace Prisma {
     readonly endereco: FieldRef<"Cliente", 'String'>
     readonly email: FieldRef<"Cliente", 'String'>
     readonly asaasCustomerId: FieldRef<"Cliente", 'String'>
+    readonly atendimentoHumanoAt: FieldRef<"Cliente", 'DateTime'>
   }
     
 
@@ -9919,6 +9932,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    whatsappTakeoverMinutos: number | null
   }
 
   export type ConfigSumAggregateOutputType = {
@@ -9935,6 +9949,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    whatsappTakeoverMinutos: number | null
   }
 
   export type ConfigMinAggregateOutputType = {
@@ -9961,6 +9976,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    whatsappTakeoverMinutos: number | null
     aiProvider: string | null
     litellmUrl: string | null
     litellmKey: string | null
@@ -9992,6 +10008,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    whatsappTakeoverMinutos: number | null
     aiProvider: string | null
     litellmUrl: string | null
     litellmKey: string | null
@@ -10023,6 +10040,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number
     whatsappDiasInativo: number
     whatsappPreAtendimento: number
+    whatsappTakeoverMinutos: number
     aiProvider: number
     litellmUrl: number
     litellmKey: number
@@ -10046,6 +10064,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    whatsappTakeoverMinutos?: true
   }
 
   export type ConfigSumAggregateInputType = {
@@ -10062,6 +10081,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    whatsappTakeoverMinutos?: true
   }
 
   export type ConfigMinAggregateInputType = {
@@ -10088,6 +10108,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    whatsappTakeoverMinutos?: true
     aiProvider?: true
     litellmUrl?: true
     litellmKey?: true
@@ -10119,6 +10140,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    whatsappTakeoverMinutos?: true
     aiProvider?: true
     litellmUrl?: true
     litellmKey?: true
@@ -10150,6 +10172,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: true
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
+    whatsappTakeoverMinutos?: true
     aiProvider?: true
     litellmUrl?: true
     litellmKey?: true
@@ -10268,6 +10291,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento: number | null
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
+    whatsappTakeoverMinutos: number | null
     aiProvider: string | null
     litellmUrl: string | null
     litellmKey: string | null
@@ -10318,6 +10342,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    whatsappTakeoverMinutos?: boolean
     aiProvider?: boolean
     litellmUrl?: boolean
     litellmKey?: boolean
@@ -10349,6 +10374,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    whatsappTakeoverMinutos?: boolean
     aiProvider?: boolean
     litellmUrl?: boolean
     litellmKey?: boolean
@@ -10380,6 +10406,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    whatsappTakeoverMinutos?: boolean
     aiProvider?: boolean
     litellmUrl?: boolean
     litellmKey?: boolean
@@ -10411,6 +10438,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: boolean
     whatsappDiasInativo?: boolean
     whatsappPreAtendimento?: boolean
+    whatsappTakeoverMinutos?: boolean
     aiProvider?: boolean
     litellmUrl?: boolean
     litellmKey?: boolean
@@ -10418,7 +10446,7 @@ export namespace Prisma {
     litellmEnableThinking?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento" | "aiProvider" | "litellmUrl" | "litellmKey" | "litellmModel" | "litellmEnableThinking", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento" | "whatsappTakeoverMinutos" | "aiProvider" | "litellmUrl" | "litellmKey" | "litellmModel" | "litellmEnableThinking", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -10447,6 +10475,7 @@ export namespace Prisma {
       whatsappAutoAgradecimento: number | null
       whatsappDiasInativo: number | null
       whatsappPreAtendimento: number | null
+      whatsappTakeoverMinutos: number | null
       aiProvider: string | null
       litellmUrl: string | null
       litellmKey: string | null
@@ -10898,6 +10927,7 @@ export namespace Prisma {
     readonly whatsappAutoAgradecimento: FieldRef<"Config", 'Int'>
     readonly whatsappDiasInativo: FieldRef<"Config", 'Int'>
     readonly whatsappPreAtendimento: FieldRef<"Config", 'Int'>
+    readonly whatsappTakeoverMinutos: FieldRef<"Config", 'Int'>
     readonly aiProvider: FieldRef<"Config", 'String'>
     readonly litellmUrl: FieldRef<"Config", 'String'>
     readonly litellmKey: FieldRef<"Config", 'String'>
@@ -22908,7 +22938,8 @@ export namespace Prisma {
     cep: 'cep',
     endereco: 'endereco',
     email: 'email',
-    asaasCustomerId: 'asaasCustomerId'
+    asaasCustomerId: 'asaasCustomerId',
+    atendimentoHumanoAt: 'atendimentoHumanoAt'
   };
 
   export type ClienteScalarFieldEnum = (typeof ClienteScalarFieldEnum)[keyof typeof ClienteScalarFieldEnum]
@@ -23025,6 +23056,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento: 'whatsappAutoAgradecimento',
     whatsappDiasInativo: 'whatsappDiasInativo',
     whatsappPreAtendimento: 'whatsappPreAtendimento',
+    whatsappTakeoverMinutos: 'whatsappTakeoverMinutos',
     aiProvider: 'aiProvider',
     litellmUrl: 'litellmUrl',
     litellmKey: 'litellmKey',
@@ -23324,6 +23356,7 @@ export namespace Prisma {
     endereco?: StringNullableFilter<"Cliente"> | string | null
     email?: StringNullableFilter<"Cliente"> | string | null
     asaasCustomerId?: StringNullableFilter<"Cliente"> | string | null
+    atendimentoHumanoAt?: DateTimeNullableFilter<"Cliente"> | Date | string | null
     vendas?: VendaListRelationFilter
   }
 
@@ -23342,6 +23375,7 @@ export namespace Prisma {
     endereco?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     asaasCustomerId?: SortOrderInput | SortOrder
+    atendimentoHumanoAt?: SortOrderInput | SortOrder
     vendas?: VendaOrderByRelationAggregateInput
   }
 
@@ -23363,6 +23397,7 @@ export namespace Prisma {
     endereco?: StringNullableFilter<"Cliente"> | string | null
     email?: StringNullableFilter<"Cliente"> | string | null
     asaasCustomerId?: StringNullableFilter<"Cliente"> | string | null
+    atendimentoHumanoAt?: DateTimeNullableFilter<"Cliente"> | Date | string | null
     vendas?: VendaListRelationFilter
   }, "id" | "nome">
 
@@ -23381,6 +23416,7 @@ export namespace Prisma {
     endereco?: SortOrderInput | SortOrder
     email?: SortOrderInput | SortOrder
     asaasCustomerId?: SortOrderInput | SortOrder
+    atendimentoHumanoAt?: SortOrderInput | SortOrder
     _count?: ClienteCountOrderByAggregateInput
     _avg?: ClienteAvgOrderByAggregateInput
     _max?: ClienteMaxOrderByAggregateInput
@@ -23406,6 +23442,7 @@ export namespace Prisma {
     endereco?: StringNullableWithAggregatesFilter<"Cliente"> | string | null
     email?: StringNullableWithAggregatesFilter<"Cliente"> | string | null
     asaasCustomerId?: StringNullableWithAggregatesFilter<"Cliente"> | string | null
+    atendimentoHumanoAt?: DateTimeNullableWithAggregatesFilter<"Cliente"> | Date | string | null
   }
 
   export type ProdutoWhereInput = {
@@ -23893,6 +23930,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
     whatsappPreAtendimento?: IntNullableFilter<"Config"> | number | null
+    whatsappTakeoverMinutos?: IntNullableFilter<"Config"> | number | null
     aiProvider?: StringNullableFilter<"Config"> | string | null
     litellmUrl?: StringNullableFilter<"Config"> | string | null
     litellmKey?: StringNullableFilter<"Config"> | string | null
@@ -23924,6 +23962,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrderInput | SortOrder
     whatsappDiasInativo?: SortOrderInput | SortOrder
     whatsappPreAtendimento?: SortOrderInput | SortOrder
+    whatsappTakeoverMinutos?: SortOrderInput | SortOrder
     aiProvider?: SortOrderInput | SortOrder
     litellmUrl?: SortOrderInput | SortOrder
     litellmKey?: SortOrderInput | SortOrder
@@ -23958,6 +23997,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: IntNullableFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableFilter<"Config"> | number | null
     whatsappPreAtendimento?: IntNullableFilter<"Config"> | number | null
+    whatsappTakeoverMinutos?: IntNullableFilter<"Config"> | number | null
     aiProvider?: StringNullableFilter<"Config"> | string | null
     litellmUrl?: StringNullableFilter<"Config"> | string | null
     litellmKey?: StringNullableFilter<"Config"> | string | null
@@ -23989,6 +24029,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrderInput | SortOrder
     whatsappDiasInativo?: SortOrderInput | SortOrder
     whatsappPreAtendimento?: SortOrderInput | SortOrder
+    whatsappTakeoverMinutos?: SortOrderInput | SortOrder
     aiProvider?: SortOrderInput | SortOrder
     litellmUrl?: SortOrderInput | SortOrder
     litellmKey?: SortOrderInput | SortOrder
@@ -24028,6 +24069,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: IntNullableWithAggregatesFilter<"Config"> | number | null
     whatsappDiasInativo?: IntNullableWithAggregatesFilter<"Config"> | number | null
     whatsappPreAtendimento?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    whatsappTakeoverMinutos?: IntNullableWithAggregatesFilter<"Config"> | number | null
     aiProvider?: StringNullableWithAggregatesFilter<"Config"> | string | null
     litellmUrl?: StringNullableWithAggregatesFilter<"Config"> | string | null
     litellmKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
@@ -24699,6 +24741,7 @@ export namespace Prisma {
     endereco?: string | null
     email?: string | null
     asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
     vendas?: VendaCreateNestedManyWithoutClienteInput
   }
 
@@ -24717,6 +24760,7 @@ export namespace Prisma {
     endereco?: string | null
     email?: string | null
     asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
     vendas?: VendaUncheckedCreateNestedManyWithoutClienteInput
   }
 
@@ -24734,6 +24778,7 @@ export namespace Prisma {
     endereco?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     vendas?: VendaUpdateManyWithoutClienteNestedInput
   }
 
@@ -24752,6 +24797,7 @@ export namespace Prisma {
     endereco?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     vendas?: VendaUncheckedUpdateManyWithoutClienteNestedInput
   }
 
@@ -24770,6 +24816,7 @@ export namespace Prisma {
     endereco?: string | null
     email?: string | null
     asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
   }
 
   export type ClienteUpdateManyMutationInput = {
@@ -24786,6 +24833,7 @@ export namespace Prisma {
     endereco?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ClienteUncheckedUpdateManyInput = {
@@ -24803,6 +24851,7 @@ export namespace Prisma {
     endereco?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ProdutoCreateInput = {
@@ -25328,6 +25377,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
     whatsappPreAtendimento?: number | null
+    whatsappTakeoverMinutos?: number | null
     aiProvider?: string | null
     litellmUrl?: string | null
     litellmKey?: string | null
@@ -25359,6 +25409,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
     whatsappPreAtendimento?: number | null
+    whatsappTakeoverMinutos?: number | null
     aiProvider?: string | null
     litellmUrl?: string | null
     litellmKey?: string | null
@@ -25389,6 +25440,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappTakeoverMinutos?: NullableIntFieldUpdateOperationsInput | number | null
     aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25420,6 +25472,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappTakeoverMinutos?: NullableIntFieldUpdateOperationsInput | number | null
     aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25451,6 +25504,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: number | null
     whatsappDiasInativo?: number | null
     whatsappPreAtendimento?: number | null
+    whatsappTakeoverMinutos?: number | null
     aiProvider?: string | null
     litellmUrl?: string | null
     litellmKey?: string | null
@@ -25481,6 +25535,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappTakeoverMinutos?: NullableIntFieldUpdateOperationsInput | number | null
     aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -25512,6 +25567,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappDiasInativo?: NullableIntFieldUpdateOperationsInput | number | null
     whatsappPreAtendimento?: NullableIntFieldUpdateOperationsInput | number | null
+    whatsappTakeoverMinutos?: NullableIntFieldUpdateOperationsInput | number | null
     aiProvider?: NullableStringFieldUpdateOperationsInput | string | null
     litellmUrl?: NullableStringFieldUpdateOperationsInput | string | null
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
@@ -26268,6 +26324,7 @@ export namespace Prisma {
     endereco?: SortOrder
     email?: SortOrder
     asaasCustomerId?: SortOrder
+    atendimentoHumanoAt?: SortOrder
   }
 
   export type ClienteAvgOrderByAggregateInput = {
@@ -26290,6 +26347,7 @@ export namespace Prisma {
     endereco?: SortOrder
     email?: SortOrder
     asaasCustomerId?: SortOrder
+    atendimentoHumanoAt?: SortOrder
   }
 
   export type ClienteMinOrderByAggregateInput = {
@@ -26307,6 +26365,7 @@ export namespace Prisma {
     endereco?: SortOrder
     email?: SortOrder
     asaasCustomerId?: SortOrder
+    atendimentoHumanoAt?: SortOrder
   }
 
   export type ClienteSumOrderByAggregateInput = {
@@ -26931,6 +26990,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    whatsappTakeoverMinutos?: SortOrder
     aiProvider?: SortOrder
     litellmUrl?: SortOrder
     litellmKey?: SortOrder
@@ -26952,6 +27012,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    whatsappTakeoverMinutos?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -26978,6 +27039,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    whatsappTakeoverMinutos?: SortOrder
     aiProvider?: SortOrder
     litellmUrl?: SortOrder
     litellmKey?: SortOrder
@@ -27009,6 +27071,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    whatsappTakeoverMinutos?: SortOrder
     aiProvider?: SortOrder
     litellmUrl?: SortOrder
     litellmKey?: SortOrder
@@ -27030,6 +27093,7 @@ export namespace Prisma {
     whatsappAutoAgradecimento?: SortOrder
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
+    whatsappTakeoverMinutos?: SortOrder
   }
 
   export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -28366,6 +28430,7 @@ export namespace Prisma {
     endereco?: string | null
     email?: string | null
     asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
   }
 
   export type ClienteUncheckedCreateWithoutVendasInput = {
@@ -28383,6 +28448,7 @@ export namespace Prisma {
     endereco?: string | null
     email?: string | null
     asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
   }
 
   export type ClienteCreateOrConnectWithoutVendasInput = {
@@ -28512,6 +28578,7 @@ export namespace Prisma {
     endereco?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ClienteUncheckedUpdateWithoutVendasInput = {
@@ -28529,6 +28596,7 @@ export namespace Prisma {
     endereco?: NullableStringFieldUpdateOperationsInput | string | null
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ItemVendaUpsertWithWhereUniqueWithoutVendaInput = {

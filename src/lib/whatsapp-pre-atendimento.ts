@@ -1,6 +1,5 @@
 /**
- * IA de pré-atendimento WhatsApp: usa catálogo de produtos para responder clientes.
- * Integra com runAi (OpenAI/Gemini) e enviarWhatsAppTexto.
+ * IA de atendimento pessoal WhatsApp: personalizada por cliente com controle humano.
  */
 
 import { prisma } from "@/lib/db";
@@ -11,60 +10,131 @@ import { formatBRL } from "@/lib/utils";
 const MAX_RESPONSE_CHARS = 1500;
 const CATALOG_LIMIT = 80;
 
-/** Monta resumo do catálogo para contexto da IA */
-export async function obterCatalogoParaIA(search?: string): Promise<string> {
+/** Normaliza telefone para comparação (remove formatação, garante 11 dígitos locais) */
+function normalizarParaBusca(tel: string): string[] {
+  const digits = tel.replace(/\D/g, "");
+  const variants: string[] = [digits];
+  // sem 55
+  if (digits.startsWith("55") && digits.length >= 12) {
+    variants.push(digits.slice(2)); // 92984520689
+  }
+  // com 55
+  if (!digits.startsWith("55") && digits.length >= 10) {
+    variants.push("55" + digits);
+  }
+  // sem nono dígito (92 9XXXX → 92 XXXX)
+  for (const v of [...variants]) {
+    const local = v.startsWith("55") ? v.slice(2) : v;
+    if (local.length === 11 && local[2] === "9") {
+      const sem9 = local.slice(0, 2) + local.slice(3);
+      variants.push(sem9);
+      variants.push("55" + sem9);
+    }
+    if (local.length === 10) {
+      variants.push(local.slice(0, 2) + "9" + local.slice(2));
+      variants.push("55" + local.slice(0, 2) + "9" + local.slice(2));
+    }
+  }
+  return [...new Set(variants)];
+}
+
+/** Busca cliente pelo telefone (tenta múltiplos formatos) */
+async function buscarClientePorTelefone(telefone: string) {
+  const variants = normalizarParaBusca(telefone);
+  for (const v of variants) {
+    // busca parcial: o número do banco pode ter formatação diferente
+    const cliente = await prisma.cliente.findFirst({
+      where: { telefone: { contains: v.replace(/^55/, "") } },
+      include: {
+        vendas: {
+          orderBy: { id: "desc" },
+          take: 5,
+          include: {
+            itens: {
+              include: { produto: { select: { nome: true, categoria: true } } },
+            },
+          },
+        },
+      },
+    });
+    if (cliente) return cliente;
+  }
+  return null;
+}
+
+/** Monta contexto do cliente para a IA */
+function montarContextoCliente(cliente: Awaited<ReturnType<typeof buscarClientePorTelefone>>) {
+  if (!cliente) return null;
+
+  const compras = cliente.vendas.map((v) => {
+    const produtos = v.itens.map((i) => i.produto?.nome || "item").join(", ");
+    return `- ${produtos}`;
+  });
+
+  const categorias = [
+    ...new Set(
+      cliente.vendas.flatMap((v) =>
+        v.itens.map((i) => i.produto?.categoria).filter(Boolean)
+      )
+    ),
+  ] as string[];
+
+  return {
+    nome: cliente.nome.split(" ")[0], // primeiro nome
+    nomeCompleto: cliente.nome,
+    totalCompras: cliente.vendas.length,
+    ultimasCompras: compras.slice(0, 5),
+    categoriasFavoritas: categorias.slice(0, 4),
+  };
+}
+
+/** Monta catálogo com destaque para categorias do cliente */
+async function obterCatalogoPersonalizado(categoriasFavoritas?: string[]): Promise<string> {
   const produtos = await prisma.produto.findMany({
-    where: search
-      ? { nome: { contains: search, mode: "insensitive" } }
-      : undefined,
+    where: { qtdEstoque: { gt: 0 } },
     select: { nome: true, categoria: true, valorVenda: true, qtdEstoque: true, marca: true },
     orderBy: { nome: "asc" },
     take: CATALOG_LIMIT,
   });
-  if (produtos.length === 0) {
-    return "Nenhum produto cadastrado no momento.";
-  }
-  const linhas = produtos.map((p) => {
-    const preco = p.valorVenda != null ? formatBRL(p.valorVenda) : "consulte";
-    const estoque = p.qtdEstoque != null ? `estoque: ${p.qtdEstoque}` : "";
-    const cat = p.categoria ? ` | ${p.categoria}` : "";
-    return `- ${p.nome}${cat} | ${preco} ${estoque}`.trim();
-  });
-  return linhas.join("\n");
+
+  if (produtos.length === 0) return "Nenhum produto disponível no momento.";
+
+  // Ordena: categorias favoritas do cliente primeiro
+  const ordenados = categoriasFavoritas?.length
+    ? [
+        ...produtos.filter((p) => categoriasFavoritas.includes(p.categoria || "")),
+        ...produtos.filter((p) => !categoriasFavoritas.includes(p.categoria || "")),
+      ]
+    : produtos;
+
+  return ordenados
+    .map((p) => {
+      const preco = p.valorVenda != null ? formatBRL(p.valorVenda) : "consulte";
+      const cat = p.categoria ? ` [${p.categoria}]` : "";
+      return `- ${p.nome}${cat} | ${preco}`;
+    })
+    .join("\n");
 }
 
-const SYSTEM_PROMPT = `Você é um assistente de pré-atendimento amigável da BFX Shop.
-Responda de forma curta e amigável em português do Brasil.
-Use os dados do catálogo abaixo para informar produtos, preços e disponibilidade.
-Se o cliente pedir para falar com um humano ou vendedor, diga: "Entendido! Um vendedor entrará em contato em breve. Obrigado por falar conosco."
-Mantenha a resposta concisa (idealmente até 4-5 linhas) para WhatsApp. Não exceda ${MAX_RESPONSE_CHARS} caracteres.`;
+/** Verifica se está em modo atendimento humano */
+async function estaEmModoHumano(clienteId: number, takeoverMinutos: number): Promise<boolean> {
+  const cliente = await prisma.cliente.findUnique({
+    where: { id: clienteId },
+    select: { atendimentoHumanoAt: true },
+  });
+  if (!(cliente as { atendimentoHumanoAt?: Date | null })?.atendimentoHumanoAt) return false;
+  const diffMs = Date.now() - (cliente as { atendimentoHumanoAt: Date }).atendimentoHumanoAt.getTime();
+  return diffMs < takeoverMinutos * 60 * 1000;
+}
 
-/** Gera resposta da IA para a mensagem do cliente */
-export async function gerarRespostaPreAtendimento(
-  mensagemCliente: string,
-  nomeContato?: string
-): Promise<string> {
-  const search = mensagemCliente.trim().length > 2 ? mensagemCliente.trim() : undefined;
-  const catalogo = await obterCatalogoParaIA(search);
-
-  const provider = "gemini";
-  const cfg = await prisma.config.findFirst();
-  if (!cfg?.geminiKey) return "Chave Gemini não configurada.";
-
-  const ctx = nomeContato ? `Cliente: ${nomeContato}. ` : "";
-  const userPrompt = `${ctx}Mensagem recebida: "${mensagemCliente}"
-
-CATÁLOGO DE PRODUTOS (nome, categoria, preço, estoque):
-${catalogo}
-
-Responda de forma amigável e objetiva baseado na mensagem e no catálogo.`;
-
-  const fullPrompt = `${SYSTEM_PROMPT}\n\n${userPrompt}`;
-  let resposta = await runAi(fullPrompt, provider);
-  if (resposta.length > MAX_RESPONSE_CHARS) {
-    resposta = resposta.slice(0, MAX_RESPONSE_CHARS - 3) + "...";
-  }
-  return resposta || "Em que posso ajudar? Consulte nosso catálogo de produtos.";
+/** Marca cliente como em atendimento humano */
+export async function marcarAtendimentoHumano(telefone: string): Promise<void> {
+  const cliente = await buscarClientePorTelefone(telefone);
+  if (!cliente) return;
+  await prisma.cliente.update({
+    where: { id: cliente.id },
+    data: { atendimentoHumanoAt: new Date() } as Record<string, unknown>,
+  });
 }
 
 /** Processa mensagem recebida e envia resposta via WhatsApp */
@@ -72,17 +142,62 @@ export async function processarMensagemRecebida(
   telefone: string,
   mensagem: string,
   nomeContato?: string
-): Promise<{ ok: boolean; error?: string }> {
-  if (!mensagem || typeof mensagem !== "string") {
-    return { ok: false, error: "Mensagem vazia" };
-  }
+): Promise<{ ok: boolean; humano?: boolean; error?: string }> {
+  if (!mensagem?.trim()) return { ok: false, error: "Mensagem vazia" };
+
   try {
-    const resposta = await gerarRespostaPreAtendimento(mensagem, nomeContato);
-    const enviado = await enviarWhatsAppTexto(telefone, resposta);
-    return enviado ? { ok: true } : { ok: false, error: "Falha ao enviar via Evolution" };
+    const cfg = await prisma.config.findFirst();
+    const takeoverMinutos = (cfg as { whatsappTakeoverMinutos?: number | null })
+      ?.whatsappTakeoverMinutos ?? 60;
+
+    // Busca cliente cadastrado
+    const cliente = await buscarClientePorTelefone(telefone);
+
+    // Verifica modo humano
+    if (cliente) {
+      const humano = await estaEmModoHumano(cliente.id, takeoverMinutos);
+      if (humano) return { ok: true, humano: true };
+    }
+
+    const ctx = montarContextoCliente(cliente);
+    const catalogo = await obterCatalogoPersonalizado(ctx?.categoriasFavoritas);
+    const nome = ctx?.nome || nomeContato || "cliente";
+
+    const systemPrompt = `Você é um assistente virtual pessoal da BFX Shop, falando diretamente com ${ctx?.nomeCompleto || nomeContato || "um cliente"}.
+Trate-o sempre pelo primeiro nome: ${nome}.
+Seja amigável, breve e objetivo — respostas curtas para WhatsApp (até 4-5 linhas, máx ${MAX_RESPONSE_CHARS} chars).
+Você tem acesso apenas aos dados do próprio cliente, nunca mencione outros clientes.
+Se pedir para falar com humano ou vendedor: diga "Perfeito, ${nome}! Vou chamar um vendedor, aguarda um instante." e nada mais.
+${
+  ctx
+    ? `
+DADOS DO CLIENTE:
+- Nome: ${ctx.nomeCompleto}
+- Total de compras: ${ctx.totalCompras}
+- Últimas compras: ${ctx.ultimasCompras.join("; ") || "nenhuma ainda"}
+- Categorias que mais compra: ${ctx.categoriasFavoritas.join(", ") || "variadas"}
+`
+    : `CLIENTE: Visitante (não cadastrado). Convide-o a conhecer nossos produtos.`
+}`;
+
+    const userPrompt = `Mensagem de ${nome}: "${mensagem}"
+
+CATÁLOGO DISPONÍVEL (em estoque):
+${catalogo}
+
+Responda de forma personalizada baseado no histórico e na mensagem.`;
+
+    let resposta = await runAi(`${systemPrompt}\n\n${userPrompt}`, "gemini");
+    if (resposta.length > MAX_RESPONSE_CHARS) {
+      resposta = resposta.slice(0, MAX_RESPONSE_CHARS - 3) + "...";
+    }
+
+    const enviado = await enviarWhatsAppTexto(telefone, resposta || `Olá, ${nome}! Como posso ajudar?`);
+    return enviado ? { ok: true } : { ok: false, error: "Falha ao enviar" };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
     console.error("[PreAtendimento] Erro:", err);
-    return { ok: false, error: msg };
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
+
+export { obterCatalogoPersonalizado as obterCatalogoParaIA };

@@ -135,7 +135,8 @@ exports.Prisma.ClienteScalarFieldEnum = {
   cep: 'cep',
   endereco: 'endereco',
   email: 'email',
-  asaasCustomerId: 'asaasCustomerId'
+  asaasCustomerId: 'asaasCustomerId',
+  atendimentoHumanoAt: 'atendimentoHumanoAt'
 };
 
 exports.Prisma.ProdutoScalarFieldEnum = {
@@ -234,6 +235,7 @@ exports.Prisma.ConfigScalarFieldEnum = {
   whatsappAutoAgradecimento: 'whatsappAutoAgradecimento',
   whatsappDiasInativo: 'whatsappDiasInativo',
   whatsappPreAtendimento: 'whatsappPreAtendimento',
+  whatsappTakeoverMinutos: 'whatsappTakeoverMinutos',
   aiProvider: 'aiProvider',
   litellmUrl: 'litellmUrl',
   litellmKey: 'litellmKey',

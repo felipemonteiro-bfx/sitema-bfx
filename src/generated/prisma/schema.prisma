@@ -9,21 +9,22 @@ datasource db {
 }
 
 model Cliente {
-  id              Int       @id @default(autoincrement())
-  nome            String    @unique
-  renda           Float?
-  empresa         String?
-  matricula       String?
-  telefone        String?
-  cpf             String?
-  cnpj            String?
-  tipo            String?
-  dataNascimento  DateTime? @map("data_nascimento")
-  cep             String?
-  endereco        String?
-  email           String?
-  asaasCustomerId String?   @map("asaas_customer_id")
-  vendas          Venda[]
+  id                  Int       @id @default(autoincrement())
+  nome                String    @unique
+  renda               Float?
+  empresa             String?
+  matricula           String?
+  telefone            String?
+  cpf                 String?
+  cnpj                String?
+  tipo                String?
+  dataNascimento      DateTime? @map("data_nascimento")
+  cep                 String?
+  endereco            String?
+  email               String?
+  asaasCustomerId     String?   @map("asaas_customer_id")
+  atendimentoHumanoAt DateTime? @map("atendimento_humano_at")
+  vendas              Venda[]
 
   @@map("clientes")
 }
@@ -158,6 +159,7 @@ model Config {
   whatsappAutoAgradecimento Int?     @default(0) @map("whatsapp_auto_agradecimento") // Agradecimento 1 dia após venda
   whatsappDiasInativo       Int?     @default(60) @map("whatsapp_dias_inativo") // Dias sem compra para reativação
   whatsappPreAtendimento    Int?     @default(0) @map("whatsapp_pre_atendimento") // 1=IA pré-atende quem manda msg no WhatsApp
+  whatsappTakeoverMinutos   Int?     @default(60) @map("whatsapp_takeover_minutos")
   aiProvider                String?  @map("ai_provider") // gemini | openai | litellm
   litellmUrl                String?  @map("litellm_url")
   litellmKey                String?  @map("litellm_key")
