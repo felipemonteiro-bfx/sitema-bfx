@@ -10,7 +10,6 @@ import { DateInput } from "@/components/ui/date-input";
 import { CheckCircle2 } from "lucide-react";
 import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
-import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
 import { EditVendaSheetWrapper } from "@/components/edit-venda-sheet-wrapper";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
@@ -443,12 +442,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         >
                           Editar
                         </Link>
-                        <ReciboDownloadLink
-                          vendaId={v.id}
-                          tipo={v.descontoEmFolha ? "autorizacao" : "venda"}
-                          className={buttonVariants({ variant: "ghost", size: "sm" })}
-                          label={v.descontoEmFolha ? "Autorização" : "PDF"}
-                        />
+                        {v.assinatura?.assinaturaStatus === 'assinado' && (
+                          <a
+                            href={`/api/assinatura/documento?vendaId=${v.id}`}
+                            download={`recibo-assinado-${v.id}.pdf`}
+                            className={buttonVariants({ variant: "ghost", size: "sm" })}
+                          >
+                            Baixar Assinado
+                          </a>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
