@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { DateInput } from "@/components/ui/date-input";
@@ -169,7 +168,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   });
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="space-y-4 overflow-x-hidden lg:space-y-6">
       <Card variant="gradient" animated className="border-primary/20">
         <CardContent className="flex flex-col gap-4 pt-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pt-6">
           <div className="space-y-2">
@@ -333,15 +332,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </Badge>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="rounded-lg border border-border">
+                <div className="rounded-lg border border-border overflow-x-auto w-full">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30 hover:bg-muted/30">
                         <TableHead className="font-semibold">Vendedor</TableHead>
-                        <TableHead className="text-right font-semibold">Vendas</TableHead>
-                        <TableHead className="text-right font-semibold">Faturamento</TableHead>
+                        <TableHead className="text-right font-semibold hidden sm:table-cell">Vendas</TableHead>
+                        <TableHead className="text-right font-semibold">Fat.</TableHead>
                         <TableHead className="text-right font-semibold">Lucro</TableHead>
-                        <TableHead className="text-right font-semibold">Ticket</TableHead>
+                        <TableHead className="text-right font-semibold hidden sm:table-cell">Ticket</TableHead>
                         <TableHead className="text-right font-semibold">Margem</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -354,8 +353,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </TableRow>
                       ) : (
                         teamRows.map((r, index) => (
-                          <TableRow 
-                            key={r.vendedor} 
+                          <TableRow
+                            key={r.vendedor}
                             className={cn(
                               "animate-fade-in-up transition-colors",
                               index === 0 && "bg-warning/5 dark:bg-warning/10"
@@ -364,16 +363,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           >
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
-                                {index === 0 && <Trophy className="h-4 w-4 text-warning" />}
-                                {r.vendedor}
+                                {index === 0 && <Trophy className="h-4 w-4 text-warning shrink-0" />}
+                                <span className="truncate max-w-[100px] sm:max-w-none">{r.vendedor}</span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-right tabular-nums">{r.vendas}</TableCell>
+                            <TableCell className="text-right tabular-nums hidden sm:table-cell">{r.vendas}</TableCell>
                             <TableCell className="text-right tabular-nums font-medium">{formatBRL(r.total)}</TableCell>
                             <TableCell className="text-right tabular-nums text-success font-medium">{formatBRL(r.lucro)}</TableCell>
-                            <TableCell className="text-right tabular-nums">{formatBRL(r.ticket)}</TableCell>
+                            <TableCell className="text-right tabular-nums hidden sm:table-cell">{formatBRL(r.ticket)}</TableCell>
                             <TableCell className="text-right">
-                              <Badge 
+                              <Badge
                                 variant={r.margem >= 20 ? "success" : r.margem >= 10 ? "warning" : "error"}
                                 size="sm"
                               >
@@ -385,7 +384,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </TableBody>
                   </Table>
-                </ScrollArea>
+                </div>
               </CardContent>
             </Card>
 
