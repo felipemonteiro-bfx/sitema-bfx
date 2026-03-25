@@ -2,11 +2,11 @@
 
 import {
   Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  ReferenceLine,
+  ComposedChart,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -28,11 +28,22 @@ function currency(v: number) {
 type EvoRow = { mes: string; total: number; lucro: number };
 type TopRow = { label: string; value: number };
 
+type ChartRow = {
+  mes: string;
+  custo: number;
+  faturamento: number;
+  bottom: number;
+  profitDelta: number;
+  lossDelta: number;
+  _lucro: number;
+};
+
 function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; value: number }[]; label?: string }) {
   if (!active || !payload || payload.length === 0) return null;
-  const fat = payload.find((p) => p.dataKey === "total")?.value ?? 0;
-  const lucro = payload.find((p) => p.dataKey === "lucro")?.value ?? 0;
-  const custo = fat - lucro;
+
+  const custo = payload.find((p) => p.dataKey === "custo")?.value ?? 0;
+  const fat = payload.find((p) => p.dataKey === "faturamento")?.value ?? 0;
+  const lucro = fat - custo;
   const margem = fat > 0 ? (lucro / fat) * 100 : 0;
   const isNeg = lucro < 0;
 
@@ -43,16 +54,16 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         <div className="flex items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full" style={{ background: "var(--chart-1)" }} />
-            <span className="text-xs text-muted-foreground">Faturamento</span>
+            <span className="text-xs text-muted-foreground">Custo total</span>
           </div>
-          <span className="text-xs font-semibold tabular-nums">{currency(fat)}</span>
+          <span className="text-xs font-semibold tabular-nums">{currency(custo)}</span>
         </div>
         <div className="flex items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
-            <span className="text-xs text-muted-foreground">Custos totais</span>
+            <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/50" />
+            <span className="text-xs text-muted-foreground">Faturamento</span>
           </div>
-          <span className="text-xs font-semibold tabular-nums text-muted-foreground">{currency(custo)}</span>
+          <span className="text-xs font-semibold tabular-nums">{currency(fat)}</span>
         </div>
         <div className="border-t border-border/40 pt-2 space-y-1.5">
           <div className="flex items-center justify-between gap-6">
@@ -96,55 +107,39 @@ function shorten(label: string, max = 18) {
 }
 
 function EvoChart({ evoData }: { evoData: EvoRow[] }) {
-  const hasData = evoData.length > 0;
-  const maxY = hasData ? Math.max(...evoData.map((d) => d.total), 1) : 1;
-  const minY = hasData ? Math.min(...evoData.map((d) => d.lucro), 0) : 0;
-  const hasNeg = minY < 0;
+  const chartData: ChartRow[] = evoData.map((d) => {
+    const custo = d.total - d.lucro;
+    const faturamento = d.total;
+    return {
+      mes: d.mes,
+      custo,
+      faturamento,
+      // Base: from 0 up to the lower of the two lines
+      bottom: Math.min(custo, faturamento),
+      // Delta above bottom for profit months (green zone: custo → faturamento)
+      profitDelta: Math.max(0, d.lucro),
+      // Delta above bottom for loss months (red zone: faturamento → custo)
+      lossDelta: Math.max(0, -d.lucro),
+      _lucro: d.lucro,
+    };
+  });
 
-  const pad = (maxY - minY) * 0.08;
-  const domainMax = maxY + pad;
-  const domainMin = minY - pad;
-
-  // Position of y=0 line from top (0%) to bottom (100%) within the chart area
-  const zeroPct = Math.round((domainMax / (domainMax - domainMin)) * 100);
+  const allY = chartData.flatMap((d) => [d.custo, d.faturamento]);
+  const maxY = Math.max(...allY, 0);
+  const minY = Math.min(...allY, 0);
+  const pad = (maxY - minY) * 0.1;
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
-      <AreaChart data={evoData} margin={{ left: 8, right: 8, top: 10, bottom: 10 }}>
+      <ComposedChart data={chartData} margin={{ left: 8, right: 8, top: 10, bottom: 10 }}>
         <defs>
-          {/* Faturamento: blue gradient fills from total line down — represents the full revenue band */}
-          <linearGradient id="totalGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.25} />
-            <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
+          <linearGradient id="profitFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
+            <stop offset="100%" stopColor="#10b981" stopOpacity={0.08} />
           </linearGradient>
-
-          {/* Lucro: green above 0, red below — gradient switches exactly at the zero line */}
-          <linearGradient id="lucroGradient" x1="0" y1="0" x2="0" y2="1">
-            {hasNeg ? (
-              <>
-                <stop offset="0%" stopColor="#10b981" stopOpacity={0.55} />
-                <stop offset={`${zeroPct - 1}%`} stopColor="#10b981" stopOpacity={0.12} />
-                <stop offset={`${zeroPct}%`} stopColor="#ef4444" stopOpacity={0.12} />
-                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.55} />
-              </>
-            ) : (
-              <>
-                <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
-                <stop offset="100%" stopColor="#10b981" stopOpacity={0.04} />
-              </>
-            )}
-          </linearGradient>
-
-          {/* Lucro line stroke: green above 0, red below */}
-          <linearGradient id="lucroStroke" x1="0" y1="0" x2="0" y2="1">
-            {hasNeg ? (
-              <>
-                <stop offset={`${zeroPct - 1}%`} stopColor="#10b981" />
-                <stop offset={`${zeroPct}%`} stopColor="#ef4444" />
-              </>
-            ) : (
-              <stop offset="0%" stopColor="#10b981" />
-            )}
+          <linearGradient id="lossFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.12} />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity={0.5} />
           </linearGradient>
         </defs>
 
@@ -156,7 +151,7 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
           tickLine={false}
         />
         <YAxis
-          domain={[domainMin, domainMax]}
+          domain={[minY - pad, maxY + pad]}
           tickFormatter={(v) => currency(Number(v))}
           tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
           axisLine={false}
@@ -165,48 +160,80 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
         />
         <Tooltip content={<CustomTooltip />} />
 
-        {/* Zero reference line shown only when there are negative values */}
-        {hasNeg && (
-          <ReferenceLine
-            y={0}
-            stroke="var(--destructive)"
-            strokeDasharray="4 3"
-            strokeWidth={1.5}
-            strokeOpacity={0.6}
-            label={{ value: "breakeven", position: "insideTopRight", fontSize: 10, fill: "var(--muted-foreground)" }}
-          />
-        )}
-
-        {/* Faturamento area — wide, light fill represents full revenue */}
+        {/* Neutral base fill (from 0 up to the lower line — invisible, just anchors the stack) */}
         <Area
+          stackId="s"
           type="monotone"
-          dataKey="total"
+          dataKey="bottom"
+          fill="transparent"
+          stroke="none"
+          legendType="none"
+          isAnimationActive={false}
+        />
+
+        {/* Green fill: profit zone (custo → faturamento when lucro > 0) */}
+        <Area
+          stackId="s"
+          type="monotone"
+          dataKey="profitDelta"
+          fill="url(#profitFill)"
+          stroke="none"
+          legendType="none"
+          animationDuration={900}
+          animationEasing="ease-out"
+        />
+
+        {/* Red fill: loss zone (faturamento → custo when lucro < 0) */}
+        <Area
+          stackId="s"
+          type="monotone"
+          dataKey="lossDelta"
+          fill="url(#lossFill)"
+          stroke="none"
+          legendType="none"
+          animationDuration={900}
+          animationEasing="ease-out"
+        />
+
+        {/* Custo line — the reference baseline */}
+        <Line
+          type="monotone"
+          dataKey="custo"
           stroke="var(--chart-1)"
-          strokeWidth={2}
-          fill="url(#totalGradient)"
-          dot={false}
+          strokeWidth={2.5}
+          dot={{ fill: "var(--chart-1)", strokeWidth: 0, r: 3.5 }}
           activeDot={{ r: 5, stroke: "var(--chart-1)", strokeWidth: 2, fill: "var(--card)" }}
           animationDuration={900}
           animationEasing="ease-out"
         />
 
-        {/* Lucro area — sits inside revenue band; gradient fill shows profit (green) or loss (red) */}
-        <Area
+        {/* Faturamento line — where the lucro actually landed (above = profit, below = loss) */}
+        <Line
           type="monotone"
-          dataKey="lucro"
-          stroke="url(#lucroStroke)"
-          strokeWidth={2.5}
-          fill="url(#lucroGradient)"
-          dot={(props) => {
-            const { cx, cy, payload } = props as { cx: number; cy: number; payload: EvoRow };
-            const color = payload.lucro < 0 ? "#ef4444" : "#10b981";
-            return <circle key={`dot-${payload.mes}`} cx={cx} cy={cy} r={3.5} fill={color} stroke="var(--card)" strokeWidth={1.5} />;
+          dataKey="faturamento"
+          stroke="var(--chart-2)"
+          strokeWidth={2}
+          strokeDasharray="5 3"
+          dot={(props: { cx: number; cy: number; payload: ChartRow }) => {
+            const { cx, cy, payload } = props;
+            const color = payload._lucro < 0 ? "#ef4444" : "#10b981";
+            return (
+              <circle
+                key={`dot-fat-${payload.mes}`}
+                cx={cx}
+                cy={cy}
+                r={3.5}
+                fill={color}
+                stroke="var(--card)"
+                strokeWidth={1.5}
+              />
+            );
           }}
           activeDot={{ r: 5, strokeWidth: 2, fill: "var(--card)" }}
           animationDuration={900}
           animationEasing="ease-out"
         />
-      </AreaChart>
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }
@@ -236,15 +263,11 @@ export function DashboardCharts({
           <div className="flex gap-2 flex-wrap justify-end">
             <Badge variant="outline" size="sm" className="gap-1">
               <div className="h-2 w-2 rounded-full bg-chart-1" />
-              Faturamento
-            </Badge>
-            <Badge variant="outline" size="sm" className="gap-1">
-              <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
               Custo
             </Badge>
-            <Badge variant="outline" size="sm" className="gap-1.5">
+            <Badge variant="outline" size="sm" className="gap-1">
               <div className={`h-2 w-2 rounded-full ${hasNeg ? "bg-destructive" : "bg-emerald-500"}`} />
-              Lucro
+              Faturamento
             </Badge>
           </div>
         </CardHeader>
