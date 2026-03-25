@@ -214,8 +214,9 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
           stroke="var(--chart-2)"
           strokeWidth={2}
           strokeDasharray="5 3"
-          dot={(props: { cx: number; cy: number; payload: ChartRow }) => {
+          dot={(props: { cx?: number; cy?: number; payload?: ChartRow }) => {
             const { cx, cy, payload } = props;
+            if (cx == null || cy == null || !payload) return <g key="empty" />;
             const color = payload._lucro < 0 ? "#ef4444" : "#10b981";
             return (
               <circle
