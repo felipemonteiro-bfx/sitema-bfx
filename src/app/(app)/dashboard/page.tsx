@@ -169,9 +169,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6">
       <Card variant="gradient" animated className="border-primary/20">
-        <CardContent className="flex flex-col gap-6 pt-6 lg:flex-row lg:items-center lg:justify-between">
+        <CardContent className="flex flex-col gap-4 pt-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pt-6">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/20">
@@ -190,7 +190,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             </div>
           </div>
           
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5">
+            {/* Atalhos de período */}
             <div className="flex flex-wrap gap-1.5">
               {periodShortcuts.map((s) => {
                 const isActive = currentFromStr === s.from && currentToStr === s.to;
@@ -210,34 +211,29 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 );
               })}
             </div>
-          <form className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1.5">
-              <label htmlFor="filter-from" className="label-form">
-                Início
-              </label>
-              <DateInput id="filter-from" name="from" defaultValue={start.toISOString().slice(0, 10)} />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="filter-to" className="label-form">
-                Fim
-              </label>
-              <DateInput id="filter-to" name="to" defaultValue={end.toISOString().slice(0, 10)} />
-            </div>
-            <div className="space-y-1.5 min-w-[180px]">
-              <label htmlFor="filter-vendors" className="label-form">
-                Vendedores
-              </label>
-              <VendorMultiSelect
-                id="filter-vendors"
-                name="vendors"
-                vendors={vendedorList}
-                defaultSelected={vendorsFilter ?? vendedorList}
-              />
-            </div>
-            <Button type="submit" leftIcon={<Filter className="h-4 w-4" />} className="h-10">
-              Filtrar
-            </Button>
-          </form>
+            {/* Filtro de datas e vendedores */}
+            <form className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap sm:gap-3">
+              <div className="space-y-1.5">
+                <label htmlFor="filter-from" className="label-form">Início</label>
+                <DateInput id="filter-from" name="from" defaultValue={start.toISOString().slice(0, 10)} />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="filter-to" className="label-form">Fim</label>
+                <DateInput id="filter-to" name="to" defaultValue={end.toISOString().slice(0, 10)} />
+              </div>
+              <div className="col-span-2 space-y-1.5 sm:min-w-[180px]">
+                <label htmlFor="filter-vendors" className="label-form">Vendedores</label>
+                <VendorMultiSelect
+                  id="filter-vendors"
+                  name="vendors"
+                  vendors={vendedorList}
+                  defaultSelected={vendorsFilter ?? vendedorList}
+                />
+              </div>
+              <Button type="submit" leftIcon={<Filter className="h-4 w-4" />} className="col-span-2 h-10 sm:col-span-1 sm:w-auto">
+                Filtrar
+              </Button>
+            </form>
           </div>
         </CardContent>
       </Card>
@@ -280,14 +276,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             <CardStats
               title="Faturamento Total"
               value={formatBRL(totalReceita)}
               description={`${peds} vendas`}
               icon={Wallet}
               color="info"
-              className="stagger-1"
+              className="stagger-1 !p-3 sm:!p-5 lg:!p-6"
             />
             <CardStats
               title="Lucro Líquido"
@@ -299,14 +295,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 direction: margem >= 20 ? "up" : margem >= 10 ? "neutral" : "down",
               }}
               color="success"
-              className="stagger-2"
+              className="stagger-2 !p-3 sm:!p-5 lg:!p-6"
             />
             <CardStats
               title="Ticket Médio"
               value={formatBRL(tik)}
               icon={ShoppingCart}
               color="info"
-              className="stagger-3"
+              className="stagger-3 !p-3 sm:!p-5 lg:!p-6"
             />
             <CardStats
               title="Top Performance"
@@ -314,14 +310,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               description={bestRev ? formatBRL(bestRev.total) : undefined}
               icon={Trophy}
               color="warning"
-              className="stagger-4"
+              className="stagger-4 !p-3 sm:!p-5 lg:!p-6"
             />
           </div>
 
           <DashboardCharts evoData={evoData} topProdutos={topProd} />
 
-          <div className="grid gap-6 xl:grid-cols-3">
-            <Card animated className="xl:col-span-2">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card animated className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="space-y-1">
                   <CardTitle className="flex items-center gap-2">

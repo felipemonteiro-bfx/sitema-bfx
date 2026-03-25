@@ -219,7 +219,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
             </span>
             {Icon && (
               <div className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-lg transition-transform group-hover:scale-110",
+                "hidden sm:flex h-10 w-10 items-center justify-center rounded-lg transition-transform group-hover:scale-110",
                 colorStyles.icon
               )}>
                 <Icon className="h-5 w-5" />
@@ -228,7 +228,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
           </div>
           
           <div className={cn(
-            "text-2xl font-bold tabular-nums",
+            "text-lg font-bold tabular-nums sm:text-2xl",
             color !== "default" && `text-${color}`
           )}>
             {value}
