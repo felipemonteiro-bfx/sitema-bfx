@@ -3,6 +3,8 @@ FROM node:20-bullseye-slim AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN apt-get update && apt-get install -y git --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
 # Install Yarn
 RUN corepack enable && corepack prepare yarn@stable --activate
 
