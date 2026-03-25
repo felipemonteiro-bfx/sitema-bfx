@@ -90,8 +90,8 @@ export default function AssinaturaPage() {
           <CardContent className="pt-10 pb-10 space-y-4">
             <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto" />
             <div>
-              <h2 className="text-xl font-bold">Assinatura enviada!</h2>
-              <p className="text-sm text-muted-foreground mt-2">Você pode fechar esta página.</p>
+              <h2 className="text-xl font-bold">Parabéns pela compra!</h2>
+              <p className="text-sm text-muted-foreground mt-2">Contrato enviado para a BFX.</p>
             </div>
           </CardContent>
         </Card>
