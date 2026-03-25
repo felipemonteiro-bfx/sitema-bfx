@@ -117,6 +117,7 @@ export async function calcularDre(mesAno: string) {
     fixas: metrics.fixas,
     lucro: metrics.lucro,
     pontoEq: metrics.pontoEq,
+    totalVendas: metrics.totalVendas,
     metaGlobal,
     detalhe: {
       cmv: metrics.cmv,

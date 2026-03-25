@@ -148,66 +148,132 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             label: "DRE Inteligente",
             content: (
               <>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Receita Bruta</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-2xl font-semibold">{formatBRL(dre.receita)}</CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Ponto de Equilíbrio</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-2xl font-semibold">{formatBRL(dre.pontoEq)}</CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Lucro Líquido</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-2xl font-semibold text-success">
-                      {formatBRL(dre.lucro)}
-                    </CardContent>
-                  </Card>
-                </div>
-                <Card className="mt-4">
-                  <CardHeader>
-                    <CardTitle>Detalhes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-lg border border-dashed p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">CMV</div>
-                        <div className="mt-1 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.cmv)}</div>
-                        <div className="text-xs text-muted-foreground">Custo de mercadorias</div>
+                {(() => {
+                  const custoTotal = dre.custosVar + dre.fixas;
+                  const pontoEqStatus =
+                    dre.pontoEq === 0 ? 'zero'
+                    : dre.receita >= dre.pontoEq * 1.2 ? 'green'
+                    : dre.receita >= dre.pontoEq ? 'yellow'
+                    : 'red';
+                  return (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-3">
+                        {/* Receita */}
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Receita Bruta</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold">{formatBRL(dre.receita)}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">{dre.totalVendas ?? '—'} vendas no período</div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Custos */}
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Custos do Período</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-destructive">{formatBRL(custoTotal)}</div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              CMV + comissões + frete + despesas
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Lucro + Ponto de Equilíbrio */}
+                        <Card className={cn(
+                          dre.lucro < 0 ? "border-red-300 bg-red-50/30 dark:bg-red-950/10" :
+                          dre.lucro === 0 ? "border-amber-300 bg-amber-50/30" : ""
+                        )}>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className={cn("text-2xl font-bold", dre.lucro >= 0 ? "text-emerald-600" : "text-destructive")}>
+                              {formatBRL(dre.lucro)}
+                            </div>
+                            {/* Ponto de Equilíbrio indicator */}
+                            <div className="mt-2 flex items-center gap-1.5">
+                              <span className={cn(
+                                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                                pontoEqStatus === 'green' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                                pontoEqStatus === 'yellow' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                                pontoEqStatus === 'red' ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                                "bg-muted text-muted-foreground"
+                              )}>
+                                <span className={cn(
+                                  "h-1.5 w-1.5 rounded-full",
+                                  pontoEqStatus === 'green' ? "bg-emerald-500" :
+                                  pontoEqStatus === 'yellow' ? "bg-amber-500" :
+                                  pontoEqStatus === 'red' ? "bg-red-500" : "bg-muted-foreground"
+                                )} />
+                                {pontoEqStatus === 'green' ? "Acima do ponto" :
+                                 pontoEqStatus === 'yellow' ? "No limite" :
+                                 pontoEqStatus === 'red' ? "Abaixo do ponto" :
+                                 "Sem custos fixos"}
+                              </span>
+                              {dre.pontoEq > 0 && (
+                                <span className="text-xs text-muted-foreground">PE: {formatBRL(dre.pontoEq)}</span>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
                       </div>
-                      <div className="rounded-lg border border-dashed p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Comissões</div>
-                        <div className="mt-1 text-base font-semibold text-destructive">
-                          {formatBRL(dre.detalhe.comissoes)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">Vendas da equipe</div>
-                      </div>
-                      <div className="rounded-lg border border-dashed p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Frete Real</div>
-                        <div className="mt-1 text-base font-semibold text-destructive">
-                          {formatBRL(dre.detalhe.freteReal)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">Logística</div>
-                      </div>
-                      <div className="rounded-lg border border-dashed p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Despesas Fixas</div>
-                        <div className="mt-1 text-base font-semibold text-destructive">{formatBRL(dre.fixas)}</div>
-                        <div className="text-xs text-muted-foreground">Operação mensal</div>
-                      </div>
-                      <div className="rounded-lg border border-dashed p-3">
-                        <div className="text-xs uppercase tracking-wide text-muted-foreground">Capital em Estoque</div>
-                        <div className="mt-1 text-base font-semibold text-amber-600">{formatBRL(estoqueImobilizado)}</div>
-                        <div className="text-xs text-muted-foreground">Valor imobilizado em mercadoria</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+
+                      {/* Detalhes de custos */}
+                      <Card className="mt-4">
+                        <CardHeader>
+                          <CardTitle>Composição dos Custos</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Custos do período */}
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Custos do período</p>
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                                <div className="text-xs text-muted-foreground">CMV</div>
+                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.cmv)}</div>
+                                <div className="text-xs text-muted-foreground">Custo de mercadorias vendidas</div>
+                              </div>
+                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                                <div className="text-xs text-muted-foreground">Comissões</div>
+                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.comissoes)}</div>
+                                <div className="text-xs text-muted-foreground">Equipe de vendas</div>
+                              </div>
+                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                                <div className="text-xs text-muted-foreground">Frete Real</div>
+                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.freteReal)}</div>
+                                <div className="text-xs text-muted-foreground">Custo logístico</div>
+                              </div>
+                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                                <div className="text-xs text-muted-foreground">Despesas Fixas</div>
+                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.fixas)}</div>
+                                <div className="text-xs text-muted-foreground">Operação mensal</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Capital em estoque — separado, não é custo do período */}
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Capital imobilizado</p>
+                            <div className="rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 p-3 flex items-start gap-3">
+                              <div className="flex-1">
+                                <div className="text-xs text-muted-foreground">Capital em Estoque</div>
+                                <div className="mt-0.5 text-base font-semibold text-amber-700 dark:text-amber-500">{formatBRL(estoqueImobilizado)}</div>
+                                <div className="text-xs text-muted-foreground">Valor de custo da mercadoria parada em estoque</div>
+                              </div>
+                              <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                não deduzido do lucro
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
+                  );
+                })()}
               </>
             ),
           },
