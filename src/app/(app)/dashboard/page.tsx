@@ -315,7 +315,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
           <DashboardCharts evoData={evoData} topProdutos={topProd} />
 
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3">
             <Card animated className="lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="space-y-1">
