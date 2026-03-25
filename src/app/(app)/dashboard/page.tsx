@@ -122,19 +122,39 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const formatDate = (d: Date) => new Intl.DateTimeFormat("pt-BR").format(d);
 
   const date6m = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-  const vendasEvo = await prisma.venda.findMany({
-    where: { dataVenda: { gte: date6m } },
-    include: { itens: { select: { subtotal: true } } },
-  });
-  const evoMap = new Map<string, { total: number; lucro: number }>();
+  const [vendasEvo, despesasEvo] = await Promise.all([
+    prisma.venda.findMany({
+      where: { dataVenda: { gte: date6m } },
+      include: { itens: { select: { subtotal: true, custoProduto: true, quantidade: true } } },
+    }),
+    prisma.despesa.findMany({
+      where: { dataDespesa: { gte: date6m } },
+      select: { valor: true, dataDespesa: true },
+    }),
+  ]);
+  const despesasPorMes = new Map<string, number>();
+  for (const d of despesasEvo) {
+    const key = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(d.dataDespesa);
+    despesasPorMes.set(key, (despesasPorMes.get(key) || 0) + (d.valor || 0));
+  }
+  const evoMap = new Map<string, { total: number; margemBruta: number }>();
   for (const v of vendasEvo) {
     const key = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(v.dataVenda);
-    const item = evoMap.get(key) || { total: 0, lucro: 0 };
-    item.total += valorTotalVenda(v);
-    item.lucro += v.lucroLiquido || 0;
+    const item = evoMap.get(key) || { total: 0, margemBruta: 0 };
+    const rec = valorTotalVenda(v);
+    const cmvV = v.itens.length > 0
+      ? v.itens.reduce((s, i) => s + (i.custoProduto || 0) * (i.quantidade || 1), 0)
+      : (v as { custoProduto?: number }).custoProduto || 0;
+    const freteV = (v as { custoEnvio?: number }).custoEnvio || 0;
+    item.total += rec;
+    item.margemBruta += rec - cmvV - freteV;
     evoMap.set(key, item);
   }
-  const evoData = Array.from(evoMap.entries()).map(([mes, r]) => ({ mes, total: r.total, lucro: r.lucro }));
+  const evoData = Array.from(evoMap.entries()).map(([mes, r]) => ({
+    mes,
+    total: r.total,
+    lucro: r.margemBruta - (despesasPorMes.get(mes) || 0),
+  }));
 
   // Quick period shortcuts
   const fmt = (d: Date) => d.toISOString().slice(0, 10);

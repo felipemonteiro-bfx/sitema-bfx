@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { LogoUploadForm } from "@/components/logo-upload-form";
 import { ReceiptEditorClient } from "@/components/receipt-editor-client";
 import { WhatsAppConnect } from "@/components/whatsapp-connect";
+import { LitellmModelSelect } from "@/components/litellm-model-select";
 import { cn } from "@/lib/utils";
 
 type Search = { tab?: string };
@@ -314,12 +315,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           )}
                         </div>
                         <div className="space-y-1">
-                          <div className="text-xs text-muted-foreground">Modelo (ex: gpt-4o, llama-3-8b)</div>
-                          <Input
+                          <div className="text-xs text-muted-foreground">Modelo</div>
+                          <LitellmModelSelect
                             name="litellmModel"
-                            placeholder="gpt-4o"
                             defaultValue={(cfg as Record<string, unknown>)?.litellmModel as string || ""}
                           />
+                          <div className="text-xs text-muted-foreground">
+                            Lista carregada da sua instância LiteLLM. Salve a URL e chave primeiro se não aparecer.
+                          </div>
                         </div>
                       </div>
                       <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
