@@ -9,6 +9,7 @@ import { QueryTabs } from "@/components/query-tabs";
 import { Separator } from "@/components/ui/separator";
 import { LogoUploadForm } from "@/components/logo-upload-form";
 import { ReceiptEditorClient } from "@/components/receipt-editor-client";
+import { WhatsAppConnect } from "@/components/whatsapp-connect";
 import { cn } from "@/lib/utils";
 
 type Search = { tab?: string };
@@ -348,6 +349,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             value: "whatsapp",
             label: "WhatsApp",
             content: (
+              <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conexão WhatsApp</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Escaneie o QR Code para conectar a conta do WhatsApp. Requer a Evolution API configurada abaixo.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <WhatsAppConnect />
+                </CardContent>
+              </Card>
               <Card>
                 <CardHeader>
                   <CardTitle>Integração WhatsApp (Evolution API)</CardTitle>
@@ -566,6 +579,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </form>
                 </CardContent>
               </Card>
+              </div>
             ),
           },
         ]}

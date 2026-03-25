@@ -1,0 +1,85 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bfx-evolution-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: microk8s-hostpath
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bfx-evolution
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bfx-evolution
+  template:
+    metadata:
+      labels:
+        app: bfx-evolution
+    spec:
+      containers:
+        - name: evolution
+          image: atendai/evolution-api:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVER_URL
+              value: "http://bfx-evolution:8080"
+            - name: AUTHENTICATION_TYPE
+              value: "apikey"
+            - name: AUTHENTICATION_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bfx-secrets
+                  key: evolution-api-key
+                  optional: true
+            - name: DATABASE_ENABLED
+              value: "false"
+            - name: DATABASE_SAVE_DATA_INSTANCE
+              value: "false"
+            - name: DATABASE_SAVE_DATA_NEW_MESSAGE
+              value: "false"
+            - name: DATABASE_SAVE_MESSAGE_UPDATE
+              value: "false"
+            - name: DATABASE_SAVE_DATA_CONTACTS
+              value: "false"
+            - name: DATABASE_SAVE_DATA_CHATS
+              value: "false"
+            - name: LOG_LEVEL
+              value: "ERROR"
+            - name: LOG_COLOR
+              value: "false"
+          volumeMounts:
+            - name: evolution-data
+              mountPath: /evolution/instances
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: evolution-data
+          persistentVolumeClaim:
+            claimName: bfx-evolution-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bfx-evolution
+spec:
+  selector:
+    app: bfx-evolution
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
