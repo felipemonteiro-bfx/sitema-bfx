@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import SignatureCanvas from 'react-signature-canvas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, AlertCircle, PenLine, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, PenLine, X, RotateCcw } from 'lucide-react';
 
 type VendaInfo = {
   id: number;
@@ -24,12 +24,12 @@ export default function AssinaturaPage() {
 
   const sigCanvas = useRef<SignatureCanvas>(null);
   const [canvasWidth, setCanvasWidth] = useState(300);
-  const [canvasHeight, setCanvasHeight] = useState(500);
+  const [canvasHeight, setCanvasHeight] = useState(400);
 
   useLayoutEffect(() => {
     if (!modalOpen) return;
     setCanvasWidth(window.innerWidth);
-    setCanvasHeight(window.innerHeight - 120);
+    setCanvasHeight(window.innerHeight - 140);
   }, [modalOpen]);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export default function AssinaturaPage() {
   };
 
   const handleSubmit = () => {
-    if (!signatureDataUrl) { setError('Por favor, assine o documento antes de enviar.'); return; }
+    if (!signatureDataUrl) { setError('Por favor, assine antes de enviar.'); return; }
     setError(null);
     setSubmitting(true);
     fetch('/api/assinatura', {
@@ -74,7 +74,7 @@ export default function AssinaturaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="h-[100dvh] flex items-center justify-center bg-gray-100 p-4">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
           <p className="text-muted-foreground text-sm">Carregando documento...</p>
@@ -85,9 +85,9 @@ export default function AssinaturaPage() {
 
   if (isSigned) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="h-[100dvh] flex items-center justify-center bg-gray-100 p-4">
         <Card className="max-w-sm w-full text-center">
-          <CardContent className="pt-8 pb-8 space-y-4">
+          <CardContent className="pt-10 pb-10 space-y-4">
             <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto" />
             <div>
               <h2 className="text-xl font-bold">Assinatura enviada!</h2>
@@ -101,9 +101,9 @@ export default function AssinaturaPage() {
 
   if ((error && !venda) || !venda) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="h-[100dvh] flex items-center justify-center bg-gray-100 p-4">
         <Card className="max-w-sm w-full text-center">
-          <CardContent className="pt-8 pb-8 space-y-4">
+          <CardContent className="pt-10 pb-10 space-y-4">
             <AlertCircle className="h-16 w-16 text-amber-500 mx-auto" />
             <div>
               <h2 className="text-xl font-bold">Não foi possível carregar</h2>
@@ -116,94 +116,102 @@ export default function AssinaturaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 flex flex-col">
-      {/* PDF embed — ocupa toda a tela */}
-      <div className="flex-1 w-full" style={{ minHeight: '70vh' }}>
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-gray-200">
+      {/* PDF iframe — ocupa todo espaço restante */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         <iframe
           src={`/api/assinatura/${token}/recibo`}
           className="w-full h-full"
-          style={{ minHeight: '70vh', border: 'none' }}
+          style={{ border: 'none', display: 'block' }}
           title="Recibo de Autorização"
         />
       </div>
 
-      {/* Barra de ação fixa na parte inferior */}
-      <div className="bg-white border-t shadow-lg px-4 py-4">
+      {/* Barra inferior — altura fixa, sempre visível */}
+      <div
+        className="bg-white border-t shadow-2xl shrink-0 px-4 pt-3"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         {/* Área de assinatura */}
-        <div className="flex flex-col items-center gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            disabled={submitting}
-            className="w-full max-w-xs"
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          disabled={submitting}
+          className="w-full mb-2 touch-manipulation"
+        >
+          <div
+            className={`w-full border-2 border-dashed rounded-lg flex items-center justify-center transition-colors min-h-[60px] ${
+              signatureDataUrl
+                ? 'border-gray-300 bg-white'
+                : 'border-primary/50 bg-primary/5 active:bg-primary/10'
+            }`}
           >
-            <div
-              className={`w-full border-2 border-dashed rounded flex items-center justify-center transition-colors min-h-[60px] ${
-                signatureDataUrl
-                  ? 'border-gray-300 bg-white'
-                  : 'border-gray-400 bg-gray-50 hover:bg-gray-100 cursor-pointer'
-              }`}
-            >
-              {signatureDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={signatureDataUrl} alt="Assinatura" className="max-h-[58px] object-contain" />
-              ) : (
-                <div className="flex items-center gap-2 text-gray-400 py-3">
-                  <PenLine className="h-5 w-5" />
-                  <span className="text-sm">Toque aqui para assinar</span>
-                </div>
-              )}
-            </div>
-            <div className="w-full max-w-xs border-t border-gray-800 mt-1 mx-auto" />
-            <p className="text-xs text-gray-600 mt-0.5 text-center">
-              {venda.cliente?.nome || 'Assinatura do Cliente'}
-            </p>
-          </button>
-        </div>
+            {signatureDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={signatureDataUrl} alt="Assinatura" className="max-h-[56px] object-contain" />
+            ) : (
+              <div className="flex items-center gap-2 text-primary/70 py-3">
+                <PenLine className="h-5 w-5 shrink-0" />
+                <span className="text-sm font-medium">Toque aqui para assinar</span>
+              </div>
+            )}
+          </div>
+          <div className="w-full border-t border-gray-700 mt-1" />
+          <p className="text-xs text-gray-500 mt-0.5 text-center">
+            {venda.cliente?.nome || 'Assinatura do Cliente'}
+          </p>
+        </button>
 
-        {/* Error */}
         {error && (
-          <div className="flex items-center gap-2 mb-2 text-sm text-red-600 justify-center">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+          <div className="flex items-center gap-2 mb-2 text-xs text-red-600">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Buttons */}
-        <div className="flex gap-2 max-w-xs mx-auto">
+        <div className="flex gap-2">
           {signatureDataUrl && (
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => { setSignatureDataUrl(null); sigCanvas.current?.clear(); }}
               disabled={submitting}
+              className="shrink-0 touch-manipulation"
             >
-              Refazer
+              <RotateCcw className="h-4 w-4" />
             </Button>
           )}
           <Button
             type="button"
+            size="lg"
             onClick={handleSubmit}
             disabled={submitting || !signatureDataUrl}
-            className="flex-1"
+            className="flex-1 touch-manipulation font-semibold min-h-[48px]"
           >
-            {submitting ? 'Enviando...' : 'Enviar Documento Assinado'}
+            {submitting ? 'Enviando...' : 'Enviar Assinado'}
           </Button>
         </div>
       </div>
 
-      {/* Fullscreen signature modal */}
+      {/* Modal de assinatura fullscreen */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 bg-white border-b">
-            <h2 className="font-semibold text-sm">Assine abaixo com o dedo</h2>
-            <button type="button" onClick={handleModalCancel} className="p-1 rounded hover:bg-gray-100">
+        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+          <div
+            className="flex items-center justify-between px-4 bg-white border-b shrink-0"
+            style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.75rem' }}
+          >
+            <h2 className="font-semibold text-sm">Assine com o dedo</h2>
+            <button
+              type="button"
+              onClick={handleModalCancel}
+              className="p-2 -mr-1 rounded-full hover:bg-gray-100 active:bg-gray-200 touch-manipulation"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="flex-1 bg-white overflow-hidden" style={{ touchAction: 'none' }}>
+          <div className="flex-1 overflow-hidden bg-white" style={{ touchAction: 'none' }}>
             <SignatureCanvas
               ref={sigCanvas}
               penColor="black"
@@ -215,12 +223,26 @@ export default function AssinaturaPage() {
             />
           </div>
 
-          <div className="flex gap-3 px-4 py-4 bg-white border-t">
-            <Button type="button" variant="outline" onClick={() => sigCanvas.current?.clear()} className="flex-1">
+          <div
+            className="flex gap-3 px-4 pt-3 bg-white border-t shrink-0"
+            style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={() => sigCanvas.current?.clear()}
+              className="flex-1 touch-manipulation"
+            >
               Limpar
             </Button>
-            <Button type="button" onClick={handleModalOk} className="flex-1">
-              Confirmar Assinatura
+            <Button
+              type="button"
+              size="lg"
+              onClick={handleModalOk}
+              className="flex-1 touch-manipulation font-semibold"
+            >
+              Confirmar
             </Button>
           </div>
         </div>
