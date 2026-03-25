@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     await prisma.notificacao.create({
       data: {
         mensagem: `A venda #${venda.id} foi assinada pelo cliente.`,
-        link: `/vendas/${venda.id}`,
+        link: `/historico`,
       },
     });
 
