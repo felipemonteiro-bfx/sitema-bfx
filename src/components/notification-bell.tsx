@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { toast } from 'sonner';
-import { createPortal } from 'react-dom';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 type Notificacao = {
   id: number;
@@ -29,10 +29,7 @@ function formatTimeAgo(dateStr: string): string {
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notificacao[]>([]);
   const [open, setOpen] = useState(false);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
   const seenIds = useRef<Set<number>>(new Set());
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const fetchNotifications = async () => {
     try {
@@ -40,11 +37,9 @@ export function NotificationBell() {
       if (!res.ok) return;
       const data: Notificacao[] = await res.json();
 
-      // Show toast for new notifications not seen before
       for (const n of data) {
         if (!seenIds.current.has(n.id)) {
           seenIds.current.add(n.id);
-          // Only toast if seenIds was already populated (not on first load)
           if (seenIds.current.size > data.length) {
             toast.info(n.mensagem);
           }
@@ -64,22 +59,6 @@ export function NotificationBell() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      const clickedInsideDropdown = dropdownRef.current && dropdownRef.current.contains(target);
-      const clickedInsideButton = buttonRef.current && buttonRef.current.contains(target);
-      if (!clickedInsideDropdown && !clickedInsideButton) {
-        setOpen(false);
-      }
-    };
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [open]);
-
   const markAllRead = async () => {
     const ids = notifications.map((n) => n.id);
     if (ids.length === 0) return;
@@ -90,6 +69,7 @@ export function NotificationBell() {
         body: JSON.stringify({ ids }),
       });
       setNotifications([]);
+      setOpen(false);
     } catch {
       // silently ignore
     }
@@ -97,87 +77,67 @@ export function NotificationBell() {
 
   const unreadCount = notifications.length;
 
-  const handleToggle = () => {
-    if (!open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPos({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-      });
-    }
-    setOpen((prev) => !prev);
-  };
-
-  const dropdown = open ? (
-    <div
-      ref={dropdownRef}
-      style={{ top: dropdownPos.top, right: dropdownPos.right }}
-      className="fixed z-[9999] w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-xl"
-    >
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <span className="text-sm font-semibold text-foreground">Notificações</span>
-        {unreadCount > 0 && (
-          <button
-            type="button"
-            onClick={markAllRead}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Marcar todas como lidas
-          </button>
-        )}
-      </div>
-      {notifications.length === 0 ? (
-        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-          Nenhuma notificação pendente.
-        </div>
-      ) : (
-        <ul className="divide-y divide-border">
-          {notifications.map((n) => (
-            <li key={n.id} className="px-4 py-3 hover:bg-muted/50 transition-colors">
-              {n.link ? (
-                <a
-                  href={n.link}
-                  className="block"
-                  onClick={() => setOpen(false)}
-                >
-                  <p className="text-sm text-foreground">{n.mensagem}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formatTimeAgo(n.criadoEm)}
-                  </p>
-                </a>
-              ) : (
-                <div>
-                  <p className="text-sm text-foreground">{n.mensagem}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formatTimeAgo(n.criadoEm)}
-                  </p>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  ) : null;
-
   return (
-    <div className="relative">
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={handleToggle}
-        className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] hover:bg-sidebar-accent hover:text-[var(--sidebar-foreground)] transition-colors"
-        aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
-      >
-        <Bell className="h-4 w-4" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] hover:bg-sidebar-accent hover:text-[var(--sidebar-foreground)] transition-colors"
+          aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
+        >
+          <Bell className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <span className="text-sm font-semibold text-foreground">Notificações</span>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllRead}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Marcar todas como lidas
+            </button>
+          )}
+        </div>
+        {notifications.length === 0 ? (
+          <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+            Nenhuma notificação pendente.
+          </div>
+        ) : (
+          <ul className="max-h-96 overflow-y-auto divide-y divide-border">
+            {notifications.map((n) => (
+              <li key={n.id} className="px-4 py-3 hover:bg-muted/50 transition-colors">
+                {n.link ? (
+                  <a
+                    href={n.link}
+                    className="block"
+                    onClick={() => setOpen(false)}
+                  >
+                    <p className="text-sm text-foreground">{n.mensagem}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatTimeAgo(n.criadoEm)}
+                    </p>
+                  </a>
+                ) : (
+                  <div>
+                    <p className="text-sm text-foreground">{n.mensagem}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatTimeAgo(n.criadoEm)}
+                    </p>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
-      </button>
-
-      {typeof document !== 'undefined' && createPortal(dropdown, document.body)}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }
