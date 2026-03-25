@@ -56,14 +56,17 @@ export async function POST(req: Request) {
       key?: { remoteJid?: string; fromMe?: boolean };
       message?: unknown;
       pushName?: string;
+      source?: string;
     };
 
     const jid = extrairRemoteJid(d.key) || (d as { key?: { remoteJid?: string } }).key?.remoteJid;
 
     const fromMe = d.key?.fromMe === true;
     if (fromMe) {
-      // Admin enviou mensagem manualmente → marcar takeover humano
-      if (jid) {
+      // Só marca takeover humano se foi enviado por um dispositivo real (não pela IA via API)
+      const source = typeof d.source === "string" ? d.source.toLowerCase() : "unknown";
+      const enviadoPorHumano = source !== "unknown" && source !== "";
+      if (enviadoPorHumano && jid) {
         const telefone = normalizarTelefone(jid);
         void marcarAtendimentoHumano(telefone);
       }

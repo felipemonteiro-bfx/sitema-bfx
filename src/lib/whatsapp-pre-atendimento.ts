@@ -51,7 +51,7 @@ async function buscarClientePorTelefone(telefone: string) {
           take: 5,
           include: {
             itens: {
-              include: { produto: { select: { nome: true, categoria: true } } },
+              select: { produtoNome: true },
             },
           },
         },
@@ -67,17 +67,11 @@ function montarContextoCliente(cliente: Awaited<ReturnType<typeof buscarClienteP
   if (!cliente) return null;
 
   const compras = cliente.vendas.map((v) => {
-    const produtos = v.itens.map((i) => i.produto?.nome || "item").join(", ");
+    const produtos = v.itens.map((i) => i.produtoNome || "item").join(", ");
     return `- ${produtos}`;
   });
 
-  const categorias = [
-    ...new Set(
-      cliente.vendas.flatMap((v) =>
-        v.itens.map((i) => i.produto?.categoria).filter(Boolean)
-      )
-    ),
-  ] as string[];
+  const categorias: string[] = [];
 
   return {
     nome: cliente.nome.split(" ")[0], // primeiro nome
