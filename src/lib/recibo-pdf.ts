@@ -332,8 +332,8 @@ export async function generateReciboPdf(
   }
 
   page.drawText("Documento gerado automaticamente pelo BFX Manager.", {
-    x: marginX,
-    y: showAssinatura ? 110 : 50,
+    x: centerX - font.widthOfTextAtSize("Documento gerado automaticamente pelo BFX Manager.", 8) / 2,
+    y: 15,
     size: 8,
     font,
     color: rgb(0.5, 0.5, 0.5),
