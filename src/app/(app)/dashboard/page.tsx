@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
 import { calcularMetricasPeriodo } from "@/lib/finance";
-import { valorTotalVenda } from "@/lib/venda-utils";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
@@ -121,40 +120,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const formatDate = (d: Date) => new Intl.DateTimeFormat("pt-BR").format(d);
 
-  const date6m = new Date(today.getFullYear(), today.getMonth() - 5, 1);
-  const [vendasEvo, despesasEvo] = await Promise.all([
-    prisma.venda.findMany({
-      where: { dataVenda: { gte: date6m } },
-      include: { itens: { select: { subtotal: true, custoProduto: true, quantidade: true } } },
-    }),
-    prisma.despesa.findMany({
-      where: { dataDespesa: { gte: date6m } },
-      select: { valor: true, dataDespesa: true },
-    }),
-  ]);
-  const despesasPorMes = new Map<string, number>();
-  for (const d of despesasEvo) {
-    const key = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(d.dataDespesa);
-    despesasPorMes.set(key, (despesasPorMes.get(key) || 0) + (d.valor || 0));
+  const evoData: { mes: string; total: number; lucro: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const ref = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const mesStart = new Date(Date.UTC(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0));
+    const mesEnd = new Date(Date.UTC(ref.getFullYear(), ref.getMonth() + 1, 1, 0, 0, 0, 0));
+    const m = await calcularMetricasPeriodo(mesStart, mesEnd);
+    const mesLabel = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(mesStart);
+    evoData.push({
+      mes: mesLabel,
+      total: Math.trunc(m.receita * 100) / 100,
+      lucro: Math.trunc(m.lucro * 100) / 100,
+    });
   }
-  const evoMap = new Map<string, { total: number; margemBruta: number }>();
-  for (const v of vendasEvo) {
-    const key = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(v.dataVenda);
-    const item = evoMap.get(key) || { total: 0, margemBruta: 0 };
-    const rec = valorTotalVenda(v);
-    const cmvV = v.itens.length > 0
-      ? v.itens.reduce((s, i) => s + (i.custoProduto || 0) * (i.quantidade || 1), 0)
-      : (v as { custoProduto?: number }).custoProduto || 0;
-    const freteV = (v as { custoEnvio?: number }).custoEnvio || 0;
-    item.total += rec;
-    item.margemBruta += rec - cmvV - freteV;
-    evoMap.set(key, item);
-  }
-  const evoData = Array.from(evoMap.entries()).map(([mes, r]) => ({
-    mes,
-    total: r.total,
-    lucro: r.margemBruta - (despesasPorMes.get(mes) || 0),
-  }));
 
   // Quick period shortcuts
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
