@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { toast } from 'sonner';
+import { createPortal } from 'react-dom';
 
 type Notificacao = {
   id: number;
@@ -28,8 +29,10 @@ function formatTimeAgo(dateStr: string): string {
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notificacao[]>([]);
   const [open, setOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
   const seenIds = useRef<Set<number>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const fetchNotifications = async () => {
     try {
@@ -64,7 +67,10 @@ export function NotificationBell() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedInsideDropdown = dropdownRef.current && dropdownRef.current.contains(target);
+      const clickedInsideButton = buttonRef.current && buttonRef.current.contains(target);
+      if (!clickedInsideDropdown && !clickedInsideButton) {
         setOpen(false);
       }
     };
@@ -91,11 +97,75 @@ export function NotificationBell() {
 
   const unreadCount = notifications.length;
 
+  const handleToggle = () => {
+    if (!open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+    setOpen((prev) => !prev);
+  };
+
+  const dropdown = open ? (
+    <div
+      ref={dropdownRef}
+      style={{ top: dropdownPos.top, right: dropdownPos.right }}
+      className="fixed z-[9999] w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-xl"
+    >
+      <div className="flex items-center justify-between border-b px-4 py-3">
+        <span className="text-sm font-semibold text-foreground">Notificações</span>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={markAllRead}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Marcar todas como lidas
+          </button>
+        )}
+      </div>
+      {notifications.length === 0 ? (
+        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+          Nenhuma notificação pendente.
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {notifications.map((n) => (
+            <li key={n.id} className="px-4 py-3 hover:bg-muted/50 transition-colors">
+              {n.link ? (
+                <a
+                  href={n.link}
+                  className="block"
+                  onClick={() => setOpen(false)}
+                >
+                  <p className="text-sm text-foreground">{n.mensagem}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formatTimeAgo(n.criadoEm)}
+                  </p>
+                </a>
+              ) : (
+                <div>
+                  <p className="text-sm text-foreground">{n.mensagem}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {formatTimeAgo(n.criadoEm)}
+                  </p>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  ) : null;
+
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative">
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] hover:bg-sidebar-accent hover:text-[var(--sidebar-foreground)] transition-colors"
         aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
       >
@@ -107,53 +177,7 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-11 z-50 w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
-          <div className="flex items-center justify-between border-b px-4 py-3">
-            <span className="text-sm font-semibold text-foreground">Notificações</span>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllRead}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Marcar todas como lidas
-              </button>
-            )}
-          </div>
-          {notifications.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Nenhuma notificação pendente.
-            </div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {notifications.map((n) => (
-                <li key={n.id} className="px-4 py-3 hover:bg-muted/50 transition-colors">
-                  {n.link ? (
-                    <a
-                      href={n.link}
-                      className="block"
-                      onClick={() => setOpen(false)}
-                    >
-                      <p className="text-sm text-foreground">{n.mensagem}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatTimeAgo(n.criadoEm)}
-                      </p>
-                    </a>
-                  ) : (
-                    <div>
-                      <p className="text-sm text-foreground">{n.mensagem}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatTimeAgo(n.criadoEm)}
-                      </p>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      {typeof document !== 'undefined' && createPortal(dropdown, document.body)}
     </div>
   );
 }

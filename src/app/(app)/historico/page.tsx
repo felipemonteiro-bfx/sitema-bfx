@@ -429,7 +429,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       {v.assinatura?.assinaturaStatus === 'assinado' ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
                       ) : v.assinaturaToken ? (
-                        <CopiarLinkAssinatura token={v.assinaturaToken} />
+                        <span className="inline-block h-2 w-2 rounded-full bg-amber-400" title="Aguardando assinatura" />
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}
@@ -442,7 +442,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         >
                           Editar
                         </Link>
-                        {v.assinatura?.assinaturaStatus === 'assinado' && (
+                        {v.assinatura?.assinaturaStatus === 'assinado' ? (
                           <a
                             href={`/api/assinatura/documento?vendaId=${v.id}`}
                             download={`recibo-assinado-${v.id}.pdf`}
@@ -450,7 +450,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           >
                             Baixar Assinado
                           </a>
-                        )}
+                        ) : v.assinaturaToken ? (
+                          <CopiarLinkAssinatura token={v.assinaturaToken} />
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>
