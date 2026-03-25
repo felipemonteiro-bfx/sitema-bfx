@@ -240,7 +240,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
                 <span className={cn("flex items-center gap-1 font-medium", trendColor)}>
                   <TrendIcon className="h-4 w-4" />
                   {trend.value > 0 && "+"}
-                  {trend.value}%
+                  {Number(trend.value.toFixed(1))}%
                 </span>
               )}
               {description && (
