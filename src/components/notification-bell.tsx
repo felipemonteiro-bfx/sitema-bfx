@@ -59,6 +59,19 @@ export function NotificationBell() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const markOneRead = async (id: number) => {
+    try {
+      await fetch('/api/notificacoes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch {
+      // silently ignore
+    }
+  };
+
   const markAllRead = async () => {
     const ids = notifications.map((n) => n.id);
     if (ids.length === 0) return;
@@ -118,7 +131,7 @@ export function NotificationBell() {
                   <a
                     href={n.link}
                     className="block"
-                    onClick={() => setOpen(false)}
+                    onClick={() => { markOneRead(n.id); setOpen(false); }}
                   >
                     <p className="text-sm text-foreground">{n.mensagem}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -126,12 +139,16 @@ export function NotificationBell() {
                     </p>
                   </a>
                 ) : (
-                  <div>
+                  <button
+                    type="button"
+                    className="w-full text-left"
+                    onClick={() => markOneRead(n.id)}
+                  >
                     <p className="text-sm text-foreground">{n.mensagem}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {formatTimeAgo(n.criadoEm)}
                     </p>
-                  </div>
+                  </button>
                 )}
               </li>
             ))}
