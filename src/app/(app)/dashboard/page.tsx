@@ -332,7 +332,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </Badge>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-border overflow-x-auto w-full">
+                <div className="rounded-lg border border-border overflow-x-auto w-full [&_th]:px-2 [&_td]:px-2 sm:[&_th]:px-3 sm:[&_td]:px-3">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/30 hover:bg-muted/30">
