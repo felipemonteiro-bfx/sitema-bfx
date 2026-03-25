@@ -337,10 +337,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableHeader>
                       <TableRow className="bg-muted/30 hover:bg-muted/30">
                         <TableHead className="font-semibold">Vendedor</TableHead>
-                        <TableHead className="text-right font-semibold hidden sm:table-cell">Vendas</TableHead>
+                        <TableHead className="text-right font-semibold max-sm:hidden">Vendas</TableHead>
                         <TableHead className="text-right font-semibold">Fat.</TableHead>
                         <TableHead className="text-right font-semibold">Lucro</TableHead>
-                        <TableHead className="text-right font-semibold hidden sm:table-cell">Ticket</TableHead>
+                        <TableHead className="text-right font-semibold max-sm:hidden">Ticket</TableHead>
                         <TableHead className="text-right font-semibold">Margem</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -367,10 +367,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 <span className="truncate max-w-[100px] sm:max-w-none">{r.vendedor}</span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-right tabular-nums hidden sm:table-cell">{r.vendas}</TableCell>
+                            <TableCell className="text-right tabular-nums max-sm:hidden">{r.vendas}</TableCell>
                             <TableCell className="text-right tabular-nums font-medium">{formatBRL(r.total)}</TableCell>
                             <TableCell className="text-right tabular-nums text-success font-medium">{formatBRL(r.lucro)}</TableCell>
-                            <TableCell className="text-right tabular-nums hidden sm:table-cell">{formatBRL(r.ticket)}</TableCell>
+                            <TableCell className="text-right tabular-nums max-sm:hidden">{formatBRL(r.ticket)}</TableCell>
                             <TableCell className="text-right">
                               <Badge
                                 variant={r.margem >= 20 ? "success" : r.margem >= 10 ? "warning" : "error"}
@@ -397,33 +397,33 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-info/10">
+                  <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-info/10">
                         <DollarSign className="h-5 w-5 text-info" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="text-xs text-muted-foreground uppercase tracking-wider">Maior Faturamento</div>
-                        <div className="font-semibold">{bestRev?.vendedor || "—"}</div>
+                        <div className="font-semibold truncate">{bestRev?.vendedor || "—"}</div>
                       </div>
                     </div>
                     {bestRev && (
-                      <Badge variant="info" size="sm">{formatBRL(bestRev.total)}</Badge>
+                      <Badge variant="info" size="sm" className="shrink-0">{formatBRL(bestRev.total)}</Badge>
                     )}
                   </div>
-                  
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+
+                  <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/10">
                         <TrendingUp className="h-5 w-5 text-success" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="text-xs text-muted-foreground uppercase tracking-wider">Maior Lucro</div>
-                        <div className="font-semibold">{bestProf?.vendedor || "—"}</div>
+                        <div className="font-semibold truncate">{bestProf?.vendedor || "—"}</div>
                       </div>
                     </div>
                     {bestProf && (
-                      <Badge variant="success" size="sm">{formatBRL(bestProf.lucro)}</Badge>
+                      <Badge variant="success" size="sm" className="shrink-0">{formatBRL(bestProf.lucro)}</Badge>
                     )}
                   </div>
                 </CardContent>
