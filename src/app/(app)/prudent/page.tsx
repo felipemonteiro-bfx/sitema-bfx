@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/db";
-import { valorTotalVenda } from "@/lib/venda-utils";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
 import AntecipacaoClient from "@/components/antecipacao-client";
+import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,27 @@ export default async function Page() {
       .filter((e): e is string => Boolean(e))
   )].sort();
 
+  // Buscar vendas ja antecipadas (antecipada = 1) para o historico
+  const antecipadas = await prisma.venda.findMany({
+    where: { antecipada: 1 },
+    orderBy: { dataVenda: "desc" },
+    take: 50,
+    include: {
+      cliente: { select: { nome: true, empresa: true } },
+      itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
+    },
+  });
+
+  const antecipadasFormatadas = antecipadas.map((v) => ({
+    id: v.id,
+    dataVenda: v.dataVenda,
+    clienteNome: v.cliente?.nome || null,
+    empresaConveniada: v.cliente?.empresa || null,
+    produtoNome: produtosTexto(v),
+    valorTotal: valorTotalVenda(v),
+    parcelas: v.parcelas,
+  }));
+
   const vendasFormatadas = todasVendas.map((v) => {
     const antecipada = v.antecipada ?? 0;
     let status: "pendente" | "em_andamento" | "antecipado";
@@ -142,6 +164,7 @@ export default async function Page() {
           />
         </CardContent>
       </Card>
+      <HistoricoAntecipacoes antecipacoes={antecipadasFormatadas} />
     </div>
   );
 }
