@@ -103,6 +103,11 @@ export type Assinatura = $Result.DefaultSelection<Prisma.$AssinaturaPayload>
  * 
  */
 export type Notificacao = $Result.DefaultSelection<Prisma.$NotificacaoPayload>
+/**
+ * Model VozDublador
+ * 
+ */
+export type VozDublador = $Result.DefaultSelection<Prisma.$VozDubladorPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -401,6 +406,16 @@ export class PrismaClient<
     * ```
     */
   get notificacao(): Prisma.NotificacaoDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.vozDublador`: Exposes CRUD operations for the **VozDublador** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VozDubladors
+    * const vozDubladors = await prisma.vozDublador.findMany()
+    * ```
+    */
+  get vozDublador(): Prisma.VozDubladorDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -859,7 +874,8 @@ export namespace Prisma {
     WhatsAppEnvioLog: 'WhatsAppEnvioLog',
     AiMensagem: 'AiMensagem',
     Assinatura: 'Assinatura',
-    Notificacao: 'Notificacao'
+    Notificacao: 'Notificacao',
+    VozDublador: 'VozDublador'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -878,7 +894,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem" | "assinatura" | "notificacao"
+      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem" | "assinatura" | "notificacao" | "vozDublador"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2214,6 +2230,80 @@ export namespace Prisma {
           }
         }
       }
+      VozDublador: {
+        payload: Prisma.$VozDubladorPayload<ExtArgs>
+        fields: Prisma.VozDubladorFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VozDubladorFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VozDubladorFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>
+          }
+          findFirst: {
+            args: Prisma.VozDubladorFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VozDubladorFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>
+          }
+          findMany: {
+            args: Prisma.VozDubladorFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>[]
+          }
+          create: {
+            args: Prisma.VozDubladorCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>
+          }
+          createMany: {
+            args: Prisma.VozDubladorCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.VozDubladorCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>[]
+          }
+          delete: {
+            args: Prisma.VozDubladorDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>
+          }
+          update: {
+            args: Prisma.VozDubladorUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>
+          }
+          deleteMany: {
+            args: Prisma.VozDubladorDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VozDubladorUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.VozDubladorUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>[]
+          }
+          upsert: {
+            args: Prisma.VozDubladorUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VozDubladorPayload>
+          }
+          aggregate: {
+            args: Prisma.VozDubladorAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVozDublador>
+          }
+          groupBy: {
+            args: Prisma.VozDubladorGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VozDubladorGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VozDubladorCountArgs<ExtArgs>
+            result: $Utils.Optional<VozDubladorCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2328,6 +2418,7 @@ export namespace Prisma {
     aiMensagem?: AiMensagemOmit
     assinatura?: AssinaturaOmit
     notificacao?: NotificacaoOmit
+    vozDublador?: VozDubladorOmit
   }
 
   /* Types for Logging */
@@ -13531,6 +13622,8 @@ export namespace Prisma {
     responsavelRh: string | null
     telefoneRh: string | null
     emailRh: string | null
+    cnpj: string | null
+    emailsExtras: string | null
   }
 
   export type EmpresaParceiraMaxAggregateOutputType = {
@@ -13539,6 +13632,8 @@ export namespace Prisma {
     responsavelRh: string | null
     telefoneRh: string | null
     emailRh: string | null
+    cnpj: string | null
+    emailsExtras: string | null
   }
 
   export type EmpresaParceiraCountAggregateOutputType = {
@@ -13547,6 +13642,8 @@ export namespace Prisma {
     responsavelRh: number
     telefoneRh: number
     emailRh: number
+    cnpj: number
+    emailsExtras: number
     _all: number
   }
 
@@ -13565,6 +13662,8 @@ export namespace Prisma {
     responsavelRh?: true
     telefoneRh?: true
     emailRh?: true
+    cnpj?: true
+    emailsExtras?: true
   }
 
   export type EmpresaParceiraMaxAggregateInputType = {
@@ -13573,6 +13672,8 @@ export namespace Prisma {
     responsavelRh?: true
     telefoneRh?: true
     emailRh?: true
+    cnpj?: true
+    emailsExtras?: true
   }
 
   export type EmpresaParceiraCountAggregateInputType = {
@@ -13581,6 +13682,8 @@ export namespace Prisma {
     responsavelRh?: true
     telefoneRh?: true
     emailRh?: true
+    cnpj?: true
+    emailsExtras?: true
     _all?: true
   }
 
@@ -13676,6 +13779,8 @@ export namespace Prisma {
     responsavelRh: string | null
     telefoneRh: string | null
     emailRh: string | null
+    cnpj: string | null
+    emailsExtras: string | null
     _count: EmpresaParceiraCountAggregateOutputType | null
     _avg: EmpresaParceiraAvgAggregateOutputType | null
     _sum: EmpresaParceiraSumAggregateOutputType | null
@@ -13703,6 +13808,8 @@ export namespace Prisma {
     responsavelRh?: boolean
     telefoneRh?: boolean
     emailRh?: boolean
+    cnpj?: boolean
+    emailsExtras?: boolean
   }, ExtArgs["result"]["empresaParceira"]>
 
   export type EmpresaParceiraSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13711,6 +13818,8 @@ export namespace Prisma {
     responsavelRh?: boolean
     telefoneRh?: boolean
     emailRh?: boolean
+    cnpj?: boolean
+    emailsExtras?: boolean
   }, ExtArgs["result"]["empresaParceira"]>
 
   export type EmpresaParceiraSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13719,6 +13828,8 @@ export namespace Prisma {
     responsavelRh?: boolean
     telefoneRh?: boolean
     emailRh?: boolean
+    cnpj?: boolean
+    emailsExtras?: boolean
   }, ExtArgs["result"]["empresaParceira"]>
 
   export type EmpresaParceiraSelectScalar = {
@@ -13727,9 +13838,11 @@ export namespace Prisma {
     responsavelRh?: boolean
     telefoneRh?: boolean
     emailRh?: boolean
+    cnpj?: boolean
+    emailsExtras?: boolean
   }
 
-  export type EmpresaParceiraOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "responsavelRh" | "telefoneRh" | "emailRh", ExtArgs["result"]["empresaParceira"]>
+  export type EmpresaParceiraOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "responsavelRh" | "telefoneRh" | "emailRh" | "cnpj" | "emailsExtras", ExtArgs["result"]["empresaParceira"]>
 
   export type $EmpresaParceiraPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "EmpresaParceira"
@@ -13740,6 +13853,8 @@ export namespace Prisma {
       responsavelRh: string | null
       telefoneRh: string | null
       emailRh: string | null
+      cnpj: string | null
+      emailsExtras: string | null
     }, ExtArgs["result"]["empresaParceira"]>
     composites: {}
   }
@@ -14168,6 +14283,8 @@ export namespace Prisma {
     readonly responsavelRh: FieldRef<"EmpresaParceira", 'String'>
     readonly telefoneRh: FieldRef<"EmpresaParceira", 'String'>
     readonly emailRh: FieldRef<"EmpresaParceira", 'String'>
+    readonly cnpj: FieldRef<"EmpresaParceira", 'String'>
+    readonly emailsExtras: FieldRef<"EmpresaParceira", 'String'>
   }
     
 
@@ -22911,6 +23028,1100 @@ export namespace Prisma {
 
 
   /**
+   * Model VozDublador
+   */
+
+  export type AggregateVozDublador = {
+    _count: VozDubladorCountAggregateOutputType | null
+    _avg: VozDubladorAvgAggregateOutputType | null
+    _sum: VozDubladorSumAggregateOutputType | null
+    _min: VozDubladorMinAggregateOutputType | null
+    _max: VozDubladorMaxAggregateOutputType | null
+  }
+
+  export type VozDubladorAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type VozDubladorSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type VozDubladorMinAggregateOutputType = {
+    id: number | null
+    nome: string | null
+    descricao: string | null
+    idioma: string | null
+    genero: string | null
+    estilo: string | null
+    minioUrl: string | null
+    minioKey: string | null
+    ativo: boolean | null
+    criadoEm: Date | null
+  }
+
+  export type VozDubladorMaxAggregateOutputType = {
+    id: number | null
+    nome: string | null
+    descricao: string | null
+    idioma: string | null
+    genero: string | null
+    estilo: string | null
+    minioUrl: string | null
+    minioKey: string | null
+    ativo: boolean | null
+    criadoEm: Date | null
+  }
+
+  export type VozDubladorCountAggregateOutputType = {
+    id: number
+    nome: number
+    descricao: number
+    idioma: number
+    genero: number
+    estilo: number
+    minioUrl: number
+    minioKey: number
+    ativo: number
+    criadoEm: number
+    _all: number
+  }
+
+
+  export type VozDubladorAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type VozDubladorSumAggregateInputType = {
+    id?: true
+  }
+
+  export type VozDubladorMinAggregateInputType = {
+    id?: true
+    nome?: true
+    descricao?: true
+    idioma?: true
+    genero?: true
+    estilo?: true
+    minioUrl?: true
+    minioKey?: true
+    ativo?: true
+    criadoEm?: true
+  }
+
+  export type VozDubladorMaxAggregateInputType = {
+    id?: true
+    nome?: true
+    descricao?: true
+    idioma?: true
+    genero?: true
+    estilo?: true
+    minioUrl?: true
+    minioKey?: true
+    ativo?: true
+    criadoEm?: true
+  }
+
+  export type VozDubladorCountAggregateInputType = {
+    id?: true
+    nome?: true
+    descricao?: true
+    idioma?: true
+    genero?: true
+    estilo?: true
+    minioUrl?: true
+    minioKey?: true
+    ativo?: true
+    criadoEm?: true
+    _all?: true
+  }
+
+  export type VozDubladorAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VozDublador to aggregate.
+     */
+    where?: VozDubladorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VozDubladors to fetch.
+     */
+    orderBy?: VozDubladorOrderByWithRelationInput | VozDubladorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VozDubladorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VozDubladors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VozDubladors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VozDubladors
+    **/
+    _count?: true | VozDubladorCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: VozDubladorAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: VozDubladorSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VozDubladorMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VozDubladorMaxAggregateInputType
+  }
+
+  export type GetVozDubladorAggregateType<T extends VozDubladorAggregateArgs> = {
+        [P in keyof T & keyof AggregateVozDublador]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVozDublador[P]>
+      : GetScalarType<T[P], AggregateVozDublador[P]>
+  }
+
+
+
+
+  export type VozDubladorGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VozDubladorWhereInput
+    orderBy?: VozDubladorOrderByWithAggregationInput | VozDubladorOrderByWithAggregationInput[]
+    by: VozDubladorScalarFieldEnum[] | VozDubladorScalarFieldEnum
+    having?: VozDubladorScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VozDubladorCountAggregateInputType | true
+    _avg?: VozDubladorAvgAggregateInputType
+    _sum?: VozDubladorSumAggregateInputType
+    _min?: VozDubladorMinAggregateInputType
+    _max?: VozDubladorMaxAggregateInputType
+  }
+
+  export type VozDubladorGroupByOutputType = {
+    id: number
+    nome: string
+    descricao: string | null
+    idioma: string
+    genero: string | null
+    estilo: string | null
+    minioUrl: string
+    minioKey: string
+    ativo: boolean
+    criadoEm: Date
+    _count: VozDubladorCountAggregateOutputType | null
+    _avg: VozDubladorAvgAggregateOutputType | null
+    _sum: VozDubladorSumAggregateOutputType | null
+    _min: VozDubladorMinAggregateOutputType | null
+    _max: VozDubladorMaxAggregateOutputType | null
+  }
+
+  type GetVozDubladorGroupByPayload<T extends VozDubladorGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VozDubladorGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VozDubladorGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VozDubladorGroupByOutputType[P]>
+            : GetScalarType<T[P], VozDubladorGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VozDubladorSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nome?: boolean
+    descricao?: boolean
+    idioma?: boolean
+    genero?: boolean
+    estilo?: boolean
+    minioUrl?: boolean
+    minioKey?: boolean
+    ativo?: boolean
+    criadoEm?: boolean
+  }, ExtArgs["result"]["vozDublador"]>
+
+  export type VozDubladorSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nome?: boolean
+    descricao?: boolean
+    idioma?: boolean
+    genero?: boolean
+    estilo?: boolean
+    minioUrl?: boolean
+    minioKey?: boolean
+    ativo?: boolean
+    criadoEm?: boolean
+  }, ExtArgs["result"]["vozDublador"]>
+
+  export type VozDubladorSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nome?: boolean
+    descricao?: boolean
+    idioma?: boolean
+    genero?: boolean
+    estilo?: boolean
+    minioUrl?: boolean
+    minioKey?: boolean
+    ativo?: boolean
+    criadoEm?: boolean
+  }, ExtArgs["result"]["vozDublador"]>
+
+  export type VozDubladorSelectScalar = {
+    id?: boolean
+    nome?: boolean
+    descricao?: boolean
+    idioma?: boolean
+    genero?: boolean
+    estilo?: boolean
+    minioUrl?: boolean
+    minioKey?: boolean
+    ativo?: boolean
+    criadoEm?: boolean
+  }
+
+  export type VozDubladorOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "descricao" | "idioma" | "genero" | "estilo" | "minioUrl" | "minioKey" | "ativo" | "criadoEm", ExtArgs["result"]["vozDublador"]>
+
+  export type $VozDubladorPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VozDublador"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      nome: string
+      descricao: string | null
+      idioma: string
+      genero: string | null
+      estilo: string | null
+      minioUrl: string
+      minioKey: string
+      ativo: boolean
+      criadoEm: Date
+    }, ExtArgs["result"]["vozDublador"]>
+    composites: {}
+  }
+
+  type VozDubladorGetPayload<S extends boolean | null | undefined | VozDubladorDefaultArgs> = $Result.GetResult<Prisma.$VozDubladorPayload, S>
+
+  type VozDubladorCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<VozDubladorFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: VozDubladorCountAggregateInputType | true
+    }
+
+  export interface VozDubladorDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VozDublador'], meta: { name: 'VozDublador' } }
+    /**
+     * Find zero or one VozDublador that matches the filter.
+     * @param {VozDubladorFindUniqueArgs} args - Arguments to find a VozDublador
+     * @example
+     * // Get one VozDublador
+     * const vozDublador = await prisma.vozDublador.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VozDubladorFindUniqueArgs>(args: SelectSubset<T, VozDubladorFindUniqueArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one VozDublador that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {VozDubladorFindUniqueOrThrowArgs} args - Arguments to find a VozDublador
+     * @example
+     * // Get one VozDublador
+     * const vozDublador = await prisma.vozDublador.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VozDubladorFindUniqueOrThrowArgs>(args: SelectSubset<T, VozDubladorFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first VozDublador that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VozDubladorFindFirstArgs} args - Arguments to find a VozDublador
+     * @example
+     * // Get one VozDublador
+     * const vozDublador = await prisma.vozDublador.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VozDubladorFindFirstArgs>(args?: SelectSubset<T, VozDubladorFindFirstArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first VozDublador that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VozDubladorFindFirstOrThrowArgs} args - Arguments to find a VozDublador
+     * @example
+     * // Get one VozDublador
+     * const vozDublador = await prisma.vozDublador.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VozDubladorFindFirstOrThrowArgs>(args?: SelectSubset<T, VozDubladorFindFirstOrThrowArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more VozDubladors that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VozDubladorFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VozDubladors
+     * const vozDubladors = await prisma.vozDublador.findMany()
+     * 
+     * // Get first 10 VozDubladors
+     * const vozDubladors = await prisma.vozDublador.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const vozDubladorWithIdOnly = await prisma.vozDublador.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VozDubladorFindManyArgs>(args?: SelectSubset<T, VozDubladorFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a VozDublador.
+     * @param {VozDubladorCreateArgs} args - Arguments to create a VozDublador.
+     * @example
+     * // Create one VozDublador
+     * const VozDublador = await prisma.vozDublador.create({
+     *   data: {
+     *     // ... data to create a VozDublador
+     *   }
+     * })
+     * 
+     */
+    create<T extends VozDubladorCreateArgs>(args: SelectSubset<T, VozDubladorCreateArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many VozDubladors.
+     * @param {VozDubladorCreateManyArgs} args - Arguments to create many VozDubladors.
+     * @example
+     * // Create many VozDubladors
+     * const vozDublador = await prisma.vozDublador.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VozDubladorCreateManyArgs>(args?: SelectSubset<T, VozDubladorCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many VozDubladors and returns the data saved in the database.
+     * @param {VozDubladorCreateManyAndReturnArgs} args - Arguments to create many VozDubladors.
+     * @example
+     * // Create many VozDubladors
+     * const vozDublador = await prisma.vozDublador.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many VozDubladors and only return the `id`
+     * const vozDubladorWithIdOnly = await prisma.vozDublador.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends VozDubladorCreateManyAndReturnArgs>(args?: SelectSubset<T, VozDubladorCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a VozDublador.
+     * @param {VozDubladorDeleteArgs} args - Arguments to delete one VozDublador.
+     * @example
+     * // Delete one VozDublador
+     * const VozDublador = await prisma.vozDublador.delete({
+     *   where: {
+     *     // ... filter to delete one VozDublador
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VozDubladorDeleteArgs>(args: SelectSubset<T, VozDubladorDeleteArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one VozDublador.
+     * @param {VozDubladorUpdateArgs} args - Arguments to update one VozDublador.
+     * @example
+     * // Update one VozDublador
+     * const vozDublador = await prisma.vozDublador.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VozDubladorUpdateArgs>(args: SelectSubset<T, VozDubladorUpdateArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more VozDubladors.
+     * @param {VozDubladorDeleteManyArgs} args - Arguments to filter VozDubladors to delete.
+     * @example
+     * // Delete a few VozDubladors
+     * const { count } = await prisma.vozDublador.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VozDubladorDeleteManyArgs>(args?: SelectSubset<T, VozDubladorDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VozDubladors.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VozDubladorUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VozDubladors
+     * const vozDublador = await prisma.vozDublador.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VozDubladorUpdateManyArgs>(args: SelectSubset<T, VozDubladorUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VozDubladors and returns the data updated in the database.
+     * @param {VozDubladorUpdateManyAndReturnArgs} args - Arguments to update many VozDubladors.
+     * @example
+     * // Update many VozDubladors
+     * const vozDublador = await prisma.vozDublador.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more VozDubladors and only return the `id`
+     * const vozDubladorWithIdOnly = await prisma.vozDublador.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends VozDubladorUpdateManyAndReturnArgs>(args: SelectSubset<T, VozDubladorUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one VozDublador.
+     * @param {VozDubladorUpsertArgs} args - Arguments to update or create a VozDublador.
+     * @example
+     * // Update or create a VozDublador
+     * const vozDublador = await prisma.vozDublador.upsert({
+     *   create: {
+     *     // ... data to create a VozDublador
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VozDublador we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VozDubladorUpsertArgs>(args: SelectSubset<T, VozDubladorUpsertArgs<ExtArgs>>): Prisma__VozDubladorClient<$Result.GetResult<Prisma.$VozDubladorPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of VozDubladors.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VozDubladorCountArgs} args - Arguments to filter VozDubladors to count.
+     * @example
+     * // Count the number of VozDubladors
+     * const count = await prisma.vozDublador.count({
+     *   where: {
+     *     // ... the filter for the VozDubladors we want to count
+     *   }
+     * })
+    **/
+    count<T extends VozDubladorCountArgs>(
+      args?: Subset<T, VozDubladorCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VozDubladorCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VozDublador.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VozDubladorAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VozDubladorAggregateArgs>(args: Subset<T, VozDubladorAggregateArgs>): Prisma.PrismaPromise<GetVozDubladorAggregateType<T>>
+
+    /**
+     * Group by VozDublador.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VozDubladorGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VozDubladorGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VozDubladorGroupByArgs['orderBy'] }
+        : { orderBy?: VozDubladorGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VozDubladorGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVozDubladorGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VozDublador model
+   */
+  readonly fields: VozDubladorFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VozDublador.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VozDubladorClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VozDublador model
+   */
+  interface VozDubladorFieldRefs {
+    readonly id: FieldRef<"VozDublador", 'Int'>
+    readonly nome: FieldRef<"VozDublador", 'String'>
+    readonly descricao: FieldRef<"VozDublador", 'String'>
+    readonly idioma: FieldRef<"VozDublador", 'String'>
+    readonly genero: FieldRef<"VozDublador", 'String'>
+    readonly estilo: FieldRef<"VozDublador", 'String'>
+    readonly minioUrl: FieldRef<"VozDublador", 'String'>
+    readonly minioKey: FieldRef<"VozDublador", 'String'>
+    readonly ativo: FieldRef<"VozDublador", 'Boolean'>
+    readonly criadoEm: FieldRef<"VozDublador", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VozDublador findUnique
+   */
+  export type VozDubladorFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * Filter, which VozDublador to fetch.
+     */
+    where: VozDubladorWhereUniqueInput
+  }
+
+  /**
+   * VozDublador findUniqueOrThrow
+   */
+  export type VozDubladorFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * Filter, which VozDublador to fetch.
+     */
+    where: VozDubladorWhereUniqueInput
+  }
+
+  /**
+   * VozDublador findFirst
+   */
+  export type VozDubladorFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * Filter, which VozDublador to fetch.
+     */
+    where?: VozDubladorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VozDubladors to fetch.
+     */
+    orderBy?: VozDubladorOrderByWithRelationInput | VozDubladorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VozDubladors.
+     */
+    cursor?: VozDubladorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VozDubladors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VozDubladors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VozDubladors.
+     */
+    distinct?: VozDubladorScalarFieldEnum | VozDubladorScalarFieldEnum[]
+  }
+
+  /**
+   * VozDublador findFirstOrThrow
+   */
+  export type VozDubladorFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * Filter, which VozDublador to fetch.
+     */
+    where?: VozDubladorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VozDubladors to fetch.
+     */
+    orderBy?: VozDubladorOrderByWithRelationInput | VozDubladorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VozDubladors.
+     */
+    cursor?: VozDubladorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VozDubladors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VozDubladors.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VozDubladors.
+     */
+    distinct?: VozDubladorScalarFieldEnum | VozDubladorScalarFieldEnum[]
+  }
+
+  /**
+   * VozDublador findMany
+   */
+  export type VozDubladorFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * Filter, which VozDubladors to fetch.
+     */
+    where?: VozDubladorWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VozDubladors to fetch.
+     */
+    orderBy?: VozDubladorOrderByWithRelationInput | VozDubladorOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VozDubladors.
+     */
+    cursor?: VozDubladorWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VozDubladors from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VozDubladors.
+     */
+    skip?: number
+    distinct?: VozDubladorScalarFieldEnum | VozDubladorScalarFieldEnum[]
+  }
+
+  /**
+   * VozDublador create
+   */
+  export type VozDubladorCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * The data needed to create a VozDublador.
+     */
+    data: XOR<VozDubladorCreateInput, VozDubladorUncheckedCreateInput>
+  }
+
+  /**
+   * VozDublador createMany
+   */
+  export type VozDubladorCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VozDubladors.
+     */
+    data: VozDubladorCreateManyInput | VozDubladorCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * VozDublador createManyAndReturn
+   */
+  export type VozDubladorCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * The data used to create many VozDubladors.
+     */
+    data: VozDubladorCreateManyInput | VozDubladorCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * VozDublador update
+   */
+  export type VozDubladorUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * The data needed to update a VozDublador.
+     */
+    data: XOR<VozDubladorUpdateInput, VozDubladorUncheckedUpdateInput>
+    /**
+     * Choose, which VozDublador to update.
+     */
+    where: VozDubladorWhereUniqueInput
+  }
+
+  /**
+   * VozDublador updateMany
+   */
+  export type VozDubladorUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VozDubladors.
+     */
+    data: XOR<VozDubladorUpdateManyMutationInput, VozDubladorUncheckedUpdateManyInput>
+    /**
+     * Filter which VozDubladors to update
+     */
+    where?: VozDubladorWhereInput
+    /**
+     * Limit how many VozDubladors to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * VozDublador updateManyAndReturn
+   */
+  export type VozDubladorUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * The data used to update VozDubladors.
+     */
+    data: XOR<VozDubladorUpdateManyMutationInput, VozDubladorUncheckedUpdateManyInput>
+    /**
+     * Filter which VozDubladors to update
+     */
+    where?: VozDubladorWhereInput
+    /**
+     * Limit how many VozDubladors to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * VozDublador upsert
+   */
+  export type VozDubladorUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * The filter to search for the VozDublador to update in case it exists.
+     */
+    where: VozDubladorWhereUniqueInput
+    /**
+     * In case the VozDublador found by the `where` argument doesn't exist, create a new VozDublador with this data.
+     */
+    create: XOR<VozDubladorCreateInput, VozDubladorUncheckedCreateInput>
+    /**
+     * In case the VozDublador was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VozDubladorUpdateInput, VozDubladorUncheckedUpdateInput>
+  }
+
+  /**
+   * VozDublador delete
+   */
+  export type VozDubladorDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+    /**
+     * Filter which VozDublador to delete.
+     */
+    where: VozDubladorWhereUniqueInput
+  }
+
+  /**
+   * VozDublador deleteMany
+   */
+  export type VozDubladorDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VozDubladors to delete
+     */
+    where?: VozDubladorWhereInput
+    /**
+     * Limit how many VozDubladors to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * VozDublador without action
+   */
+  export type VozDubladorDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VozDublador
+     */
+    select?: VozDubladorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VozDublador
+     */
+    omit?: VozDubladorOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -23099,7 +24310,9 @@ export namespace Prisma {
     nome: 'nome',
     responsavelRh: 'responsavelRh',
     telefoneRh: 'telefoneRh',
-    emailRh: 'emailRh'
+    emailRh: 'emailRh',
+    cnpj: 'cnpj',
+    emailsExtras: 'emailsExtras'
   };
 
   export type EmpresaParceiraScalarFieldEnum = (typeof EmpresaParceiraScalarFieldEnum)[keyof typeof EmpresaParceiraScalarFieldEnum]
@@ -23196,6 +24409,22 @@ export namespace Prisma {
   };
 
   export type NotificacaoScalarFieldEnum = (typeof NotificacaoScalarFieldEnum)[keyof typeof NotificacaoScalarFieldEnum]
+
+
+  export const VozDubladorScalarFieldEnum: {
+    id: 'id',
+    nome: 'nome',
+    descricao: 'descricao',
+    idioma: 'idioma',
+    genero: 'genero',
+    estilo: 'estilo',
+    minioUrl: 'minioUrl',
+    minioKey: 'minioKey',
+    ativo: 'ativo',
+    criadoEm: 'criadoEm'
+  };
+
+  export type VozDubladorScalarFieldEnum = (typeof VozDubladorScalarFieldEnum)[keyof typeof VozDubladorScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -24222,6 +25451,8 @@ export namespace Prisma {
     responsavelRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     telefoneRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     emailRh?: StringNullableFilter<"EmpresaParceira"> | string | null
+    cnpj?: StringNullableFilter<"EmpresaParceira"> | string | null
+    emailsExtras?: StringNullableFilter<"EmpresaParceira"> | string | null
   }
 
   export type EmpresaParceiraOrderByWithRelationInput = {
@@ -24230,6 +25461,8 @@ export namespace Prisma {
     responsavelRh?: SortOrderInput | SortOrder
     telefoneRh?: SortOrderInput | SortOrder
     emailRh?: SortOrderInput | SortOrder
+    cnpj?: SortOrderInput | SortOrder
+    emailsExtras?: SortOrderInput | SortOrder
   }
 
   export type EmpresaParceiraWhereUniqueInput = Prisma.AtLeast<{
@@ -24241,6 +25474,8 @@ export namespace Prisma {
     responsavelRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     telefoneRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     emailRh?: StringNullableFilter<"EmpresaParceira"> | string | null
+    cnpj?: StringNullableFilter<"EmpresaParceira"> | string | null
+    emailsExtras?: StringNullableFilter<"EmpresaParceira"> | string | null
   }, "id" | "nome">
 
   export type EmpresaParceiraOrderByWithAggregationInput = {
@@ -24249,6 +25484,8 @@ export namespace Prisma {
     responsavelRh?: SortOrderInput | SortOrder
     telefoneRh?: SortOrderInput | SortOrder
     emailRh?: SortOrderInput | SortOrder
+    cnpj?: SortOrderInput | SortOrder
+    emailsExtras?: SortOrderInput | SortOrder
     _count?: EmpresaParceiraCountOrderByAggregateInput
     _avg?: EmpresaParceiraAvgOrderByAggregateInput
     _max?: EmpresaParceiraMaxOrderByAggregateInput
@@ -24265,6 +25502,8 @@ export namespace Prisma {
     responsavelRh?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
     telefoneRh?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
     emailRh?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
+    cnpj?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
+    emailsExtras?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
   }
 
   export type PagamentoWhereInput = {
@@ -24725,6 +25964,85 @@ export namespace Prisma {
     lida?: BoolWithAggregatesFilter<"Notificacao"> | boolean
     criadoEm?: DateTimeWithAggregatesFilter<"Notificacao"> | Date | string
     link?: StringNullableWithAggregatesFilter<"Notificacao"> | string | null
+  }
+
+  export type VozDubladorWhereInput = {
+    AND?: VozDubladorWhereInput | VozDubladorWhereInput[]
+    OR?: VozDubladorWhereInput[]
+    NOT?: VozDubladorWhereInput | VozDubladorWhereInput[]
+    id?: IntFilter<"VozDublador"> | number
+    nome?: StringFilter<"VozDublador"> | string
+    descricao?: StringNullableFilter<"VozDublador"> | string | null
+    idioma?: StringFilter<"VozDublador"> | string
+    genero?: StringNullableFilter<"VozDublador"> | string | null
+    estilo?: StringNullableFilter<"VozDublador"> | string | null
+    minioUrl?: StringFilter<"VozDublador"> | string
+    minioKey?: StringFilter<"VozDublador"> | string
+    ativo?: BoolFilter<"VozDublador"> | boolean
+    criadoEm?: DateTimeFilter<"VozDublador"> | Date | string
+  }
+
+  export type VozDubladorOrderByWithRelationInput = {
+    id?: SortOrder
+    nome?: SortOrder
+    descricao?: SortOrderInput | SortOrder
+    idioma?: SortOrder
+    genero?: SortOrderInput | SortOrder
+    estilo?: SortOrderInput | SortOrder
+    minioUrl?: SortOrder
+    minioKey?: SortOrder
+    ativo?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type VozDubladorWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: VozDubladorWhereInput | VozDubladorWhereInput[]
+    OR?: VozDubladorWhereInput[]
+    NOT?: VozDubladorWhereInput | VozDubladorWhereInput[]
+    nome?: StringFilter<"VozDublador"> | string
+    descricao?: StringNullableFilter<"VozDublador"> | string | null
+    idioma?: StringFilter<"VozDublador"> | string
+    genero?: StringNullableFilter<"VozDublador"> | string | null
+    estilo?: StringNullableFilter<"VozDublador"> | string | null
+    minioUrl?: StringFilter<"VozDublador"> | string
+    minioKey?: StringFilter<"VozDublador"> | string
+    ativo?: BoolFilter<"VozDublador"> | boolean
+    criadoEm?: DateTimeFilter<"VozDublador"> | Date | string
+  }, "id">
+
+  export type VozDubladorOrderByWithAggregationInput = {
+    id?: SortOrder
+    nome?: SortOrder
+    descricao?: SortOrderInput | SortOrder
+    idioma?: SortOrder
+    genero?: SortOrderInput | SortOrder
+    estilo?: SortOrderInput | SortOrder
+    minioUrl?: SortOrder
+    minioKey?: SortOrder
+    ativo?: SortOrder
+    criadoEm?: SortOrder
+    _count?: VozDubladorCountOrderByAggregateInput
+    _avg?: VozDubladorAvgOrderByAggregateInput
+    _max?: VozDubladorMaxOrderByAggregateInput
+    _min?: VozDubladorMinOrderByAggregateInput
+    _sum?: VozDubladorSumOrderByAggregateInput
+  }
+
+  export type VozDubladorScalarWhereWithAggregatesInput = {
+    AND?: VozDubladorScalarWhereWithAggregatesInput | VozDubladorScalarWhereWithAggregatesInput[]
+    OR?: VozDubladorScalarWhereWithAggregatesInput[]
+    NOT?: VozDubladorScalarWhereWithAggregatesInput | VozDubladorScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"VozDublador"> | number
+    nome?: StringWithAggregatesFilter<"VozDublador"> | string
+    descricao?: StringNullableWithAggregatesFilter<"VozDublador"> | string | null
+    idioma?: StringWithAggregatesFilter<"VozDublador"> | string
+    genero?: StringNullableWithAggregatesFilter<"VozDublador"> | string | null
+    estilo?: StringNullableWithAggregatesFilter<"VozDublador"> | string | null
+    minioUrl?: StringWithAggregatesFilter<"VozDublador"> | string
+    minioKey?: StringWithAggregatesFilter<"VozDublador"> | string
+    ativo?: BoolWithAggregatesFilter<"VozDublador"> | boolean
+    criadoEm?: DateTimeWithAggregatesFilter<"VozDublador"> | Date | string
   }
 
   export type ClienteCreateInput = {
@@ -25725,6 +27043,8 @@ export namespace Prisma {
     responsavelRh?: string | null
     telefoneRh?: string | null
     emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
   }
 
   export type EmpresaParceiraUncheckedCreateInput = {
@@ -25733,6 +27053,8 @@ export namespace Prisma {
     responsavelRh?: string | null
     telefoneRh?: string | null
     emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
   }
 
   export type EmpresaParceiraUpdateInput = {
@@ -25740,6 +27062,8 @@ export namespace Prisma {
     responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
     telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type EmpresaParceiraUncheckedUpdateInput = {
@@ -25748,6 +27072,8 @@ export namespace Prisma {
     responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
     telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type EmpresaParceiraCreateManyInput = {
@@ -25756,6 +27082,8 @@ export namespace Prisma {
     responsavelRh?: string | null
     telefoneRh?: string | null
     emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
   }
 
   export type EmpresaParceiraUpdateManyMutationInput = {
@@ -25763,6 +27091,8 @@ export namespace Prisma {
     responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
     telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type EmpresaParceiraUncheckedUpdateManyInput = {
@@ -25771,6 +27101,8 @@ export namespace Prisma {
     responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
     telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PagamentoCreateInput = {
@@ -26229,6 +27561,94 @@ export namespace Prisma {
     lida?: BoolFieldUpdateOperationsInput | boolean
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type VozDubladorCreateInput = {
+    nome: string
+    descricao?: string | null
+    idioma?: string
+    genero?: string | null
+    estilo?: string | null
+    minioUrl: string
+    minioKey: string
+    ativo?: boolean
+    criadoEm?: Date | string
+  }
+
+  export type VozDubladorUncheckedCreateInput = {
+    id?: number
+    nome: string
+    descricao?: string | null
+    idioma?: string
+    genero?: string | null
+    estilo?: string | null
+    minioUrl: string
+    minioKey: string
+    ativo?: boolean
+    criadoEm?: Date | string
+  }
+
+  export type VozDubladorUpdateInput = {
+    nome?: StringFieldUpdateOperationsInput | string
+    descricao?: NullableStringFieldUpdateOperationsInput | string | null
+    idioma?: StringFieldUpdateOperationsInput | string
+    genero?: NullableStringFieldUpdateOperationsInput | string | null
+    estilo?: NullableStringFieldUpdateOperationsInput | string | null
+    minioUrl?: StringFieldUpdateOperationsInput | string
+    minioKey?: StringFieldUpdateOperationsInput | string
+    ativo?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VozDubladorUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    descricao?: NullableStringFieldUpdateOperationsInput | string | null
+    idioma?: StringFieldUpdateOperationsInput | string
+    genero?: NullableStringFieldUpdateOperationsInput | string | null
+    estilo?: NullableStringFieldUpdateOperationsInput | string | null
+    minioUrl?: StringFieldUpdateOperationsInput | string
+    minioKey?: StringFieldUpdateOperationsInput | string
+    ativo?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VozDubladorCreateManyInput = {
+    id?: number
+    nome: string
+    descricao?: string | null
+    idioma?: string
+    genero?: string | null
+    estilo?: string | null
+    minioUrl: string
+    minioKey: string
+    ativo?: boolean
+    criadoEm?: Date | string
+  }
+
+  export type VozDubladorUpdateManyMutationInput = {
+    nome?: StringFieldUpdateOperationsInput | string
+    descricao?: NullableStringFieldUpdateOperationsInput | string | null
+    idioma?: StringFieldUpdateOperationsInput | string
+    genero?: NullableStringFieldUpdateOperationsInput | string | null
+    estilo?: NullableStringFieldUpdateOperationsInput | string | null
+    minioUrl?: StringFieldUpdateOperationsInput | string
+    minioKey?: StringFieldUpdateOperationsInput | string
+    ativo?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VozDubladorUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    descricao?: NullableStringFieldUpdateOperationsInput | string | null
+    idioma?: StringFieldUpdateOperationsInput | string
+    genero?: NullableStringFieldUpdateOperationsInput | string | null
+    estilo?: NullableStringFieldUpdateOperationsInput | string | null
+    minioUrl?: StringFieldUpdateOperationsInput | string
+    minioKey?: StringFieldUpdateOperationsInput | string
+    ativo?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -27203,6 +28623,8 @@ export namespace Prisma {
     responsavelRh?: SortOrder
     telefoneRh?: SortOrder
     emailRh?: SortOrder
+    cnpj?: SortOrder
+    emailsExtras?: SortOrder
   }
 
   export type EmpresaParceiraAvgOrderByAggregateInput = {
@@ -27215,6 +28637,8 @@ export namespace Prisma {
     responsavelRh?: SortOrder
     telefoneRh?: SortOrder
     emailRh?: SortOrder
+    cnpj?: SortOrder
+    emailsExtras?: SortOrder
   }
 
   export type EmpresaParceiraMinOrderByAggregateInput = {
@@ -27223,6 +28647,8 @@ export namespace Prisma {
     responsavelRh?: SortOrder
     telefoneRh?: SortOrder
     emailRh?: SortOrder
+    cnpj?: SortOrder
+    emailsExtras?: SortOrder
   }
 
   export type EmpresaParceiraSumOrderByAggregateInput = {
@@ -27554,6 +28980,53 @@ export namespace Prisma {
   }
 
   export type NotificacaoSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type VozDubladorCountOrderByAggregateInput = {
+    id?: SortOrder
+    nome?: SortOrder
+    descricao?: SortOrder
+    idioma?: SortOrder
+    genero?: SortOrder
+    estilo?: SortOrder
+    minioUrl?: SortOrder
+    minioKey?: SortOrder
+    ativo?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type VozDubladorAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type VozDubladorMaxOrderByAggregateInput = {
+    id?: SortOrder
+    nome?: SortOrder
+    descricao?: SortOrder
+    idioma?: SortOrder
+    genero?: SortOrder
+    estilo?: SortOrder
+    minioUrl?: SortOrder
+    minioKey?: SortOrder
+    ativo?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type VozDubladorMinOrderByAggregateInput = {
+    id?: SortOrder
+    nome?: SortOrder
+    descricao?: SortOrder
+    idioma?: SortOrder
+    genero?: SortOrder
+    estilo?: SortOrder
+    minioUrl?: SortOrder
+    minioKey?: SortOrder
+    ativo?: SortOrder
+    criadoEm?: SortOrder
+  }
+
+  export type VozDubladorSumOrderByAggregateInput = {
     id?: SortOrder
   }
 

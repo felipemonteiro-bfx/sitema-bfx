@@ -201,6 +201,8 @@ model EmpresaParceira {
   responsavelRh String? @map("responsavel_rh")
   telefoneRh    String? @map("telefone_rh")
   emailRh       String? @map("email_rh")
+  cnpj          String? @map("cnpj")
+  emailsExtras  String? @map("emails_extras")
 
   @@map("empresas_parceiras")
 }
@@ -292,4 +294,19 @@ model Notificacao {
   link     String?
 
   @@map("notificacoes")
+}
+
+model VozDublador {
+  id        Int      @id @default(autoincrement())
+  nome      String // Ex: "Guilherme Briggs"
+  descricao String? // Ex: "Voz grave, dramática"
+  idioma    String   @default("pt-BR")
+  genero    String? // "masculino" | "feminino"
+  estilo    String? // "narrador", "personagem", "comercial"
+  minioUrl  String   @map("minio_url") // URL pública do arquivo no MinIO
+  minioKey  String   @map("minio_key") // Chave interna no bucket (para download)
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  @@map("vozes_dubladores")
 }

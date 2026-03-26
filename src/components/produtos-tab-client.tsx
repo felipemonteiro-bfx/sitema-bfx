@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import ProdutoFormClient from "@/components/produto-form-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, cn } from "@/lib/utils";
-import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
+import { ArrowUpDown, ChevronUp, ChevronDown, Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,6 +84,47 @@ export default function ProdutosTabClient({
   const [searchValue, setSearchValue] = useState(searchQuery ?? "");
   const [isSearching, setIsSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  type SortField = 'nome' | 'dataCompra' | 'marca' | 'valorVenda';
+  type SortDir = 'asc' | 'desc';
+  const [sortField, setSortField] = useState<SortField>('nome');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const sortedProdutos = useMemo(() => {
+    return [...produtos].sort((a, b) => {
+      let cmp = 0;
+      if (sortField === 'nome') {
+        cmp = a.nome.localeCompare(b.nome, 'pt-BR');
+      } else if (sortField === 'dataCompra') {
+        const da = a.dataCompra ? new Date(a.dataCompra).getTime() : 0;
+        const db = b.dataCompra ? new Date(b.dataCompra).getTime() : 0;
+        cmp = da - db;
+      } else if (sortField === 'marca') {
+        const ma = a.marca || '';
+        const mb = b.marca || '';
+        cmp = ma.localeCompare(mb, 'pt-BR');
+      } else if (sortField === 'valorVenda') {
+        cmp = (a.valorVenda || 0) - (b.valorVenda || 0);
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [produtos, sortField, sortDir]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 text-muted-foreground/50 inline" />;
+    return sortDir === 'asc'
+      ? <ChevronUp className="ml-1 h-3 w-3 text-blue-900 inline" />
+      : <ChevronDown className="ml-1 h-3 w-3 text-blue-900 inline" />;
+  };
 
   const produtosMap = useMemo(
     () => new Map(produtos.map((produto) => [produto.id, produto])),
@@ -271,18 +312,39 @@ export default function ProdutosTabClient({
               />
             </TableHead>
             <TableHead className="w-[80px]">Foto</TableHead>
-            <TableHead>Nome</TableHead>
+            <TableHead
+              className="cursor-pointer select-none hover:text-blue-900"
+              onClick={() => handleSort('nome')}
+            >
+              Nome<SortIcon field="nome" />
+            </TableHead>
             <TableHead>Categoria</TableHead>
-            <TableHead>Marca/Fornecedor</TableHead>
+            <TableHead
+              className="cursor-pointer select-none hover:text-blue-900"
+              onClick={() => handleSort('marca')}
+            >
+              Marca/Fornecedor<SortIcon field="marca" />
+            </TableHead>
             <TableHead>NCM</TableHead>
-            <TableHead className="text-right">Valor</TableHead>
+            <TableHead
+              className="cursor-pointer select-none hover:text-blue-900"
+              onClick={() => handleSort('dataCompra')}
+            >
+              Data Compra<SortIcon field="dataCompra" />
+            </TableHead>
+            <TableHead
+              className="text-right cursor-pointer select-none hover:text-blue-900"
+              onClick={() => handleSort('valorVenda')}
+            >
+              Valor<SortIcon field="valorVenda" />
+            </TableHead>
             <TableHead className="w-[100px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {produtos.length === 0 ? (
+          {sortedProdutos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                 {searchQuery ? (
                   <div className="space-y-1">
                     <p>Nenhum produto encontrado para &quot;{searchQuery}&quot;</p>
@@ -294,7 +356,7 @@ export default function ProdutosTabClient({
               </TableCell>
             </TableRow>
           ) : (
-            produtos.map((p) => (
+            sortedProdutos.map((p) => (
               <TableRow key={p.id}>
                 <TableCell>
                   <Checkbox
@@ -330,6 +392,11 @@ export default function ProdutosTabClient({
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-xs">{p.ncm}</TableCell>
+                <TableCell className="text-xs text-muted-foreground tabular-nums">
+                  {p.dataCompra
+                    ? new Date(p.dataCompra).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : "—"}
+                </TableCell>
                 <TableCell className="text-right tabular-nums font-semibold">{formatBRL(p.valorVenda || 0)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">

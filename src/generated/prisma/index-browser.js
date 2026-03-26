@@ -269,7 +269,9 @@ exports.Prisma.EmpresaParceiraScalarFieldEnum = {
   nome: 'nome',
   responsavelRh: 'responsavelRh',
   telefoneRh: 'telefoneRh',
-  emailRh: 'emailRh'
+  emailRh: 'emailRh',
+  cnpj: 'cnpj',
+  emailsExtras: 'emailsExtras'
 };
 
 exports.Prisma.PagamentoScalarFieldEnum = {
@@ -341,6 +343,19 @@ exports.Prisma.NotificacaoScalarFieldEnum = {
   link: 'link'
 };
 
+exports.Prisma.VozDubladorScalarFieldEnum = {
+  id: 'id',
+  nome: 'nome',
+  descricao: 'descricao',
+  idioma: 'idioma',
+  genero: 'genero',
+  estilo: 'estilo',
+  minioUrl: 'minioUrl',
+  minioKey: 'minioKey',
+  ativo: 'ativo',
+  criadoEm: 'criadoEm'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -386,7 +401,8 @@ exports.Prisma.ModelName = {
   WhatsAppEnvioLog: 'WhatsAppEnvioLog',
   AiMensagem: 'AiMensagem',
   Assinatura: 'Assinatura',
-  Notificacao: 'Notificacao'
+  Notificacao: 'Notificacao',
+  VozDublador: 'VozDublador'
 };
 
 /**

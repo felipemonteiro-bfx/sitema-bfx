@@ -30,6 +30,8 @@ type EmpresaListItem = {
   responsavelRh: string | null;
   telefoneRh: string | null;
   emailRh: string | null;
+  cnpj: string | null;
+  emailsExtras: string | null;
 };
 
 interface Props {
@@ -106,25 +108,33 @@ export default function EmpresasTabClient({
           <CardTitle className="text-blue-900">Nova Empresa</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={onAddAction} className="grid gap-4 [&_input]:uppercase">
-            <div className="grid gap-3 md:grid-cols-2">
+          <form action={onAddAction} className="grid gap-4">
+            <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
-                <Input name="nome" placeholder="Empresa" aria-label="Nome" />
+                <Input name="nome" placeholder="Empresa" aria-label="Nome" className="uppercase" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">CNPJ</div>
+                <Input name="cnpj" placeholder="00.000.000/0000-00" aria-label="CNPJ" />
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Responsavel RH</div>
-                <Input name="rh" placeholder="Responsavel RH" aria-label="Responsavel RH" />
+                <Input name="rh" placeholder="Responsavel RH" aria-label="Responsavel RH" className="uppercase" />
               </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
                 <MaskedInput name="tel" mask="phone" aria-label="Telefone RH" />
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
-                <Input name="email" placeholder="Email RH" aria-label="Email RH" />
+                <Input name="email" placeholder="email@empresa.com" aria-label="Email RH" />
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Emails adicionais</div>
+                <Input name="emailsExtras" placeholder="email1@x.com, email2@y.com" aria-label="Emails adicionais" />
               </div>
             </div>
             <div className="flex items-center justify-end">
@@ -193,6 +203,7 @@ export default function EmpresasTabClient({
                   />
                 </TableHead>
                 <TableHead>Nome</TableHead>
+                <TableHead>CNPJ</TableHead>
                 <TableHead>RH</TableHead>
                 <TableHead>Contato</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
@@ -201,7 +212,7 @@ export default function EmpresasTabClient({
             <TableBody>
               {empresas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                     Sem empresas cadastradas.
                   </TableCell>
                 </TableRow>
@@ -215,8 +226,15 @@ export default function EmpresasTabClient({
                       />
                     </TableCell>
                     <TableCell className="font-medium">{e.nome}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{e.cnpj || "—"}</TableCell>
                     <TableCell>{e.responsavelRh}</TableCell>
-                    <TableCell>{e.telefoneRh || e.emailRh}</TableCell>
+                    <TableCell>
+                      <div>{e.telefoneRh || ""}</div>
+                      {e.emailRh && <div className="text-xs text-muted-foreground">{e.emailRh}</div>}
+                      {e.emailsExtras && (
+                        <div className="text-xs text-muted-foreground">{e.emailsExtras}</div>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Link
                         href={buildUrl({ tab: "empresas", editEmpresa: String(e.id) })}
@@ -240,26 +258,34 @@ export default function EmpresasTabClient({
             <CardTitle className="text-blue-900">Editando empresa #{editEmpresaData.id}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={onUpdateAction} className="grid gap-4 [&_input]:uppercase">
+            <form action={onUpdateAction} className="grid gap-4">
               <input type="hidden" name="id" value={editEmpresaData.id} />
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
                   <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
-                  <Input name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-label="Nome" />
+                  <Input name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-label="Nome" className="uppercase" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">CNPJ</div>
+                  <Input name="cnpj" defaultValue={editEmpresaData.cnpj || ""} placeholder="00.000.000/0000-00" aria-label="CNPJ" />
                 </div>
                 <div className="space-y-1">
                   <div className="text-xs font-semibold text-muted-foreground">Responsavel RH</div>
-                  <Input name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsavel RH" aria-label="Responsavel RH" />
+                  <Input name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsavel RH" aria-label="Responsavel RH" className="uppercase" />
                 </div>
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
                   <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
                   <MaskedInput name="tel" mask="phone" defaultValue={editEmpresaData.telefoneRh || ""} aria-label="Telefone RH" />
                 </div>
                 <div className="space-y-1">
                   <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
-                  <Input name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="Email RH" aria-label="Email RH" />
+                  <Input name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="email@empresa.com" aria-label="Email RH" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Emails adicionais</div>
+                  <Input name="emailsExtras" defaultValue={editEmpresaData.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" aria-label="Emails adicionais" />
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2">
