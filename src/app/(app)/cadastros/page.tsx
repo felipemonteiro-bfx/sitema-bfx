@@ -206,12 +206,16 @@ async function addEmpresa(formData: FormData) {
   "use server";
   const nome = normalizeUppercase(formData.get("nome"));
   if (!nome) return;
+  const cnpjRaw = String(formData.get("cnpj") || "").trim();
+  const emailsExtrasRaw = String(formData.get("emailsExtras") || "").trim().toLowerCase();
   await prisma.empresaParceira.create({
     data: {
       nome,
       responsavelRh: normalizeUppercase(formData.get("rh")),
       telefoneRh: normalizeUppercase(formData.get("tel")),
-      emailRh: normalizeUppercase(formData.get("email")),
+      emailRh: String(formData.get("email") || "").trim().toLowerCase() || null,
+      cnpj: cnpjRaw ? cnpjRaw.toLocaleUpperCase("pt-BR") : null,
+      emailsExtras: emailsExtrasRaw || null,
     },
   });
   revalidatePath("/cadastros");
@@ -222,13 +226,17 @@ async function updateEmpresa(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) return;
+  const cnpjRaw = String(formData.get("cnpj") || "").trim();
+  const emailsExtrasRaw = String(formData.get("emailsExtras") || "").trim().toLowerCase();
   await prisma.empresaParceira.update({
     where: { id },
     data: {
       nome,
       responsavelRh: normalizeUppercase(formData.get("rh")),
       telefoneRh: normalizeUppercase(formData.get("tel")),
-      emailRh: normalizeUppercase(formData.get("email")),
+      emailRh: String(formData.get("email") || "").trim().toLowerCase() || null,
+      cnpj: cnpjRaw ? cnpjRaw.toLocaleUpperCase("pt-BR") : null,
+      emailsExtras: emailsExtrasRaw || null,
     },
   });
   await createAuditLog("empresa:update", { empresaId: id, nome });
@@ -268,7 +276,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   }) : null;
   const editEmpresaData = editEmpresaId ? await prisma.empresaParceira.findUnique({
     where: { id: editEmpresaId },
-    select: { id: true, nome: true, responsavelRh: true, telefoneRh: true, emailRh: true },
+    select: { id: true, nome: true, responsavelRh: true, telefoneRh: true, emailRh: true, cnpj: true, emailsExtras: true },
   }) : null;
 
   const errorMsg = sp.error === "nome_duplicado"
