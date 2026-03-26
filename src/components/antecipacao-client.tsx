@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, ImageIcon } from "lucide-react";
 
 interface ParcelaDetalhe {
   numeroParcela: number;
@@ -141,6 +141,12 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     if (selectedIds.length === 0) return;
     const idsParam = selectedIds.join(',');
     window.location.href = `/api/relatorios/antecipacao-xlsx?ids=${idsParam}`;
+  };
+
+  const handleGerarRelatorioVisual = () => {
+    if (selectedIds.length === 0) return;
+    const idsParam = selectedIds.join(',');
+    window.open(`/api/relatorios/antecipacao-imagem?ids=${idsParam}`, '_blank');
   };
 
   const selectableInFiltered = vendasFiltradas.filter(v => v.status !== 'antecipado');
@@ -310,6 +316,16 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             >
               <FileSpreadsheet className="h-4 w-4" />
               Gerar Planilha
+            </Button>
+            <Button
+              type="button"
+              disabled={selectedIds.length === 0 || isProcessing}
+              variant="outline"
+              className="h-12 px-5 text-sm font-bold gap-2"
+              onClick={handleGerarRelatorioVisual}
+            >
+              <ImageIcon className="h-4 w-4" />
+              Gerar Relatorio Visual
             </Button>
             <Button
               disabled={selectedIds.length === 0 || isProcessing}
