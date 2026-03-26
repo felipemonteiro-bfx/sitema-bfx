@@ -21,18 +21,28 @@ async function antecipar(formData: FormData) {
 export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
-  
-  const pend = await prisma.venda.findMany({ 
-    where: { antecipada: 0 },
+
+  // Buscar TODAS as vendas (antecipada 0, 1, 2)
+  const todasVendas = await prisma.venda.findMany({
     orderBy: { dataVenda: "desc" },
     include: {
       cliente: {
         select: {
+          nome: true,
+          cpf: true,
+          cnpj: true,
           empresa: true,
           email: true,
         },
       },
-      itens: { select: { subtotal: true } },
+      itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
+      parcelasVencimento: {
+        select: {
+          numeroParcela: true,
+          dataVencimento: true,
+          valorParcela: true,
+        },
+      },
     },
   });
 
@@ -47,9 +57,6 @@ export default async function Page() {
         lte: fimMes,
       },
       paga: false,
-      venda: {
-        antecipada: 0,
-      },
     },
     include: {
       venda: {
@@ -70,14 +77,42 @@ export default async function Page() {
     vencimentosPorEmpresa[empresa] = (vencimentosPorEmpresa[empresa] || 0) + p.valorParcela;
   });
 
-  const vendasFormatadas = pend.map((v) => ({
-    id: v.id,
-    dataVenda: v.dataVenda,
-    produtoNome: v.produtoNome,
-    valorVenda: valorTotalVenda(v),
-    parcelas: v.parcelas,
-    empresaConveniada: v.cliente?.empresa || null,
-  }));
+  // Extrair lista unica de empresas conveniadas
+  const empresasUnicas = [...new Set(
+    todasVendas
+      .map((v) => v.cliente?.empresa)
+      .filter((e): e is string => Boolean(e))
+  )].sort();
+
+  const vendasFormatadas = todasVendas.map((v) => {
+    const antecipada = v.antecipada ?? 0;
+    let status: "pendente" | "em_andamento" | "antecipado";
+    if (antecipada === 1) {
+      status = "antecipado";
+    } else if (antecipada === 2) {
+      status = "em_andamento";
+    } else {
+      status = "pendente";
+    }
+
+    return {
+      id: v.id,
+      dataVenda: v.dataVenda,
+      produtoNome: v.produtoNome,
+      valorVenda: valorTotalVenda(v),
+      parcelas: v.parcelas,
+      empresaConveniada: v.cliente?.empresa || null,
+      clienteNome: v.cliente?.nome || null,
+      clienteCpf: v.cliente?.cpf || null,
+      clienteCnpj: v.cliente?.cnpj || null,
+      status,
+      parcelas_detalhes: v.parcelasVencimento.map((p) => ({
+        numeroParcela: p.numeroParcela,
+        dataVencimento: p.dataVencimento.toISOString(),
+        valorParcela: p.valorParcela,
+      })),
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -95,14 +130,15 @@ export default async function Page() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            Vendas Pendentes de Antecipação
+            Vendas — Antecipação
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <AntecipacaoClient 
-            vendasIniciais={vendasFormatadas} 
+          <AntecipacaoClient
+            vendasIniciais={vendasFormatadas}
             onSubmit={antecipar}
             vencimentosPorEmpresa={vencimentosPorEmpresa}
+            empresasDisponiveis={empresasUnicas}
           />
         </CardContent>
       </Card>

@@ -4,8 +4,16 @@ import { useState } from 'react';
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FileSpreadsheet } from "lucide-react";
+
+interface ParcelaDetalhe {
+  numeroParcela: number;
+  dataVencimento: string;
+  valorParcela: number;
+}
 
 interface Venda {
   id: number;
@@ -14,12 +22,18 @@ interface Venda {
   valorVenda: number | null;
   parcelas: number | null;
   empresaConveniada: string | null;
+  clienteNome?: string | null;
+  clienteCpf?: string | null;
+  clienteCnpj?: string | null;
+  status: 'pendente' | 'em_andamento' | 'antecipado';
+  parcelas_detalhes?: ParcelaDetalhe[];
 }
 
 interface Props {
   vendasIniciais: Venda[];
   onSubmit: (formData: FormData) => Promise<void>;
   vencimentosPorEmpresa: Record<string, number>;
+  empresasDisponiveis: string[];
 }
 
 const TAXA_MENSAL = 3.99;
@@ -47,27 +61,61 @@ function calcularTaxaPercent(prazoMedio: number) {
   return (Math.pow(1 + TAXA_MENSAL / 100, prazoMedio / 30) - 1) * 100;
 }
 
-export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa }: Props) {
+function StatusBadge({ status }: { status: Venda['status'] }) {
+  if (status === 'antecipado') {
+    return (
+      <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/20 font-semibold text-xs">
+        Antecipado
+      </Badge>
+    );
+  }
+  if (status === 'em_andamento') {
+    return (
+      <Badge variant="secondary" className="bg-info/15 text-info border-info/30 hover:bg-info/20 font-semibold text-xs">
+        Em andamento
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="bg-warning/10 text-warning border-warning/40 hover:bg-warning/15 font-semibold text-xs">
+      Pendente
+    </Badge>
+  );
+}
+
+export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis }: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [filtroEmpresa, setFiltroEmpresa] = useState<string>("todas");
+  const [filtroStatus, setFiltroStatus] = useState<string>("todas");
 
-  const toggleSelect = (id: number) => {
+  // Filtrar vendas baseado nos filtros ativos
+  const vendasFiltradas = vendasIniciais.filter((v) => {
+    const passaEmpresa = filtroEmpresa === "todas" || v.empresaConveniada === filtroEmpresa;
+    const passaStatus = filtroStatus === "todas" || v.status === filtroStatus;
+    return passaEmpresa && passaStatus;
+  });
+
+  const toggleSelect = (id: number, isAntecipado: boolean) => {
+    if (isAntecipado) return;
     setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
   const toggleAll = () => {
-    if (selectedIds.length === vendasIniciais.length) {
-      setSelectedIds([]);
+    const selectableIds = vendasFiltradas.filter(v => v.status !== 'antecipado').map(v => v.id);
+    const allSelected = selectableIds.every(id => selectedIds.includes(id));
+    if (allSelected && selectableIds.length > 0) {
+      setSelectedIds(prev => prev.filter(id => !selectableIds.includes(id)));
     } else {
-      setSelectedIds(vendasIniciais.map(v => v.id));
+      setSelectedIds(prev => [...new Set([...prev, ...selectableIds])]);
     }
   };
 
   const handleAction = async (formData: FormData) => {
     if (selectedIds.length === 0) return;
-    
+
     setIsProcessing(true);
     try {
       // 1. Gerar e baixar o relatório para a financeira
@@ -89,6 +137,15 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     }
   };
 
+  const handleGerarPlanilha = () => {
+    if (selectedIds.length === 0) return;
+    const idsParam = selectedIds.join(',');
+    window.location.href = `/api/relatorios/antecipacao-xlsx?ids=${idsParam}`;
+  };
+
+  const selectableInFiltered = vendasFiltradas.filter(v => v.status !== 'antecipado');
+  const allFilteredSelected = selectableInFiltered.length > 0 && selectableInFiltered.every(v => selectedIds.includes(v.id));
+
   const selectedVendas = vendasIniciais.filter(v => selectedIds.includes(v.id));
   const totalSelecionado = selectedVendas.reduce((sum, v) => sum + (v.valorVenda || 0), 0);
   const prazoMedio = calcularPrazoMedioDias(selectedVendas);
@@ -103,65 +160,119 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
   return (
     <form action={handleAction}>
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Empresa</label>
+          <select
+            value={filtroEmpresa}
+            onChange={(e) => setFiltroEmpresa(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring min-w-[180px]"
+          >
+            <option value="todas">Todas as empresas</option>
+            {empresasDisponiveis.map((empresa) => (
+              <option key={empresa} value={empresa}>{empresa}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</label>
+          <select
+            value={filtroStatus}
+            onChange={(e) => setFiltroStatus(e.target.value)}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring min-w-[160px]"
+          >
+            <option value="todas">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="em_andamento">Em andamento</option>
+            <option value="antecipado">Antecipado</option>
+          </select>
+        </div>
+        {(filtroEmpresa !== "todas" || filtroStatus !== "todas") && (
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground opacity-0">.</label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-9 text-muted-foreground hover:text-foreground"
+              onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); }}
+            >
+              Limpar filtros
+            </Button>
+          </div>
+        )}
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
-                checked={vendasIniciais.length > 0 && selectedIds.length === vendasIniciais.length}
+                checked={allFilteredSelected}
                 onCheckedChange={toggleAll}
-                disabled={isProcessing}
+                disabled={isProcessing || selectableInFiltered.length === 0}
               />
             </TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Empresa Conveniada</TableHead>
             <TableHead>Produto</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead className="text-right">Valor</TableHead>
             <TableHead className="text-right">Parcelas</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {vendasIniciais.length === 0 ? (
+          {vendasFiltradas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                Sem vendas pendentes para antecipação.
+              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                Nenhuma venda encontrada com os filtros aplicados.
               </TableCell>
             </TableRow>
           ) : (
-            vendasIniciais.map((v) => (
-              <TableRow
-                key={v.id}
-                className={`cursor-pointer transition-all duration-200 hover:bg-accent/50 hover:shadow-sm ${
-                  selectedIds.includes(v.id) ? 'bg-success/10 border-l-4 border-success' : ''
-                }`}
-                onClick={() => !isProcessing && toggleSelect(v.id)}
-              >
-                <TableCell onClick={(e) => e.stopPropagation()}>
-                  <Checkbox
-                    checked={selectedIds.includes(v.id)}
-                    onCheckedChange={() => toggleSelect(v.id)}
-                    disabled={isProcessing}
-                  />
-                </TableCell>
-                <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
-                <TableCell className="text-foreground">
-                  {v.empresaConveniada ? (
-                    <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                      {v.empresaConveniada}
+            vendasFiltradas.map((v) => {
+              const isAntecipado = v.status === 'antecipado';
+              const isSelected = selectedIds.includes(v.id);
+              return (
+                <TableRow
+                  key={v.id}
+                  className={`transition-all duration-200 ${
+                    isAntecipado
+                      ? 'opacity-60 cursor-default'
+                      : 'cursor-pointer hover:bg-accent/50 hover:shadow-sm'
+                  } ${isSelected ? 'bg-success/10 border-l-4 border-success' : ''}`}
+                  onClick={() => !isProcessing && toggleSelect(v.id, isAntecipado)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelect(v.id, isAntecipado)}
+                      disabled={isProcessing || isAntecipado}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
+                  <TableCell className="text-foreground">
+                    {v.empresaConveniada ? (
+                      <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                        {v.empresaConveniada}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-semibold text-foreground">{v.produtoNome}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={v.status} />
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-bold text-foreground">{formatBRL(v.valorVenda || 0)}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    <span className="inline-flex items-center justify-center rounded-md bg-info/20 px-2 py-0.5 text-xs font-bold text-info">
+                      {v.parcelas}x
                     </span>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">-</span>
-                  )}
-                </TableCell>
-                <TableCell className="font-semibold text-foreground">{v.produtoNome}</TableCell>
-                <TableCell className="text-right tabular-nums font-bold text-foreground">{formatBRL(v.valorVenda || 0)}</TableCell>
-                <TableCell className="text-right tabular-nums">
-                  <span className="inline-flex items-center justify-center rounded-md bg-info/20 px-2 py-0.5 text-xs font-bold text-info">
-                    {v.parcelas}x
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
@@ -189,16 +300,28 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             </div>
           </div>
 
-          <Button
-            disabled={selectedIds.length === 0 || isProcessing}
-            variant="success"
-            className="h-12 px-8 text-base font-bold shadow-lg hover:shadow-xl transition-all"
-          >
-            {isProcessing ? "Gerando Relatório..." : `Antecipar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'}`}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              type="button"
+              disabled={selectedIds.length === 0 || isProcessing}
+              variant="outline"
+              className="h-12 px-5 text-sm font-bold gap-2"
+              onClick={handleGerarPlanilha}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Gerar Planilha
+            </Button>
+            <Button
+              disabled={selectedIds.length === 0 || isProcessing}
+              variant="success"
+              className="h-12 px-8 text-base font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              {isProcessing ? "Gerando Relatório..." : `Antecipar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'}`}
+            </Button>
+          </div>
         </div>
         <div className="pt-3 border-t border-border text-xs font-medium text-muted-foreground flex items-center gap-2">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-info/20 text-[10px] font-bold text-info">ℹ</span>
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-info/20 text-[10px] font-bold text-info">i</span>
           Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. Juros simples &lt; 30 dias e compostos a partir de 30 dias.
         </div>
       </div>
