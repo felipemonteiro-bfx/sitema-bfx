@@ -116,19 +116,28 @@ export async function deleteVenda(formData: FormData): Promise<void> {
   const id = Number(formData.get("id") || 0);
   if (!id) return;
 
-  // Restaurar estoque antes de deletar
-  const itens = await prisma.itemVenda.findMany({
-    where: { vendaId: id },
-    select: { produtoNome: true, quantidade: true },
-  });
-  for (const item of itens) {
-    await prisma.produto.updateMany({
-      where: { nome: item.produtoNome },
-      data: { qtdEstoque: { increment: item.quantidade } },
+  try {
+    // Restaurar estoque antes de deletar
+    const itens = await prisma.itemVenda.findMany({
+      where: { vendaId: id },
+      select: { produtoNome: true, quantidade: true },
     });
-  }
+    for (const item of itens) {
+      await prisma.produto.updateMany({
+        where: { nome: item.produtoNome },
+        data: { qtdEstoque: { increment: item.quantidade } },
+      });
+    }
 
-  await prisma.venda.delete({ where: { id } });
-  await createAuditLog("venda:delete", { vendaId: id });
-  revalidatePath("/historico");
+    // Deletar registros relacionados que têm ON DELETE RESTRICT
+    await prisma.assinatura.deleteMany({ where: { vendaId: id } });
+    await prisma.documento.deleteMany({ where: { vendaId: id } });
+
+    await prisma.venda.delete({ where: { id } });
+    await createAuditLog("venda:delete", { vendaId: id });
+    revalidatePath("/historico");
+  } catch (err) {
+    console.error("Erro ao excluir venda:", err);
+    throw new Error("Erro ao excluir venda. Tente novamente.");
+  }
 }

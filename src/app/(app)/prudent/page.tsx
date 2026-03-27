@@ -11,23 +11,41 @@ export const dynamic = "force-dynamic";
 async function antecipar(formData: FormData) {
   "use server";
   const ids = formData.getAll("id").map((v) => Number(v));
+  const mesInicio = formData.get("mesInicio") as string | null; // MM/YYYY
+  const mesFim = formData.get("mesFim") as string | null;
   if (!ids.length) return;
 
-  // Buscar vendas para calcular total e periodo
-  const vendas = await prisma.venda.findMany({
-    where: { id: { in: ids } },
-    include: {
-      itens: { select: { subtotal: true } },
-      parcelasVencimento: { select: { dataVencimento: true, valorParcela: true } },
+  // Calcular range de datas para filtrar parcelas
+  let inicioDate: Date | null = null;
+  let fimDate: Date | null = null;
+  if (mesInicio && mesFim) {
+    const [mi, ai] = mesInicio.split("/").map(Number);
+    const [mf, af] = mesFim.split("/").map(Number);
+    if (mi && ai && mf && af) {
+      inicioDate = new Date(Date.UTC(ai, mi - 1, 1));
+      fimDate = new Date(Date.UTC(af, mf, 0, 23, 59, 59)); // ultimo dia do mes fim
+    }
+  }
+
+  // Buscar parcelas das vendas selecionadas no período
+  const parcelas = await prisma.parcelaVencimento.findMany({
+    where: {
+      vendaId: { in: ids },
+      antecipada: false,
+      ...(inicioDate && fimDate ? {
+        dataVencimento: { gte: inicioDate, lte: fimDate },
+      } : {}),
     },
+    include: { venda: { include: { itens: { select: { subtotal: true } } } } },
   });
 
-  const valorTotal = vendas.reduce((sum, v) => {
-    return sum + v.itens.reduce((s, i) => s + (i.subtotal || 0), 0);
-  }, 0);
+  if (parcelas.length === 0) return;
 
-  const todasParcelas = vendas.flatMap((v) => v.parcelasVencimento);
-  const datas = todasParcelas.map((p) => new Date(p.dataVencimento)).sort((a, b) => a.getTime() - b.getTime());
+  const parcelaIds = parcelas.map((p) => p.id);
+  const valorTotal = parcelas.reduce((sum, p) => sum + p.valorParcela, 0);
+  const vendaIdsAfetados = [...new Set(parcelas.map((p) => p.vendaId))];
+
+  const datas = parcelas.map((p) => new Date(p.dataVencimento)).sort((a, b) => a.getTime() - b.getTime());
   const periodoInicio = datas[0] || null;
   const periodoFim = datas[datas.length - 1] || null;
 
@@ -45,20 +63,38 @@ async function antecipar(formData: FormData) {
   // Salvar batch
   await prisma.anticipacaoBatch.create({
     data: {
-      vendaIds: JSON.stringify(ids),
+      vendaIds: JSON.stringify(vendaIdsAfetados),
       valorTotal,
-      quantidadeVendas: ids.length,
+      quantidadeVendas: vendaIdsAfetados.length,
       periodoDescricao,
       periodoInicio,
       periodoFim,
     },
   });
 
-  // Marcar vendas como antecipadas
-  await prisma.venda.updateMany({
-    where: { id: { in: ids } },
-    data: { antecipada: 1 },
+  // Marcar parcelas como antecipadas
+  await prisma.parcelaVencimento.updateMany({
+    where: { id: { in: parcelaIds } },
+    data: { antecipada: true },
   });
+
+  // Atualizar status das vendas baseado nas parcelas
+  for (const vendaId of vendaIdsAfetados) {
+    const totalParcelas = await prisma.parcelaVencimento.count({ where: { vendaId } });
+    const parcelasAntecipadas = await prisma.parcelaVencimento.count({ where: { vendaId, antecipada: true } });
+
+    let novoStatus = 0; // pendente
+    if (parcelasAntecipadas === totalParcelas) {
+      novoStatus = 1; // totalmente antecipado
+    } else if (parcelasAntecipadas > 0) {
+      novoStatus = 3; // parcialmente antecipado
+    }
+
+    await prisma.venda.update({
+      where: { id: vendaId },
+      data: { antecipada: novoStatus },
+    });
+  }
 
   revalidatePath("/prudent");
 }
@@ -86,6 +122,7 @@ export default async function Page() {
           numeroParcela: true,
           dataVencimento: true,
           valorParcela: true,
+          antecipada: true,
         },
       },
     },
@@ -146,11 +183,13 @@ export default async function Page() {
 
   const vendasFormatadas = todasVendas.map((v) => {
     const antecipada = v.antecipada ?? 0;
-    let status: "pendente" | "em_andamento" | "antecipado";
+    let status: "pendente" | "em_andamento" | "antecipado" | "parcialmente_antecipado";
     if (antecipada === 1) {
       status = "antecipado";
     } else if (antecipada === 2) {
       status = "em_andamento";
+    } else if (antecipada === 3) {
+      status = "parcialmente_antecipado";
     } else {
       status = "pendente";
     }
@@ -175,6 +214,7 @@ export default async function Page() {
         numeroParcela: p.numeroParcela,
         dataVencimento: p.dataVencimento.toISOString(),
         valorParcela: p.valorParcela,
+        antecipada: p.antecipada,
       })),
     };
   });

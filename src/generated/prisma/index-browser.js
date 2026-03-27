@@ -208,7 +208,8 @@ exports.Prisma.ParcelaVencimentoScalarFieldEnum = {
   dataVencimento: 'dataVencimento',
   valorParcela: 'valorParcela',
   paga: 'paga',
-  dataPagamento: 'dataPagamento'
+  dataPagamento: 'dataPagamento',
+  antecipada: 'antecipada'
 };
 
 exports.Prisma.ConfigScalarFieldEnum = {

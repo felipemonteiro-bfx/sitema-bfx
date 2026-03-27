@@ -127,6 +127,7 @@ model ParcelaVencimento {
   valorParcela   Float     @map("valor_parcela")
   paga           Boolean   @default(false)
   dataPagamento  DateTime? @map("data_pagamento")
+  antecipada     Boolean   @default(false)
 
   venda Venda @relation(fields: [vendaId], references: [id], onDelete: Cascade)
 

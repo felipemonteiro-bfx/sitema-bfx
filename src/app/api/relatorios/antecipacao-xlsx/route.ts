@@ -86,6 +86,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "IDs inválidos" }, { status: 400 });
   }
 
+  // Filtro de período opcional (MM/YYYY)
+  const mesInicioStr = searchParams.get("mesInicio");
+  const mesFimStr = searchParams.get("mesFim");
+  let periodoInicio: Date | null = null;
+  let periodoFim: Date | null = null;
+  if (mesInicioStr && mesFimStr) {
+    const [mi, ai] = mesInicioStr.split("/").map(Number);
+    const [mf, af] = mesFimStr.split("/").map(Number);
+    if (mi && ai && mf && af) {
+      periodoInicio = new Date(Date.UTC(ai, mi - 1, 1));
+      periodoFim = new Date(Date.UTC(af, mf, 0, 23, 59, 59));
+    }
+  }
+
   try {
     const vendas = await prisma.venda.findMany({
       where: { id: { in: ids } },
@@ -132,9 +146,15 @@ export async function GET(request: NextRequest) {
       const totalVenda = valorTotalVenda(venda);
 
       if (venda.parcelasVencimento.length > 0) {
-        // Usar parcelas reais
+        // Usar parcelas reais, filtrando pelo período se fornecido
+        const parcelasFiltradas = periodoInicio && periodoFim
+          ? venda.parcelasVencimento.filter((p) => {
+              const d = new Date(p.dataVencimento);
+              return d >= periodoInicio! && d <= periodoFim!;
+            })
+          : venda.parcelasVencimento;
         const totalParcelas = venda.parcelasVencimento.length;
-        for (const parcela of venda.parcelasVencimento) {
+        for (const parcela of parcelasFiltradas) {
           const d = new Date(parcela.dataVencimento);
           const year = d.getUTCFullYear();
           const month = d.getUTCMonth();

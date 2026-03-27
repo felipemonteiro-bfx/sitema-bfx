@@ -8992,6 +8992,7 @@ export namespace Prisma {
     valorParcela: number | null
     paga: boolean | null
     dataPagamento: Date | null
+    antecipada: boolean | null
   }
 
   export type ParcelaVencimentoMaxAggregateOutputType = {
@@ -9002,6 +9003,7 @@ export namespace Prisma {
     valorParcela: number | null
     paga: boolean | null
     dataPagamento: Date | null
+    antecipada: boolean | null
   }
 
   export type ParcelaVencimentoCountAggregateOutputType = {
@@ -9012,6 +9014,7 @@ export namespace Prisma {
     valorParcela: number
     paga: number
     dataPagamento: number
+    antecipada: number
     _all: number
   }
 
@@ -9038,6 +9041,7 @@ export namespace Prisma {
     valorParcela?: true
     paga?: true
     dataPagamento?: true
+    antecipada?: true
   }
 
   export type ParcelaVencimentoMaxAggregateInputType = {
@@ -9048,6 +9052,7 @@ export namespace Prisma {
     valorParcela?: true
     paga?: true
     dataPagamento?: true
+    antecipada?: true
   }
 
   export type ParcelaVencimentoCountAggregateInputType = {
@@ -9058,6 +9063,7 @@ export namespace Prisma {
     valorParcela?: true
     paga?: true
     dataPagamento?: true
+    antecipada?: true
     _all?: true
   }
 
@@ -9155,6 +9161,7 @@ export namespace Prisma {
     valorParcela: number
     paga: boolean
     dataPagamento: Date | null
+    antecipada: boolean
     _count: ParcelaVencimentoCountAggregateOutputType | null
     _avg: ParcelaVencimentoAvgAggregateOutputType | null
     _sum: ParcelaVencimentoSumAggregateOutputType | null
@@ -9184,6 +9191,7 @@ export namespace Prisma {
     valorParcela?: boolean
     paga?: boolean
     dataPagamento?: boolean
+    antecipada?: boolean
     venda?: boolean | VendaDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["parcelaVencimento"]>
 
@@ -9195,6 +9203,7 @@ export namespace Prisma {
     valorParcela?: boolean
     paga?: boolean
     dataPagamento?: boolean
+    antecipada?: boolean
     venda?: boolean | VendaDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["parcelaVencimento"]>
 
@@ -9206,6 +9215,7 @@ export namespace Prisma {
     valorParcela?: boolean
     paga?: boolean
     dataPagamento?: boolean
+    antecipada?: boolean
     venda?: boolean | VendaDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["parcelaVencimento"]>
 
@@ -9217,9 +9227,10 @@ export namespace Prisma {
     valorParcela?: boolean
     paga?: boolean
     dataPagamento?: boolean
+    antecipada?: boolean
   }
 
-  export type ParcelaVencimentoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendaId" | "numeroParcela" | "dataVencimento" | "valorParcela" | "paga" | "dataPagamento", ExtArgs["result"]["parcelaVencimento"]>
+  export type ParcelaVencimentoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendaId" | "numeroParcela" | "dataVencimento" | "valorParcela" | "paga" | "dataPagamento" | "antecipada", ExtArgs["result"]["parcelaVencimento"]>
   export type ParcelaVencimentoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     venda?: boolean | VendaDefaultArgs<ExtArgs>
   }
@@ -9243,6 +9254,7 @@ export namespace Prisma {
       valorParcela: number
       paga: boolean
       dataPagamento: Date | null
+      antecipada: boolean
     }, ExtArgs["result"]["parcelaVencimento"]>
     composites: {}
   }
@@ -9674,6 +9686,7 @@ export namespace Prisma {
     readonly valorParcela: FieldRef<"ParcelaVencimento", 'Float'>
     readonly paga: FieldRef<"ParcelaVencimento", 'Boolean'>
     readonly dataPagamento: FieldRef<"ParcelaVencimento", 'DateTime'>
+    readonly antecipada: FieldRef<"ParcelaVencimento", 'Boolean'>
   }
     
 
@@ -25404,7 +25417,8 @@ export namespace Prisma {
     dataVencimento: 'dataVencimento',
     valorParcela: 'valorParcela',
     paga: 'paga',
-    dataPagamento: 'dataPagamento'
+    dataPagamento: 'dataPagamento',
+    antecipada: 'antecipada'
   };
 
   export type ParcelaVencimentoScalarFieldEnum = (typeof ParcelaVencimentoScalarFieldEnum)[keyof typeof ParcelaVencimentoScalarFieldEnum]
@@ -26257,6 +26271,7 @@ export namespace Prisma {
     valorParcela?: FloatFilter<"ParcelaVencimento"> | number
     paga?: BoolFilter<"ParcelaVencimento"> | boolean
     dataPagamento?: DateTimeNullableFilter<"ParcelaVencimento"> | Date | string | null
+    antecipada?: BoolFilter<"ParcelaVencimento"> | boolean
     venda?: XOR<VendaScalarRelationFilter, VendaWhereInput>
   }
 
@@ -26268,6 +26283,7 @@ export namespace Prisma {
     valorParcela?: SortOrder
     paga?: SortOrder
     dataPagamento?: SortOrderInput | SortOrder
+    antecipada?: SortOrder
     venda?: VendaOrderByWithRelationInput
   }
 
@@ -26282,6 +26298,7 @@ export namespace Prisma {
     valorParcela?: FloatFilter<"ParcelaVencimento"> | number
     paga?: BoolFilter<"ParcelaVencimento"> | boolean
     dataPagamento?: DateTimeNullableFilter<"ParcelaVencimento"> | Date | string | null
+    antecipada?: BoolFilter<"ParcelaVencimento"> | boolean
     venda?: XOR<VendaScalarRelationFilter, VendaWhereInput>
   }, "id">
 
@@ -26293,6 +26310,7 @@ export namespace Prisma {
     valorParcela?: SortOrder
     paga?: SortOrder
     dataPagamento?: SortOrderInput | SortOrder
+    antecipada?: SortOrder
     _count?: ParcelaVencimentoCountOrderByAggregateInput
     _avg?: ParcelaVencimentoAvgOrderByAggregateInput
     _max?: ParcelaVencimentoMaxOrderByAggregateInput
@@ -26311,6 +26329,7 @@ export namespace Prisma {
     valorParcela?: FloatWithAggregatesFilter<"ParcelaVencimento"> | number
     paga?: BoolWithAggregatesFilter<"ParcelaVencimento"> | boolean
     dataPagamento?: DateTimeNullableWithAggregatesFilter<"ParcelaVencimento"> | Date | string | null
+    antecipada?: BoolWithAggregatesFilter<"ParcelaVencimento"> | boolean
   }
 
   export type ConfigWhereInput = {
@@ -27862,6 +27881,7 @@ export namespace Prisma {
     valorParcela: number
     paga?: boolean
     dataPagamento?: Date | string | null
+    antecipada?: boolean
     venda: VendaCreateNestedOneWithoutParcelasVencimentoInput
   }
 
@@ -27873,6 +27893,7 @@ export namespace Prisma {
     valorParcela: number
     paga?: boolean
     dataPagamento?: Date | string | null
+    antecipada?: boolean
   }
 
   export type ParcelaVencimentoUpdateInput = {
@@ -27881,6 +27902,7 @@ export namespace Prisma {
     valorParcela?: FloatFieldUpdateOperationsInput | number
     paga?: BoolFieldUpdateOperationsInput | boolean
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    antecipada?: BoolFieldUpdateOperationsInput | boolean
     venda?: VendaUpdateOneRequiredWithoutParcelasVencimentoNestedInput
   }
 
@@ -27892,6 +27914,7 @@ export namespace Prisma {
     valorParcela?: FloatFieldUpdateOperationsInput | number
     paga?: BoolFieldUpdateOperationsInput | boolean
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    antecipada?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ParcelaVencimentoCreateManyInput = {
@@ -27902,6 +27925,7 @@ export namespace Prisma {
     valorParcela: number
     paga?: boolean
     dataPagamento?: Date | string | null
+    antecipada?: boolean
   }
 
   export type ParcelaVencimentoUpdateManyMutationInput = {
@@ -27910,6 +27934,7 @@ export namespace Prisma {
     valorParcela?: FloatFieldUpdateOperationsInput | number
     paga?: BoolFieldUpdateOperationsInput | boolean
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    antecipada?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ParcelaVencimentoUncheckedUpdateManyInput = {
@@ -27920,6 +27945,7 @@ export namespace Prisma {
     valorParcela?: FloatFieldUpdateOperationsInput | number
     paga?: BoolFieldUpdateOperationsInput | boolean
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    antecipada?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ConfigCreateInput = {
@@ -29669,6 +29695,7 @@ export namespace Prisma {
     valorParcela?: SortOrder
     paga?: SortOrder
     dataPagamento?: SortOrder
+    antecipada?: SortOrder
   }
 
   export type ParcelaVencimentoAvgOrderByAggregateInput = {
@@ -29686,6 +29713,7 @@ export namespace Prisma {
     valorParcela?: SortOrder
     paga?: SortOrder
     dataPagamento?: SortOrder
+    antecipada?: SortOrder
   }
 
   export type ParcelaVencimentoMinOrderByAggregateInput = {
@@ -29696,6 +29724,7 @@ export namespace Prisma {
     valorParcela?: SortOrder
     paga?: SortOrder
     dataPagamento?: SortOrder
+    antecipada?: SortOrder
   }
 
   export type ParcelaVencimentoSumOrderByAggregateInput = {
@@ -31331,6 +31360,7 @@ export namespace Prisma {
     valorParcela: number
     paga?: boolean
     dataPagamento?: Date | string | null
+    antecipada?: boolean
   }
 
   export type ParcelaVencimentoUncheckedCreateWithoutVendaInput = {
@@ -31340,6 +31370,7 @@ export namespace Prisma {
     valorParcela: number
     paga?: boolean
     dataPagamento?: Date | string | null
+    antecipada?: boolean
   }
 
   export type ParcelaVencimentoCreateOrConnectWithoutVendaInput = {
@@ -31497,6 +31528,7 @@ export namespace Prisma {
     valorParcela?: FloatFilter<"ParcelaVencimento"> | number
     paga?: BoolFilter<"ParcelaVencimento"> | boolean
     dataPagamento?: DateTimeNullableFilter<"ParcelaVencimento"> | Date | string | null
+    antecipada?: BoolFilter<"ParcelaVencimento"> | boolean
   }
 
   export type DocumentoUpsertWithWhereUniqueWithoutVendaInput = {
@@ -32301,6 +32333,7 @@ export namespace Prisma {
     valorParcela: number
     paga?: boolean
     dataPagamento?: Date | string | null
+    antecipada?: boolean
   }
 
   export type DocumentoCreateManyVendaInput = {
@@ -32344,6 +32377,7 @@ export namespace Prisma {
     valorParcela?: FloatFieldUpdateOperationsInput | number
     paga?: BoolFieldUpdateOperationsInput | boolean
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    antecipada?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ParcelaVencimentoUncheckedUpdateWithoutVendaInput = {
@@ -32353,6 +32387,7 @@ export namespace Prisma {
     valorParcela?: FloatFieldUpdateOperationsInput | number
     paga?: BoolFieldUpdateOperationsInput | boolean
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    antecipada?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ParcelaVencimentoUncheckedUpdateManyWithoutVendaInput = {
@@ -32362,6 +32397,7 @@ export namespace Prisma {
     valorParcela?: FloatFieldUpdateOperationsInput | number
     paga?: BoolFieldUpdateOperationsInput | boolean
     dataPagamento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    antecipada?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type DocumentoUpdateWithoutVendaInput = {

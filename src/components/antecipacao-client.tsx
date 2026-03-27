@@ -13,6 +13,7 @@ interface ParcelaDetalhe {
   numeroParcela: number;
   dataVencimento: string;
   valorParcela: number;
+  antecipada?: boolean;
 }
 
 interface ItemVenda {
@@ -31,7 +32,7 @@ interface Venda {
   clienteNome?: string | null;
   clienteCpf?: string | null;
   clienteCnpj?: string | null;
-  status: 'pendente' | 'em_andamento' | 'antecipado';
+  status: 'pendente' | 'em_andamento' | 'antecipado' | 'parcialmente_antecipado';
   itens?: ItemVenda[];
   parcelas_detalhes?: ParcelaDetalhe[];
 }
@@ -73,6 +74,13 @@ function StatusBadge({ status }: { status: Venda['status'] }) {
     return (
       <Badge className="bg-green-600 text-white border-0 font-semibold text-xs">
         Antecipado
+      </Badge>
+    );
+  }
+  if (status === 'parcialmente_antecipado') {
+    return (
+      <Badge className="bg-purple-600 text-white border-0 font-semibold text-xs">
+        Parcial
       </Badge>
     );
   }
@@ -129,8 +137,8 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     return passaEmpresa && passaStatus && passaPeriodo;
   });
 
-  const toggleSelect = (id: number, isAntecipado: boolean) => {
-    if (isAntecipado) return;
+  const toggleSelect = (id: number, isTotalmenteAntecipado: boolean) => {
+    if (isTotalmenteAntecipado) return;
     setSelectedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
@@ -153,13 +161,18 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     try {
       // 1. Gerar e baixar o relatório para a financeira
       const idsParam = selectedIds.join(',');
-      window.location.href = `/api/relatorios/antecipacao?ids=${idsParam}`;
+      const xlsxParams = new URLSearchParams({ ids: idsParam });
+      if (periodoInicio) xlsxParams.set('mesInicio', periodoInicio);
+      if (periodoFim) xlsxParams.set('mesFim', periodoFim);
+      window.location.href = `/api/relatorios/antecipacao?${xlsxParams.toString()}`;
 
       // Pequeno delay para garantir que o download inicie
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // 2. Executar a antecipação no banco
       selectedIds.forEach(id => formData.append('id', id.toString()));
+      if (periodoInicio) formData.append('mesInicio', periodoInicio);
+      if (periodoFim) formData.append('mesFim', periodoFim);
       await onSubmit(formData);
       setSelectedIds([]);
     } catch (error) {
@@ -172,14 +185,18 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
   const handleGerarPlanilha = () => {
     if (selectedIds.length === 0) return;
-    const idsParam = selectedIds.join(',');
-    window.location.href = `/api/relatorios/antecipacao-xlsx?ids=${idsParam}`;
+    const params = new URLSearchParams({ ids: selectedIds.join(',') });
+    if (periodoInicio) params.set('mesInicio', periodoInicio);
+    if (periodoFim) params.set('mesFim', periodoFim);
+    window.location.href = `/api/relatorios/antecipacao-xlsx?${params.toString()}`;
   };
 
   const handleGerarRelatorioVisual = () => {
     if (selectedIds.length === 0) return;
-    const idsParam = selectedIds.join(',');
-    window.open(`/api/relatorios/antecipacao-imagem?ids=${idsParam}`, '_blank');
+    const params = new URLSearchParams({ ids: selectedIds.join(',') });
+    if (periodoInicio) params.set('mesInicio', periodoInicio);
+    if (periodoFim) params.set('mesFim', periodoFim);
+    window.open(`/api/relatorios/antecipacao-imagem?${params.toString()}`, '_blank');
   };
 
   const selectableInFiltered = vendasFiltradas.filter(v => v.status !== 'antecipado');
@@ -223,6 +240,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           >
             <option value="todas">Todos os status</option>
             <option value="pendente">Pendente</option>
+            <option value="parcialmente_antecipado">Parcialmente antecipado</option>
             <option value="em_andamento">Em andamento</option>
             <option value="antecipado">Antecipado</option>
           </select>
@@ -293,27 +311,29 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             </TableRow>
           ) : (
             vendasFiltradas.map((v) => {
-              const isAntecipado = v.status === 'antecipado';
+              const isTotalmenteAntecipado = v.status === 'antecipado';
               const isSelected = selectedIds.includes(v.id);
               return (
                 <TableRow
                   key={v.id}
                   className={`transition-all duration-200 ${
-                    isAntecipado
+                    isTotalmenteAntecipado
                       ? 'bg-green-50 dark:bg-green-950/30 opacity-70 cursor-default'
+                      : v.status === 'parcialmente_antecipado'
+                      ? 'bg-purple-50 dark:bg-purple-950/30 cursor-pointer hover:bg-purple-100/70'
                       : v.status === 'em_andamento'
                       ? 'bg-blue-50 dark:bg-blue-950/30 cursor-pointer hover:bg-blue-100/70'
                       : isSelected
                       ? 'bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 cursor-pointer'
                       : 'cursor-pointer hover:bg-accent/50'
                   }`}
-                  onClick={() => !isProcessing && toggleSelect(v.id, isAntecipado)}
+                  onClick={() => !isProcessing && toggleSelect(v.id, isTotalmenteAntecipado)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
-                      onCheckedChange={() => toggleSelect(v.id, isAntecipado)}
-                      disabled={isProcessing || isAntecipado}
+                      onCheckedChange={() => toggleSelect(v.id, isTotalmenteAntecipado)}
+                      disabled={isProcessing || isTotalmenteAntecipado}
                     />
                   </TableCell>
                   <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
