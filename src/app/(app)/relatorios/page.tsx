@@ -35,7 +35,7 @@ export default async function Page() {
   ];
 
   const formatDateBR = (value: string) =>
-    new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value + "T00:00:00"));
+    new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(new Date(value + "T00:00:00"));
 
   return (
     <div className="space-y-6">

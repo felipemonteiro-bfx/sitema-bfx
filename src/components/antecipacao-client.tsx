@@ -194,7 +194,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
   const formatDateBR = (value: string | Date) => {
     const d = typeof value === 'string' ? new Date(value) : value;
-    return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(d);
+    return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(d);
   };
 
   return (

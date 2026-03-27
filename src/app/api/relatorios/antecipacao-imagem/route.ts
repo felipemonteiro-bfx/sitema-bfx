@@ -9,7 +9,7 @@ function formatBRL(value: number): string {
 
 function formatDateBR(value: Date | string): string {
   const d = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(d);
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(d);
 }
 
 function getMesAnoLabel(date: Date): string {

@@ -19,7 +19,7 @@ import { updateVenda, deleteVenda } from "@/app/(app)/historico/actions";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 
 const formatDateBR = (value: Date) =>
-  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
 
 type Search = { 
   from?: string; 

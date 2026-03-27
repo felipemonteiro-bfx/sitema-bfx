@@ -10,7 +10,7 @@ import { custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { useState } from "react";
 
 const formatDateBR = (value: Date) =>
-  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
 
 type SearchParams = {
   from?: string;

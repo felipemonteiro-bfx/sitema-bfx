@@ -32,7 +32,7 @@ async function antecipar(formData: FormData) {
   const periodoFim = datas[datas.length - 1] || null;
 
   const formatMesAno = (d: Date) =>
-    d.toLocaleDateString("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" });
+    d.toLocaleDateString("pt-BR", { month: "short", year: "numeric", timeZone: "America/Manaus" });
 
   const periodoDescricao =
     periodoInicio && periodoFim
