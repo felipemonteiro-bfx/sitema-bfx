@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MaskedInput } from "@/components/masked-input";
 import { cn } from "@/lib/utils";
 import { Pencil, Search, Trash2 } from "lucide-react";
+import { useTableFeatures } from "@/hooks/use-table-features";
+import { TablePagination } from "@/components/table-pagination";
+import { SortableHeader } from "@/components/sortable-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +60,12 @@ export default function EmpresasTabClient({
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const table = useTableFeatures({
+    data: empresas as (EmpresaListItem & Record<string, unknown>)[],
+    searchFields: ["nome", "cnpj", "responsavelRh", "emailRh", "telefoneRh"] as (keyof EmpresaListItem)[],
+    defaultSort: "nome" as keyof EmpresaListItem,
+  });
 
   const buildUrl = (params: Record<string, string | undefined>) => {
     const newParams = { ...sp, ...params };
@@ -147,16 +156,20 @@ export default function EmpresasTabClient({
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-blue-900">Empresas Parceiras</CardTitle>
-          <form className="relative w-full max-w-sm [&_input]:uppercase">
+          <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              name="q_empresas"
               placeholder="Pesquisar empresas..."
-              defaultValue={searchQuery}
-              className="pl-9 h-9"
+              value={table.search}
+              onChange={(e) => table.setSearch(e.target.value)}
+              className={cn("pl-9 h-9", table.search && "pr-8")}
             />
-            <input type="hidden" name="tab" value="empresas" />
-          </form>
+            {table.search && (
+              <button type="button" onClick={() => table.setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
@@ -202,22 +215,22 @@ export default function EmpresasTabClient({
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>CNPJ</TableHead>
-                <TableHead>RH</TableHead>
-                <TableHead>Contato</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
+                <SortableHeader label="Nome" field="nome" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
+                <SortableHeader label="CNPJ" field="cnpj" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
+                <SortableHeader label="RH" field="responsavelRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
+                <SortableHeader label="Contato" field="emailRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {empresas.length === 0 ? (
+              {table.paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Sem empresas cadastradas.
+                    {table.search ? "Nenhum resultado encontrado." : "Sem empresas cadastradas."}
                   </TableCell>
                 </TableRow>
               ) : (
-                empresas.map((e) => (
+                (table.paginatedData as unknown as EmpresaListItem[]).map((e) => (
                   <TableRow key={e.id}>
                     <TableCell>
                       <Checkbox
@@ -249,6 +262,7 @@ export default function EmpresasTabClient({
               )}
             </TableBody>
           </Table>
+          <TablePagination page={table.page} totalPages={table.totalPages} totalFiltered={table.totalFiltered} totalItems={empresas.length} onPageChange={table.setPage} />
         </CardContent>
       </Card>
 

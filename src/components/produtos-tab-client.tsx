@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, startTransition, useCallback, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, startTransition } from "react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,10 @@ import { Input } from "@/components/ui/input";
 import ProdutoFormClient from "@/components/produto-form-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, cn } from "@/lib/utils";
-import { ArrowUpDown, ChevronUp, ChevronDown, Loader2, Pencil, Search, Trash2, X } from "lucide-react";
+import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
+import { useTableFeatures } from "@/hooks/use-table-features";
+import { TablePagination } from "@/components/table-pagination";
+import { SortableHeader } from "@/components/sortable-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -81,51 +84,18 @@ export default function ProdutosTabClient({
   const [deleting, setDeleting] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const [searchValue, setSearchValue] = useState(searchQuery ?? "");
-  const [isSearching, setIsSearching] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  type SortField = 'nome' | 'dataCompra' | 'marca' | 'valorVenda';
-  type SortDir = 'asc' | 'desc';
-  const [sortField, setSortField] = useState<SortField>('nome');
-  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const table = useTableFeatures({
+    data: produtos as (ProdutoListItem & Record<string, unknown>)[],
+    searchFields: ["nome", "marca", "categoria", "ncm"] as (keyof ProdutoListItem)[],
+    defaultSort: "nome" as keyof ProdutoListItem,
+    defaultSortDir: "asc",
+  });
 
-  const sortedProdutos = useMemo(() => {
-    return [...produtos].sort((a, b) => {
-      let cmp = 0;
-      if (sortField === 'nome') {
-        cmp = a.nome.localeCompare(b.nome, 'pt-BR');
-      } else if (sortField === 'dataCompra') {
-        const da = a.dataCompra ? new Date(a.dataCompra).getTime() : 0;
-        const db = b.dataCompra ? new Date(b.dataCompra).getTime() : 0;
-        cmp = da - db;
-      } else if (sortField === 'marca') {
-        const ma = a.marca || '';
-        const mb = b.marca || '';
-        cmp = ma.localeCompare(mb, 'pt-BR');
-      } else if (sortField === 'valorVenda') {
-        cmp = (a.valorVenda || 0) - (b.valorVenda || 0);
-      }
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-  }, [produtos, sortField, sortDir]);
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDir('asc');
-    }
-  };
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 text-muted-foreground/50 inline" />;
-    return sortDir === 'asc'
-      ? <ChevronUp className="ml-1 h-3 w-3 text-blue-900 inline" />
-      : <ChevronDown className="ml-1 h-3 w-3 text-blue-900 inline" />;
-  };
-
+  // Keep backwards compat — these were used throughout
+  const sortedProdutos = table.paginatedData as unknown as ProdutoListItem[];
+  const sortField = table.sortField;
+  const sortDir = table.sortDir;
   const produtosMap = useMemo(
     () => new Map(produtos.map((produto) => [produto.id, produto])),
     [produtos]
@@ -196,67 +166,25 @@ export default function ProdutosTabClient({
     }
   };
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchValue(value);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!value) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("q_produtos");
-      params.set("tab", "produtos");
-      startTransition(() => router.push(pathname + "?" + params.toString()));
-      return;
-    }
-    setIsSearching(true);
-    debounceRef.current = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      const trimmed = value.trim();
-      if (trimmed) {
-        params.set("q_produtos", trimmed);
-      } else {
-        params.delete("q_produtos");
-      }
-      params.set("tab", "produtos");
-      startTransition(() => router.push(pathname + "?" + params.toString()));
-      setIsSearching(false);
-    }, 300);
-  }, [searchParams, pathname, router]);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    table.setSearch(e.target.value);
+  };
 
-  const clearSearch = useCallback(() => {
-    setSearchValue("");
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("q_produtos");
-    params.set("tab", "produtos");
-    startTransition(() => router.push(pathname + "?" + params.toString()));
-  }, [searchParams, pathname, router]);
-
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    setSearchValue(searchQuery ?? "");
-    setIsSearching(false);
-  }, [searchQuery]);
+  const clearSearch = () => {
+    table.setSearch("");
+  };
 
   return (
     <>
       <div className="relative w-full max-w-sm">
-        {isSearching ? (
-          <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
-        ) : (
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        )}
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Pesquisar produtos..."
-          value={searchValue}
+          value={table.search}
           onChange={handleSearchChange}
-          className={cn("pl-9 h-9", searchValue && "pr-8")}
+          className={cn("pl-9 h-9", table.search && "pr-8")}
         />
-        {searchValue && (
+        {table.search && (
           <button
             type="button"
             onClick={clearSearch}
@@ -311,33 +239,13 @@ export default function ProdutosTabClient({
                 onCheckedChange={handleSelectAll}
               />
             </TableHead>
-            <TableHead className="w-[80px]">Foto</TableHead>
-            <TableHead
-              className="cursor-pointer select-none hover:text-blue-900"
-              onClick={() => handleSort('nome')}
-            >
-              Nome<SortIcon field="nome" />
-            </TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead
-              className="cursor-pointer select-none hover:text-blue-900"
-              onClick={() => handleSort('marca')}
-            >
-              Marca/Fornecedor<SortIcon field="marca" />
-            </TableHead>
-            <TableHead>NCM</TableHead>
-            <TableHead
-              className="cursor-pointer select-none hover:text-blue-900"
-              onClick={() => handleSort('dataCompra')}
-            >
-              Data Compra<SortIcon field="dataCompra" />
-            </TableHead>
-            <TableHead
-              className="text-right cursor-pointer select-none hover:text-blue-900"
-              onClick={() => handleSort('valorVenda')}
-            >
-              Valor<SortIcon field="valorVenda" />
-            </TableHead>
+            <SortableHeader label="Foto" field="_foto" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
+            <SortableHeader label="Nome" field="nome" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
+            <SortableHeader label="Categoria" field="categoria" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
+            <SortableHeader label="Marca/Fornecedor" field="marca" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
+            <SortableHeader label="NCM" field="ncm" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
+            <SortableHeader label="Data Compra" field="dataCompra" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
+            <SortableHeader label="Valor" field="valorVenda" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} className="text-right" />
             <TableHead className="w-[100px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -456,6 +364,14 @@ export default function ProdutosTabClient({
           )}
         </TableBody>
       </Table>
+
+      <TablePagination
+        page={table.page}
+        totalPages={table.totalPages}
+        totalFiltered={table.totalFiltered}
+        totalItems={produtos.length}
+        onPageChange={table.setPage}
+      />
 
       <Dialog open={modalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">

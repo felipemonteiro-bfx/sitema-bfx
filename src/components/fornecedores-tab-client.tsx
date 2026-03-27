@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MaskedInput } from "@/components/masked-input";
 import { cn } from "@/lib/utils";
 import { Pencil, Search, Trash2 } from "lucide-react";
+import { useTableFeatures } from "@/hooks/use-table-features";
+import { TablePagination } from "@/components/table-pagination";
+import { SortableHeader } from "@/components/sortable-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +55,12 @@ export default function FornecedoresTabClient({
   const router = useRouter();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  const table = useTableFeatures({
+    data: fornecedores as (FornecedorListItem & Record<string, unknown>)[],
+    searchFields: ["nome", "telefone"] as (keyof FornecedorListItem)[],
+    defaultSort: "nome" as keyof FornecedorListItem,
+  });
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const buildUrl = (params: Record<string, string | undefined>) => {
@@ -125,16 +134,20 @@ export default function FornecedoresTabClient({
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-blue-900">Fornecedores Cadastrados</CardTitle>
-          <form className="relative w-full max-w-sm [&_input]:uppercase">
+          <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              name="q_fornecedores"
               placeholder="Pesquisar fornecedores..."
-              defaultValue={searchQuery}
-              className="pl-9 h-9"
+              value={table.search}
+              onChange={(e) => table.setSearch(e.target.value)}
+              className={cn("pl-9 h-9", table.search && "pr-8")}
             />
-            <input type="hidden" name="tab" value="fornecedores" />
-          </form>
+            {table.search && (
+              <button type="button" onClick={() => table.setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
@@ -180,20 +193,20 @@ export default function FornecedoresTabClient({
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
+                <SortableHeader label="Nome" field="nome" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
+                <SortableHeader label="Telefone" field="telefone" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fornecedores.length === 0 ? (
+              {table.paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    Sem fornecedores cadastrados.
+                    {table.search ? "Nenhum resultado encontrado." : "Sem fornecedores cadastrados."}
                   </TableCell>
                 </TableRow>
               ) : (
-                fornecedores.map((f) => (
+                (table.paginatedData as unknown as FornecedorListItem[]).map((f) => (
                   <TableRow key={f.id}>
                     <TableCell>
                       <Checkbox
@@ -217,6 +230,7 @@ export default function FornecedoresTabClient({
               )}
             </TableBody>
           </Table>
+          <TablePagination page={table.page} totalPages={table.totalPages} totalFiltered={table.totalFiltered} totalItems={fornecedores.length} onPageChange={table.setPage} />
         </CardContent>
       </Card>
 

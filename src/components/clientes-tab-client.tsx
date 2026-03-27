@@ -13,6 +13,9 @@ import { MaskedInput } from "@/components/masked-input";
 import { CurrencyInput } from "@/components/currency-input";
 import { formatBRL, cn } from "@/lib/utils";
 import { Pencil, Search, Trash2 } from "lucide-react";
+import { useTableFeatures } from "@/hooks/use-table-features";
+import { TablePagination } from "@/components/table-pagination";
+import { SortableHeader } from "@/components/sortable-header";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,6 +71,12 @@ export default function ClientesTabClient({
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const table = useTableFeatures({
+    data: clientes as (ClienteListItem & Record<string, unknown>)[],
+    searchFields: ["nome", "cpf", "cnpj", "telefone", "empresa"] as (keyof ClienteListItem)[],
+    defaultSort: "nome" as keyof ClienteListItem,
+  });
 
   const buildUrl = (params: Record<string, string | undefined>) => {
     const newParams = { ...sp, ...params };
@@ -180,16 +189,20 @@ export default function ClientesTabClient({
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-blue-900">Clientes</CardTitle>
-          <form className="relative w-full max-w-sm [&_input]:uppercase">
+          <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              name="q_clientes"
               placeholder="Pesquisar clientes..."
-              defaultValue={searchQuery}
-              className="pl-9 h-9"
+              value={table.search}
+              onChange={(e) => table.setSearch(e.target.value)}
+              className={cn("pl-9 h-9", table.search && "pr-8")}
             />
-            <input type="hidden" name="tab" value="clientes" />
-          </form>
+            {table.search && (
+              <button type="button" onClick={() => table.setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
@@ -235,22 +248,22 @@ export default function ClientesTabClient({
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Doc</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead className="text-right">Renda</TableHead>
+                <SortableHeader label="Nome" field="nome" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} />
+                <SortableHeader label="Doc" field="cpf" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} />
+                <SortableHeader label="Telefone" field="telefone" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} />
+                <SortableHeader label="Renda" field="renda" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} className="text-right" />
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clientes.length === 0 ? (
+              {table.paginatedData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Sem clientes cadastrados.
+                    {table.search ? "Nenhum resultado encontrado." : "Sem clientes cadastrados."}
                   </TableCell>
                 </TableRow>
               ) : (
-                clientes.map((c) => (
+                (table.paginatedData as unknown as ClienteListItem[]).map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>
                       <Checkbox
@@ -276,6 +289,13 @@ export default function ClientesTabClient({
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            page={table.page}
+            totalPages={table.totalPages}
+            totalFiltered={table.totalFiltered}
+            totalItems={clientes.length}
+            onPageChange={table.setPage}
+          />
         </CardContent>
       </Card>
 
