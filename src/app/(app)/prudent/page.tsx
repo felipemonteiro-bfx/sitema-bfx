@@ -166,6 +166,11 @@ export default async function Page() {
       clienteCpf: v.cliente?.cpf || null,
       clienteCnpj: v.cliente?.cnpj || null,
       status,
+      itens: v.itens.map((i) => ({
+        produtoNome: i.produtoNome,
+        quantidade: i.quantidade,
+        subtotal: i.subtotal,
+      })),
       parcelas_detalhes: v.parcelasVencimento.map((p) => ({
         numeroParcela: p.numeroParcela,
         dataVencimento: p.dataVencimento.toISOString(),

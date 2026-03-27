@@ -15,6 +15,12 @@ interface ParcelaDetalhe {
   valorParcela: number;
 }
 
+interface ItemVenda {
+  produtoNome: string;
+  quantidade: number;
+  subtotal: number;
+}
+
 interface Venda {
   id: number;
   dataVenda: string | Date;
@@ -26,6 +32,7 @@ interface Venda {
   clienteCpf?: string | null;
   clienteCnpj?: string | null;
   status: 'pendente' | 'em_andamento' | 'antecipado';
+  itens?: ItemVenda[];
   parcelas_detalhes?: ParcelaDetalhe[];
 }
 
@@ -97,10 +104,8 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const [isProcessing, setIsProcessing] = useState(false);
   const [filtroEmpresa, setFiltroEmpresa] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todas");
-  const hoje = new Date();
-  const mesAtualStr = `${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
-  const [periodoInicio, setPeriodoInicio] = useState<string>(mesAtualStr);
-  const [periodoFim, setPeriodoFim] = useState<string>(mesAtualStr);
+  const [periodoInicio, setPeriodoInicio] = useState<string>("");
+  const [periodoFim, setPeriodoFim] = useState<string>("");
 
   const periodoInicioP = parseMesAno(periodoInicio);
   const periodoFimP = parseMesAno(periodoFim);
@@ -244,7 +249,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm w-28 focus:outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
-        {(filtroEmpresa !== "todas" || filtroStatus !== "todas") && (
+        {(filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "") && (
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground opacity-0">.</label>
             <Button
@@ -252,7 +257,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               variant="ghost"
               size="sm"
               className="h-9 text-muted-foreground hover:text-foreground"
-              onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); }}
+              onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); }}
             >
               Limpar filtros
             </Button>
@@ -271,6 +276,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               />
             </TableHead>
             <TableHead>Data</TableHead>
+            <TableHead>Cliente</TableHead>
             <TableHead>Empresa Conveniada</TableHead>
             <TableHead>Produto</TableHead>
             <TableHead>Status</TableHead>
@@ -281,7 +287,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         <TableBody>
           {vendasFiltradas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                 Nenhuma venda encontrada com os filtros aplicados.
               </TableCell>
             </TableRow>
@@ -311,6 +317,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                     />
                   </TableCell>
                   <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
+                  <TableCell className="text-foreground text-sm truncate max-w-[150px]">{v.clienteNome || '—'}</TableCell>
                   <TableCell className="text-foreground">
                     {v.empresaConveniada ? (
                       <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
@@ -320,7 +327,31 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                       <span className="text-muted-foreground text-xs">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="font-semibold text-foreground">{v.produtoNome}</TableCell>
+                  <TableCell className="font-semibold text-foreground max-w-[250px]">
+                    {v.itens && v.itens.length > 1 ? (
+                      <details className="cursor-pointer">
+                        <summary className="truncate text-sm">
+                          {v.itens.length} produtos
+                        </summary>
+                        <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                          {v.itens.map((item, idx) => (
+                            <li key={idx} className="flex justify-between gap-2">
+                              <span className="truncate">{item.produtoNome} ({item.quantidade}x)</span>
+                              <span className="tabular-nums shrink-0">{formatBRL(item.subtotal)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : v.itens && v.itens.length === 1 ? (
+                      <span className="block truncate" title={v.itens[0].produtoNome}>
+                        {v.itens[0].produtoNome}
+                      </span>
+                    ) : (
+                      <span className="block truncate" title={v.produtoNome || ''}>
+                        {v.produtoNome || '—'}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge status={v.status} />
                   </TableCell>
