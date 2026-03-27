@@ -31,7 +31,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
       const dataBase = dataVenda ? new Date(dataVenda) : new Date();
       const primeiroVencimento = calcularPrimeiroVencimento(dataBase);
       const novasParcelas: Parcela[] = Array.from({ length: numeroParcelas }).map((_, i) => {
-        const dataVencimento = new Date(primeiroVencimento.getFullYear(), primeiroVencimento.getMonth() + i, 10);
+        const dataVencimento = new Date(Date.UTC(primeiroVencimento.getUTCFullYear(), primeiroVencimento.getUTCMonth() + i, 10));
         return {
           numeroParcela: i + 1,
           dataVencimento: dataVencimento.toISOString().split('T')[0],

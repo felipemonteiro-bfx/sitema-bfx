@@ -56,9 +56,10 @@ export function maskCep(val?: string | null) {
  * - Compra após dia 20 → dia 10 do mês subsequente (dois meses à frente)
  */
 export function calcularPrimeiroVencimento(dataCompra: Date): Date {
-  const dia = dataCompra.getDate();
+  // Use UTC methods to avoid timezone offset affecting the day-of-month check
+  const dia = dataCompra.getUTCDate();
   const mesesAFrente = dia <= 20 ? 1 : 2;
-  return new Date(dataCompra.getFullYear(), dataCompra.getMonth() + mesesAFrente, 10);
+  return new Date(Date.UTC(dataCompra.getUTCFullYear(), dataCompra.getUTCMonth() + mesesAFrente, 10));
 }
 
 export function sugerirNcm(nome?: string | null) {
