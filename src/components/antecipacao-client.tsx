@@ -64,23 +64,32 @@ function calcularTaxaPercent(prazoMedio: number) {
 function StatusBadge({ status }: { status: Venda['status'] }) {
   if (status === 'antecipado') {
     return (
-      <Badge className="bg-success/15 text-success border-success/30 hover:bg-success/20 font-semibold text-xs">
+      <Badge className="bg-green-600 text-white border-0 font-semibold text-xs">
         Antecipado
       </Badge>
     );
   }
   if (status === 'em_andamento') {
     return (
-      <Badge variant="secondary" className="bg-info/15 text-info border-info/30 hover:bg-info/20 font-semibold text-xs">
+      <Badge className="bg-blue-600 text-white border-0 font-semibold text-xs">
         Em andamento
       </Badge>
     );
   }
   return (
-    <Badge variant="outline" className="bg-warning/10 text-warning border-warning/40 hover:bg-warning/15 font-semibold text-xs">
+    <Badge className="bg-amber-500 text-white border-0 font-semibold text-xs">
       Pendente
     </Badge>
   );
+}
+
+function parseMesAno(str: string): { mes: number; ano: number } | null {
+  const parts = str.split('/');
+  if (parts.length !== 2) return null;
+  const mes = parseInt(parts[0], 10);
+  const ano = parseInt(parts[1], 10);
+  if (isNaN(mes) || isNaN(ano) || mes < 1 || mes > 12) return null;
+  return { mes, ano };
 }
 
 export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis }: Props) {
@@ -88,12 +97,31 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const [isProcessing, setIsProcessing] = useState(false);
   const [filtroEmpresa, setFiltroEmpresa] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todas");
+  const hoje = new Date();
+  const mesAtualStr = `${String(hoje.getMonth() + 1).padStart(2, '0')}/${hoje.getFullYear()}`;
+  const [periodoInicio, setPeriodoInicio] = useState<string>(mesAtualStr);
+  const [periodoFim, setPeriodoFim] = useState<string>(mesAtualStr);
+
+  const periodoInicioP = parseMesAno(periodoInicio);
+  const periodoFimP = parseMesAno(periodoFim);
 
   // Filtrar vendas baseado nos filtros ativos
   const vendasFiltradas = vendasIniciais.filter((v) => {
     const passaEmpresa = filtroEmpresa === "todas" || v.empresaConveniada === filtroEmpresa;
     const passaStatus = filtroStatus === "todas" || v.status === filtroStatus;
-    return passaEmpresa && passaStatus;
+
+    // Filtro de periodo: se periodo definido, venda precisa ter parcela no range
+    let passaPeriodo = true;
+    if (periodoInicioP && periodoFimP && v.parcelas_detalhes && v.parcelas_detalhes.length > 0) {
+      const inicioRef = new Date(periodoInicioP.ano, periodoInicioP.mes - 1, 1);
+      const fimRef = new Date(periodoFimP.ano, periodoFimP.mes, 0); // ultimo dia do mes fim
+      passaPeriodo = v.parcelas_detalhes.some((p) => {
+        const d = new Date(p.dataVencimento);
+        return d >= inicioRef && d <= fimRef;
+      });
+    }
+
+    return passaEmpresa && passaStatus && passaPeriodo;
   });
 
   const toggleSelect = (id: number, isAntecipado: boolean) => {
@@ -194,6 +222,28 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             <option value="antecipado">Antecipado</option>
           </select>
         </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">De mês/ano</label>
+          <input
+            type="text"
+            value={periodoInicio}
+            onChange={(e) => setPeriodoInicio(e.target.value)}
+            placeholder="03/2025"
+            maxLength={7}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm w-28 focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Até mês/ano</label>
+          <input
+            type="text"
+            value={periodoFim}
+            onChange={(e) => setPeriodoFim(e.target.value)}
+            placeholder="04/2025"
+            maxLength={7}
+            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm w-28 focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
         {(filtroEmpresa !== "todas" || filtroStatus !== "todas") && (
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground opacity-0">.</label>
@@ -244,9 +294,13 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                   key={v.id}
                   className={`transition-all duration-200 ${
                     isAntecipado
-                      ? 'opacity-60 cursor-default'
-                      : 'cursor-pointer hover:bg-accent/50 hover:shadow-sm'
-                  } ${isSelected ? 'bg-success/10 border-l-4 border-success' : ''}`}
+                      ? 'bg-green-50 dark:bg-green-950/30 opacity-70 cursor-default'
+                      : v.status === 'em_andamento'
+                      ? 'bg-blue-50 dark:bg-blue-950/30 cursor-pointer hover:bg-blue-100/70'
+                      : isSelected
+                      ? 'bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 cursor-pointer'
+                      : 'cursor-pointer hover:bg-accent/50'
+                  }`}
                   onClick={() => !isProcessing && toggleSelect(v.id, isAntecipado)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -325,7 +379,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               onClick={handleGerarRelatorioVisual}
             >
               <ImageIcon className="h-4 w-4" />
-              Gerar Relatorio Visual
+              Gerar Relatório Visual
             </Button>
             <Button
               disabled={selectedIds.length === 0 || isProcessing}
