@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileSpreadsheet, ImageIcon } from "lucide-react";
+import { FileSpreadsheet, ImageIcon, Loader2 } from "lucide-react";
 
 interface ParcelaDetalhe {
   numeroParcela: number;
@@ -337,62 +337,99 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         </TableBody>
       </Table>
 
-      <div className="mt-6 flex flex-col gap-4 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-card to-card-elevated shadow-lg p-6 dark:shadow-[var(--shadow-lg)] transition-all">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Selecionado</span>
-            <span className="text-3xl font-black text-foreground tabular-nums">{formatBRL(totalSelecionado)}</span>
-            <span className="text-xs font-medium text-muted-foreground">{selectedIds.length} {selectedIds.length === 1 ? 'item selecionado' : 'itens selecionados'}</span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="group relative overflow-hidden rounded-lg border-2 border-info/30 bg-gradient-to-br from-info-bg to-transparent px-4 py-3 transition-all hover:border-info/50 hover:scale-[1.02] cursor-default">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Prazo médio (D+1)</div>
-              <div className="text-lg font-bold text-info tabular-nums">{prazoMedio.toFixed(1)} dias</div>
+      <div className="mt-6 rounded-xl border-2 border-primary/20 bg-card shadow-lg overflow-hidden transition-all">
+        {/* Linha 1: Total + Métricas */}
+        <div className="p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+          {/* Total selecionado */}
+          <div className="flex-shrink-0 min-w-[140px]">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Selecionado</div>
+            <div className="text-3xl sm:text-4xl font-black text-foreground tabular-nums leading-none mt-0.5">
+              {formatBRL(totalSelecionado)}
             </div>
-            <div className="group relative overflow-hidden rounded-lg border-2 border-warning/30 bg-gradient-to-br from-warning-bg to-transparent px-4 py-3 transition-all hover:border-warning/50 hover:scale-[1.02] cursor-default">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Taxa total</div>
-              <div className="text-lg font-bold text-warning tabular-nums">{taxaPercent.toFixed(2)}%</div>
-            </div>
-            <div className="group relative overflow-hidden rounded-lg border-2 border-success/30 bg-gradient-to-br from-success-bg to-transparent px-4 py-3 transition-all hover:border-success/50 hover:scale-[1.02] dark:shadow-[var(--glow-primary)] cursor-default">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Valor líquido</div>
-              <div className="text-lg font-bold text-success tabular-nums">{formatBRL(valorLiquido)}</div>
+            <div className="text-xs text-muted-foreground mt-1.5">
+              {selectedIds.length} {selectedIds.length === 1 ? 'item selecionado' : 'itens selecionados'}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {/* Separador vertical (só desktop) */}
+          <div className="hidden sm:block w-px self-stretch bg-border" />
+
+          {/* 3 métricas em grid compacto */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1">
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-blue-500 dark:text-blue-400">Prazo médio</div>
+              <div className="text-xl font-black text-blue-700 dark:text-blue-300 tabular-nums leading-tight">
+                {prazoMedio.toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
+              </div>
+              <div className="text-[9px] text-blue-400/80 font-medium mt-0.5">D+1</div>
+            </div>
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400">Taxa total</div>
+              <div className="text-xl font-black text-amber-700 dark:text-amber-300 tabular-nums leading-tight">
+                {taxaPercent.toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
+              </div>
+              <div className="text-[9px] text-amber-400/80 font-medium mt-0.5">Smart</div>
+            </div>
+            <div className="rounded-lg bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/60 px-3 py-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">Líquido</div>
+              <div className="text-base sm:text-lg font-black text-green-700 dark:text-green-300 tabular-nums leading-tight truncate">
+                {formatBRL(valorLiquido)}
+              </div>
+              <div className="text-[9px] text-green-500/80 font-medium mt-0.5">estimado</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-border" />
+
+        {/* Linha 2: Ações */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          {/* Secundárias */}
+          <div className="flex gap-2 sm:flex-shrink-0">
             <Button
               type="button"
               disabled={selectedIds.length === 0 || isProcessing}
               variant="outline"
-              className="h-12 px-5 text-sm font-bold gap-2"
+              size="sm"
+              className="flex-1 sm:flex-none h-10 px-4 text-sm font-semibold gap-2 cursor-pointer"
               onClick={handleGerarPlanilha}
             >
               <FileSpreadsheet className="h-4 w-4" />
-              Gerar Planilha
+              Planilha
             </Button>
             <Button
               type="button"
               disabled={selectedIds.length === 0 || isProcessing}
               variant="outline"
-              className="h-12 px-5 text-sm font-bold gap-2"
+              size="sm"
+              className="flex-1 sm:flex-none h-10 px-4 text-sm font-semibold gap-2 cursor-pointer"
               onClick={handleGerarRelatorioVisual}
             >
               <ImageIcon className="h-4 w-4" />
-              Gerar Relatório Visual
-            </Button>
-            <Button
-              disabled={selectedIds.length === 0 || isProcessing}
-              variant="success"
-              className="h-12 px-8 text-base font-bold shadow-lg hover:shadow-xl transition-all"
-            >
-              {isProcessing ? "Gerando Relatório..." : `Antecipar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'}`}
+              Relatório Visual
             </Button>
           </div>
+
+          {/* CTA principal */}
+          <Button
+            disabled={selectedIds.length === 0 || isProcessing}
+            className="w-full sm:w-auto sm:ml-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-bold bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-md hover:shadow-green-500/30 transition-all gap-2 cursor-pointer"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processando...
+              </>
+            ) : (
+              `Antecipar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'}`
+            )}
+          </Button>
         </div>
-        <div className="pt-3 border-t border-border text-xs font-medium text-muted-foreground flex items-center gap-2">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-info/20 text-[10px] font-bold text-info">i</span>
-          Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. Juros simples &lt; 30 dias e compostos a partir de 30 dias.
+
+        {/* Rodapé informativo */}
+        <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-2.5">
+          <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-[9px] font-bold text-blue-600 dark:text-blue-400">i</span>
+          Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
       </div>
 
