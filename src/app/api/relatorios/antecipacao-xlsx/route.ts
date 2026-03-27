@@ -37,6 +37,7 @@ interface LinhaAba {
   produto: string;
   valorParcela: number;
   numeroParcela: number;
+  totalParcelas: number;
   dataDesconto: string;
 }
 
@@ -58,7 +59,7 @@ function buildXmlSheet(sheetName: string, linhas: LinhaAba[]): string {
       `<Cell><Data ss:Type="String">${escapeXml(l.dataCompra)}</Data></Cell>`,
       `<Cell><Data ss:Type="String">${escapeXml(l.produto)}</Data></Cell>`,
       `<Cell><Data ss:Type="Number">${l.valorParcela.toFixed(2)}</Data></Cell>`,
-      `<Cell><Data ss:Type="Number">${l.numeroParcela}</Data></Cell>`,
+      `<Cell><Data ss:Type="String">${escapeXml(`${l.numeroParcela}/${l.totalParcelas}`)}</Data></Cell>`,
       `<Cell><Data ss:Type="String">${escapeXml(l.dataDesconto)}</Data></Cell>`,
     ];
     return `<Row>${cells.join('')}</Row>`;
@@ -132,6 +133,7 @@ export async function GET(request: NextRequest) {
 
       if (venda.parcelasVencimento.length > 0) {
         // Usar parcelas reais
+        const totalParcelas = venda.parcelasVencimento.length;
         for (const parcela of venda.parcelasVencimento) {
           const d = new Date(parcela.dataVencimento);
           const year = d.getUTCFullYear();
@@ -152,6 +154,7 @@ export async function GET(request: NextRequest) {
             produto,
             valorParcela: parcela.valorParcela,
             numeroParcela: parcela.numeroParcela,
+            totalParcelas,
             dataDesconto,
           });
         }
@@ -185,6 +188,7 @@ export async function GET(request: NextRequest) {
             produto,
             valorParcela,
             numeroParcela: i + 1,
+            totalParcelas: numParcelas,
             dataDesconto,
           });
         }
