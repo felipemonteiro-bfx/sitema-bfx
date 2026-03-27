@@ -310,3 +310,16 @@ model VozDublador {
 
   @@map("vozes_dubladores")
 }
+
+model AnticipacaoBatch {
+  id               Int       @id @default(autoincrement())
+  criadaEm         DateTime  @default(now()) @map("criada_em")
+  vendaIds         String    @map("venda_ids") // JSON: "[1,2,3]"
+  valorTotal       Float     @map("valor_total")
+  quantidadeVendas Int       @map("quantidade_vendas")
+  periodoDescricao String?   @map("periodo_descricao") // ex: "mar/2025 - abr/2025"
+  periodoInicio    DateTime? @map("periodo_inicio")
+  periodoFim       DateTime? @map("periodo_fim")
+
+  @@map("antecipacao_batches")
+}

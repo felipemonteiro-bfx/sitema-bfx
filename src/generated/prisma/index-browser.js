@@ -356,6 +356,17 @@ exports.Prisma.VozDubladorScalarFieldEnum = {
   criadoEm: 'criadoEm'
 };
 
+exports.Prisma.AnticipacaoBatchScalarFieldEnum = {
+  id: 'id',
+  criadaEm: 'criadaEm',
+  vendaIds: 'vendaIds',
+  valorTotal: 'valorTotal',
+  quantidadeVendas: 'quantidadeVendas',
+  periodoDescricao: 'periodoDescricao',
+  periodoInicio: 'periodoInicio',
+  periodoFim: 'periodoFim'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -402,7 +413,8 @@ exports.Prisma.ModelName = {
   AiMensagem: 'AiMensagem',
   Assinatura: 'Assinatura',
   Notificacao: 'Notificacao',
-  VozDublador: 'VozDublador'
+  VozDublador: 'VozDublador',
+  AnticipacaoBatch: 'AnticipacaoBatch'
 };
 
 /**

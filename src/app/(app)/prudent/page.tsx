@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
@@ -12,10 +12,54 @@ async function antecipar(formData: FormData) {
   "use server";
   const ids = formData.getAll("id").map((v) => Number(v));
   if (!ids.length) return;
+
+  // Buscar vendas para calcular total e periodo
+  const vendas = await prisma.venda.findMany({
+    where: { id: { in: ids } },
+    include: {
+      itens: { select: { subtotal: true } },
+      parcelasVencimento: { select: { dataVencimento: true, valorParcela: true } },
+    },
+  });
+
+  const valorTotal = vendas.reduce((sum, v) => {
+    return sum + v.itens.reduce((s, i) => s + (i.subtotal || 0), 0);
+  }, 0);
+
+  const todasParcelas = vendas.flatMap((v) => v.parcelasVencimento);
+  const datas = todasParcelas.map((p) => new Date(p.dataVencimento)).sort((a, b) => a.getTime() - b.getTime());
+  const periodoInicio = datas[0] || null;
+  const periodoFim = datas[datas.length - 1] || null;
+
+  const formatMesAno = (d: Date) =>
+    d.toLocaleDateString("pt-BR", { month: "short", year: "numeric", timeZone: "UTC" });
+
+  const periodoDescricao =
+    periodoInicio && periodoFim
+      ? periodoInicio.getMonth() === periodoFim.getMonth() &&
+        periodoInicio.getFullYear() === periodoFim.getFullYear()
+        ? formatMesAno(periodoInicio)
+        : `${formatMesAno(periodoInicio)} - ${formatMesAno(periodoFim)}`
+      : null;
+
+  // Salvar batch
+  await prisma.anticipacaoBatch.create({
+    data: {
+      vendaIds: JSON.stringify(ids),
+      valorTotal,
+      quantidadeVendas: ids.length,
+      periodoDescricao,
+      periodoInicio,
+      periodoFim,
+    },
+  });
+
+  // Marcar vendas como antecipadas
   await prisma.venda.updateMany({
     where: { id: { in: ids } },
     data: { antecipada: 1 },
   });
+
   revalidatePath("/prudent");
 }
 
@@ -85,25 +129,19 @@ export default async function Page() {
       .filter((e): e is string => Boolean(e))
   )].sort();
 
-  // Buscar vendas ja antecipadas (antecipada = 1) para o historico
-  const antecipadas = await prisma.venda.findMany({
-    where: { antecipada: 1 },
-    orderBy: { dataVenda: "desc" },
+  // Buscar batches de antecipacao para o historico
+  const batches = await prisma.anticipacaoBatch.findMany({
+    orderBy: { criadaEm: "desc" },
     take: 50,
-    include: {
-      cliente: { select: { nome: true, empresa: true } },
-      itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
-    },
   });
 
-  const antecipadasFormatadas = antecipadas.map((v) => ({
-    id: v.id,
-    dataVenda: v.dataVenda,
-    clienteNome: v.cliente?.nome || null,
-    empresaConveniada: v.cliente?.empresa || null,
-    produtoNome: produtosTexto(v),
-    valorTotal: valorTotalVenda(v),
-    parcelas: v.parcelas,
+  const batchesFormatados = batches.map((b) => ({
+    id: b.id,
+    criadaEm: b.criadaEm,
+    vendaIds: b.vendaIds,
+    valorTotal: b.valorTotal,
+    quantidadeVendas: b.quantidadeVendas,
+    periodoDescricao: b.periodoDescricao,
   }));
 
   const vendasFormatadas = todasVendas.map((v) => {
@@ -164,7 +202,7 @@ export default async function Page() {
           />
         </CardContent>
       </Card>
-      <HistoricoAntecipacoes antecipacoes={antecipadasFormatadas} />
+      <HistoricoAntecipacoes batches={batchesFormatados} />
     </div>
   );
 }

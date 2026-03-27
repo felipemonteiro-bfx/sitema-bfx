@@ -108,6 +108,11 @@ export type Notificacao = $Result.DefaultSelection<Prisma.$NotificacaoPayload>
  * 
  */
 export type VozDublador = $Result.DefaultSelection<Prisma.$VozDubladorPayload>
+/**
+ * Model AnticipacaoBatch
+ * 
+ */
+export type AnticipacaoBatch = $Result.DefaultSelection<Prisma.$AnticipacaoBatchPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -416,6 +421,16 @@ export class PrismaClient<
     * ```
     */
   get vozDublador(): Prisma.VozDubladorDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.anticipacaoBatch`: Exposes CRUD operations for the **AnticipacaoBatch** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AnticipacaoBatches
+    * const anticipacaoBatches = await prisma.anticipacaoBatch.findMany()
+    * ```
+    */
+  get anticipacaoBatch(): Prisma.AnticipacaoBatchDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -875,7 +890,8 @@ export namespace Prisma {
     AiMensagem: 'AiMensagem',
     Assinatura: 'Assinatura',
     Notificacao: 'Notificacao',
-    VozDublador: 'VozDublador'
+    VozDublador: 'VozDublador',
+    AnticipacaoBatch: 'AnticipacaoBatch'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -894,7 +910,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem" | "assinatura" | "notificacao" | "vozDublador"
+      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem" | "assinatura" | "notificacao" | "vozDublador" | "anticipacaoBatch"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2304,6 +2320,80 @@ export namespace Prisma {
           }
         }
       }
+      AnticipacaoBatch: {
+        payload: Prisma.$AnticipacaoBatchPayload<ExtArgs>
+        fields: Prisma.AnticipacaoBatchFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AnticipacaoBatchFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AnticipacaoBatchFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>
+          }
+          findFirst: {
+            args: Prisma.AnticipacaoBatchFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AnticipacaoBatchFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>
+          }
+          findMany: {
+            args: Prisma.AnticipacaoBatchFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>[]
+          }
+          create: {
+            args: Prisma.AnticipacaoBatchCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>
+          }
+          createMany: {
+            args: Prisma.AnticipacaoBatchCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AnticipacaoBatchCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>[]
+          }
+          delete: {
+            args: Prisma.AnticipacaoBatchDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>
+          }
+          update: {
+            args: Prisma.AnticipacaoBatchUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>
+          }
+          deleteMany: {
+            args: Prisma.AnticipacaoBatchDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AnticipacaoBatchUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.AnticipacaoBatchUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>[]
+          }
+          upsert: {
+            args: Prisma.AnticipacaoBatchUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AnticipacaoBatchPayload>
+          }
+          aggregate: {
+            args: Prisma.AnticipacaoBatchAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAnticipacaoBatch>
+          }
+          groupBy: {
+            args: Prisma.AnticipacaoBatchGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AnticipacaoBatchGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AnticipacaoBatchCountArgs<ExtArgs>
+            result: $Utils.Optional<AnticipacaoBatchCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2419,6 +2509,7 @@ export namespace Prisma {
     assinatura?: AssinaturaOmit
     notificacao?: NotificacaoOmit
     vozDublador?: VozDubladorOmit
+    anticipacaoBatch?: AnticipacaoBatchOmit
   }
 
   /* Types for Logging */
@@ -24122,6 +24213,1082 @@ export namespace Prisma {
 
 
   /**
+   * Model AnticipacaoBatch
+   */
+
+  export type AggregateAnticipacaoBatch = {
+    _count: AnticipacaoBatchCountAggregateOutputType | null
+    _avg: AnticipacaoBatchAvgAggregateOutputType | null
+    _sum: AnticipacaoBatchSumAggregateOutputType | null
+    _min: AnticipacaoBatchMinAggregateOutputType | null
+    _max: AnticipacaoBatchMaxAggregateOutputType | null
+  }
+
+  export type AnticipacaoBatchAvgAggregateOutputType = {
+    id: number | null
+    valorTotal: number | null
+    quantidadeVendas: number | null
+  }
+
+  export type AnticipacaoBatchSumAggregateOutputType = {
+    id: number | null
+    valorTotal: number | null
+    quantidadeVendas: number | null
+  }
+
+  export type AnticipacaoBatchMinAggregateOutputType = {
+    id: number | null
+    criadaEm: Date | null
+    vendaIds: string | null
+    valorTotal: number | null
+    quantidadeVendas: number | null
+    periodoDescricao: string | null
+    periodoInicio: Date | null
+    periodoFim: Date | null
+  }
+
+  export type AnticipacaoBatchMaxAggregateOutputType = {
+    id: number | null
+    criadaEm: Date | null
+    vendaIds: string | null
+    valorTotal: number | null
+    quantidadeVendas: number | null
+    periodoDescricao: string | null
+    periodoInicio: Date | null
+    periodoFim: Date | null
+  }
+
+  export type AnticipacaoBatchCountAggregateOutputType = {
+    id: number
+    criadaEm: number
+    vendaIds: number
+    valorTotal: number
+    quantidadeVendas: number
+    periodoDescricao: number
+    periodoInicio: number
+    periodoFim: number
+    _all: number
+  }
+
+
+  export type AnticipacaoBatchAvgAggregateInputType = {
+    id?: true
+    valorTotal?: true
+    quantidadeVendas?: true
+  }
+
+  export type AnticipacaoBatchSumAggregateInputType = {
+    id?: true
+    valorTotal?: true
+    quantidadeVendas?: true
+  }
+
+  export type AnticipacaoBatchMinAggregateInputType = {
+    id?: true
+    criadaEm?: true
+    vendaIds?: true
+    valorTotal?: true
+    quantidadeVendas?: true
+    periodoDescricao?: true
+    periodoInicio?: true
+    periodoFim?: true
+  }
+
+  export type AnticipacaoBatchMaxAggregateInputType = {
+    id?: true
+    criadaEm?: true
+    vendaIds?: true
+    valorTotal?: true
+    quantidadeVendas?: true
+    periodoDescricao?: true
+    periodoInicio?: true
+    periodoFim?: true
+  }
+
+  export type AnticipacaoBatchCountAggregateInputType = {
+    id?: true
+    criadaEm?: true
+    vendaIds?: true
+    valorTotal?: true
+    quantidadeVendas?: true
+    periodoDescricao?: true
+    periodoInicio?: true
+    periodoFim?: true
+    _all?: true
+  }
+
+  export type AnticipacaoBatchAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AnticipacaoBatch to aggregate.
+     */
+    where?: AnticipacaoBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnticipacaoBatches to fetch.
+     */
+    orderBy?: AnticipacaoBatchOrderByWithRelationInput | AnticipacaoBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AnticipacaoBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnticipacaoBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnticipacaoBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AnticipacaoBatches
+    **/
+    _count?: true | AnticipacaoBatchCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AnticipacaoBatchAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AnticipacaoBatchSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AnticipacaoBatchMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AnticipacaoBatchMaxAggregateInputType
+  }
+
+  export type GetAnticipacaoBatchAggregateType<T extends AnticipacaoBatchAggregateArgs> = {
+        [P in keyof T & keyof AggregateAnticipacaoBatch]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAnticipacaoBatch[P]>
+      : GetScalarType<T[P], AggregateAnticipacaoBatch[P]>
+  }
+
+
+
+
+  export type AnticipacaoBatchGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AnticipacaoBatchWhereInput
+    orderBy?: AnticipacaoBatchOrderByWithAggregationInput | AnticipacaoBatchOrderByWithAggregationInput[]
+    by: AnticipacaoBatchScalarFieldEnum[] | AnticipacaoBatchScalarFieldEnum
+    having?: AnticipacaoBatchScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AnticipacaoBatchCountAggregateInputType | true
+    _avg?: AnticipacaoBatchAvgAggregateInputType
+    _sum?: AnticipacaoBatchSumAggregateInputType
+    _min?: AnticipacaoBatchMinAggregateInputType
+    _max?: AnticipacaoBatchMaxAggregateInputType
+  }
+
+  export type AnticipacaoBatchGroupByOutputType = {
+    id: number
+    criadaEm: Date
+    vendaIds: string
+    valorTotal: number
+    quantidadeVendas: number
+    periodoDescricao: string | null
+    periodoInicio: Date | null
+    periodoFim: Date | null
+    _count: AnticipacaoBatchCountAggregateOutputType | null
+    _avg: AnticipacaoBatchAvgAggregateOutputType | null
+    _sum: AnticipacaoBatchSumAggregateOutputType | null
+    _min: AnticipacaoBatchMinAggregateOutputType | null
+    _max: AnticipacaoBatchMaxAggregateOutputType | null
+  }
+
+  type GetAnticipacaoBatchGroupByPayload<T extends AnticipacaoBatchGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AnticipacaoBatchGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AnticipacaoBatchGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AnticipacaoBatchGroupByOutputType[P]>
+            : GetScalarType<T[P], AnticipacaoBatchGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AnticipacaoBatchSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    criadaEm?: boolean
+    vendaIds?: boolean
+    valorTotal?: boolean
+    quantidadeVendas?: boolean
+    periodoDescricao?: boolean
+    periodoInicio?: boolean
+    periodoFim?: boolean
+  }, ExtArgs["result"]["anticipacaoBatch"]>
+
+  export type AnticipacaoBatchSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    criadaEm?: boolean
+    vendaIds?: boolean
+    valorTotal?: boolean
+    quantidadeVendas?: boolean
+    periodoDescricao?: boolean
+    periodoInicio?: boolean
+    periodoFim?: boolean
+  }, ExtArgs["result"]["anticipacaoBatch"]>
+
+  export type AnticipacaoBatchSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    criadaEm?: boolean
+    vendaIds?: boolean
+    valorTotal?: boolean
+    quantidadeVendas?: boolean
+    periodoDescricao?: boolean
+    periodoInicio?: boolean
+    periodoFim?: boolean
+  }, ExtArgs["result"]["anticipacaoBatch"]>
+
+  export type AnticipacaoBatchSelectScalar = {
+    id?: boolean
+    criadaEm?: boolean
+    vendaIds?: boolean
+    valorTotal?: boolean
+    quantidadeVendas?: boolean
+    periodoDescricao?: boolean
+    periodoInicio?: boolean
+    periodoFim?: boolean
+  }
+
+  export type AnticipacaoBatchOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "criadaEm" | "vendaIds" | "valorTotal" | "quantidadeVendas" | "periodoDescricao" | "periodoInicio" | "periodoFim", ExtArgs["result"]["anticipacaoBatch"]>
+
+  export type $AnticipacaoBatchPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AnticipacaoBatch"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      criadaEm: Date
+      vendaIds: string
+      valorTotal: number
+      quantidadeVendas: number
+      periodoDescricao: string | null
+      periodoInicio: Date | null
+      periodoFim: Date | null
+    }, ExtArgs["result"]["anticipacaoBatch"]>
+    composites: {}
+  }
+
+  type AnticipacaoBatchGetPayload<S extends boolean | null | undefined | AnticipacaoBatchDefaultArgs> = $Result.GetResult<Prisma.$AnticipacaoBatchPayload, S>
+
+  type AnticipacaoBatchCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<AnticipacaoBatchFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: AnticipacaoBatchCountAggregateInputType | true
+    }
+
+  export interface AnticipacaoBatchDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AnticipacaoBatch'], meta: { name: 'AnticipacaoBatch' } }
+    /**
+     * Find zero or one AnticipacaoBatch that matches the filter.
+     * @param {AnticipacaoBatchFindUniqueArgs} args - Arguments to find a AnticipacaoBatch
+     * @example
+     * // Get one AnticipacaoBatch
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AnticipacaoBatchFindUniqueArgs>(args: SelectSubset<T, AnticipacaoBatchFindUniqueArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one AnticipacaoBatch that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {AnticipacaoBatchFindUniqueOrThrowArgs} args - Arguments to find a AnticipacaoBatch
+     * @example
+     * // Get one AnticipacaoBatch
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AnticipacaoBatchFindUniqueOrThrowArgs>(args: SelectSubset<T, AnticipacaoBatchFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AnticipacaoBatch that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnticipacaoBatchFindFirstArgs} args - Arguments to find a AnticipacaoBatch
+     * @example
+     * // Get one AnticipacaoBatch
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AnticipacaoBatchFindFirstArgs>(args?: SelectSubset<T, AnticipacaoBatchFindFirstArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first AnticipacaoBatch that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnticipacaoBatchFindFirstOrThrowArgs} args - Arguments to find a AnticipacaoBatch
+     * @example
+     * // Get one AnticipacaoBatch
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AnticipacaoBatchFindFirstOrThrowArgs>(args?: SelectSubset<T, AnticipacaoBatchFindFirstOrThrowArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more AnticipacaoBatches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnticipacaoBatchFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AnticipacaoBatches
+     * const anticipacaoBatches = await prisma.anticipacaoBatch.findMany()
+     * 
+     * // Get first 10 AnticipacaoBatches
+     * const anticipacaoBatches = await prisma.anticipacaoBatch.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const anticipacaoBatchWithIdOnly = await prisma.anticipacaoBatch.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AnticipacaoBatchFindManyArgs>(args?: SelectSubset<T, AnticipacaoBatchFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a AnticipacaoBatch.
+     * @param {AnticipacaoBatchCreateArgs} args - Arguments to create a AnticipacaoBatch.
+     * @example
+     * // Create one AnticipacaoBatch
+     * const AnticipacaoBatch = await prisma.anticipacaoBatch.create({
+     *   data: {
+     *     // ... data to create a AnticipacaoBatch
+     *   }
+     * })
+     * 
+     */
+    create<T extends AnticipacaoBatchCreateArgs>(args: SelectSubset<T, AnticipacaoBatchCreateArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many AnticipacaoBatches.
+     * @param {AnticipacaoBatchCreateManyArgs} args - Arguments to create many AnticipacaoBatches.
+     * @example
+     * // Create many AnticipacaoBatches
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AnticipacaoBatchCreateManyArgs>(args?: SelectSubset<T, AnticipacaoBatchCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AnticipacaoBatches and returns the data saved in the database.
+     * @param {AnticipacaoBatchCreateManyAndReturnArgs} args - Arguments to create many AnticipacaoBatches.
+     * @example
+     * // Create many AnticipacaoBatches
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AnticipacaoBatches and only return the `id`
+     * const anticipacaoBatchWithIdOnly = await prisma.anticipacaoBatch.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AnticipacaoBatchCreateManyAndReturnArgs>(args?: SelectSubset<T, AnticipacaoBatchCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a AnticipacaoBatch.
+     * @param {AnticipacaoBatchDeleteArgs} args - Arguments to delete one AnticipacaoBatch.
+     * @example
+     * // Delete one AnticipacaoBatch
+     * const AnticipacaoBatch = await prisma.anticipacaoBatch.delete({
+     *   where: {
+     *     // ... filter to delete one AnticipacaoBatch
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AnticipacaoBatchDeleteArgs>(args: SelectSubset<T, AnticipacaoBatchDeleteArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one AnticipacaoBatch.
+     * @param {AnticipacaoBatchUpdateArgs} args - Arguments to update one AnticipacaoBatch.
+     * @example
+     * // Update one AnticipacaoBatch
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AnticipacaoBatchUpdateArgs>(args: SelectSubset<T, AnticipacaoBatchUpdateArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more AnticipacaoBatches.
+     * @param {AnticipacaoBatchDeleteManyArgs} args - Arguments to filter AnticipacaoBatches to delete.
+     * @example
+     * // Delete a few AnticipacaoBatches
+     * const { count } = await prisma.anticipacaoBatch.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AnticipacaoBatchDeleteManyArgs>(args?: SelectSubset<T, AnticipacaoBatchDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AnticipacaoBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnticipacaoBatchUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AnticipacaoBatches
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AnticipacaoBatchUpdateManyArgs>(args: SelectSubset<T, AnticipacaoBatchUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AnticipacaoBatches and returns the data updated in the database.
+     * @param {AnticipacaoBatchUpdateManyAndReturnArgs} args - Arguments to update many AnticipacaoBatches.
+     * @example
+     * // Update many AnticipacaoBatches
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more AnticipacaoBatches and only return the `id`
+     * const anticipacaoBatchWithIdOnly = await prisma.anticipacaoBatch.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends AnticipacaoBatchUpdateManyAndReturnArgs>(args: SelectSubset<T, AnticipacaoBatchUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one AnticipacaoBatch.
+     * @param {AnticipacaoBatchUpsertArgs} args - Arguments to update or create a AnticipacaoBatch.
+     * @example
+     * // Update or create a AnticipacaoBatch
+     * const anticipacaoBatch = await prisma.anticipacaoBatch.upsert({
+     *   create: {
+     *     // ... data to create a AnticipacaoBatch
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AnticipacaoBatch we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AnticipacaoBatchUpsertArgs>(args: SelectSubset<T, AnticipacaoBatchUpsertArgs<ExtArgs>>): Prisma__AnticipacaoBatchClient<$Result.GetResult<Prisma.$AnticipacaoBatchPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of AnticipacaoBatches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnticipacaoBatchCountArgs} args - Arguments to filter AnticipacaoBatches to count.
+     * @example
+     * // Count the number of AnticipacaoBatches
+     * const count = await prisma.anticipacaoBatch.count({
+     *   where: {
+     *     // ... the filter for the AnticipacaoBatches we want to count
+     *   }
+     * })
+    **/
+    count<T extends AnticipacaoBatchCountArgs>(
+      args?: Subset<T, AnticipacaoBatchCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AnticipacaoBatchCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AnticipacaoBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnticipacaoBatchAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AnticipacaoBatchAggregateArgs>(args: Subset<T, AnticipacaoBatchAggregateArgs>): Prisma.PrismaPromise<GetAnticipacaoBatchAggregateType<T>>
+
+    /**
+     * Group by AnticipacaoBatch.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AnticipacaoBatchGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AnticipacaoBatchGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AnticipacaoBatchGroupByArgs['orderBy'] }
+        : { orderBy?: AnticipacaoBatchGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AnticipacaoBatchGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAnticipacaoBatchGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AnticipacaoBatch model
+   */
+  readonly fields: AnticipacaoBatchFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AnticipacaoBatch.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AnticipacaoBatchClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AnticipacaoBatch model
+   */
+  interface AnticipacaoBatchFieldRefs {
+    readonly id: FieldRef<"AnticipacaoBatch", 'Int'>
+    readonly criadaEm: FieldRef<"AnticipacaoBatch", 'DateTime'>
+    readonly vendaIds: FieldRef<"AnticipacaoBatch", 'String'>
+    readonly valorTotal: FieldRef<"AnticipacaoBatch", 'Float'>
+    readonly quantidadeVendas: FieldRef<"AnticipacaoBatch", 'Int'>
+    readonly periodoDescricao: FieldRef<"AnticipacaoBatch", 'String'>
+    readonly periodoInicio: FieldRef<"AnticipacaoBatch", 'DateTime'>
+    readonly periodoFim: FieldRef<"AnticipacaoBatch", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AnticipacaoBatch findUnique
+   */
+  export type AnticipacaoBatchFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which AnticipacaoBatch to fetch.
+     */
+    where: AnticipacaoBatchWhereUniqueInput
+  }
+
+  /**
+   * AnticipacaoBatch findUniqueOrThrow
+   */
+  export type AnticipacaoBatchFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which AnticipacaoBatch to fetch.
+     */
+    where: AnticipacaoBatchWhereUniqueInput
+  }
+
+  /**
+   * AnticipacaoBatch findFirst
+   */
+  export type AnticipacaoBatchFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which AnticipacaoBatch to fetch.
+     */
+    where?: AnticipacaoBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnticipacaoBatches to fetch.
+     */
+    orderBy?: AnticipacaoBatchOrderByWithRelationInput | AnticipacaoBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AnticipacaoBatches.
+     */
+    cursor?: AnticipacaoBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnticipacaoBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnticipacaoBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnticipacaoBatches.
+     */
+    distinct?: AnticipacaoBatchScalarFieldEnum | AnticipacaoBatchScalarFieldEnum[]
+  }
+
+  /**
+   * AnticipacaoBatch findFirstOrThrow
+   */
+  export type AnticipacaoBatchFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which AnticipacaoBatch to fetch.
+     */
+    where?: AnticipacaoBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnticipacaoBatches to fetch.
+     */
+    orderBy?: AnticipacaoBatchOrderByWithRelationInput | AnticipacaoBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AnticipacaoBatches.
+     */
+    cursor?: AnticipacaoBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnticipacaoBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnticipacaoBatches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AnticipacaoBatches.
+     */
+    distinct?: AnticipacaoBatchScalarFieldEnum | AnticipacaoBatchScalarFieldEnum[]
+  }
+
+  /**
+   * AnticipacaoBatch findMany
+   */
+  export type AnticipacaoBatchFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * Filter, which AnticipacaoBatches to fetch.
+     */
+    where?: AnticipacaoBatchWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AnticipacaoBatches to fetch.
+     */
+    orderBy?: AnticipacaoBatchOrderByWithRelationInput | AnticipacaoBatchOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AnticipacaoBatches.
+     */
+    cursor?: AnticipacaoBatchWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AnticipacaoBatches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AnticipacaoBatches.
+     */
+    skip?: number
+    distinct?: AnticipacaoBatchScalarFieldEnum | AnticipacaoBatchScalarFieldEnum[]
+  }
+
+  /**
+   * AnticipacaoBatch create
+   */
+  export type AnticipacaoBatchCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * The data needed to create a AnticipacaoBatch.
+     */
+    data: XOR<AnticipacaoBatchCreateInput, AnticipacaoBatchUncheckedCreateInput>
+  }
+
+  /**
+   * AnticipacaoBatch createMany
+   */
+  export type AnticipacaoBatchCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AnticipacaoBatches.
+     */
+    data: AnticipacaoBatchCreateManyInput | AnticipacaoBatchCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AnticipacaoBatch createManyAndReturn
+   */
+  export type AnticipacaoBatchCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * The data used to create many AnticipacaoBatches.
+     */
+    data: AnticipacaoBatchCreateManyInput | AnticipacaoBatchCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * AnticipacaoBatch update
+   */
+  export type AnticipacaoBatchUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * The data needed to update a AnticipacaoBatch.
+     */
+    data: XOR<AnticipacaoBatchUpdateInput, AnticipacaoBatchUncheckedUpdateInput>
+    /**
+     * Choose, which AnticipacaoBatch to update.
+     */
+    where: AnticipacaoBatchWhereUniqueInput
+  }
+
+  /**
+   * AnticipacaoBatch updateMany
+   */
+  export type AnticipacaoBatchUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AnticipacaoBatches.
+     */
+    data: XOR<AnticipacaoBatchUpdateManyMutationInput, AnticipacaoBatchUncheckedUpdateManyInput>
+    /**
+     * Filter which AnticipacaoBatches to update
+     */
+    where?: AnticipacaoBatchWhereInput
+    /**
+     * Limit how many AnticipacaoBatches to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnticipacaoBatch updateManyAndReturn
+   */
+  export type AnticipacaoBatchUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * The data used to update AnticipacaoBatches.
+     */
+    data: XOR<AnticipacaoBatchUpdateManyMutationInput, AnticipacaoBatchUncheckedUpdateManyInput>
+    /**
+     * Filter which AnticipacaoBatches to update
+     */
+    where?: AnticipacaoBatchWhereInput
+    /**
+     * Limit how many AnticipacaoBatches to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnticipacaoBatch upsert
+   */
+  export type AnticipacaoBatchUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * The filter to search for the AnticipacaoBatch to update in case it exists.
+     */
+    where: AnticipacaoBatchWhereUniqueInput
+    /**
+     * In case the AnticipacaoBatch found by the `where` argument doesn't exist, create a new AnticipacaoBatch with this data.
+     */
+    create: XOR<AnticipacaoBatchCreateInput, AnticipacaoBatchUncheckedCreateInput>
+    /**
+     * In case the AnticipacaoBatch was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AnticipacaoBatchUpdateInput, AnticipacaoBatchUncheckedUpdateInput>
+  }
+
+  /**
+   * AnticipacaoBatch delete
+   */
+  export type AnticipacaoBatchDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+    /**
+     * Filter which AnticipacaoBatch to delete.
+     */
+    where: AnticipacaoBatchWhereUniqueInput
+  }
+
+  /**
+   * AnticipacaoBatch deleteMany
+   */
+  export type AnticipacaoBatchDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AnticipacaoBatches to delete
+     */
+    where?: AnticipacaoBatchWhereInput
+    /**
+     * Limit how many AnticipacaoBatches to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * AnticipacaoBatch without action
+   */
+  export type AnticipacaoBatchDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AnticipacaoBatch
+     */
+    select?: AnticipacaoBatchSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AnticipacaoBatch
+     */
+    omit?: AnticipacaoBatchOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -24425,6 +25592,20 @@ export namespace Prisma {
   };
 
   export type VozDubladorScalarFieldEnum = (typeof VozDubladorScalarFieldEnum)[keyof typeof VozDubladorScalarFieldEnum]
+
+
+  export const AnticipacaoBatchScalarFieldEnum: {
+    id: 'id',
+    criadaEm: 'criadaEm',
+    vendaIds: 'vendaIds',
+    valorTotal: 'valorTotal',
+    quantidadeVendas: 'quantidadeVendas',
+    periodoDescricao: 'periodoDescricao',
+    periodoInicio: 'periodoInicio',
+    periodoFim: 'periodoFim'
+  };
+
+  export type AnticipacaoBatchScalarFieldEnum = (typeof AnticipacaoBatchScalarFieldEnum)[keyof typeof AnticipacaoBatchScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -26045,6 +27226,75 @@ export namespace Prisma {
     criadoEm?: DateTimeWithAggregatesFilter<"VozDublador"> | Date | string
   }
 
+  export type AnticipacaoBatchWhereInput = {
+    AND?: AnticipacaoBatchWhereInput | AnticipacaoBatchWhereInput[]
+    OR?: AnticipacaoBatchWhereInput[]
+    NOT?: AnticipacaoBatchWhereInput | AnticipacaoBatchWhereInput[]
+    id?: IntFilter<"AnticipacaoBatch"> | number
+    criadaEm?: DateTimeFilter<"AnticipacaoBatch"> | Date | string
+    vendaIds?: StringFilter<"AnticipacaoBatch"> | string
+    valorTotal?: FloatFilter<"AnticipacaoBatch"> | number
+    quantidadeVendas?: IntFilter<"AnticipacaoBatch"> | number
+    periodoDescricao?: StringNullableFilter<"AnticipacaoBatch"> | string | null
+    periodoInicio?: DateTimeNullableFilter<"AnticipacaoBatch"> | Date | string | null
+    periodoFim?: DateTimeNullableFilter<"AnticipacaoBatch"> | Date | string | null
+  }
+
+  export type AnticipacaoBatchOrderByWithRelationInput = {
+    id?: SortOrder
+    criadaEm?: SortOrder
+    vendaIds?: SortOrder
+    valorTotal?: SortOrder
+    quantidadeVendas?: SortOrder
+    periodoDescricao?: SortOrderInput | SortOrder
+    periodoInicio?: SortOrderInput | SortOrder
+    periodoFim?: SortOrderInput | SortOrder
+  }
+
+  export type AnticipacaoBatchWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    AND?: AnticipacaoBatchWhereInput | AnticipacaoBatchWhereInput[]
+    OR?: AnticipacaoBatchWhereInput[]
+    NOT?: AnticipacaoBatchWhereInput | AnticipacaoBatchWhereInput[]
+    criadaEm?: DateTimeFilter<"AnticipacaoBatch"> | Date | string
+    vendaIds?: StringFilter<"AnticipacaoBatch"> | string
+    valorTotal?: FloatFilter<"AnticipacaoBatch"> | number
+    quantidadeVendas?: IntFilter<"AnticipacaoBatch"> | number
+    periodoDescricao?: StringNullableFilter<"AnticipacaoBatch"> | string | null
+    periodoInicio?: DateTimeNullableFilter<"AnticipacaoBatch"> | Date | string | null
+    periodoFim?: DateTimeNullableFilter<"AnticipacaoBatch"> | Date | string | null
+  }, "id">
+
+  export type AnticipacaoBatchOrderByWithAggregationInput = {
+    id?: SortOrder
+    criadaEm?: SortOrder
+    vendaIds?: SortOrder
+    valorTotal?: SortOrder
+    quantidadeVendas?: SortOrder
+    periodoDescricao?: SortOrderInput | SortOrder
+    periodoInicio?: SortOrderInput | SortOrder
+    periodoFim?: SortOrderInput | SortOrder
+    _count?: AnticipacaoBatchCountOrderByAggregateInput
+    _avg?: AnticipacaoBatchAvgOrderByAggregateInput
+    _max?: AnticipacaoBatchMaxOrderByAggregateInput
+    _min?: AnticipacaoBatchMinOrderByAggregateInput
+    _sum?: AnticipacaoBatchSumOrderByAggregateInput
+  }
+
+  export type AnticipacaoBatchScalarWhereWithAggregatesInput = {
+    AND?: AnticipacaoBatchScalarWhereWithAggregatesInput | AnticipacaoBatchScalarWhereWithAggregatesInput[]
+    OR?: AnticipacaoBatchScalarWhereWithAggregatesInput[]
+    NOT?: AnticipacaoBatchScalarWhereWithAggregatesInput | AnticipacaoBatchScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"AnticipacaoBatch"> | number
+    criadaEm?: DateTimeWithAggregatesFilter<"AnticipacaoBatch"> | Date | string
+    vendaIds?: StringWithAggregatesFilter<"AnticipacaoBatch"> | string
+    valorTotal?: FloatWithAggregatesFilter<"AnticipacaoBatch"> | number
+    quantidadeVendas?: IntWithAggregatesFilter<"AnticipacaoBatch"> | number
+    periodoDescricao?: StringNullableWithAggregatesFilter<"AnticipacaoBatch"> | string | null
+    periodoInicio?: DateTimeNullableWithAggregatesFilter<"AnticipacaoBatch"> | Date | string | null
+    periodoFim?: DateTimeNullableWithAggregatesFilter<"AnticipacaoBatch"> | Date | string | null
+  }
+
   export type ClienteCreateInput = {
     nome: string
     renda?: number | null
@@ -27651,6 +28901,80 @@ export namespace Prisma {
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AnticipacaoBatchCreateInput = {
+    criadaEm?: Date | string
+    vendaIds: string
+    valorTotal: number
+    quantidadeVendas: number
+    periodoDescricao?: string | null
+    periodoInicio?: Date | string | null
+    periodoFim?: Date | string | null
+  }
+
+  export type AnticipacaoBatchUncheckedCreateInput = {
+    id?: number
+    criadaEm?: Date | string
+    vendaIds: string
+    valorTotal: number
+    quantidadeVendas: number
+    periodoDescricao?: string | null
+    periodoInicio?: Date | string | null
+    periodoFim?: Date | string | null
+  }
+
+  export type AnticipacaoBatchUpdateInput = {
+    criadaEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendaIds?: StringFieldUpdateOperationsInput | string
+    valorTotal?: FloatFieldUpdateOperationsInput | number
+    quantidadeVendas?: IntFieldUpdateOperationsInput | number
+    periodoDescricao?: NullableStringFieldUpdateOperationsInput | string | null
+    periodoInicio?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    periodoFim?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AnticipacaoBatchUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    criadaEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendaIds?: StringFieldUpdateOperationsInput | string
+    valorTotal?: FloatFieldUpdateOperationsInput | number
+    quantidadeVendas?: IntFieldUpdateOperationsInput | number
+    periodoDescricao?: NullableStringFieldUpdateOperationsInput | string | null
+    periodoInicio?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    periodoFim?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AnticipacaoBatchCreateManyInput = {
+    id?: number
+    criadaEm?: Date | string
+    vendaIds: string
+    valorTotal: number
+    quantidadeVendas: number
+    periodoDescricao?: string | null
+    periodoInicio?: Date | string | null
+    periodoFim?: Date | string | null
+  }
+
+  export type AnticipacaoBatchUpdateManyMutationInput = {
+    criadaEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendaIds?: StringFieldUpdateOperationsInput | string
+    valorTotal?: FloatFieldUpdateOperationsInput | number
+    quantidadeVendas?: IntFieldUpdateOperationsInput | number
+    periodoDescricao?: NullableStringFieldUpdateOperationsInput | string | null
+    periodoInicio?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    periodoFim?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AnticipacaoBatchUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    criadaEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendaIds?: StringFieldUpdateOperationsInput | string
+    valorTotal?: FloatFieldUpdateOperationsInput | number
+    quantidadeVendas?: IntFieldUpdateOperationsInput | number
+    periodoDescricao?: NullableStringFieldUpdateOperationsInput | string | null
+    periodoInicio?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    periodoFim?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -29028,6 +30352,51 @@ export namespace Prisma {
 
   export type VozDubladorSumOrderByAggregateInput = {
     id?: SortOrder
+  }
+
+  export type AnticipacaoBatchCountOrderByAggregateInput = {
+    id?: SortOrder
+    criadaEm?: SortOrder
+    vendaIds?: SortOrder
+    valorTotal?: SortOrder
+    quantidadeVendas?: SortOrder
+    periodoDescricao?: SortOrder
+    periodoInicio?: SortOrder
+    periodoFim?: SortOrder
+  }
+
+  export type AnticipacaoBatchAvgOrderByAggregateInput = {
+    id?: SortOrder
+    valorTotal?: SortOrder
+    quantidadeVendas?: SortOrder
+  }
+
+  export type AnticipacaoBatchMaxOrderByAggregateInput = {
+    id?: SortOrder
+    criadaEm?: SortOrder
+    vendaIds?: SortOrder
+    valorTotal?: SortOrder
+    quantidadeVendas?: SortOrder
+    periodoDescricao?: SortOrder
+    periodoInicio?: SortOrder
+    periodoFim?: SortOrder
+  }
+
+  export type AnticipacaoBatchMinOrderByAggregateInput = {
+    id?: SortOrder
+    criadaEm?: SortOrder
+    vendaIds?: SortOrder
+    valorTotal?: SortOrder
+    quantidadeVendas?: SortOrder
+    periodoDescricao?: SortOrder
+    periodoInicio?: SortOrder
+    periodoFim?: SortOrder
+  }
+
+  export type AnticipacaoBatchSumOrderByAggregateInput = {
+    id?: SortOrder
+    valorTotal?: SortOrder
+    quantidadeVendas?: SortOrder
   }
 
   export type VendaCreateNestedManyWithoutClienteInput = {
