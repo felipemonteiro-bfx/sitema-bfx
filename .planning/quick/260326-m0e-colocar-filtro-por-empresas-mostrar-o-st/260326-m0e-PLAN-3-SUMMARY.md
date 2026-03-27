@@ -1,70 +1,88 @@
 ---
 phase: quick-260326-m0e
 plan: 3
-subsystem: antecipacao
-tags: [historico, pdf, relatorio, antecipacao, pdf-lib]
-key-files:
-  created:
-    - src/components/historico-antecipacoes.tsx
-    - src/app/api/relatorios/antecipacao-imagem/route.ts
+subsystem: antecipacao-prudent
+tags: [prisma, antecipacao, batch, historico, filtro-periodo, status-colors]
+dependency_graph:
+  requires: [PLAN-2 filtro empresa/status xlsx, PLAN-1 CNPJ empresas]
+  provides: [AnticipacaoBatch model, batch history with re-download, period filter, color-coded status rows]
+  affects: [prudent/page.tsx, antecipacao-client.tsx, historico-antecipacoes.tsx]
+tech_stack:
+  added: []
+  patterns: [Prisma batch tracking model, period range filtering on parcelas, server action batch creation]
+key_files:
+  created: []
   modified:
+    - prisma/schema.prisma
     - src/app/(app)/prudent/page.tsx
     - src/components/antecipacao-client.tsx
+    - src/components/historico-antecipacoes.tsx
+    - src/generated/prisma/index.d.ts
 decisions:
-  - PDF retorna inline (Content-Disposition: inline) para visualizacao no browser sem forcar download
-  - Altura da pagina PDF calculada dinamicamente baseada no volume de dados para evitar corte de conteudo
-  - Filtro de mes/ano no historico derivado dos dados (sem state externo, sem query params)
+  - Prisma model AnticipacaoBatch generates camelCase accessor anticipacaoBatch (not antecipacaoBatch)
+  - Used prisma generate (not --skip-generate) to obtain correct TypeScript types
+  - DB bfx missing from container; created via docker exec and reset postgres password
 metrics:
-  duration: ~20min
-  completed: "2026-03-26"
-  tasks: 2
-  files: 4
+  duration: ~25 min
+  completed: "2026-03-27"
+  tasks_completed: 2
+  files_changed: 10
 ---
 
-# Phase quick-260326-m0e Plan 3: Historico de Antecipacoes e Relatorio Visual PDF
+# Phase quick-260326-m0e Plan 3: AnticipacaoBatch, Filtro de Período e Cores
 
-**One-liner:** Historico tabelado de antecipacoes realizadas com filtro por mes + PDF gerado com pdf-lib agrupando parcelas por empresa/mes com CNPJ, contato e totais.
+**One-liner:** AnticipacaoBatch rastreia cada antecipação em lote com período calculado das parcelas, filtro de período por range de meses, cores sólidas por status nas linhas e histórico por lote com re-download de planilha e relatório visual.
 
 ## Tasks Completed
 
-| # | Task | Commit | Files |
-|---|------|--------|-------|
-| 1 | Historico de antecipacoes realizadas | 47a87b6 | historico-antecipacoes.tsx (new), prudent/page.tsx |
-| 2 | Gerar imagem/card com dados de antecipacao por empresa/mes | 2b303ca | antecipacao-imagem/route.ts (new), antecipacao-client.tsx |
+| Task | Name | Commit | Files |
+|------|------|--------|-------|
+| 1 | AnticipacaoBatch schema + server action + historico por lote | b9c144d | prisma/schema.prisma, prudent/page.tsx, historico-antecipacoes.tsx, generated/prisma/* |
+| 2 | Filtro de periodo + cores por status + acentuacao | 18fbe8d | antecipacao-client.tsx |
 
 ## What Was Built
 
-### Task 1: HistoricoAntecipacoes Component
+### Task 1: AnticipacaoBatch
 
-- Componente client `src/components/historico-antecipacoes.tsx` com tabela de antecipacoes ja realizadas
-- Colunas: Data, Cliente, Empresa, Produto, Valor, Parcelas
-- Filtro por mes/ano derivado dos dados com select simples
-- Footer com contagem total e valor total das antecipacoes exibidas
-- Estado vazio com mensagem "Nenhuma antecipacao realizada ainda."
-- `prudent/page.tsx` busca vendas com `antecipada: 1` (top 50 mais recentes) e renderiza o componente abaixo do card principal
+Model `AnticipacaoBatch` adicionado ao schema Prisma com: `id`, `criadaEm`, `vendaIds` (JSON string), `valorTotal`, `quantidadeVendas`, `periodoDescricao`, `periodoInicio`, `periodoFim`. Tabela `antecipacao_batches` criada no DB via `prisma db push`. Client regenerado com delegate `prisma.anticipacaoBatch`.
 
-### Task 2: Relatorio Visual PDF
+Server action `antecipar()` refatorada: busca itens e parcelas das vendas selecionadas, calcula `valorTotal` (soma dos subtotais), determina `periodoInicio/Fim` pela menor/maior data de parcela, formata `periodoDescricao` (ex: "mar./2025 - abr./2025"), cria o batch antes de atualizar `antecipada=1` nas vendas.
 
-- Endpoint GET `/api/relatorios/antecipacao-imagem?ids=1,2,3` usando pdf-lib
-- Recebe IDs de vendas, busca dados completos incluindo cliente, itens, parcelasVencimento
-- Lookup em EmpresaParceira para obter CNPJ e contato (telefoneRh/emailRh)
-- PDF estruturado:
-  - Header azul escuro com titulo "RELATORIO DE ANTECIPACAO", data de geracao, total geral
-  - Bloco por empresa: nome (bold grande), CNPJ, contato, subtotal empresa
-  - Sub-secao por mes: cabecalho com mes/ano e total do mes, tabela de parcelas (numero, vencimento, valor)
-  - Footer: "TOTAL GERAL" em fundo azul
-  - Altura da pagina calculada dinamicamente
-- Botao "Gerar Relatorio Visual" adicionado em `antecipacao-client.tsx` (icone ImageIcon, desabilitado sem selecao, abre em nova aba)
+`prudent/page.tsx` substituiu query de vendas antecipadas individuais por `anticipacaoBatch.findMany()` e passa `batchesFormatados` para `<HistoricoAntecipacoes>`.
+
+`historico-antecipacoes.tsx` reescrito: exibe cards por lote com número do batch, data/hora, período descritivo, quantidade de vendas, valor total e botões "Planilha" e "Relatório Visual" que reconstroem os links com os IDs do lote.
+
+### Task 2: Filtro de Período, Cores e Acentuação
+
+Helper `parseMesAno()` valida formato `MM/AAAA`. Estados `periodoInicio`/`periodoFim` inicializados com mês atual. A lógica de `vendasFiltradas` agora inclui verificação de parcelas: uma venda passa o filtro se tiver ao menos uma parcela com `dataVencimento` dentro do range `[primeiro dia do mês início, último dia do mês fim]`.
+
+Dois inputs textuais "De mês/ano" / "Até mês/ano" adicionados à barra de filtros (maxLength=7, largura fixa w-28).
+
+`StatusBadge` atualizado com cores sólidas visíveis: `bg-green-600 text-white` (antecipado), `bg-blue-600 text-white` (em_andamento), `bg-amber-500 text-white` (pendente). `TableRow` com fundo colorido por status para clareza visual imediata.
+
+Acentuação corrigida: "Gerar Relatorio Visual" → "Gerar Relatório Visual".
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+### Auto-fixed Issues
 
-## Self-Check
+**1. [Rule 3 - Blocking] Database bfx ausente no container Docker**
+- **Found during:** Task 1 (prisma db push)
+- **Issue:** Container `bfx_db` não tinha o database `bfx` criado; senha postgres inválida para conexões externas (scram-sha-256)
+- **Fix:** `docker exec bfx_db psql -U postgres -c "CREATE DATABASE bfx;"` + `ALTER USER postgres PASSWORD 'postgres'`
+- **Commit:** incluído em b9c144d via db push bem-sucedido
 
-- [x] `src/components/historico-antecipacoes.tsx` exists
-- [x] `src/app/api/relatorios/antecipacao-imagem/route.ts` exists
-- [x] Commits 47a87b6 and 2b303ca exist
-- [x] TypeScript check passes (only 2 pre-existing unrelated errors in .next/dev/types/validator.ts)
+**2. [Rule 1 - Bug] Accessor Prisma é `anticipacaoBatch` não `antecipacaoBatch`**
+- **Found during:** Task 1 (tsc check pós-generate)
+- **Issue:** Prisma Client gera camelCase de `AnticipacaoBatch` → `anticipacaoBatch`
+- **Fix:** Substituição global de `prisma.antecipacaoBatch` → `prisma.anticipacaoBatch` no page.tsx
+- **Commit:** b9c144d
 
 ## Self-Check: PASSED
+
+- [x] `prisma/schema.prisma` contém model AnticipacaoBatch
+- [x] `src/components/historico-antecipacoes.tsx` interface Batch com botoes re-download
+- [x] `src/components/antecipacao-client.tsx` filtro de periodo + cores solidas
+- [x] `src/app/(app)/prudent/page.tsx` usa anticipacaoBatch.findMany e passa batches
+- [x] Commits b9c144d e 18fbe8d existem no historico git
+- [x] TypeScript: apenas erros pre-existentes em .next/dev/types/validator.ts
