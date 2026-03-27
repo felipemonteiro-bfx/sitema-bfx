@@ -19,6 +19,9 @@ metadata:
   name: bfx-db
   labels:
     app: bfx-db
+  annotations:
+    argocd.argoproj.io/sync-options: Delete=false
+    helm.sh/resource-policy: keep
 spec:
   serviceName: bfx-db
   replicas: 1
@@ -67,7 +70,8 @@ spec:
     - metadata:
         name: data
         annotations:
-          argocd.argoproj.io/sync-options: Prune=false
+          argocd.argoproj.io/sync-options: "Delete=false,Prune=false"
+          helm.sh/resource-policy: keep
       spec:
         accessModes:
           - ReadWriteOnce
