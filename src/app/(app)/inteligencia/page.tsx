@@ -12,8 +12,10 @@ async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
   try {
     const cfg = await prisma.config.findFirst();
     const p = (cfg as Record<string, unknown>)?.aiProvider as string | undefined;
-    if (p === "litellm" || p === "openai") return p;
+    if (p === "litellm" || p === "openai" || p === "gemini") return p;
   } catch { /* ignore */ }
+  const envProvider = process.env.AI_PROVIDER;
+  if (envProvider === "litellm" || envProvider === "openai" || envProvider === "gemini") return envProvider;
   return "gemini";
 }
 

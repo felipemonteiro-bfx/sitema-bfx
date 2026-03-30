@@ -39,22 +39,26 @@ FLUXO DE CADASTRO (acoes de escrita):
 export async function runAi(prompt: string, provider: "openai" | "gemini" | "litellm") {
   const cfg = await prisma.config.findFirst();
   if (provider === "litellm") {
-    if (!cfg?.litellmUrl || !cfg?.litellmKey) return "LiteLLM nao configurado.";
-    const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
-    const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
-    const litellmProviderOptions = cfg.litellmEnableThinking
+    const litellmUrl = cfg?.litellmUrl || process.env.LITELLM_URL || "";
+    const litellmKey = cfg?.litellmKey || process.env.LITELLM_KEY || "";
+    if (!litellmUrl || !litellmKey) return "LiteLLM nao configurado.";
+    const baseURL = litellmUrl.startsWith("http") ? litellmUrl : `https://${litellmUrl}`;
+    const litellm = createOpenAI({ baseURL, apiKey: litellmKey });
+    const enableThinking = cfg?.litellmEnableThinking ?? (process.env.LITELLM_ENABLE_THINKING === "true");
+    const litellmProviderOptions = enableThinking
       ? { openai: { body: { chat_template_kwargs: { enable_thinking: true } } } }
       : undefined;
     const { text } = await generateText({
-      model: litellm.chat(cfg.litellmModel || "gpt-4o"),
+      model: litellm.chat(cfg?.litellmModel || process.env.LITELLM_MODEL || "gpt-4o"),
       prompt,
       ...(litellmProviderOptions && { providerOptions: litellmProviderOptions }),
     });
     return stripThinkTags(text) || "Sem resposta.";
   }
   if (provider === "openai") {
-    if (!cfg?.openaiKey) return "Chave OpenAI nao configurada.";
-    const openai = createOpenAI({ apiKey: cfg.openaiKey });
+    const openaiKey = cfg?.openaiKey || process.env.OPENAI_API_KEY || "";
+    if (!openaiKey) return "Chave OpenAI nao configurada.";
+    const openai = createOpenAI({ apiKey: openaiKey });
     const { text } = await generateText({
       model: openai("gpt-4o-mini"),
       prompt,
@@ -62,8 +66,9 @@ export async function runAi(prompt: string, provider: "openai" | "gemini" | "lit
     return stripThinkTags(text) || "Sem resposta.";
   }
 
-  if (!cfg?.geminiKey) return "Chave Gemini nao configurada.";
-  const google = createGoogleGenerativeAI({ apiKey: cfg.geminiKey });
+  const geminiKey = cfg?.geminiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
+  if (!geminiKey) return "Chave Gemini nao configurada.";
+  const google = createGoogleGenerativeAI({ apiKey: geminiKey });
   const { text } = await generateText({
     model: google("gemini-2.5-flash"),
     prompt,
@@ -266,12 +271,15 @@ export async function runAiWithActions(
 
   if (provider === "litellm") {
     const cfg = await prisma.config.findFirst();
-    if (!cfg?.litellmUrl || !cfg?.litellmKey) return { text: "LiteLLM nao configurado.", actions: [] };
-    const baseURL = cfg.litellmUrl.startsWith("http") ? cfg.litellmUrl : `https://${cfg.litellmUrl}`;
-    const litellm = createOpenAI({ baseURL, apiKey: cfg.litellmKey });
+    const litellmUrl = cfg?.litellmUrl || process.env.LITELLM_URL || "";
+    const litellmKey = cfg?.litellmKey || process.env.LITELLM_KEY || "";
+    if (!litellmUrl || !litellmKey) return { text: "LiteLLM nao configurado.", actions: [] };
+    const baseURL = litellmUrl.startsWith("http") ? litellmUrl : `https://${litellmUrl}`;
+    const litellm = createOpenAI({ baseURL, apiKey: litellmKey });
     // .chat() forces the /chat/completions endpoint instead of /responses (Responses API)
-    const litellmModel = litellm.chat(cfg.litellmModel || "gpt-4o");
-    const litellmProviderOptions = cfg.litellmEnableThinking
+    const litellmModel = litellm.chat(cfg?.litellmModel || process.env.LITELLM_MODEL || "gpt-4o");
+    const enableThinking = cfg?.litellmEnableThinking ?? (process.env.LITELLM_ENABLE_THINKING === "true");
+    const litellmProviderOptions = enableThinking
       ? { openai: { body: { chat_template_kwargs: { enable_thinking: true } } } }
       : undefined;
     const executed: { name: string; result: unknown }[] = [];
@@ -323,9 +331,10 @@ export async function runAiWithActions(
 
   if (provider === "gemini") {
     const cfg = await prisma.config.findFirst();
-    if (!cfg?.geminiKey) return { text: "Chave Gemini nao configurada.", actions: [] };
+    const geminiKey = cfg?.geminiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
+    if (!geminiKey) return { text: "Chave Gemini nao configurada.", actions: [] };
 
-    const google = createGoogleGenerativeAI({ apiKey: cfg.geminiKey });
+    const google = createGoogleGenerativeAI({ apiKey: geminiKey });
     const executed: { name: string; result: unknown }[] = [];
     const tools = Object.fromEntries(
       aiActions
@@ -358,8 +367,9 @@ export async function runAiWithActions(
       });
       text = stripThinkTags(result.text ?? "");
     } catch {
-      if (cfg?.openaiKey) {
-        const openai = createOpenAI({ apiKey: cfg.openaiKey });
+      const openaiKeyFallback = cfg?.openaiKey || process.env.OPENAI_API_KEY || "";
+      if (openaiKeyFallback) {
+        const openai = createOpenAI({ apiKey: openaiKeyFallback });
         try {
           const result = await generateText({
             model: openai("gpt-4o-mini"),
@@ -423,9 +433,10 @@ export async function runAiWithActions(
   }
 
   const cfg = await prisma.config.findFirst();
-  if (!cfg?.openaiKey) return { text: "Chave OpenAI nao configurada.", actions: [] };
+  const openaiKey = cfg?.openaiKey || process.env.OPENAI_API_KEY || "";
+  if (!openaiKey) return { text: "Chave OpenAI nao configurada.", actions: [] };
 
-  const openai = createOpenAI({ apiKey: cfg.openaiKey });
+  const openai = createOpenAI({ apiKey: openaiKey });
   const executed: { name: string; result: unknown }[] = [];
   const tools = Object.fromEntries(
     aiActions
