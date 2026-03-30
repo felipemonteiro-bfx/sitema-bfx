@@ -36,10 +36,10 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 
 ### Seguranca e Secrets
 
-- [ ] **INF-SEC-01**: SESSION_SECRET com fallback "dev-secret" nao funciona em producao (fail-fast com erro claro)
-- [ ] **INF-SEC-02**: Rotas admin (/api/admin/*) exigem autenticacao antes de executar logica
-- [ ] **INF-SEC-03**: requireAdmin lanca excecao (requireAdminOrThrow) em vez de retornar boolean ignoravel
-- [ ] **INF-SEC-04**: recibo-url.ts protegido contra dev-secret em producao
+- [x] **INF-SEC-01**: SESSION_SECRET com fallback "dev-secret" nao funciona em producao (fail-fast com erro claro)
+- [x] **INF-SEC-02**: Rotas admin (/api/admin/*) exigem autenticacao antes de executar logica
+- [x] **INF-SEC-03**: requireAdmin lanca excecao (requireAdminOrThrow) em vez de retornar boolean ignoravel
+- [x] **INF-SEC-04**: recibo-url.ts protegido contra dev-secret em producao
 
 ### Integracao Asaas
 
@@ -96,10 +96,10 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 | PDV-11 | Phase 3 — Busca Rapida de Cliente | Pending |
 | PDV-12 | Phase 3 — Busca Rapida de Cliente | Pending |
 | PDV-13 | Phase 3 — Busca Rapida de Cliente | Pending |
-| INF-SEC-01 | Phase 4 — Infra e Qualidade | Pending |
-| INF-SEC-02 | Phase 4 — Infra e Qualidade | Pending |
-| INF-SEC-03 | Phase 4 — Infra e Qualidade | Pending |
-| INF-SEC-04 | Phase 4 — Infra e Qualidade | Pending |
+| INF-SEC-01 | Phase 4 — Infra e Qualidade | Complete |
+| INF-SEC-02 | Phase 4 — Infra e Qualidade | Complete |
+| INF-SEC-03 | Phase 4 — Infra e Qualidade | Complete |
+| INF-SEC-04 | Phase 4 — Infra e Qualidade | Complete |
 | INF-ASAAS-01 | Phase 4 — Infra e Qualidade | Complete |
 | INF-ASAAS-02 | Phase 4 — Infra e Qualidade | Complete |
 | INF-IA-01 | Phase 4 — Infra e Qualidade | Complete |
