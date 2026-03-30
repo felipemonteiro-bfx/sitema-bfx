@@ -1,244 +1,447 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-02-19
+**Analysis Date:** 2026-03-30
 
 ## Test Framework
 
 **Runner:**
-- Playwright v1+ (inferred from test file syntax)
-- Location: `tests/` directory at project root
-- Config: Not explicitly configured (using Playwright defaults)
+- Playwright (`@playwright/test`)
+- Single test file found: `tests/venda-rapida-dropdown.spec.ts`
+- No unit/integration test framework detected (Jest, Vitest not installed)
 
 **Assertion Library:**
-- Playwright built-in expect() assertions: `expect(element).toBeVisible()`
+- Playwright assertions (`expect()` from `@playwright/test`)
 
 **Run Commands:**
-```bash
-npx playwright test                    # Run all tests
-npx playwright test --headed           # Run with UI visible
-npx playwright test --debug            # Debug mode
-npx playwright test --grep "pattern"   # Run matching tests
-```
+- No test scripts defined in `package.json`
+- Tests are E2E only, run manually via `npx playwright test`
 
 ## Test File Organization
 
 **Location:**
-- Separate test directory: `tests/` at project root (not co-located)
-- Test files not in `src/` directory structure
+- E2E tests: `tests/` directory at project root
+- Pattern: `*.spec.ts` for Playwright tests
 
 **Naming:**
-- Pattern: `feature-name.spec.ts`
-- Example: `venda-rapida-dropdown.spec.ts`
-- Extension: `.spec.ts` (not `.test.ts`)
+- Playwright spec pattern: `tests/[feature]-[aspect].spec.ts`
+- Example: `tests/venda-rapida-dropdown.spec.ts`
 
 **Structure:**
 ```
 tests/
-├── venda-rapida-dropdown.spec.ts
-└── screenshots/              # Generated during test run
+├── venda-rapida-dropdown.spec.ts  # Z-index/dropdown tests
+└── screenshots/                    # Generated during test runs
 ```
 
 ## Test Structure
 
 **Suite Organization:**
 ```typescript
+// tests/venda-rapida-dropdown.spec.ts (full file shown below)
 import { test, expect } from '@playwright/test';
 
 test.describe('Terminal de Vendas - Dropdown Z-Index', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3000/venda-rapida');
+    await page.goto('http://localhost:3008/venda-rapida');
     await page.waitForLoadState('networkidle');
   });
 
-  test('Client dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
-    // Test implementation
-  });
-
-  test('Produto dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
-    // Test implementation
+  test('Cliente dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
+    const clienteInput = page.locator('input[placeholder*="nome ou CPF"]');
+    await clienteInput.fill('Maria');
+    await page.waitForTimeout(500); // Aguardar debounce
+    const dropdown = page.locator('div.absolute.z-\\[9999\\]').first();
+    await expect(dropdown).toBeVisible();
   });
 });
 ```
 
 **Patterns:**
-- `test.describe()` groups related tests by feature
-- `test.beforeEach()` runs setup before each test (navigation, page load)
-- `test()` function defines individual test case
-- Tests are async and use `await` for all page interactions
 
-## Test Types Present
+1. **Setup Pattern:**
+   - `test.beforeEach()` for common setup (navigation, waitForLoadState)
+   - Waits for `networkidle` before running tests
+
+2. **Interaction Pattern:**
+   - `page.locator()` for element selection (CSS selectors, placeholders)
+   - `.fill()` for input
+   - `.scrollIntoViewIfNeeded()` for scrolling to element
+   - `.evaluate()` for executing JavaScript in browser context
+
+3. **Assertion Pattern:**
+   - `expect(element).toBeVisible()` for visibility checks
+   - `expect(parseInt(zIndex)).toBeGreaterThan(1000)` for computed values
+   - Screenshots for debugging: `page.screenshot({ path: 'tests/screenshots/...' })`
+
+4. **Debugging/Verification Pattern:**
+   - `console.log()` for test output
+   - Browser API access: `window.getComputedStyle(el).zIndex`
+   - Screenshot generation for visual verification
+
+## Mocking
+
+**Framework:** None detected; tests are fully integrated E2E tests
+
+**Patterns:**
+- No mocking service - tests hit real application instance
+- API endpoints tested via real HTTP requests to `http://localhost:3008`
+
+**What to Mock:**
+- External services (Asaas, WhatsApp, Evolution) - not tested in current suite
+- Database - not tested in current suite (would need separate unit test setup)
+
+**What NOT to Mock:**
+- UI rendering (Playwright tests real DOM)
+- DOM interactions
+- Navigation and routing
+- Local application state
+
+## Fixtures and Factories
+
+**Test Data:**
+- Not found in codebase
+- E2E tests use real data from running application
+
+**Location:**
+- Fixtures would go in `tests/fixtures/` if created
+- Factory functions would go in `tests/factories/` if created
+
+**Current approach:**
+- Tests work with existing database data
+- Search by real user input ("Maria" for cliente, "Shampoo" for produto)
+- No setup/teardown of test-specific data detected
+
+## Coverage
+
+**Requirements:** No coverage configuration detected
+
+**View Coverage:**
+- No coverage tool configured
+- Would require adding Jest/Vitest and coverage collection
+
+## Test Types
+
+**Unit Tests:**
+- Not present in codebase
+- Would test: validation schemas (Zod), utility functions (`formatBRL`, `maskCpf`), calculations
+
+**Integration Tests:**
+- Not present in codebase
+- Would test: Server Actions with database, API routes with auth, form submission workflows
 
 **E2E Tests:**
 - Framework: Playwright
-- Scope: User interactions and UI behavior (not unit tests)
-- Approach: Navigate to page → perform action → assert result
-- Example test checks z-index of dropdown elements
+- File: `tests/venda-rapida-dropdown.spec.ts`
+- Scope: Browser-level UI interactions
+- Focus: Z-index stacking (dropdowns appearing above cards)
 
-**Example E2E Test:**
+**Existing E2E Test Details:**
 ```typescript
-test('Cliente dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
-  // 1. Find and interact with element
-  const clienteInput = page.locator('input[placeholder*="nome ou CPF"]');
-  await clienteInput.fill('Maria');
-  await page.waitForTimeout(500); // Aguardar debounce
+// tests/venda-rapida-dropdown.spec.ts (lines 1-79)
+import { test, expect } from '@playwright/test';
 
-  // 2. Verify visibility
-  const dropdown = page.locator('div.absolute.z-\\[9999\\]').first();
-  await expect(dropdown).toBeVisible();
-
-  // 3. Check computed styles
-  const zIndex = await dropdown.evaluate((el) => {
-    return window.getComputedStyle(el).zIndex;
+test.describe('Terminal de Vendas - Dropdown Z-Index', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('http://localhost:3008/venda-rapida');
+    await page.waitForLoadState('networkidle');
   });
-  expect(parseInt(zIndex)).toBeGreaterThan(1000);
 
-  // 4. Screenshot for debugging
-  await page.screenshot({
-    path: 'tests/screenshots/cliente-dropdown.png',
-    fullPage: true
+  test('Cliente dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
+    // 1. Fill cliente input to trigger dropdown
+    const clienteInput = page.locator('input[placeholder*="nome ou CPF"]');
+    await clienteInput.fill('Maria');
+    await page.waitForTimeout(500); // Debounce wait
+
+    // 2. Verify dropdown is visible
+    const dropdown = page.locator('div.absolute.z-\\[9999\\]').first();
+    await expect(dropdown).toBeVisible();
+
+    // 3. Check computed z-index value
+    const zIndex = await dropdown.evaluate((el) => {
+      return window.getComputedStyle(el).zIndex;
+    });
+    console.log('Cliente dropdown z-index:', zIndex);
+    expect(parseInt(zIndex)).toBeGreaterThan(1000);
+
+    // 4. Take screenshot for debugging
+    await page.screenshot({
+      path: 'tests/screenshots/cliente-dropdown.png',
+      fullPage: true
+    });
+  });
+
+  test('Produto dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
+    const produtoInput = page.locator('input[placeholder*="produto por nome"]');
+    await produtoInput.scrollIntoViewIfNeeded();
+    await produtoInput.fill('Shampoo');
+    await page.waitForTimeout(500);
+
+    const dropdown = page.locator('div.absolute.z-\\[9999\\]').nth(1);
+    await expect(dropdown).toBeVisible();
+
+    const zIndex = await dropdown.evaluate((el) => {
+      return window.getComputedStyle(el).zIndex;
+    });
+    console.log('Produto dropdown z-index:', zIndex);
+
+    await page.screenshot({
+      path: 'tests/screenshots/produto-dropdown.png',
+      fullPage: true
+    });
+  });
+
+  test('Verificar stack context dos cards', async ({ page }) => {
+    const cards = page.locator('div[class*="Card"]');
+    const count = await cards.count();
+
+    console.log(`Total de cards encontrados: ${count}`);
+
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      const card = cards.nth(i);
+      const zIndex = await card.evaluate((el) => {
+        return window.getComputedStyle(el).zIndex;
+      });
+      console.log(`Card ${i} z-index:`, zIndex);
+    }
+
+    await page.screenshot({
+      path: 'tests/screenshots/cards-stack.png',
+      fullPage: true
+    });
   });
 });
 ```
 
-## Selectors
+## Common Patterns
 
-**Patterns:**
-- Attribute selectors: `input[placeholder*="nome ou CPF"]`
-- CSS classes: `div.absolute.z-\\[9999\\]`
-- nth-child navigation: `.nth(1)` for multiple matching elements
-- Custom roles: `page.locator('div.Card')`
-
-**Best Practices:**
-- Use semantic attributes (placeholder) when available
-- Escape square brackets in Tailwind classes: `z-\\[9999\\]`
-- Use `.first()` or `.nth(n)` for multiple matches
-
-## Page Interactions
-
-**Navigation:**
+**Async Testing:**
 ```typescript
-await page.goto('http://localhost:3000/venda-rapida');
-await page.waitForLoadState('networkidle');  // Wait for network idle
+// Playwright tests are async by default
+test('test name', async ({ page }) => {
+  await page.goto('...');
+  await page.fill('...', 'value');
+  await expect(element).toBeVisible();
+});
+
+// Wait patterns
+await page.waitForLoadState('networkidle'); // Network idle
+await page.waitForTimeout(500);              // Fixed delay (for debounce)
+await element.scrollIntoViewIfNeeded();      // Scroll before interaction
 ```
 
-**User Input:**
+**Browser Evaluation:**
 ```typescript
-const input = page.locator('input[placeholder*="nome ou CPF"]');
-await input.fill('Maria');
-await page.waitForTimeout(500);  // Wait for debounce
+// Execute JavaScript in browser context
+const zIndex = await dropdown.evaluate((el) => {
+  return window.getComputedStyle(el).zIndex;
+});
+
+// Count elements
+const count = await cards.count();
+
+// Iterate over matching elements
+for (let i = 0; i < count; i++) {
+  const card = cards.nth(i);
+  // Test each card
+}
 ```
 
-**Assertions:**
-```typescript
-await expect(element).toBeVisible();
-const zIndex = await element.evaluate((el) => window.getComputedStyle(el).zIndex);
-expect(parseInt(zIndex)).toBeGreaterThan(1000);
-```
-
-**Screenshots:**
+**Screenshot/Debug Pattern:**
 ```typescript
 await page.screenshot({
-  path: 'tests/screenshots/elemento.png',
+  path: 'tests/screenshots/feature-name.png',
   fullPage: true
 });
 ```
 
-## Test Data & Fixtures
+## Coverage Gaps
 
-**No Explicit Fixtures:** Tests use live application state
-- Navigate to running application (http://localhost:3000)
-- Interact with actual database/form fields
-- No mock data or factories observed
+**Untested Areas:**
 
-**Test Setup:**
-- `beforeEach()` used for common setup (navigation)
-- Each test creates its own state by user interaction
-- No cleanup hooks observed (tests appear independent)
+**Server Actions:**
+- Files: `src/app/*/actions.ts` (criarVenda, criarVendaV2, updateVenda, etc.)
+- What's not tested: Validation logic, error handling, database transactions, Asaas/WhatsApp integrations
+- Risk: Schema changes, business logic bugs, integration failures go undetected
+- Priority: HIGH - Most critical business logic
 
-## Coverage
+**API Routes:**
+- Files: `src/app/api/**/route.ts`
+- What's not tested: Authentication guards, response formats, error responses, WebHook handling
+- Risk: API contract violations, security bypasses
+- Priority: HIGH
 
-**Requirements:** Not enforced (no coverage config found)
+**Utility Functions:**
+- Files: `src/lib/utils.ts`, `src/lib/validations/*`
+- What's not tested: Mask functions (maskCpf, maskTel), validation schemas, date calculations
+- Risk: Data formatting errors, validation bypasses
+- Priority: MEDIUM
 
-**Current Status:**
-- Only 1 test file present: `venda-rapida-dropdown.spec.ts`
-- Tests are E2E/integration only (no unit test suite)
-- No coverage reports generated
+**Component Integration:**
+- Files: `src/components/*-client.tsx`, `src/components/*-form.tsx`
+- What's not tested: Form submissions, error display, toast notifications, loading states
+- Risk: UI flows broken, error messages not shown to users
+- Priority: MEDIUM
 
-## Debugging Tools
+**Database Queries:**
+- Pattern: Prisma queries in Server Actions and lib files
+- What's not tested: Transaction rollbacks, constraint violations, query performance
+- Risk: Silent data corruption, slow operations not detected
+- Priority: MEDIUM
 
-**Screenshots:**
-- Generated during test run with `page.screenshot()`
-- Saved to `tests/screenshots/` directory
-- Full page captures for visual debugging
+**Validation Schemas:**
+- Files: `src/lib/validations/*.ts` (venda.ts, cliente.ts, produto.ts)
+- What's not tested: Zod schema validation, edge cases (negative numbers, invalid dates)
+- Risk: Invalid data accepted, type errors at runtime
+- Priority: MEDIUM
 
-**Console Output:**
+**Authentication/Authorization:**
+- Pattern: `requireAdmin()` guard in API routes
+- What's not tested: Session handling, role-based access, token validation
+- Risk: Unauthorized access possible
+- Priority: HIGH
+
+**External Integrations:**
+- Asaas (boletos): NOT TESTED - real API calls only, no mock
+- WhatsApp (Evolution): NOT TESTED - real API calls only, no mock
+- MinIO (file upload): NOT TESTED
+- Risk: Integration failures discovered in production only
+- Priority: HIGH
+
+## Test Patterns to Follow When Adding Tests
+
+**Unit Tests for Utilities:**
 ```typescript
-console.log('Cliente dropdown z-index:', zIndex);
-console.log(`Total de cards encontrados: ${count}`);
+// Example structure for src/lib/utils.ts tests
+import { formatBRL, maskCpf } from '@/lib/utils';
+
+describe('formatBRL', () => {
+  it('should format number as BRL currency', () => {
+    expect(formatBRL(1234.56)).toBe('R$ 1.234,56');
+  });
+
+  it('should handle null/undefined', () => {
+    expect(formatBRL(null)).toBe('R$ 0,00');
+    expect(formatBRL(undefined)).toBe('R$ 0,00');
+  });
+});
+
+describe('maskCpf', () => {
+  it('should format 11-digit string as CPF', () => {
+    expect(maskCpf('12345678901')).toBe('123.456.789-01');
+  });
+
+  it('should return original value if wrong length', () => {
+    expect(maskCpf('123')).toBe('123');
+  });
+});
 ```
 
-**Playwright Inspector:**
-```bash
-npx playwright test --debug  # Opens inspector
+**Schema Validation Tests:**
+```typescript
+// Example for src/lib/validations/venda.ts tests
+import { vendaV2Schema } from '@/lib/validations/venda';
+
+describe('vendaV2Schema', () => {
+  it('should validate correct venda data', () => {
+    const data = {
+      data: '2026-03-30',
+      vendedor: 'João',
+      clienteId: 1,
+      frete: 10,
+      envio: 5,
+      parcelas: 3,
+      temNota: false,
+      taxaNota: 5.97,
+      produtos: [{ produtoNome: 'Item', custoProduto: 10, valorVenda: 20, quantidade: 1, subtotal: 20 }],
+    };
+    const result = vendaV2Schema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  it('should reject missing required fields', () => {
+    const data = { vendedor: 'João' };
+    const result = vendaV2Schema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+});
 ```
 
-## Test Isolation
+**Server Action Tests:**
+```typescript
+// Example structure (would require Node test runner or Jest setup)
+import { criarVendaV2 } from '@/app/(app)/venda-rapida/actions';
 
-**Page Context:**
-- Each test runs with its own browser page
-- No shared state between tests (new page instance per test)
-- `beforeEach()` ensures consistent starting state
+describe('criarVendaV2', () => {
+  it('should create venda with valid data', async () => {
+    const formData = new FormData();
+    formData.set('data', '2026-03-30');
+    // ... set other fields
 
-**Server State:**
-- Tests hit live application state
-- Database changes may persist (no automatic rollback)
-- Tests should be independent and not rely on execution order
+    const result = await criarVendaV2(formData);
+    expect(result.success).toBe(true);
+    expect(result.data?.vendaId).toBeGreaterThan(0);
+  });
 
-## Known Gaps
+  it('should return error for invalid data', async () => {
+    const formData = new FormData();
+    // Missing required fields
 
-**Not Tested:**
-- Unit tests: No test framework for individual functions (validations, utilities)
-- Component testing: No component test suite (Jest, Vitest, React Testing Library)
-- API endpoint testing: No direct API route tests
-- Form validation: No specific tests for Zod schema validation
-- Error scenarios: No tests for error states or edge cases
+    const result = await criarVendaV2(formData);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
 
-**To Add (Future):**
-- Unit tests for: `finance.ts`, `ai-actions.ts`, `utils.ts` functions
-- Component tests for form interactions
-- Error boundary and error state testing
-- Accessibility tests (a11y)
-- Performance testing (Lighthouse integration)
+  it('should handle database errors gracefully', async () => {
+    // Mock Prisma to throw error
+    const formData = new FormData();
+    // ... set fields
 
-## Running Tests
-
-**Prerequisites:**
-- Application running on http://localhost:3000
-- Test environment variables configured
-- Playwright browsers installed
-
-**Execute:**
-```bash
-# Start dev server first
-npm run dev
-
-# In another terminal
-npx playwright test
+    const result = await criarVendaV2(formData);
+    expect(result.success).toBe(false);
+  });
+});
 ```
 
-**Parallel Execution:**
-- Playwright runs tests in parallel by default
-- Can configure workers via `playwright.config.ts` (not present)
+**E2E Test Pattern for New Features:**
+```typescript
+// Example for new feature test
+import { test, expect } from '@playwright/test';
 
-## CI/CD Integration
+test.describe('Nova Feature', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('http://localhost:3008/nova-feature');
+    await page.waitForLoadState('networkidle');
+  });
 
-**Current Setup:** Not detected
+  test('should display form elements', async ({ page }) => {
+    const form = page.locator('form');
+    await expect(form).toBeVisible();
 
-**To Implement:**
-- GitHub Actions workflow to run Playwright tests
-- Run tests on PR/push to ensure no regressions
-- Generate test reports and upload artifacts
+    const input = page.locator('input[name="fieldName"]');
+    await expect(input).toBeVisible();
+  });
+
+  test('should submit form and show success', async ({ page }) => {
+    const input = page.locator('input[name="fieldName"]');
+    await input.fill('test value');
+
+    const submitBtn = page.locator('button[type="submit"]');
+    await submitBtn.click();
+
+    const success = page.locator('text=Success');
+    await expect(success).toBeVisible();
+  });
+
+  test('should show error for invalid input', async ({ page }) => {
+    const submitBtn = page.locator('button[type="submit"]');
+    await submitBtn.click();
+
+    const error = page.locator('text=Error');
+    await expect(error).toBeVisible();
+  });
+});
+```
 
 ---
 
-*Testing analysis: 2026-02-19*
+*Testing analysis: 2026-03-30*

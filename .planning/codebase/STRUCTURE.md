@@ -1,319 +1,341 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-02-19
+**Analysis Date:** 2026-03-30
 
 ## Directory Layout
 
 ```
-sitema-bfx/
-├── src/                          # Application source code
-│   ├── app/                      # Next.js App Router
-│   │   ├── layout.tsx           # Root layout (theme provider, fonts)
-│   │   ├── page.tsx             # Home redirect (/ → /dashboard or /login)
-│   │   ├── globals.css          # Tailwind + CSS variables (semantic tokens)
-│   │   ├── global-error.tsx     # Error boundary
-│   │   │
-│   │   ├── (auth)/              # Auth group (unauthenticated routes)
-│   │   │   └── login/
-│   │   │       └── page.tsx     # Login form (React Hook Form + Zod)
-│   │   │
-│   │   ├── (app)/               # App group (authenticated routes, role-based)
-│   │   │   ├── layout.tsx       # App wrapper (sidebar, session guard)
-│   │   │   ├── dashboard/       # Analytics, KPIs
-│   │   │   ├── venda-rapida/    # POS terminal (primary sales feature)
-│   │   │   ├── historico/       # Sales history (CRUD)
-│   │   │   ├── cadastros/       # Client/Product/Vendor/Company data entry
-│   │   │   ├── comissoes/       # Commission tracking (sellers)
-│   │   │   ├── financeiro/      # P&L, DRE reports
-│   │   │   ├── gestao-rh/       # HR management
-│   │   │   ├── inteligencia/    # AI chat (BFX Intelligence)
-│   │   │   ├── importacao/      # CSV/data import
-│   │   │   ├── prudent/         # Receivables anticipation module
-│   │   │   ├── relatorios/      # PDF exports, catalogs
-│   │   │   ├── configuracoes/   # Settings, API keys
-│   │   │   └── perfil/          # User profile
-│   │   │
-│   │   └── api/                 # REST API routes (HTTP)
-│   │       ├── auth/
-│   │       │   ├── login/route.ts      # POST - create session
-│   │       │   └── logout/route.ts     # POST - clear session
-│   │       ├── vendas/
-│   │       │   ├── autocomplete/clientes/route.ts    # GET - client search
-│   │       │   ├── autocomplete/produtos/route.ts    # GET - product search
-│   │       │   └── sugestoes/route.ts  # GET - AI upsell/crosssell
-│   │       ├── produtos/
-│   │       │   ├── autocomplete/route.ts # GET - product search
-│   │       │   └── upload/route.ts      # POST - product image
-│   │       ├── clientes/
-│   │       │   └── [id]/
-│   │       │       └── limite/route.ts  # GET - credit limit info
-│   │       ├── comissoes/
-│   │       ├── relatorios/
-│   │       │   ├── vendas/pdf/route.ts  # GET - PDF generation
-│   │       │   └── catalogo/route.ts    # GET - product catalog
-│   │       ├── importacao/
-│   │       │   └── batch/route.ts       # POST - bulk data import
-│   │       ├── search/route.ts          # GET - global search
-│   │       ├── ncm/search/route.ts      # GET - NCM code lookup
-│   │       ├── recibo/route.ts          # GET - receipt generation
-│   │       └── upload-logo/route.ts     # POST - company logo upload
+sistema-bfx/
+├── src/
+│   ├── app/                           # Next.js App Router
+│   │   ├── layout.tsx                 # Root layout (theme, providers)
+│   │   ├── page.tsx                   # Root page (redirects to /dashboard)
+│   │   ├── api/                       # HTTP API routes (40+ endpoints)
+│   │   │   ├── auth/                  # Authentication endpoints
+│   │   │   ├── clientes/              # Client management
+│   │   │   ├── produtos/              # Product endpoints
+│   │   │   ├── vendas/                # Sales endpoints
+│   │   │   ├── relatorios/            # Report generation (CSV, PDF, XLSX)
+│   │   │   ├── assinatura/            # Signature document endpoints
+│   │   │   ├── cron/                  # Scheduled tasks (8 jobs)
+│   │   │   ├── webhooks/              # WhatsApp/Evolution webhooks
+│   │   │   └── ...                    # Other integrations
+│   │   ├── (auth)/                    # Login group (public)
+│   │   │   └── login/page.tsx         # Authentication page
+│   │   ├── (app)/                     # Protected app group (requires session)
+│   │   │   ├── layout.tsx             # App layout (sidebar, navigation)
+│   │   │   ├── dashboard/page.tsx     # Main dashboard
+│   │   │   ├── venda-rapida/          # Quick sales entry
+│   │   │   ├── historico/page.tsx     # Sales history
+│   │   │   ├── financeiro/page.tsx    # Finance & DRE
+│   │   │   ├── boletos/page.tsx       # Boleto management
+│   │   │   ├── inteligencia/page.tsx  # AI chat interface
+│   │   │   ├── relatorios/page.tsx    # Report viewer
+│   │   │   ├── cadastros/page.tsx     # Data entry (clients, products)
+│   │   │   ├── gestao-rh/page.tsx     # HR management
+│   │   │   ├── comissoes/page.tsx     # Commission tracking
+│   │   │   ├── importacao/page.tsx    # Bulk data import
+│   │   │   ├── configuracoes/page.tsx # Settings
+│   │   │   └── perfil/page.tsx        # User profile
+│   │   ├── assinatura/[token]/        # Signature signing (public link)
+│   │   ├── catalogo/page.tsx          # Product catalog (public)
+│   │   └── offline/                   # PWA offline fallback
 │   │
-│   ├── components/                # React components (UI + features)
-│   │   ├── ui/                   # shadcn/ui base components
+│   ├── components/                    # React components (92 files)
+│   │   ├── ui/                        # shadcn/ui base components
 │   │   │   ├── button.tsx
-│   │   │   ├── card.tsx
 │   │   │   ├── input.tsx
-│   │   │   ├── form.tsx          # React Hook Form wrapper
-│   │   │   ├── label.tsx
-│   │   │   ├── table.tsx
 │   │   │   ├── dialog.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── form.tsx
 │   │   │   ├── select.tsx
-│   │   │   ├── tabs.tsx
-│   │   │   ├── skeleton.tsx      # Loading placeholder
-│   │   │   ├── date-input.tsx    # Date picker
-│   │   │   └── [27 other base components]
-│   │   │
-│   │   ├── theme-provider.tsx    # next-themes setup
-│   │   ├── theme-toggle.tsx      # Dark mode toggle button
-│   │   ├── sidebar-nav.tsx       # Sidebar navigation menu
-│   │   ├── mobile-menu-trigger.tsx # Mobile drawer menu
-│   │   │
-│   │   ├── venda-rapida-form-client.tsx     # POS form (multi-product, parcels)
-│   │   ├── produto-form-client.tsx          # Product create/edit
-│   │   ├── produto-item-form.tsx            # Line item in sale
-│   │   ├── parcelas-vencimento-form.tsx    # Installment schedule UI
-│   │   ├── antecipacao-client.tsx          # Receivables form
-│   │   │
-│   │   ├── delete-venda-button.tsx         # Delete sale confirmation dialog
-│   │   ├── delete-user-button.tsx          # Delete user confirmation
-│   │   ├── LogoutButton.tsx                # Session logout
-│   │   │
-│   │   ├── importacao-client.tsx           # CSV import uploader
-│   │   ├── intelligence-chat-client.tsx   # AI chat interface
-│   │   ├── intelligence-chat-composer.tsx # Message input for AI
-│   │   ├── dashboard-charts.tsx           # Recharts visualizations
-│   │   ├── finance-charts.tsx             # P&L charts
-│   │   ├── commissions-dashboard-client.tsx # Commission metrics
-│   │   ├── report-buttons-client.tsx      # PDF export buttons
-│   │   │
-│   │   ├── form-select.tsx                # Custom select with search
-│   │   ├── query-tabs.tsx                 # Tabs with URL sync (nuqs)
-│   │   ├── month-filter.tsx               # Month range picker
-│   │   ├── receipt-editor-client.tsx      # Receipt preview/edit
-│   │   ├── receipt-preview.tsx            # Receipt display
-│   │   ├── logo-upload-form.tsx           # Company logo upload
-│   │   ├── chat-prompt-input.tsx          # AI chat input field
-│   │   └── [other feature components]
+│   │   │   ├── card.tsx
+│   │   │   └── ...
+│   │   ├── intelligence-chat-client.tsx    # AI chat interface (main)
+│   │   ├── intelligence-chat-composer.tsx  # AI input form
+│   │   ├── venda-rapida-form-client.tsx    # Quick sales form
+│   │   ├── edit-venda-form-client.tsx      # Edit sales with products
+│   │   ├── clientes-tab-client.tsx         # Client management table
+│   │   ├── parcelas-vencimento-form.tsx    # Installment payment form
+│   │   ├── gerar-boleto-button.tsx         # Boleto generation button
+│   │   ├── recibo-download-link.tsx        # Receipt download link
+│   │   ├── assinatura-form-client.tsx      # Signature form
+│   │   ├── dashboard-charts.tsx            # Dashboard charts (recharts)
+│   │   ├── finance-charts.tsx              # Financial dashboards
+│   │   ├── report-buttons-client.tsx       # Report generation buttons
+│   │   ├── sidebar-nav.tsx                 # Navigation menu
+│   │   ├── mobile-menu-trigger.tsx         # Mobile hamburger menu
+│   │   ├── theme-toggle.tsx                # Dark/light mode switch
+│   │   ├── notification-bell.tsx           # Notification center
+│   │   ├── masked-input.tsx                # Formatted input (CPF, phone)
+│   │   ├── sortable-header.tsx             # Table column sorting
+│   │   ├── month-filter.tsx                # Month/year picker
+│   │   ├── delete-venda-button.tsx         # Delete sale with confirm
+│   │   ├── edit-user-button.tsx            # User edit dialog
+│   │   └── ...
 │   │
-│   └── lib/                       # Utilities and helpers
-│       ├── db.ts                 # Prisma client singleton
-│       ├── session.ts            # JWT auth (createSessionToken, getSession)
-│       ├── guards.ts             # Access control (requireAdmin)
-│       ├── utils.ts              # Formatting (formatBRL, cn)
-│       ├── action-response.ts    # Server Action response type + helpers
-│       │
-│       ├── design-tokens.ts      # Semantic tokens (spacing, colors, typography)
-│       ├── finance.ts            # Financial calculations (margin, ROI, etc.)
-│       ├── animations.ts         # Tailwind animation utilities
-│       ├── ai.ts                 # AI model integration (OpenAI, Gemini)
-│       ├── ai-actions.ts         # AI action definitions and execution
-│       ├── credit.ts             # Credit limit and risk calculations
-│       ├── ncm.ts                # NCM code utilities
-│       ├── mcp.ts                # MCP (Multi-Client Protocol) tools
-│       ├── use-query-param.tsx   # nuqs hook for URL state
-│       │
-│       └── validations/          # Zod schemas (form validation)
-│           ├── auth.ts           # Login schema
-│           ├── cliente.ts        # Customer form schema
-│           ├── produto.ts        # Product form schema
-│           └── venda.ts          # Sales form schema
+│   ├── lib/                           # Utilities and services (38 files)
+│   │   ├── db.ts                      # Prisma Client singleton
+│   │   ├── session.ts                 # JWT session management
+│   │   ├── action-response.ts         # Server Action response type
+│   │   │
+│   │   ├── ai.ts                      # AI orchestration (runAiWithActions)
+│   │   ├── ai-actions.ts              # AI tool definitions & schemas (50+ actions)
+│   │   ├── mcp.ts                     # MCP tool integration
+│   │   │
+│   │   ├── boleto-actions.ts          # Server Action: generate Asaas boleto
+│   │   ├── asaas.ts                   # Asaas SDK wrapper
+│   │   ├── whatsapp.ts                # WhatsApp API client
+│   │   ├── evolution.ts               # Evolution API wrapper
+│   │   ├── minio.ts                   # MinIO/S3 client
+│   │   ├── uber.ts                    # Uber Freight API
+│   │   │
+│   │   ├── db-search.ts               # Fuzzy search utilities (cliente, produto, fornecedor)
+│   │   ├── venda-utils.ts             # Sale calculations (total, margin, commission)
+│   │   ├── finance.ts                 # Financial calculations (DRE, cash flow)
+│   │   ├── comissoes-utils.ts         # Commission calculations
+│   │   ├── parcelas.ts                # Installment utilities
+│   │   │
+│   │   ├── recibo-pdf.ts              # PDF generation (receipt, contract)
+│   │   ├── recibo-url.ts              # Receipt URL generation
+│   │   ├── documento-service.ts       # Document storage (Documento model)
+│   │   │
+│   │   ├── guards.ts                  # Authorization helpers
+│   │   ├── audit.ts                   # Audit logging
+│   │   ├── credit.ts                  # Credit limit checks
+│   │   │
+│   │   ├── ncm.ts                     # NCM (product code) lookup
+│   │   ├── masks.ts                   # Input formatting (CPF, CNPJ, phone)
+│   │   ├── utils.ts                   # General utilities (formatBRL, cn, etc.)
+│   │   ├── animations.ts              # Animation CSS classes
+│   │   ├── design-tokens.ts           # Design system tokens
+│   │   ├── use-query-param.tsx        # URL search params hook
+│   │   ├── whatsapp-pre-atendimento.ts # AI pre-attendance for WhatsApp
+│   │   ├── validations/               # Zod schemas
+│   │   │   ├── auth.ts                # Login validation
+│   │   │   ├── cliente.ts             # Client form validation
+│   │   │   ├── produto.ts             # Product form validation
+│   │   │   ├── venda.ts               # Sales form validation
+│   │   │   └── importacao.ts          # Import validation
+│   │   └── ...
+│   │
+│   ├── hooks/                         # React hooks (1 file)
+│   │   └── use-table-features.ts      # Pagination, sorting, filtering logic
+│   │
+│   └── generated/                     # Generated files (do not edit)
+│       └── prisma/                    # Prisma Client generated types
+│           └── runtime/
 │
-├── prisma/                        # Database configuration
-│   ├── schema.prisma             # Data models (11 models)
-│   ├── seed.js                   # Database seeding
-│   ├── import_sqlite.js          # Legacy SQLite migration
-│   └── migrations/               # Prisma migrations
+├── prisma/
+│   ├── schema.prisma                  # Database schema (14 models)
+│   ├── migrations/                    # Database migrations
+│   │   ├── 20260324000000_add_produto_data_compra/
+│   │   ├── 20260327000002_add_antecipacao_batch/
+│   │   └── 20260226130000_add_asaas_config/
+│   ├── seed.js                        # Database seeding script
+│   ├── import_sqlite.js               # Legacy SQLite import
+│   └── import-vendas-sqlite.js        # Legacy sales import
 │
-├── public/                        # Static assets
-│   └── uploads/                  # User-uploaded files (receipts, logos)
+├── deploy/
+│   └── bfx/                           # Kubernetes manifests (ArgoCD)
+│       ├── kustomization.yaml         # Kustomize base
+│       ├── namespace.yaml             # K8s namespace creation
+│       ├── app.yaml                   # Deployment + Service for app
+│       ├── postgres.yaml              # StatefulSet + PVC for PostgreSQL
+│       ├── secrets.yaml               # ConfigMap placeholder
+│       ├── serviceaccount.yaml        # ServiceAccount for app pod
+│       ├── ingress.yaml               # Ingress routing
+│       ├── cronjob-cleanup-uploads.yaml # CronJob for cleanup
+│       └── evolution-api.yaml         # Evolution API deployment
 │
-├── .planning/                     # GSD planning artifacts
-│   └── codebase/                 # Architecture/quality docs (you are here)
+├── public/
+│   ├── manifest.json                  # PWA manifest
+│   └── icons/                         # App icons (192x192, 512x512)
 │
-├── .github/                       # GitHub CI/CD workflows
-├── .vscode/                       # IDE settings
-├── design-system/                 # Design tokens documentation
-├── scripts/                       # Utility scripts
-├── deploy/                        # Docker/deployment configs
-├── nginx/                         # Nginx reverse proxy config
-├── tests/                         # Test files
-├── package.json                   # Dependencies (React 18.3.1, Next 16.1.6)
-├── tsconfig.json                  # TypeScript config (paths: @/*)
-├── next.config.ts                 # Next.js configuration
-└── tailwind.config.ts             # Tailwind CSS v4 config
+├── tests/                             # Test files (if any)
+├── docs/                              # Documentation
+├── scripts/                           # One-off scripts
+│   ├── gerar-recibo-assinado-95.ts   # PDF generation for receipt
+│   ├── reset-assinatura.ts           # Signature data cleanup
+│   └── ...
+│
+├── package.json                       # NPM dependencies
+├── tsconfig.json                      # TypeScript configuration
+├── next.config.js                     # Next.js configuration
+├── tailwind.config.ts                 # Tailwind CSS configuration
+├── postcss.config.mjs                 # PostCSS configuration
+├── eslint.config.js                   # ESLint configuration
+├── Dockerfile                         # Container image definition
+└── docker-compose.yml                 # Local development stack
 ```
 
 ## Directory Purposes
 
-**`src/app/(auth)/`:**
-- Purpose: Unauthenticated routes (login page)
-- Contains: Login form, session creation
-- Key files: `login/page.tsx` (React Hook Form + Zod validation)
+**src/app:**
+- Purpose: Next.js 15 App Router page hierarchy and API routes
+- Contains: Page components, layouts, API handlers
+- Key files: `(app)/layout.tsx` (protected wrapper), `api/` (40+ endpoints)
 
-**`src/app/(app)/`:**
-- Purpose: Protected routes (require authenticated session)
-- Contains: Business logic pages, forms, reports
-- Key files: `layout.tsx` (session guard, sidebar, menu routing)
-- Pattern: Each feature is a route directory with page.tsx, actions.ts, loading.tsx
+**src/components:**
+- Purpose: Reusable React components, both UI primitives and domain-specific
+- Contains: 92 components including forms, charts, tables, dialogs
+- Key files: `intelligence-chat-client.tsx` (main AI interface), form components
 
-**`src/app/api/`:**
-- Purpose: HTTP API endpoints for client autocomplete, file uploads, webhooks
-- Contains: Route handlers (GET/POST) following REST conventions
-- Key files: Auth routes, autocomplete endpoints, PDF generation
+**src/lib:**
+- Purpose: Utilities, services, and business logic
+- Contains: Database access, AI orchestration, integrations, calculations, validation
+- Key files: `ai.ts` (AI entry point), `ai-actions.ts` (tool definitions), `db.ts` (Prisma singleton)
 
-**`src/components/ui/`:**
-- Purpose: shadcn/ui base components (buttons, forms, cards, etc.)
-- Contains: Unstyled Radix UI + Tailwind components
-- Key files: form.tsx (React Hook Form wrapper), button.tsx (variants)
+**prisma:**
+- Purpose: Database schema, migrations, and seeding
+- Contains: 14 data models, migration files, legacy import scripts
+- Key files: `schema.prisma` (database structure)
 
-**`src/components/`:**
-- Purpose: Feature-specific client components (forms, dialogs, charts)
-- Contains: "use client" components for interactivity
-- Key files: VendaRapidaFormClient, ProductFormClient, AI chat, charts
-
-**`src/lib/`:**
-- Purpose: Shared utilities, types, validation schemas
-- Contains: Database client, session management, helpers, validators
-- Key files: db.ts (Prisma), session.ts (JWT), validations/ (Zod schemas)
-
-**`prisma/`:**
-- Purpose: Database schema and migrations
-- Contains: 11 Prisma models (Cliente, Produto, Venda, Usuario, etc.)
-- Key files: schema.prisma, seed.js
+**deploy/bfx:**
+- Purpose: Kubernetes manifests for production deployment
+- Contains: Deployment configs, StatefulSet for PostgreSQL, Ingress routing, CronJobs
+- Key files: `kustomization.yaml` (composition), `app.yaml` (main app), `postgres.yaml` (database)
 
 ## Key File Locations
 
 **Entry Points:**
-- `src/app/layout.tsx`: Root HTML structure, theme provider, fonts
-- `src/app/page.tsx`: Home redirect (/ → /dashboard or /login)
-- `src/app/(app)/layout.tsx`: App wrapper with sidebar, session validation
-- `src/app/(auth)/login/page.tsx`: Login form with credentials input
+- `src/app/layout.tsx`: Root HTML setup (fonts, theme provider, PWA register)
+- `src/app/(app)/layout.tsx`: Protected app layout (session check, sidebar)
+- `src/app/(auth)/login/page.tsx`: Authentication endpoint
 
 **Configuration:**
-- `tsconfig.json`: TypeScript config with `@/*` path alias
-- `next.config.ts`: Next.js runtime config
-- `tailwind.config.ts`: Tailwind CSS framework config
-- `prisma/schema.prisma`: Database schema and relationships
+- `src/lib/db.ts`: Prisma Client singleton (import everywhere)
+- `src/lib/session.ts`: JWT token creation/verification
+- `prisma/schema.prisma`: All database models and relationships
 
 **Core Logic:**
-- `src/lib/db.ts`: Prisma client (database connection)
-- `src/lib/session.ts`: JWT token management (create, verify)
-- `src/lib/guards.ts`: Access control functions (requireAdmin)
-- `src/lib/action-response.ts`: Server Action response standardization
+- `src/lib/ai.ts`: Main AI orchestrator `runAiWithActions()`
+- `src/lib/ai-actions.ts`: Tool definitions with Zod schemas
+- `src/lib/boleto-actions.ts`: Asaas boleto generation Server Action
+- `src/lib/venda-utils.ts`: Sale calculations (total, margin, taxes)
+- `src/lib/finance.ts`: Financial reports (DRE, cash flow)
 
 **Testing:**
-- `tests/`: Test files (not extensively documented in codebase)
-- `test-results/`: Test output artifacts
+- `src/**/*.test.ts` (none currently — testing patterns not established)
+- See TESTING.md for patterns
+
+**Reports:**
+- `src/app/api/relatorios/vendas/route.ts`: CSV export
+- `src/app/api/relatorios/vendas/pdf/route.ts`: PDF report
+- `src/app/api/relatorios/catalogo/route.ts`: Product catalog
+
+**Integrations:**
+- `src/lib/asaas.ts`: Boleto API client
+- `src/lib/whatsapp.ts`: WhatsApp message sending
+- `src/lib/evolution.ts`: Evolution API wrapper
+- `src/lib/minio.ts`: File storage client
 
 ## Naming Conventions
 
 **Files:**
-- Pages: `page.tsx` (Server Component by default)
-- Server Actions: `actions.ts` (in same directory as page)
-- Loading states: `loading.tsx` (auto-shown by Next.js)
-- Client components: `-client.tsx` suffix for clarity
-- UI components: `kebab-case.tsx`
-- API routes: `route.ts` (HTTP method exported from file)
+
+- **Page components:** `page.tsx` in route directories (Next.js convention)
+- **Client components:** `*-client.tsx` (e.g., `venda-rapida-form-client.tsx`) — signals `"use client"` directive
+- **Server actions:** `*-actions.ts` (e.g., `boleto-actions.ts`) — contains `"use server"` boundary
+- **UI components:** lowercase with hyphens (e.g., `input.tsx`, `card.tsx`) in `src/components/ui/`
+- **Utilities:** lowercase with hyphens (e.g., `db-search.ts`, `venda-utils.ts`)
+- **Hooks:** `use-*` pattern (e.g., `use-table-features.ts`)
+- **Validation schemas:** `*.ts` in `src/lib/validations/` by domain (e.g., `cliente.ts`, `venda.ts`)
 
 **Directories:**
-- Feature routes: lowercase-with-hyphens (venda-rapida, historico, gestao-rh)
-- Component folders: PascalCase for features, lowercase for categories (ui/)
-- Utility modules: Single word (lib, utils) or grouped (lib/validations/)
 
-**Variables & Functions:**
-- Constants: UPPER_SNAKE_CASE (API keys, configuration)
-- Functions: camelCase (getSession, formatBRL, requireAdmin)
-- Types/Interfaces: PascalCase (SessionPayload, ActionResponse, VendaFormData)
-- CSS classes: kebab-case (via Tailwind utilities)
-- Database columns: snake_case in schema, camelCase in ORM (dataVenda, produtoNome)
+- **Route groups:** Parentheses for logical grouping, non-URL (e.g., `(app)`, `(auth)`)
+- **API routes:** Snake-case matching resource names (e.g., `/api/clientes/`, `/api/relatorios/vendas/`)
+- **Feature folders:** Lowercase with hyphens (e.g., `src/app/configuracoes/`)
 
-**Components:**
-- Exported React components: PascalCase
-- Props interfaces: Component name + "Props" (e.g., VendaRapidaFormClientProps)
-- Variant/enum values: lowercase (variant="success", size="sm")
+**Functions:**
+
+- **Server actions:** camelCase, descriptive (e.g., `gerarBoletoAsaas()`, `askAi()`, `addAssistantMessage()`)
+- **Utilities:** camelCase (e.g., `valorTotalVenda()`, `calcularDre()`, `formatBRL()`)
+- **AI actions:** snake_case for tool names (e.g., `listar_clientes`, `criar_venda`, `resumo_financeiro`)
+- **React hooks:** camelCase with `use` prefix (e.g., `useTableFeatures()`)
+
+**Variables & Constants:**
+
+- **Constants:** UPPER_SNAKE_CASE for global config (e.g., `TABLE_BLOCK_RE`, `SYSTEM_PROMPT`)
+- **Types:** PascalCase for TS types (e.g., `SessionPayload`, `ActionResponse`, `ProdutoItem`)
+- **Regular variables:** camelCase (e.g., `selectedCliente`, `produtoSuggestions`)
 
 ## Where to Add New Code
 
-**New Feature (e.g., "Contratos"):**
-1. Create route: `src/app/(app)/contratos/`
-2. Add page: `src/app/(app)/contratos/page.tsx` (Server Component)
-3. Add actions: `src/app/(app)/contratos/actions.ts` (Server Actions)
-4. Add loading: `src/app/(app)/contratos/loading.tsx` (skeleton UI)
-5. Add forms: `src/components/contrato-form-client.tsx` ("use client")
-6. Add validation: `src/lib/validations/contrato.ts` (Zod schema)
-7. Add API endpoints: `src/app/api/contratos/route.ts` if needed
-8. Add menu item: Update `src/app/(app)/layout.tsx` adminMenu or sellerMenu array
+**New Feature (e.g., sales with tracking):**
+
+1. **Database Model:** Add to `prisma/schema.prisma`
+2. **Migration:** Run `npx prisma migrate dev --name add_tracking`
+3. **API Endpoint:** Create `src/app/api/tracking/route.ts` (GET) or use Server Action
+4. **Page:** Create `src/app/(app)/tracking/page.tsx`
+5. **Form Component:** Create `src/components/tracking-form-client.tsx`
+6. **Utilities:** Add calculations to `src/lib/tracking-utils.ts`
+7. **Validation:** Add Zod schema to `src/lib/validations/tracking.ts`
 
 **New Component/Module:**
-- Reusable components: `src/components/component-name.tsx`
-- UI base component: `src/components/ui/component-name.tsx` (from shadcn/ui)
-- Feature-specific: `src/components/feature-name-xxx.tsx` with clear suffix
 
-**New API Endpoint:**
-- Structure: `src/app/api/[resource]/route.ts` or `src/app/api/[resource]/[action]/route.ts`
-- Pattern: Export async `GET()` or `POST()` functions
-- Example: `src/app/api/contratos/[id]/route.ts` for GET/PUT/DELETE by ID
+- **Presentational:** Place in `src/components/` with descriptive name
+- **Reusable logic:** Extract to `src/lib/[domain]-utils.ts`
+- **Data fetching:** Keep in Server Components or use API routes
+- **Interactions:** Use Client Components with `"use client"` marker
 
-**Shared Utilities:**
-- Formatting/calculations: `src/lib/utils.ts` or new domain file (finance.ts, credit.ts)
-- Validation schemas: `src/lib/validations/[domain].ts`
-- Type definitions: Inside the schema file or dedicated `types.ts`
+**New API Route:**
 
-**Database Model Changes:**
-1. Update `prisma/schema.prisma` (add model or field)
-2. Run `npm run prisma:generate` (generate Prisma client types)
-3. Create migration: `npx prisma migrate dev --name describe_change`
-4. Seed if needed: Update `prisma/seed.js`
+- Location: `src/app/api/[resource]/route.ts` following REST conventions
+- Pattern: Read query params, call Prisma, return Response
+- Example: `src/app/api/relatorios/vendas/route.ts` returns CSV
+
+**New AI Action:**
+
+1. Add schema to `actionParamSchemas` in `src/lib/ai-actions.ts`
+2. Add definition to `aiActions` array with name, description, handler
+3. Handler executes Prisma queries, returns formatted data
+4. Add role restrictions if admin-only
+5. Test in intelligence page with prompt
+
+**Utilities/Helpers:**
+
+- **Shared calculations:** `src/lib/[domain]-utils.ts`
+- **Database queries:** Keep in API routes or Server Components, don't create separate DAL
+- **Formatting:** `src/lib/utils.ts` for general, domain-specific in `src/lib/[domain]-utils.ts`
 
 ## Special Directories
 
-**`src/app/api/`:**
-- Purpose: HTTP API endpoints
-- Generated: No (developer-created)
+**src/generated/prisma:**
+- Purpose: Prisma Client auto-generated types and client
+- Generated: Yes, by `npx prisma generate`
+- Committed: Yes (safe to commit generated Prisma client)
+- Note: Do not edit manually
+
+**public/:**
+- Purpose: Static assets served directly by Next.js
+- Contains: PWA manifest, app icons, favicon
 - Committed: Yes
-- Pattern: Each route.ts file exports request handlers (GET, POST, PUT, DELETE)
-- Dynamic routes: Use `[id]` or `[...slug]` syntax for path parameters
+- Note: Files here accessible at `/[filename]`
 
-**`prisma/migrations/`:**
-- Purpose: Database schema version history
-- Generated: Auto-generated by `prisma migrate dev`
-- Committed: Yes (tracks schema changes across team)
-- Note: Never edit manually; regenerate with `prisma migrate dev`
+**deploy/bfx/:**
+- Purpose: Kubernetes infrastructure-as-code (ArgoCD synced)
+- Contains: Manifests for app, database, ingress, cron jobs
+- Committed: Yes (critical for production)
+- Note: Changes trigger automatic deployments via ArgoCD
 
-**`.planning/codebase/`:**
-- Purpose: Architecture and quality documentation for GSD
-- Generated: Manual (this file you're reading)
-- Committed: Yes (guides future development)
-- Contents: ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, CONCERNS.md
+**scripts/:**
+- Purpose: One-off utility scripts for manual execution
+- Contains: PDF generation, data cleanup, imports
+- Committed: Yes
+- Note: Run with `npx tsx scripts/[script].ts`
 
-**`public/uploads/`:**
-- Purpose: User-uploaded files (receipts, logos, product images)
-- Generated: Runtime upload handlers
-- Committed: No (added to .gitignore)
-- Cleanup: Manual or via cron job
+**.next/:**
+- Purpose: Build output directory (Next.js)
+- Generated: Yes, by `npm run build`
+- Committed: No (in .gitignore)
 
-**`.next/`:**
-- Purpose: Next.js build artifacts and cache
-- Generated: Auto-generated by `npm run build`
-- Committed: No (.gitignore)
-- Clean: `rm -rf .next/` to force rebuild
-
-**`node_modules/`:**
+**node_modules/:**
 - Purpose: Installed dependencies
-- Generated: `yarn install` or `npm install`
-- Committed: No (.gitignore)
-- Lockfile: `yarn.lock` (yarn package manager)
+- Generated: Yes, by `npm install` or `yarn install`
+- Committed: No (in .gitignore)
 
 ---
 
-*Structure analysis: 2026-02-19*
+*Structure analysis: 2026-03-30*

@@ -1,347 +1,267 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-02-19
+**Analysis Date:** 2026-03-30
 
 ## Security Issues
 
-### Authentication & Authorization Gaps
+**Hardcoded placeholder secrets in production manifest:**
+- Issue: `SESSION_SECRET: change-me-in-production` and `CRON_SECRET: change-me-cron-secret-min-32-chars` are placeholder values in committed Kubernetes secrets file
+- Files: `deploy/bfx/secrets.yaml` (lines 20, 25)
+- Impact: If secrets file is deployed as-is, session tokens are predictable and cron endpoints are unprotected. Any attacker can forge sessions or trigger cron jobs.
+- Fix approach: Move to external secret management (AWS Secrets Manager, HashiCorp Vault) or ensure CI/CD replaces these values before deployment. Add validation in middleware to reject default secret values.
 
-**Missing API route protection:**
-- Issue: API routes are not protected with authentication middleware or session validation
-- Files: `src/app/api/clientes/[id]/limite/route.ts`, `src/app/api/produtos/autocomplete/route.ts`, `src/app/api/vendas/autocomplete/clientes/route.ts`, `src/app/api/search/route.ts`, `src/app/api/importacao/batch/route.ts`
-- Impact: Any unauthenticated user can access data endpoints without logging in
-- Fix approach: Create middleware that validates session token before processing requests
+**Asaas API key exposed in secrets manifest:**
+- Issue: Production Asaas API key is hardcoded in committed secrets.yaml (format: `$aact_prod_...`)
+- Files: `deploy/bfx/secrets.yaml` (line 26)
+- Impact: If repository is compromised, attacker gains access to payment processing. Key can be revoked but requires immediate action.
+- Fix approach: Use external secret management (AWS Secrets Manager, K8s sealed-secrets). Never commit real credentials to git.
 
-**Missing role-based access control (RBAC) on protected pages:**
-- Issue: Dashboard requires admin check `requireAdmin()`, but other admin functions (comissoes, relatorios) lack validation
-- Files: `src/app/(app)/dashboard/page.tsx`, `src/lib/guards.ts`
-- Impact: Users can potentially access restricted features by bypassing client-side checks
-- Fix approach: Implement server-side RBAC middleware in `/app/layout.tsx` for all protected routes
+**LiteLLM API key exposed:**
+- Issue: Production LiteLLM key (`sk-ly735Euf-s6uQKcPu1l52Q`) committed in secrets.yaml
+- Files: `deploy/bfx/secrets.yaml` (line 31)
+- Impact: Attacker can make unlimited API calls to AI provider, incurring costs and potentially accessing rate-limited free tier.
+- Fix approach: Use external secret management. Rotate key immediately.
 
-### File Upload Vulnerabilities
+**Database credentials in plain text:**
+- Issue: Postgres credentials (`postgres:postgres`) hardcoded in secrets.yaml DATABASE_URL
+- Files: `deploy/bfx/secrets.yaml` (line 19)
+- Impact: Default credentials are widely known. Should be unique per environment.
+- Fix approach: Use strong, auto-generated passwords. Store in external secret manager.
 
-**No file type validation on uploads:**
-- Issue: File upload endpoints accept any file without MIME type or extension checks
-- Files: `src/app/api/produtos/upload/route.ts` (line 10-24), `src/app/api/upload-logo/route.ts` (line 15-19)
-- Impact: Users could upload executables (.exe, .sh) or malicious documents disguised as PDFs
-- Fix approach: Validate MIME type, extension whitelist, and file size before saving
+## AI Provider Issues
 
-**No file size limits:**
-- Issue: Upload endpoints don't enforce maximum file size constraints
-- Files: `src/app/api/produtos/upload/route.ts`, `src/app/api/upload-logo/route.ts`
-- Impact: Disk space exhaustion attacks possible; large uploads could freeze application
-- Fix approach: Add `MAX_FILE_SIZE` constant, check `file.size` before processing
+**No fallback when all providers exhaust rate limits:**
+- Issue: LiteLLM provider has no retry logic or degradation strategy. Gemini has fallback to OpenAI (lines 369-399 in ai.ts), but no tertiary fallback.
+- Files: `src/lib/ai.ts` (lines 39-77, 295-330)
+- Impact: When free tier Gemini quota exhausted and OpenAI key missing, users see generic error. No graceful degradation to read-only mode or queued processing.
+- Fix approach: Implement queue-based processing, read-only fallback, exponential backoff with jitter. Add provider health check endpoint.
 
-**Unsafe file path construction:**
-- Issue: Filenames not sanitized; paths built with unsanitized user input
-- Files: `src/app/api/produtos/upload/route.ts` (line 21), `src/app/api/upload-logo/route.ts` (line 16)
-- Example: `filename = \`${Date.now()}-${file.name}\`` - allows malicious filenames like `../../etc/passwd`
-- Fix approach: Use `path.basename()` to extract filename only, remove special characters
+**Free tier Gemini quota not monitored:**
+- Issue: No quota tracking or warning system for Gemini free tier. Rate limit errors only discovered when user hits them.
+- Files: `src/lib/ai.ts` (lines 358-399)
+- Impact: Users experience sudden failures during peak usage. No proactive notification to admin.
+- Fix approach: Add quota tracking in Config model. Implement warning when 80% of daily quota used. Switch to paid tier monitoring.
 
-**Path traversal vulnerability:**
-- Issue: Logo/image paths loaded from database without validation
-- Files: `src/app/api/recibo/route.ts` (line 66), `src/app/api/catalogo/route.ts` (line 68)
-- Vulnerable code: `const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath)`
-- Impact: Attacker could craft malicious path in config to read any file on server
-- Fix approach: Validate paths are within `public/` directory; reject paths with `..` components
-
-### Plaintext Password Storage
-
-**Critical: Passwords stored without hashing:**
-- Issue: Login route compares plaintext passwords directly
-- Files: `src/app/api/auth/login/route.ts` (line 15)
-- Vulnerable code: `if (!user || user.password !== String(body.password).trim())`
-- Impact: Database breach exposes all user passwords in plaintext
-- Fix approach: Use bcrypt or argon2 for password hashing; implement proper password verification
-
-### API Key Exposure
-
-**Secrets stored in database (Config table):**
-- Issue: OpenAI and Gemini API keys stored in plaintext in `config` table
-- Files: `prisma/schema.prisma` (lines 113-114), `src/lib/ai.ts` (lines 14-15, 24)
-- Impact: Database dump or SQL injection exposes production API keys
-- Fix approach: Use environment variables only; never store secrets in database
-
-**Sensitive data in session token:**
-- Issue: Session JWT uses default secret if `SESSION_SECRET` not set
-- Files: `src/lib/session.ts` (line 4)
-- Vulnerable code: `const secret = new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret")`
-- Impact: Default "dev-secret" makes sessions forgeable in development if deployed
-- Fix approach: Require `SESSION_SECRET` env var; fail startup if missing in production
-
-## Data Validation Issues
-
-### Missing Input Validation
-
-**No schema validation for server actions:**
-- Issue: `criarVenda` and `criarVendaV2` don't validate FormData before database operations
-- Files: `src/app/(app)/venda-rapida/actions.ts` (lines 8-49, 54-120)
-- Example: `const clienteId = Number(formData.get("cliente") || 0)` - no check if clienteId exists
-- Impact: Invalid data, negative values, NaN values can be saved to database
-- Fix approach: Create Zod schemas for all server actions; validate before database operations
-
-**Unvalidated query parameters in API routes:**
-- Issue: Search queries, date ranges, and limits not validated
-- Files: `src/app/api/search/route.ts` (line 10), `src/app/api/comissoes/route.ts` (lines 10-12)
-- Example: `const limit = Math.min(Number(searchParams.get("limit") || 20) || 20, MAX_LIMIT)` - still allows invalid dates
-- Impact: Invalid dates could return wrong results; string injection in search (though mitigated by Prisma)
-- Fix approach: Validate date strings with `new Date()` and check `!isNaN(date.getTime())`
-
-**No validation on batch import:**
-- Issue: `importacao/batch/route.ts` doesn't validate row data before database operations
-- Files: `src/app/api/importacao/batch/route.ts` (lines 9-48)
-- Example: No checks for negative numbers, invalid dates, or missing required fields
-- Impact: Corrupted data imported; financial calculations affected
-- Fix approach: Validate each row with schema; return detailed errors for invalid rows
-
-**Unvalidated date parsing:**
-- Issue: Date strings converted to `new Date()` without validation
-- Files: `src/app/(app)/venda-rapida/actions.ts` (line 31), `src/app/api/importacao/batch/route.ts` (line 34)
-- Impact: Invalid date strings create Invalid Date objects; calculations break silently
-- Fix approach: Use `z.coerce.date()` in Zod or validate with `!isNaN(new Date(str).getTime())`
-
-## Error Handling Issues
-
-### Silent Failures
-
-**No return value from server actions:**
-- Issue: `criarVenda` doesn't return ActionResponse; silently fails
-- Files: `src/app/(app)/venda-rapida/actions.ts` (line 28-29)
-- Impact: User doesn't know if operation succeeded; can repeat submissions
-- Fix approach: Return ActionResponse with success/error status from all server actions
-
-**Unhandled promise rejections:**
-- Issue: Fetch calls in client components don't handle all error cases
-- Files: `src/components/venda-rapida-form-client.tsx` (lines 87-90, 100+)
-- Example: `.catch(error => console.error(...))` - only logs, doesn't update UI
-- Impact: User sees no feedback if network request fails
-- Fix approach: Add proper error states; show toast notifications on failure
-
-**Generic error messages:**
-- Issue: All API errors return same generic "Erro interno no servidor"
-- Files: `src/app/api/importacao/batch/route.ts` (line 53), multiple routes
-- Impact: Impossible to debug; user doesn't know what failed
-- Fix approach: Return structured error objects with specific error codes
-
-### Uncaught Exceptions
-
-**JSON parsing without try-catch:**
-- Issue: Some routes parse JSON without error handling
-- Files: `src/app/(app)/venda-rapida/actions.ts` (line 77), `src/app/api/mcp/route.ts` (line 22)
-- Vulnerable code: `JSON.parse(String(produtosJson))` - throws if invalid JSON
-- Impact: Application crashes with 500 error instead of validation error
-- Fix approach: Wrap in try-catch; return `errorResponse` for invalid JSON
-
-## Performance Bottlenecks
-
-### N+1 Query Patterns
-
-**Multiple sequential queries for related data:**
-- Issue: `findMany` called without `include` relationships
-- Files: `src/app/(app)/historico/page.tsx` (lines 108-110), `src/app/(app)/dashboard/page.tsx` (line 38)
-- Example: Loads all `usuario` records separately for filtering instead of in `where` clause
-- Impact: Unnecessary database round trips; slow page loads with many users/vendors
-- Fix approach: Use Prisma `include` or `select` to batch load relationships
-
-**Loop-based data aggregation:**
-- Issue: Manual aggregation using loops instead of database queries
-- Files: `src/app/(app)/dashboard/page.tsx` (lines 57-87), `src/app/(app)/historico/page.tsx`
-- Example: Loads all sales, loops through manually to aggregate by vendor
-- Impact: Memory usage scales with data size; slow with thousands of records
-- Fix approach: Use Prisma `groupBy()` or raw SQL aggregation
-
-### Missing Database Indexes
-
-**Insufficient indexes for common queries:**
-- Issue: `findMany` on unindexed fields without filters
-- Files: `prisma/schema.prisma` - missing indexes on frequently searched fields
-- Example: No index on `venda.vendedor` (used in WHERE clauses) or `cliente.nome` (used in searches)
-- Impact: Full table scans on queries; performance degrades as data grows
-- Fix approach: Add `@@index([vendedor])`, `@@index([nome])` to models
-
-**Date range queries slow:**
-- Issue: Dashboard queries large date ranges without proper indexes
-- Files: `src/app/(app)/dashboard/page.tsx` (line 92-94)
-- Query: `vendasEvo` loads 6 months of sales to calculate evolution
-- Impact: Slow on large dataset; blocks page load
-- Fix approach: Add `@@index([dataVenda])` to Venda model; consider pagination for time series
-
-### Unbounded Result Sets
-
-**No limit on full table scans:**
-- Issue: Some queries load all records without pagination or limits
-- Files: `src/lib/ai-actions.ts` (multiple `findMany` calls), `src/app/(app)/cadastros/page.tsx` (line 89+)
-- Example: `await prisma.usuario.findMany()` loads all users without limit
-- Impact: Memory exhaustion with large datasets; crashes possible
-- Fix approach: Add `take` parameter or pagination; implement cursor-based pagination
+**LiteLLM configuration not validated:**
+- Issue: LiteLLM URL and key loaded from env/DB without validation that endpoint is reachable
+- Files: `src/lib/ai.ts` (lines 42-55)
+- Impact: Silent failures if LiteLLM server down. Error message returned to user but no alerting.
+- Fix approach: Add health check on startup and periodically. Implement circuit breaker pattern.
 
 ## Database Schema Issues
 
-### Deprecated Fields Mixed with New
+**Text-based vendedor field lacks foreign key constraint:**
+- Issue: `Venda.vendedor` and `Pagamento.vendedor` stored as `String?` without FK to `Usuario.username`. Same in `AuditLog.usuario` and `AiMensagem.usuario`.
+- Files: `prisma/schema.prisma` (lines 54, 215, 225, 274)
+- Impact: Cannot enforce data integrity. Orphaned references when user deleted. Reports show text strings instead of linked user objects. No audit trail linking.
+- Fix approach: Add FK relationship `vendedor Usuario @relation(fields: [vendedorId], references: [id])`. Migrate existing text data to integer IDs. Add cascade delete rules.
 
-**Parallel product tracking (conflicting data models):**
-- Issue: `Venda` model has both old fields (produtoNome) and new relationship (itens)
-- Files: `prisma/schema.prisma` (lines 51-72)
-- Impact: Data inconsistency; calculations may use wrong field; migrations risky
-- Fix approach: Complete migration to `ItemVenda` relationship; deprecate old fields in phases
+**AnticipacaoBatch.vendaIds stored as JSON string:**
+- Issue: `vendaIds` is `String` containing JSON array `"[1,2,3]"` instead of proper M2M relation
+- Files: `prisma/schema.prisma` (lines 319)
+- Impact: Cannot query batches by venda. Cannot enforce FK constraint. Parsing required in application code (see `historico-antecipacoes.tsx:26` - uses `JSON.parse(vendaIds)`). No referential integrity.
+- Fix approach: Create `AnticipacaoBatchVenda` M2M model. Add FK constraints. Update queries to use relations instead of string parsing.
 
-### Missing Constraints
+**Missing FK enforcement in deprecated fields:**
+- Issue: `Venda.produtoNome` and `Venda.custoProduto` are deprecated but still used. No FK to Produto. ItemVenda.produtoNome also text-based.
+- Files: `prisma/schema.prisma` (lines 58-61, 111-112)
+- Impact: Can create orphaned item records with fake product names. No price history tracking. Cannot report by actual product.
+- Fix approach: Deprecate Venda deprecated fields entirely. Enforce ItemVenda.produtoId FK to Produto. Migration to populate missing IDs.
 
-**No uniqueness on critical fields:**
-- Issue: `vendedor` field not indexed; allows duplicate vendor entries
-- Files: `prisma/schema.prisma` (line 48) - `vendedor` is plain String
-- Impact: Vendor analytics split across inconsistent names
-- Fix approach: Add `@@unique([vendedor])` or normalize vendor references
+## Deployment Issues
 
-**Orphaned records possible:**
-- Issue: `clienteId` is nullable; allows sales with null customer
-- Files: `prisma/schema.prisma` (line 49)
-- Impact: Reports exclude sales without client; data quality issues
-- Fix approach: Make `clienteId` required with `NOT NULL`; add data migration
+**Image tag mismatch between kustomization and app.yaml:**
+- Issue: `kustomization.yaml` specifies `newTag: dc22172d19e93d8fc9e3fbc55b22b27b17dfc0f2` but `app.yaml` has hardcoded different tag `938b273a5a683c4828cbfb088c9f69d44e8e842d`
+- Files: `deploy/bfx/kustomization.yaml` (line 17), `deploy/bfx/app.yaml` (line 40)
+- Impact: Kustomization image patch is ignored. app.yaml hardcoded tag deploys old code. ArgoCD reconciliation may fail.
+- Fix approach: Remove hardcoded tag from app.yaml. Let Kustomize manage all image tags via kustomization.yaml.
 
-### Missing Cascade Delete Rules
+**No image pull secret validation:**
+- Issue: Deployment references `ecr-creds` secret but no validation that it exists or contains valid AWS credentials
+- Files: `deploy/bfx/app.yaml` (lines 22-23)
+- Impact: Pod stuck in ImagePullBackOff without clear error if secret missing or expired.
+- Fix approach: Add pre-deployment validation script. Document ECR credential setup in runbook.
 
-**Partial cascade delete implementation:**
-- Issue: `ItemVenda` and `ParcelaVencimento` have `onDelete: Cascade`, but business logic may expect soft deletes
-- Files: `prisma/schema.prisma` (lines 87, 102)
-- Impact: Hard deletes lose data; no audit trail of deletions
-- Fix approach: Implement soft deletes (add `deletedAt` field) or restrict deletion with validation
+## Missing Tests
 
-## Tech Debt
+**Zero unit/integration test coverage:**
+- Issue: Only 1 Playwright E2E test file exists (`tests/venda-rapida-dropdown.spec.ts`) for entire codebase. No unit tests, integration tests, or API tests.
+- Files: `tests/` (only one .spec.ts file)
+- Impact: Regressions undetected until production. AI actions untested. Data model changes break queries silently. API endpoints have no contract tests.
+- Fix approach: Set up Vitest. Add 80% coverage requirement in CI. Prioritize: AI actions (high risk), venda creation flow, Asaas integration.
 
-### Dead Code & Unused Features
+**No test config or test runner setup:**
+- Issue: No Jest/Vitest config, no test setup files, no mocking framework configured
+- Files: Missing `jest.config.js`, `vitest.config.ts`, `test-setup.ts`
+- Impact: High barrier to adding tests. Developers unsure of patterns and tooling.
+- Fix approach: Configure Vitest with jsdom, MSW for API mocking, add test template examples.
 
-**Unused import patterns:**
-- Issue: Multiple import strategies not consistently used across codebase
-- Files: Various component files import unused icons from lucide-react
-- Impact: Larger bundle size; maintenance confusion
-- Fix approach: ESLint rule to enforce no unused imports
+## Code Organization Issues
 
-**Dual form implementations:**
-- Issue: Both `VendaRapidaFormClient` (730 lines) and `VendaRapidaFormV2` (468 lines) exist
-- Files: `src/components/venda-rapida-form-client.tsx` vs `venda-rapida-form-v2.tsx`
-- Impact: Code duplication; twice the maintenance burden
-- Fix approach: Consolidate into single form component; deprecate old version
+**Prisma generated client committed to git:**
+- Issue: `src/generated/prisma/` directory (1.2MB of .js/.d.ts files) committed to repository
+- Files: `src/generated/prisma/*.js`, `src/generated/prisma/*.d.ts`, `src/generated/prisma/*.wasm`
+- Impact: Repository size bloated. Merge conflicts on schema changes. Generated code diffs clutter history.
+- Fix approach: Add `src/generated/` to .gitignore. Regenerate during CI prebuild step. Keep only `prisma/schema.prisma` in version control.
 
-### Type Safety Issues
+**Giant monolithic form components:**
+- Issue: Multiple form components exceed 1000 lines: `venda-rapida-form-v2.tsx` (1082 lines), `venda-rapida-form-client.tsx` (724 lines)
+- Files: `src/components/venda-rapida-form-v2.tsx`, `src/components/venda-rapida-form-client.tsx`
+- Impact: Impossible to test individual features. Complex state management. Hard to reuse validation logic. Merge conflicts likely.
+- Fix approach: Split into: FormHeader, ClientSelector, ProductItemsList, ParcelasForm, PaymentOptions, ReviewSummary subcomponents.
 
-**Generic type parameter abuse:**
-- Issue: `toolSchema` uses `.passthrough()` allowing any properties
-- Files: `src/lib/ai.ts` (line 9)
-- Impact: Type safety lost; potential runtime errors from AI tool calls
-- Fix approach: Define strict schema for each AI action parameter
+**Fragmented AI action definitions:**
+- Issue: All AI actions (~1426 lines) in single `ai-actions.ts` file with no logical grouping
+- Files: `src/lib/ai-actions.ts`
+- Impact: Difficult to navigate. Actions for different domains (venda, produto, cliente, financeiro) mixed together. Updates require large file edits.
+- Fix approach: Split into: `ai-actions/venda.ts`, `ai-actions/cliente.ts`, `ai-actions/produto.ts`, `ai-actions/financeiro.ts`. Index in main file.
 
-**Loose type casting:**
-- Issue: Excessive use of `String()` and `Number()` coercion without validation
-- Files: Throughout codebase (e.g., `src/app/(app)/venda-rapida/actions.ts`)
-- Example: `Number(formData.get("cliente") || 0)` returns 0 if missing instead of error
-- Impact: Silent failures; calculations with wrong values
-- Fix approach: Use Zod to coerce with proper validation; throw on invalid input
+## Integration Fragility
 
-## Fragile Areas
+**Asaas webhook handling missing:**
+- Issue: Boleto creation works (`src/lib/asaas.ts`) but no webhook endpoint to receive payment status updates
+- Files: `src/lib/asaas.ts` (no webhook handling code)
+- Impact: Payment status never updated in DB. Parcels marked paid only if admin manually updates. Overdue payments not detected. False positives on payment status.
+- Fix approach: Add `POST /api/webhooks/asaas` endpoint. Parse webhook payload. Update payment status and ParcelaVencimento.paga. Add webhook signature verification.
 
-### Complex Multi-Product Sales Logic
+**Evolution API dependency fragility:**
+- Issue: WhatsApp messages sent via Evolution API (`src/lib/evolution.ts`) with no retry logic or graceful degradation
+- Files: `src/lib/evolution.ts`, `src/lib/whatsapp.ts`
+- Impact: If Evolution API down, WhatsApp features silently fail. No user notification. Recibos not sent. Boleto reminders not delivered.
+- Fix approach: Implement exponential backoff retry. Queue failed messages. Add monitoring/alerting. Fallback to in-app notification if API unavailable.
 
-**Area:** `src/components/venda-rapida-form-client.tsx`, `src/app/(app)/venda-rapida/actions.ts`
-- Why fragile: 730+ lines managing product arrays, parcelas, AI suggestions, stock limits
-- Multiple state variables (clienteQuery, selectedCliente, produtoQuery, selectedProduto, etc.)
-- Heavy reliance on fetch calls with implicit error handling
-- Safe modification: Add comprehensive test suite before refactoring; use React Testing Library for form state
+**Asaas API key invalidation not handled:**
+- Issue: If Asaas API key becomes invalid (revoked, expired), system continues trying to create boletos and silently fails
+- Files: `src/lib/asaas.ts` (lines 219-243), `src/lib/boleto-actions.ts`
+- Impact: Users think boletos created when they're not. Payment processing silently broken. No alerting to admin.
+- Fix approach: Add API key validation on startup. Catch 401/403 errors specifically. Disable boleto feature in UI. Alert admin.
 
-### AI Integration with Dynamic Schemas
+**LiteLLM configuration silent failures:**
+- Issue: Invalid LiteLLM URL or key returns generic error to user with no logging
+- Files: `src/lib/ai.ts` (lines 41-55)
+- Impact: Admin unaware of misconfiguration. Users see "LiteLLM not configured" when actually URL wrong.
+- Fix approach: Add structured logging. Validate config on app startup. Return detailed error with endpoint tested.
 
-**Area:** `src/lib/ai-actions.ts`, `src/lib/ai.ts`
-- Why fragile: 615 lines of AI action definitions; schema validation at runtime
-- JSON parsing of action results without strict typing
-- Changes to AI model behavior could break assumptions
-- Safe modification: Lock AI model version; add integration tests for each action; validate output schemas
+## Missing Features
 
-### Financial Calculations Spread Across Multiple Files
+**No payment webhook to update order status:**
+- Issue: Asaas integration creates payments but has no mechanism to receive payment confirmations and update Venda.status
+- Files: No webhook handler implemented
+- Impact: Venda status stays "ativa" forever. Parcels never marked paid unless manually updated. Financial reports incorrect.
+- Fix approach: Create webhook handler. Test with Asaas test payloads. Add signature verification.
 
-**Area:** `src/lib/finance.ts`, `src/app/(app)/dashboard/page.tsx`, `src/components/venda-rapida-form-client.tsx`
-- Why fragile: Lucro, ticket, margem calculations duplicated in multiple places
-- Subtle differences in how fields are used (lucroLiquido vs calculated lucro)
-- Safe modification: Centralize all calculations in single module; unit test each formula
+**No expiration handling for assinatura tokens:**
+- Issue: `Assinatura.assinatura_status` can be "pendente" or "expirado" but no job removes expired records or prevents expired signature submission
+- Files: `src/app/(app)/assinatura/`, no cleanup cron
+- Impact: Stale pending signatures clutter DB. Expired tokens may still be accepted. Signature page could be available long after venda completed.
+- Fix approach: Add cron job to mark signatures as expired after 30 days. Reject signature submission if expired.
 
-## Missing Critical Features
+**No rate limiting on public endpoints:**
+- Issue: No rate limiting on `/api/assinatura` or other public endpoints. No CSRF protection.
+- Files: Public API routes
+- Impact: Brute force attacks possible. Spam submissions. DOS vulnerability.
+- Fix approach: Add rate limiting middleware. Implement CSRF tokens. Add request throttling.
 
-### No Audit Trail
+**Missing data export feature:**
+- Issue: Users cannot export sales data to CSV/Excel beyond antecipacao batches
+- Files: No bulk export endpoint
+- Impact: Users manually copy-paste from tables. Cannot perform external analysis. Fragmented reporting.
+- Fix approach: Add export endpoint with format selection. Cache for performance.
 
-**Problem:** No logging of who created/modified records or when
-- Blocks: Compliance audits; fraud investigation; data recovery
-- Users can modify/delete records with no accountability
-- Fix approach: Add `createdAt`, `updatedAt`, `createdBy`, `updatedBy` fields to all models
+## Performance Concerns
 
-### No Soft Deletes
+**Large file components not optimized:**
+- Issue: Dashboard and finance charts (353 lines, 183 lines) not code-split. render on every state change.
+- Files: `src/components/dashboard-charts.tsx`, `src/components/finance-charts.tsx`
+- Impact: Initial page load slow. Large JS bundle. Client-side computation expensive.
+- Fix approach: Implement React.memo() for chart components. Lazy load with Suspense. Consider server-side aggregation.
 
-**Problem:** Hard deletes lose data permanently
-- Blocks: Recovery of accidentally deleted sales/customers; data retention compliance
-- No way to distinguish deleted vs never-existing records
-- Fix approach: Add `deletedAt` field to models; filter out soft-deleted records in queries
+**Unindexed database queries:**
+- Issue: Multiple columns lack indexes for common filters (client query, date range queries, status filters)
+- Files: `prisma/schema.prisma` (schema shows limited indexes)
+- Impact: Full table scans on common queries. Slow reports as data grows.
+- Fix approach: Add indexes on: `Venda.dataVenda`, `Venda.status`, `Cliente.nome`, `ParcelaVencimento.dataPagamento`, `AiMensagem.sessaoId, criadoEm`.
 
-### No Rate Limiting
+**No database query analysis:**
+- Issue: No N+1 query detection, no query logging in development
+- Files: No middleware for query analysis
+- Impact: Unnoticed N+1 problems until production slowness. Hidden data layer inefficiencies.
+- Fix approach: Enable Prisma query logging in dev. Add query metrics to observability.
 
-**Problem:** API endpoints have no rate limiting
-- Blocks: Protection against brute force attacks; DDoS mitigation
-- Batch import endpoint could be abused
-- Fix approach: Use `next-rate-limit` package; implement per-IP rate limiting on all API routes
+## Technical Debt
 
-### No CSRF Protection
+**npm install fails due to permissions:**
+- Issue: Package installation fails with permission errors on node_modules directory
+- Files: Project root
+- Impact: Cannot install new dependencies. Developers stuck on old versions. CI/CD issues.
+- Fix approach: Check directory ownership. Use sudo sparingly. Consider Docker-based development.
 
-**Problem:** No CSRF tokens on state-changing requests
-- Blocks: Protection against cross-site request forgery
-- Forms using FormData don't validate origin
-- Fix approach: Implement CSRF token validation using `next-safe` or built-in Next.js mechanisms
+**remark-gfm not installed, using native parser:**
+- Issue: Markdown table rendering uses custom native parser instead of robust remark-gfm
+- Files: `src/lib/ai.ts` (buildMarkdownTable), `src/components/MarkdownContent`
+- Impact: Complex markdown may render incorrectly. Feature parity issues with standard markdown. Hard to maintain parser.
+- Fix approach: Either document custom parser behavior or substitute compatible markdown library.
 
-### No SQL Injection Prevention (Partially)
+**Hook blocks RegExp.exec() pattern:**
+- Issue: Git hook rejects code containing `RegExp exec()` pattern, requires `.split()` + regex instead
+- Files: `.git/hooks/` (enforces pattern matching)
+- Impact: Counterintuitive code style requirement. Not self-documenting. Developers surprised by commit failure.
+- Fix approach: Document in CLAUDE.md with examples. Consider relaxing rule or adding linting instead.
 
-**Problem:** While Prisma prevents SQL injection, raw dynamic query strings could be used
-- Impact: Safe with current code but risky pattern if extended
-- Fix approach: Enforce no raw SQL; use parameterized queries always
+**Multiple migration scripts with unclear purpose:**
+- Issue: Many ad-hoc scripts in `scripts/` and `prisma/` (import-vendas-sqlite.js, fix-parcelas-roteador.ts, reset-assinatura.ts) lack documentation
+- Files: `prisma/`, `scripts/` directories
+- Impact: Unclear which are safe to run, which are one-off. Risk of accidental data loss.
+- Fix approach: Add script documentation. Add confirmation prompts. Move one-offs to archive directory.
 
 ## Scaling Limits
 
-### Database Connection Pooling
+**Single database replica:**
+- Issue: PostgreSQL deployed as single StatefulSet without replication
+- Files: `deploy/bfx/postgres.yaml`
+- Impact: Database unavailability = full system down. No read scaling. Schema migrations require downtime.
+- Fix approach: Add read replicas. Implement connection pooling. Plan for managed RDS.
 
-**Current state:** No explicit connection pool configuration
-- Files: `src/lib/db.ts` (not examined but typically uses Prisma default)
-- Limit: Default Prisma pool ~10 connections; exhausted under heavy load
-- Scaling path: Configure `prisma.schema` with `connectionLimit`, `idleTimeout` parameters
+**No caching layer for repeated queries:**
+- Issue: No Redis or in-memory cache. Every dashboard load queries full dataset.
+- Files: No cache layer in architecture
+- Impact: Database load increases linearly with concurrent users. Reports slow down.
+- Fix approach: Add Redis for session, cache, and query results. Implement cache invalidation on writes.
 
-### Large File Handling
+**Evolution API instance single point of failure:**
+- Issue: Single Evolution API instance. If down, all WhatsApp features fail.
+- Files: `deploy/bfx/evolution-api.yaml`, `src/lib/evolution.ts`
+- Impact: WhatsApp integrations unavailable during Evolution maintenance. No failover.
+- Fix approach: Deploy multiple instances. Load balance. Implement queue-based async sending.
 
-**Current state:** Files written synchronously to local filesystem
-- Files: `src/app/api/produtos/upload/route.ts`, `src/app/api/upload-logo/route.ts`
-- Limit: Single server can't handle parallel uploads; disk I/O blocks requests
-- Scaling path: Migrate to S3/cloud storage; implement async upload with job queue
+## Audit & Compliance
 
-### Dashboard Query Performance
+**Audit log missing critical info:**
+- Issue: `AuditLog.usuario` stored as text without FK. Cannot trace actions to actual Usuario records.
+- Files: `prisma/schema.prisma` (line 225)
+- Impact: Audit trail not forensically sound. Cannot prove who made changes. Compliance audit failures.
+- Fix approach: Add FK to Usuario. Add usuarioId integer field. Log both action type (create/update/delete) and old/new values.
 
-**Current state:** Dashboard loads 6+ months of sales data in memory
-- Files: `src/app/(app)/dashboard/page.tsx` (line 92-102)
-- Limit: >100K records causes OOM; page load >5 seconds
-- Scaling path: Implement time-series aggregation in database; use materialized views or cache
+**No data retention policy:**
+- Issue: No automatic deletion of old audit logs, AI conversation history, or temporary documents
+- Files: No cron job for cleanup
+- Impact: Database grows unbounded. GDPR right-to-be-forgotten not implemented. Storage costs escalate.
+- Fix approach: Add retention policies to Config. Implement cron jobs for purge. Add GDPR data export/deletion endpoints.
 
-## Dependencies at Risk
+## Dependency Risks
 
-### AI SDK Pinning
+**Outdated or risky dependencies:**
+- Issue: Some dependencies may have known vulnerabilities (requires audit)
+- Files: `package.json`
+- Impact: Security vulnerabilities in transitive dependencies. Supply chain risk.
+- Fix approach: Run `npm audit`. Add Dependabot or similar. Pin patch versions. Automated security scanning in CI.
 
-**Risk:** `@ai-sdk/openai`, `@ai-sdk/google`, `ai` packages update frequently
-- Impact: Breaking API changes; new OpenAI API versions not supported
-- Migration plan: Pin major versions; test new releases in staging before updating
-
-### Prisma Version Gap
-
-**Risk:** `@prisma/client@6.5.0` is recent; upgrade path unclear
-- Impact: Bug fixes may require schema changes; migration failures possible
-- Migration plan: Monitor release notes; test migrations in dev first
-
-### Deprecated shadcn Component Versions
-
-**Risk:** Some shadcn/ui components may have breaking changes
-- Impact: Component API changes break existing usage
-- Workaround: Pin shadcn versions; create wrapper components for stability
+**Pinned image tags in production:**
+- Issue: Kubernetes manifests use specific image tags (correct practice) but Dockerfile/build process unclear
+- Files: `deploy/bfx/app.yaml`, `deploy/bfx/kustomization.yaml`
+- Impact: If build fails, no rollback option. Unknown base image origins.
+- Fix approach: Document build/push process. Use semantic versioning. Store build metadata (commit SHA, build timestamp).
 
 ---
 
-*Concerns audit: 2026-02-19*
+*Concerns audit: 2026-03-30*

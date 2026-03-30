@@ -1,160 +1,142 @@
 # Technology Stack
 
-**Analysis Date:** 2026-02-19
+**Analysis Date:** 2026-03-30
 
 ## Languages
 
 **Primary:**
-- TypeScript 5 - All source code (`src/**/*.ts`, `src/**/*.tsx`)
-- JavaScript - Build config, scripts, and Node scripts
+- TypeScript 5+ - Full codebase (backend API routes, server components, utilities)
+- JavaScript - Build configuration, scripts
 
 **Secondary:**
-- CSS - Styling via Tailwind CSS (defined in component files)
+- SQL - PostgreSQL schema and migrations
+- HTML/CSS - Next.js templates and Tailwind styling
 
 ## Runtime
 
 **Environment:**
-- Node.js 20 (specified in Docker images `node:20-bullseye-slim`)
+- Node.js 20 (Alpine Linux: `node:20-bullseye-slim`)
+- corepack with Yarn enabled in Dockerfile
 
 **Package Manager:**
 - Yarn 1.22.22
-- Lockfile: `.pnp.cjs` and `.pnp.loader.mjs` (Yarn PnP enabled)
+- Lockfile: `yarn.lock` (present)
 
 ## Frameworks
 
 **Core:**
-- Next.js 16.1.6 - Full-stack React framework with App Router
-- React 18.3.1 - UI library
+- Next.js 16.1.6 (App Router) - Full-stack framework with API routes
+- React 18.3.1 - UI components and client-side rendering
+- Tailwind CSS 4.1.18 - Utility-first styling framework
+- Prisma 6.5.0 - ORM for PostgreSQL queries and migrations
 
-**UI Components:**
-- shadcn/ui - Component library (25+ components installed)
-- Radix UI - Headless primitives (`@radix-ui/react-*` 12+ packages)
-- Lucide React 0.563.0 - Icon library
+**Testing:**
+- Not detected in package.json
 
-**Form & Validation:**
-- React Hook Form 7.71.1 - Form state management
-- @hookform/resolvers 5.2.2 - Schema validation bridge
-- Zod 4.3.6 - Schema validation and TypeScript-first validation
+**Build/Dev:**
+- ESLint 9 - Code linting with Next.js config
+- PostCSS 8.5.6 - CSS processing pipeline
+- AutoPrefixer 10.4.24 - CSS vendor prefixes
+- TypeScript 5 - Type checking and compilation
+- ts-node 10.9.2 - TypeScript execution for scripts
+- tsx 4.21.0 - TypeScript executor for Node.js scripts
 
-**Styling:**
-- Tailwind CSS 4.1.18 - Utility-first CSS framework
-- @tailwindcss/postcss 4.1.18 - PostCSS plugin
-- Tailwind Merge 3.4.0 - Utility class conflict resolution
-- Tailwindcss Animate 1.0.7 - Animation utilities
-- tw-animate-css 1.4.0 - Additional animations
+**UI Component Library:**
+- shadcn/ui (3.8.2) - Radix UI-based component library
+- Radix UI primitives (multiple packages) - Accessible component foundation
+- class-variance-authority 0.7.1 - Component variant system
 
-**Date & Time:**
-- date-fns 4.1.0 - Date manipulation and formatting
+## Key Dependencies
 
-**Charts & Visualization:**
-- Recharts 3.7.0 - React charting library
+**Critical:**
+- `@prisma/client` 6.5.0 - Database client and query engine
+- `ai` 6.0.69 - Vercel AI SDK for LLM integration and tool definitions
 
-**AI & ML:**
-- ai 6.0.69 - Vercel AI SDK
-- @ai-sdk/openai 3.0.25 - OpenAI integration
-- @ai-sdk/google 3.0.20 - Google Generative AI integration
-- openai 4.91.0 - Direct OpenAI SDK
-- @google/generative-ai 0.21.0 - Google Generative AI SDK
-- @google/genai 0.7.0 - Alternative Google AI SDK
+**AI/LLM Providers:**
+- `@ai-sdk/google` 3.0.20 - Google Generative AI (Gemini) adapter
+- `@ai-sdk/openai` 3.0.25 - OpenAI GPT models adapter
+- `@google/generative-ai` 0.21.0 - Google Generative AI SDK
+- `openai` 6.22.0 - OpenAI official client
 
-**Database:**
-- @prisma/client 6.5.0 - Database ORM/query builder
+**Infrastructure & Storage:**
+- `@aws-sdk/client-s3` 3.998.0 - S3/MinIO client for product image uploads
+- `jose` 6.1.3 - JWT encoding/decoding for sessions
 
-**Utilities:**
-- uuid 10.0.0 - UUID generation (v10.0.0)
-- class-variance-authority 0.7.1 - Variant pattern for components
-- clsx 2.1.1 - Conditional className helper
-- papaparse 5.5.3 - CSV parsing
-- pdf-lib 1.17.1 - PDF generation
-- nuqs 2.8.8 - URL query state management
-- next-themes 0.4.6 - Dark mode theme provider
-- jose 6.1.3 - JWT handling
+**Forms & Validation:**
+- `react-hook-form` 7.71.1 - Form state management
+- `@hookform/resolvers` 5.2.2 - Form validation schema resolvers
+- `zod` 4.3.6 - TypeScript-first schema validation
 
-**Dev & Build Tools:**
-- Prisma 6.5.0 - Database toolkit and migration CLI
-- TypeScript 5 - Type checking
-- ESLint 9 - Linting (`eslint-config-next 16.1.6`)
-- Autoprefixer 10.4.24 - CSS vendor prefix auto-add
-- PostCSS 8.5.6 - CSS transformation
-- shadcn (CLI) 3.8.2 - Component scaffolding
-- ts-node 10.9.2 - TypeScript execution
-- tsx 4.21.0 - TypeScript execution
-- cross-env 7.0.3 - Cross-platform env variable setting
-- better-sqlite3 12.6.2 - SQLite database (optional)
+**UI & Interaction:**
+- `lucide-react` 0.563.0 - Icon library
+- `sonner` 2.0.7 - Toast notifications
+- `react-markdown` 10.1.0 - Markdown rendering
+- `react-day-picker` 9.13.2 - Date picker component
+- `recharts` 3.7.0 - Charting library
+- `cmdk` 1.1.1 - Command palette component
+- `nuqs` 2.8.8 - Next.js URL search params management
+- `next-themes` 0.4.6 - Dark mode theme management
+
+**Document Generation:**
+- `pdf-lib` 1.17.1 - PDF creation and manipulation
+- `react-signature-canvas` 1.1.0-alpha.2 - Digital signature capture
+
+**Data Handling:**
+- `papaparse` 5.5.3 - CSV parsing
+- `date-fns` 4.1.0 - Date utilities
+- `uuid` 10.0.0 - UUID generation
+- `tailwind-merge` 3.4.0 - Merge Tailwind class names
+- `clsx` 2.1.1 - Conditional class composition
+
+**Development Only:**
+- `better-sqlite3` 12.6.2 - SQLite for data import scripts
+- `cross-env` 7.0.3 - Cross-platform environment variables
+- `shadcn` 3.8.2 - Component CLI
+- `@tailwindcss/postcss` 4.1.18 - Tailwind CSS processing
 
 ## Configuration
 
 **Environment:**
-- Environment variables defined via `.env` file
-- Example provided in `.env.example`:
-  - `DATABASE_URL` - PostgreSQL connection string
-  - `SESSION_SECRET` - JWT session signing key
-  - `NEXT_PUBLIC_APP_URL` - Public application URL
+
+Environment variables are loaded from `.env` or `.env.local` (Next.js standard priority). See `.env.example` for all options:
+
+- `.env` - Local environment (git-ignored)
+- `.env.example` - Template with documented variables (committed)
 
 **Build:**
-- `next.config.ts` - Next.js configuration (standalone output mode)
-- `tsconfig.json` - TypeScript compiler configuration with `@/*` path alias
-- `tailwind.config.ts` - Tailwind CSS configuration (dark mode via class)
-- `eslint.config.mjs` - ESLint configuration with Next.js best practices
-- `postcss.config.js` - PostCSS plugins
-- `prisma/schema.prisma` - Database schema definition
-- `components.json` - shadcn/ui component configuration
+
+Build configuration files:
+- `next.config.ts` - Next.js configuration (output: standalone, image patterns for MinIO/S3)
+- `tailwind.config.ts` - Tailwind CSS configuration
+- `tsconfig.json` - TypeScript compiler options (ES2017 target, path alias `@/*` → `./src/*`)
+- `postcss.config.js` - PostCSS pipeline (Tailwind processing)
+- `eslint.config.mjs` - ESLint linting rules (Next.js preset)
+- `prisma.config.ts` - Prisma configuration (if custom)
 
 ## Platform Requirements
 
 **Development:**
 - Node.js 20+
-- Yarn 1.22.22
-- PostgreSQL 16+ (in Docker: `postgres:16-alpine`)
-- Optional: SQLite (via better-sqlite3)
+- Yarn package manager
+- PostgreSQL 16+ (or Docker PostgreSQL service)
+- Optional: MinIO or S3-compatible storage (for product images)
+- Optional: Evolution API server (for WhatsApp integration)
+- Optional: Asaas account (for payment gateway)
+- Optional: Google Generative AI / OpenAI API keys (for AI features)
 
 **Production:**
-- Node.js 20
-- PostgreSQL 16+
-- 3000 port exposure (configurable via `PORT` env var)
-- 512MB+ RAM recommended (Next.js + Prisma)
+- Container deployment (Docker image built with multi-stage Dockerfile)
+- PostgreSQL 16+ database (persistent StatefulSet in Kubernetes)
+- Optional: MinIO or S3-compatible storage
+- Optional: Evolution API server
+- Kubernetes 1.20+ (with ArgoCD for GitOps deployments)
+- `microk8s-hostpath` storage class (or equivalent persistent volume provider)
 
-## Docker Support
-
-**Development:**
-- `Dockerfile.dev` - Development image with hot reload
-- Multi-stage build for dependencies isolation
-- Volume mounts for live code changes
-
-**Production:**
-- `Dockerfile` - Multi-stage production build (deps → builder → runner)
-- Standalone mode enabled for smaller production footprint
-- Automatic database migrations on startup
-
-**Compose:**
-- `docker-compose.yml` - PostgreSQL (port 5432) + Next.js app (port 3000)
-- Named volume `bfx_pg` for persistent data
-
-## Key Dependencies Summary
-
-| Category | Package | Version | Purpose |
-|----------|---------|---------|---------|
-| **Web Framework** | Next.js | 16.1.6 | Full-stack React framework |
-| **UI Library** | React | 18.3.1 | Component library |
-| **Form Validation** | React Hook Form + Zod | 7.71.1 + 4.3.6 | Form state + validation |
-| **Database** | Prisma | 6.5.0 | ORM and migrations |
-| **Database Engine** | PostgreSQL | 16 | Primary database |
-| **AI/LLM** | @ai-sdk (OpenAI + Google) | 3.0+ | LLM integration |
-| **Styling** | Tailwind CSS | 4.1.18 | Utility CSS framework |
-| **Components** | shadcn/ui + Radix | Latest | Accessible component library |
-| **Authentication** | jose + next cookies | 6.1.3 | JWT session management |
-
-## Build Output
-
-- **Bundle Target:** ES2017
-- **Module Resolution:** Bundler mode (ESM)
-- **Output Mode:** Next.js standalone (no Node.js server required in production)
-- **Turbopack:** Disabled in production (`NEXT_DISABLE_TURBOPACK=1`)
-
-## Telemetry
-
-- Next.js telemetry disabled (`NEXT_TELEMETRY_DISABLED=1`)
+**Deployment Target:**
+- Docker containers (ECR-ready, built via Dockerfile)
+- Kubernetes clusters (manifests in `deploy/bfx/`)
+- ArgoCD for continuous deployment (Application resources in `deploy/bfx/`)
 
 ---
 
-*Stack analysis: 2026-02-19*
+*Stack analysis: 2026-03-30*
