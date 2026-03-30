@@ -53,8 +53,8 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 
 ### Cobertura de Testes
 
-- [ ] **INF-TEST-01**: vitest configurado com alias @ e script test no package.json
-- [ ] **INF-TEST-02**: Testes unitarios cobrem logica critica (asaas config, session secret, recibo url, guards, env validation)
+- [x] **INF-TEST-01**: vitest configurado com alias @ e script test no package.json
+- [x] **INF-TEST-02**: Testes unitarios cobrem logica critica (asaas config, session secret, recibo url, guards, env validation)
 
 ## v2 Requirements
 
@@ -104,8 +104,8 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 | INF-ASAAS-02 | Phase 4 — Infra e Qualidade | Complete |
 | INF-IA-01 | Phase 4 — Infra e Qualidade | Complete |
 | INF-IA-02 | Phase 4 — Infra e Qualidade | Complete |
-| INF-TEST-01 | Phase 4 — Infra e Qualidade | Pending |
-| INF-TEST-02 | Phase 4 — Infra e Qualidade | Pending |
+| INF-TEST-01 | Phase 4 — Infra e Qualidade | Complete |
+| INF-TEST-02 | Phase 4 — Infra e Qualidade | Complete |
 
 **Coverage:**
 - v1 requirements: 13 total

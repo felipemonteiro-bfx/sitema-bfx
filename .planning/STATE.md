@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-melhorias-infra-02-PLAN.md
-last_updated: "2026-03-30T17:29:33.682Z"
+stopped_at: Completed 04-melhorias-infra-04-PLAN.md
+last_updated: "2026-03-30T17:35:46.381Z"
 last_activity: "2026-03-24 - Completed quick task 260324-eey: sistema de assinatura de recibo com link"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 04-melhorias-infra P03 | 1 | 2 tasks | 3 files |
 | Phase 04-melhorias-infra P01 | 1m | 2 tasks | 5 files |
+| Phase 04-melhorias-infra P04 | 12 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,8 @@ Recent decisions affecting current work:
 - [Phase 04-01]: Fail-fast no nivel de modulo em producao para SESSION_SECRET (lanca em import-time, nao request-time)
 - [Phase 04-melhorias-infra]: Deteccao de duplicata Asaas usa two-layer check: error code + substrings (backward compat)
 - [Phase 04-melhorias-infra]: installmentValue calculado automaticamente (totalValue/installmentCount) com suporte a valor explicito via ?? operator
+- [Phase 04-melhorias-infra]: env-validation tests use await import() rejects pattern because env.ts runs validateEnv() at module scope
+- [Phase 04-melhorias-infra]: session-secret test mocks next/headers to keep unit tests in pure Node.js without cookie dependency
 
 ### Roadmap Evolution
 
@@ -107,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T17:29:33.679Z
-Stopped at: Completed 04-melhorias-infra-02-PLAN.md
+Last session: 2026-03-30T17:35:46.379Z
+Stopped at: Completed 04-melhorias-infra-04-PLAN.md
 Resume file: None
