@@ -140,13 +140,23 @@ async function asaasFetch<T>(
   const data = (await res.json().catch(() => ({}))) as T & AsaasErrorResponse;
 
   if (!res.ok) {
-    const msg =
-      (data as AsaasErrorResponse).errors?.[0]?.description ||
-      `Asaas API error: ${res.status}`;
+    const firstError = (data as AsaasErrorResponse).errors?.[0];
+    const code = firstError?.code || "";
+    const desc = firstError?.description || "";
+    const msg = code ? `[${code}] ${desc}` : desc || `Asaas API error: ${res.status}`;
     throw new Error(msg);
   }
 
   return data as T;
+}
+
+/** Extrai o code do primeiro erro Asaas de uma mensagem de Error. */
+function isAsaasDuplicateError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const message = err.message.toLowerCase();
+  // Substrings conhecidas de erro de duplicata (pt-BR e en)
+  const duplicateSubstrings = ["invalid", "ja", "already", "duplicate", "ja cadastrado", "cpf_cnpj_already_in_use"];
+  return duplicateSubstrings.some((s) => message.includes(s));
 }
 
 /**
@@ -187,9 +197,8 @@ export async function getOrCreateCustomer(
     });
     return customerId;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     // Cliente já existe com esse CPF/CNPJ: tentar listar e usar o primeiro
-    if (message.includes("invalid") || message.includes("já") || message.includes("already") || message.includes("duplicate")) {
+    if (isAsaasDuplicateError(err)) {
       const list = await asaasFetch<AsaasCustomersListResponse>(
         config,
         `/v3/customers?cpfCnpj=${encodeURIComponent(cpfCnpj)}`
