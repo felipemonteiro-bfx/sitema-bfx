@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { X, Package, AlertTriangle } from "lucide-react";
+import { X, Package, AlertTriangle, Plus } from "lucide-react";
 import { formatBRL, cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/currency-input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { CadastrarProdutoRapidoDialog } from "@/components/cadastrar-produto-rapido-dialog";
 
 interface ProdutoItem {
   id: string; // ID temporário para o frontend
@@ -38,7 +39,11 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     qtdEstoque?: number | null;
   }[]>([]);
   const [estoqueDisponivel, setEstoqueDisponivel] = useState<number | null>(null);
+  const [cadastrarOpen, setCadastrarOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const showDropdown = isSearching && produtoQuery.length >= 2;
 
   // Autocomplete de produtos
   useEffect(() => {
@@ -74,6 +79,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
   }) => {
     setProdutoQuery(p.nome);
     setProdutoSuggestions([]);
+    setIsSearching(false);
     setEstoqueDisponivel(p.qtdEstoque ?? null);
 
     const newItem: ProdutoItem = {
@@ -112,7 +118,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
       variant="elevated"
       className={cn(
         "relative overflow-visible border-primary/20 transition-all hover:border-primary/40",
-        produtoSuggestions.length > 0 && "z-10",
+        (produtoSuggestions.length > 0 || showDropdown) && "z-10",
         hasError && "border-destructive border-2",
       )}
     >
@@ -181,13 +187,14 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               onChange={(e) => {
                 setProdutoQuery(e.target.value);
                 setEstoqueDisponivel(null);
+                setIsSearching(true);
               }}
               placeholder="Digite o nome do produto"
               required
               className={hasError ? "border-destructive border-2" : ""}
             />
-            {produtoSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto">
+            {showDropdown && (produtoSuggestions.length > 0 || true) && (
+              <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
                 {produtoSuggestions.map((p) => (
                   <button
                     key={p.id}
@@ -219,8 +226,31 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                     )}
                   </button>
                 ))}
+                {produtoSuggestions.length === 0 && (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    Nenhum produto encontrado
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProdutoSuggestions([]);
+                    setIsSearching(false);
+                    setCadastrarOpen(true);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-primary/10 transition-colors cursor-pointer text-sm border-t border-border flex items-center gap-2 text-primary font-medium"
+                >
+                  <Plus className="h-3.5 w-3.5 shrink-0" />
+                  Cadastrar &ldquo;{produtoQuery}&rdquo;
+                </button>
               </div>
             )}
+            <CadastrarProdutoRapidoDialog
+              open={cadastrarOpen}
+              onOpenChange={setCadastrarOpen}
+              nomeInicial={produtoQuery}
+              onCriado={(p) => handleProdutoSelect({ nome: p.nome, valorVenda: p.valorVenda, custoPadrao: p.custoPadrao, qtdEstoque: p.qtdEstoque })}
+            />
           </div>
 
           {/* Custo */}
