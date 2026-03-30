@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret");
+const rawSecret = process.env.SESSION_SECRET;
+if (process.env.NODE_ENV === "production" && (!rawSecret || rawSecret === "dev-secret")) {
+  throw new Error("SESSION_SECRET nao configurado em producao.");
+}
+const secret = new TextEncoder().encode(rawSecret || "dev-secret");
 
 /**
  * Rotas de API que não exigem autenticação

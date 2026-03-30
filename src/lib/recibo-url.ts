@@ -1,6 +1,10 @@
 import { createHmac } from "crypto";
 
-const SECRET = process.env.SESSION_SECRET || "dev-secret";
+const rawSecret = process.env.SESSION_SECRET;
+if (process.env.NODE_ENV === "production" && (!rawSecret || rawSecret === "dev-secret")) {
+  throw new Error("SESSION_SECRET nao configurado em producao.");
+}
+const SECRET = rawSecret || "dev-secret";
 
 /**
  * Gera assinatura HMAC-SHA256 para link de recibo público.
