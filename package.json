@@ -8,6 +8,8 @@
     "build": "cross-env NODE_ENV=production NEXT_DISABLE_TURBOPACK=1 next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run --reporter=verbose",
+    "test:watch": "vitest --reporter=verbose",
     "db:start": "docker compose up -d db",
     "db:migrate": "npx prisma migrate deploy",
     "db:seed": "npx prisma db seed",
@@ -94,7 +96,8 @@
     "tailwindcss": "^4.1.18",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.2"
   },
   "packageManager": "yarn@1.22.22",
   "prisma": {
