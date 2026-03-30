@@ -43,8 +43,8 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 
 ### Integracao Asaas
 
-- [ ] **INF-ASAAS-01**: Deteccao de cliente duplicado usa campo code do erro Asaas (nao apenas substring na description)
-- [ ] **INF-ASAAS-02**: Parcelamento envia installmentValue calculado para Asaas v3
+- [x] **INF-ASAAS-01**: Deteccao de cliente duplicado usa campo code do erro Asaas (nao apenas substring na description)
+- [x] **INF-ASAAS-02**: Parcelamento envia installmentValue calculado para Asaas v3
 
 ### IA em Producao
 
@@ -100,8 +100,8 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 | INF-SEC-02 | Phase 4 — Infra e Qualidade | Pending |
 | INF-SEC-03 | Phase 4 — Infra e Qualidade | Pending |
 | INF-SEC-04 | Phase 4 — Infra e Qualidade | Pending |
-| INF-ASAAS-01 | Phase 4 — Infra e Qualidade | Pending |
-| INF-ASAAS-02 | Phase 4 — Infra e Qualidade | Pending |
+| INF-ASAAS-01 | Phase 4 — Infra e Qualidade | Complete |
+| INF-ASAAS-02 | Phase 4 — Infra e Qualidade | Complete |
 | INF-IA-01 | Phase 4 — Infra e Qualidade | Complete |
 | INF-IA-02 | Phase 4 — Infra e Qualidade | Complete |
 | INF-TEST-01 | Phase 4 — Infra e Qualidade | Pending |
