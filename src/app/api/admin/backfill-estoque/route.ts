@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/session";
 
 type BackfillEntry = {
   produtoNome: string;
@@ -23,6 +24,10 @@ async function getVendidos(): Promise<BackfillEntry[]> {
 }
 
 export async function GET() {
+  const session = await getSession();
+  if (!session || session.role !== "admin") {
+    return NextResponse.json({ error: "Nao autorizado. Requer perfil admin." }, { status: 401 });
+  }
   try {
     const vendidos = await getVendidos();
 
@@ -46,6 +51,10 @@ export async function GET() {
 }
 
 export async function POST() {
+  const session = await getSession();
+  if (!session || session.role !== "admin") {
+    return NextResponse.json({ error: "Nao autorizado. Requer perfil admin." }, { status: 401 });
+  }
   try {
     const vendidos = await getVendidos();
 
