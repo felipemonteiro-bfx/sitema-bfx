@@ -48,8 +48,8 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 
 ### IA em Producao
 
-- [ ] **INF-IA-01**: Env vars obrigatorias validadas com zod no startup (fail-fast se ausentes)
-- [ ] **INF-IA-02**: .env.example documenta todas as variaveis incluindo LiteLLM
+- [x] **INF-IA-01**: Env vars obrigatorias validadas com zod no startup (fail-fast se ausentes)
+- [x] **INF-IA-02**: .env.example documenta todas as variaveis incluindo LiteLLM
 
 ### Cobertura de Testes
 
@@ -102,8 +102,8 @@ Melhorias no PDV (Venda Rapida) para suporte completo a vendas complexas.
 | INF-SEC-04 | Phase 4 — Infra e Qualidade | Pending |
 | INF-ASAAS-01 | Phase 4 — Infra e Qualidade | Pending |
 | INF-ASAAS-02 | Phase 4 — Infra e Qualidade | Pending |
-| INF-IA-01 | Phase 4 — Infra e Qualidade | Pending |
-| INF-IA-02 | Phase 4 — Infra e Qualidade | Pending |
+| INF-IA-01 | Phase 4 — Infra e Qualidade | Complete |
+| INF-IA-02 | Phase 4 — Infra e Qualidade | Complete |
 | INF-TEST-01 | Phase 4 — Infra e Qualidade | Pending |
 | INF-TEST-02 | Phase 4 — Infra e Qualidade | Pending |
 

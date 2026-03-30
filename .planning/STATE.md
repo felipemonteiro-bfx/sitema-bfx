@@ -3,10 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: "Completed quick task 260324-eey: sistema de assinatura de recibo com link"
-last_updated: "2026-03-24T18:22:03.393Z"
-last_activity: "2026-03-23 - Completed quick task 260323-kp0: mostrar custo e margem de lucro nas vendas do historico"
+stopped_at: Completed 04-melhorias-infra-01-PLAN.md
+last_updated: "2026-03-30T17:29:15.798Z"
+last_activity: "2026-03-24 - Completed quick task 260324-eey: sistema de assinatura de recibo com link"
 progress:
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 4
+  completed_plans: 3
   percent: 0
 ---
 
@@ -46,6 +50,8 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+| Phase 04-melhorias-infra P03 | 1 | 2 tasks | 3 files |
+| Phase 04-melhorias-infra P01 | 1m | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -58,6 +64,11 @@ Recent decisions affecting current work:
 - Pending: Datas de parcelas manuais com sugestão automática (D+30, D+60...)
 - Pending: Desconto por item em % (flexibilidade para diferentes negócios)
 - [Phase quick-260323-kp0]: Gross margin only (CMV/receita), excludes taxaNota/custoEnvio; returns null when cost data unavailable
+- [Phase 04-melhorias-infra]: SESSION_SECRET requires 32+ chars only in production; bypasses with dev-secret default in dev
+- [Phase 04-melhorias-infra]: SKIP_ENV_VALIDATION env var bypasses zod schema for CI/Docker build scenarios
+- [Phase 04-melhorias-infra]: env.ts wired via db.ts (not middleware.ts) to avoid Edge Runtime incompatibility
+- [Phase 04-01]: Mantida compatibilidade retroativa de requireAdmin() — adicionado requireAdminOrThrow() como alternativa segura
+- [Phase 04-01]: Fail-fast no nivel de modulo em producao para SESSION_SECRET (lanca em import-time, nao request-time)
 
 ### Roadmap Evolution
 
@@ -94,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T18:22:03.392Z
-Stopped at: Completed quick task 260324-eey: sistema de assinatura de recibo com link
+Last session: 2026-03-30T17:29:15.796Z
+Stopped at: Completed 04-melhorias-infra-01-PLAN.md
 Resume file: None
