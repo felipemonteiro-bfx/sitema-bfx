@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 04-melhorias-infra-01-PLAN.md
-last_updated: "2026-03-30T17:29:15.798Z"
+stopped_at: Completed 04-melhorias-infra-02-PLAN.md
+last_updated: "2026-03-30T17:29:33.682Z"
 last_activity: "2026-03-24 - Completed quick task 260324-eey: sistema de assinatura de recibo com link"
 progress:
   total_phases: 4
@@ -69,6 +69,8 @@ Recent decisions affecting current work:
 - [Phase 04-melhorias-infra]: env.ts wired via db.ts (not middleware.ts) to avoid Edge Runtime incompatibility
 - [Phase 04-01]: Mantida compatibilidade retroativa de requireAdmin() — adicionado requireAdminOrThrow() como alternativa segura
 - [Phase 04-01]: Fail-fast no nivel de modulo em producao para SESSION_SECRET (lanca em import-time, nao request-time)
+- [Phase 04-melhorias-infra]: Deteccao de duplicata Asaas usa two-layer check: error code + substrings (backward compat)
+- [Phase 04-melhorias-infra]: installmentValue calculado automaticamente (totalValue/installmentCount) com suporte a valor explicito via ?? operator
 
 ### Roadmap Evolution
 
@@ -105,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T17:29:15.796Z
-Stopped at: Completed 04-melhorias-infra-01-PLAN.md
+Last session: 2026-03-30T17:29:33.679Z
+Stopped at: Completed 04-melhorias-infra-02-PLAN.md
 Resume file: None
