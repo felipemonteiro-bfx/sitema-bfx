@@ -47,6 +47,7 @@ export type CreateBoletoParams = {
   dueDate: string; // YYYY-MM-DD
   installmentCount?: number;
   totalValue?: number;
+  installmentValue?: number;
   description?: string;
   externalReference?: string;
 };
@@ -239,7 +240,11 @@ export async function createBoletoPayment(
 
   if (params.installmentCount != null && params.installmentCount > 1) {
     body.installmentCount = params.installmentCount;
-    if (params.totalValue != null) body.totalValue = params.totalValue;
+    if (params.totalValue != null) {
+      body.totalValue = params.totalValue;
+      // Asaas v3 pode exigir installmentValue; calcular a partir do total
+      body.installmentValue = params.installmentValue ?? Math.round((params.totalValue / params.installmentCount) * 100) / 100;
+    }
   }
 
   const res = await asaasFetch<AsaasPaymentResponse>(config, "/v3/payments", {
