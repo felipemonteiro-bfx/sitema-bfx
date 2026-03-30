@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const isProduction = process.env.NODE_ENV === "production";
-const skipValidation = process.env.SKIP_ENV_VALIDATION === "true";
+const skipValidation = !!process.env.SKIP_ENV_VALIDATION;
 
 const envSchema = z.object({
   // Obrigatorias
