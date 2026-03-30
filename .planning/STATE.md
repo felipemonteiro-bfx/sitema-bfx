@@ -59,6 +59,10 @@ Recent decisions affecting current work:
 - Pending: Desconto por item em % (flexibilidade para diferentes negócios)
 - [Phase quick-260323-kp0]: Gross margin only (CMV/receita), excludes taxaNota/custoEnvio; returns null when cost data unavailable
 
+### Roadmap Evolution
+
+- Phase 4 added: Melhorias de infraestrutura e qualidade do sistema (Asaas, IA, segurança, testes)
+
 ### Pending Todos
 
 None yet.

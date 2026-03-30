@@ -58,3 +58,13 @@ Phases execute in order: 1 → 2 → 3
 | 1. Multi-Produto | 0/1 | In progress | - |
 | 2. Descontos e Parcelamento | 0/? | Not started | - |
 | 3. Busca Rápida de Cliente | 0/? | Not started | - |
+
+### Phase 4: Melhorias de infraestrutura e qualidade do sistema: corrigir integracao Asaas, configurar IA em producao, seguranca e secrets, cobertura de testes
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 4 to break down)
