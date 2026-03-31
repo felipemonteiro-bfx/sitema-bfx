@@ -716,16 +716,18 @@ export default function VendaRapidaFormV2({
                     key={c.id}
                     type="button"
                     onClick={() => {
-                      setSelectedCliente({
-                        id: c.id,
-                        nome: c.nome,
-                        endereco: c.endereco,
-                        cep: c.cep,
-                        telefone: c.telefone,
-                        cpf: c.cpf,
-                        cnpj: c.cnpj,
+                      void setFormState({
+                        selectedCliente: {
+                          id: c.id,
+                          nome: c.nome,
+                          endereco: c.endereco,
+                          cep: c.cep,
+                          telefone: c.telefone,
+                          cpf: c.cpf,
+                          cnpj: c.cnpj,
+                        },
+                        clienteQuery: c.nome,
                       });
-                      setClienteQuery(c.nome);
                       setClienteSuggestions([]);
                       setProdutoParaSugestoes(null);
                     }}
@@ -934,8 +936,7 @@ export default function VendaRapidaFormV2({
                 checked={descontoEmFolha}
                 onCheckedChange={(checked) => {
                   if (checked === true) {
-                    setDescontoEmFolha(true);
-                    setBoleto(false);
+                    void setFormState({ descontoEmFolha: true, boleto: false });
                   } else {
                     setDescontoEmFolha(false);
                   }
@@ -948,8 +949,7 @@ export default function VendaRapidaFormV2({
                 checked={boleto}
                 onCheckedChange={(checked) => {
                   if (checked === true) {
-                    setBoleto(true);
-                    setDescontoEmFolha(false);
+                    void setFormState({ boleto: true, descontoEmFolha: false });
                   } else {
                     setBoleto(false);
                   }
