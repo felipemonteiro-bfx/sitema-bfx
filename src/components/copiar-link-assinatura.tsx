@@ -6,7 +6,7 @@ import { Copy, Check, Link2 } from 'lucide-react';
 export function CopiarLinkAssinatura({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
 
-  const url = `${window.location.origin}/assinatura/${token}`;
+  const url = `${typeof window !== "undefined" ? window.location.origin : ""}/assinatura/${token}`;
 
   const handleCopy = async () => {
     try {
