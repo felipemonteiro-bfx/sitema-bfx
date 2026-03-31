@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         vendedor: true,
         valorVenda: true,
         quantidade: true,
-        valorFrete: true,
+        valorFrete: true, desconto: true,
         itens: { select: { subtotal: true } },
       },
     });

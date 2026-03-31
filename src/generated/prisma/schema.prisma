@@ -25,7 +25,6 @@ model Cliente {
   asaasCustomerId     String?   @map("asaas_customer_id")
   atendimentoHumanoAt DateTime? @map("atendimento_humano_at")
   vendas              Venda[]
-  whatsappLogs        WhatsAppEnvioLog[]
 
   @@map("clientes")
 }
@@ -43,7 +42,6 @@ model Produto {
   valorVenda   Float?      @default(0) @map("valor_venda")
   dataCompra   DateTime?   @map("data_compra")
   fornecedor   Fornecedor? @relation(fields: [fornecedorId], references: [id])
-  itensVenda   ItemVenda[]
 
   @@unique([nome, fornecedorId])
   @@map("produtos")
@@ -54,7 +52,6 @@ model Venda {
   uuid      String?  @unique @db.Uuid
   dataVenda DateTime @map("data_venda")
   vendedor  String?
-  vendedorId Int?    @map("vendedor_id")
   clienteId Int?     @map("cliente_id")
 
   // DEPRECATED: Campos mantidos para compatibilidade com vendas antigas
@@ -75,6 +72,7 @@ model Venda {
   temNota             Boolean @default(false) @map("tem_nota")
   taxaNota            Float?  @default(5.97) @map("taxa_nota")
   descontoEmFolha     Boolean @default(false) @map("desconto_em_folha")
+  desconto            Float?  @default(0) @map("desconto")
   boleto              Boolean @default(false) @map("boleto")
   status              String  @default("ativa") @map("status") // "ativa" | "cancelada" | "estornada"
   asaasPaymentId      String? @map("asaas_payment_id")
@@ -83,7 +81,6 @@ model Venda {
 
   // Relacionamentos
   cliente            Cliente?            @relation(fields: [clienteId], references: [id])
-  vendedorUsuario    Usuario?            @relation("VendasVendedor", fields: [vendedorId], references: [id], onDelete: SetNull)
   itens              ItemVenda[]
   parcelasVencimento ParcelaVencimento[]
   documentos         Documento[]
@@ -112,17 +109,14 @@ model ItemVenda {
   id           Int    @id @default(autoincrement())
   vendaId      Int    @map("venda_id")
   produtoNome  String @map("produto_nome")
-  produtoId    Int?   @map("produto_id")
   custoProduto Float  @map("custo_produto")
   valorVenda   Float  @map("valor_venda")
   quantidade   Int    @default(1)
   subtotal     Float // quantidade * valorVenda
 
-  venda   Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
-  produto Produto? @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+  venda Venda @relation(fields: [vendaId], references: [id], onDelete: Cascade)
 
   @@index([vendaId])
-  @@index([produtoId])
   @@map("itens_venda")
 }
 
@@ -190,8 +184,6 @@ model Usuario {
   cep            String?
   metaMensal     Float?    @default(50000.0) @map("meta_mensal")
   comissaoPct    Float?    @default(2.0) @map("comissao_pct")
-  vendas         Venda[]   @relation("VendasVendedor")
-  pagamentos     Pagamento[] @relation("PagamentosVendedor")
 
   @@map("usuarios")
 }
@@ -221,11 +213,8 @@ model Pagamento {
   id            Int      @id @default(autoincrement())
   dataPagamento DateTime @map("data_pagamento")
   vendedor      String?
-  vendedorId    Int?     @map("vendedor_id")
   valor         Float?
   obs           String?
-
-  vendedorUsuario Usuario? @relation("PagamentosVendedor", fields: [vendedorId], references: [id], onDelete: SetNull)
 
   @@map("pagamentos")
 }
@@ -266,8 +255,6 @@ model WhatsAppEnvioLog {
   tipo       String // reativacao, aniversario, inadimplencia, nps, boasvindas, agradecimento
   referencia Int? // vendaId quando aplicável
   dataEnvio  DateTime @default(now()) @map("data_envio")
-
-  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 
   @@index([clienteId, tipo])
   @@index([tipo, referencia])

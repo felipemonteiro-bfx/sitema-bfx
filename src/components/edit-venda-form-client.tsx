@@ -37,6 +37,7 @@ type EditVendaData = {
   parcelas: number | null;
   temNota: boolean;
   taxaNota: number;
+  desconto: number;
   descontoEmFolha: boolean;
   boleto: boolean;
   assinaturaToken?: string | null;
@@ -103,10 +104,11 @@ export function EditVendaFormClient({
   );
   const [frete, setFrete] = useState(editVenda.valorFrete ?? 0);
   const [envio, setEnvio] = useState(editVenda.custoEnvio ?? 0);
+  const [descontoValor, setDescontoValor] = useState(editVenda.desconto ?? 0);
   const [loading, setLoading] = useState(false);
 
   const subtotalProdutos = produtos.reduce((s, p) => s + p.subtotal, 0);
-  const totalVenda = subtotalProdutos + frete;
+  const totalVenda = subtotalProdutos + frete - descontoValor;
   const numParcelas = editVenda.parcelas || 1;
   const valorParcela = numParcelas > 0 ? totalVenda / numParcelas : 0;
 
@@ -150,6 +152,7 @@ export function EditVendaFormClient({
     formData.set("produtos", JSON.stringify(produtos));
     formData.set("frete", String(frete));
     formData.set("envio", String(envio));
+    formData.set("desconto", String(descontoValor));
 
     setLoading(true);
     try {
@@ -227,6 +230,10 @@ export function EditVendaFormClient({
           <div className="space-y-1">
             <Label className="text-xs font-medium text-muted-foreground">Custo de envio</Label>
             <CurrencyInput value={envio} onChange={setEnvio} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground">Desconto (R$)</Label>
+            <CurrencyInput value={descontoValor} onChange={setDescontoValor} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs font-medium text-muted-foreground">Parcelas</Label>
@@ -322,6 +329,12 @@ export function EditVendaFormClient({
               <span className="text-muted-foreground">Frete</span>
               <span className="font-semibold">{formatBRL(frete)}</span>
             </div>
+            {descontoValor > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Desconto</span>
+                <span className="font-semibold text-destructive">-{formatBRL(descontoValor)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm font-bold border-t pt-2">
               <span>Total</span>
               <span>{formatBRL(totalVenda)}</span>

@@ -72,6 +72,7 @@ model Venda {
   temNota            Boolean   @default(false) @map("tem_nota")
   taxaNota           Float?    @default(5.97) @map("taxa_nota")
   descontoEmFolha    Boolean   @default(false) @map("desconto_em_folha")
+  desconto           Float?    @default(0) @map("desconto")
   boleto             Boolean   @default(false) @map("boleto")
   status             String    @default("ativa") @map("status") // "ativa" | "cancelada" | "estornada"
   asaasPaymentId     String?   @map("asaas_payment_id")

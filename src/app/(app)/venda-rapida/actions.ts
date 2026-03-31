@@ -105,6 +105,7 @@ export async function criarVendaV2(
       taxaNota: Number(formData.get("taxaNota") || 5.97),
       produtos,
       parcelasVencimento: parcelasVencimento.length > 0 ? parcelasVencimento : undefined,
+      desconto: Number(formData.get("desconto") || 0),
       descontoEmFolha: formData.get("descontoEmFolha") === "true",
       boleto: formData.get("boleto") === "true",
     };
@@ -117,6 +118,7 @@ export async function criarVendaV2(
     }
 
     const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
+    const desconto = parsed.data.desconto ?? 0;
     // Apenas um: desconto em folha ou boleto (nunca os dois)
     const descontoEmFolha = parsed.data.descontoEmFolha ?? false;
     let boleto = parsed.data.boleto ?? false;
@@ -124,7 +126,7 @@ export async function criarVendaV2(
 
     // Cálculos totais
     const subtotalProdutos = produtosValidados.reduce((sum, p) => sum + p.subtotal, 0);
-    const totalVenda = subtotalProdutos + frete;
+    const totalVenda = subtotalProdutos + frete - desconto;
     const valorDescontoNota = temNota ? (subtotalProdutos * taxaNota) / 100 : 0;
     const custoTotal =
       produtosValidados.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0) + envio + valorDescontoNota;
@@ -156,6 +158,7 @@ export async function criarVendaV2(
           excedeuLimite: formData.get("excedeuLimite") === "1" ? 1 : 0,
           temNota,
           taxaNota,
+          desconto,
           descontoEmFolha: descontoEmFolha ?? false,
           boleto: boleto ?? false,
           assinaturaToken: assinaturaToken ?? undefined,

@@ -5170,6 +5170,7 @@ export namespace Prisma {
     antecipada: number | null
     excedeuLimite: number | null
     taxaNota: number | null
+    desconto: number | null
   }
 
   export type VendaSumAggregateOutputType = {
@@ -5187,6 +5188,7 @@ export namespace Prisma {
     antecipada: number | null
     excedeuLimite: number | null
     taxaNota: number | null
+    desconto: number | null
   }
 
   export type VendaMinAggregateOutputType = {
@@ -5210,6 +5212,7 @@ export namespace Prisma {
     temNota: boolean | null
     taxaNota: number | null
     descontoEmFolha: boolean | null
+    desconto: number | null
     boleto: boolean | null
     status: string | null
     asaasPaymentId: string | null
@@ -5238,6 +5241,7 @@ export namespace Prisma {
     temNota: boolean | null
     taxaNota: number | null
     descontoEmFolha: boolean | null
+    desconto: number | null
     boleto: boolean | null
     status: string | null
     asaasPaymentId: string | null
@@ -5266,6 +5270,7 @@ export namespace Prisma {
     temNota: number
     taxaNota: number
     descontoEmFolha: number
+    desconto: number
     boleto: number
     status: number
     asaasPaymentId: number
@@ -5290,6 +5295,7 @@ export namespace Prisma {
     antecipada?: true
     excedeuLimite?: true
     taxaNota?: true
+    desconto?: true
   }
 
   export type VendaSumAggregateInputType = {
@@ -5307,6 +5313,7 @@ export namespace Prisma {
     antecipada?: true
     excedeuLimite?: true
     taxaNota?: true
+    desconto?: true
   }
 
   export type VendaMinAggregateInputType = {
@@ -5330,6 +5337,7 @@ export namespace Prisma {
     temNota?: true
     taxaNota?: true
     descontoEmFolha?: true
+    desconto?: true
     boleto?: true
     status?: true
     asaasPaymentId?: true
@@ -5358,6 +5366,7 @@ export namespace Prisma {
     temNota?: true
     taxaNota?: true
     descontoEmFolha?: true
+    desconto?: true
     boleto?: true
     status?: true
     asaasPaymentId?: true
@@ -5386,6 +5395,7 @@ export namespace Prisma {
     temNota?: true
     taxaNota?: true
     descontoEmFolha?: true
+    desconto?: true
     boleto?: true
     status?: true
     asaasPaymentId?: true
@@ -5501,6 +5511,7 @@ export namespace Prisma {
     temNota: boolean
     taxaNota: number | null
     descontoEmFolha: boolean
+    desconto: number | null
     boleto: boolean
     status: string
     asaasPaymentId: string | null
@@ -5548,6 +5559,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: boolean
     descontoEmFolha?: boolean
+    desconto?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
@@ -5582,6 +5594,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: boolean
     descontoEmFolha?: boolean
+    desconto?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
@@ -5611,6 +5624,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: boolean
     descontoEmFolha?: boolean
+    desconto?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
@@ -5640,6 +5654,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: boolean
     descontoEmFolha?: boolean
+    desconto?: boolean
     boleto?: boolean
     status?: boolean
     asaasPaymentId?: boolean
@@ -5647,7 +5662,7 @@ export namespace Prisma {
     assinaturaToken?: boolean
   }
 
-  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "descontoEmFolha" | "boleto" | "status" | "asaasPaymentId" | "boletoUrl" | "assinaturaToken", ExtArgs["result"]["venda"]>
+  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "descontoEmFolha" | "desconto" | "boleto" | "status" | "asaasPaymentId" | "boletoUrl" | "assinaturaToken", ExtArgs["result"]["venda"]>
   export type VendaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
@@ -5693,6 +5708,7 @@ export namespace Prisma {
       temNota: boolean
       taxaNota: number | null
       descontoEmFolha: boolean
+      desconto: number | null
       boleto: boolean
       status: string
       asaasPaymentId: string | null
@@ -6146,6 +6162,7 @@ export namespace Prisma {
     readonly temNota: FieldRef<"Venda", 'Boolean'>
     readonly taxaNota: FieldRef<"Venda", 'Float'>
     readonly descontoEmFolha: FieldRef<"Venda", 'Boolean'>
+    readonly desconto: FieldRef<"Venda", 'Float'>
     readonly boleto: FieldRef<"Venda", 'Boolean'>
     readonly status: FieldRef<"Venda", 'String'>
     readonly asaasPaymentId: FieldRef<"Venda", 'String'>
@@ -25374,6 +25391,7 @@ export namespace Prisma {
     temNota: 'temNota',
     taxaNota: 'taxaNota',
     descontoEmFolha: 'descontoEmFolha',
+    desconto: 'desconto',
     boleto: 'boleto',
     status: 'status',
     asaasPaymentId: 'asaasPaymentId',
@@ -25981,6 +25999,7 @@ export namespace Prisma {
     temNota?: BoolFilter<"Venda"> | boolean
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
+    desconto?: FloatNullableFilter<"Venda"> | number | null
     boleto?: BoolFilter<"Venda"> | boolean
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
@@ -26014,6 +26033,7 @@ export namespace Prisma {
     temNota?: SortOrder
     taxaNota?: SortOrderInput | SortOrder
     descontoEmFolha?: SortOrder
+    desconto?: SortOrderInput | SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
@@ -26051,6 +26071,7 @@ export namespace Prisma {
     temNota?: BoolFilter<"Venda"> | boolean
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
+    desconto?: FloatNullableFilter<"Venda"> | number | null
     boleto?: BoolFilter<"Venda"> | boolean
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
@@ -26083,6 +26104,7 @@ export namespace Prisma {
     temNota?: SortOrder
     taxaNota?: SortOrderInput | SortOrder
     descontoEmFolha?: SortOrder
+    desconto?: SortOrderInput | SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
@@ -26119,6 +26141,7 @@ export namespace Prisma {
     temNota?: BoolWithAggregatesFilter<"Venda"> | boolean
     taxaNota?: FloatNullableWithAggregatesFilter<"Venda"> | number | null
     descontoEmFolha?: BoolWithAggregatesFilter<"Venda"> | boolean
+    desconto?: FloatNullableWithAggregatesFilter<"Venda"> | number | null
     boleto?: BoolWithAggregatesFilter<"Venda"> | boolean
     status?: StringWithAggregatesFilter<"Venda"> | string
     asaasPaymentId?: StringNullableWithAggregatesFilter<"Venda"> | string | null
@@ -27554,6 +27577,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -27587,6 +27611,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -27617,6 +27642,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27650,6 +27676,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27682,6 +27709,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -27708,6 +27736,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -27736,6 +27765,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29409,6 +29439,7 @@ export namespace Prisma {
     temNota?: SortOrder
     taxaNota?: SortOrder
     descontoEmFolha?: SortOrder
+    desconto?: SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
@@ -29431,6 +29462,7 @@ export namespace Prisma {
     antecipada?: SortOrder
     excedeuLimite?: SortOrder
     taxaNota?: SortOrder
+    desconto?: SortOrder
   }
 
   export type VendaMaxOrderByAggregateInput = {
@@ -29454,6 +29486,7 @@ export namespace Prisma {
     temNota?: SortOrder
     taxaNota?: SortOrder
     descontoEmFolha?: SortOrder
+    desconto?: SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
@@ -29482,6 +29515,7 @@ export namespace Prisma {
     temNota?: SortOrder
     taxaNota?: SortOrder
     descontoEmFolha?: SortOrder
+    desconto?: SortOrder
     boleto?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
@@ -29504,6 +29538,7 @@ export namespace Prisma {
     antecipada?: SortOrder
     excedeuLimite?: SortOrder
     taxaNota?: SortOrder
+    desconto?: SortOrder
   }
 
   export type UuidNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -31150,6 +31185,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31181,6 +31217,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31242,6 +31279,7 @@ export namespace Prisma {
     temNota?: BoolFilter<"Venda"> | boolean
     taxaNota?: FloatNullableFilter<"Venda"> | number | null
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
+    desconto?: FloatNullableFilter<"Venda"> | number | null
     boleto?: BoolFilter<"Venda"> | boolean
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
@@ -31601,6 +31639,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31633,6 +31672,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31678,6 +31718,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31710,6 +31751,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31739,6 +31781,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31771,6 +31814,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31816,6 +31860,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31848,6 +31893,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31877,6 +31923,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31909,6 +31956,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -31954,6 +32002,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31986,6 +32035,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -32083,6 +32133,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -32115,6 +32166,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -32160,6 +32212,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -32192,6 +32245,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -32222,6 +32276,7 @@ export namespace Prisma {
     temNota?: boolean
     taxaNota?: number | null
     descontoEmFolha?: boolean
+    desconto?: number | null
     boleto?: boolean
     status?: string
     asaasPaymentId?: string | null
@@ -32248,6 +32303,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -32279,6 +32335,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -32310,6 +32367,7 @@ export namespace Prisma {
     temNota?: BoolFieldUpdateOperationsInput | boolean
     taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null

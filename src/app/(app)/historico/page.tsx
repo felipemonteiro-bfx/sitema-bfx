@@ -89,7 +89,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       produtoNome: true,
       quantidade: true,
       valorVenda: true,
-      valorFrete: true,
+      valorFrete: true, desconto: true,
       custoProduto: true,
       temNota: true,
       taxaNota: true,
@@ -117,7 +117,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       id: true, dataVenda: true, vendedor: true, produtoNome: true,
       quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
-      descontoEmFolha: true, boleto: true,
+      desconto: true, descontoEmFolha: true, boleto: true,
       asaasPaymentId: true, boletoUrl: true,
       itens: {
         select: { produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },

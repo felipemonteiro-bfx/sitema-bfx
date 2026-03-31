@@ -174,6 +174,7 @@ exports.Prisma.VendaScalarFieldEnum = {
   temNota: 'temNota',
   taxaNota: 'taxaNota',
   descontoEmFolha: 'descontoEmFolha',
+  desconto: 'desconto',
   boleto: 'boleto',
   status: 'status',
   asaasPaymentId: 'asaasPaymentId',

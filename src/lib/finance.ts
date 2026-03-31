@@ -181,7 +181,7 @@ export async function calcularFluxoCaixa(mesAno?: string) {
     },
     select: {
       id: true, dataVenda: true, valorParcela: true, parcelas: true,
-      antecipada: true, valorVenda: true, quantidade: true, valorFrete: true,
+      antecipada: true, valorVenda: true, quantidade: true, valorFrete: true, desconto: true,
       itens: { select: { subtotal: true } },
     },
   });

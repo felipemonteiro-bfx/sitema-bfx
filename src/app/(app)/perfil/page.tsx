@@ -34,7 +34,7 @@ export default async function Page() {
   // Buscar comissões do usuário (vendedor)
   const vendas = await prisma.venda.findMany({
     where: { vendedor: user.nomeExibicao || user.username || undefined },
-    select: { valorVenda: true, quantidade: true, valorFrete: true, itens: { select: { subtotal: true } } }
+    select: { valorVenda: true, quantidade: true, valorFrete: true, desconto: true, itens: { select: { subtotal: true } } }
   });
 
   const pct = user.comissaoPct || 0;

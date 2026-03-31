@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
             dataVenda: true,
             valorVenda: true,
             quantidade: true,
-            valorFrete: true,
+            valorFrete: true, desconto: true,
             itens: {
               select: {
                 subtotal: true,

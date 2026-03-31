@@ -11,6 +11,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const envio = Number(formData.get("envio") || 0);
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
+  const desconto = Number(formData.get("desconto") || 0);
   const descontoEmFolha = formData.get("descontoEmFolha") === "on";
   let boleto = formData.get("boleto") === "on";
   if (descontoEmFolha && boleto) boleto = false;
@@ -35,7 +36,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     ? itens.reduce((s, i) => s + i.custoProduto * i.quantidade, 0)
     : custoLegado * quantidadeLegado;
   const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
-  const total = subtotal + frete;
+  const total = subtotal + frete - desconto;
   const lucro = total - (totalCusto + envio + valorDescontoNota);
 
   try {
@@ -52,6 +53,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         parcelas: Number(formData.get("parcelas") || 1),
         temNota,
         taxaNota,
+        desconto,
         lucroLiquido: lucro,
         descontoEmFolha,
         boleto,

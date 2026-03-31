@@ -40,6 +40,7 @@ type EditVendaData = {
   parcelas: number | null;
   temNota: boolean;
   taxaNota: number | null;
+  desconto: number | null;
   descontoEmFolha: boolean | null;
   boleto: boolean | null;
   asaasPaymentId: string | null;
@@ -134,6 +135,10 @@ export function EditVendaHistoricoForm({
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">Custo de envio</label>
         <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
+      </div>
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground">Desconto (R$)</label>
+        <Input name="desconto" type="number" step="0.01" min="0" defaultValue={editVenda.desconto || 0} />
       </div>
 
       <div className="space-y-1">

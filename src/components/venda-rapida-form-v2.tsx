@@ -111,6 +111,7 @@ export default function VendaRapidaFormV2({
       envio: parseAsFloat.withDefault(0),
       temNota: parseAsBoolean.withDefault(false),
       taxaNota: parseAsString.withDefault("5.97"),
+      desconto: parseAsFloat.withDefault(0),
       descontoEmFolha: parseAsBoolean.withDefault(false),
       boleto: parseAsBoolean.withDefault(false),
     },
@@ -119,7 +120,7 @@ export default function VendaRapidaFormV2({
 
   // Desestrutura para compatibilidade com o restante do código
   const { dataVenda, vendedor, parcelas, clienteQuery, selectedCliente,
-          frete, envio, temNota, taxaNota, descontoEmFolha, boleto } = formState;
+          frete, envio, temNota, taxaNota, desconto, descontoEmFolha, boleto } = formState;
   // produtos pode ser null quando não há param na URL → usa o item padrão
   const produtos: ProdutoItem[] = formState.produtos ?? [DEFAULT_PRODUTO_ITEM];
 
@@ -134,6 +135,7 @@ export default function VendaRapidaFormV2({
   const setEnvio = (v: number) => void setFormState({ envio: v });
   const setTemNota = (v: boolean) => void setFormState({ temNota: v });
   const setTaxaNota = (v: string) => void setFormState({ taxaNota: v });
+  const setDesconto = (v: number) => void setFormState({ desconto: v });
   const setDescontoEmFolha = (v: boolean) => void setFormState({ descontoEmFolha: v });
   const setBoleto = (v: boolean) => void setFormState({ boleto: v });
 
@@ -266,7 +268,7 @@ export default function VendaRapidaFormV2({
   const numTaxaNota = Number(taxaNota) || 0;
   const numParcelas = Number(parcelas) || 1;
 
-  const totalVenda = subtotalProdutos + numFrete;
+  const totalVenda = subtotalProdutos + numFrete - desconto;
   const valorDescontoNota = temNota
     ? (subtotalProdutos * numTaxaNota) / 100
     : 0;
@@ -530,6 +532,7 @@ export default function VendaRapidaFormV2({
     formData.append("parcelas", parcelas);
     formData.append("temNota", String(temNota));
     formData.append("taxaNota", taxaNota);
+    formData.append("desconto", String(desconto));
     formData.append("descontoEmFolha", String(descontoEmFolha));
     formData.append("boleto", String(boleto));
     formData.append("excedeuLimite", String(excedeuLimite));
@@ -552,6 +555,7 @@ export default function VendaRapidaFormV2({
           envio: null,
           parcelas: null,
           temNota: null,
+          desconto: null,
           descontoEmFolha: null,
           boleto: null,
         });
@@ -876,7 +880,7 @@ export default function VendaRapidaFormV2({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Frete (Cobrado)
@@ -908,6 +912,12 @@ export default function VendaRapidaFormV2({
                 Envio (Custo)
               </Label>
               <CurrencyInput value={envio} onChange={setEnvio} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Desconto (R$)
+              </Label>
+              <CurrencyInput value={desconto} onChange={setDesconto} />
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
@@ -1012,7 +1022,7 @@ export default function VendaRapidaFormV2({
           <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Subtotal Produtos
@@ -1029,6 +1039,16 @@ export default function VendaRapidaFormV2({
                 {formatBRL(numFrete)}
               </div>
             </div>
+            {desconto > 0 && (
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                  Desconto
+                </div>
+                <div className="text-lg font-bold text-destructive">
+                  -{formatBRL(desconto)}
+                </div>
+              </div>
+            )}
             <div className="space-y-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider">
                 Total Venda

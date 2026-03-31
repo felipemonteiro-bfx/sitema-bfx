@@ -6,12 +6,14 @@ export function valorTotalVenda(v: {
   valorVenda?: number | null;
   quantidade?: number | null;
   valorFrete?: number | null;
+  desconto?: number | null;
 }): number {
   const frete = v.valorFrete ?? 0;
+  const desconto = v.desconto ?? 0;
   if (v.itens && v.itens.length > 0) {
-    return v.itens.reduce((s, i) => s + i.subtotal, 0) + frete;
+    return v.itens.reduce((s, i) => s + i.subtotal, 0) + frete - desconto;
   }
-  return ((v.valorVenda ?? 0) * (v.quantidade ?? 1)) + frete;
+  return ((v.valorVenda ?? 0) * (v.quantidade ?? 1)) + frete - desconto;
 }
 
 /**

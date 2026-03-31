@@ -1322,7 +1322,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           select: {
             vendedor: true,
             valorVenda: true,
-            valorFrete: true,
+            valorFrete: true, desconto: true,
             quantidade: true,
             itens: { select: { subtotal: true } },
           },
