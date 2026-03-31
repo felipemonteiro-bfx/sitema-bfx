@@ -27,9 +27,11 @@ interface Props {
   onRemove: (index: number) => void;
   canRemove: boolean;
   hasError?: boolean;
+  fornecedores?: { id: number; nome: string }[];
+  categoriasExistentes?: string[];
 }
 
-export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, hasError }: Props) {
+export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, hasError, fornecedores = [], categoriasExistentes = [] }: Props) {
   const [produtoQuery, setProdutoQuery] = useState(item.produtoNome);
   const [produtoSuggestions, setProdutoSuggestions] = useState<{
     id: number;
@@ -249,6 +251,8 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               open={cadastrarOpen}
               onOpenChange={setCadastrarOpen}
               nomeInicial={produtoQuery}
+              fornecedores={fornecedores}
+              categoriasExistentes={categoriasExistentes}
               onCriado={(p) => handleProdutoSelect({ nome: p.nome, valorVenda: p.valorVenda, custoPadrao: p.custoPadrao, qtdEstoque: p.qtdEstoque })}
             />
           </div>

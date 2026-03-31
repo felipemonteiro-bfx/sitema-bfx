@@ -12,11 +12,20 @@ import { criarVendaV2 } from "./actions";
 import { signReciboId } from "@/lib/recibo-url";
 
 export default async function Page() {
-  const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
-  const ultima = await prisma.venda.findFirst({
-    orderBy: { id: "desc" },
-    include: { itens: true, assinatura: true },
-  });
+  const [vendedores, ultima, fornecedores, produtosComCategoria] = await Promise.all([
+    prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } }),
+    prisma.venda.findFirst({
+      orderBy: { id: "desc" },
+      include: { itens: true, assinatura: true },
+    }),
+    prisma.fornecedor.findMany({ orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
+    prisma.produto.findMany({
+      where: { categoria: { not: null } },
+      select: { categoria: true },
+      distinct: ["categoria"],
+      orderBy: { categoria: "asc" },
+    }),
+  ]);
 
   const vendedorOptions = vendedores.map((v) => ({
     value: String(v.nomeExibicao || v.username),
@@ -28,6 +37,10 @@ export default async function Page() {
     value: String(i + 1),
     label: String(i + 1),
   }));
+
+  const categoriasExistentes = produtosComCategoria
+    .map((p) => p.categoria as string)
+    .filter(Boolean);
 
   const totalUltima = ultima ? valorTotalVenda(ultima) : 0;
 
@@ -85,6 +98,8 @@ export default async function Page() {
       <VendaRapidaFormV2
         vendedorOptions={vendedorOptions}
         parcelasOptions={parcelasOptions}
+        fornecedores={fornecedores}
+        categoriasExistentes={categoriasExistentes}
         onSubmit={criarVendaV2}
       />
 

@@ -8,18 +8,24 @@ export async function POST(request: NextRequest) {
     if (!nome) {
       return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
     }
+    const marca = String(body.marca || "").trim().toUpperCase() || null;
+    const categoria = String(body.categoria || "").trim().toUpperCase() || null;
+    const ncm = String(body.ncm || "").trim().toUpperCase() || null;
+    const fornecedorId = body.fornecedorId ? Number(body.fornecedorId) : null;
+    const dataCompra = body.dataCompra ? new Date(body.dataCompra) : null;
+
     const produto = await prisma.produto.create({
       data: {
         nome,
         custoPadrao: Number(body.custoPadrao || 0),
         valorVenda: Number(body.valorVenda || 0),
         qtdEstoque: Number(body.qtdEstoque || 0),
-        marca: null,
-        categoria: null,
-        ncm: null,
+        marca,
+        categoria,
+        ncm,
         imagem: "",
-        fornecedorId: null,
-        dataCompra: null,
+        fornecedorId,
+        dataCompra,
       },
       select: {
         id: true,

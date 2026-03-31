@@ -49,6 +49,8 @@ interface Parcela {
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
   parcelasOptions: { value: string; label: string }[];
+  fornecedores: { id: number; nome: string }[];
+  categoriasExistentes: string[];
   onSubmit: (
     formData: FormData,
   ) => Promise<ActionResponse<{ vendaId: number; boletoUrl?: string; assinaturaToken?: string }>>;
@@ -57,6 +59,8 @@ interface Props {
 export default function VendaRapidaFormV2({
   vendedorOptions,
   parcelasOptions,
+  fornecedores,
+  categoriasExistentes,
   onSubmit,
 }: Props) {
   const [loading, setLoading] = useState(false);
@@ -833,6 +837,8 @@ export default function VendaRapidaFormV2({
             onRemove={removeProduto}
             canRemove={produtos.length > 1}
             hasError={validationErrors.produtoIndices?.includes(index)}
+            fornecedores={fornecedores}
+            categoriasExistentes={categoriasExistentes}
           />
         ))}
       </div>
