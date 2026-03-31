@@ -14,6 +14,17 @@ export async function POST(request: NextRequest) {
     const fornecedorId = body.fornecedorId ? Number(body.fornecedorId) : null;
     const dataCompra = body.dataCompra ? new Date(body.dataCompra) : null;
 
+    const selectFields = { id: true, nome: true, valorVenda: true, custoPadrao: true, qtdEstoque: true };
+
+    // Verificar se já existe produto com mesmo nome + fornecedor
+    const existente = await prisma.produto.findFirst({
+      where: { nome, fornecedorId },
+      select: selectFields,
+    });
+    if (existente) {
+      return NextResponse.json(existente);
+    }
+
     const produto = await prisma.produto.create({
       data: {
         nome,
@@ -27,16 +38,19 @@ export async function POST(request: NextRequest) {
         fornecedorId,
         dataCompra,
       },
-      select: {
-        id: true,
-        nome: true,
-        valorVenda: true,
-        custoPadrao: true,
-        qtdEstoque: true,
-      },
+      select: selectFields,
     });
     return NextResponse.json(produto);
-  } catch {
+  } catch (err) {
+    const prismaErr = err as { code?: string };
+    if (prismaErr.code === "P2002") {
+      // Unique constraint — produto já existe, retornar ele
+      const existente = await prisma.produto.findFirst({
+        where: { nome, fornecedorId },
+        select: { id: true, nome: true, valorVenda: true, custoPadrao: true, qtdEstoque: true },
+      });
+      if (existente) return NextResponse.json(existente);
+    }
     return NextResponse.json({ error: "Erro ao criar produto" }, { status: 500 });
   }
 }
