@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
+  let nome = "";
+  let fornecedorId: number | null = null;
+
   try {
     const body = await request.json();
-    const nome = String(body.nome || "").trim().toUpperCase();
+    nome = String(body.nome || "").trim().toUpperCase();
     if (!nome) {
       return NextResponse.json({ error: "Nome obrigatório" }, { status: 400 });
     }
     const marca = String(body.marca || "").trim().toUpperCase() || null;
     const categoria = String(body.categoria || "").trim().toUpperCase() || null;
     const ncm = String(body.ncm || "").trim().toUpperCase() || null;
-    const fornecedorId = body.fornecedorId ? Number(body.fornecedorId) : null;
+    fornecedorId = body.fornecedorId ? Number(body.fornecedorId) : null;
     const dataCompra = body.dataCompra ? new Date(body.dataCompra) : null;
 
     const selectFields = { id: true, nome: true, valorVenda: true, custoPadrao: true, qtdEstoque: true };
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(produto);
   } catch (err) {
     const prismaErr = err as { code?: string };
-    if (prismaErr.code === "P2002") {
+    if (prismaErr.code === "P2002" && nome) {
       // Unique constraint — produto já existe, retornar ele
       const existente = await prisma.produto.findFirst({
         where: { nome, fornecedorId },
