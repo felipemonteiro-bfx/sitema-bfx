@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useQueryStates, parseAsString, parseAsFloat, parseAsBoolean, parseAsJson } from "nuqs";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,25 @@ interface Parcela {
   valorParcela: number;
 }
 
+type ClienteSelected = {
+  id: number;
+  nome: string;
+  endereco?: string | null;
+  cep?: string | null;
+  telefone?: string | null;
+  cpf?: string | null;
+  cnpj?: string | null;
+};
+
+const DEFAULT_PRODUTO_ITEM: ProdutoItem = {
+  id: "new-0",
+  produtoNome: "",
+  custoProduto: 0,
+  valorVenda: 0,
+  quantidade: 1,
+  subtotal: 0,
+};
+
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
   parcelasOptions: { value: string; label: string }[];
@@ -71,24 +91,53 @@ export default function VendaRapidaFormV2({
     produtoIndices?: number[];
   }>({});
 
-  // Form states
-  const [dataVenda, setDataVenda] = useState(
-    new Date().toISOString().split("T")[0],
+  // Form states persistentes na URL (sobrevivem a refresh/navegação)
+  const [formState, setFormState] = useQueryStates(
+    {
+      dataVenda: parseAsString.withDefault(new Date().toISOString().split("T")[0]),
+      vendedor: parseAsString.withDefault(vendedorOptions[0]?.value || ""),
+      parcelas: parseAsString.withDefault("1"),
+      clienteQuery: parseAsString.withDefault(""),
+      selectedCliente: parseAsJson<ClienteSelected>((v) => {
+        if (typeof v === "object" && v !== null && "id" in v && "nome" in v)
+          return v as ClienteSelected;
+        return null;
+      }),
+      produtos: parseAsJson<ProdutoItem[]>((v) => {
+        if (Array.isArray(v) && (v as unknown[]).length > 0) return v as ProdutoItem[];
+        return null;
+      }),
+      frete: parseAsFloat.withDefault(0),
+      envio: parseAsFloat.withDefault(0),
+      temNota: parseAsBoolean.withDefault(false),
+      taxaNota: parseAsString.withDefault("5.97"),
+      descontoEmFolha: parseAsBoolean.withDefault(false),
+      boleto: parseAsBoolean.withDefault(false),
+    },
+    { history: "replace" },
   );
-  const [vendedor, setVendedor] = useState(vendedorOptions[0]?.value || "");
-  const [parcelas, setParcelas] = useState("1");
 
-  // Cliente autocomplete
-  const [clienteQuery, setClienteQuery] = useState("");
-  const [selectedCliente, setSelectedCliente] = useState<{
-    id: number;
-    nome: string;
-    endereco?: string | null;
-    cep?: string | null;
-    telefone?: string | null;
-    cpf?: string | null;
-    cnpj?: string | null;
-  } | null>(null);
+  // Desestrutura para compatibilidade com o restante do código
+  const { dataVenda, vendedor, parcelas, clienteQuery, selectedCliente,
+          frete, envio, temNota, taxaNota, descontoEmFolha, boleto } = formState;
+  // produtos pode ser null quando não há param na URL → usa o item padrão
+  const produtos: ProdutoItem[] = formState.produtos ?? [DEFAULT_PRODUTO_ITEM];
+
+  // Wrappers com assinatura idêntica aos setState originais
+  const setDataVenda = (v: string) => void setFormState({ dataVenda: v });
+  const setVendedor = (v: string) => void setFormState({ vendedor: v });
+  const setParcelas = (v: string) => void setFormState({ parcelas: v });
+  const setClienteQuery = (v: string) => void setFormState({ clienteQuery: v });
+  const setSelectedCliente = (v: ClienteSelected | null) => void setFormState({ selectedCliente: v ?? null });
+  const setProdutos = (v: ProdutoItem[]) => void setFormState({ produtos: v.length > 0 ? v : null });
+  const setFrete = (v: number) => void setFormState({ frete: v });
+  const setEnvio = (v: number) => void setFormState({ envio: v });
+  const setTemNota = (v: boolean) => void setFormState({ temNota: v });
+  const setTaxaNota = (v: string) => void setFormState({ taxaNota: v });
+  const setDescontoEmFolha = (v: boolean) => void setFormState({ descontoEmFolha: v });
+  const setBoleto = (v: boolean) => void setFormState({ boleto: v });
+
+  // Cliente autocomplete suggestions (transient — não persiste)
   const [clienteSuggestions, setClienteSuggestions] = useState<
     {
       id: number;
@@ -102,26 +151,6 @@ export default function VendaRapidaFormV2({
       ultimaVenda?: { data: string; valor: number } | null;
     }[]
   >([]);
-
-  // Produtos (múltiplos)
-  const [produtos, setProdutos] = useState<ProdutoItem[]>([
-    {
-      id: crypto.randomUUID(),
-      produtoNome: "",
-      custoProduto: 0,
-      valorVenda: 0,
-      quantidade: 1,
-      subtotal: 0,
-    },
-  ]);
-
-  // Outras despesas
-  const [frete, setFrete] = useState(0);
-  const [envio, setEnvio] = useState(0);
-  const [temNota, setTemNota] = useState(false);
-  const [taxaNota, setTaxaNota] = useState("5.97");
-  const [descontoEmFolha, setDescontoEmFolha] = useState(false);
-  const [boleto, setBoleto] = useState(false);
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
@@ -514,25 +543,18 @@ export default function VendaRapidaFormV2({
     try {
       const result = await onSubmit(formData);
       if (result.success) {
-        // Reset form
-        setClienteQuery("");
-        setSelectedCliente(null);
-        setProdutos([
-          {
-            id: crypto.randomUUID(),
-            produtoNome: "",
-            custoProduto: 0,
-            valorVenda: 0,
-            quantidade: 1,
-            subtotal: 0,
-          },
-        ]);
-        setFrete(0);
-        setEnvio(0);
-        setParcelas("1");
-        setTemNota(false);
-        setDescontoEmFolha(false);
-        setBoleto(false);
+        // Reset form — null remove o param da URL e reverte ao default
+        void setFormState({
+          clienteQuery: null,
+          selectedCliente: null,
+          produtos: null,
+          frete: null,
+          envio: null,
+          parcelas: null,
+          temNota: null,
+          descontoEmFolha: null,
+          boleto: null,
+        });
         setParcelasVencimento([]);
         setProdutoParaSugestoes(null);
         const boletoUrl = result.data?.boletoUrl;
