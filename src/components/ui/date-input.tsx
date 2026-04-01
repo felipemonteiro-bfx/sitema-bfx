@@ -54,6 +54,7 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            type="button"
             variant="outline"
             disabled={disabled}
             rightIcon={<CalendarIcon className="opacity-50 text-muted-foreground" />}
