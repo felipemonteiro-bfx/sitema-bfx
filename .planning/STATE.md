@@ -5,7 +5,7 @@ milestone_name: milestone
 status: planning
 stopped_at: Completed 04-melhorias-infra-04-PLAN.md
 last_updated: "2026-03-30T17:40:47.594Z"
-last_activity: "2026-03-24 - Completed quick task 260324-eey: sistema de assinatura de recibo com link"
+last_activity: "2026-04-01 - Completed quick task 260401-np7: fix DateInput type=button em venda rapida"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -107,6 +107,7 @@ None yet.
 | 13 | stock decrement on sale create (criarVenda, criarVendaV2, criar_venda IA) + restore on delete + backfill endpoint | 2026-03-23 | cc0379b | Verified | [260323-k3c-quando-eu-fa-ao-uma-venda-de-um-produto-](./quick/260323-k3c-quando-eu-fa-ao-uma-venda-de-um-produto-/) |
 | 14 | mostrar custo e margem de lucro nas vendas do historico | 2026-03-23 | cfe9cf1 | — | [260323-kp0-mostrar-custo-e-margem-de-lucro-nas-vend](./quick/260323-kp0-mostrar-custo-e-margem-de-lucro-nas-vend/) |
 | 15 | sistema de assinatura de recibo com link para assinatura digital e notificacoes no sistema | 2026-03-24 | 8e79807 | — | [260324-eey-sistema-de-assinatura-de-recibo-com-link](./quick/260324-eey-sistema-de-assinatura-de-recibo-com-link/) |
+| 16 | fix: DateInput quebrava form ao clicar na data (type="button" ausente) | 2026-04-01 | 57b2be9 | — | [260401-np7-em-venda-rapida-quando-eu-clico-na-data-](./quick/260401-np7-em-venda-rapida-quando-eu-clico-na-data-/) |
 
 ## Session Continuity
 
