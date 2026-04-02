@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 1 of 3 (Multi-Produto)
 Plan: 0 of ? in current phase
 Status: Ready to plan
-Last activity: 2026-03-24 - Completed quick task 260324-eey: sistema de assinatura de recibo com link
+Last activity: 2026-04-02 - Completed quick task 260402-grr: email empresa, relatório vendas, WhatsApp fix, vínculos empresas, nome similar, fuzzy search
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -108,6 +108,7 @@ None yet.
 | 14 | mostrar custo e margem de lucro nas vendas do historico | 2026-03-23 | cfe9cf1 | — | [260323-kp0-mostrar-custo-e-margem-de-lucro-nas-vend](./quick/260323-kp0-mostrar-custo-e-margem-de-lucro-nas-vend/) |
 | 15 | sistema de assinatura de recibo com link para assinatura digital e notificacoes no sistema | 2026-03-24 | 8e79807 | — | [260324-eey-sistema-de-assinatura-de-recibo-com-link](./quick/260324-eey-sistema-de-assinatura-de-recibo-com-link/) |
 | 16 | fix: DateInput quebrava form ao clicar na data (type="button" ausente) | 2026-04-01 | 57b2be9 | — | [260401-np7-em-venda-rapida-quando-eu-clico-na-data-](./quick/260401-np7-em-venda-rapida-quando-eu-clico-na-data-/) |
+| 17 | Mandar email para a empresa em que o cliente vinculado; relatório de vendas com matrícula/nome/produtos/vendedor/data/valor/parcelas; relatório semanal por empresa com cópia pro admin; ajustar serviço WhatsApp off; ajustar vínculos de empresas parceiras; informar nome similar em novo cliente; fuzzy search em vendas | 2026-04-02 | c035e1c | Verified | [260402-grr-mandar-email-para-a-empresa-em-que-o-cli](./quick/260402-grr-mandar-email-para-a-empresa-em-que-o-cli/) |
 
 ## Session Continuity
 
