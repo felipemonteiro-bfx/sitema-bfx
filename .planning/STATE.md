@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-02-19)
 Phase: 1 of 3 (Multi-Produto)
 Plan: 0 of ? in current phase
 Status: Ready to plan
-Last activity: 2026-04-02 - Completed quick task 260402-grr: email empresa, relatório vendas, WhatsApp fix, vínculos empresas, nome similar, fuzzy search
+Last activity: 2026-04-02 - Completed quick task 260402-ix6: fallback WhatsApp quando sem email + fix data /venda-rapida confirmado
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -109,6 +109,7 @@ None yet.
 | 15 | sistema de assinatura de recibo com link para assinatura digital e notificacoes no sistema | 2026-03-24 | 8e79807 | — | [260324-eey-sistema-de-assinatura-de-recibo-com-link](./quick/260324-eey-sistema-de-assinatura-de-recibo-com-link/) |
 | 16 | fix: DateInput quebrava form ao clicar na data (type="button" ausente) | 2026-04-01 | 57b2be9 | — | [260401-np7-em-venda-rapida-quando-eu-clico-na-data-](./quick/260401-np7-em-venda-rapida-quando-eu-clico-na-data-/) |
 | 17 | Mandar email para a empresa em que o cliente vinculado; relatório de vendas com matrícula/nome/produtos/vendedor/data/valor/parcelas; relatório semanal por empresa com cópia pro admin; ajustar serviço WhatsApp off; ajustar vínculos de empresas parceiras; informar nome similar em novo cliente; fuzzy search em vendas | 2026-04-02 | c035e1c | Verified | [260402-grr-mandar-email-para-a-empresa-em-que-o-cli](./quick/260402-grr-mandar-email-para-a-empresa-em-que-o-cli/) |
+| 18 | Se não tiver email configurado enviar notificação via WhatsApp (não impeditivo fallback email→WhatsApp). Fix /venda-rapida clicar na data quebra o sistema. | 2026-04-02 | 0e6582c | Verified | [260402-ix6-se-n-o-tiver-email-configurado-enviar-no](./quick/260402-ix6-se-n-o-tiver-email-configurado-enviar-no/) |
 
 ## Session Continuity
 
