@@ -26,14 +26,14 @@ export async function GET(req: Request) {
             : undefined,
       },
       include: {
-        cliente: { select: { nome: true, empresa: true } },
+        cliente: { select: { nome: true, empresa: true, matricula: true } },
         itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
       },
       orderBy: { dataVenda: "desc" },
     });
 
     const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([595, 842]);
+    let page = pdfDoc.addPage([842, 595]); // Landscape A4
     const { width, height } = page.getSize();
 
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
     });
     if (empresa && empresa !== "all") {
       page.drawText(`Empresa: ${empresa}`, {
-        x: 400,
+        x: 560,
         y: height - 65,
         size: 10,
         font,
@@ -65,14 +65,14 @@ export async function GET(req: Request) {
       });
     }
 
-    // Table Header
+    // Table Header — 7 columns: Mat. | Nome | Produtos | Vendedor | Data | Valor | Parc.
     const tableTop = height - 120;
-    const colX = [40, 100, 220, 320, 420, 500];
-    const headers = ["Data", "Cliente", "Produto", "Vendedor", "Valor", "Status"];
+    const colX = [40, 100, 210, 380, 490, 580, 680];
+    const headers = ["Mat.", "Nome", "Produtos", "Vendedor", "Data", "Valor", "Parc."];
 
     page.drawRectangle({ x: 30, y: tableTop - 5, width: width - 60, height: 20, color: rgb(0.95, 0.95, 0.95) });
     headers.forEach((h, i) => {
-      page.drawText(h, { x: colX[i], y: tableTop, size: 10, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
+      page.drawText(h, { x: colX[i], y: tableTop, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
     });
 
     let y = tableTop - 25;
@@ -80,28 +80,29 @@ export async function GET(req: Request) {
 
     for (const v of vendas) {
       if (y < 50) {
-        page = pdfDoc.addPage([595, 842]);
+        page = pdfDoc.addPage([842, 595]);
         y = height - 50;
       }
 
       const valorTotal = valorTotalVenda(v);
       totalValor += valorTotal;
 
-      page.drawText(formatDateBR(v.dataVenda), { x: colX[0], y, size: 9, font });
-      page.drawText(v.cliente?.nome?.substring(0, 20) || "N/D", { x: colX[1], y, size: 9, font });
-      page.drawText(produtosTexto(v).substring(0, 18) || "N/A", { x: colX[2], y, size: 9, font });
-      page.drawText(v.vendedor || "N/D", { x: colX[3], y, size: 9, font });
-      page.drawText(formatBRL(valorTotal), { x: colX[4], y, size: 9, font });
-      page.drawText(v.temNota ? "C/ Nota" : "S/ Nota", {
-        x: colX[5],
-        y,
-        size: 8,
-        font,
-        color: v.temNota ? rgb(0, 0.5, 0) : rgb(0.5, 0.5, 0.5),
-      });
+      const matricula = v.cliente?.matricula?.substring(0, 10) || "—";
+      const nomeCliente = v.cliente?.nome?.substring(0, 20) || "N/D";
+      const produtos = produtosTexto(v).substring(0, 30) || "N/A";
+      const vendedor = (v.vendedor || "N/D").substring(0, 16);
+      const dataStr = formatDateBR(v.dataVenda);
+      const parcelas = String(v.parcelas || 1) + "x";
+
+      page.drawText(matricula, { x: colX[0], y, size: 8, font });
+      page.drawText(nomeCliente, { x: colX[1], y, size: 8, font });
+      page.drawText(produtos, { x: colX[2], y, size: 8, font });
+      page.drawText(vendedor, { x: colX[3], y, size: 8, font });
+      page.drawText(dataStr, { x: colX[4], y, size: 8, font });
+      page.drawText(formatBRL(valorTotal), { x: colX[5], y, size: 8, font });
+      page.drawText(parcelas, { x: colX[6], y, size: 8, font });
 
       y -= 18;
-      // Linha separadora leve
       page.drawLine({
         start: { x: 30, y: y + 10 },
         end: { x: width - 30, y: y + 10 },
@@ -114,7 +115,7 @@ export async function GET(req: Request) {
     y -= 20;
     page.drawRectangle({ x: 30, y: y - 10, width: width - 60, height: 30, color: rgb(0.07, 0.15, 0.3) });
     page.drawText(`TOTAL DO PERÍODO: ${formatBRL(totalValor)}`, { x: 40, y, size: 12, font: fontBold, color: rgb(1, 1, 1) });
-    page.drawText(`Vendas emitidas: ${vendas.length}`, { x: 400, y, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+    page.drawText(`Vendas: ${vendas.length}`, { x: 650, y, size: 10, font: fontBold, color: rgb(1, 1, 1) });
 
     const pdfBytes = await pdfDoc.save();
 

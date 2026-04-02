@@ -15,6 +15,7 @@ import {
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 import { signReciboId } from "@/lib/recibo-url";
+import { sendVendaNotification } from "@/lib/email";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -61,6 +62,29 @@ export async function criarVenda(formData: FormData) {
       where: { nome: produto },
       data: { qtdEstoque: { decrement: quantidade } },
     });
+  }
+  // Fire-and-forget: notify partner company via email
+  if (clienteId) {
+    void (async () => {
+      try {
+        const vendaComCliente = await prisma.venda.findFirst({
+          where: { clienteId, dataVenda: { gte: new Date(data) } },
+          orderBy: { id: "desc" },
+          include: {
+            cliente: { select: { nome: true, matricula: true, empresa: true } },
+            itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+          },
+        });
+        if (vendaComCliente) {
+          await sendVendaNotification({
+            ...vendaComCliente,
+            cliente: vendaComCliente.cliente ?? undefined,
+          });
+        }
+      } catch (e) {
+        console.error("[email] sendVendaNotification failed (criarVenda):", e);
+      }
+    })();
   }
   revalidatePath("/venda-rapida");
 }
@@ -230,6 +254,29 @@ export async function criarVendaV2(
     revalidatePath("/dashboard");
 
     await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
+
+    // Fire-and-forget: notify partner company via email
+    if (clienteId) {
+      void (async () => {
+        try {
+          const vendaComCliente = await prisma.venda.findUnique({
+            where: { id: venda.id },
+            include: {
+              cliente: { select: { nome: true, matricula: true, empresa: true } },
+              itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+            },
+          });
+          if (vendaComCliente) {
+            await sendVendaNotification({
+              ...vendaComCliente,
+              cliente: vendaComCliente.cliente ?? undefined,
+            });
+          }
+        } catch (e) {
+          console.error("[email] sendVendaNotification failed:", e);
+        }
+      })();
+    }
 
     let boletoUrl: string | undefined;
 

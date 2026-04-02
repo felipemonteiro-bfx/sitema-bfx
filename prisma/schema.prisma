@@ -168,6 +168,13 @@ model Config {
   litellmKey               String? @map("litellm_key")
   litellmModel             String? @map("litellm_model")
   litellmEnableThinking    Boolean? @default(false) @map("litellm_enable_thinking")
+  // Email / SMTP
+  smtpHost                 String? @map("smtp_host")
+  smtpPort                 Int?    @map("smtp_port")
+  smtpUser                 String? @map("smtp_user")
+  smtpPass                 String? @map("smtp_pass")
+  smtpFrom                 String? @map("smtp_from")
+  adminEmail               String? @map("admin_email")
 
   @@map("config")
 }
@@ -207,7 +214,22 @@ model EmpresaParceira {
   cnpj          String? @map("cnpj")
   emailsExtras  String? @map("emails_extras")
 
+  vinculos      EmpresaVinculo[] @relation("empresa_origem")
+  vinculadaPor  EmpresaVinculo[] @relation("empresa_destino")
+
   @@map("empresas_parceiras")
+}
+
+model EmpresaVinculo {
+  id          Int @id @default(autoincrement())
+  empresaId   Int @map("empresa_id")
+  vinculadaId Int @map("vinculada_id")
+
+  empresa   EmpresaParceira @relation("empresa_origem",  fields: [empresaId],   references: [id], onDelete: Cascade)
+  vinculada EmpresaParceira @relation("empresa_destino", fields: [vinculadaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, vinculadaId])
+  @@map("empresas_vinculos")
 }
 
 model Pagamento {

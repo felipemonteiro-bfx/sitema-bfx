@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   const end = to ? new Date(to + "T23:59:59") : new Date();
 
   const vendas = await prisma.venda.findMany({
-    where: { 
+    where: {
       dataVenda: { gte: start, lte: end },
       cliente: empresa && empresa !== "all" ? {
         empresa: {
@@ -21,31 +21,23 @@ export async function GET(req: Request) {
     },
     include: {
       cliente: {
-        select: { empresa: true, nome: true }
+        select: { empresa: true, nome: true, matricula: true }
       },
       itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
     },
     orderBy: { dataVenda: "desc" },
   });
 
-  const header = "Data,Vendedor,Empresa,Cliente,Produto,Valor,Frete,Total,Parcelas,ValorParcela\n";
+  const header = "Matricula,Nome,Produtos,Vendedor,Data,Valor,Parcelas\n";
   const lines = vendas.map((v) => {
     const total = valorTotalVenda(v);
-    const subtotalProd = v.itens?.length
-      ? v.itens.reduce((s, i) => s + i.subtotal, 0)
-      : (v.valorVenda ?? 0) * (v.quantidade ?? 1);
-    return [
-      v.dataVenda.toISOString().slice(0, 10),
-      v.vendedor || "",
-      v.cliente?.empresa || "N/D",
-      v.cliente?.nome || "N/D",
-      produtosTexto(v),
-      subtotalProd,
-      v.valorFrete || 0,
-      total,
-      v.parcelas || 0,
-      v.valorParcela || 0,
-    ].join(",");
+    const matricula = v.cliente?.matricula || "";
+    const nome = v.cliente?.nome || "N/D";
+    const produtos = `"${produtosTexto(v).replace(/"/g, '""')}"`;
+    const vendedor = v.vendedor || "";
+    const data = v.dataVenda.toISOString().slice(0, 10);
+    const parcelas = v.parcelas || 1;
+    return [matricula, nome, produtos, vendedor, data, total, parcelas].join(",");
   });
   const csv = header + lines.join("\n");
 
