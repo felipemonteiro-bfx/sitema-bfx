@@ -73,6 +73,64 @@ export async function fuzzyFindProdutoByNome(nome: string) {
 }
 
 /**
+ * Fuzzy search across vendas by: client name, product name (itens), or vendedor.
+ * Returns up to `limit` vendas with cliente + itens included.
+ */
+export async function fuzzyFindVendas(search: string, limit = 50) {
+  const q = search.trim();
+  if (!q) return [];
+
+  // 1. Fuzzy match client names → get clienteIds
+  const clienteIds = await fuzzyIds("clientes", "nome", q, limit);
+
+  // 2. Fuzzy match vendedor field on vendas
+  type VendaIdRow = { id: number };
+  const vendedorRows = await prisma.$queryRawUnsafe<VendaIdRow[]>(
+    `SELECT id
+     FROM "vendas"
+     WHERE similarity(f_unaccent(lower(COALESCE("vendedor", ''))), f_unaccent(lower($1))) > $2
+        OR f_unaccent(lower(COALESCE("vendedor", ''))) ILIKE '%' || f_unaccent(lower($1)) || '%'
+     LIMIT $3`,
+    q,
+    0.15,
+    limit
+  );
+  const vendedorVendaIds = vendedorRows.map((r) => r.id);
+
+  // 3. Fuzzy match product names in itens_venda
+  type ItemVendaIdRow = { venda_id: number };
+  const itemRows = await prisma.$queryRawUnsafe<ItemVendaIdRow[]>(
+    `SELECT DISTINCT "venda_id"
+     FROM "itens_venda"
+     WHERE similarity(f_unaccent(lower("produto_nome")), f_unaccent(lower($1))) > $2
+        OR f_unaccent(lower("produto_nome")) ILIKE '%' || f_unaccent(lower($1)) || '%'
+     LIMIT $3`,
+    q,
+    0.15,
+    limit
+  );
+  const itemVendaIds = itemRows.map((r) => r.venda_id);
+
+  // 4. Build combined WHERE clause
+  const conditions: { clienteId?: { in: number[] }; id?: { in: number[] } }[] = [];
+  if (clienteIds.length > 0) conditions.push({ clienteId: { in: clienteIds } });
+  if (vendedorVendaIds.length > 0) conditions.push({ id: { in: vendedorVendaIds } });
+  if (itemVendaIds.length > 0) conditions.push({ id: { in: itemVendaIds } });
+
+  if (conditions.length === 0) return [];
+
+  return prisma.venda.findMany({
+    where: { OR: conditions },
+    include: {
+      cliente: { select: { nome: true, matricula: true, empresa: true } },
+      itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+    },
+    orderBy: { dataVenda: "desc" },
+    take: limit,
+  });
+}
+
+/**
  * Fuzzy-finds usuarios by nomeExibicao, falling back to username for users
  * that have no nomeExibicao set.
  */

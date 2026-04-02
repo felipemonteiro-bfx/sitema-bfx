@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { HistoricoBuscaFuzzy } from "@/components/historico-busca-fuzzy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
@@ -16,21 +17,23 @@ import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { updateVenda, deleteVenda } from "@/app/(app)/historico/actions";
+import { fuzzyFindVendas } from "@/lib/db-search";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
 
-type Search = { 
-  from?: string; 
-  to?: string; 
-  edit?: string; 
-  vendedor?: string; 
+type Search = {
+  from?: string;
+  to?: string;
+  edit?: string;
+  vendedor?: string;
   produto?: string;
   cliente?: string;
   descontoFolha?: string;
   boleto?: string;
   page?: string;
+  q?: string;
 };
 
 
@@ -60,19 +63,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const clientes = await prisma.cliente.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } });
 
   const produtoFilter = sp.produto && sp.produto !== "all" ? sp.produto : undefined;
-  const where = {
-    dataVenda: { gte: start, lte: end },
-    vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
-    ...(produtoFilter && {
-      OR: [
-        { produtoNome: produtoFilter },
-        { itens: { some: { produtoNome: produtoFilter } } },
-      ],
-    }),
-    clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
-    descontoEmFolha: sp.descontoFolha === "1" ? true : sp.descontoFolha === "0" ? false : undefined,
-    boleto: sp.boleto === "1" ? true : sp.boleto === "0" ? false : undefined,
-  };
+  const queryBusca = sp.q?.trim() || "";
+
+  // Fuzzy search mode: quando `q` está presente, busca por cliente/produto/vendedor
+  let fuzzyVendaIds: number[] | null = null;
+  if (queryBusca) {
+    const fuzzyResults = await fuzzyFindVendas(queryBusca, 200);
+    fuzzyVendaIds = fuzzyResults.map((v) => v.id);
+  }
+
+  const where = fuzzyVendaIds !== null
+    ? { id: { in: fuzzyVendaIds } }
+    : {
+        dataVenda: { gte: start, lte: end },
+        vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
+        ...(produtoFilter && {
+          OR: [
+            { produtoNome: produtoFilter },
+            { itens: { some: { produtoNome: produtoFilter } } },
+          ],
+        }),
+        clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
+        descontoEmFolha: sp.descontoFolha === "1" ? true : sp.descontoFolha === "0" ? false : undefined,
+        boleto: sp.boleto === "1" ? true : sp.boleto === "0" ? false : undefined,
+      };
 
   const totalVendas = await prisma.venda.count({ where });
   const totalPages = Math.ceil(totalVendas / pageSize);
@@ -171,6 +185,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         <h1 className="text-2xl font-semibold">Histórico (Editar)</h1>
         <p className="text-sm text-muted-foreground">Filtre e edite vendas do período.</p>
       </div>
+
+      <HistoricoBuscaFuzzy defaultValue={sp.q || ""} />
 
       <Card>
         <CardHeader>

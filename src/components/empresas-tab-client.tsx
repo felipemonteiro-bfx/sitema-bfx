@@ -35,6 +35,7 @@ type EmpresaListItem = {
   emailRh: string | null;
   cnpj: string | null;
   emailsExtras: string | null;
+  vinculos?: { vinculada: { id: number; nome: string } }[];
 };
 
 interface Props {
@@ -45,6 +46,7 @@ interface Props {
   onAddAction: (formData: FormData) => Promise<void>;
   onUpdateAction: (formData: FormData) => Promise<void>;
   onBulkDeleteAction: (ids: number[]) => Promise<void>;
+  onVincularAction?: (empresaId: number, vinculadaIds: number[]) => Promise<void>;
 }
 
 export default function EmpresasTabClient({
@@ -55,11 +57,15 @@ export default function EmpresasTabClient({
   onAddAction,
   onUpdateAction,
   onBulkDeleteAction,
+  onVincularAction,
 }: Props) {
   const router = useRouter();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [vinculandoId, setVinculandoId] = useState<number | null>(null);
+  const [vinculacaoIds, setVinculacaoIds] = useState<Set<number>>(new Set());
+  const [savingVinculo, setSavingVinculo] = useState(false);
 
   const table = useTableFeatures({
     data: empresas as (EmpresaListItem & Record<string, unknown>)[],
@@ -107,6 +113,36 @@ export default function EmpresasTabClient({
       });
     } finally {
       setBulkDeleting(false);
+    }
+  };
+
+  const openVinculos = (empresa: EmpresaListItem) => {
+    const currentIds = new Set((empresa.vinculos || []).map((v) => v.vinculada.id));
+    setVinculacaoIds(currentIds);
+    setVinculandoId(empresa.id);
+  };
+
+  const toggleVinculo = (id: number) => {
+    const next = new Set(vinculacaoIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setVinculacaoIds(next);
+  };
+
+  const saveVinculos = async () => {
+    if (vinculandoId == null || !onVincularAction) return;
+    setSavingVinculo(true);
+    try {
+      await onVincularAction(vinculandoId, Array.from(vinculacaoIds));
+      setVinculandoId(null);
+      startTransition(() => {
+        router.refresh();
+      });
+    } finally {
+      setSavingVinculo(false);
     }
   };
 
@@ -219,6 +255,7 @@ export default function EmpresasTabClient({
                 <SortableHeader label="CNPJ" field="cnpj" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="RH" field="responsavelRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="Contato" field="emailRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
+                <TableHead className="text-xs">Vinculadas</TableHead>
                 <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
               </TableRow>
             </TableHeader>
@@ -248,14 +285,39 @@ export default function EmpresasTabClient({
                         <div className="text-xs text-muted-foreground">{e.emailsExtras}</div>
                       )}
                     </TableCell>
+                    <TableCell className="text-xs">
+                      {(e.vinculos || []).length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {(e.vinculos || []).map((v) => (
+                            <span key={v.vinculada.id} className="inline-block rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-800 border border-blue-200">
+                              {v.vinculada.nome}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground opacity-40">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
-                      <Link
-                        href={buildUrl({ tab: "empresas", editEmpresa: String(e.id) })}
-                        className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
-                        title="Editar"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Link>
+                      <div className="flex items-center gap-1">
+                        {onVincularAction && (
+                          <button
+                            type="button"
+                            onClick={() => openVinculos(e)}
+                            className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground text-xs")}
+                            title="Gerenciar vinculos"
+                          >
+                            Vincular
+                          </button>
+                        )}
+                        <Link
+                          href={buildUrl({ tab: "empresas", editEmpresa: String(e.id) })}
+                          className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -309,6 +371,52 @@ export default function EmpresasTabClient({
                 <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alteracoes</button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Vinculos dialog */}
+      {vinculandoId !== null && onVincularAction && (
+        <Card className="mt-4 border-blue-200">
+          <CardHeader>
+            <CardTitle className="text-blue-900 text-base">
+              Vinculos da empresa #{vinculandoId}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">Selecione as empresas vinculadas a esta:</p>
+            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+              {empresas
+                .filter((e) => e.id !== vinculandoId)
+                .map((e) => (
+                  <label key={e.id} className="flex items-center gap-2 cursor-pointer text-sm rounded border px-3 py-2 hover:bg-muted">
+                    <input
+                      type="checkbox"
+                      checked={vinculacaoIds.has(e.id)}
+                      onChange={() => toggleVinculo(e.id)}
+                      className="h-4 w-4"
+                    />
+                    {e.nome}
+                  </label>
+                ))}
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setVinculandoId(null)}
+                className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={saveVinculos}
+                disabled={savingVinculo}
+                className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}
+              >
+                {savingVinculo ? "Salvando..." : "Salvar vinculos"}
+              </button>
+            </div>
           </CardContent>
         </Card>
       )}

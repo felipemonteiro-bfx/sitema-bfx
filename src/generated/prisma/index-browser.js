@@ -242,7 +242,13 @@ exports.Prisma.ConfigScalarFieldEnum = {
   litellmUrl: 'litellmUrl',
   litellmKey: 'litellmKey',
   litellmModel: 'litellmModel',
-  litellmEnableThinking: 'litellmEnableThinking'
+  litellmEnableThinking: 'litellmEnableThinking',
+  smtpHost: 'smtpHost',
+  smtpPort: 'smtpPort',
+  smtpUser: 'smtpUser',
+  smtpPass: 'smtpPass',
+  smtpFrom: 'smtpFrom',
+  adminEmail: 'adminEmail'
 };
 
 exports.Prisma.UsuarioScalarFieldEnum = {
@@ -274,6 +280,12 @@ exports.Prisma.EmpresaParceiraScalarFieldEnum = {
   emailRh: 'emailRh',
   cnpj: 'cnpj',
   emailsExtras: 'emailsExtras'
+};
+
+exports.Prisma.EmpresaVinculoScalarFieldEnum = {
+  id: 'id',
+  empresaId: 'empresaId',
+  vinculadaId: 'vinculadaId'
 };
 
 exports.Prisma.PagamentoScalarFieldEnum = {
@@ -407,6 +419,7 @@ exports.Prisma.ModelName = {
   Usuario: 'Usuario',
   Fornecedor: 'Fornecedor',
   EmpresaParceira: 'EmpresaParceira',
+  EmpresaVinculo: 'EmpresaVinculo',
   Pagamento: 'Pagamento',
   AuditLog: 'AuditLog',
   Despesa: 'Despesa',

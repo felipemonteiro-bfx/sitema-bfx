@@ -255,6 +255,32 @@ async function bulkDeleteEmpresas(ids: number[]) {
   revalidatePath("/cadastros");
 }
 
+async function vincularEmpresas(empresaId: number, vinculadaIds: number[]) {
+  "use server";
+  if (!empresaId) return;
+  try {
+    // Remove all existing vinculos for this empresa
+    await prisma.empresaVinculo.deleteMany({ where: { empresaId } });
+    // Create new vinculos (symmetric: A->B and B->A)
+    if (vinculadaIds.length > 0) {
+      const pairs = vinculadaIds.flatMap((vid) => [
+        { empresaId, vinculadaId: vid },
+        { empresaId: vid, vinculadaId: empresaId },
+      ]);
+      // Use upsert-style: delete duplicates first
+      const uniquePairs = pairs.filter(
+        (p, idx, arr) =>
+          arr.findIndex((x) => x.empresaId === p.empresaId && x.vinculadaId === p.vinculadaId) === idx
+      );
+      await prisma.empresaVinculo.createMany({ data: uniquePairs, skipDuplicates: true });
+    }
+    await createAuditLog("empresa:vincular", { empresaId, vinculadaIds });
+    revalidatePath("/cadastros");
+  } catch (err) {
+    console.error("[vincularEmpresas]", err);
+  }
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const editClienteId = sp.editCliente ? Number(sp.editCliente) : 0;
@@ -277,7 +303,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const editEmpresaData = editEmpresaId ? await prisma.empresaParceira.findUnique({
     where: { id: editEmpresaId },
     select: { id: true, nome: true, responsavelRh: true, telefoneRh: true, emailRh: true, cnpj: true, emailsExtras: true },
-  }) : null;
+  }).catch(() => null) : null;
 
   const errorMsg = sp.error === "nome_duplicado"
     ? "Ja existe um cliente com esse nome. Use um nome diferente."
@@ -331,12 +357,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     )
   ).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
-  const empresas = await prisma.empresaParceira.findMany({
+  const empresasRaw = await prisma.empresaParceira.findMany({
     where: sp.q_empresas ? {
       nome: { contains: sp.q_empresas, mode: 'insensitive' }
     } : {},
-    orderBy: { nome: "asc" }
+    orderBy: { nome: "asc" },
   });
+
+  // Try to include vinculos — table may not exist on older deployments
+  type EmpresaWithVinculos = typeof empresasRaw[0] & {
+    vinculos?: { vinculada: { id: number; nome: string } }[];
+  };
+  let empresas: EmpresaWithVinculos[] = empresasRaw;
+  try {
+    const withVinculos = await prisma.empresaParceira.findMany({
+      where: sp.q_empresas ? { nome: { contains: sp.q_empresas, mode: 'insensitive' } } : {},
+      orderBy: { nome: "asc" },
+      include: {
+        vinculos: { include: { vinculada: { select: { id: true, nome: true } } } },
+      },
+    });
+    empresas = withVinculos;
+  } catch {
+    // Table not yet migrated, use raw without vinculos
+  }
 
   const fornecedores = await prisma.fornecedor.findMany({
     where: sp.q_fornecedores ? {
@@ -459,6 +503,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 onAddAction={addEmpresa}
                 onUpdateAction={updateEmpresa}
                 onBulkDeleteAction={bulkDeleteEmpresas}
+                onVincularAction={vincularEmpresas}
               />
             ),
           },

@@ -64,6 +64,11 @@ export type Fornecedor = $Result.DefaultSelection<Prisma.$FornecedorPayload>
  */
 export type EmpresaParceira = $Result.DefaultSelection<Prisma.$EmpresaParceiraPayload>
 /**
+ * Model EmpresaVinculo
+ * 
+ */
+export type EmpresaVinculo = $Result.DefaultSelection<Prisma.$EmpresaVinculoPayload>
+/**
  * Model Pagamento
  * 
  */
@@ -331,6 +336,16 @@ export class PrismaClient<
     * ```
     */
   get empresaParceira(): Prisma.EmpresaParceiraDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.empresaVinculo`: Exposes CRUD operations for the **EmpresaVinculo** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more EmpresaVinculos
+    * const empresaVinculos = await prisma.empresaVinculo.findMany()
+    * ```
+    */
+  get empresaVinculo(): Prisma.EmpresaVinculoDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.pagamento`: Exposes CRUD operations for the **Pagamento** model.
@@ -882,6 +897,7 @@ export namespace Prisma {
     Usuario: 'Usuario',
     Fornecedor: 'Fornecedor',
     EmpresaParceira: 'EmpresaParceira',
+    EmpresaVinculo: 'EmpresaVinculo',
     Pagamento: 'Pagamento',
     AuditLog: 'AuditLog',
     Despesa: 'Despesa',
@@ -910,7 +926,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem" | "assinatura" | "notificacao" | "vozDublador" | "anticipacaoBatch"
+      modelProps: "cliente" | "produto" | "venda" | "documento" | "itemVenda" | "parcelaVencimento" | "config" | "usuario" | "fornecedor" | "empresaParceira" | "empresaVinculo" | "pagamento" | "auditLog" | "despesa" | "aviso" | "whatsAppEnvioLog" | "aiMensagem" | "assinatura" | "notificacao" | "vozDublador" | "anticipacaoBatch"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1651,6 +1667,80 @@ export namespace Prisma {
           count: {
             args: Prisma.EmpresaParceiraCountArgs<ExtArgs>
             result: $Utils.Optional<EmpresaParceiraCountAggregateOutputType> | number
+          }
+        }
+      }
+      EmpresaVinculo: {
+        payload: Prisma.$EmpresaVinculoPayload<ExtArgs>
+        fields: Prisma.EmpresaVinculoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.EmpresaVinculoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.EmpresaVinculoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>
+          }
+          findFirst: {
+            args: Prisma.EmpresaVinculoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.EmpresaVinculoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>
+          }
+          findMany: {
+            args: Prisma.EmpresaVinculoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>[]
+          }
+          create: {
+            args: Prisma.EmpresaVinculoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>
+          }
+          createMany: {
+            args: Prisma.EmpresaVinculoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.EmpresaVinculoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>[]
+          }
+          delete: {
+            args: Prisma.EmpresaVinculoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>
+          }
+          update: {
+            args: Prisma.EmpresaVinculoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>
+          }
+          deleteMany: {
+            args: Prisma.EmpresaVinculoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.EmpresaVinculoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.EmpresaVinculoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>[]
+          }
+          upsert: {
+            args: Prisma.EmpresaVinculoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$EmpresaVinculoPayload>
+          }
+          aggregate: {
+            args: Prisma.EmpresaVinculoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateEmpresaVinculo>
+          }
+          groupBy: {
+            args: Prisma.EmpresaVinculoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<EmpresaVinculoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.EmpresaVinculoCountArgs<ExtArgs>
+            result: $Utils.Optional<EmpresaVinculoCountAggregateOutputType> | number
           }
         }
       }
@@ -2500,6 +2590,7 @@ export namespace Prisma {
     usuario?: UsuarioOmit
     fornecedor?: FornecedorOmit
     empresaParceira?: EmpresaParceiraOmit
+    empresaVinculo?: EmpresaVinculoOmit
     pagamento?: PagamentoOmit
     auditLog?: AuditLogOmit
     despesa?: DespesaOmit
@@ -2693,6 +2784,46 @@ export namespace Prisma {
    */
   export type FornecedorCountOutputTypeCountProdutosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProdutoWhereInput
+  }
+
+
+  /**
+   * Count Type EmpresaParceiraCountOutputType
+   */
+
+  export type EmpresaParceiraCountOutputType = {
+    vinculos: number
+    vinculadaPor: number
+  }
+
+  export type EmpresaParceiraCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vinculos?: boolean | EmpresaParceiraCountOutputTypeCountVinculosArgs
+    vinculadaPor?: boolean | EmpresaParceiraCountOutputTypeCountVinculadaPorArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * EmpresaParceiraCountOutputType without action
+   */
+  export type EmpresaParceiraCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaParceiraCountOutputType
+     */
+    select?: EmpresaParceiraCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * EmpresaParceiraCountOutputType without action
+   */
+  export type EmpresaParceiraCountOutputTypeCountVinculosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EmpresaVinculoWhereInput
+  }
+
+  /**
+   * EmpresaParceiraCountOutputType without action
+   */
+  export type EmpresaParceiraCountOutputTypeCountVinculadaPorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EmpresaVinculoWhereInput
   }
 
 
@@ -10145,6 +10276,7 @@ export namespace Prisma {
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
     whatsappTakeoverMinutos: number | null
+    smtpPort: number | null
   }
 
   export type ConfigSumAggregateOutputType = {
@@ -10162,6 +10294,7 @@ export namespace Prisma {
     whatsappDiasInativo: number | null
     whatsappPreAtendimento: number | null
     whatsappTakeoverMinutos: number | null
+    smtpPort: number | null
   }
 
   export type ConfigMinAggregateOutputType = {
@@ -10194,6 +10327,12 @@ export namespace Prisma {
     litellmKey: string | null
     litellmModel: string | null
     litellmEnableThinking: boolean | null
+    smtpHost: string | null
+    smtpPort: number | null
+    smtpUser: string | null
+    smtpPass: string | null
+    smtpFrom: string | null
+    adminEmail: string | null
   }
 
   export type ConfigMaxAggregateOutputType = {
@@ -10226,6 +10365,12 @@ export namespace Prisma {
     litellmKey: string | null
     litellmModel: string | null
     litellmEnableThinking: boolean | null
+    smtpHost: string | null
+    smtpPort: number | null
+    smtpUser: string | null
+    smtpPass: string | null
+    smtpFrom: string | null
+    adminEmail: string | null
   }
 
   export type ConfigCountAggregateOutputType = {
@@ -10258,6 +10403,12 @@ export namespace Prisma {
     litellmKey: number
     litellmModel: number
     litellmEnableThinking: number
+    smtpHost: number
+    smtpPort: number
+    smtpUser: number
+    smtpPass: number
+    smtpFrom: number
+    adminEmail: number
     _all: number
   }
 
@@ -10277,6 +10428,7 @@ export namespace Prisma {
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
     whatsappTakeoverMinutos?: true
+    smtpPort?: true
   }
 
   export type ConfigSumAggregateInputType = {
@@ -10294,6 +10446,7 @@ export namespace Prisma {
     whatsappDiasInativo?: true
     whatsappPreAtendimento?: true
     whatsappTakeoverMinutos?: true
+    smtpPort?: true
   }
 
   export type ConfigMinAggregateInputType = {
@@ -10326,6 +10479,12 @@ export namespace Prisma {
     litellmKey?: true
     litellmModel?: true
     litellmEnableThinking?: true
+    smtpHost?: true
+    smtpPort?: true
+    smtpUser?: true
+    smtpPass?: true
+    smtpFrom?: true
+    adminEmail?: true
   }
 
   export type ConfigMaxAggregateInputType = {
@@ -10358,6 +10517,12 @@ export namespace Prisma {
     litellmKey?: true
     litellmModel?: true
     litellmEnableThinking?: true
+    smtpHost?: true
+    smtpPort?: true
+    smtpUser?: true
+    smtpPass?: true
+    smtpFrom?: true
+    adminEmail?: true
   }
 
   export type ConfigCountAggregateInputType = {
@@ -10390,6 +10555,12 @@ export namespace Prisma {
     litellmKey?: true
     litellmModel?: true
     litellmEnableThinking?: true
+    smtpHost?: true
+    smtpPort?: true
+    smtpUser?: true
+    smtpPass?: true
+    smtpFrom?: true
+    adminEmail?: true
     _all?: true
   }
 
@@ -10509,6 +10680,12 @@ export namespace Prisma {
     litellmKey: string | null
     litellmModel: string | null
     litellmEnableThinking: boolean | null
+    smtpHost: string | null
+    smtpPort: number | null
+    smtpUser: string | null
+    smtpPass: string | null
+    smtpFrom: string | null
+    adminEmail: string | null
     _count: ConfigCountAggregateOutputType | null
     _avg: ConfigAvgAggregateOutputType | null
     _sum: ConfigSumAggregateOutputType | null
@@ -10560,6 +10737,12 @@ export namespace Prisma {
     litellmKey?: boolean
     litellmModel?: boolean
     litellmEnableThinking?: boolean
+    smtpHost?: boolean
+    smtpPort?: boolean
+    smtpUser?: boolean
+    smtpPass?: boolean
+    smtpFrom?: boolean
+    adminEmail?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10592,6 +10775,12 @@ export namespace Prisma {
     litellmKey?: boolean
     litellmModel?: boolean
     litellmEnableThinking?: boolean
+    smtpHost?: boolean
+    smtpPort?: boolean
+    smtpUser?: boolean
+    smtpPass?: boolean
+    smtpFrom?: boolean
+    adminEmail?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -10624,6 +10813,12 @@ export namespace Prisma {
     litellmKey?: boolean
     litellmModel?: boolean
     litellmEnableThinking?: boolean
+    smtpHost?: boolean
+    smtpPort?: boolean
+    smtpUser?: boolean
+    smtpPass?: boolean
+    smtpFrom?: boolean
+    adminEmail?: boolean
   }, ExtArgs["result"]["config"]>
 
   export type ConfigSelectScalar = {
@@ -10656,9 +10851,15 @@ export namespace Prisma {
     litellmKey?: boolean
     litellmModel?: boolean
     litellmEnableThinking?: boolean
+    smtpHost?: boolean
+    smtpPort?: boolean
+    smtpUser?: boolean
+    smtpPass?: boolean
+    smtpFrom?: boolean
+    adminEmail?: boolean
   }
 
-  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento" | "whatsappTakeoverMinutos" | "aiProvider" | "litellmUrl" | "litellmKey" | "litellmModel" | "litellmEnableThinking", ExtArgs["result"]["config"]>
+  export type ConfigOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "modeloContrato" | "modeloReciboVenda" | "logoPath" | "openaiKey" | "geminiKey" | "asaasApiKey" | "asaasEnv" | "evolutionApiUrl" | "evolutionApiKey" | "evolutionInstance" | "whatsappAutoEnabled" | "whatsappAutoRecibo" | "whatsappAutoBoleto" | "whatsappAutoLembrete" | "whatsappAutoReativacao" | "whatsappAutoAniversario" | "whatsappAutoInadimplencia" | "whatsappAutoNPS" | "whatsappAutoBoasVindas" | "whatsappAutoAgradecimento" | "whatsappDiasInativo" | "whatsappPreAtendimento" | "whatsappTakeoverMinutos" | "aiProvider" | "litellmUrl" | "litellmKey" | "litellmModel" | "litellmEnableThinking" | "smtpHost" | "smtpPort" | "smtpUser" | "smtpPass" | "smtpFrom" | "adminEmail", ExtArgs["result"]["config"]>
 
   export type $ConfigPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Config"
@@ -10693,6 +10894,12 @@ export namespace Prisma {
       litellmKey: string | null
       litellmModel: string | null
       litellmEnableThinking: boolean | null
+      smtpHost: string | null
+      smtpPort: number | null
+      smtpUser: string | null
+      smtpPass: string | null
+      smtpFrom: string | null
+      adminEmail: string | null
     }, ExtArgs["result"]["config"]>
     composites: {}
   }
@@ -11145,6 +11352,12 @@ export namespace Prisma {
     readonly litellmKey: FieldRef<"Config", 'String'>
     readonly litellmModel: FieldRef<"Config", 'String'>
     readonly litellmEnableThinking: FieldRef<"Config", 'Boolean'>
+    readonly smtpHost: FieldRef<"Config", 'String'>
+    readonly smtpPort: FieldRef<"Config", 'Int'>
+    readonly smtpUser: FieldRef<"Config", 'String'>
+    readonly smtpPass: FieldRef<"Config", 'String'>
+    readonly smtpFrom: FieldRef<"Config", 'String'>
+    readonly adminEmail: FieldRef<"Config", 'String'>
   }
     
 
@@ -13931,6 +14144,9 @@ export namespace Prisma {
     emailRh?: boolean
     cnpj?: boolean
     emailsExtras?: boolean
+    vinculos?: boolean | EmpresaParceira$vinculosArgs<ExtArgs>
+    vinculadaPor?: boolean | EmpresaParceira$vinculadaPorArgs<ExtArgs>
+    _count?: boolean | EmpresaParceiraCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["empresaParceira"]>
 
   export type EmpresaParceiraSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13964,10 +14180,20 @@ export namespace Prisma {
   }
 
   export type EmpresaParceiraOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "responsavelRh" | "telefoneRh" | "emailRh" | "cnpj" | "emailsExtras", ExtArgs["result"]["empresaParceira"]>
+  export type EmpresaParceiraInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vinculos?: boolean | EmpresaParceira$vinculosArgs<ExtArgs>
+    vinculadaPor?: boolean | EmpresaParceira$vinculadaPorArgs<ExtArgs>
+    _count?: boolean | EmpresaParceiraCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type EmpresaParceiraIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type EmpresaParceiraIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $EmpresaParceiraPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "EmpresaParceira"
-    objects: {}
+    objects: {
+      vinculos: Prisma.$EmpresaVinculoPayload<ExtArgs>[]
+      vinculadaPor: Prisma.$EmpresaVinculoPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       nome: string
@@ -14370,6 +14596,8 @@ export namespace Prisma {
    */
   export interface Prisma__EmpresaParceiraClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    vinculos<T extends EmpresaParceira$vinculosArgs<ExtArgs> = {}>(args?: Subset<T, EmpresaParceira$vinculosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    vinculadaPor<T extends EmpresaParceira$vinculadaPorArgs<ExtArgs> = {}>(args?: Subset<T, EmpresaParceira$vinculadaPorArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14423,6 +14651,10 @@ export namespace Prisma {
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+    /**
      * Filter, which EmpresaParceira to fetch.
      */
     where: EmpresaParceiraWhereUniqueInput
@@ -14441,6 +14673,10 @@ export namespace Prisma {
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+    /**
      * Filter, which EmpresaParceira to fetch.
      */
     where: EmpresaParceiraWhereUniqueInput
@@ -14458,6 +14694,10 @@ export namespace Prisma {
      * Omit specific fields from the EmpresaParceira
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
     /**
      * Filter, which EmpresaParceira to fetch.
      */
@@ -14507,6 +14747,10 @@ export namespace Prisma {
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+    /**
      * Filter, which EmpresaParceira to fetch.
      */
     where?: EmpresaParceiraWhereInput
@@ -14555,6 +14799,10 @@ export namespace Prisma {
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+    /**
      * Filter, which EmpresaParceiras to fetch.
      */
     where?: EmpresaParceiraWhereInput
@@ -14597,6 +14845,10 @@ export namespace Prisma {
      * Omit specific fields from the EmpresaParceira
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
     /**
      * The data needed to create a EmpresaParceira.
      */
@@ -14645,6 +14897,10 @@ export namespace Prisma {
      * Omit specific fields from the EmpresaParceira
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
     /**
      * The data needed to update a EmpresaParceira.
      */
@@ -14712,6 +14968,10 @@ export namespace Prisma {
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+    /**
      * The filter to search for the EmpresaParceira to update in case it exists.
      */
     where: EmpresaParceiraWhereUniqueInput
@@ -14738,6 +14998,10 @@ export namespace Prisma {
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+    /**
      * Filter which EmpresaParceira to delete.
      */
     where: EmpresaParceiraWhereUniqueInput
@@ -14758,6 +15022,54 @@ export namespace Prisma {
   }
 
   /**
+   * EmpresaParceira.vinculos
+   */
+  export type EmpresaParceira$vinculosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    where?: EmpresaVinculoWhereInput
+    orderBy?: EmpresaVinculoOrderByWithRelationInput | EmpresaVinculoOrderByWithRelationInput[]
+    cursor?: EmpresaVinculoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EmpresaVinculoScalarFieldEnum | EmpresaVinculoScalarFieldEnum[]
+  }
+
+  /**
+   * EmpresaParceira.vinculadaPor
+   */
+  export type EmpresaParceira$vinculadaPorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    where?: EmpresaVinculoWhereInput
+    orderBy?: EmpresaVinculoOrderByWithRelationInput | EmpresaVinculoOrderByWithRelationInput[]
+    cursor?: EmpresaVinculoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: EmpresaVinculoScalarFieldEnum | EmpresaVinculoScalarFieldEnum[]
+  }
+
+  /**
    * EmpresaParceira without action
    */
   export type EmpresaParceiraDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -14769,6 +15081,1092 @@ export namespace Prisma {
      * Omit specific fields from the EmpresaParceira
      */
     omit?: EmpresaParceiraOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model EmpresaVinculo
+   */
+
+  export type AggregateEmpresaVinculo = {
+    _count: EmpresaVinculoCountAggregateOutputType | null
+    _avg: EmpresaVinculoAvgAggregateOutputType | null
+    _sum: EmpresaVinculoSumAggregateOutputType | null
+    _min: EmpresaVinculoMinAggregateOutputType | null
+    _max: EmpresaVinculoMaxAggregateOutputType | null
+  }
+
+  export type EmpresaVinculoAvgAggregateOutputType = {
+    id: number | null
+    empresaId: number | null
+    vinculadaId: number | null
+  }
+
+  export type EmpresaVinculoSumAggregateOutputType = {
+    id: number | null
+    empresaId: number | null
+    vinculadaId: number | null
+  }
+
+  export type EmpresaVinculoMinAggregateOutputType = {
+    id: number | null
+    empresaId: number | null
+    vinculadaId: number | null
+  }
+
+  export type EmpresaVinculoMaxAggregateOutputType = {
+    id: number | null
+    empresaId: number | null
+    vinculadaId: number | null
+  }
+
+  export type EmpresaVinculoCountAggregateOutputType = {
+    id: number
+    empresaId: number
+    vinculadaId: number
+    _all: number
+  }
+
+
+  export type EmpresaVinculoAvgAggregateInputType = {
+    id?: true
+    empresaId?: true
+    vinculadaId?: true
+  }
+
+  export type EmpresaVinculoSumAggregateInputType = {
+    id?: true
+    empresaId?: true
+    vinculadaId?: true
+  }
+
+  export type EmpresaVinculoMinAggregateInputType = {
+    id?: true
+    empresaId?: true
+    vinculadaId?: true
+  }
+
+  export type EmpresaVinculoMaxAggregateInputType = {
+    id?: true
+    empresaId?: true
+    vinculadaId?: true
+  }
+
+  export type EmpresaVinculoCountAggregateInputType = {
+    id?: true
+    empresaId?: true
+    vinculadaId?: true
+    _all?: true
+  }
+
+  export type EmpresaVinculoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EmpresaVinculo to aggregate.
+     */
+    where?: EmpresaVinculoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EmpresaVinculos to fetch.
+     */
+    orderBy?: EmpresaVinculoOrderByWithRelationInput | EmpresaVinculoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: EmpresaVinculoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EmpresaVinculos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EmpresaVinculos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned EmpresaVinculos
+    **/
+    _count?: true | EmpresaVinculoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: EmpresaVinculoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: EmpresaVinculoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: EmpresaVinculoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: EmpresaVinculoMaxAggregateInputType
+  }
+
+  export type GetEmpresaVinculoAggregateType<T extends EmpresaVinculoAggregateArgs> = {
+        [P in keyof T & keyof AggregateEmpresaVinculo]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateEmpresaVinculo[P]>
+      : GetScalarType<T[P], AggregateEmpresaVinculo[P]>
+  }
+
+
+
+
+  export type EmpresaVinculoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: EmpresaVinculoWhereInput
+    orderBy?: EmpresaVinculoOrderByWithAggregationInput | EmpresaVinculoOrderByWithAggregationInput[]
+    by: EmpresaVinculoScalarFieldEnum[] | EmpresaVinculoScalarFieldEnum
+    having?: EmpresaVinculoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: EmpresaVinculoCountAggregateInputType | true
+    _avg?: EmpresaVinculoAvgAggregateInputType
+    _sum?: EmpresaVinculoSumAggregateInputType
+    _min?: EmpresaVinculoMinAggregateInputType
+    _max?: EmpresaVinculoMaxAggregateInputType
+  }
+
+  export type EmpresaVinculoGroupByOutputType = {
+    id: number
+    empresaId: number
+    vinculadaId: number
+    _count: EmpresaVinculoCountAggregateOutputType | null
+    _avg: EmpresaVinculoAvgAggregateOutputType | null
+    _sum: EmpresaVinculoSumAggregateOutputType | null
+    _min: EmpresaVinculoMinAggregateOutputType | null
+    _max: EmpresaVinculoMaxAggregateOutputType | null
+  }
+
+  type GetEmpresaVinculoGroupByPayload<T extends EmpresaVinculoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<EmpresaVinculoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof EmpresaVinculoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], EmpresaVinculoGroupByOutputType[P]>
+            : GetScalarType<T[P], EmpresaVinculoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type EmpresaVinculoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    empresaId?: boolean
+    vinculadaId?: boolean
+    empresa?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+    vinculada?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["empresaVinculo"]>
+
+  export type EmpresaVinculoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    empresaId?: boolean
+    vinculadaId?: boolean
+    empresa?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+    vinculada?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["empresaVinculo"]>
+
+  export type EmpresaVinculoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    empresaId?: boolean
+    vinculadaId?: boolean
+    empresa?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+    vinculada?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["empresaVinculo"]>
+
+  export type EmpresaVinculoSelectScalar = {
+    id?: boolean
+    empresaId?: boolean
+    vinculadaId?: boolean
+  }
+
+  export type EmpresaVinculoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "empresaId" | "vinculadaId", ExtArgs["result"]["empresaVinculo"]>
+  export type EmpresaVinculoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    empresa?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+    vinculada?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+  }
+  export type EmpresaVinculoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    empresa?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+    vinculada?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+  }
+  export type EmpresaVinculoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    empresa?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+    vinculada?: boolean | EmpresaParceiraDefaultArgs<ExtArgs>
+  }
+
+  export type $EmpresaVinculoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "EmpresaVinculo"
+    objects: {
+      empresa: Prisma.$EmpresaParceiraPayload<ExtArgs>
+      vinculada: Prisma.$EmpresaParceiraPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      empresaId: number
+      vinculadaId: number
+    }, ExtArgs["result"]["empresaVinculo"]>
+    composites: {}
+  }
+
+  type EmpresaVinculoGetPayload<S extends boolean | null | undefined | EmpresaVinculoDefaultArgs> = $Result.GetResult<Prisma.$EmpresaVinculoPayload, S>
+
+  type EmpresaVinculoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<EmpresaVinculoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: EmpresaVinculoCountAggregateInputType | true
+    }
+
+  export interface EmpresaVinculoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['EmpresaVinculo'], meta: { name: 'EmpresaVinculo' } }
+    /**
+     * Find zero or one EmpresaVinculo that matches the filter.
+     * @param {EmpresaVinculoFindUniqueArgs} args - Arguments to find a EmpresaVinculo
+     * @example
+     * // Get one EmpresaVinculo
+     * const empresaVinculo = await prisma.empresaVinculo.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends EmpresaVinculoFindUniqueArgs>(args: SelectSubset<T, EmpresaVinculoFindUniqueArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one EmpresaVinculo that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {EmpresaVinculoFindUniqueOrThrowArgs} args - Arguments to find a EmpresaVinculo
+     * @example
+     * // Get one EmpresaVinculo
+     * const empresaVinculo = await prisma.empresaVinculo.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends EmpresaVinculoFindUniqueOrThrowArgs>(args: SelectSubset<T, EmpresaVinculoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first EmpresaVinculo that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmpresaVinculoFindFirstArgs} args - Arguments to find a EmpresaVinculo
+     * @example
+     * // Get one EmpresaVinculo
+     * const empresaVinculo = await prisma.empresaVinculo.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends EmpresaVinculoFindFirstArgs>(args?: SelectSubset<T, EmpresaVinculoFindFirstArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first EmpresaVinculo that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmpresaVinculoFindFirstOrThrowArgs} args - Arguments to find a EmpresaVinculo
+     * @example
+     * // Get one EmpresaVinculo
+     * const empresaVinculo = await prisma.empresaVinculo.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends EmpresaVinculoFindFirstOrThrowArgs>(args?: SelectSubset<T, EmpresaVinculoFindFirstOrThrowArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more EmpresaVinculos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmpresaVinculoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all EmpresaVinculos
+     * const empresaVinculos = await prisma.empresaVinculo.findMany()
+     * 
+     * // Get first 10 EmpresaVinculos
+     * const empresaVinculos = await prisma.empresaVinculo.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const empresaVinculoWithIdOnly = await prisma.empresaVinculo.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends EmpresaVinculoFindManyArgs>(args?: SelectSubset<T, EmpresaVinculoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a EmpresaVinculo.
+     * @param {EmpresaVinculoCreateArgs} args - Arguments to create a EmpresaVinculo.
+     * @example
+     * // Create one EmpresaVinculo
+     * const EmpresaVinculo = await prisma.empresaVinculo.create({
+     *   data: {
+     *     // ... data to create a EmpresaVinculo
+     *   }
+     * })
+     * 
+     */
+    create<T extends EmpresaVinculoCreateArgs>(args: SelectSubset<T, EmpresaVinculoCreateArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many EmpresaVinculos.
+     * @param {EmpresaVinculoCreateManyArgs} args - Arguments to create many EmpresaVinculos.
+     * @example
+     * // Create many EmpresaVinculos
+     * const empresaVinculo = await prisma.empresaVinculo.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends EmpresaVinculoCreateManyArgs>(args?: SelectSubset<T, EmpresaVinculoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many EmpresaVinculos and returns the data saved in the database.
+     * @param {EmpresaVinculoCreateManyAndReturnArgs} args - Arguments to create many EmpresaVinculos.
+     * @example
+     * // Create many EmpresaVinculos
+     * const empresaVinculo = await prisma.empresaVinculo.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many EmpresaVinculos and only return the `id`
+     * const empresaVinculoWithIdOnly = await prisma.empresaVinculo.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends EmpresaVinculoCreateManyAndReturnArgs>(args?: SelectSubset<T, EmpresaVinculoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a EmpresaVinculo.
+     * @param {EmpresaVinculoDeleteArgs} args - Arguments to delete one EmpresaVinculo.
+     * @example
+     * // Delete one EmpresaVinculo
+     * const EmpresaVinculo = await prisma.empresaVinculo.delete({
+     *   where: {
+     *     // ... filter to delete one EmpresaVinculo
+     *   }
+     * })
+     * 
+     */
+    delete<T extends EmpresaVinculoDeleteArgs>(args: SelectSubset<T, EmpresaVinculoDeleteArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one EmpresaVinculo.
+     * @param {EmpresaVinculoUpdateArgs} args - Arguments to update one EmpresaVinculo.
+     * @example
+     * // Update one EmpresaVinculo
+     * const empresaVinculo = await prisma.empresaVinculo.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends EmpresaVinculoUpdateArgs>(args: SelectSubset<T, EmpresaVinculoUpdateArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more EmpresaVinculos.
+     * @param {EmpresaVinculoDeleteManyArgs} args - Arguments to filter EmpresaVinculos to delete.
+     * @example
+     * // Delete a few EmpresaVinculos
+     * const { count } = await prisma.empresaVinculo.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends EmpresaVinculoDeleteManyArgs>(args?: SelectSubset<T, EmpresaVinculoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EmpresaVinculos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmpresaVinculoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many EmpresaVinculos
+     * const empresaVinculo = await prisma.empresaVinculo.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends EmpresaVinculoUpdateManyArgs>(args: SelectSubset<T, EmpresaVinculoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more EmpresaVinculos and returns the data updated in the database.
+     * @param {EmpresaVinculoUpdateManyAndReturnArgs} args - Arguments to update many EmpresaVinculos.
+     * @example
+     * // Update many EmpresaVinculos
+     * const empresaVinculo = await prisma.empresaVinculo.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more EmpresaVinculos and only return the `id`
+     * const empresaVinculoWithIdOnly = await prisma.empresaVinculo.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends EmpresaVinculoUpdateManyAndReturnArgs>(args: SelectSubset<T, EmpresaVinculoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one EmpresaVinculo.
+     * @param {EmpresaVinculoUpsertArgs} args - Arguments to update or create a EmpresaVinculo.
+     * @example
+     * // Update or create a EmpresaVinculo
+     * const empresaVinculo = await prisma.empresaVinculo.upsert({
+     *   create: {
+     *     // ... data to create a EmpresaVinculo
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the EmpresaVinculo we want to update
+     *   }
+     * })
+     */
+    upsert<T extends EmpresaVinculoUpsertArgs>(args: SelectSubset<T, EmpresaVinculoUpsertArgs<ExtArgs>>): Prisma__EmpresaVinculoClient<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of EmpresaVinculos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmpresaVinculoCountArgs} args - Arguments to filter EmpresaVinculos to count.
+     * @example
+     * // Count the number of EmpresaVinculos
+     * const count = await prisma.empresaVinculo.count({
+     *   where: {
+     *     // ... the filter for the EmpresaVinculos we want to count
+     *   }
+     * })
+    **/
+    count<T extends EmpresaVinculoCountArgs>(
+      args?: Subset<T, EmpresaVinculoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], EmpresaVinculoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a EmpresaVinculo.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmpresaVinculoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends EmpresaVinculoAggregateArgs>(args: Subset<T, EmpresaVinculoAggregateArgs>): Prisma.PrismaPromise<GetEmpresaVinculoAggregateType<T>>
+
+    /**
+     * Group by EmpresaVinculo.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {EmpresaVinculoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends EmpresaVinculoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: EmpresaVinculoGroupByArgs['orderBy'] }
+        : { orderBy?: EmpresaVinculoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, EmpresaVinculoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetEmpresaVinculoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the EmpresaVinculo model
+   */
+  readonly fields: EmpresaVinculoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for EmpresaVinculo.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__EmpresaVinculoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    empresa<T extends EmpresaParceiraDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EmpresaParceiraDefaultArgs<ExtArgs>>): Prisma__EmpresaParceiraClient<$Result.GetResult<Prisma.$EmpresaParceiraPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    vinculada<T extends EmpresaParceiraDefaultArgs<ExtArgs> = {}>(args?: Subset<T, EmpresaParceiraDefaultArgs<ExtArgs>>): Prisma__EmpresaParceiraClient<$Result.GetResult<Prisma.$EmpresaParceiraPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the EmpresaVinculo model
+   */
+  interface EmpresaVinculoFieldRefs {
+    readonly id: FieldRef<"EmpresaVinculo", 'Int'>
+    readonly empresaId: FieldRef<"EmpresaVinculo", 'Int'>
+    readonly vinculadaId: FieldRef<"EmpresaVinculo", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * EmpresaVinculo findUnique
+   */
+  export type EmpresaVinculoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * Filter, which EmpresaVinculo to fetch.
+     */
+    where: EmpresaVinculoWhereUniqueInput
+  }
+
+  /**
+   * EmpresaVinculo findUniqueOrThrow
+   */
+  export type EmpresaVinculoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * Filter, which EmpresaVinculo to fetch.
+     */
+    where: EmpresaVinculoWhereUniqueInput
+  }
+
+  /**
+   * EmpresaVinculo findFirst
+   */
+  export type EmpresaVinculoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * Filter, which EmpresaVinculo to fetch.
+     */
+    where?: EmpresaVinculoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EmpresaVinculos to fetch.
+     */
+    orderBy?: EmpresaVinculoOrderByWithRelationInput | EmpresaVinculoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EmpresaVinculos.
+     */
+    cursor?: EmpresaVinculoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EmpresaVinculos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EmpresaVinculos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EmpresaVinculos.
+     */
+    distinct?: EmpresaVinculoScalarFieldEnum | EmpresaVinculoScalarFieldEnum[]
+  }
+
+  /**
+   * EmpresaVinculo findFirstOrThrow
+   */
+  export type EmpresaVinculoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * Filter, which EmpresaVinculo to fetch.
+     */
+    where?: EmpresaVinculoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EmpresaVinculos to fetch.
+     */
+    orderBy?: EmpresaVinculoOrderByWithRelationInput | EmpresaVinculoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for EmpresaVinculos.
+     */
+    cursor?: EmpresaVinculoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EmpresaVinculos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EmpresaVinculos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of EmpresaVinculos.
+     */
+    distinct?: EmpresaVinculoScalarFieldEnum | EmpresaVinculoScalarFieldEnum[]
+  }
+
+  /**
+   * EmpresaVinculo findMany
+   */
+  export type EmpresaVinculoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * Filter, which EmpresaVinculos to fetch.
+     */
+    where?: EmpresaVinculoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of EmpresaVinculos to fetch.
+     */
+    orderBy?: EmpresaVinculoOrderByWithRelationInput | EmpresaVinculoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing EmpresaVinculos.
+     */
+    cursor?: EmpresaVinculoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` EmpresaVinculos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` EmpresaVinculos.
+     */
+    skip?: number
+    distinct?: EmpresaVinculoScalarFieldEnum | EmpresaVinculoScalarFieldEnum[]
+  }
+
+  /**
+   * EmpresaVinculo create
+   */
+  export type EmpresaVinculoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * The data needed to create a EmpresaVinculo.
+     */
+    data: XOR<EmpresaVinculoCreateInput, EmpresaVinculoUncheckedCreateInput>
+  }
+
+  /**
+   * EmpresaVinculo createMany
+   */
+  export type EmpresaVinculoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many EmpresaVinculos.
+     */
+    data: EmpresaVinculoCreateManyInput | EmpresaVinculoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * EmpresaVinculo createManyAndReturn
+   */
+  export type EmpresaVinculoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * The data used to create many EmpresaVinculos.
+     */
+    data: EmpresaVinculoCreateManyInput | EmpresaVinculoCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EmpresaVinculo update
+   */
+  export type EmpresaVinculoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * The data needed to update a EmpresaVinculo.
+     */
+    data: XOR<EmpresaVinculoUpdateInput, EmpresaVinculoUncheckedUpdateInput>
+    /**
+     * Choose, which EmpresaVinculo to update.
+     */
+    where: EmpresaVinculoWhereUniqueInput
+  }
+
+  /**
+   * EmpresaVinculo updateMany
+   */
+  export type EmpresaVinculoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update EmpresaVinculos.
+     */
+    data: XOR<EmpresaVinculoUpdateManyMutationInput, EmpresaVinculoUncheckedUpdateManyInput>
+    /**
+     * Filter which EmpresaVinculos to update
+     */
+    where?: EmpresaVinculoWhereInput
+    /**
+     * Limit how many EmpresaVinculos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * EmpresaVinculo updateManyAndReturn
+   */
+  export type EmpresaVinculoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * The data used to update EmpresaVinculos.
+     */
+    data: XOR<EmpresaVinculoUpdateManyMutationInput, EmpresaVinculoUncheckedUpdateManyInput>
+    /**
+     * Filter which EmpresaVinculos to update
+     */
+    where?: EmpresaVinculoWhereInput
+    /**
+     * Limit how many EmpresaVinculos to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * EmpresaVinculo upsert
+   */
+  export type EmpresaVinculoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * The filter to search for the EmpresaVinculo to update in case it exists.
+     */
+    where: EmpresaVinculoWhereUniqueInput
+    /**
+     * In case the EmpresaVinculo found by the `where` argument doesn't exist, create a new EmpresaVinculo with this data.
+     */
+    create: XOR<EmpresaVinculoCreateInput, EmpresaVinculoUncheckedCreateInput>
+    /**
+     * In case the EmpresaVinculo was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<EmpresaVinculoUpdateInput, EmpresaVinculoUncheckedUpdateInput>
+  }
+
+  /**
+   * EmpresaVinculo delete
+   */
+  export type EmpresaVinculoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
+    /**
+     * Filter which EmpresaVinculo to delete.
+     */
+    where: EmpresaVinculoWhereUniqueInput
+  }
+
+  /**
+   * EmpresaVinculo deleteMany
+   */
+  export type EmpresaVinculoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which EmpresaVinculos to delete
+     */
+    where?: EmpresaVinculoWhereInput
+    /**
+     * Limit how many EmpresaVinculos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * EmpresaVinculo without action
+   */
+  export type EmpresaVinculoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaVinculo
+     */
+    select?: EmpresaVinculoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaVinculo
+     */
+    omit?: EmpresaVinculoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaVinculoInclude<ExtArgs> | null
   }
 
 
@@ -25471,7 +26869,13 @@ export namespace Prisma {
     litellmUrl: 'litellmUrl',
     litellmKey: 'litellmKey',
     litellmModel: 'litellmModel',
-    litellmEnableThinking: 'litellmEnableThinking'
+    litellmEnableThinking: 'litellmEnableThinking',
+    smtpHost: 'smtpHost',
+    smtpPort: 'smtpPort',
+    smtpUser: 'smtpUser',
+    smtpPass: 'smtpPass',
+    smtpFrom: 'smtpFrom',
+    adminEmail: 'adminEmail'
   };
 
   export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
@@ -25515,6 +26919,15 @@ export namespace Prisma {
   };
 
   export type EmpresaParceiraScalarFieldEnum = (typeof EmpresaParceiraScalarFieldEnum)[keyof typeof EmpresaParceiraScalarFieldEnum]
+
+
+  export const EmpresaVinculoScalarFieldEnum: {
+    id: 'id',
+    empresaId: 'empresaId',
+    vinculadaId: 'vinculadaId'
+  };
+
+  export type EmpresaVinculoScalarFieldEnum = (typeof EmpresaVinculoScalarFieldEnum)[keyof typeof EmpresaVinculoScalarFieldEnum]
 
 
   export const PagamentoScalarFieldEnum: {
@@ -26388,6 +27801,12 @@ export namespace Prisma {
     litellmKey?: StringNullableFilter<"Config"> | string | null
     litellmModel?: StringNullableFilter<"Config"> | string | null
     litellmEnableThinking?: BoolNullableFilter<"Config"> | boolean | null
+    smtpHost?: StringNullableFilter<"Config"> | string | null
+    smtpPort?: IntNullableFilter<"Config"> | number | null
+    smtpUser?: StringNullableFilter<"Config"> | string | null
+    smtpPass?: StringNullableFilter<"Config"> | string | null
+    smtpFrom?: StringNullableFilter<"Config"> | string | null
+    adminEmail?: StringNullableFilter<"Config"> | string | null
   }
 
   export type ConfigOrderByWithRelationInput = {
@@ -26420,6 +27839,12 @@ export namespace Prisma {
     litellmKey?: SortOrderInput | SortOrder
     litellmModel?: SortOrderInput | SortOrder
     litellmEnableThinking?: SortOrderInput | SortOrder
+    smtpHost?: SortOrderInput | SortOrder
+    smtpPort?: SortOrderInput | SortOrder
+    smtpUser?: SortOrderInput | SortOrder
+    smtpPass?: SortOrderInput | SortOrder
+    smtpFrom?: SortOrderInput | SortOrder
+    adminEmail?: SortOrderInput | SortOrder
   }
 
   export type ConfigWhereUniqueInput = Prisma.AtLeast<{
@@ -26455,6 +27880,12 @@ export namespace Prisma {
     litellmKey?: StringNullableFilter<"Config"> | string | null
     litellmModel?: StringNullableFilter<"Config"> | string | null
     litellmEnableThinking?: BoolNullableFilter<"Config"> | boolean | null
+    smtpHost?: StringNullableFilter<"Config"> | string | null
+    smtpPort?: IntNullableFilter<"Config"> | number | null
+    smtpUser?: StringNullableFilter<"Config"> | string | null
+    smtpPass?: StringNullableFilter<"Config"> | string | null
+    smtpFrom?: StringNullableFilter<"Config"> | string | null
+    adminEmail?: StringNullableFilter<"Config"> | string | null
   }, "id">
 
   export type ConfigOrderByWithAggregationInput = {
@@ -26487,6 +27918,12 @@ export namespace Prisma {
     litellmKey?: SortOrderInput | SortOrder
     litellmModel?: SortOrderInput | SortOrder
     litellmEnableThinking?: SortOrderInput | SortOrder
+    smtpHost?: SortOrderInput | SortOrder
+    smtpPort?: SortOrderInput | SortOrder
+    smtpUser?: SortOrderInput | SortOrder
+    smtpPass?: SortOrderInput | SortOrder
+    smtpFrom?: SortOrderInput | SortOrder
+    adminEmail?: SortOrderInput | SortOrder
     _count?: ConfigCountOrderByAggregateInput
     _avg?: ConfigAvgOrderByAggregateInput
     _max?: ConfigMaxOrderByAggregateInput
@@ -26527,6 +27964,12 @@ export namespace Prisma {
     litellmKey?: StringNullableWithAggregatesFilter<"Config"> | string | null
     litellmModel?: StringNullableWithAggregatesFilter<"Config"> | string | null
     litellmEnableThinking?: BoolNullableWithAggregatesFilter<"Config"> | boolean | null
+    smtpHost?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    smtpPort?: IntNullableWithAggregatesFilter<"Config"> | number | null
+    smtpUser?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    smtpPass?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    smtpFrom?: StringNullableWithAggregatesFilter<"Config"> | string | null
+    adminEmail?: StringNullableWithAggregatesFilter<"Config"> | string | null
   }
 
   export type UsuarioWhereInput = {
@@ -26676,6 +28119,8 @@ export namespace Prisma {
     emailRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     cnpj?: StringNullableFilter<"EmpresaParceira"> | string | null
     emailsExtras?: StringNullableFilter<"EmpresaParceira"> | string | null
+    vinculos?: EmpresaVinculoListRelationFilter
+    vinculadaPor?: EmpresaVinculoListRelationFilter
   }
 
   export type EmpresaParceiraOrderByWithRelationInput = {
@@ -26686,6 +28131,8 @@ export namespace Prisma {
     emailRh?: SortOrderInput | SortOrder
     cnpj?: SortOrderInput | SortOrder
     emailsExtras?: SortOrderInput | SortOrder
+    vinculos?: EmpresaVinculoOrderByRelationAggregateInput
+    vinculadaPor?: EmpresaVinculoOrderByRelationAggregateInput
   }
 
   export type EmpresaParceiraWhereUniqueInput = Prisma.AtLeast<{
@@ -26699,6 +28146,8 @@ export namespace Prisma {
     emailRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     cnpj?: StringNullableFilter<"EmpresaParceira"> | string | null
     emailsExtras?: StringNullableFilter<"EmpresaParceira"> | string | null
+    vinculos?: EmpresaVinculoListRelationFilter
+    vinculadaPor?: EmpresaVinculoListRelationFilter
   }, "id" | "nome">
 
   export type EmpresaParceiraOrderByWithAggregationInput = {
@@ -26727,6 +28176,57 @@ export namespace Prisma {
     emailRh?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
     cnpj?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
     emailsExtras?: StringNullableWithAggregatesFilter<"EmpresaParceira"> | string | null
+  }
+
+  export type EmpresaVinculoWhereInput = {
+    AND?: EmpresaVinculoWhereInput | EmpresaVinculoWhereInput[]
+    OR?: EmpresaVinculoWhereInput[]
+    NOT?: EmpresaVinculoWhereInput | EmpresaVinculoWhereInput[]
+    id?: IntFilter<"EmpresaVinculo"> | number
+    empresaId?: IntFilter<"EmpresaVinculo"> | number
+    vinculadaId?: IntFilter<"EmpresaVinculo"> | number
+    empresa?: XOR<EmpresaParceiraScalarRelationFilter, EmpresaParceiraWhereInput>
+    vinculada?: XOR<EmpresaParceiraScalarRelationFilter, EmpresaParceiraWhereInput>
+  }
+
+  export type EmpresaVinculoOrderByWithRelationInput = {
+    id?: SortOrder
+    empresaId?: SortOrder
+    vinculadaId?: SortOrder
+    empresa?: EmpresaParceiraOrderByWithRelationInput
+    vinculada?: EmpresaParceiraOrderByWithRelationInput
+  }
+
+  export type EmpresaVinculoWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    empresaId_vinculadaId?: EmpresaVinculoEmpresaIdVinculadaIdCompoundUniqueInput
+    AND?: EmpresaVinculoWhereInput | EmpresaVinculoWhereInput[]
+    OR?: EmpresaVinculoWhereInput[]
+    NOT?: EmpresaVinculoWhereInput | EmpresaVinculoWhereInput[]
+    empresaId?: IntFilter<"EmpresaVinculo"> | number
+    vinculadaId?: IntFilter<"EmpresaVinculo"> | number
+    empresa?: XOR<EmpresaParceiraScalarRelationFilter, EmpresaParceiraWhereInput>
+    vinculada?: XOR<EmpresaParceiraScalarRelationFilter, EmpresaParceiraWhereInput>
+  }, "id" | "empresaId_vinculadaId">
+
+  export type EmpresaVinculoOrderByWithAggregationInput = {
+    id?: SortOrder
+    empresaId?: SortOrder
+    vinculadaId?: SortOrder
+    _count?: EmpresaVinculoCountOrderByAggregateInput
+    _avg?: EmpresaVinculoAvgOrderByAggregateInput
+    _max?: EmpresaVinculoMaxOrderByAggregateInput
+    _min?: EmpresaVinculoMinOrderByAggregateInput
+    _sum?: EmpresaVinculoSumOrderByAggregateInput
+  }
+
+  export type EmpresaVinculoScalarWhereWithAggregatesInput = {
+    AND?: EmpresaVinculoScalarWhereWithAggregatesInput | EmpresaVinculoScalarWhereWithAggregatesInput[]
+    OR?: EmpresaVinculoScalarWhereWithAggregatesInput[]
+    NOT?: EmpresaVinculoScalarWhereWithAggregatesInput | EmpresaVinculoScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"EmpresaVinculo"> | number
+    empresaId?: IntWithAggregatesFilter<"EmpresaVinculo"> | number
+    vinculadaId?: IntWithAggregatesFilter<"EmpresaVinculo"> | number
   }
 
   export type PagamentoWhereInput = {
@@ -28007,6 +29507,12 @@ export namespace Prisma {
     litellmKey?: string | null
     litellmModel?: string | null
     litellmEnableThinking?: boolean | null
+    smtpHost?: string | null
+    smtpPort?: number | null
+    smtpUser?: string | null
+    smtpPass?: string | null
+    smtpFrom?: string | null
+    adminEmail?: string | null
   }
 
   export type ConfigUncheckedCreateInput = {
@@ -28039,6 +29545,12 @@ export namespace Prisma {
     litellmKey?: string | null
     litellmModel?: string | null
     litellmEnableThinking?: boolean | null
+    smtpHost?: string | null
+    smtpPort?: number | null
+    smtpUser?: string | null
+    smtpPass?: string | null
+    smtpFrom?: string | null
+    adminEmail?: string | null
   }
 
   export type ConfigUpdateInput = {
@@ -28070,6 +29582,12 @@ export namespace Prisma {
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
     litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    smtpHost?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    smtpUser?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPass?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpFrom?: NullableStringFieldUpdateOperationsInput | string | null
+    adminEmail?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ConfigUncheckedUpdateInput = {
@@ -28102,6 +29620,12 @@ export namespace Prisma {
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
     litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    smtpHost?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    smtpUser?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPass?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpFrom?: NullableStringFieldUpdateOperationsInput | string | null
+    adminEmail?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ConfigCreateManyInput = {
@@ -28134,6 +29658,12 @@ export namespace Prisma {
     litellmKey?: string | null
     litellmModel?: string | null
     litellmEnableThinking?: boolean | null
+    smtpHost?: string | null
+    smtpPort?: number | null
+    smtpUser?: string | null
+    smtpPass?: string | null
+    smtpFrom?: string | null
+    adminEmail?: string | null
   }
 
   export type ConfigUpdateManyMutationInput = {
@@ -28165,6 +29695,12 @@ export namespace Prisma {
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
     litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    smtpHost?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    smtpUser?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPass?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpFrom?: NullableStringFieldUpdateOperationsInput | string | null
+    adminEmail?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ConfigUncheckedUpdateManyInput = {
@@ -28197,6 +29733,12 @@ export namespace Prisma {
     litellmKey?: NullableStringFieldUpdateOperationsInput | string | null
     litellmModel?: NullableStringFieldUpdateOperationsInput | string | null
     litellmEnableThinking?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    smtpHost?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    smtpUser?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpPass?: NullableStringFieldUpdateOperationsInput | string | null
+    smtpFrom?: NullableStringFieldUpdateOperationsInput | string | null
+    adminEmail?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type UsuarioCreateInput = {
@@ -28351,6 +29893,8 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    vinculos?: EmpresaVinculoCreateNestedManyWithoutEmpresaInput
+    vinculadaPor?: EmpresaVinculoCreateNestedManyWithoutVinculadaInput
   }
 
   export type EmpresaParceiraUncheckedCreateInput = {
@@ -28361,6 +29905,8 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    vinculos?: EmpresaVinculoUncheckedCreateNestedManyWithoutEmpresaInput
+    vinculadaPor?: EmpresaVinculoUncheckedCreateNestedManyWithoutVinculadaInput
   }
 
   export type EmpresaParceiraUpdateInput = {
@@ -28370,6 +29916,8 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculos?: EmpresaVinculoUpdateManyWithoutEmpresaNestedInput
+    vinculadaPor?: EmpresaVinculoUpdateManyWithoutVinculadaNestedInput
   }
 
   export type EmpresaParceiraUncheckedUpdateInput = {
@@ -28380,6 +29928,8 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculos?: EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput
+    vinculadaPor?: EmpresaVinculoUncheckedUpdateManyWithoutVinculadaNestedInput
   }
 
   export type EmpresaParceiraCreateManyInput = {
@@ -28409,6 +29959,44 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type EmpresaVinculoCreateInput = {
+    empresa: EmpresaParceiraCreateNestedOneWithoutVinculosInput
+    vinculada: EmpresaParceiraCreateNestedOneWithoutVinculadaPorInput
+  }
+
+  export type EmpresaVinculoUncheckedCreateInput = {
+    id?: number
+    empresaId: number
+    vinculadaId: number
+  }
+
+  export type EmpresaVinculoUpdateInput = {
+    empresa?: EmpresaParceiraUpdateOneRequiredWithoutVinculosNestedInput
+    vinculada?: EmpresaParceiraUpdateOneRequiredWithoutVinculadaPorNestedInput
+  }
+
+  export type EmpresaVinculoUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    empresaId?: IntFieldUpdateOperationsInput | number
+    vinculadaId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type EmpresaVinculoCreateManyInput = {
+    id?: number
+    empresaId: number
+    vinculadaId: number
+  }
+
+  export type EmpresaVinculoUpdateManyMutationInput = {
+
+  }
+
+  export type EmpresaVinculoUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    empresaId?: IntFieldUpdateOperationsInput | number
+    vinculadaId?: IntFieldUpdateOperationsInput | number
   }
 
   export type PagamentoCreateInput = {
@@ -29804,6 +31392,12 @@ export namespace Prisma {
     litellmKey?: SortOrder
     litellmModel?: SortOrder
     litellmEnableThinking?: SortOrder
+    smtpHost?: SortOrder
+    smtpPort?: SortOrder
+    smtpUser?: SortOrder
+    smtpPass?: SortOrder
+    smtpFrom?: SortOrder
+    adminEmail?: SortOrder
   }
 
   export type ConfigAvgOrderByAggregateInput = {
@@ -29821,6 +31415,7 @@ export namespace Prisma {
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
     whatsappTakeoverMinutos?: SortOrder
+    smtpPort?: SortOrder
   }
 
   export type ConfigMaxOrderByAggregateInput = {
@@ -29853,6 +31448,12 @@ export namespace Prisma {
     litellmKey?: SortOrder
     litellmModel?: SortOrder
     litellmEnableThinking?: SortOrder
+    smtpHost?: SortOrder
+    smtpPort?: SortOrder
+    smtpUser?: SortOrder
+    smtpPass?: SortOrder
+    smtpFrom?: SortOrder
+    adminEmail?: SortOrder
   }
 
   export type ConfigMinOrderByAggregateInput = {
@@ -29885,6 +31486,12 @@ export namespace Prisma {
     litellmKey?: SortOrder
     litellmModel?: SortOrder
     litellmEnableThinking?: SortOrder
+    smtpHost?: SortOrder
+    smtpPort?: SortOrder
+    smtpUser?: SortOrder
+    smtpPass?: SortOrder
+    smtpFrom?: SortOrder
+    adminEmail?: SortOrder
   }
 
   export type ConfigSumOrderByAggregateInput = {
@@ -29902,6 +31509,7 @@ export namespace Prisma {
     whatsappDiasInativo?: SortOrder
     whatsappPreAtendimento?: SortOrder
     whatsappTakeoverMinutos?: SortOrder
+    smtpPort?: SortOrder
   }
 
   export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -30005,6 +31613,16 @@ export namespace Prisma {
     id?: SortOrder
   }
 
+  export type EmpresaVinculoListRelationFilter = {
+    every?: EmpresaVinculoWhereInput
+    some?: EmpresaVinculoWhereInput
+    none?: EmpresaVinculoWhereInput
+  }
+
+  export type EmpresaVinculoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type EmpresaParceiraCountOrderByAggregateInput = {
     id?: SortOrder
     nome?: SortOrder
@@ -30041,6 +31659,46 @@ export namespace Prisma {
 
   export type EmpresaParceiraSumOrderByAggregateInput = {
     id?: SortOrder
+  }
+
+  export type EmpresaParceiraScalarRelationFilter = {
+    is?: EmpresaParceiraWhereInput
+    isNot?: EmpresaParceiraWhereInput
+  }
+
+  export type EmpresaVinculoEmpresaIdVinculadaIdCompoundUniqueInput = {
+    empresaId: number
+    vinculadaId: number
+  }
+
+  export type EmpresaVinculoCountOrderByAggregateInput = {
+    id?: SortOrder
+    empresaId?: SortOrder
+    vinculadaId?: SortOrder
+  }
+
+  export type EmpresaVinculoAvgOrderByAggregateInput = {
+    id?: SortOrder
+    empresaId?: SortOrder
+    vinculadaId?: SortOrder
+  }
+
+  export type EmpresaVinculoMaxOrderByAggregateInput = {
+    id?: SortOrder
+    empresaId?: SortOrder
+    vinculadaId?: SortOrder
+  }
+
+  export type EmpresaVinculoMinOrderByAggregateInput = {
+    id?: SortOrder
+    empresaId?: SortOrder
+    vinculadaId?: SortOrder
+  }
+
+  export type EmpresaVinculoSumOrderByAggregateInput = {
+    id?: SortOrder
+    empresaId?: SortOrder
+    vinculadaId?: SortOrder
   }
 
   export type PagamentoCountOrderByAggregateInput = {
@@ -30839,6 +32497,118 @@ export namespace Prisma {
     update?: ProdutoUpdateWithWhereUniqueWithoutFornecedorInput | ProdutoUpdateWithWhereUniqueWithoutFornecedorInput[]
     updateMany?: ProdutoUpdateManyWithWhereWithoutFornecedorInput | ProdutoUpdateManyWithWhereWithoutFornecedorInput[]
     deleteMany?: ProdutoScalarWhereInput | ProdutoScalarWhereInput[]
+  }
+
+  export type EmpresaVinculoCreateNestedManyWithoutEmpresaInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput> | EmpresaVinculoCreateWithoutEmpresaInput[] | EmpresaVinculoUncheckedCreateWithoutEmpresaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutEmpresaInput | EmpresaVinculoCreateOrConnectWithoutEmpresaInput[]
+    createMany?: EmpresaVinculoCreateManyEmpresaInputEnvelope
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+  }
+
+  export type EmpresaVinculoCreateNestedManyWithoutVinculadaInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutVinculadaInput, EmpresaVinculoUncheckedCreateWithoutVinculadaInput> | EmpresaVinculoCreateWithoutVinculadaInput[] | EmpresaVinculoUncheckedCreateWithoutVinculadaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutVinculadaInput | EmpresaVinculoCreateOrConnectWithoutVinculadaInput[]
+    createMany?: EmpresaVinculoCreateManyVinculadaInputEnvelope
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+  }
+
+  export type EmpresaVinculoUncheckedCreateNestedManyWithoutEmpresaInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput> | EmpresaVinculoCreateWithoutEmpresaInput[] | EmpresaVinculoUncheckedCreateWithoutEmpresaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutEmpresaInput | EmpresaVinculoCreateOrConnectWithoutEmpresaInput[]
+    createMany?: EmpresaVinculoCreateManyEmpresaInputEnvelope
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+  }
+
+  export type EmpresaVinculoUncheckedCreateNestedManyWithoutVinculadaInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutVinculadaInput, EmpresaVinculoUncheckedCreateWithoutVinculadaInput> | EmpresaVinculoCreateWithoutVinculadaInput[] | EmpresaVinculoUncheckedCreateWithoutVinculadaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutVinculadaInput | EmpresaVinculoCreateOrConnectWithoutVinculadaInput[]
+    createMany?: EmpresaVinculoCreateManyVinculadaInputEnvelope
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+  }
+
+  export type EmpresaVinculoUpdateManyWithoutEmpresaNestedInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput> | EmpresaVinculoCreateWithoutEmpresaInput[] | EmpresaVinculoUncheckedCreateWithoutEmpresaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutEmpresaInput | EmpresaVinculoCreateOrConnectWithoutEmpresaInput[]
+    upsert?: EmpresaVinculoUpsertWithWhereUniqueWithoutEmpresaInput | EmpresaVinculoUpsertWithWhereUniqueWithoutEmpresaInput[]
+    createMany?: EmpresaVinculoCreateManyEmpresaInputEnvelope
+    set?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    disconnect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    delete?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    update?: EmpresaVinculoUpdateWithWhereUniqueWithoutEmpresaInput | EmpresaVinculoUpdateWithWhereUniqueWithoutEmpresaInput[]
+    updateMany?: EmpresaVinculoUpdateManyWithWhereWithoutEmpresaInput | EmpresaVinculoUpdateManyWithWhereWithoutEmpresaInput[]
+    deleteMany?: EmpresaVinculoScalarWhereInput | EmpresaVinculoScalarWhereInput[]
+  }
+
+  export type EmpresaVinculoUpdateManyWithoutVinculadaNestedInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutVinculadaInput, EmpresaVinculoUncheckedCreateWithoutVinculadaInput> | EmpresaVinculoCreateWithoutVinculadaInput[] | EmpresaVinculoUncheckedCreateWithoutVinculadaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutVinculadaInput | EmpresaVinculoCreateOrConnectWithoutVinculadaInput[]
+    upsert?: EmpresaVinculoUpsertWithWhereUniqueWithoutVinculadaInput | EmpresaVinculoUpsertWithWhereUniqueWithoutVinculadaInput[]
+    createMany?: EmpresaVinculoCreateManyVinculadaInputEnvelope
+    set?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    disconnect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    delete?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    update?: EmpresaVinculoUpdateWithWhereUniqueWithoutVinculadaInput | EmpresaVinculoUpdateWithWhereUniqueWithoutVinculadaInput[]
+    updateMany?: EmpresaVinculoUpdateManyWithWhereWithoutVinculadaInput | EmpresaVinculoUpdateManyWithWhereWithoutVinculadaInput[]
+    deleteMany?: EmpresaVinculoScalarWhereInput | EmpresaVinculoScalarWhereInput[]
+  }
+
+  export type EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput> | EmpresaVinculoCreateWithoutEmpresaInput[] | EmpresaVinculoUncheckedCreateWithoutEmpresaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutEmpresaInput | EmpresaVinculoCreateOrConnectWithoutEmpresaInput[]
+    upsert?: EmpresaVinculoUpsertWithWhereUniqueWithoutEmpresaInput | EmpresaVinculoUpsertWithWhereUniqueWithoutEmpresaInput[]
+    createMany?: EmpresaVinculoCreateManyEmpresaInputEnvelope
+    set?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    disconnect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    delete?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    update?: EmpresaVinculoUpdateWithWhereUniqueWithoutEmpresaInput | EmpresaVinculoUpdateWithWhereUniqueWithoutEmpresaInput[]
+    updateMany?: EmpresaVinculoUpdateManyWithWhereWithoutEmpresaInput | EmpresaVinculoUpdateManyWithWhereWithoutEmpresaInput[]
+    deleteMany?: EmpresaVinculoScalarWhereInput | EmpresaVinculoScalarWhereInput[]
+  }
+
+  export type EmpresaVinculoUncheckedUpdateManyWithoutVinculadaNestedInput = {
+    create?: XOR<EmpresaVinculoCreateWithoutVinculadaInput, EmpresaVinculoUncheckedCreateWithoutVinculadaInput> | EmpresaVinculoCreateWithoutVinculadaInput[] | EmpresaVinculoUncheckedCreateWithoutVinculadaInput[]
+    connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutVinculadaInput | EmpresaVinculoCreateOrConnectWithoutVinculadaInput[]
+    upsert?: EmpresaVinculoUpsertWithWhereUniqueWithoutVinculadaInput | EmpresaVinculoUpsertWithWhereUniqueWithoutVinculadaInput[]
+    createMany?: EmpresaVinculoCreateManyVinculadaInputEnvelope
+    set?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    disconnect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    delete?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+    update?: EmpresaVinculoUpdateWithWhereUniqueWithoutVinculadaInput | EmpresaVinculoUpdateWithWhereUniqueWithoutVinculadaInput[]
+    updateMany?: EmpresaVinculoUpdateManyWithWhereWithoutVinculadaInput | EmpresaVinculoUpdateManyWithWhereWithoutVinculadaInput[]
+    deleteMany?: EmpresaVinculoScalarWhereInput | EmpresaVinculoScalarWhereInput[]
+  }
+
+  export type EmpresaParceiraCreateNestedOneWithoutVinculosInput = {
+    create?: XOR<EmpresaParceiraCreateWithoutVinculosInput, EmpresaParceiraUncheckedCreateWithoutVinculosInput>
+    connectOrCreate?: EmpresaParceiraCreateOrConnectWithoutVinculosInput
+    connect?: EmpresaParceiraWhereUniqueInput
+  }
+
+  export type EmpresaParceiraCreateNestedOneWithoutVinculadaPorInput = {
+    create?: XOR<EmpresaParceiraCreateWithoutVinculadaPorInput, EmpresaParceiraUncheckedCreateWithoutVinculadaPorInput>
+    connectOrCreate?: EmpresaParceiraCreateOrConnectWithoutVinculadaPorInput
+    connect?: EmpresaParceiraWhereUniqueInput
+  }
+
+  export type EmpresaParceiraUpdateOneRequiredWithoutVinculosNestedInput = {
+    create?: XOR<EmpresaParceiraCreateWithoutVinculosInput, EmpresaParceiraUncheckedCreateWithoutVinculosInput>
+    connectOrCreate?: EmpresaParceiraCreateOrConnectWithoutVinculosInput
+    upsert?: EmpresaParceiraUpsertWithoutVinculosInput
+    connect?: EmpresaParceiraWhereUniqueInput
+    update?: XOR<XOR<EmpresaParceiraUpdateToOneWithWhereWithoutVinculosInput, EmpresaParceiraUpdateWithoutVinculosInput>, EmpresaParceiraUncheckedUpdateWithoutVinculosInput>
+  }
+
+  export type EmpresaParceiraUpdateOneRequiredWithoutVinculadaPorNestedInput = {
+    create?: XOR<EmpresaParceiraCreateWithoutVinculadaPorInput, EmpresaParceiraUncheckedCreateWithoutVinculadaPorInput>
+    connectOrCreate?: EmpresaParceiraCreateOrConnectWithoutVinculadaPorInput
+    upsert?: EmpresaParceiraUpsertWithoutVinculadaPorInput
+    connect?: EmpresaParceiraWhereUniqueInput
+    update?: XOR<XOR<EmpresaParceiraUpdateToOneWithWhereWithoutVinculadaPorInput, EmpresaParceiraUpdateWithoutVinculadaPorInput>, EmpresaParceiraUncheckedUpdateWithoutVinculadaPorInput>
   }
 
   export type VendaCreateNestedOneWithoutAssinaturaInput = {
@@ -32114,6 +33884,201 @@ export namespace Prisma {
     dataCompra?: DateTimeNullableFilter<"Produto"> | Date | string | null
   }
 
+  export type EmpresaVinculoCreateWithoutEmpresaInput = {
+    vinculada: EmpresaParceiraCreateNestedOneWithoutVinculadaPorInput
+  }
+
+  export type EmpresaVinculoUncheckedCreateWithoutEmpresaInput = {
+    id?: number
+    vinculadaId: number
+  }
+
+  export type EmpresaVinculoCreateOrConnectWithoutEmpresaInput = {
+    where: EmpresaVinculoWhereUniqueInput
+    create: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput>
+  }
+
+  export type EmpresaVinculoCreateManyEmpresaInputEnvelope = {
+    data: EmpresaVinculoCreateManyEmpresaInput | EmpresaVinculoCreateManyEmpresaInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type EmpresaVinculoCreateWithoutVinculadaInput = {
+    empresa: EmpresaParceiraCreateNestedOneWithoutVinculosInput
+  }
+
+  export type EmpresaVinculoUncheckedCreateWithoutVinculadaInput = {
+    id?: number
+    empresaId: number
+  }
+
+  export type EmpresaVinculoCreateOrConnectWithoutVinculadaInput = {
+    where: EmpresaVinculoWhereUniqueInput
+    create: XOR<EmpresaVinculoCreateWithoutVinculadaInput, EmpresaVinculoUncheckedCreateWithoutVinculadaInput>
+  }
+
+  export type EmpresaVinculoCreateManyVinculadaInputEnvelope = {
+    data: EmpresaVinculoCreateManyVinculadaInput | EmpresaVinculoCreateManyVinculadaInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type EmpresaVinculoUpsertWithWhereUniqueWithoutEmpresaInput = {
+    where: EmpresaVinculoWhereUniqueInput
+    update: XOR<EmpresaVinculoUpdateWithoutEmpresaInput, EmpresaVinculoUncheckedUpdateWithoutEmpresaInput>
+    create: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput>
+  }
+
+  export type EmpresaVinculoUpdateWithWhereUniqueWithoutEmpresaInput = {
+    where: EmpresaVinculoWhereUniqueInput
+    data: XOR<EmpresaVinculoUpdateWithoutEmpresaInput, EmpresaVinculoUncheckedUpdateWithoutEmpresaInput>
+  }
+
+  export type EmpresaVinculoUpdateManyWithWhereWithoutEmpresaInput = {
+    where: EmpresaVinculoScalarWhereInput
+    data: XOR<EmpresaVinculoUpdateManyMutationInput, EmpresaVinculoUncheckedUpdateManyWithoutEmpresaInput>
+  }
+
+  export type EmpresaVinculoScalarWhereInput = {
+    AND?: EmpresaVinculoScalarWhereInput | EmpresaVinculoScalarWhereInput[]
+    OR?: EmpresaVinculoScalarWhereInput[]
+    NOT?: EmpresaVinculoScalarWhereInput | EmpresaVinculoScalarWhereInput[]
+    id?: IntFilter<"EmpresaVinculo"> | number
+    empresaId?: IntFilter<"EmpresaVinculo"> | number
+    vinculadaId?: IntFilter<"EmpresaVinculo"> | number
+  }
+
+  export type EmpresaVinculoUpsertWithWhereUniqueWithoutVinculadaInput = {
+    where: EmpresaVinculoWhereUniqueInput
+    update: XOR<EmpresaVinculoUpdateWithoutVinculadaInput, EmpresaVinculoUncheckedUpdateWithoutVinculadaInput>
+    create: XOR<EmpresaVinculoCreateWithoutVinculadaInput, EmpresaVinculoUncheckedCreateWithoutVinculadaInput>
+  }
+
+  export type EmpresaVinculoUpdateWithWhereUniqueWithoutVinculadaInput = {
+    where: EmpresaVinculoWhereUniqueInput
+    data: XOR<EmpresaVinculoUpdateWithoutVinculadaInput, EmpresaVinculoUncheckedUpdateWithoutVinculadaInput>
+  }
+
+  export type EmpresaVinculoUpdateManyWithWhereWithoutVinculadaInput = {
+    where: EmpresaVinculoScalarWhereInput
+    data: XOR<EmpresaVinculoUpdateManyMutationInput, EmpresaVinculoUncheckedUpdateManyWithoutVinculadaInput>
+  }
+
+  export type EmpresaParceiraCreateWithoutVinculosInput = {
+    nome: string
+    responsavelRh?: string | null
+    telefoneRh?: string | null
+    emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
+    vinculadaPor?: EmpresaVinculoCreateNestedManyWithoutVinculadaInput
+  }
+
+  export type EmpresaParceiraUncheckedCreateWithoutVinculosInput = {
+    id?: number
+    nome: string
+    responsavelRh?: string | null
+    telefoneRh?: string | null
+    emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
+    vinculadaPor?: EmpresaVinculoUncheckedCreateNestedManyWithoutVinculadaInput
+  }
+
+  export type EmpresaParceiraCreateOrConnectWithoutVinculosInput = {
+    where: EmpresaParceiraWhereUniqueInput
+    create: XOR<EmpresaParceiraCreateWithoutVinculosInput, EmpresaParceiraUncheckedCreateWithoutVinculosInput>
+  }
+
+  export type EmpresaParceiraCreateWithoutVinculadaPorInput = {
+    nome: string
+    responsavelRh?: string | null
+    telefoneRh?: string | null
+    emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
+    vinculos?: EmpresaVinculoCreateNestedManyWithoutEmpresaInput
+  }
+
+  export type EmpresaParceiraUncheckedCreateWithoutVinculadaPorInput = {
+    id?: number
+    nome: string
+    responsavelRh?: string | null
+    telefoneRh?: string | null
+    emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
+    vinculos?: EmpresaVinculoUncheckedCreateNestedManyWithoutEmpresaInput
+  }
+
+  export type EmpresaParceiraCreateOrConnectWithoutVinculadaPorInput = {
+    where: EmpresaParceiraWhereUniqueInput
+    create: XOR<EmpresaParceiraCreateWithoutVinculadaPorInput, EmpresaParceiraUncheckedCreateWithoutVinculadaPorInput>
+  }
+
+  export type EmpresaParceiraUpsertWithoutVinculosInput = {
+    update: XOR<EmpresaParceiraUpdateWithoutVinculosInput, EmpresaParceiraUncheckedUpdateWithoutVinculosInput>
+    create: XOR<EmpresaParceiraCreateWithoutVinculosInput, EmpresaParceiraUncheckedCreateWithoutVinculosInput>
+    where?: EmpresaParceiraWhereInput
+  }
+
+  export type EmpresaParceiraUpdateToOneWithWhereWithoutVinculosInput = {
+    where?: EmpresaParceiraWhereInput
+    data: XOR<EmpresaParceiraUpdateWithoutVinculosInput, EmpresaParceiraUncheckedUpdateWithoutVinculosInput>
+  }
+
+  export type EmpresaParceiraUpdateWithoutVinculosInput = {
+    nome?: StringFieldUpdateOperationsInput | string
+    responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
+    telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
+    emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculadaPor?: EmpresaVinculoUpdateManyWithoutVinculadaNestedInput
+  }
+
+  export type EmpresaParceiraUncheckedUpdateWithoutVinculosInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
+    telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
+    emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculadaPor?: EmpresaVinculoUncheckedUpdateManyWithoutVinculadaNestedInput
+  }
+
+  export type EmpresaParceiraUpsertWithoutVinculadaPorInput = {
+    update: XOR<EmpresaParceiraUpdateWithoutVinculadaPorInput, EmpresaParceiraUncheckedUpdateWithoutVinculadaPorInput>
+    create: XOR<EmpresaParceiraCreateWithoutVinculadaPorInput, EmpresaParceiraUncheckedCreateWithoutVinculadaPorInput>
+    where?: EmpresaParceiraWhereInput
+  }
+
+  export type EmpresaParceiraUpdateToOneWithWhereWithoutVinculadaPorInput = {
+    where?: EmpresaParceiraWhereInput
+    data: XOR<EmpresaParceiraUpdateWithoutVinculadaPorInput, EmpresaParceiraUncheckedUpdateWithoutVinculadaPorInput>
+  }
+
+  export type EmpresaParceiraUpdateWithoutVinculadaPorInput = {
+    nome?: StringFieldUpdateOperationsInput | string
+    responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
+    telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
+    emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculos?: EmpresaVinculoUpdateManyWithoutEmpresaNestedInput
+  }
+
+  export type EmpresaParceiraUncheckedUpdateWithoutVinculadaPorInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
+    telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
+    emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculos?: EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput
+  }
+
   export type VendaCreateWithoutAssinaturaInput = {
     uuid?: string | null
     dataVenda: Date | string
@@ -32533,6 +34498,44 @@ export namespace Prisma {
     qtdEstoque?: NullableIntFieldUpdateOperationsInput | number | null
     valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
     dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type EmpresaVinculoCreateManyEmpresaInput = {
+    id?: number
+    vinculadaId: number
+  }
+
+  export type EmpresaVinculoCreateManyVinculadaInput = {
+    id?: number
+    empresaId: number
+  }
+
+  export type EmpresaVinculoUpdateWithoutEmpresaInput = {
+    vinculada?: EmpresaParceiraUpdateOneRequiredWithoutVinculadaPorNestedInput
+  }
+
+  export type EmpresaVinculoUncheckedUpdateWithoutEmpresaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vinculadaId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type EmpresaVinculoUncheckedUpdateManyWithoutEmpresaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    vinculadaId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type EmpresaVinculoUpdateWithoutVinculadaInput = {
+    empresa?: EmpresaParceiraUpdateOneRequiredWithoutVinculosNestedInput
+  }
+
+  export type EmpresaVinculoUncheckedUpdateWithoutVinculadaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    empresaId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type EmpresaVinculoUncheckedUpdateManyWithoutVinculadaInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    empresaId?: IntFieldUpdateOperationsInput | number
   }
 
 

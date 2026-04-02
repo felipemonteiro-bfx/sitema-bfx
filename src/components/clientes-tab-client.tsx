@@ -12,7 +12,7 @@ import { FormSelect } from "@/components/form-select";
 import { MaskedInput } from "@/components/masked-input";
 import { CurrencyInput } from "@/components/currency-input";
 import { formatBRL, cn } from "@/lib/utils";
-import { Pencil, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Pencil, Search, Trash2 } from "lucide-react";
 import { useTableFeatures } from "@/hooks/use-table-features";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
@@ -71,6 +71,24 @@ export default function ClientesTabClient({
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [similares, setSimilares] = useState<{ id: number; nome: string }[]>([]);
+
+  const handleNomeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const nome = e.target.value.trim();
+    if (!nome || nome.length < 3) {
+      setSimilares([]);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/clientes/similar?nome=${encodeURIComponent(nome)}`);
+      if (res.ok) {
+        const data = (await res.json()) as { similares: { id: number; nome: string }[] };
+        setSimilares(data.similares || []);
+      }
+    } catch {
+      setSimilares([]);
+    }
+  };
 
   const table = useTableFeatures({
     data: clientes as (ClienteListItem & Record<string, unknown>)[],
@@ -137,7 +155,22 @@ export default function ClientesTabClient({
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Nome/Razao Social</div>
-                <Input name="nome" placeholder="Nome/Razao Social" aria-label="Nome" />
+                <Input
+                  name="nome"
+                  placeholder="Nome/Razao Social"
+                  aria-label="Nome"
+                  onBlur={handleNomeBlur}
+                  onChange={() => setSimilares([])}
+                />
+                {similares.length > 0 && (
+                  <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+                    <span>
+                      <strong>Cliente(s) com nome similar:</strong>{" "}
+                      {similares.map((s) => s.nome).join(", ")}. Verifique antes de salvar.
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="space-y-1">
                 <div className="text-xs font-semibold text-muted-foreground">Tipo</div>

@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
-import { fuzzyFindClientes, fuzzyFindProdutos, fuzzyFindUsuarios } from "@/lib/db-search";
+import { fuzzyFindClientes, fuzzyFindProdutos, fuzzyFindUsuarios, fuzzyFindVendas } from "@/lib/db-search";
+import { produtosTexto } from "@/lib/venda-utils";
+import { formatDateBR } from "@/lib/utils";
 
 const MAX_LIMIT = 50;
+
+function formatDateBRSafe(d: Date | string): string {
+  try {
+    return formatDateBR(d);
+  } catch {
+    return String(d).slice(0, 10);
+  }
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -37,6 +47,21 @@ export async function GET(req: Request) {
         value: String(u.nomeExibicao || u.username),
         label: String(u.nomeExibicao || u.username),
       })),
+    });
+  }
+
+  if (type === "vendas") {
+    const vendas = await fuzzyFindVendas(q, limit);
+    return NextResponse.json({
+      options: vendas.map((v) => {
+        const clienteNome = v.cliente?.nome || "N/D";
+        const produtos = produtosTexto(v);
+        const data = formatDateBRSafe(v.dataVenda);
+        return {
+          value: String(v.id),
+          label: `${clienteNome} — ${produtos} — ${data}`,
+        };
+      }),
     });
   }
 

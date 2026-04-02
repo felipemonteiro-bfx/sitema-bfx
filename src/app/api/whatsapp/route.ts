@@ -7,7 +7,20 @@ export async function GET() {
   const ok = await requireAdmin();
   if (!ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const result = await getInstanceState();
+  let result = await getInstanceState();
+
+  // Auto-reconnect when instance is disconnected
+  if (result.state === 'close' || result.state === 'unknown') {
+    try {
+      const created = await createInstance();
+      if (created) {
+        result = await getInstanceState();
+      }
+    } catch (err) {
+      console.error('[whatsapp] auto-reconnect failed:', err);
+    }
+  }
+
   return NextResponse.json(result);
 }
 
