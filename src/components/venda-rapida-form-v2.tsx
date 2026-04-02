@@ -190,24 +190,33 @@ export default function VendaRapidaFormV2({
   const submitLockRef = useRef(false);
 
   // Limpar erro do campo ao editar
+  const selectedClienteId = selectedCliente?.id ?? null;
+  const produtosKey = produtos.map((p) => `${p.id}:${p.produtoNome}:${p.quantidade}:${p.valorVenda}`).join("|");
   useEffect(() => {
     setValidationErrors((prev) => {
-      const next = { ...prev };
-      if (dataVenda && prev.data) next.data = false;
-      if (vendedor?.trim() && prev.vendedor) next.vendedor = false;
-      if (selectedCliente && prev.cliente) next.cliente = false;
-      if (prev.produtoIndices?.length) {
-        const stillInvalid = prev.produtoIndices.filter((i) => {
-          const p = produtos[i];
-          if (!p) return false;
-          const ok = p.produtoNome?.trim() && p.custoProduto >= 0 && p.valorVenda >= 0 && p.quantidade >= 1;
-          return !ok;
-        });
-        next.produtoIndices = stillInvalid.length > 0 ? stillInvalid : undefined;
+      const hasClienteOk = selectedClienteId != null;
+      const dataOk = !!dataVenda;
+      const vendedorOk = !!(vendedor?.trim());
+      const nextData = dataOk && prev.data ? false : prev.data;
+      const nextVendedor = vendedorOk && prev.vendedor ? false : prev.vendedor;
+      const nextCliente = hasClienteOk && prev.cliente ? false : prev.cliente;
+      const nextProdutoIndices = prev.produtoIndices?.length
+        ? (() => {
+            const stillInvalid = prev.produtoIndices.filter((i) => {
+              const p = produtos[i];
+              if (!p) return false;
+              return !(p.produtoNome?.trim() && p.custoProduto >= 0 && p.valorVenda >= 0 && p.quantidade >= 1);
+            });
+            return stillInvalid.length > 0 ? stillInvalid : undefined;
+          })()
+        : prev.produtoIndices;
+      if (nextData === prev.data && nextVendedor === prev.vendedor && nextCliente === prev.cliente && nextProdutoIndices === prev.produtoIndices) {
+        return prev;
       }
-      return next;
+      return { ...prev, data: nextData, vendedor: nextVendedor, cliente: nextCliente, produtoIndices: nextProdutoIndices };
     });
-  }, [dataVenda, vendedor, selectedCliente, produtos]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataVenda, vendedor, selectedClienteId, produtosKey]);
 
   // Cliente Autocomplete
   useEffect(() => {
@@ -233,7 +242,8 @@ export default function VendaRapidaFormV2({
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [clienteQuery, selectedCliente]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clienteQuery, selectedClienteId]);
 
   // Uber Direct status
   useEffect(() => {
@@ -259,7 +269,8 @@ export default function VendaRapidaFormV2({
     } else {
       setLimiteData(null);
     }
-  }, [selectedCliente]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClienteId]);
 
   // Cálculos totais
   const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);
