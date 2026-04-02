@@ -20,9 +20,8 @@ export async function GET(req: Request) {
     const cfg = await prisma.config.findFirst();
     const adminEmail = (cfg as Record<string, unknown> | null)?.adminEmail as string | undefined;
 
-    // Fetch all partner companies with email configured
+    // Fetch ALL partner companies (including those without email, for WhatsApp fallback)
     const empresas = await prisma.empresaParceira.findMany({
-      where: { emailRh: { not: null } },
       orderBy: { nome: "asc" },
     });
 
@@ -40,8 +39,6 @@ export async function GET(req: Request) {
     const erros: string[] = [];
 
     for (const empresa of empresas) {
-      if (!empresa.emailRh) continue;
-
       // Fetch sales for this company in the last 7 days
       const vendas = await prisma.venda.findMany({
         where: {
@@ -57,15 +54,20 @@ export async function GET(req: Request) {
         orderBy: { dataVenda: "desc" },
       });
 
-      // Build recipient list
-      const toEmails: string[] = [empresa.emailRh];
-      if (empresa.emailsExtras) {
-        const extras = empresa.emailsExtras.split(",").map((e) => e.trim()).filter(Boolean);
-        toEmails.push(...extras);
+      // Build recipient list (may be empty if no emailRh — sendWeeklyReport will use WhatsApp fallback)
+      const toEmails: string[] = [];
+      if (empresa.emailRh) {
+        toEmails.push(empresa.emailRh);
+        if (empresa.emailsExtras) {
+          const extras = empresa.emailsExtras.split(",").map((e) => e.trim()).filter(Boolean);
+          toEmails.push(...extras);
+        }
       }
 
+      const telefoneFallback = empresa.telefoneRh ?? undefined;
+
       try {
-        await sendWeeklyReport(empresa.nome, vendas, toEmails, adminEmail);
+        await sendWeeklyReport(empresa.nome, vendas, toEmails, adminEmail, telefoneFallback);
         enviados++;
       } catch (err) {
         console.error(`[relatorio-semanal] Erro ao enviar para ${empresa.nome}:`, err);
