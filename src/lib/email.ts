@@ -11,6 +11,7 @@ import * as tls from "tls";
 import { prisma } from "@/lib/db";
 import { produtosTexto, valorTotalVenda } from "@/lib/venda-utils";
 import { formatBRL, formatDateBR } from "@/lib/utils";
+import { enviarWhatsAppTexto } from "@/lib/whatsapp";
 
 type SmtpConfig = {
   host: string;
@@ -321,19 +322,24 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<void>
     },
   });
 
-  if (!empresa?.emailRh) return;
-
-  const toEmails: string[] = [empresa.emailRh];
-  if (empresa.emailsExtras) {
-    const extras = empresa.emailsExtras.split(",").map((e) => e.trim()).filter(Boolean);
-    toEmails.push(...extras);
-  }
-
   const totalValor = valorTotalVenda(venda);
   const produtosStr = produtosTexto(venda);
   const dataStr = formatDateBR(venda.dataVenda);
 
-  const html = `
+  // Determine if email can be sent
+  const smtpCfg = await getSmtpConfig();
+  const hasEmail = !!(empresa?.emailRh);
+  const canSendEmail = hasEmail && smtpCfg !== null;
+
+  if (canSendEmail && empresa) {
+    // Send email notification
+    const toEmails: string[] = [empresa.emailRh as string];
+    if (empresa.emailsExtras) {
+      const extras = empresa.emailsExtras.split(",").map((e) => e.trim()).filter(Boolean);
+      toEmails.push(...extras);
+    }
+
+    const html = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head><meta charset="UTF-8"><style>
@@ -364,11 +370,42 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<void>
 </body>
 </html>`;
 
-  await sendEmail({
-    to: toEmails,
-    subject: `Nova venda — ${venda.cliente?.nome || "cliente"} (${empresa.nome})`,
-    html,
-  });
+    try {
+      await sendEmail({
+        to: toEmails,
+        subject: `Nova venda — ${venda.cliente?.nome || "cliente"} (${empresa.nome})`,
+        html,
+      });
+    } catch (err) {
+      console.error("[email] Falha ao enviar notificacao de venda por email:", err);
+    }
+    return;
+  }
+
+  // Fallback: send WhatsApp notification if empresa found
+  if (!empresa) return;
+
+  if (!empresa.telefoneRh) {
+    console.warn(`[email] Empresa ${empresa.nome} sem email configurado e sem telefone — notificacao ignorada.`);
+    return;
+  }
+
+  const mensagem = [
+    "[BFX] Nova venda registrada",
+    `Empresa: ${empresa.nome}`,
+    `Cliente: ${venda.cliente?.nome || "N/D"} (Mat: ${venda.cliente?.matricula || "N/D"})`,
+    `Produto(s): ${produtosStr}`,
+    `Vendedor: ${venda.vendedor || "N/D"}`,
+    `Data: ${dataStr}`,
+    `Parcelas: ${venda.parcelas || 1}x`,
+    `Valor Total: ${formatBRL(totalValor)}`,
+  ].join("\n");
+
+  try {
+    await enviarWhatsAppTexto(empresa.telefoneRh, mensagem);
+  } catch (err) {
+    console.error("[email] Falha ao enviar notificacao de venda via WhatsApp:", err);
+  }
 }
 
 type VendaRelatorio = {
@@ -395,8 +432,37 @@ export async function sendWeeklyReport(
   empresaNome: string,
   vendas: VendaRelatorio[],
   emailsTo: string[],
-  adminEmail?: string
+  adminEmail?: string,
+  telefoneFallback?: string
 ): Promise<void> {
+  const smtpCfg = await getSmtpConfig();
+
+  // If SMTP not configured, fall back to WhatsApp
+  if (!smtpCfg) {
+    if (!telefoneFallback) {
+      console.warn(`[email] SMTP nao configurado e sem telefone de fallback para ${empresaNome} — relatorio ignorado.`);
+      return;
+    }
+    const totalGeralFallback = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
+    const fimFallback = new Date();
+    const inicioFallback = new Date();
+    inicioFallback.setDate(inicioFallback.getDate() - 7);
+    const semanaLabelFallback = `${formatDateBR(inicioFallback)} a ${formatDateBR(fimFallback)}`;
+    const mensagem = [
+      `[BFX] Relatorio Semanal de Vendas`,
+      `Empresa: ${empresaNome}`,
+      `Periodo: ${semanaLabelFallback}`,
+      `Total de vendas: ${vendas.length}`,
+      `Valor total: ${formatBRL(totalGeralFallback)}`,
+    ].join("\n");
+    try {
+      await enviarWhatsAppTexto(telefoneFallback, mensagem);
+    } catch (err) {
+      console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);
+    }
+    return;
+  }
+
   if (emailsTo.length === 0) return;
 
   const rows = vendas.map((v) => {
