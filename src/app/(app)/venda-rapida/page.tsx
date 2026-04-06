@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { PageHeader } from "@/components/page-header";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,11 +48,11 @@ export default async function Page() {
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="page-title-gradient text-3xl font-black tracking-tight">Terminal de Vendas</h1>
-          <div className="gradient-bar mt-2" />
-          <p className="text-muted-foreground font-medium mt-2">PDV Inteligente BFX Intelligence</p>
-        </div>
+        <PageHeader
+          title="Terminal de Vendas"
+          description="PDV Inteligente BFX Intelligence"
+          breadcrumbs={[{ label: "Venda Rapida" }]}
+        />
 
         {ultima && (
           <div className="flex items-center gap-3 bg-card p-2 rounded-2xl shadow-sm border border-border pr-4">

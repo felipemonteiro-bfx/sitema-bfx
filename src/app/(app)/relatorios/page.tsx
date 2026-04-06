@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
@@ -39,29 +39,16 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Relatórios</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <h1 className="page-title-gradient text-2xl font-semibold">Relatórios</h1>
-        <div className="gradient-bar mt-2" />
-        <p className="text-sm text-muted-foreground mt-2">
-          Gere exportações rápidas e compartilhe com o time financeiro.
-        </p>
-      </div>
+      <PageHeader
+        title="Relatorios"
+        description="Exporte relatorios de vendas e financeiro."
+        breadcrumbs={[{ label: "Relatorios" }]}
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-blue-900">Relatório de vendas</CardTitle>
+            <CardTitle className="text-primary">Relatório de vendas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <form
@@ -113,7 +100,7 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900">Outros Relatórios</CardTitle>
+            <CardTitle className="text-primary">Outros Relatórios</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1">
@@ -155,7 +142,7 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900">Atalhos</CardTitle>
+            <CardTitle className="text-primary">Atalhos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <a 

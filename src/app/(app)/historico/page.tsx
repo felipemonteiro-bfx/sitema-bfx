@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { HistoricoBuscaFuzzy } from "@/components/historico-busca-fuzzy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
@@ -171,21 +171,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Histórico de Vendas</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        <h1 className="text-2xl font-semibold">Histórico (Editar)</h1>
-        <p className="text-sm text-muted-foreground">Filtre e edite vendas do período.</p>
-      </div>
+      <PageHeader
+        title="Historico de Vendas"
+        description="Filtre e edite vendas do periodo."
+        breadcrumbs={[{ label: "Historico de Vendas" }]}
+      />
 
       <HistoricoBuscaFuzzy defaultValue={sp.q || ""} />
 

@@ -12,6 +12,7 @@ import { DashboardCharts } from "@/components/dashboard-charts";
 import { DateInput } from "@/components/ui/date-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
 import { 
   DollarSign, 
   TrendingUp, 
@@ -172,21 +173,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       <Card variant="gradient" animated className="border-primary/20">
         <CardContent className="flex flex-col gap-4 pt-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pt-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/20">
-                <Target className="h-6 w-6 text-primary dark:text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="page-title-gradient text-2xl font-bold tracking-tight">
-                  Dashboard Executivo
-                </h1>
-                <div className="gradient-bar mt-2" />
-                <p className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(start)} — {formatDate(end)}
-                </p>
-              </div>
-            </div>
+            <PageHeader
+              title="Dashboard Executivo"
+              breadcrumbs={[{ label: "Dashboard" }]}
+            />
+            <p className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+              <Calendar className="h-4 w-4" />
+              {formatDate(start)} — {formatDate(end)}
+            </p>
           </div>
           
           <div className="flex flex-col gap-2.5">

@@ -13,6 +13,7 @@ import FornecedoresTabClient from "@/components/fornecedores-tab-client";
 import EmpresasTabClient from "@/components/empresas-tab-client";
 import { LinkCatalogoButton } from "@/components/link-catalogo-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string };
@@ -415,10 +416,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Cadastros</h1>
-        <p className="text-sm text-muted-foreground">Base de clientes, produtos, fornecedores e empresas.</p>
-      </div>
+      <PageHeader
+        title="Cadastros"
+        description="Base de clientes, produtos, fornecedores e empresas."
+        breadcrumbs={[{ label: "Cadastros" }]}
+      />
       <QueryTabs
         defaultTab={sp.tab || (sp.editProduto ? "produtos" : sp.editFornecedor ? "fornecedores" : sp.editEmpresa ? "empresas" : sp.editCliente ? "clientes" : "clientes")}
         tabs={[
@@ -449,7 +451,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     href="/api/relatorios/catalogo"
                     target="_blank"
                     rel="noreferrer"
-                    className={cn(buttonVariants({ variant: "outline" }), "border-blue-900 text-blue-900 hover:bg-blue-50")}
+                    className={cn(buttonVariants({ variant: "outline" }), "border-primary text-primary hover:bg-blue-50")}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>
                     Gerar Catalogo (Imprimir)
@@ -458,7 +460,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </div>
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-blue-900">Novo Produto</CardTitle>
+                    <CardTitle className="text-primary">Novo Produto</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ProdutoFormClient
@@ -470,7 +472,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </Card>
                 <Card className="mt-4">
                   <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-blue-900">Produtos</CardTitle>
+                    <CardTitle className="text-primary">Produtos</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ProdutosTabClient
