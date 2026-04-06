@@ -12,6 +12,8 @@ import { ReceiptEditorClient } from "@/components/receipt-editor-client";
 import { WhatsAppConnect } from "@/components/whatsapp-connect";
 import { LitellmModelSelect } from "@/components/litellm-model-select";
 import { cn } from "@/lib/utils";
+import { FormSelect } from "@/components/form-select";
+import { Label } from "@/components/ui/label";
 
 type Search = { tab?: string };
 
@@ -248,15 +250,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </div>
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Ambiente</div>
-                      <select
+                      <Label>Ambiente</Label>
+                      <FormSelect
                         name="asaasEnv"
+                        options={[
+                          { value: "sandbox", label: "Sandbox (testes)" },
+                          { value: "production", label: "Producao" },
+                        ]}
                         defaultValue={(cfg as { asaasEnv?: string | null })?.asaasEnv || "sandbox"}
-                        className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                      >
-                        <option value="sandbox">Sandbox (testes)</option>
-                        <option value="production">Produção</option>
-                      </select>
+                        searchable={false}
+                      />
                       <div className="text-xs text-muted-foreground">
                         Use sandbox para testes; produção para boletos reais.
                       </div>
@@ -282,16 +285,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardContent>
                     <form action={saveAiProvider} className="space-y-4">
                       <div className="space-y-1">
-                        <div className="text-xs font-semibold text-muted-foreground">Provedor ativo</div>
-                        <select
+                        <Label>Provedor ativo</Label>
+                        <FormSelect
                           name="aiProvider"
+                          options={[
+                            { value: "gemini", label: "Gemini" },
+                            { value: "openai", label: "OpenAI" },
+                            { value: "litellm", label: "LiteLLM / Proxy" },
+                          ]}
                           defaultValue={(cfg as Record<string, unknown>)?.aiProvider as string || "gemini"}
-                          className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                        >
-                          <option value="gemini">Gemini</option>
-                          <option value="openai">OpenAI</option>
-                          <option value="litellm">LiteLLM (custom)</option>
-                        </select>
+                          searchable={false}
+                        />
                       </div>
                       <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
                         <div className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</div>

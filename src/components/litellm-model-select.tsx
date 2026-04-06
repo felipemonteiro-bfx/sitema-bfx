@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { FormSelect } from "@/components/form-select";
 
 interface Props {
   defaultValue?: string;
@@ -54,19 +55,21 @@ export function LitellmModelSelect({ defaultValue, name }: Props) {
     );
   }
 
+  const options = [
+    ...(defaultValue && !models.includes(defaultValue)
+      ? [{ value: defaultValue, label: `${defaultValue} (atual)` }]
+      : []),
+    ...models.map((m) => ({ value: m, label: m })),
+  ];
+
   return (
-    <select
+    <FormSelect
       name={name}
+      options={options}
       value={value}
-      onChange={(e) => setValue(e.target.value)}
-      className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-    >
-      {defaultValue && !models.includes(defaultValue) && (
-        <option value={defaultValue}>{defaultValue} (atual)</option>
-      )}
-      {models.map((m) => (
-        <option key={m} value={m}>{m}</option>
-      ))}
-    </select>
+      onValueChange={setValue}
+      placeholder="Selecione o modelo"
+      searchable={models.length > 5}
+    />
   );
 }

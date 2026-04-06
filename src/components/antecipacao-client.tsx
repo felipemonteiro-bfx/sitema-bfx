@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileSpreadsheet, ImageIcon, Loader2 } from "lucide-react";
+import { FormSelect } from "@/components/form-select";
 
 interface ParcelaDetalhe {
   numeroParcela: number;
@@ -220,30 +221,32 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Empresa</label>
-          <select
+          <FormSelect
+            name="_filtroEmpresa"
+            options={[
+              { value: "todas", label: "Todas as empresas" },
+              ...empresasDisponiveis.map((e: string) => ({ value: e, label: e })),
+            ]}
             value={filtroEmpresa}
-            onChange={(e) => setFiltroEmpresa(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring min-w-[180px]"
-          >
-            <option value="todas">Todas as empresas</option>
-            {empresasDisponiveis.map((empresa) => (
-              <option key={empresa} value={empresa}>{empresa}</option>
-            ))}
-          </select>
+            onValueChange={setFiltroEmpresa}
+            searchable={empresasDisponiveis.length > 5}
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</label>
-          <select
+          <FormSelect
+            name="_filtroStatus"
+            options={[
+              { value: "todas", label: "Todos os status" },
+              { value: "pendente", label: "Pendente" },
+              { value: "parcialmente_antecipado", label: "Parcialmente antecipado" },
+              { value: "em_andamento", label: "Em andamento" },
+              { value: "antecipado", label: "Antecipado" },
+            ]}
             value={filtroStatus}
-            onChange={(e) => setFiltroStatus(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring min-w-[160px]"
-          >
-            <option value="todas">Todos os status</option>
-            <option value="pendente">Pendente</option>
-            <option value="parcialmente_antecipado">Parcialmente antecipado</option>
-            <option value="em_andamento">Em andamento</option>
-            <option value="antecipado">Antecipado</option>
-          </select>
+            onValueChange={setFiltroStatus}
+            searchable={false}
+          />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">De mês/ano</label>
