@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { buildCadastrosUrl } from "@/lib/build-cadastros-url";
 
 type ClienteListItem = {
   id: number;
@@ -143,14 +144,7 @@ export default function ClientesTabClient({
     defaultSort: "nome" as keyof ClienteListItem,
   });
 
-  const buildUrl = (params: Record<string, string | undefined>) => {
-    const newParams = { ...sp, ...params };
-    const search = new URLSearchParams();
-    Object.entries(newParams).forEach(([k, v]) => {
-      if (v) search.set(k, v);
-    });
-    return `/cadastros?${search.toString()}`;
-  };
+  const buildUrl = (params: Record<string, string | undefined>) => buildCadastrosUrl(sp, params);
 
   const allSelected = clientes.length > 0 && selectedIds.size === clientes.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < clientes.length;

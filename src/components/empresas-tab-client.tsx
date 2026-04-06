@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { buildCadastrosUrl } from "@/lib/build-cadastros-url";
 
 type EmpresaListItem = {
   id: number;
@@ -103,14 +104,7 @@ export default function EmpresasTabClient({
     defaultSort: "nome" as keyof EmpresaListItem,
   });
 
-  const buildUrl = (params: Record<string, string | undefined>) => {
-    const newParams = { ...sp, ...params };
-    const search = new URLSearchParams();
-    Object.entries(newParams).forEach(([k, v]) => {
-      if (v) search.set(k, v);
-    });
-    return `/cadastros?${search.toString()}`;
-  };
+  const buildUrl = (params: Record<string, string | undefined>) => buildCadastrosUrl(sp, params);
 
   const allSelected = empresas.length > 0 && selectedIds.size === empresas.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < empresas.length;

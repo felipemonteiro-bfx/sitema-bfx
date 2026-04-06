@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { buildCadastrosUrl } from "@/lib/build-cadastros-url";
 
 type FornecedorListItem = {
   id: number;
@@ -92,14 +93,7 @@ export default function FornecedoresTabClient({
     }
   };
 
-  const buildUrl = (params: Record<string, string | undefined>) => {
-    const newParams = { ...sp, ...params };
-    const search = new URLSearchParams();
-    Object.entries(newParams).forEach(([k, v]) => {
-      if (v) search.set(k, v);
-    });
-    return `/cadastros?${search.toString()}`;
-  };
+  const buildUrl = (params: Record<string, string | undefined>) => buildCadastrosUrl(sp, params);
 
   const allSelected = fornecedores.length > 0 && selectedIds.size === fornecedores.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < fornecedores.length;
