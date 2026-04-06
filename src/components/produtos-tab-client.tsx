@@ -189,6 +189,7 @@ export default function ProdutosTabClient({
           <button
             type="button"
             onClick={clearSearch}
+            aria-label="Limpar busca"
             className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
@@ -236,6 +237,7 @@ export default function ProdutosTabClient({
           <TableRow>
             <TableHead className="w-[40px]">
               <Checkbox
+                aria-label="Selecionar todos"
                 checked={allSelected ? true : someSelected ? "indeterminate" : false}
                 onCheckedChange={handleSelectAll}
               />
@@ -262,6 +264,7 @@ export default function ProdutosTabClient({
               <TableRow key={p.id}>
                 <TableCell>
                   <Checkbox
+                    aria-label={`Selecionar ${p.nome}`}
                     checked={selectedIds.has(p.id)}
                     onCheckedChange={(checked) => handleSelectOne(p.id, checked)}
                   />
@@ -309,6 +312,7 @@ export default function ProdutosTabClient({
                           variant="ghost"
                           className="h-8 px-2 text-muted-foreground hover:text-destructive"
                           title="Excluir"
+                          aria-label={`Excluir ${p.nome}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -347,6 +351,7 @@ export default function ProdutosTabClient({
                       variant="ghost"
                       className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
                       title="Editar"
+                      aria-label={`Editar ${p.nome}`}
                       onClick={() => handleOpenProduto(p.id)}
                     >
                       <Pencil className="h-4 w-4" />

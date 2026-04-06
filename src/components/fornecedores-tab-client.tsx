@@ -145,12 +145,12 @@ export default function FornecedoresTabClient({
           <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Nome do Fornecedor <span className="text-destructive">*</span></Label>
-                <Input name="nome" placeholder="Razao Social ou Nome" aria-label="Nome" />
+                <Label htmlFor="add-fornecedor-nome">Nome do Fornecedor <span className="text-destructive">*</span></Label>
+                <Input id="add-fornecedor-nome" name="nome" placeholder="Razao Social ou Nome" aria-required="true" />
               </div>
               <div className="space-y-1">
-                <Label>Telefone/WhatsApp</Label>
-                <MaskedInput name="telefone" mask="phone" aria-label="Telefone" />
+                <Label htmlFor="add-fornecedor-telefone">Telefone/WhatsApp</Label>
+                <MaskedInput id="add-fornecedor-telefone" name="telefone" mask="phone" />
               </div>
             </div>
             <div className="flex items-center justify-end">
@@ -172,7 +172,7 @@ export default function FornecedoresTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <button type="button" onClick={() => table.setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
                 <Trash2 className="h-3 w-3" />
               </button>
             )}
@@ -218,6 +218,7 @@ export default function FornecedoresTabClient({
               <TableRow>
                 <TableHead className="w-[40px]">
                   <Checkbox
+                    aria-label="Selecionar todos"
                     checked={allSelected ? true : someSelected ? "indeterminate" : false}
                     onCheckedChange={handleSelectAll}
                   />
@@ -239,6 +240,7 @@ export default function FornecedoresTabClient({
                   <TableRow key={f.id}>
                     <TableCell>
                       <Checkbox
+                        aria-label={`Selecionar ${f.nome}`}
                         checked={selectedIds.has(f.id)}
                         onCheckedChange={(checked) => handleSelectOne(f.id, checked)}
                       />
@@ -250,6 +252,7 @@ export default function FornecedoresTabClient({
                         href={buildUrl({ tab: "fornecedores", editFornecedor: String(f.id) })}
                         className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
                         title="Editar"
+                        aria-label={`Editar ${f.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
                       </Link>
@@ -273,12 +276,12 @@ export default function FornecedoresTabClient({
               <input type="hidden" name="id" value={editFornecedorData.id} />
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Nome do Fornecedor <span className="text-destructive">*</span></Label>
-                  <Input name="nome" defaultValue={editFornecedorData.nome} placeholder="Razao Social ou Nome" aria-label="Nome" />
+                  <Label htmlFor="edit-fornecedor-nome">Nome do Fornecedor <span className="text-destructive">*</span></Label>
+                  <Input id="edit-fornecedor-nome" name="nome" defaultValue={editFornecedorData.nome} placeholder="Razao Social ou Nome" aria-required="true" />
                 </div>
                 <div className="space-y-1">
-                  <Label>Telefone/WhatsApp</Label>
-                  <MaskedInput name="telefone" mask="phone" defaultValue={editFornecedorData.telefone || ""} aria-label="Telefone" />
+                  <Label htmlFor="edit-fornecedor-telefone">Telefone/WhatsApp</Label>
+                  <MaskedInput id="edit-fornecedor-telefone" name="telefone" mask="phone" defaultValue={editFornecedorData.telefone || ""} />
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2">

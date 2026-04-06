@@ -22,6 +22,7 @@ type FormSelectProps = {
   searchable?: boolean;
   searchPlaceholder?: string;
   formId?: string;
+  id?: string;
 };
 
 export function FormSelect({
@@ -35,6 +36,7 @@ export function FormSelect({
   searchable = true,
   searchPlaceholder = "Pesquisar...",
   formId,
+  id,
 }: FormSelectProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue ?? "");
   const [open, setOpen] = React.useState(false);
@@ -71,6 +73,7 @@ export function FormSelect({
             type="button"
             role="combobox"
             aria-expanded={open}
+            id={id}
             className={cn(
               "flex h-10 w-full items-center justify-between whitespace-nowrap rounded-lg border border-input bg-background/70 px-3 py-2 text-sm text-foreground shadow-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card",
               !value && "text-muted-foreground",

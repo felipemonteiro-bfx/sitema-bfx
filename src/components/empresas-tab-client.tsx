@@ -189,30 +189,30 @@ export default function EmpresasTabClient({
           <form action={handleAdd} className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label>Empresa <span className="text-destructive">*</span></Label>
-                <Input name="nome" placeholder="Empresa" aria-label="Nome" className="uppercase" />
+                <Label htmlFor="add-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
+                <Input id="add-empresa-nome" name="nome" placeholder="Empresa" aria-required="true" className="uppercase" />
               </div>
               <div className="space-y-1">
-                <Label>CNPJ</Label>
-                <Input name="cnpj" placeholder="00.000.000/0000-00" aria-label="CNPJ" />
+                <Label htmlFor="add-empresa-cnpj">CNPJ</Label>
+                <Input id="add-empresa-cnpj" name="cnpj" placeholder="00.000.000/0000-00" />
               </div>
               <div className="space-y-1">
-                <Label>Responsavel RH</Label>
-                <Input name="rh" placeholder="Responsavel RH" aria-label="Responsavel RH" className="uppercase" />
+                <Label htmlFor="add-empresa-rh">Responsavel RH</Label>
+                <Input id="add-empresa-rh" name="rh" placeholder="Responsavel RH" className="uppercase" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label>Telefone RH</Label>
-                <MaskedInput name="tel" mask="phone" aria-label="Telefone RH" />
+                <Label htmlFor="add-empresa-tel">Telefone RH</Label>
+                <MaskedInput id="add-empresa-tel" name="tel" mask="phone" />
               </div>
               <div className="space-y-1">
-                <Label>Email RH</Label>
-                <Input name="email" placeholder="email@empresa.com" aria-label="Email RH" />
+                <Label htmlFor="add-empresa-email">Email RH</Label>
+                <Input id="add-empresa-email" name="email" placeholder="email@empresa.com" />
               </div>
               <div className="space-y-1">
-                <Label>Emails adicionais</Label>
-                <Input name="emailsExtras" placeholder="email1@x.com, email2@y.com" aria-label="Emails adicionais" />
+                <Label htmlFor="add-empresa-emailsExtras">Emails adicionais</Label>
+                <Input id="add-empresa-emailsExtras" name="emailsExtras" placeholder="email1@x.com, email2@y.com" />
               </div>
             </div>
             <div className="flex items-center justify-end">
@@ -234,7 +234,7 @@ export default function EmpresasTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <button type="button" onClick={() => table.setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
                 <Trash2 className="h-3 w-3" />
               </button>
             )}
@@ -280,6 +280,7 @@ export default function EmpresasTabClient({
               <TableRow>
                 <TableHead className="w-[40px]">
                   <Checkbox
+                    aria-label="Selecionar todos"
                     checked={allSelected ? true : someSelected ? "indeterminate" : false}
                     onCheckedChange={handleSelectAll}
                   />
@@ -305,6 +306,7 @@ export default function EmpresasTabClient({
                   <TableRow key={e.id}>
                     <TableCell>
                       <Checkbox
+                        aria-label={`Selecionar ${e.nome}`}
                         checked={selectedIds.has(e.id)}
                         onCheckedChange={(checked) => handleSelectOne(e.id, checked)}
                       />
@@ -353,6 +355,7 @@ export default function EmpresasTabClient({
                           href={buildUrl({ tab: "empresas", editEmpresa: String(e.id) })}
                           className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
                           title="Editar"
+                          aria-label={`Editar ${e.nome}`}
                         >
                           <Pencil className="h-4 w-4" />
                         </Link>
@@ -377,30 +380,30 @@ export default function EmpresasTabClient({
               <input type="hidden" name="id" value={editEmpresaData.id} />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <Label>Empresa <span className="text-destructive">*</span></Label>
-                  <Input name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-label="Nome" className="uppercase" />
+                  <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
+                  <Input id="edit-empresa-nome" name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
                 </div>
                 <div className="space-y-1">
-                  <Label>CNPJ</Label>
-                  <Input name="cnpj" defaultValue={editEmpresaData.cnpj || ""} placeholder="00.000.000/0000-00" aria-label="CNPJ" />
+                  <Label htmlFor="edit-empresa-cnpj">CNPJ</Label>
+                  <Input id="edit-empresa-cnpj" name="cnpj" defaultValue={editEmpresaData.cnpj || ""} placeholder="00.000.000/0000-00" />
                 </div>
                 <div className="space-y-1">
-                  <Label>Responsavel RH</Label>
-                  <Input name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsavel RH" aria-label="Responsavel RH" className="uppercase" />
+                  <Label htmlFor="edit-empresa-rh">Responsavel RH</Label>
+                  <Input id="edit-empresa-rh" name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsavel RH" className="uppercase" />
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <Label>Telefone RH</Label>
-                  <MaskedInput name="tel" mask="phone" defaultValue={editEmpresaData.telefoneRh || ""} aria-label="Telefone RH" />
+                  <Label htmlFor="edit-empresa-tel">Telefone RH</Label>
+                  <MaskedInput id="edit-empresa-tel" name="tel" mask="phone" defaultValue={editEmpresaData.telefoneRh || ""} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Email RH</Label>
-                  <Input name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="email@empresa.com" aria-label="Email RH" />
+                  <Label htmlFor="edit-empresa-email">Email RH</Label>
+                  <Input id="edit-empresa-email" name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="email@empresa.com" />
                 </div>
                 <div className="space-y-1">
-                  <Label>Emails adicionais</Label>
-                  <Input name="emailsExtras" defaultValue={editEmpresaData.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" aria-label="Emails adicionais" />
+                  <Label htmlFor="edit-empresa-emailsExtras">Emails adicionais</Label>
+                  <Input id="edit-empresa-emailsExtras" name="emailsExtras" defaultValue={editEmpresaData.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" />
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2">

@@ -191,23 +191,24 @@ export default function ClientesTabClient({
         </CardHeader>
         <CardContent>
           {errorMsg && !sp.editCliente && (
-            <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div role="alert" className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {errorMsg}
             </div>
           )}
           <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label>Nome/Razao Social <span className="text-destructive">*</span></Label>
+                <Label htmlFor="add-nome">Nome/Razao Social <span className="text-destructive">*</span></Label>
                 <Input
+                  id="add-nome"
                   name="nome"
                   placeholder="Nome/Razao Social"
-                  aria-label="Nome"
+                  aria-required="true"
                   onBlur={handleNomeBlur}
                   onChange={() => setSimilares([])}
                 />
                 {similares.length > 0 && (
-                  <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  <div role="alert" className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                     <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
                     <span>
                       <strong>Cliente(s) com nome similar:</strong>{" "}
@@ -217,8 +218,9 @@ export default function ClientesTabClient({
                 )}
               </div>
               <div className="space-y-1">
-                <Label>Tipo</Label>
+                <Label htmlFor="add-tipo">Tipo</Label>
                 <FormSelect
+                  id="add-tipo"
                   name="tipo"
                   options={[
                     { value: "PF", label: "Pessoa Fisica" },
@@ -228,34 +230,35 @@ export default function ClientesTabClient({
                 />
               </div>
               <div className="space-y-1">
-                <Label>CPF/CNPJ</Label>
-                <Input name="doc" placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
+                <Label htmlFor="add-doc">CPF/CNPJ</Label>
+                <Input id="add-doc" name="doc" placeholder="CPF/CNPJ" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-4">
               <div className="space-y-1">
-                <Label>Matricula</Label>
-                <Input name="matricula" placeholder="Matricula" aria-label="Matricula" />
+                <Label htmlFor="add-matricula">Matricula</Label>
+                <Input id="add-matricula" name="matricula" placeholder="Matricula" />
               </div>
               <div className="space-y-1">
-                <Label>Renda/Faturamento</Label>
-                <CurrencyInput name="renda" aria-label="Renda" />
+                <Label htmlFor="add-renda">Renda/Faturamento</Label>
+                <CurrencyInput id="add-renda" name="renda" />
               </div>
               <div className="space-y-1">
-                <Label>WhatsApp</Label>
-                <MaskedInput name="telefone" mask="phone" aria-label="WhatsApp" />
+                <Label htmlFor="add-telefone">WhatsApp</Label>
+                <MaskedInput id="add-telefone" name="telefone" mask="phone" />
               </div>
               <div className="space-y-1">
-                <Label>CEP</Label>
-                <MaskedInput name="cep" mask="cep" aria-label="CEP" />
+                <Label htmlFor="add-cep">CEP</Label>
+                <MaskedInput id="add-cep" name="cep" mask="cep" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label>Empresa/Vinculo</Label>
+                <Label htmlFor="add-empresa">Empresa/Vinculo</Label>
                 <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId} />
                 <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === selectedEmpresaId)?.nome ?? ""} />
                 <FormSelect
+                  id="add-empresa"
                   name="_empresa_display"
                   options={empresaOptions}
                   value={selectedEmpresaId}
@@ -264,8 +267,8 @@ export default function ClientesTabClient({
                 />
               </div>
               <div className="space-y-1">
-                <Label>Data de Nascimento</Label>
-                <Input type="date" name="dataNascimento" aria-label="Data de Nascimento" />
+                <Label htmlFor="add-dataNascimento">Data de Nascimento</Label>
+                <Input id="add-dataNascimento" type="date" name="dataNascimento" />
               </div>
             </div>
             <div className="flex items-center justify-end">
@@ -287,7 +290,7 @@ export default function ClientesTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <button type="button" onClick={() => table.setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
                 <Trash2 className="h-3 w-3" />
               </button>
             )}
@@ -333,6 +336,7 @@ export default function ClientesTabClient({
               <TableRow>
                 <TableHead className="w-[40px]">
                   <Checkbox
+                    aria-label="Selecionar todos"
                     checked={allSelected ? true : someSelected ? "indeterminate" : false}
                     onCheckedChange={handleSelectAll}
                   />
@@ -356,6 +360,7 @@ export default function ClientesTabClient({
                   <TableRow key={c.id}>
                     <TableCell>
                       <Checkbox
+                        aria-label={`Selecionar ${c.nome}`}
                         checked={selectedIds.has(c.id)}
                         onCheckedChange={(checked) => handleSelectOne(c.id, checked)}
                       />
@@ -369,6 +374,7 @@ export default function ClientesTabClient({
                         href={buildUrl({ tab: "clientes", editCliente: String(c.id) })}
                         className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
                         title="Editar"
+                        aria-label={`Editar ${c.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
                       </Link>
@@ -395,7 +401,7 @@ export default function ClientesTabClient({
           </CardHeader>
           <CardContent>
             {errorMsg && sp.editCliente && (
-              <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <div role="alert" className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {errorMsg}
               </div>
             )}
@@ -403,12 +409,13 @@ export default function ClientesTabClient({
               <input type="hidden" name="id" value={editClienteData.id} />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <Label>Nome/Razao Social <span className="text-destructive">*</span></Label>
-                  <Input name="nome" defaultValue={editClienteData.nome} placeholder="Nome/Razao Social" aria-label="Nome" />
+                  <Label htmlFor="edit-nome">Nome/Razao Social <span className="text-destructive">*</span></Label>
+                  <Input id="edit-nome" name="nome" defaultValue={editClienteData.nome} placeholder="Nome/Razao Social" aria-required="true" />
                 </div>
                 <div className="space-y-1">
-                  <Label>Tipo</Label>
+                  <Label htmlFor="edit-tipo">Tipo</Label>
                   <FormSelect
+                    id="edit-tipo"
                     name="tipo"
                     options={[
                       { value: "PF", label: "Pessoa Fisica" },
@@ -418,34 +425,35 @@ export default function ClientesTabClient({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>CPF/CNPJ</Label>
-                  <Input name="doc" defaultValue={editClienteData.cpf || editClienteData.cnpj || ""} placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
+                  <Label htmlFor="edit-doc">CPF/CNPJ</Label>
+                  <Input id="edit-doc" name="doc" defaultValue={editClienteData.cpf || editClienteData.cnpj || ""} placeholder="CPF/CNPJ" />
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <div className="space-y-1">
-                  <Label>Matricula</Label>
-                  <Input name="matricula" defaultValue={editClienteData.matricula || ""} placeholder="Matricula" aria-label="Matricula" />
+                  <Label htmlFor="edit-matricula">Matricula</Label>
+                  <Input id="edit-matricula" name="matricula" defaultValue={editClienteData.matricula || ""} placeholder="Matricula" />
                 </div>
                 <div className="space-y-1">
-                  <Label>Renda/Faturamento</Label>
-                  <CurrencyInput name="renda" defaultValue={editClienteData.renda ?? 0} aria-label="Renda" />
+                  <Label htmlFor="edit-renda">Renda/Faturamento</Label>
+                  <CurrencyInput id="edit-renda" name="renda" defaultValue={editClienteData.renda ?? 0} />
                 </div>
                 <div className="space-y-1">
-                  <Label>WhatsApp</Label>
-                  <MaskedInput name="telefone" mask="phone" defaultValue={editClienteData.telefone || ""} aria-label="WhatsApp" />
+                  <Label htmlFor="edit-telefone">WhatsApp</Label>
+                  <MaskedInput id="edit-telefone" name="telefone" mask="phone" defaultValue={editClienteData.telefone || ""} />
                 </div>
                 <div className="space-y-1">
-                  <Label>CEP</Label>
-                  <MaskedInput name="cep" mask="cep" defaultValue={editClienteData.cep || ""} aria-label="CEP" />
+                  <Label htmlFor="edit-cep">CEP</Label>
+                  <MaskedInput id="edit-cep" name="cep" mask="cep" defaultValue={editClienteData.cep || ""} />
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <Label>Empresa/Vinculo</Label>
+                  <Label htmlFor="edit-empresa">Empresa/Vinculo</Label>
                   <input type="hidden" name="empresaParceiraId" value={editSelectedEmpresaId} />
                   <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === editSelectedEmpresaId)?.nome ?? ""} />
                   <FormSelect
+                    id="edit-empresa"
                     name="_edit_empresa_display"
                     options={empresaOptions}
                     value={editSelectedEmpresaId}
@@ -454,12 +462,12 @@ export default function ClientesTabClient({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Data de Nascimento</Label>
+                  <Label htmlFor="edit-dataNascimento">Data de Nascimento</Label>
                   <Input
+                    id="edit-dataNascimento"
                     type="date"
                     name="dataNascimento"
                     defaultValue={editClienteData.dataNascimento ? new Date(editClienteData.dataNascimento).toISOString().split("T")[0] : ""}
-                    aria-label="Data de Nascimento"
                   />
                 </div>
               </div>
