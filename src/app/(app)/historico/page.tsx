@@ -386,7 +386,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       {(() => {
                         const m = margemVenda(v);
                         if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
-                        return <span className={m > 0 ? "text-emerald-600" : m === 0 ? "text-amber-500" : "text-red-500"}>{m.toFixed(1)}%</span>;
+                        return <span className={m > 0 ? "text-success" : m === 0 ? "text-warning" : "text-destructive"}>{m.toFixed(1)}%</span>;
                       })()}
                     </TableCell>
                     <TableCell className="text-center">
@@ -418,7 +418,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             </a>
                           ) : (
                           <span className="flex flex-col items-center gap-1">
-                            <span className="text-amber-600 text-xs">Pendente</span>
+                            <span className="text-warning text-xs">Pendente</span>
                             <GerarBoletoButton
                               vendaId={v.id}
                               gerarBoletoAction={gerarBoletoAsaas}
@@ -435,9 +435,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell className="text-center">
                       {v.assinatura?.assinaturaStatus === 'assinado' ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" />
+                        <CheckCircle2 className="h-4 w-4 text-success mx-auto" />
                       ) : v.assinaturaToken ? (
-                        <span className="inline-block h-2 w-2 rounded-full bg-amber-400" title="Aguardando assinatura" />
+                        <span className="inline-block h-2 w-2 rounded-full bg-warning" title="Aguardando assinatura" />
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}

@@ -347,7 +347,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         )}>
           <CardHeader className="pb-3 px-4 pt-4">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <User className="h-4 w-4 text-blue-600" /> Cliente
+              <User className="h-4 w-4 text-info" /> Cliente
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -357,10 +357,10 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                   value={clienteQuery}
                   onChange={(e) => setClienteQuery(e.target.value)}
                   placeholder="Pesquisar por nome ou CPF..."
-                  className={`pl-10 h-11 transition-all ${selectedCliente ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20 ring-emerald-500/20" : ""}`}
+                  className={`pl-10 h-11 transition-all ${selectedCliente ? "border-success bg-success/10 dark:bg-success/10 ring-success/20" : ""}`}
                   required
                 />
-                <User className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${selectedCliente ? "text-emerald-600" : "text-muted-foreground"}`} />
+                <User className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${selectedCliente ? "text-success" : "text-muted-foreground"}`} />
                 {selectedCliente && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <Badge variant="outline" className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">Selecionado</Badge>
@@ -397,7 +397,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         <Card className="border-none shadow-sm bg-white dark:bg-card overflow-visible">
           <CardHeader className="pb-3 px-4 pt-4">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Package className="h-4 w-4 text-blue-600" /> Produto
+              <Package className="h-4 w-4 text-info" /> Produto
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">
@@ -408,9 +408,9 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
                     value={produtoQuery}
                     onChange={(e) => setProdutoQuery(e.target.value)}
                     placeholder="Pesquisar produto por nome..."
-                    className={`pl-10 h-11 transition-all ${selectedProduto ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/20" : ""}`}
+                    className={`pl-10 h-11 transition-all ${selectedProduto ? "border-success bg-success/10 dark:bg-success/10" : ""}`}
                   />
-                  <Package className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${selectedProduto ? "text-emerald-600" : "text-muted-foreground"}`} />
+                  <Package className={`absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 ${selectedProduto ? "text-success" : "text-muted-foreground"}`} />
                 </div>
 
                 {produtoSuggestions.length > 0 && (
@@ -518,7 +518,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
         <Card className="border-none shadow-sm bg-white dark:bg-card">
           <CardHeader className="pb-3 px-4 pt-4">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Calculator className="h-4 w-4 text-blue-600" /> Valores e Custos
+              <Calculator className="h-4 w-4 text-info" /> Valores e Custos
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4">

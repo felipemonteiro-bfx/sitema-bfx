@@ -99,15 +99,15 @@ export function WhatsAppConnect() {
       <div className="flex items-center gap-2">
         {status.state === 'open' ? (
           <>
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-            <span className="text-sm font-medium text-emerald-600">Conectado</span>
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span className="flex h-2.5 w-2.5 rounded-full bg-success" />
+            <span className="text-sm font-medium text-success">Conectado</span>
+            <CheckCircle2 className="h-4 w-4 text-success" />
           </>
         ) : status.state === 'connecting' ? (
           <>
-            <span className="flex h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse" />
-            <span className="text-sm font-medium text-amber-600">Aguardando QR Code</span>
-            <Wifi className="h-4 w-4 text-amber-400" />
+            <span className="flex h-2.5 w-2.5 rounded-full bg-warning animate-pulse" />
+            <span className="text-sm font-medium text-warning">Aguardando QR Code</span>
+            <Wifi className="h-4 w-4 text-warning" />
           </>
         ) : (
           <>
@@ -137,7 +137,7 @@ export function WhatsAppConnect() {
       )}
 
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="text-sm text-destructive">{error}</p>
       )}
 
       {/* Actions */}
@@ -173,7 +173,7 @@ export function WhatsAppConnect() {
             size="sm"
             onClick={handleLogout}
             disabled={actionLoading}
-            className="gap-2 text-red-600 hover:text-red-700"
+            className="gap-2 text-destructive hover:text-destructive/80"
           >
             {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
             Desconectar

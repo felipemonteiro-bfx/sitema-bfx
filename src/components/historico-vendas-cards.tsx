@@ -156,7 +156,7 @@ function VendaCard({
                 <span className={`text-foreground tabular-nums ${(() => {
                   const m = margemVenda(venda);
                   if (m == null) return "opacity-50";
-                  return m > 0 ? "text-emerald-600" : m === 0 ? "text-amber-500" : "text-red-500";
+                  return m > 0 ? "text-success" : m === 0 ? "text-warning" : "text-destructive";
                 })()}`}>
                   {(() => {
                     const m = margemVenda(venda);
@@ -215,10 +215,10 @@ function VendaCard({
                 <span className="text-foreground">
                   {venda.assinatura?.assinaturaStatus === "assinado" ? (
                     <a href={`/api/comprovante?vendaId=${venda.id}`} target="_blank" rel="noopener noreferrer">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                     </a>
                   ) : (
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertCircle className="h-4 w-4 text-warning" />
                   )}
                 </span>
               </div>
