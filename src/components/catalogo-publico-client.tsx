@@ -95,7 +95,7 @@ export function CatalogoPublicoClient({ produtos }: Props) {
               <div className="relative aspect-square bg-slate-100 dark:bg-slate-800">
                 <ProdutoImagem src={imgPath} alt={p.nome} />
                 {p.categoria && (
-                  <span className="absolute left-3 top-3 rounded-lg bg-blue-900/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white dark:bg-blue-600/90">
+                  <span className="absolute left-3 top-3 rounded-lg bg-primary/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground dark:bg-primary/80">
                     {p.categoria}
                   </span>
                 )}
@@ -110,7 +110,7 @@ export function CatalogoPublicoClient({ produtos }: Props) {
                   {p.nome}
                 </h2>
                 <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-xl font-black text-blue-900 dark:text-blue-400">
+                  <span className="text-xl font-black text-primary dark:text-primary">
                     {formatBRL(p.valorVenda ?? 0)}
                   </span>
                 </div>

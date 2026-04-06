@@ -29,12 +29,12 @@ export default async function Page() {
         <div className="flex items-center gap-3">
           <div className="text-right">
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">Total no Banco</div>
-            <div className="text-xl font-black text-blue-900 leading-tight">{count}</div>
+            <div className="text-xl font-black text-primary leading-tight">{count}</div>
           </div>
           <a 
             href={csvHref} 
             download="modelo-importacao.csv"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-blue-900 text-blue-900 hover:bg-blue-50 cursor-pointer")}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-primary text-primary hover:bg-primary/5 cursor-pointer")}
           >
             Baixar Modelo
           </a>

@@ -20,6 +20,7 @@ import { updateVenda, deleteVenda, enviarEmailEmpresa } from "@/app/(app)/histor
 import { fuzzyFindVendas } from "@/lib/db-search";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
@@ -343,8 +344,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
-                    Sem dados para os filtros selecionados.
+                  <TableCell colSpan={13}>
+                    <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o periodo de busca." />
                   </TableCell>
                 </TableRow>
               ) : (

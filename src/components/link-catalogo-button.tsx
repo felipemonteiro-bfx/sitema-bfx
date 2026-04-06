@@ -30,7 +30,7 @@ export function LinkCatalogoButton() {
         onClick={handleCopy}
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "border-blue-900 text-blue-900 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950 cursor-pointer gap-2"
+          "border-primary text-primary hover:bg-primary/5 dark:border-primary dark:text-primary dark:hover:bg-primary/10 cursor-pointer gap-2"
         )}
       >
         {copied ? (
@@ -51,7 +51,7 @@ export function LinkCatalogoButton() {
         rel="noopener noreferrer"
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "border-blue-900 text-blue-900 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950 gap-2"
+          "border-primary text-primary hover:bg-primary/5 dark:border-primary dark:text-primary dark:hover:bg-primary/10 gap-2"
         )}
       >
         <ExternalLink className="h-4 w-4" />

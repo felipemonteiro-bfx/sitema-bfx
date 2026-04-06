@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MaskedInput } from "@/components/masked-input";
 import { cn } from "@/lib/utils";
 import { Pencil, Search, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
@@ -265,8 +266,8 @@ export default function EmpresasTabClient({
             <TableBody>
               {table.paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                    {table.search ? "Nenhum resultado encontrado." : "Sem empresas cadastradas."}
+                  <TableCell colSpan={8}>
+                    <EmptyState variant="folder" size="sm" title="Nenhuma empresa encontrada" description={table.search ? "Tente outro termo de busca." : "Cadastre a primeira empresa acima."} />
                   </TableCell>
                 </TableRow>
               ) : (

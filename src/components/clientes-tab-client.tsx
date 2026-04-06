@@ -13,6 +13,7 @@ import { MaskedInput } from "@/components/masked-input";
 import { CurrencyInput } from "@/components/currency-input";
 import { formatBRL, cn } from "@/lib/utils";
 import { AlertTriangle, Pencil, Search, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
@@ -344,8 +345,8 @@ export default function ClientesTabClient({
             <TableBody>
               {table.paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    {table.search ? "Nenhum resultado encontrado." : "Sem clientes cadastrados."}
+                  <TableCell colSpan={6}>
+                    <EmptyState variant="clients" size="sm" title="Nenhum cliente encontrado" description={table.search ? "Tente outro termo de busca." : "Cadastre o primeiro cliente acima."} />
                   </TableCell>
                 </TableRow>
               ) : (

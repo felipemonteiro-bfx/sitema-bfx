@@ -19,6 +19,7 @@ import ProdutoFormClient from "@/components/produto-form-client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatBRL, cn } from "@/lib/utils";
 import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
@@ -252,15 +253,8 @@ export default function ProdutosTabClient({
         <TableBody>
           {sortedProdutos.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
-                {searchQuery ? (
-                  <div className="space-y-1">
-                    <p>Nenhum produto encontrado para &quot;{searchQuery}&quot;</p>
-                    <p className="text-xs">Tente outro termo ou limpe a busca.</p>
-                  </div>
-                ) : (
-                  "Sem produtos cadastrados."
-                )}
+              <TableCell colSpan={9}>
+                <EmptyState variant="products" size="sm" title="Nenhum produto encontrado" description={table.search || searchQuery ? "Tente outro termo de busca." : "Cadastre o primeiro produto acima."} />
               </TableCell>
             </TableRow>
           ) : (

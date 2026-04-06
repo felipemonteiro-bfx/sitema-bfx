@@ -591,7 +591,7 @@ export default function VendaRapidaFormClient({ vendedorOptions, parcelasOptions
       {/* Coluna da Direita: Resumo Fixo (Sidebar) */}
       <div className="lg:col-span-4 space-y-4">
         <div className="sticky top-6">
-          <Card className="border-none shadow-lg bg-blue-900 text-white overflow-hidden">
+          <Card className="border-none shadow-lg bg-primary text-primary-foreground overflow-hidden">
             <div className="p-5">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-lg flex items-center gap-2">

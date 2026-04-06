@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MaskedInput } from "@/components/masked-input";
 import { cn } from "@/lib/utils";
 import { Pencil, Search, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
@@ -202,8 +203,8 @@ export default function FornecedoresTabClient({
             <TableBody>
               {table.paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    {table.search ? "Nenhum resultado encontrado." : "Sem fornecedores cadastrados."}
+                  <TableCell colSpan={4}>
+                    <EmptyState variant="default" size="sm" title="Nenhum fornecedor encontrado" description={table.search ? "Tente outro termo de busca." : "Cadastre o primeiro fornecedor acima."} />
                   </TableCell>
                 </TableRow>
               ) : (

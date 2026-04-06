@@ -479,7 +479,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
         {/* Rodapé informativo */}
         <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-2.5">
-          <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-[9px] font-bold text-blue-600 dark:text-blue-400">i</span>
+          <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-primary/40 text-[9px] font-bold text-blue-600 dark:text-blue-400">i</span>
           Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
       </div>
