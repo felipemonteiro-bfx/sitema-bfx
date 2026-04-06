@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { QueryTabs } from "@/components/query-tabs";
 import { Separator } from "@/components/ui/separator";
 import { LogoUploadForm } from "@/components/logo-upload-form";
@@ -79,19 +80,23 @@ async function saveAiProvider(formData: FormData) {
 
 async function saveAsaas(formData: FormData) {
   "use server";
-  const apiKey = String(formData.get("asaasApiKey") || "").trim() || null;
-  const env = String(formData.get("asaasEnv") || "sandbox").trim();
-  const asaasEnv = env === "production" ? "production" : "sandbox";
-  const cfg = await prisma.config.findFirst();
-  // Só sobrescreve a chave se uma nova foi digitada; preserva a existente caso contrário
-  const data: Record<string, unknown> = { asaasEnv };
-  if (apiKey !== null) data.asaasApiKey = apiKey;
-  if (cfg) {
-    await prisma.config.update({ where: { id: cfg.id }, data });
-  } else {
-    await prisma.config.create({ data: { asaasEnv } });
+  try {
+    const apiKey = String(formData.get("asaasApiKey") || "").trim() || null;
+    const env = String(formData.get("asaasEnv") || "sandbox").trim();
+    const asaasEnv = env === "production" ? "production" : "sandbox";
+    const cfg = await prisma.config.findFirst();
+    const data: Record<string, unknown> = { asaasEnv };
+    if (apiKey !== null) data.asaasApiKey = apiKey;
+    if (cfg) {
+      await prisma.config.update({ where: { id: cfg.id }, data });
+    } else {
+      await prisma.config.create({ data: { asaasEnv, ...(apiKey ? { asaasApiKey: apiKey } : {}) } });
+    }
+    revalidatePath("/configuracoes");
+  } catch (err) {
+    console.error("[saveAsaas] Erro ao salvar configuracao Asaas:", err);
+    redirect("/configuracoes?error=asaas_save_failed");
   }
-  revalidatePath("/configuracoes");
 }
 
 async function saveWhatsApp(formData: FormData) {
