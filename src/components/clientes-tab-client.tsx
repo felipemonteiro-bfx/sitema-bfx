@@ -81,7 +81,9 @@ export default function ClientesTabClient({
   const [empresaSearch, setEmpresaSearch] = useState("");
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | null>(null);
   const [empresaDropdownOpen, setEmpresaDropdownOpen] = useState(false);
-  const [editEmpresaSearch, setEditEmpresaSearch] = useState("");
+  const [editEmpresaSearch, setEditEmpresaSearch] = useState(
+    editClienteData?.empresaParceiraId ? "" : (editClienteData?.empresa ?? "")
+  );
   const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<number | null>(editClienteData?.empresaParceiraId ?? null);
   const [editEmpresaDropdownOpen, setEditEmpresaDropdownOpen] = useState(false);
 

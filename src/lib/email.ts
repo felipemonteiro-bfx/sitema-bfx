@@ -76,6 +76,11 @@ function toBase64(str: string): string {
   return Buffer.from(str).toString("base64");
 }
 
+/** Escapes HTML special characters to prevent XSS in email templates. */
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 /**
  * Sends an email via raw SMTP (supports STARTTLS on port 587 or TLS on port 465).
  */
@@ -313,9 +318,10 @@ type VendaForEmail = {
 /**
  * Sends a notification email to the partner company when a sale is created.
  * Uses empresaParceiraId (FK) when available, falls back to text matching.
+ * Returns true if notification was sent, false if skipped (no empresa found).
  */
-export async function sendVendaNotification(venda: VendaForEmail): Promise<void> {
-  if (!venda.cliente?.empresaParceiraId && !venda.cliente?.empresa) return;
+export async function sendVendaNotification(venda: VendaForEmail): Promise<boolean> {
+  if (!venda.cliente?.empresaParceiraId && !venda.cliente?.empresa) return false;
 
   // Prefer FK lookup, fall back to text matching for legacy data
   const empresa = venda.cliente.empresaParceiraId
@@ -356,13 +362,13 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<void>
 <body>
 <div class="card">
   <h2>Nova Venda Registrada</h2>
-  <p>Uma nova venda foi registrada para um colaborador da <strong>${empresa.nome}</strong>.</p>
+  <p>Uma nova venda foi registrada para um colaborador da <strong>${escapeHtml(empresa.nome)}</strong>.</p>
   <table>
     <tr><th>Campo</th><th>Valor</th></tr>
-    <tr><td>Cliente</td><td>${venda.cliente?.nome || "N/D"}</td></tr>
-    <tr><td>Matricula</td><td>${venda.cliente?.matricula || "N/D"}</td></tr>
-    <tr><td>Produto(s)</td><td>${produtosStr}</td></tr>
-    <tr><td>Vendedor</td><td>${venda.vendedor || "N/D"}</td></tr>
+    <tr><td>Cliente</td><td>${escapeHtml(venda.cliente?.nome || "N/D")}</td></tr>
+    <tr><td>Matricula</td><td>${escapeHtml(venda.cliente?.matricula || "N/D")}</td></tr>
+    <tr><td>Produto(s)</td><td>${escapeHtml(produtosStr)}</td></tr>
+    <tr><td>Vendedor</td><td>${escapeHtml(venda.vendedor || "N/D")}</td></tr>
     <tr><td>Data</td><td>${dataStr}</td></tr>
     <tr><td>Parcelas</td><td>${venda.parcelas || 1}x</td></tr>
     <tr><td class="total">Valor Total</td><td class="total">${formatBRL(totalValor)}</td></tr>
@@ -381,15 +387,15 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<void>
     } catch (err) {
       console.error("[email] Falha ao enviar notificacao de venda por email:", err);
     }
-    return;
+    return true;
   }
 
   // Fallback: send WhatsApp notification if empresa found
-  if (!empresa) return;
+  if (!empresa) return false;
 
   if (!empresa.telefoneRh) {
     console.warn(`[email] Empresa ${empresa.nome} sem email configurado e sem telefone — notificacao ignorada.`);
-    return;
+    return false;
   }
 
   const mensagem = [
@@ -408,6 +414,7 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<void>
   } catch (err) {
     console.error("[email] Falha ao enviar notificacao de venda via WhatsApp:", err);
   }
+  return true;
 }
 
 type VendaRelatorio = {
@@ -466,15 +473,39 @@ export async function sendWeeklyReport(
     return;
   }
 
-  if (emailsTo.length === 0) return;
+  // If SMTP is configured but no email recipients, try WhatsApp fallback
+  if (emailsTo.length === 0) {
+    if (!telefoneFallback) {
+      console.warn(`[email] Empresa ${empresaNome} sem email e sem telefone — relatorio ignorado.`);
+      return;
+    }
+    const totalGeralWa = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
+    const fimWa = new Date();
+    const inicioWa = new Date();
+    inicioWa.setDate(inicioWa.getDate() - 7);
+    const semanaLabelWa = `${formatDateBR(inicioWa)} a ${formatDateBR(fimWa)}`;
+    const mensagem = [
+      `[BFX] Relatorio Semanal de Vendas`,
+      `Empresa: ${empresaNome}`,
+      `Periodo: ${semanaLabelWa}`,
+      `Total de vendas: ${vendas.length}`,
+      `Valor total: ${formatBRL(totalGeralWa)}`,
+    ].join("\n");
+    try {
+      await enviarWhatsAppTexto(telefoneFallback, mensagem);
+    } catch (err) {
+      console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);
+    }
+    return;
+  }
 
   const rows = vendas.map((v) => {
     const total = valorTotalVenda(v);
-    const produtos = produtosTexto(v);
+    const produtos = escapeHtml(produtosTexto(v));
     const data = formatDateBR(v.dataVenda);
-    const matricula = v.cliente?.matricula || "—";
-    const nome = v.cliente?.nome || "N/D";
-    const vendedor = v.vendedor || "N/D";
+    const matricula = escapeHtml(v.cliente?.matricula || "—");
+    const nome = escapeHtml(v.cliente?.nome || "N/D");
+    const vendedor = escapeHtml(v.vendedor || "N/D");
     const parcelas = v.parcelas || 1;
     return `
     <tr>
@@ -511,7 +542,7 @@ export async function sendWeeklyReport(
 </style></head>
 <body>
 <div class="card">
-  <h2>Relatorio Semanal de Vendas — ${empresaNome}</h2>
+  <h2>Relatorio Semanal de Vendas — ${escapeHtml(empresaNome)}</h2>
   <p>Periodo: <strong>${semanaLabel}</strong> &nbsp;|&nbsp; Total de vendas: <strong>${vendas.length}</strong></p>
   <table>
     <thead>

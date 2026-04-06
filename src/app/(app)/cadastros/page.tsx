@@ -26,7 +26,8 @@ async function addCliente(formData: FormData) {
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!nome) return;
-  const empresaParceiraId = formData.get("empresaParceiraId") ? Number(formData.get("empresaParceiraId")) : null;
+  const empresaParceiraIdRaw = Number(formData.get("empresaParceiraId") || 0);
+  const empresaParceiraId = empresaParceiraIdRaw > 0 ? empresaParceiraIdRaw : null;
   const dataNascimentoStr = String(formData.get("dataNascimento") || "").trim();
   try {
     const cliente = await prisma.cliente.create({
@@ -58,7 +59,8 @@ async function updateCliente(formData: FormData) {
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!id || !nome) return;
-  const empresaParceiraId = formData.get("empresaParceiraId") ? Number(formData.get("empresaParceiraId")) : null;
+  const empresaParceiraIdRaw = Number(formData.get("empresaParceiraId") || 0);
+  const empresaParceiraId = empresaParceiraIdRaw > 0 ? empresaParceiraIdRaw : null;
   const dataNascimentoStr = String(formData.get("dataNascimento") || "").trim();
   try {
     await prisma.cliente.update({

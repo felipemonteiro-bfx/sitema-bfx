@@ -132,10 +132,14 @@ export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: bo
       return { success: false, error: "Cliente nao vinculado a nenhuma empresa." };
     }
 
-    await sendVendaNotification({
+    const sent = await sendVendaNotification({
       ...venda,
       cliente: venda.cliente ?? undefined,
     });
+
+    if (!sent) {
+      return { success: false, error: "Empresa nao encontrada ou sem contato configurado." };
+    }
 
     return { success: true };
   } catch (err) {

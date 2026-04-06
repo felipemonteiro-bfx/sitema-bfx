@@ -38,7 +38,7 @@ export async function criarVenda(formData: FormData) {
   const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
 
   if (!data || !vendedor || !clienteId) return;
-  await prisma.venda.create({
+  const vendaCriada = await prisma.venda.create({
     data: {
       dataVenda: new Date(data),
       vendedor,
@@ -67,9 +67,8 @@ export async function criarVenda(formData: FormData) {
   if (clienteId) {
     void (async () => {
       try {
-        const vendaComCliente = await prisma.venda.findFirst({
-          where: { clienteId, dataVenda: { gte: new Date(data) } },
-          orderBy: { id: "desc" },
+        const vendaComCliente = await prisma.venda.findUnique({
+          where: { id: vendaCriada.id },
           include: {
             cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
             itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
