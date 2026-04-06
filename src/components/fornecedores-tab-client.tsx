@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, startTransition } from "react";
+import { useState, startTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -104,15 +104,15 @@ export default function FornecedoresTabClient({
   const allSelected = fornecedores.length > 0 && selectedIds.size === fornecedores.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < fornecedores.length;
 
-  const handleSelectAll = (checked: boolean | "indeterminate") => {
+  const handleSelectAll = useCallback((checked: boolean | "indeterminate") => {
     if (checked) {
       setSelectedIds(new Set(fornecedores.map((f) => f.id)));
     } else {
       setSelectedIds(new Set());
     }
-  };
+  }, [fornecedores]);
 
-  const handleSelectOne = (id: number, checked: boolean | "indeterminate") => {
+  const handleSelectOne = useCallback((id: number, checked: boolean | "indeterminate") => {
     const next = new Set(selectedIds);
     if (checked) {
       next.add(id);
@@ -120,9 +120,9 @@ export default function FornecedoresTabClient({
       next.delete(id);
     }
     setSelectedIds(next);
-  };
+  }, [selectedIds]);
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = useCallback(async () => {
     setBulkDeleting(true);
     try {
       await onBulkDeleteAction(Array.from(selectedIds));
@@ -133,7 +133,7 @@ export default function FornecedoresTabClient({
     } finally {
       setBulkDeleting(false);
     }
-  };
+  }, [onBulkDeleteAction, selectedIds, router]);
 
   return (
     <>

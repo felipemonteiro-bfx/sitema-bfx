@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, startTransition } from "react";
+import { useState, startTransition, useCallback, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -93,12 +93,15 @@ export default function ClientesTabClient({
     ...empresasParceiras.map(e => ({ value: String(e.id), label: e.nome })),
   ];
 
-  const handleNomeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+  const lastCheckedNome = useRef("");
+
+  const handleNomeBlur = useCallback(async (e: React.FocusEvent<HTMLInputElement>) => {
     const nome = e.target.value.trim();
-    if (!nome || nome.length < 3) {
-      setSimilares([]);
+    if (!nome || nome.length < 3 || nome === lastCheckedNome.current) {
+      if (!nome || nome.length < 3) setSimilares([]);
       return;
     }
+    lastCheckedNome.current = nome;
     try {
       const res = await fetch(`/api/clientes/similar?nome=${encodeURIComponent(nome)}`);
       if (res.ok) {
@@ -108,7 +111,7 @@ export default function ClientesTabClient({
     } catch {
       setSimilares([]);
     }
-  };
+  }, []);
 
   const handleAdd = async (formData: FormData) => {
     setSubmittingAdd(true);
@@ -152,15 +155,15 @@ export default function ClientesTabClient({
   const allSelected = clientes.length > 0 && selectedIds.size === clientes.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < clientes.length;
 
-  const handleSelectAll = (checked: boolean | "indeterminate") => {
+  const handleSelectAll = useCallback((checked: boolean | "indeterminate") => {
     if (checked) {
       setSelectedIds(new Set(clientes.map((c) => c.id)));
     } else {
       setSelectedIds(new Set());
     }
-  };
+  }, [clientes]);
 
-  const handleSelectOne = (id: number, checked: boolean | "indeterminate") => {
+  const handleSelectOne = useCallback((id: number, checked: boolean | "indeterminate") => {
     const next = new Set(selectedIds);
     if (checked) {
       next.add(id);
@@ -168,9 +171,9 @@ export default function ClientesTabClient({
       next.delete(id);
     }
     setSelectedIds(next);
-  };
+  }, [selectedIds]);
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = useCallback(async () => {
     setBulkDeleting(true);
     try {
       await onBulkDeleteAction(Array.from(selectedIds));
@@ -181,7 +184,7 @@ export default function ClientesTabClient({
     } finally {
       setBulkDeleting(false);
     }
-  };
+  }, [onBulkDeleteAction, selectedIds, router]);
 
   return (
     <>

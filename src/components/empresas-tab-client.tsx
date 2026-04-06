@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, startTransition } from "react";
+import { useState, startTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -115,15 +115,15 @@ export default function EmpresasTabClient({
   const allSelected = empresas.length > 0 && selectedIds.size === empresas.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < empresas.length;
 
-  const handleSelectAll = (checked: boolean | "indeterminate") => {
+  const handleSelectAll = useCallback((checked: boolean | "indeterminate") => {
     if (checked) {
       setSelectedIds(new Set(empresas.map((e) => e.id)));
     } else {
       setSelectedIds(new Set());
     }
-  };
+  }, [empresas]);
 
-  const handleSelectOne = (id: number, checked: boolean | "indeterminate") => {
+  const handleSelectOne = useCallback((id: number, checked: boolean | "indeterminate") => {
     const next = new Set(selectedIds);
     if (checked) {
       next.add(id);
@@ -131,9 +131,9 @@ export default function EmpresasTabClient({
       next.delete(id);
     }
     setSelectedIds(next);
-  };
+  }, [selectedIds]);
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = useCallback(async () => {
     setBulkDeleting(true);
     try {
       await onBulkDeleteAction(Array.from(selectedIds));
@@ -144,7 +144,7 @@ export default function EmpresasTabClient({
     } finally {
       setBulkDeleting(false);
     }
-  };
+  }, [onBulkDeleteAction, selectedIds, router]);
 
   const openVinculos = (empresa: EmpresaListItem) => {
     const currentIds = new Set((empresa.vinculos || []).map((v) => v.vinculada.id));
