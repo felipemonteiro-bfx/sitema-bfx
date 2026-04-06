@@ -213,10 +213,11 @@ export default function FornecedoresTabClient({
               </Button>
             </div>
           )}
+          <div className="overflow-x-auto -mx-6 px-6">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40px]">
+                <TableHead className="w-11">
                   <Checkbox
                     aria-label="Selecionar todos"
                     checked={allSelected ? true : someSelected ? "indeterminate" : false}
@@ -262,6 +263,7 @@ export default function FornecedoresTabClient({
               )}
             </TableBody>
           </Table>
+          </div>
           <TablePagination page={table.page} totalPages={table.totalPages} totalFiltered={table.totalFiltered} totalItems={fornecedores.length} onPageChange={table.setPage} />
         </CardContent>
       </Card>
