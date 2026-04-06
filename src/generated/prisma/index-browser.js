@@ -136,7 +136,8 @@ exports.Prisma.ClienteScalarFieldEnum = {
   endereco: 'endereco',
   email: 'email',
   asaasCustomerId: 'asaasCustomerId',
-  atendimentoHumanoAt: 'atendimentoHumanoAt'
+  atendimentoHumanoAt: 'atendimentoHumanoAt',
+  empresaParceiraId: 'empresaParceiraId'
 };
 
 exports.Prisma.ProdutoScalarFieldEnum = {

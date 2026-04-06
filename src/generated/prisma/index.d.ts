@@ -2792,11 +2792,13 @@ export namespace Prisma {
    */
 
   export type EmpresaParceiraCountOutputType = {
+    clientes: number
     vinculos: number
     vinculadaPor: number
   }
 
   export type EmpresaParceiraCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    clientes?: boolean | EmpresaParceiraCountOutputTypeCountClientesArgs
     vinculos?: boolean | EmpresaParceiraCountOutputTypeCountVinculosArgs
     vinculadaPor?: boolean | EmpresaParceiraCountOutputTypeCountVinculadaPorArgs
   }
@@ -2810,6 +2812,13 @@ export namespace Prisma {
      * Select specific fields to fetch from the EmpresaParceiraCountOutputType
      */
     select?: EmpresaParceiraCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * EmpresaParceiraCountOutputType without action
+   */
+  export type EmpresaParceiraCountOutputTypeCountClientesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ClienteWhereInput
   }
 
   /**
@@ -2846,11 +2855,13 @@ export namespace Prisma {
   export type ClienteAvgAggregateOutputType = {
     id: number | null
     renda: number | null
+    empresaParceiraId: number | null
   }
 
   export type ClienteSumAggregateOutputType = {
     id: number | null
     renda: number | null
+    empresaParceiraId: number | null
   }
 
   export type ClienteMinAggregateOutputType = {
@@ -2869,6 +2880,7 @@ export namespace Prisma {
     email: string | null
     asaasCustomerId: string | null
     atendimentoHumanoAt: Date | null
+    empresaParceiraId: number | null
   }
 
   export type ClienteMaxAggregateOutputType = {
@@ -2887,6 +2899,7 @@ export namespace Prisma {
     email: string | null
     asaasCustomerId: string | null
     atendimentoHumanoAt: Date | null
+    empresaParceiraId: number | null
   }
 
   export type ClienteCountAggregateOutputType = {
@@ -2905,6 +2918,7 @@ export namespace Prisma {
     email: number
     asaasCustomerId: number
     atendimentoHumanoAt: number
+    empresaParceiraId: number
     _all: number
   }
 
@@ -2912,11 +2926,13 @@ export namespace Prisma {
   export type ClienteAvgAggregateInputType = {
     id?: true
     renda?: true
+    empresaParceiraId?: true
   }
 
   export type ClienteSumAggregateInputType = {
     id?: true
     renda?: true
+    empresaParceiraId?: true
   }
 
   export type ClienteMinAggregateInputType = {
@@ -2935,6 +2951,7 @@ export namespace Prisma {
     email?: true
     asaasCustomerId?: true
     atendimentoHumanoAt?: true
+    empresaParceiraId?: true
   }
 
   export type ClienteMaxAggregateInputType = {
@@ -2953,6 +2970,7 @@ export namespace Prisma {
     email?: true
     asaasCustomerId?: true
     atendimentoHumanoAt?: true
+    empresaParceiraId?: true
   }
 
   export type ClienteCountAggregateInputType = {
@@ -2971,6 +2989,7 @@ export namespace Prisma {
     email?: true
     asaasCustomerId?: true
     atendimentoHumanoAt?: true
+    empresaParceiraId?: true
     _all?: true
   }
 
@@ -3076,6 +3095,7 @@ export namespace Prisma {
     email: string | null
     asaasCustomerId: string | null
     atendimentoHumanoAt: Date | null
+    empresaParceiraId: number | null
     _count: ClienteCountAggregateOutputType | null
     _avg: ClienteAvgAggregateOutputType | null
     _sum: ClienteSumAggregateOutputType | null
@@ -3113,6 +3133,8 @@ export namespace Prisma {
     email?: boolean
     asaasCustomerId?: boolean
     atendimentoHumanoAt?: boolean
+    empresaParceiraId?: boolean
+    empresaParceira?: boolean | Cliente$empresaParceiraArgs<ExtArgs>
     vendas?: boolean | Cliente$vendasArgs<ExtArgs>
     _count?: boolean | ClienteCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cliente"]>
@@ -3133,6 +3155,8 @@ export namespace Prisma {
     email?: boolean
     asaasCustomerId?: boolean
     atendimentoHumanoAt?: boolean
+    empresaParceiraId?: boolean
+    empresaParceira?: boolean | Cliente$empresaParceiraArgs<ExtArgs>
   }, ExtArgs["result"]["cliente"]>
 
   export type ClienteSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3151,6 +3175,8 @@ export namespace Prisma {
     email?: boolean
     asaasCustomerId?: boolean
     atendimentoHumanoAt?: boolean
+    empresaParceiraId?: boolean
+    empresaParceira?: boolean | Cliente$empresaParceiraArgs<ExtArgs>
   }, ExtArgs["result"]["cliente"]>
 
   export type ClienteSelectScalar = {
@@ -3169,19 +3195,26 @@ export namespace Prisma {
     email?: boolean
     asaasCustomerId?: boolean
     atendimentoHumanoAt?: boolean
+    empresaParceiraId?: boolean
   }
 
-  export type ClienteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "renda" | "empresa" | "matricula" | "telefone" | "cpf" | "cnpj" | "tipo" | "dataNascimento" | "cep" | "endereco" | "email" | "asaasCustomerId" | "atendimentoHumanoAt", ExtArgs["result"]["cliente"]>
+  export type ClienteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "renda" | "empresa" | "matricula" | "telefone" | "cpf" | "cnpj" | "tipo" | "dataNascimento" | "cep" | "endereco" | "email" | "asaasCustomerId" | "atendimentoHumanoAt" | "empresaParceiraId", ExtArgs["result"]["cliente"]>
   export type ClienteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    empresaParceira?: boolean | Cliente$empresaParceiraArgs<ExtArgs>
     vendas?: boolean | Cliente$vendasArgs<ExtArgs>
     _count?: boolean | ClienteCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type ClienteIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type ClienteIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ClienteIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    empresaParceira?: boolean | Cliente$empresaParceiraArgs<ExtArgs>
+  }
+  export type ClienteIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    empresaParceira?: boolean | Cliente$empresaParceiraArgs<ExtArgs>
+  }
 
   export type $ClientePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Cliente"
     objects: {
+      empresaParceira: Prisma.$EmpresaParceiraPayload<ExtArgs> | null
       vendas: Prisma.$VendaPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -3200,6 +3233,7 @@ export namespace Prisma {
       email: string | null
       asaasCustomerId: string | null
       atendimentoHumanoAt: Date | null
+      empresaParceiraId: number | null
     }, ExtArgs["result"]["cliente"]>
     composites: {}
   }
@@ -3594,6 +3628,7 @@ export namespace Prisma {
    */
   export interface Prisma__ClienteClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    empresaParceira<T extends Cliente$empresaParceiraArgs<ExtArgs> = {}>(args?: Subset<T, Cliente$empresaParceiraArgs<ExtArgs>>): Prisma__EmpresaParceiraClient<$Result.GetResult<Prisma.$EmpresaParceiraPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     vendas<T extends Cliente$vendasArgs<ExtArgs> = {}>(args?: Subset<T, Cliente$vendasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VendaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -3639,6 +3674,7 @@ export namespace Prisma {
     readonly email: FieldRef<"Cliente", 'String'>
     readonly asaasCustomerId: FieldRef<"Cliente", 'String'>
     readonly atendimentoHumanoAt: FieldRef<"Cliente", 'DateTime'>
+    readonly empresaParceiraId: FieldRef<"Cliente", 'Int'>
   }
     
 
@@ -3888,6 +3924,10 @@ export namespace Prisma {
      */
     data: ClienteCreateManyInput | ClienteCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClienteIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -3958,6 +3998,10 @@ export namespace Prisma {
      * Limit how many Clientes to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClienteIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -4024,6 +4068,25 @@ export namespace Prisma {
      * Limit how many Clientes to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Cliente.empresaParceira
+   */
+  export type Cliente$empresaParceiraArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the EmpresaParceira
+     */
+    select?: EmpresaParceiraSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the EmpresaParceira
+     */
+    omit?: EmpresaParceiraOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: EmpresaParceiraInclude<ExtArgs> | null
+    where?: EmpresaParceiraWhereInput
   }
 
   /**
@@ -14144,6 +14207,7 @@ export namespace Prisma {
     emailRh?: boolean
     cnpj?: boolean
     emailsExtras?: boolean
+    clientes?: boolean | EmpresaParceira$clientesArgs<ExtArgs>
     vinculos?: boolean | EmpresaParceira$vinculosArgs<ExtArgs>
     vinculadaPor?: boolean | EmpresaParceira$vinculadaPorArgs<ExtArgs>
     _count?: boolean | EmpresaParceiraCountOutputTypeDefaultArgs<ExtArgs>
@@ -14181,6 +14245,7 @@ export namespace Prisma {
 
   export type EmpresaParceiraOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "nome" | "responsavelRh" | "telefoneRh" | "emailRh" | "cnpj" | "emailsExtras", ExtArgs["result"]["empresaParceira"]>
   export type EmpresaParceiraInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    clientes?: boolean | EmpresaParceira$clientesArgs<ExtArgs>
     vinculos?: boolean | EmpresaParceira$vinculosArgs<ExtArgs>
     vinculadaPor?: boolean | EmpresaParceira$vinculadaPorArgs<ExtArgs>
     _count?: boolean | EmpresaParceiraCountOutputTypeDefaultArgs<ExtArgs>
@@ -14191,6 +14256,7 @@ export namespace Prisma {
   export type $EmpresaParceiraPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "EmpresaParceira"
     objects: {
+      clientes: Prisma.$ClientePayload<ExtArgs>[]
       vinculos: Prisma.$EmpresaVinculoPayload<ExtArgs>[]
       vinculadaPor: Prisma.$EmpresaVinculoPayload<ExtArgs>[]
     }
@@ -14596,6 +14662,7 @@ export namespace Prisma {
    */
   export interface Prisma__EmpresaParceiraClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    clientes<T extends EmpresaParceira$clientesArgs<ExtArgs> = {}>(args?: Subset<T, EmpresaParceira$clientesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClientePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     vinculos<T extends EmpresaParceira$vinculosArgs<ExtArgs> = {}>(args?: Subset<T, EmpresaParceira$vinculosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     vinculadaPor<T extends EmpresaParceira$vinculadaPorArgs<ExtArgs> = {}>(args?: Subset<T, EmpresaParceira$vinculadaPorArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmpresaVinculoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -15019,6 +15086,30 @@ export namespace Prisma {
      * Limit how many EmpresaParceiras to delete.
      */
     limit?: number
+  }
+
+  /**
+   * EmpresaParceira.clientes
+   */
+  export type EmpresaParceira$clientesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cliente
+     */
+    select?: ClienteSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cliente
+     */
+    omit?: ClienteOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ClienteInclude<ExtArgs> | null
+    where?: ClienteWhereInput
+    orderBy?: ClienteOrderByWithRelationInput | ClienteOrderByWithRelationInput[]
+    cursor?: ClienteWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ClienteScalarFieldEnum | ClienteScalarFieldEnum[]
   }
 
   /**
@@ -26745,7 +26836,8 @@ export namespace Prisma {
     endereco: 'endereco',
     email: 'email',
     asaasCustomerId: 'asaasCustomerId',
-    atendimentoHumanoAt: 'atendimentoHumanoAt'
+    atendimentoHumanoAt: 'atendimentoHumanoAt',
+    empresaParceiraId: 'empresaParceiraId'
   };
 
   export type ClienteScalarFieldEnum = (typeof ClienteScalarFieldEnum)[keyof typeof ClienteScalarFieldEnum]
@@ -27212,6 +27304,8 @@ export namespace Prisma {
     email?: StringNullableFilter<"Cliente"> | string | null
     asaasCustomerId?: StringNullableFilter<"Cliente"> | string | null
     atendimentoHumanoAt?: DateTimeNullableFilter<"Cliente"> | Date | string | null
+    empresaParceiraId?: IntNullableFilter<"Cliente"> | number | null
+    empresaParceira?: XOR<EmpresaParceiraNullableScalarRelationFilter, EmpresaParceiraWhereInput> | null
     vendas?: VendaListRelationFilter
   }
 
@@ -27231,6 +27325,8 @@ export namespace Prisma {
     email?: SortOrderInput | SortOrder
     asaasCustomerId?: SortOrderInput | SortOrder
     atendimentoHumanoAt?: SortOrderInput | SortOrder
+    empresaParceiraId?: SortOrderInput | SortOrder
+    empresaParceira?: EmpresaParceiraOrderByWithRelationInput
     vendas?: VendaOrderByRelationAggregateInput
   }
 
@@ -27253,6 +27349,8 @@ export namespace Prisma {
     email?: StringNullableFilter<"Cliente"> | string | null
     asaasCustomerId?: StringNullableFilter<"Cliente"> | string | null
     atendimentoHumanoAt?: DateTimeNullableFilter<"Cliente"> | Date | string | null
+    empresaParceiraId?: IntNullableFilter<"Cliente"> | number | null
+    empresaParceira?: XOR<EmpresaParceiraNullableScalarRelationFilter, EmpresaParceiraWhereInput> | null
     vendas?: VendaListRelationFilter
   }, "id" | "nome">
 
@@ -27272,6 +27370,7 @@ export namespace Prisma {
     email?: SortOrderInput | SortOrder
     asaasCustomerId?: SortOrderInput | SortOrder
     atendimentoHumanoAt?: SortOrderInput | SortOrder
+    empresaParceiraId?: SortOrderInput | SortOrder
     _count?: ClienteCountOrderByAggregateInput
     _avg?: ClienteAvgOrderByAggregateInput
     _max?: ClienteMaxOrderByAggregateInput
@@ -27298,6 +27397,7 @@ export namespace Prisma {
     email?: StringNullableWithAggregatesFilter<"Cliente"> | string | null
     asaasCustomerId?: StringNullableWithAggregatesFilter<"Cliente"> | string | null
     atendimentoHumanoAt?: DateTimeNullableWithAggregatesFilter<"Cliente"> | Date | string | null
+    empresaParceiraId?: IntNullableWithAggregatesFilter<"Cliente"> | number | null
   }
 
   export type ProdutoWhereInput = {
@@ -28119,6 +28219,7 @@ export namespace Prisma {
     emailRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     cnpj?: StringNullableFilter<"EmpresaParceira"> | string | null
     emailsExtras?: StringNullableFilter<"EmpresaParceira"> | string | null
+    clientes?: ClienteListRelationFilter
     vinculos?: EmpresaVinculoListRelationFilter
     vinculadaPor?: EmpresaVinculoListRelationFilter
   }
@@ -28131,6 +28232,7 @@ export namespace Prisma {
     emailRh?: SortOrderInput | SortOrder
     cnpj?: SortOrderInput | SortOrder
     emailsExtras?: SortOrderInput | SortOrder
+    clientes?: ClienteOrderByRelationAggregateInput
     vinculos?: EmpresaVinculoOrderByRelationAggregateInput
     vinculadaPor?: EmpresaVinculoOrderByRelationAggregateInput
   }
@@ -28146,6 +28248,7 @@ export namespace Prisma {
     emailRh?: StringNullableFilter<"EmpresaParceira"> | string | null
     cnpj?: StringNullableFilter<"EmpresaParceira"> | string | null
     emailsExtras?: StringNullableFilter<"EmpresaParceira"> | string | null
+    clientes?: ClienteListRelationFilter
     vinculos?: EmpresaVinculoListRelationFilter
     vinculadaPor?: EmpresaVinculoListRelationFilter
   }, "id" | "nome">
@@ -28852,6 +28955,7 @@ export namespace Prisma {
     email?: string | null
     asaasCustomerId?: string | null
     atendimentoHumanoAt?: Date | string | null
+    empresaParceira?: EmpresaParceiraCreateNestedOneWithoutClientesInput
     vendas?: VendaCreateNestedManyWithoutClienteInput
   }
 
@@ -28871,6 +28975,7 @@ export namespace Prisma {
     email?: string | null
     asaasCustomerId?: string | null
     atendimentoHumanoAt?: Date | string | null
+    empresaParceiraId?: number | null
     vendas?: VendaUncheckedCreateNestedManyWithoutClienteInput
   }
 
@@ -28889,6 +28994,7 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    empresaParceira?: EmpresaParceiraUpdateOneWithoutClientesNestedInput
     vendas?: VendaUpdateManyWithoutClienteNestedInput
   }
 
@@ -28908,6 +29014,7 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    empresaParceiraId?: NullableIntFieldUpdateOperationsInput | number | null
     vendas?: VendaUncheckedUpdateManyWithoutClienteNestedInput
   }
 
@@ -28927,6 +29034,7 @@ export namespace Prisma {
     email?: string | null
     asaasCustomerId?: string | null
     atendimentoHumanoAt?: Date | string | null
+    empresaParceiraId?: number | null
   }
 
   export type ClienteUpdateManyMutationInput = {
@@ -28962,6 +29070,7 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    empresaParceiraId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ProdutoCreateInput = {
@@ -29893,6 +30002,7 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    clientes?: ClienteCreateNestedManyWithoutEmpresaParceiraInput
     vinculos?: EmpresaVinculoCreateNestedManyWithoutEmpresaInput
     vinculadaPor?: EmpresaVinculoCreateNestedManyWithoutVinculadaInput
   }
@@ -29905,6 +30015,7 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    clientes?: ClienteUncheckedCreateNestedManyWithoutEmpresaParceiraInput
     vinculos?: EmpresaVinculoUncheckedCreateNestedManyWithoutEmpresaInput
     vinculadaPor?: EmpresaVinculoUncheckedCreateNestedManyWithoutVinculadaInput
   }
@@ -29916,6 +30027,7 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    clientes?: ClienteUpdateManyWithoutEmpresaParceiraNestedInput
     vinculos?: EmpresaVinculoUpdateManyWithoutEmpresaNestedInput
     vinculadaPor?: EmpresaVinculoUpdateManyWithoutVinculadaNestedInput
   }
@@ -29928,6 +30040,7 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    clientes?: ClienteUncheckedUpdateManyWithoutEmpresaParceiraNestedInput
     vinculos?: EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput
     vinculadaPor?: EmpresaVinculoUncheckedUpdateManyWithoutVinculadaNestedInput
   }
@@ -30682,6 +30795,22 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type EmpresaParceiraNullableScalarRelationFilter = {
+    is?: EmpresaParceiraWhereInput | null
+    isNot?: EmpresaParceiraWhereInput | null
+  }
+
   export type VendaListRelationFilter = {
     every?: VendaWhereInput
     some?: VendaWhereInput
@@ -30713,11 +30842,13 @@ export namespace Prisma {
     email?: SortOrder
     asaasCustomerId?: SortOrder
     atendimentoHumanoAt?: SortOrder
+    empresaParceiraId?: SortOrder
   }
 
   export type ClienteAvgOrderByAggregateInput = {
     id?: SortOrder
     renda?: SortOrder
+    empresaParceiraId?: SortOrder
   }
 
   export type ClienteMaxOrderByAggregateInput = {
@@ -30736,6 +30867,7 @@ export namespace Prisma {
     email?: SortOrder
     asaasCustomerId?: SortOrder
     atendimentoHumanoAt?: SortOrder
+    empresaParceiraId?: SortOrder
   }
 
   export type ClienteMinOrderByAggregateInput = {
@@ -30754,11 +30886,13 @@ export namespace Prisma {
     email?: SortOrder
     asaasCustomerId?: SortOrder
     atendimentoHumanoAt?: SortOrder
+    empresaParceiraId?: SortOrder
   }
 
   export type ClienteSumOrderByAggregateInput = {
     id?: SortOrder
     renda?: SortOrder
+    empresaParceiraId?: SortOrder
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -30843,7 +30977,7 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
     notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -30851,7 +30985,12 @@ export namespace Prisma {
     lte?: number | IntFieldRefInput<$PrismaModel>
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type FornecedorNullableScalarRelationFilter = {
@@ -30920,22 +31059,6 @@ export namespace Prisma {
     fornecedorId?: SortOrder
     qtdEstoque?: SortOrder
     valorVenda?: SortOrder
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type UuidNullableFilter<$PrismaModel = never> = {
@@ -31613,10 +31736,20 @@ export namespace Prisma {
     id?: SortOrder
   }
 
+  export type ClienteListRelationFilter = {
+    every?: ClienteWhereInput
+    some?: ClienteWhereInput
+    none?: ClienteWhereInput
+  }
+
   export type EmpresaVinculoListRelationFilter = {
     every?: EmpresaVinculoWhereInput
     some?: EmpresaVinculoWhereInput
     none?: EmpresaVinculoWhereInput
+  }
+
+  export type ClienteOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type EmpresaVinculoOrderByRelationAggregateInput = {
@@ -32121,6 +32254,12 @@ export namespace Prisma {
     quantidadeVendas?: SortOrder
   }
 
+  export type EmpresaParceiraCreateNestedOneWithoutClientesInput = {
+    create?: XOR<EmpresaParceiraCreateWithoutClientesInput, EmpresaParceiraUncheckedCreateWithoutClientesInput>
+    connectOrCreate?: EmpresaParceiraCreateOrConnectWithoutClientesInput
+    connect?: EmpresaParceiraWhereUniqueInput
+  }
+
   export type VendaCreateNestedManyWithoutClienteInput = {
     create?: XOR<VendaCreateWithoutClienteInput, VendaUncheckedCreateWithoutClienteInput> | VendaCreateWithoutClienteInput[] | VendaUncheckedCreateWithoutClienteInput[]
     connectOrCreate?: VendaCreateOrConnectWithoutClienteInput | VendaCreateOrConnectWithoutClienteInput[]
@@ -32155,6 +32294,16 @@ export namespace Prisma {
     set?: Date | string | null
   }
 
+  export type EmpresaParceiraUpdateOneWithoutClientesNestedInput = {
+    create?: XOR<EmpresaParceiraCreateWithoutClientesInput, EmpresaParceiraUncheckedCreateWithoutClientesInput>
+    connectOrCreate?: EmpresaParceiraCreateOrConnectWithoutClientesInput
+    upsert?: EmpresaParceiraUpsertWithoutClientesInput
+    disconnect?: EmpresaParceiraWhereInput | boolean
+    delete?: EmpresaParceiraWhereInput | boolean
+    connect?: EmpresaParceiraWhereUniqueInput
+    update?: XOR<XOR<EmpresaParceiraUpdateToOneWithWhereWithoutClientesInput, EmpresaParceiraUpdateWithoutClientesInput>, EmpresaParceiraUncheckedUpdateWithoutClientesInput>
+  }
+
   export type VendaUpdateManyWithoutClienteNestedInput = {
     create?: XOR<VendaCreateWithoutClienteInput, VendaUncheckedCreateWithoutClienteInput> | VendaCreateWithoutClienteInput[] | VendaUncheckedCreateWithoutClienteInput[]
     connectOrCreate?: VendaCreateOrConnectWithoutClienteInput | VendaCreateOrConnectWithoutClienteInput[]
@@ -32171,6 +32320,14 @@ export namespace Prisma {
 
   export type IntFieldUpdateOperationsInput = {
     set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
     increment?: number
     decrement?: number
     multiply?: number
@@ -32195,14 +32352,6 @@ export namespace Prisma {
     create?: XOR<FornecedorCreateWithoutProdutosInput, FornecedorUncheckedCreateWithoutProdutosInput>
     connectOrCreate?: FornecedorCreateOrConnectWithoutProdutosInput
     connect?: FornecedorWhereUniqueInput
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type FornecedorUpdateOneWithoutProdutosNestedInput = {
@@ -32499,6 +32648,13 @@ export namespace Prisma {
     deleteMany?: ProdutoScalarWhereInput | ProdutoScalarWhereInput[]
   }
 
+  export type ClienteCreateNestedManyWithoutEmpresaParceiraInput = {
+    create?: XOR<ClienteCreateWithoutEmpresaParceiraInput, ClienteUncheckedCreateWithoutEmpresaParceiraInput> | ClienteCreateWithoutEmpresaParceiraInput[] | ClienteUncheckedCreateWithoutEmpresaParceiraInput[]
+    connectOrCreate?: ClienteCreateOrConnectWithoutEmpresaParceiraInput | ClienteCreateOrConnectWithoutEmpresaParceiraInput[]
+    createMany?: ClienteCreateManyEmpresaParceiraInputEnvelope
+    connect?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+  }
+
   export type EmpresaVinculoCreateNestedManyWithoutEmpresaInput = {
     create?: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput> | EmpresaVinculoCreateWithoutEmpresaInput[] | EmpresaVinculoUncheckedCreateWithoutEmpresaInput[]
     connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutEmpresaInput | EmpresaVinculoCreateOrConnectWithoutEmpresaInput[]
@@ -32513,6 +32669,13 @@ export namespace Prisma {
     connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
   }
 
+  export type ClienteUncheckedCreateNestedManyWithoutEmpresaParceiraInput = {
+    create?: XOR<ClienteCreateWithoutEmpresaParceiraInput, ClienteUncheckedCreateWithoutEmpresaParceiraInput> | ClienteCreateWithoutEmpresaParceiraInput[] | ClienteUncheckedCreateWithoutEmpresaParceiraInput[]
+    connectOrCreate?: ClienteCreateOrConnectWithoutEmpresaParceiraInput | ClienteCreateOrConnectWithoutEmpresaParceiraInput[]
+    createMany?: ClienteCreateManyEmpresaParceiraInputEnvelope
+    connect?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+  }
+
   export type EmpresaVinculoUncheckedCreateNestedManyWithoutEmpresaInput = {
     create?: XOR<EmpresaVinculoCreateWithoutEmpresaInput, EmpresaVinculoUncheckedCreateWithoutEmpresaInput> | EmpresaVinculoCreateWithoutEmpresaInput[] | EmpresaVinculoUncheckedCreateWithoutEmpresaInput[]
     connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutEmpresaInput | EmpresaVinculoCreateOrConnectWithoutEmpresaInput[]
@@ -32525,6 +32688,20 @@ export namespace Prisma {
     connectOrCreate?: EmpresaVinculoCreateOrConnectWithoutVinculadaInput | EmpresaVinculoCreateOrConnectWithoutVinculadaInput[]
     createMany?: EmpresaVinculoCreateManyVinculadaInputEnvelope
     connect?: EmpresaVinculoWhereUniqueInput | EmpresaVinculoWhereUniqueInput[]
+  }
+
+  export type ClienteUpdateManyWithoutEmpresaParceiraNestedInput = {
+    create?: XOR<ClienteCreateWithoutEmpresaParceiraInput, ClienteUncheckedCreateWithoutEmpresaParceiraInput> | ClienteCreateWithoutEmpresaParceiraInput[] | ClienteUncheckedCreateWithoutEmpresaParceiraInput[]
+    connectOrCreate?: ClienteCreateOrConnectWithoutEmpresaParceiraInput | ClienteCreateOrConnectWithoutEmpresaParceiraInput[]
+    upsert?: ClienteUpsertWithWhereUniqueWithoutEmpresaParceiraInput | ClienteUpsertWithWhereUniqueWithoutEmpresaParceiraInput[]
+    createMany?: ClienteCreateManyEmpresaParceiraInputEnvelope
+    set?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    disconnect?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    delete?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    connect?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    update?: ClienteUpdateWithWhereUniqueWithoutEmpresaParceiraInput | ClienteUpdateWithWhereUniqueWithoutEmpresaParceiraInput[]
+    updateMany?: ClienteUpdateManyWithWhereWithoutEmpresaParceiraInput | ClienteUpdateManyWithWhereWithoutEmpresaParceiraInput[]
+    deleteMany?: ClienteScalarWhereInput | ClienteScalarWhereInput[]
   }
 
   export type EmpresaVinculoUpdateManyWithoutEmpresaNestedInput = {
@@ -32553,6 +32730,20 @@ export namespace Prisma {
     update?: EmpresaVinculoUpdateWithWhereUniqueWithoutVinculadaInput | EmpresaVinculoUpdateWithWhereUniqueWithoutVinculadaInput[]
     updateMany?: EmpresaVinculoUpdateManyWithWhereWithoutVinculadaInput | EmpresaVinculoUpdateManyWithWhereWithoutVinculadaInput[]
     deleteMany?: EmpresaVinculoScalarWhereInput | EmpresaVinculoScalarWhereInput[]
+  }
+
+  export type ClienteUncheckedUpdateManyWithoutEmpresaParceiraNestedInput = {
+    create?: XOR<ClienteCreateWithoutEmpresaParceiraInput, ClienteUncheckedCreateWithoutEmpresaParceiraInput> | ClienteCreateWithoutEmpresaParceiraInput[] | ClienteUncheckedCreateWithoutEmpresaParceiraInput[]
+    connectOrCreate?: ClienteCreateOrConnectWithoutEmpresaParceiraInput | ClienteCreateOrConnectWithoutEmpresaParceiraInput[]
+    upsert?: ClienteUpsertWithWhereUniqueWithoutEmpresaParceiraInput | ClienteUpsertWithWhereUniqueWithoutEmpresaParceiraInput[]
+    createMany?: ClienteCreateManyEmpresaParceiraInputEnvelope
+    set?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    disconnect?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    delete?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    connect?: ClienteWhereUniqueInput | ClienteWhereUniqueInput[]
+    update?: ClienteUpdateWithWhereUniqueWithoutEmpresaParceiraInput | ClienteUpdateWithWhereUniqueWithoutEmpresaParceiraInput[]
+    updateMany?: ClienteUpdateManyWithWhereWithoutEmpresaParceiraInput | ClienteUpdateManyWithWhereWithoutEmpresaParceiraInput[]
+    deleteMany?: ClienteScalarWhereInput | ClienteScalarWhereInput[]
   }
 
   export type EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput = {
@@ -32686,6 +32877,17 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -32744,17 +32946,6 @@ export namespace Prisma {
     _sum?: NestedFloatNullableFilter<$PrismaModel>
     _min?: NestedFloatNullableFilter<$PrismaModel>
     _max?: NestedFloatNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -32936,6 +33127,34 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type EmpresaParceiraCreateWithoutClientesInput = {
+    nome: string
+    responsavelRh?: string | null
+    telefoneRh?: string | null
+    emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
+    vinculos?: EmpresaVinculoCreateNestedManyWithoutEmpresaInput
+    vinculadaPor?: EmpresaVinculoCreateNestedManyWithoutVinculadaInput
+  }
+
+  export type EmpresaParceiraUncheckedCreateWithoutClientesInput = {
+    id?: number
+    nome: string
+    responsavelRh?: string | null
+    telefoneRh?: string | null
+    emailRh?: string | null
+    cnpj?: string | null
+    emailsExtras?: string | null
+    vinculos?: EmpresaVinculoUncheckedCreateNestedManyWithoutEmpresaInput
+    vinculadaPor?: EmpresaVinculoUncheckedCreateNestedManyWithoutVinculadaInput
+  }
+
+  export type EmpresaParceiraCreateOrConnectWithoutClientesInput = {
+    where: EmpresaParceiraWhereUniqueInput
+    create: XOR<EmpresaParceiraCreateWithoutClientesInput, EmpresaParceiraUncheckedCreateWithoutClientesInput>
+  }
+
   export type VendaCreateWithoutClienteInput = {
     uuid?: string | null
     dataVenda: Date | string
@@ -33007,6 +33226,40 @@ export namespace Prisma {
   export type VendaCreateManyClienteInputEnvelope = {
     data: VendaCreateManyClienteInput | VendaCreateManyClienteInput[]
     skipDuplicates?: boolean
+  }
+
+  export type EmpresaParceiraUpsertWithoutClientesInput = {
+    update: XOR<EmpresaParceiraUpdateWithoutClientesInput, EmpresaParceiraUncheckedUpdateWithoutClientesInput>
+    create: XOR<EmpresaParceiraCreateWithoutClientesInput, EmpresaParceiraUncheckedCreateWithoutClientesInput>
+    where?: EmpresaParceiraWhereInput
+  }
+
+  export type EmpresaParceiraUpdateToOneWithWhereWithoutClientesInput = {
+    where?: EmpresaParceiraWhereInput
+    data: XOR<EmpresaParceiraUpdateWithoutClientesInput, EmpresaParceiraUncheckedUpdateWithoutClientesInput>
+  }
+
+  export type EmpresaParceiraUpdateWithoutClientesInput = {
+    nome?: StringFieldUpdateOperationsInput | string
+    responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
+    telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
+    emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculos?: EmpresaVinculoUpdateManyWithoutEmpresaNestedInput
+    vinculadaPor?: EmpresaVinculoUpdateManyWithoutVinculadaNestedInput
+  }
+
+  export type EmpresaParceiraUncheckedUpdateWithoutClientesInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    responsavelRh?: NullableStringFieldUpdateOperationsInput | string | null
+    telefoneRh?: NullableStringFieldUpdateOperationsInput | string | null
+    emailRh?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    vinculos?: EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput
+    vinculadaPor?: EmpresaVinculoUncheckedUpdateManyWithoutVinculadaNestedInput
   }
 
   export type VendaUpsertWithWhereUniqueWithoutClienteInput = {
@@ -33110,6 +33363,7 @@ export namespace Prisma {
     email?: string | null
     asaasCustomerId?: string | null
     atendimentoHumanoAt?: Date | string | null
+    empresaParceira?: EmpresaParceiraCreateNestedOneWithoutClientesInput
   }
 
   export type ClienteUncheckedCreateWithoutVendasInput = {
@@ -33128,6 +33382,7 @@ export namespace Prisma {
     email?: string | null
     asaasCustomerId?: string | null
     atendimentoHumanoAt?: Date | string | null
+    empresaParceiraId?: number | null
   }
 
   export type ClienteCreateOrConnectWithoutVendasInput = {
@@ -33260,6 +33515,7 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    empresaParceira?: EmpresaParceiraUpdateOneWithoutClientesNestedInput
   }
 
   export type ClienteUncheckedUpdateWithoutVendasInput = {
@@ -33278,6 +33534,7 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
     atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    empresaParceiraId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type ItemVendaUpsertWithWhereUniqueWithoutVendaInput = {
@@ -33884,6 +34141,53 @@ export namespace Prisma {
     dataCompra?: DateTimeNullableFilter<"Produto"> | Date | string | null
   }
 
+  export type ClienteCreateWithoutEmpresaParceiraInput = {
+    nome: string
+    renda?: number | null
+    empresa?: string | null
+    matricula?: string | null
+    telefone?: string | null
+    cpf?: string | null
+    cnpj?: string | null
+    tipo?: string | null
+    dataNascimento?: Date | string | null
+    cep?: string | null
+    endereco?: string | null
+    email?: string | null
+    asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
+    vendas?: VendaCreateNestedManyWithoutClienteInput
+  }
+
+  export type ClienteUncheckedCreateWithoutEmpresaParceiraInput = {
+    id?: number
+    nome: string
+    renda?: number | null
+    empresa?: string | null
+    matricula?: string | null
+    telefone?: string | null
+    cpf?: string | null
+    cnpj?: string | null
+    tipo?: string | null
+    dataNascimento?: Date | string | null
+    cep?: string | null
+    endereco?: string | null
+    email?: string | null
+    asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
+    vendas?: VendaUncheckedCreateNestedManyWithoutClienteInput
+  }
+
+  export type ClienteCreateOrConnectWithoutEmpresaParceiraInput = {
+    where: ClienteWhereUniqueInput
+    create: XOR<ClienteCreateWithoutEmpresaParceiraInput, ClienteUncheckedCreateWithoutEmpresaParceiraInput>
+  }
+
+  export type ClienteCreateManyEmpresaParceiraInputEnvelope = {
+    data: ClienteCreateManyEmpresaParceiraInput | ClienteCreateManyEmpresaParceiraInput[]
+    skipDuplicates?: boolean
+  }
+
   export type EmpresaVinculoCreateWithoutEmpresaInput = {
     vinculada: EmpresaParceiraCreateNestedOneWithoutVinculadaPorInput
   }
@@ -33920,6 +34224,44 @@ export namespace Prisma {
   export type EmpresaVinculoCreateManyVinculadaInputEnvelope = {
     data: EmpresaVinculoCreateManyVinculadaInput | EmpresaVinculoCreateManyVinculadaInput[]
     skipDuplicates?: boolean
+  }
+
+  export type ClienteUpsertWithWhereUniqueWithoutEmpresaParceiraInput = {
+    where: ClienteWhereUniqueInput
+    update: XOR<ClienteUpdateWithoutEmpresaParceiraInput, ClienteUncheckedUpdateWithoutEmpresaParceiraInput>
+    create: XOR<ClienteCreateWithoutEmpresaParceiraInput, ClienteUncheckedCreateWithoutEmpresaParceiraInput>
+  }
+
+  export type ClienteUpdateWithWhereUniqueWithoutEmpresaParceiraInput = {
+    where: ClienteWhereUniqueInput
+    data: XOR<ClienteUpdateWithoutEmpresaParceiraInput, ClienteUncheckedUpdateWithoutEmpresaParceiraInput>
+  }
+
+  export type ClienteUpdateManyWithWhereWithoutEmpresaParceiraInput = {
+    where: ClienteScalarWhereInput
+    data: XOR<ClienteUpdateManyMutationInput, ClienteUncheckedUpdateManyWithoutEmpresaParceiraInput>
+  }
+
+  export type ClienteScalarWhereInput = {
+    AND?: ClienteScalarWhereInput | ClienteScalarWhereInput[]
+    OR?: ClienteScalarWhereInput[]
+    NOT?: ClienteScalarWhereInput | ClienteScalarWhereInput[]
+    id?: IntFilter<"Cliente"> | number
+    nome?: StringFilter<"Cliente"> | string
+    renda?: FloatNullableFilter<"Cliente"> | number | null
+    empresa?: StringNullableFilter<"Cliente"> | string | null
+    matricula?: StringNullableFilter<"Cliente"> | string | null
+    telefone?: StringNullableFilter<"Cliente"> | string | null
+    cpf?: StringNullableFilter<"Cliente"> | string | null
+    cnpj?: StringNullableFilter<"Cliente"> | string | null
+    tipo?: StringNullableFilter<"Cliente"> | string | null
+    dataNascimento?: DateTimeNullableFilter<"Cliente"> | Date | string | null
+    cep?: StringNullableFilter<"Cliente"> | string | null
+    endereco?: StringNullableFilter<"Cliente"> | string | null
+    email?: StringNullableFilter<"Cliente"> | string | null
+    asaasCustomerId?: StringNullableFilter<"Cliente"> | string | null
+    atendimentoHumanoAt?: DateTimeNullableFilter<"Cliente"> | Date | string | null
+    empresaParceiraId?: IntNullableFilter<"Cliente"> | number | null
   }
 
   export type EmpresaVinculoUpsertWithWhereUniqueWithoutEmpresaInput = {
@@ -33970,6 +34312,7 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    clientes?: ClienteCreateNestedManyWithoutEmpresaParceiraInput
     vinculadaPor?: EmpresaVinculoCreateNestedManyWithoutVinculadaInput
   }
 
@@ -33981,6 +34324,7 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    clientes?: ClienteUncheckedCreateNestedManyWithoutEmpresaParceiraInput
     vinculadaPor?: EmpresaVinculoUncheckedCreateNestedManyWithoutVinculadaInput
   }
 
@@ -33996,6 +34340,7 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    clientes?: ClienteCreateNestedManyWithoutEmpresaParceiraInput
     vinculos?: EmpresaVinculoCreateNestedManyWithoutEmpresaInput
   }
 
@@ -34007,6 +34352,7 @@ export namespace Prisma {
     emailRh?: string | null
     cnpj?: string | null
     emailsExtras?: string | null
+    clientes?: ClienteUncheckedCreateNestedManyWithoutEmpresaParceiraInput
     vinculos?: EmpresaVinculoUncheckedCreateNestedManyWithoutEmpresaInput
   }
 
@@ -34033,6 +34379,7 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    clientes?: ClienteUpdateManyWithoutEmpresaParceiraNestedInput
     vinculadaPor?: EmpresaVinculoUpdateManyWithoutVinculadaNestedInput
   }
 
@@ -34044,6 +34391,7 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    clientes?: ClienteUncheckedUpdateManyWithoutEmpresaParceiraNestedInput
     vinculadaPor?: EmpresaVinculoUncheckedUpdateManyWithoutVinculadaNestedInput
   }
 
@@ -34065,6 +34413,7 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    clientes?: ClienteUpdateManyWithoutEmpresaParceiraNestedInput
     vinculos?: EmpresaVinculoUpdateManyWithoutEmpresaNestedInput
   }
 
@@ -34076,6 +34425,7 @@ export namespace Prisma {
     emailRh?: NullableStringFieldUpdateOperationsInput | string | null
     cnpj?: NullableStringFieldUpdateOperationsInput | string | null
     emailsExtras?: NullableStringFieldUpdateOperationsInput | string | null
+    clientes?: ClienteUncheckedUpdateManyWithoutEmpresaParceiraNestedInput
     vinculos?: EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput
   }
 
@@ -34500,6 +34850,24 @@ export namespace Prisma {
     dataCompra?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type ClienteCreateManyEmpresaParceiraInput = {
+    id?: number
+    nome: string
+    renda?: number | null
+    empresa?: string | null
+    matricula?: string | null
+    telefone?: string | null
+    cpf?: string | null
+    cnpj?: string | null
+    tipo?: string | null
+    dataNascimento?: Date | string | null
+    cep?: string | null
+    endereco?: string | null
+    email?: string | null
+    asaasCustomerId?: string | null
+    atendimentoHumanoAt?: Date | string | null
+  }
+
   export type EmpresaVinculoCreateManyEmpresaInput = {
     id?: number
     vinculadaId: number
@@ -34508,6 +34876,61 @@ export namespace Prisma {
   export type EmpresaVinculoCreateManyVinculadaInput = {
     id?: number
     empresaId: number
+  }
+
+  export type ClienteUpdateWithoutEmpresaParceiraInput = {
+    nome?: StringFieldUpdateOperationsInput | string
+    renda?: NullableFloatFieldUpdateOperationsInput | number | null
+    empresa?: NullableStringFieldUpdateOperationsInput | string | null
+    matricula?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    cpf?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    tipo?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendas?: VendaUpdateManyWithoutClienteNestedInput
+  }
+
+  export type ClienteUncheckedUpdateWithoutEmpresaParceiraInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    renda?: NullableFloatFieldUpdateOperationsInput | number | null
+    empresa?: NullableStringFieldUpdateOperationsInput | string | null
+    matricula?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    cpf?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    tipo?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vendas?: VendaUncheckedUpdateManyWithoutClienteNestedInput
+  }
+
+  export type ClienteUncheckedUpdateManyWithoutEmpresaParceiraInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    nome?: StringFieldUpdateOperationsInput | string
+    renda?: NullableFloatFieldUpdateOperationsInput | number | null
+    empresa?: NullableStringFieldUpdateOperationsInput | string | null
+    matricula?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    cpf?: NullableStringFieldUpdateOperationsInput | string | null
+    cnpj?: NullableStringFieldUpdateOperationsInput | string | null
+    tipo?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    asaasCustomerId?: NullableStringFieldUpdateOperationsInput | string | null
+    atendimentoHumanoAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type EmpresaVinculoUpdateWithoutEmpresaInput = {

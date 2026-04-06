@@ -36,6 +36,7 @@ type EmpresaListItem = {
   cnpj: string | null;
   emailsExtras: string | null;
   vinculos?: { vinculada: { id: number; nome: string } }[];
+  _count?: { clientes: number };
 };
 
 interface Props {
@@ -255,6 +256,7 @@ export default function EmpresasTabClient({
                 <SortableHeader label="CNPJ" field="cnpj" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="RH" field="responsavelRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="Contato" field="emailRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
+                <TableHead className="text-xs text-center">Clientes</TableHead>
                 <TableHead className="text-xs">Vinculadas</TableHead>
                 <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
               </TableRow>
@@ -262,7 +264,7 @@ export default function EmpresasTabClient({
             <TableBody>
               {table.paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     {table.search ? "Nenhum resultado encontrado." : "Sem empresas cadastradas."}
                   </TableCell>
                 </TableRow>
@@ -284,6 +286,11 @@ export default function EmpresasTabClient({
                       {e.emailsExtras && (
                         <div className="text-xs text-muted-foreground">{e.emailsExtras}</div>
                       )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", (e._count?.clientes ?? 0) > 0 ? "bg-blue-50 text-blue-800" : "text-muted-foreground opacity-40")}>
+                        {e._count?.clientes ?? 0}
+                      </span>
                     </TableCell>
                     <TableCell className="text-xs">
                       {(e.vinculos || []).length > 0 ? (

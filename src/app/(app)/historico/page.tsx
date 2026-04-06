@@ -16,9 +16,10 @@ import { EditVendaSheetWrapper } from "@/components/edit-venda-sheet-wrapper";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
-import { updateVenda, deleteVenda } from "@/app/(app)/historico/actions";
+import { updateVenda, deleteVenda, enviarEmailEmpresa } from "@/app/(app)/historico/actions";
 import { fuzzyFindVendas } from "@/lib/db-search";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
+import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
@@ -111,7 +112,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       boleto: true,
       asaasPaymentId: true,
       boletoUrl: true,
-      cliente: { select: { nome: true } },
+      cliente: { select: { nome: true, empresaParceiraId: true, empresa: true } },
       itens: {
         select: { produtoNome: true, custoProduto: true, quantidade: true, subtotal: true },
         orderBy: { id: "asc" },
@@ -469,6 +470,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         ) : v.assinaturaToken ? (
                           <CopiarLinkAssinatura token={v.assinaturaToken} />
                         ) : null}
+                        {(v.cliente?.empresaParceiraId || v.cliente?.empresa) && (
+                          <EnviarEmailEmpresaButton vendaId={v.id} onSend={enviarEmailEmpresa} />
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

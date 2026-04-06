@@ -71,7 +71,7 @@ export async function criarVenda(formData: FormData) {
           where: { clienteId, dataVenda: { gte: new Date(data) } },
           orderBy: { id: "desc" },
           include: {
-            cliente: { select: { nome: true, matricula: true, empresa: true } },
+            cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
             itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
           },
         });
@@ -262,7 +262,7 @@ export async function criarVendaV2(
           const vendaComCliente = await prisma.venda.findUnique({
             where: { id: venda.id },
             include: {
-              cliente: { select: { nome: true, matricula: true, empresa: true } },
+              cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
               itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
             },
           });

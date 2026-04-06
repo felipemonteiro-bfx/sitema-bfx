@@ -9,8 +9,8 @@ datasource db {
 }
 
 model Cliente {
-  id                  Int       @id @default(autoincrement())
-  nome                String    @unique
+  id                  Int              @id @default(autoincrement())
+  nome                String           @unique
   renda               Float?
   empresa             String?
   matricula           String?
@@ -18,12 +18,14 @@ model Cliente {
   cpf                 String?
   cnpj                String?
   tipo                String?
-  dataNascimento      DateTime? @map("data_nascimento")
+  dataNascimento      DateTime?        @map("data_nascimento")
   cep                 String?
   endereco            String?
   email               String?
-  asaasCustomerId     String?   @map("asaas_customer_id")
-  atendimentoHumanoAt DateTime? @map("atendimento_humano_at")
+  asaasCustomerId     String?          @map("asaas_customer_id")
+  atendimentoHumanoAt DateTime?        @map("atendimento_humano_at")
+  empresaParceiraId   Int?             @map("empresa_parceira_id")
+  empresaParceira     EmpresaParceira? @relation(fields: [empresaParceiraId], references: [id])
   vendas              Venda[]
 
   @@map("clientes")
@@ -213,6 +215,7 @@ model EmpresaParceira {
   cnpj          String? @map("cnpj")
   emailsExtras  String? @map("emails_extras")
 
+  clientes     Cliente[]
   vinculos     EmpresaVinculo[] @relation("empresa_origem")
   vinculadaPor EmpresaVinculo[] @relation("empresa_destino")
 

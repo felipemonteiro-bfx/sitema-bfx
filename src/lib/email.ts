@@ -306,21 +306,23 @@ type VendaForEmail = {
     nome?: string | null;
     matricula?: string | null;
     empresa?: string | null;
+    empresaParceiraId?: number | null;
   } | null;
 };
 
 /**
  * Sends a notification email to the partner company when a sale is created.
+ * Uses empresaParceiraId (FK) when available, falls back to text matching.
  */
 export async function sendVendaNotification(venda: VendaForEmail): Promise<void> {
-  if (!venda.cliente?.empresa) return;
+  if (!venda.cliente?.empresaParceiraId && !venda.cliente?.empresa) return;
 
-  // Find the partner company (case-insensitive)
-  const empresa = await prisma.empresaParceira.findFirst({
-    where: {
-      nome: { equals: venda.cliente.empresa, mode: "insensitive" },
-    },
-  });
+  // Prefer FK lookup, fall back to text matching for legacy data
+  const empresa = venda.cliente.empresaParceiraId
+    ? await prisma.empresaParceira.findUnique({ where: { id: venda.cliente.empresaParceiraId } })
+    : await prisma.empresaParceira.findFirst({
+        where: { nome: { equals: venda.cliente.empresa!, mode: "insensitive" } },
+      });
 
   const totalValor = valorTotalVenda(venda);
   const produtosStr = produtosTexto(venda);
@@ -422,6 +424,7 @@ type VendaRelatorio = {
     nome?: string | null;
     matricula?: string | null;
     empresa?: string | null;
+    empresaParceiraId?: number | null;
   } | null;
 };
 

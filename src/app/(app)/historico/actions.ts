@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
+import { sendVendaNotification } from "@/lib/email";
 
 export async function updateVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const id = Number(formData.get("id") || 0);
@@ -111,6 +112,35 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   } catch (err) {
     console.error("Erro ao atualizar venda:", err);
     return { success: false, error: "Erro ao salvar alterações. Tente novamente." };
+  }
+}
+
+export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: boolean; error?: string }> {
+  if (!vendaId) return { success: false, error: "ID da venda invalido." };
+
+  try {
+    const venda = await prisma.venda.findUnique({
+      where: { id: vendaId },
+      include: {
+        cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
+        itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+      },
+    });
+
+    if (!venda) return { success: false, error: "Venda nao encontrada." };
+    if (!venda.cliente?.empresaParceiraId && !venda.cliente?.empresa) {
+      return { success: false, error: "Cliente nao vinculado a nenhuma empresa." };
+    }
+
+    await sendVendaNotification({
+      ...venda,
+      cliente: venda.cliente ?? undefined,
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("[enviarEmailEmpresa] Erro:", err);
+    return { success: false, error: "Erro ao enviar email." };
   }
 }
 

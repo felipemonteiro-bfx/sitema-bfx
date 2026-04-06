@@ -40,7 +40,11 @@ type ClienteListItem = {
   telefone: string | null;
   cep: string | null;
   tipo: string | null;
+  empresaParceiraId: number | null;
+  dataNascimento: Date | string | null;
 };
+
+type EmpresaOption = { id: number; nome: string };
 
 type ClienteEdit = ClienteListItem;
 
@@ -53,6 +57,7 @@ interface Props {
   onAddAction: (formData: FormData) => Promise<void>;
   onUpdateAction: (formData: FormData) => Promise<void>;
   onBulkDeleteAction: (ids: number[]) => Promise<void>;
+  empresasParceiras?: EmpresaOption[];
 }
 
 export default function ClientesTabClient({
@@ -64,6 +69,7 @@ export default function ClientesTabClient({
   onAddAction,
   onUpdateAction,
   onBulkDeleteAction,
+  empresasParceiras = [],
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -72,6 +78,19 @@ export default function ClientesTabClient({
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [similares, setSimilares] = useState<{ id: number; nome: string }[]>([]);
+  const [empresaSearch, setEmpresaSearch] = useState("");
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | null>(null);
+  const [empresaDropdownOpen, setEmpresaDropdownOpen] = useState(false);
+  const [editEmpresaSearch, setEditEmpresaSearch] = useState("");
+  const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<number | null>(editClienteData?.empresaParceiraId ?? null);
+  const [editEmpresaDropdownOpen, setEditEmpresaDropdownOpen] = useState(false);
+
+  const filteredEmpresas = empresasParceiras.filter(e =>
+    !empresaSearch || e.nome.toLowerCase().includes(empresaSearch.toLowerCase())
+  );
+  const editFilteredEmpresas = empresasParceiras.filter(e =>
+    !editEmpresaSearch || e.nome.toLowerCase().includes(editEmpresaSearch.toLowerCase())
+  );
 
   const handleNomeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const nome = e.target.value.trim();
@@ -206,10 +225,41 @@ export default function ClientesTabClient({
                 <MaskedInput name="cep" mask="cep" aria-label="CEP" />
               </div>
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1">
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1 relative">
                 <div className="text-xs font-semibold text-muted-foreground">Empresa/Vinculo</div>
-                <Input name="empresa" placeholder="Empresa/Vinculo" aria-label="Empresa" />
+                <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId ?? ""} />
+                <input type="hidden" name="empresa" value={empresasParceiras.find(e => e.id === selectedEmpresaId)?.nome ?? empresaSearch} />
+                <Input
+                  placeholder="Buscar empresa..."
+                  aria-label="Empresa"
+                  value={empresaSearch}
+                  onChange={(e) => { setEmpresaSearch(e.target.value); setEmpresaDropdownOpen(true); setSelectedEmpresaId(null); }}
+                  onFocus={() => setEmpresaDropdownOpen(true)}
+                  onBlur={() => setTimeout(() => setEmpresaDropdownOpen(false), 200)}
+                  className="uppercase"
+                />
+                {empresaDropdownOpen && filteredEmpresas.length > 0 && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    {filteredEmpresas.map(e => (
+                      <button
+                        key={e.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer"
+                        onMouseDown={(ev) => { ev.preventDefault(); setSelectedEmpresaId(e.id); setEmpresaSearch(e.nome); setEmpresaDropdownOpen(false); }}
+                      >
+                        {e.nome}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {selectedEmpresaId && (
+                  <button type="button" onClick={() => { setSelectedEmpresaId(null); setEmpresaSearch(""); }} className="absolute right-2 top-7 text-xs text-muted-foreground hover:text-foreground">✕</button>
+                )}
+              </div>
+              <div className="space-y-1">
+                <div className="text-xs font-semibold text-muted-foreground">Data de Nascimento</div>
+                <Input type="date" name="dataNascimento" aria-label="Data de Nascimento" />
               </div>
             </div>
             <div className="flex items-center justify-end">
@@ -384,10 +434,46 @@ export default function ClientesTabClient({
                   <MaskedInput name="cep" mask="cep" defaultValue={editClienteData.cep || ""} aria-label="CEP" />
                 </div>
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-1">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="space-y-1 relative">
                   <div className="text-xs font-semibold text-muted-foreground">Empresa/Vinculo</div>
-                  <Input name="empresa" defaultValue={editClienteData.empresa || ""} placeholder="Empresa/Vinculo" aria-label="Empresa" />
+                  <input type="hidden" name="empresaParceiraId" value={editSelectedEmpresaId ?? ""} />
+                  <input type="hidden" name="empresa" value={empresasParceiras.find(e => e.id === editSelectedEmpresaId)?.nome ?? editEmpresaSearch} />
+                  <Input
+                    placeholder="Buscar empresa..."
+                    aria-label="Empresa"
+                    value={editEmpresaSearch || (editSelectedEmpresaId ? (empresasParceiras.find(e => e.id === editSelectedEmpresaId)?.nome ?? editClienteData.empresa ?? "") : editClienteData.empresa || "")}
+                    onChange={(e) => { setEditEmpresaSearch(e.target.value); setEditEmpresaDropdownOpen(true); setEditSelectedEmpresaId(null); }}
+                    onFocus={() => setEditEmpresaDropdownOpen(true)}
+                    onBlur={() => setTimeout(() => setEditEmpresaDropdownOpen(false), 200)}
+                    className="uppercase"
+                  />
+                  {editEmpresaDropdownOpen && editFilteredEmpresas.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                      {editFilteredEmpresas.map(e => (
+                        <button
+                          key={e.id}
+                          type="button"
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer"
+                          onMouseDown={(ev) => { ev.preventDefault(); setEditSelectedEmpresaId(e.id); setEditEmpresaSearch(e.nome); setEditEmpresaDropdownOpen(false); }}
+                        >
+                          {e.nome}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {editSelectedEmpresaId && (
+                    <button type="button" onClick={() => { setEditSelectedEmpresaId(null); setEditEmpresaSearch(""); }} className="absolute right-2 top-7 text-xs text-muted-foreground hover:text-foreground">✕</button>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-semibold text-muted-foreground">Data de Nascimento</div>
+                  <Input
+                    type="date"
+                    name="dataNascimento"
+                    defaultValue={editClienteData.dataNascimento ? new Date(editClienteData.dataNascimento).toISOString().split("T")[0] : ""}
+                    aria-label="Data de Nascimento"
+                  />
                 </div>
               </div>
               <div className="flex items-center justify-end gap-2">

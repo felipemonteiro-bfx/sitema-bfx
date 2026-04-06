@@ -40,15 +40,19 @@ export async function GET(req: Request) {
 
     for (const empresa of empresas) {
       // Fetch sales for this company in the last 7 days
+      // Use FK (empresaParceiraId) when possible, fall back to text matching for legacy data
       const vendas = await prisma.venda.findMany({
         where: {
           dataVenda: { gte: semanaAtras, lte: hoje },
           cliente: {
-            empresa: { equals: empresa.nome, mode: "insensitive" },
+            OR: [
+              { empresaParceiraId: empresa.id },
+              { empresa: { equals: empresa.nome, mode: "insensitive" }, empresaParceiraId: null },
+            ],
           },
         },
         include: {
-          cliente: { select: { nome: true, matricula: true, empresa: true } },
+          cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
           itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
         },
         orderBy: { dataVenda: "desc" },

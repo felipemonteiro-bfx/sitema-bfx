@@ -26,6 +26,8 @@ async function addCliente(formData: FormData) {
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!nome) return;
+  const empresaParceiraId = formData.get("empresaParceiraId") ? Number(formData.get("empresaParceiraId")) : null;
+  const dataNascimentoStr = String(formData.get("dataNascimento") || "").trim();
   try {
     const cliente = await prisma.cliente.create({
       data: {
@@ -34,10 +36,12 @@ async function addCliente(formData: FormData) {
         cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
         renda: Number(formData.get("renda") || 0),
         empresa: normalizeUppercase(formData.get("empresa")),
+        empresaParceiraId,
         telefone: normalizeUppercase(formData.get("telefone")),
         cep: normalizeUppercase(formData.get("cep")),
         matricula: normalizeUppercase(formData.get("matricula")),
         tipo,
+        dataNascimento: dataNascimentoStr ? new Date(dataNascimentoStr) : null,
       },
     });
     await createAuditLog("cliente:create", { clienteId: cliente.id, nome });
@@ -54,6 +58,8 @@ async function updateCliente(formData: FormData) {
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!id || !nome) return;
+  const empresaParceiraId = formData.get("empresaParceiraId") ? Number(formData.get("empresaParceiraId")) : null;
+  const dataNascimentoStr = String(formData.get("dataNascimento") || "").trim();
   try {
     await prisma.cliente.update({
       where: { id },
@@ -63,10 +69,12 @@ async function updateCliente(formData: FormData) {
         cnpj: tipo === "PJ" ? normalizeUppercase(formData.get("doc")) : null,
         renda: Number(formData.get("renda") || 0),
         empresa: normalizeUppercase(formData.get("empresa")),
+        empresaParceiraId,
         telefone: normalizeUppercase(formData.get("telefone")),
         cep: normalizeUppercase(formData.get("cep")),
         matricula: normalizeUppercase(formData.get("matricula")),
         tipo,
+        dataNascimento: dataNascimentoStr ? new Date(dataNascimentoStr) : null,
       },
     });
     await createAuditLog("cliente:update", { clienteId: id, nome });
@@ -290,7 +298,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const editClienteData = editClienteId ? await prisma.cliente.findUnique({
     where: { id: editClienteId },
-    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true },
+    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true, empresaParceiraId: true, dataNascimento: true },
   }) : null;
   const editProdutoData = editProdutoId ? await prisma.produto.findUnique({
     where: { id: editProdutoId },
@@ -319,7 +327,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         { cnpj: { contains: sp.q_clientes, mode: 'insensitive' } },
       ]
     } : {},
-    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true },
+    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true, empresaParceiraId: true, dataNascimento: true },
     orderBy: { nome: "asc" }
   });
 
@@ -364,9 +372,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     orderBy: { nome: "asc" },
   });
 
-  // Try to include vinculos — table may not exist on older deployments
+  // Try to include vinculos and client count — table may not exist on older deployments
   type EmpresaWithVinculos = typeof empresasRaw[0] & {
     vinculos?: { vinculada: { id: number; nome: string } }[];
+    _count?: { clientes: number };
   };
   let empresas: EmpresaWithVinculos[] = empresasRaw;
   try {
@@ -375,6 +384,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       orderBy: { nome: "asc" },
       include: {
         vinculos: { include: { vinculada: { select: { id: true, nome: true } } } },
+        _count: { select: { clientes: true } },
       },
     });
     empresas = withVinculos;
@@ -423,6 +433,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 onAddAction={addCliente}
                 onUpdateAction={updateCliente}
                 onBulkDeleteAction={bulkDeleteClientes}
+                empresasParceiras={empresasRaw.map(e => ({ id: e.id, nome: e.nome }))}
               />
             ),
           },
