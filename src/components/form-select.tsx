@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check, ChevronDown, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -68,25 +67,21 @@ export function FormSelect({
       <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
+          <button
             type="button"
-            variant="outline"
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "min-h-10 h-auto py-2 w-full flex items-center justify-between gap-2 overflow-hidden box-border text-left font-normal touch-manipulation",
-              "sm:max-h-10 sm:py-0 sm:min-h-0 sm:h-10",
+              "flex h-10 w-full items-center justify-between whitespace-nowrap rounded-lg border border-input bg-background/70 px-3 py-2 text-sm text-foreground shadow-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card",
               !value && "text-muted-foreground",
               className
             )}
           >
-            <span className="flex w-full min-w-0 items-center justify-between gap-2">
-              <span className="min-w-0 truncate">{selected?.label ?? placeholder}</span>
-              <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
-            </span>
-          </Button>
+            <span className="line-clamp-1">{selected?.label ?? placeholder}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+          </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2.5">
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] rounded-xl border bg-popover p-2 shadow-md">
           {searchable && (
             <div className="mb-2 flex items-center gap-2 border-b border-border/60 pb-2">
               <Search className="h-4 w-4 text-muted-foreground" />
@@ -98,23 +93,27 @@ export function FormSelect({
               />
             </div>
           )}
-          <div className="max-h-[min(18rem,50vh)] overflow-y-auto overscroll-contain pr-1">
+          <div className="max-h-[min(18rem,50vh)] overflow-y-auto overscroll-contain">
             {filtered.length === 0 ? (
-              <div className="px-2 py-3 text-sm text-muted-foreground">Nenhum resultado.</div>
+              <div className="px-2.5 py-3 text-sm text-muted-foreground">Nenhum resultado.</div>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {filtered.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
                     className={cn(
-                      "flex w-full items-center justify-between rounded-md px-2.5 py-2 text-sm transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-none",
-                      opt.value === value && "bg-muted"
+                      "relative flex w-full cursor-default select-none items-center rounded-md py-2 pl-2.5 pr-8 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground",
+                      opt.value === value && "bg-accent/50"
                     )}
                     onClick={() => handleValueChange(opt.value)}
                   >
                     <span className="truncate">{opt.label}</span>
-                    {opt.value === value && <Check className="h-4 w-4 shrink-0 opacity-80" />}
+                    {opt.value === value && (
+                      <span className="absolute right-2 inline-flex h-4 w-4 items-center justify-center">
+                        <Check className="h-4 w-4" />
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
