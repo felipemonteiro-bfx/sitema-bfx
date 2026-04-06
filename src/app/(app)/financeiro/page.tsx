@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { PageHeader } from "@/components/page-header";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
@@ -122,21 +123,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-1">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Financeiro e DRE</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <h1 className="text-2xl font-semibold">Financeiro e DRE</h1>
-          <p className="text-sm text-muted-foreground">Visão consolidada de receitas, despesas e caixa.</p>
-        </div>
+        <PageHeader
+          title="Financeiro e DRE"
+          description="Visão consolidada de receitas, despesas e caixa."
+          breadcrumbs={[{ label: "Financeiro e DRE" }]}
+        />
         <MonthFilter />
       </div>
 
@@ -184,30 +175,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
                         {/* Lucro + Ponto de Equilíbrio */}
                         <Card className={cn(
-                          dre.lucro < 0 ? "border-red-300 bg-red-50/30 dark:bg-red-950/10" :
-                          dre.lucro === 0 ? "border-amber-300 bg-amber-50/30" : ""
+                          dre.lucro < 0 ? "border-destructive/30 bg-destructive/5 dark:bg-destructive/10" :
+                          dre.lucro === 0 ? "border-warning/30 bg-warning/5" : ""
                         )}>
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className={cn("text-2xl font-bold", dre.lucro >= 0 ? "text-emerald-600" : "text-destructive")}>
+                            <div className={cn("text-2xl font-bold", dre.lucro >= 0 ? "text-success" : "text-destructive")}>
                               {formatBRL(dre.lucro)}
                             </div>
                             {/* Ponto de Equilíbrio indicator */}
                             <div className="mt-2 flex items-center gap-1.5">
                               <span className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                                pontoEqStatus === 'green' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
-                                pontoEqStatus === 'yellow' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                                pontoEqStatus === 'red' ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                                pontoEqStatus === 'green' ? "bg-success/10 text-success dark:bg-success/20" :
+                                pontoEqStatus === 'yellow' ? "bg-warning/10 text-warning dark:bg-warning/20" :
+                                pontoEqStatus === 'red' ? "bg-destructive/10 text-destructive dark:bg-destructive/20" :
                                 "bg-muted text-muted-foreground"
                               )}>
                                 <span className={cn(
                                   "h-1.5 w-1.5 rounded-full",
-                                  pontoEqStatus === 'green' ? "bg-emerald-500" :
-                                  pontoEqStatus === 'yellow' ? "bg-amber-500" :
-                                  pontoEqStatus === 'red' ? "bg-red-500" : "bg-muted-foreground"
+                                  pontoEqStatus === 'green' ? "bg-success" :
+                                  pontoEqStatus === 'yellow' ? "bg-warning" :
+                                  pontoEqStatus === 'red' ? "bg-destructive" : "bg-muted-foreground"
                                 )} />
                                 {pontoEqStatus === 'green' ? "Acima do ponto" :
                                  pontoEqStatus === 'yellow' ? "No limite" :
@@ -258,13 +249,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           {/* Capital em estoque — separado, não é custo do período */}
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Capital imobilizado</p>
-                            <div className="rounded-lg border border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 p-3 flex items-start gap-3">
+                            <div className="rounded-lg border border-warning/20 bg-warning/5 dark:bg-warning/10 p-3 flex items-start gap-3">
                               <div className="flex-1">
                                 <div className="text-xs text-muted-foreground">Capital em Estoque</div>
-                                <div className="mt-0.5 text-base font-semibold text-amber-700 dark:text-amber-500">{formatBRL(estoqueImobilizado)}</div>
+                                <div className="mt-0.5 text-base font-semibold text-warning">{formatBRL(estoqueImobilizado)}</div>
                                 <div className="text-xs text-muted-foreground">Valor de custo da mercadoria parada em estoque</div>
                               </div>
-                              <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                              <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning dark:bg-warning/20">
                                 não deduzido do lucro
                               </span>
                             </div>
@@ -308,7 +299,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                       <div className="text-xs text-muted-foreground">Saída média</div>
-                      <div className="mt-1 text-base font-semibold text-rose-600">
+                      <div className="mt-1 text-base font-semibold text-destructive">
                         {formatBRL(
                           fluxo.length ? fluxo.reduce((acc, r) => acc + r.saidas, 0) / fluxo.length : 0
                         )}
@@ -316,7 +307,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                       <div className="text-xs text-muted-foreground">Saldo médio</div>
-                      <div className="mt-1 text-base font-semibold text-slate-700">
+                      <div className="mt-1 text-base font-semibold text-foreground">
                         {formatBRL(
                           fluxo.length ? fluxo.reduce((acc, r) => acc + r.saldo, 0) / fluxo.length : 0
                         )}
@@ -347,10 +338,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <TableCell className="text-right tabular-nums text-success">
                               {formatBRL(r.entradas)}
                             </TableCell>
-                            <TableCell className="text-right tabular-nums text-rose-700">
+                            <TableCell className="text-right tabular-nums text-destructive">
                               {formatBRL(r.saidas)}
                             </TableCell>
-                            <TableCell className="text-right tabular-nums font-medium text-slate-800">
+                            <TableCell className="text-right tabular-nums font-medium text-foreground">
                               {formatBRL(r.saldo)}
                             </TableCell>
                           </TableRow>
@@ -378,15 +369,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <form action={addDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       <input type="hidden" name="mes" value={currentMes} />
                       <div className="col-span-2 space-y-1 md:col-span-2">
-                        <label className="text-xs font-medium text-muted-foreground">Descrição</label>
-                        <Input name="descricao" placeholder="Ex.: Aluguel, frete, comissão" aria-label="Descrição" />
+                        <Label htmlFor="add-descricao">Descrição</Label>
+                        <Input id="add-descricao" name="descricao" placeholder="Ex.: Aluguel, frete, comissão" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">Valor</label>
-                        <Input name="valor" placeholder="0,00" type="number" step="0.01" aria-label="Valor" />
+                        <Label htmlFor="add-valor">Valor</Label>
+                        <Input id="add-valor" name="valor" placeholder="0,00" type="number" step="0.01" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+                        <Label htmlFor="add-tipo">Tipo</Label>
                         <FormSelect
                           name="tipo"
                           options={[
@@ -397,7 +388,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-medium text-muted-foreground">Data</label>
+                        <Label htmlFor="add-data">Data</Label>
                         <DateInput name="data" aria-label="Data" />
                       </div>
                       <div className="col-span-1 md:col-span-3 flex items-end gap-3">
@@ -411,7 +402,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </Card>
 
                 {editDespesa && (
-                  <Card className="mt-4 border-amber-200 bg-amber-50/20">
+                  <Card className="mt-4 border-warning/20 bg-warning/5">
                     <CardHeader>
                       <CardTitle>Editar Lançamento #{editDespesa.id}</CardTitle>
                     </CardHeader>
@@ -420,15 +411,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <input type="hidden" name="id" value={editDespesa.id} />
                         <input type="hidden" name="mes" value={currentMes} />
                         <div className="col-span-2 space-y-1 md:col-span-2">
-                          <label className="text-xs font-medium text-muted-foreground">Descrição</label>
-                          <Input name="descricao" defaultValue={editDespesa.descricao || ""} aria-label="Descrição" />
+                          <Label htmlFor="edit-descricao">Descrição</Label>
+                          <Input id="edit-descricao" name="descricao" defaultValue={editDespesa.descricao || ""} />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-muted-foreground">Valor</label>
-                          <Input name="valor" type="number" step="0.01" defaultValue={editDespesa.valor || 0} aria-label="Valor" />
+                          <Label htmlFor="edit-valor">Valor</Label>
+                          <Input id="edit-valor" name="valor" type="number" step="0.01" defaultValue={editDespesa.valor || 0} />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-muted-foreground">Tipo</label>
+                          <Label htmlFor="edit-tipo">Tipo</Label>
                           <FormSelect
                             name="tipo"
                             options={[
@@ -439,7 +430,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-medium text-muted-foreground">Data</label>
+                          <Label htmlFor="edit-data">Data</Label>
                           <DateInput name="data" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
                         </div>
                         <div className="col-span-1 md:col-span-3 flex items-end gap-2">
@@ -487,19 +478,21 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               <TableCell className="text-right tabular-nums">{formatBRL(d.valor || 0)}</TableCell>
                               <TableCell>
                                 <div className="flex items-center justify-end gap-2">
-                                  <Link 
+                                  <Link
                                     href={`/financeiro?tab=lanc&mes=${currentMes}&edit=${d.id}`}
                                     className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "cursor-pointer")}
                                     title="Editar"
+                                    aria-label="Editar despesa"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                   </Link>
                                   <form action={deleteDespesa}>
                                     <input type="hidden" name="id" value={d.id} />
                                     <input type="hidden" name="mes" value={currentMes} />
-                                    <button 
-                                      className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer")} 
+                                    <button
+                                      className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer")}
                                       title="Excluir"
+                                      aria-label="Excluir despesa"
                                     >
                                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                                     </button>
@@ -524,7 +517,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Valor Imobilizado</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold text-amber-600">{formatBRL(estoqueImobilizado)}</CardContent>
+                    <CardContent className="text-2xl font-semibold text-warning">{formatBRL(estoqueImobilizado)}</CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Potencial de Receita</CardTitle></CardHeader>
@@ -571,9 +564,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 <TableCell className="font-medium">{p.nome}</TableCell>
                                 <TableCell className="text-right tabular-nums">{p.qtdEstoque ?? 0}</TableCell>
                                 <TableCell className="text-right tabular-nums">{formatBRL(p.custoPadrao ?? 0)}</TableCell>
-                                <TableCell className="text-right tabular-nums font-semibold text-amber-600">{formatBRL(imob)}</TableCell>
+                                <TableCell className="text-right tabular-nums font-semibold text-warning">{formatBRL(imob)}</TableCell>
                                 <TableCell className="text-right tabular-nums">{formatBRL(p.valorVenda ?? 0)}</TableCell>
-                                <TableCell className={cn("text-right tabular-nums font-medium", margem >= 30 ? "text-success" : margem >= 15 ? "text-amber-600" : "text-destructive")}>
+                                <TableCell className={cn("text-right tabular-nums font-medium", margem >= 30 ? "text-success" : margem >= 15 ? "text-warning" : "text-destructive")}>
                                   {margem.toFixed(1)}%
                                 </TableCell>
                               </TableRow>
