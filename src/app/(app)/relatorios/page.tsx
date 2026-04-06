@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { FormSelect } from "@/components/form-select";
+import { Label } from "@/components/ui/label";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { DateInput } from "@/components/ui/date-input";
@@ -57,8 +58,9 @@ export default async function Page() {
               className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
             >
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Empresa Parceira</div>
+                <Label htmlFor="rel-empresa">Empresa Parceira</Label>
                 <FormSelect
+                  id="rel-empresa"
                   name="empresa"
                   defaultValue="all"
                   options={[
@@ -68,12 +70,12 @@ export default async function Page() {
                 />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Data inicial</div>
-                <DateInput name="from" defaultValue={monthStartStr} aria-label="Data inicial" />
+                <Label htmlFor="rel-from">Data inicial</Label>
+                <DateInput id="rel-from" name="from" defaultValue={monthStartStr} />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Data final</div>
-                <DateInput name="to" defaultValue={today} aria-label="Data final" />
+                <Label htmlFor="rel-to">Data final</Label>
+                <DateInput id="rel-to" name="to" defaultValue={today} />
               </div>
             </form>
 
@@ -89,7 +91,7 @@ export default async function Page() {
                 <a 
                   key={empresa} 
                   href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}
-                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-rose-200 text-rose-700 hover:bg-rose-50")}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-destructive/30 text-destructive hover:bg-destructive/5")}
                 >
                   PDF {empresa}
                 </a>
@@ -104,15 +106,15 @@ export default async function Page() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1">
-              <div className="text-xs font-semibold text-muted-foreground">Inadimplência</div>
+              <Label>Inadimplencia</Label>
               <div className="flex gap-2">
-                <a 
+                <a
                   href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=csv`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
                   CSV
                 </a>
-                <a 
+                <a
                   href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=pdf`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
@@ -121,15 +123,15 @@ export default async function Page() {
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-xs font-semibold text-muted-foreground">Margem por Produto</div>
+              <Label>Margem por Produto</Label>
               <div className="flex gap-2">
-                <a 
+                <a
                   href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=csv`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
                   CSV
                 </a>
-                <a 
+                <a
                   href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=pdf`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >

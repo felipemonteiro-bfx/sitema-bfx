@@ -23,7 +23,6 @@ export function ReportButtonsClient() {
       <Button
         type="button"
         onClick={() => handleDownload('csv')}
-        className="bg-emerald-600 hover:bg-emerald-700 text-white"
         leftIcon={<FileSpreadsheet className="h-4 w-4" />}
       >
         Baixar CSV (Excel)
@@ -31,8 +30,8 @@ export function ReportButtonsClient() {
 
       <Button
         type="button"
+        variant="outline"
         onClick={() => handleDownload('pdf')}
-        className="bg-rose-600 hover:bg-rose-700 text-white"
         leftIcon={<FileText className="h-4 w-4" />}
       >
         Baixar PDF (Impressão)
