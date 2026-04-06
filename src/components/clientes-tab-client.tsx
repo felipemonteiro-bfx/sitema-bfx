@@ -2,6 +2,7 @@
 
 import { useState, startTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -79,6 +80,8 @@ export default function ClientesTabClient({
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [submittingAdd, setSubmittingAdd] = useState(false);
+  const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [similares, setSimilares] = useState<{ id: number; nome: string }[]>([]);
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string>("");
   const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<string>(
@@ -104,6 +107,30 @@ export default function ClientesTabClient({
       }
     } catch {
       setSimilares([]);
+    }
+  };
+
+  const handleAdd = async (formData: FormData) => {
+    setSubmittingAdd(true);
+    try {
+      await onAddAction(formData);
+      toast.success("Cliente salvo com sucesso!");
+    } catch {
+      toast.error("Erro ao salvar. Tente novamente.");
+    } finally {
+      setSubmittingAdd(false);
+    }
+  };
+
+  const handleUpdate = async (formData: FormData) => {
+    setSubmittingUpdate(true);
+    try {
+      await onUpdateAction(formData);
+      toast.success("Cliente atualizado com sucesso!");
+    } catch {
+      toast.error("Erro ao atualizar. Tente novamente.");
+    } finally {
+      setSubmittingUpdate(false);
     }
   };
 
@@ -168,10 +195,10 @@ export default function ClientesTabClient({
               {errorMsg}
             </div>
           )}
-          <form action={onAddAction} className="grid gap-4 [&_input]:uppercase">
+          <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label>Nome/Razao Social</Label>
+                <Label>Nome/Razao Social <span className="text-destructive">*</span></Label>
                 <Input
                   name="nome"
                   placeholder="Nome/Razao Social"
@@ -242,7 +269,7 @@ export default function ClientesTabClient({
               </div>
             </div>
             <div className="flex items-center justify-end">
-              <Button type="submit">Salvar Cliente</Button>
+              <Button type="submit" loading={submittingAdd}>Salvar Cliente</Button>
             </div>
           </form>
         </CardContent>
@@ -372,11 +399,11 @@ export default function ClientesTabClient({
                 {errorMsg}
               </div>
             )}
-            <form action={onUpdateAction} className="grid gap-4 [&_input]:uppercase">
+            <form action={handleUpdate} className="grid gap-4 [&_input]:uppercase">
               <input type="hidden" name="id" value={editClienteData.id} />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <Label>Nome/Razao Social</Label>
+                  <Label>Nome/Razao Social <span className="text-destructive">*</span></Label>
                   <Input name="nome" defaultValue={editClienteData.nome} placeholder="Nome/Razao Social" aria-label="Nome" />
                 </div>
                 <div className="space-y-1">
@@ -440,7 +467,7 @@ export default function ClientesTabClient({
                 <Link href={buildUrl({ tab: "clientes", editCliente: undefined })} className={buttonVariants({ variant: "outline" })}>
                   Cancelar
                 </Link>
-                <Button type="submit">Salvar alteracoes</Button>
+                <Button type="submit" loading={submittingUpdate}>Salvar alteracoes</Button>
               </div>
             </form>
           </CardContent>

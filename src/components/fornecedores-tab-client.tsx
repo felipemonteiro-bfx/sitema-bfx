@@ -2,6 +2,7 @@
 
 import { useState, startTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -57,6 +58,8 @@ export default function FornecedoresTabClient({
   const router = useRouter();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [submittingAdd, setSubmittingAdd] = useState(false);
+  const [submittingUpdate, setSubmittingUpdate] = useState(false);
 
   const table = useTableFeatures({
     data: fornecedores as (FornecedorListItem & Record<string, unknown>)[],
@@ -64,6 +67,30 @@ export default function FornecedoresTabClient({
     defaultSort: "nome" as keyof FornecedorListItem,
   });
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const handleAdd = async (formData: FormData) => {
+    setSubmittingAdd(true);
+    try {
+      await onAddAction(formData);
+      toast.success("Fornecedor salvo com sucesso!");
+    } catch {
+      toast.error("Erro ao salvar. Tente novamente.");
+    } finally {
+      setSubmittingAdd(false);
+    }
+  };
+
+  const handleUpdate = async (formData: FormData) => {
+    setSubmittingUpdate(true);
+    try {
+      await onUpdateAction(formData);
+      toast.success("Fornecedor atualizado com sucesso!");
+    } catch {
+      toast.error("Erro ao atualizar. Tente novamente.");
+    } finally {
+      setSubmittingUpdate(false);
+    }
+  };
 
   const buildUrl = (params: Record<string, string | undefined>) => {
     const newParams = { ...sp, ...params };
@@ -115,10 +142,10 @@ export default function FornecedoresTabClient({
           <CardTitle className="text-primary">Novo Fornecedor</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={onAddAction} className="grid gap-4 [&_input]:uppercase">
+          <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label>Nome do Fornecedor</Label>
+                <Label>Nome do Fornecedor <span className="text-destructive">*</span></Label>
                 <Input name="nome" placeholder="Razao Social ou Nome" aria-label="Nome" />
               </div>
               <div className="space-y-1">
@@ -127,7 +154,7 @@ export default function FornecedoresTabClient({
               </div>
             </div>
             <div className="flex items-center justify-end">
-              <Button type="submit">Salvar Fornecedor</Button>
+              <Button type="submit" loading={submittingAdd}>Salvar Fornecedor</Button>
             </div>
           </form>
         </CardContent>
@@ -242,11 +269,11 @@ export default function FornecedoresTabClient({
             <CardTitle className="text-primary">Editando fornecedor #{editFornecedorData.id}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={onUpdateAction} className="grid gap-4 [&_input]:uppercase">
+            <form action={handleUpdate} className="grid gap-4 [&_input]:uppercase">
               <input type="hidden" name="id" value={editFornecedorData.id} />
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Nome do Fornecedor</Label>
+                  <Label>Nome do Fornecedor <span className="text-destructive">*</span></Label>
                   <Input name="nome" defaultValue={editFornecedorData.nome} placeholder="Razao Social ou Nome" aria-label="Nome" />
                 </div>
                 <div className="space-y-1">
@@ -258,7 +285,7 @@ export default function FornecedoresTabClient({
                 <Link href={buildUrl({ tab: "fornecedores", editFornecedor: undefined })} className={buttonVariants({ variant: "outline" })}>
                   Cancelar
                 </Link>
-                <Button type="submit">Salvar alteracoes</Button>
+                <Button type="submit" loading={submittingUpdate}>Salvar alteracoes</Button>
               </div>
             </form>
           </CardContent>

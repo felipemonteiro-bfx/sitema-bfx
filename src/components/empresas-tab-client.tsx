@@ -2,6 +2,7 @@
 
 import { useState, startTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,9 +67,35 @@ export default function EmpresasTabClient({
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [submittingAdd, setSubmittingAdd] = useState(false);
+  const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [vinculandoId, setVinculandoId] = useState<number | null>(null);
   const [vinculacaoIds, setVinculacaoIds] = useState<Set<number>>(new Set());
   const [savingVinculo, setSavingVinculo] = useState(false);
+
+  const handleAdd = async (formData: FormData) => {
+    setSubmittingAdd(true);
+    try {
+      await onAddAction(formData);
+      toast.success("Empresa salva com sucesso!");
+    } catch {
+      toast.error("Erro ao salvar. Tente novamente.");
+    } finally {
+      setSubmittingAdd(false);
+    }
+  };
+
+  const handleUpdate = async (formData: FormData) => {
+    setSubmittingUpdate(true);
+    try {
+      await onUpdateAction(formData);
+      toast.success("Empresa atualizada com sucesso!");
+    } catch {
+      toast.error("Erro ao atualizar. Tente novamente.");
+    } finally {
+      setSubmittingUpdate(false);
+    }
+  };
 
   const table = useTableFeatures({
     data: empresas as (EmpresaListItem & Record<string, unknown>)[],
@@ -140,10 +167,13 @@ export default function EmpresasTabClient({
     setSavingVinculo(true);
     try {
       await onVincularAction(vinculandoId, Array.from(vinculacaoIds));
+      toast.success("Vinculos atualizados com sucesso!");
       setVinculandoId(null);
       startTransition(() => {
         router.refresh();
       });
+    } catch {
+      toast.error("Erro ao atualizar vinculos. Tente novamente.");
     } finally {
       setSavingVinculo(false);
     }
@@ -156,10 +186,10 @@ export default function EmpresasTabClient({
           <CardTitle className="text-primary">Nova Empresa</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={onAddAction} className="grid gap-4">
+          <form action={handleAdd} className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label>Empresa</Label>
+                <Label>Empresa <span className="text-destructive">*</span></Label>
                 <Input name="nome" placeholder="Empresa" aria-label="Nome" className="uppercase" />
               </div>
               <div className="space-y-1">
@@ -186,7 +216,7 @@ export default function EmpresasTabClient({
               </div>
             </div>
             <div className="flex items-center justify-end">
-              <Button type="submit">Salvar Empresa</Button>
+              <Button type="submit" loading={submittingAdd}>Salvar Empresa</Button>
             </div>
           </form>
         </CardContent>
@@ -343,11 +373,11 @@ export default function EmpresasTabClient({
             <CardTitle className="text-primary">Editando empresa #{editEmpresaData.id}</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={onUpdateAction} className="grid gap-4">
+            <form action={handleUpdate} className="grid gap-4">
               <input type="hidden" name="id" value={editEmpresaData.id} />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <Label>Empresa</Label>
+                  <Label>Empresa <span className="text-destructive">*</span></Label>
                   <Input name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-label="Nome" className="uppercase" />
                 </div>
                 <div className="space-y-1">
@@ -377,7 +407,7 @@ export default function EmpresasTabClient({
                 <Link href={buildUrl({ tab: "empresas", editEmpresa: undefined })} className={buttonVariants({ variant: "outline" })}>
                   Cancelar
                 </Link>
-                <Button type="submit">Salvar alteracoes</Button>
+                <Button type="submit" loading={submittingUpdate}>Salvar alteracoes</Button>
               </div>
             </form>
           </CardContent>
