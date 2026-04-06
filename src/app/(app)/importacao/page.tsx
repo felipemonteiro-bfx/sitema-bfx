@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import ImportacaoClient from "@/components/importacao-client";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export default async function Page() {
@@ -28,7 +29,7 @@ export default async function Page() {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">Total no Banco</div>
+            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none">Total no Banco</Label>
             <div className="text-xl font-black text-primary leading-tight">{count}</div>
           </div>
           <a 

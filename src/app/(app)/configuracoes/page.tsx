@@ -185,7 +185,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     Esta mensagem aparece no painel dos vendedores.
                   </div>
                   <form action={saveAviso} className="space-y-3">
-                    <Textarea name="mensagem" defaultValue={aviso?.mensagem || ""} />
+                    <Label htmlFor="mensagem">Mensagem</Label>
+                    <Textarea id="mensagem" name="mensagem" defaultValue={aviso?.mensagem || ""} />
                     <button className={cn(buttonVariants(), "cursor-pointer")}>Publicar aviso</button>
                   </form>
                 </CardContent>
@@ -244,8 +245,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveAsaas} className="space-y-4">
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">API Key</div>
+                      <Label htmlFor="asaasApiKey">API Key</Label>
                       <Input
+                        id="asaasApiKey"
                         name="asaasApiKey"
                         type="password"
                         placeholder={(cfg as { asaasApiKey?: string | null })?.asaasApiKey ? "•••••••• (salva)" : "$aas_xxxxxxxxxxxxxxxx"}
@@ -303,18 +305,20 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                       </div>
                       <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-                        <div className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</div>
+                        <p className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</p>
                         <div className="space-y-1">
-                          <div className="text-xs text-muted-foreground">URL da API</div>
+                          <Label htmlFor="litellmUrl">URL da API</Label>
                           <Input
+                            id="litellmUrl"
                             name="litellmUrl"
                             placeholder="https://ai.softlive.dev"
                             defaultValue={(cfg as Record<string, unknown>)?.litellmUrl as string || ""}
                           />
                         </div>
                         <div className="space-y-1">
-                          <div className="text-xs text-muted-foreground">API Key</div>
+                          <Label htmlFor="litellmKey">API Key</Label>
                           <Input
+                            id="litellmKey"
                             name="litellmKey"
                             type="password"
                             placeholder={(cfg as Record<string, unknown>)?.litellmKey ? "•••••••• (salva)" : "sk-..."}
@@ -324,7 +328,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           )}
                         </div>
                         <div className="space-y-1">
-                          <div className="text-xs text-muted-foreground">Modelo</div>
+                          <Label htmlFor="litellmModel">Modelo</Label>
                           <LitellmModelSelect
                             name="litellmModel"
                             defaultValue={(cfg as Record<string, unknown>)?.litellmModel as string || ""}
@@ -386,16 +390,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveWhatsApp} className="space-y-4">
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">URL da Evolution API</div>
+                      <Label htmlFor="evolutionApiUrl">URL da Evolution API</Label>
                       <Input
+                        id="evolutionApiUrl"
                         name="evolutionApiUrl"
                         placeholder="https://sua-evolution.exemplo.com"
                         defaultValue={cfg?.evolutionApiUrl ?? ""}
                       />
                     </div>
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">API Key</div>
+                      <Label htmlFor="evolutionApiKey">API Key</Label>
                       <Input
+                        id="evolutionApiKey"
                         name="evolutionApiKey"
                         type="password"
                         placeholder={cfg?.evolutionApiKey ? "•••••••• (salva)" : "Chave da Evolution API"}
@@ -405,8 +411,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </div>
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Nome da instância</div>
+                      <Label htmlFor="evolutionInstance">Nome da instância</Label>
                       <Input
+                        id="evolutionInstance"
                         name="evolutionInstance"
                         placeholder="bfx"
                         defaultValue={cfg?.evolutionInstance ?? "bfx"}
@@ -428,9 +435,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </label>
                     </div>
                     <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-                      <div className="text-xs font-semibold text-muted-foreground">
+                      <p className="text-xs font-semibold text-muted-foreground">
                         O que enviar automaticamente
-                      </div>
+                      </p>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                           <input

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { MaskedInput } from "@/components/masked-input";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { revalidatePath } from "next/cache";
@@ -58,11 +59,26 @@ export default async function Page() {
           <CardContent>
             <form action={savePerfil} className="grid gap-3 md:grid-cols-2">
               <input type="hidden" name="id" value={user.id} />
-              <Input name="nome" defaultValue={user.nomeExibicao || ""} placeholder="Nome" aria-label="Nome" />
-              <Input name="email" defaultValue={user.email || ""} placeholder="Email" aria-label="Email" />
-              <MaskedInput name="telefone" mask="phone" defaultValue={user.telefone || ""} aria-label="Telefone" />
-              <Input name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" aria-label="Endereço" />
-              <Input name="senha" defaultValue={user.password} placeholder="Senha" aria-label="Senha" />
+              <div className="space-y-1">
+                <Label htmlFor="perfil-nome">Nome</Label>
+                <Input id="perfil-nome" name="nome" defaultValue={user.nomeExibicao || ""} placeholder="Nome" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-email">E-mail</Label>
+                <Input id="perfil-email" name="email" defaultValue={user.email || ""} placeholder="Email" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-telefone">Telefone</Label>
+                <MaskedInput id="perfil-telefone" name="telefone" mask="phone" defaultValue={user.telefone || ""} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-endereco">Endereço</Label>
+                <Input id="perfil-endereco" name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-senha">Senha</Label>
+                <Input id="perfil-senha" name="senha" defaultValue={user.password} placeholder="Senha" type="password" />
+              </div>
               <button className={cn(buttonVariants(), "md:col-span-2 bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
             </form>
           </CardContent>
@@ -76,7 +92,7 @@ export default async function Page() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Total Acumulado</p>
-              <div className="text-2xl font-bold text-emerald-700">{formatBRL(totalComissao)}</div>
+              <div className="text-2xl font-bold text-primary">{formatBRL(totalComissao)}</div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Sua Taxa</p>

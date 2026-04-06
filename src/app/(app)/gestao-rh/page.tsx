@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { revalidatePath } from "next/cache";
@@ -139,8 +140,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <TableCell>{u.username}</TableCell>
                             <TableCell>
                               <Badge
-                                variant="secondary"
-                                className={u.role === "admin" ? "bg-indigo-50 text-indigo-700" : ""}
+                                variant={u.role === "admin" ? "default" : "secondary"}
                               >
                                 {u.role}
                               </Badge>
@@ -170,7 +170,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <form method="get" className="grid gap-2 md:grid-cols-[1fr_auto] items-end">
                     <input type="hidden" name="tab" value="detalhes" />
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Filtrar funcionário</div>
+                      <Label htmlFor="rh-filter-user">Filtrar funcionário</Label>
                       <FormSelect
                         name="user"
                         defaultValue={selectedUser ? String(selectedUser) : "all"}
@@ -199,15 +199,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       >
                         <input type="hidden" name="id" value={u.id} />
                         <div className="space-y-1 md:col-span-2">
-                          <div className="text-xs font-semibold text-muted-foreground">Nome</div>
-                          <Input name="nome" defaultValue={u.nomeExibicao || ""} aria-label="Nome" />
+                          <Label htmlFor={`rh-nome-${u.id}`}>Nome</Label>
+                          <Input id={`rh-nome-${u.id}`} name="nome" defaultValue={u.nomeExibicao || ""} />
                         </div>
                         <div className="space-y-1 md:col-span-2">
-                          <div className="text-xs font-semibold text-muted-foreground">Login</div>
-                          <Input name="login" defaultValue={u.username} aria-label="Login" />
+                          <Label htmlFor={`rh-login-${u.id}`}>Login</Label>
+                          <Input id={`rh-login-${u.id}`} name="login" defaultValue={u.username} />
                         </div>
                         <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Role</div>
+                          <Label>Role</Label>
                           <FormSelect
                             name="role"
                             defaultValue={u.role || "vendedor"}
@@ -218,16 +218,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Meta</div>
-                          <Input name="meta" type="number" defaultValue={u.metaMensal || 0} aria-label="Meta" />
+                          <Label htmlFor={`rh-meta-${u.id}`}>Meta</Label>
+                          <Input id={`rh-meta-${u.id}`} name="meta" type="number" defaultValue={u.metaMensal || 0} />
                         </div>
                         <div className="space-y-1">
-                          <div className="text-xs font-semibold text-muted-foreground">Comissão %</div>
+                          <Label htmlFor={`rh-comissao-${u.id}`}>Comissão %</Label>
                           <Input
+                            id={`rh-comissao-${u.id}`}
                             name="comissao"
                             type="number"
                             defaultValue={u.comissaoPct || 2}
-                            aria-label="Comissão"
                           />
                         </div>
                         <div className="md:col-span-6 flex items-center justify-between gap-3 border-t pt-4">
@@ -256,16 +256,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={addUser} className="grid gap-3 md:grid-cols-3">
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Nome completo</div>
-                      <Input name="nome" placeholder="Nome Completo" aria-label="Nome" />
+                      <Label htmlFor="novo-nome">Nome completo</Label>
+                      <Input id="novo-nome" name="nome" placeholder="Nome Completo" aria-required="true" />
                     </div>
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Login</div>
-                      <Input name="login" placeholder="Login" aria-label="Login" />
+                      <Label htmlFor="novo-login">Login</Label>
+                      <Input id="novo-login" name="login" placeholder="Login" aria-required="true" />
                     </div>
                     <div className="space-y-1">
-                      <div className="text-xs font-semibold text-muted-foreground">Senha</div>
-                      <Input name="senha" placeholder="Senha" aria-label="Senha" />
+                      <Label htmlFor="novo-senha">Senha</Label>
+                      <Input id="novo-senha" name="senha" placeholder="Senha" type="password" aria-required="true" />
                     </div>
                     <FormSelect
                       name="role"
