@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
 type EmpresaListItem = {
@@ -151,40 +152,40 @@ export default function EmpresasTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-blue-900">Nova Empresa</CardTitle>
+          <CardTitle className="text-primary">Nova Empresa</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={onAddAction} className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
+                <Label>Empresa</Label>
                 <Input name="nome" placeholder="Empresa" aria-label="Nome" className="uppercase" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">CNPJ</div>
+                <Label>CNPJ</Label>
                 <Input name="cnpj" placeholder="00.000.000/0000-00" aria-label="CNPJ" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Responsavel RH</div>
+                <Label>Responsavel RH</Label>
                 <Input name="rh" placeholder="Responsavel RH" aria-label="Responsavel RH" className="uppercase" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
+                <Label>Telefone RH</Label>
                 <MaskedInput name="tel" mask="phone" aria-label="Telefone RH" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
+                <Label>Email RH</Label>
                 <Input name="email" placeholder="email@empresa.com" aria-label="Email RH" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Emails adicionais</div>
+                <Label>Emails adicionais</Label>
                 <Input name="emailsExtras" placeholder="email1@x.com, email2@y.com" aria-label="Emails adicionais" />
               </div>
             </div>
             <div className="flex items-center justify-end">
-              <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Empresa</button>
+              <Button type="submit">Salvar Empresa</Button>
             </div>
           </form>
         </CardContent>
@@ -192,7 +193,7 @@ export default function EmpresasTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-blue-900">Empresas Parceiras</CardTitle>
+          <CardTitle className="text-primary">Empresas Parceiras</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -338,36 +339,36 @@ export default function EmpresasTabClient({
       {editEmpresaData && (
         <Card id="editar-empresa" className="mt-4 scroll-mt-24">
           <CardHeader>
-            <CardTitle className="text-blue-900">Editando empresa #{editEmpresaData.id}</CardTitle>
+            <CardTitle className="text-primary">Editando empresa #{editEmpresaData.id}</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={onUpdateAction} className="grid gap-4">
               <input type="hidden" name="id" value={editEmpresaData.id} />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Empresa</div>
+                  <Label>Empresa</Label>
                   <Input name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-label="Nome" className="uppercase" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">CNPJ</div>
+                  <Label>CNPJ</Label>
                   <Input name="cnpj" defaultValue={editEmpresaData.cnpj || ""} placeholder="00.000.000/0000-00" aria-label="CNPJ" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Responsavel RH</div>
+                  <Label>Responsavel RH</Label>
                   <Input name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsavel RH" aria-label="Responsavel RH" className="uppercase" />
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Telefone RH</div>
+                  <Label>Telefone RH</Label>
                   <MaskedInput name="tel" mask="phone" defaultValue={editEmpresaData.telefoneRh || ""} aria-label="Telefone RH" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Email RH</div>
+                  <Label>Email RH</Label>
                   <Input name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="email@empresa.com" aria-label="Email RH" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Emails adicionais</div>
+                  <Label>Emails adicionais</Label>
                   <Input name="emailsExtras" defaultValue={editEmpresaData.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" aria-label="Emails adicionais" />
                 </div>
               </div>
@@ -375,7 +376,7 @@ export default function EmpresasTabClient({
                 <Link href={buildUrl({ tab: "empresas", editEmpresa: undefined })} className={buttonVariants({ variant: "outline" })}>
                   Cancelar
                 </Link>
-                <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alteracoes</button>
+                <Button type="submit">Salvar alteracoes</Button>
               </div>
             </form>
           </CardContent>
@@ -386,7 +387,7 @@ export default function EmpresasTabClient({
       {vinculandoId !== null && onVincularAction && (
         <Card className="mt-4 border-blue-200">
           <CardHeader>
-            <CardTitle className="text-blue-900 text-base">
+            <CardTitle className="text-primary text-base">
               Vinculos da empresa #{vinculandoId}
             </CardTitle>
           </CardHeader>
@@ -415,14 +416,13 @@ export default function EmpresasTabClient({
               >
                 Cancelar
               </button>
-              <button
+              <Button
                 type="button"
                 onClick={saveVinculos}
                 disabled={savingVinculo}
-                className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}
               >
                 {savingVinculo ? "Salvando..." : "Salvar vinculos"}
-              </button>
+              </Button>
             </div>
           </CardContent>
         </Card>

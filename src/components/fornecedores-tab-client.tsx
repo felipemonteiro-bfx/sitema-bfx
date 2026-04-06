@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
 type FornecedorListItem = {
@@ -110,22 +111,22 @@ export default function FornecedoresTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-blue-900">Novo Fornecedor</CardTitle>
+          <CardTitle className="text-primary">Novo Fornecedor</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={onAddAction} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
+                <Label>Nome do Fornecedor</Label>
                 <Input name="nome" placeholder="Razao Social ou Nome" aria-label="Nome" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
+                <Label>Telefone/WhatsApp</Label>
                 <MaskedInput name="telefone" mask="phone" aria-label="Telefone" />
               </div>
             </div>
             <div className="flex items-center justify-end">
-              <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Fornecedor</button>
+              <Button type="submit">Salvar Fornecedor</Button>
             </div>
           </form>
         </CardContent>
@@ -133,7 +134,7 @@ export default function FornecedoresTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-blue-900">Fornecedores Cadastrados</CardTitle>
+          <CardTitle className="text-primary">Fornecedores Cadastrados</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -237,18 +238,18 @@ export default function FornecedoresTabClient({
       {editFornecedorData && (
         <Card id="editar-fornecedor" className="mt-4 scroll-mt-24">
           <CardHeader>
-            <CardTitle className="text-blue-900">Editando fornecedor #{editFornecedorData.id}</CardTitle>
+            <CardTitle className="text-primary">Editando fornecedor #{editFornecedorData.id}</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={onUpdateAction} className="grid gap-4 [&_input]:uppercase">
               <input type="hidden" name="id" value={editFornecedorData.id} />
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Nome do Fornecedor</div>
+                  <Label>Nome do Fornecedor</Label>
                   <Input name="nome" defaultValue={editFornecedorData.nome} placeholder="Razao Social ou Nome" aria-label="Nome" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Telefone/WhatsApp</div>
+                  <Label>Telefone/WhatsApp</Label>
                   <MaskedInput name="telefone" mask="phone" defaultValue={editFornecedorData.telefone || ""} aria-label="Telefone" />
                 </div>
               </div>
@@ -256,7 +257,7 @@ export default function FornecedoresTabClient({
                 <Link href={buildUrl({ tab: "fornecedores", editFornecedor: undefined })} className={buttonVariants({ variant: "outline" })}>
                   Cancelar
                 </Link>
-                <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alteracoes</button>
+                <Button type="submit">Salvar alteracoes</Button>
               </div>
             </form>
           </CardContent>

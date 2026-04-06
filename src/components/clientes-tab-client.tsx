@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
 
 type ClienteListItem = {
@@ -164,7 +165,7 @@ export default function ClientesTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-blue-900">Novo Cliente</CardTitle>
+          <CardTitle className="text-primary">Novo Cliente</CardTitle>
         </CardHeader>
         <CardContent>
           {errorMsg && !sp.editCliente && (
@@ -175,7 +176,7 @@ export default function ClientesTabClient({
           <form action={onAddAction} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Nome/Razao Social</div>
+                <Label>Nome/Razao Social</Label>
                 <Input
                   name="nome"
                   placeholder="Nome/Razao Social"
@@ -194,7 +195,7 @@ export default function ClientesTabClient({
                 )}
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Tipo</div>
+                <Label>Tipo</Label>
                 <FormSelect
                   name="tipo"
                   options={[
@@ -205,31 +206,31 @@ export default function ClientesTabClient({
                 />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">CPF/CNPJ</div>
+                <Label>CPF/CNPJ</Label>
                 <Input name="doc" placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-4">
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Matricula</div>
+                <Label>Matricula</Label>
                 <Input name="matricula" placeholder="Matricula" aria-label="Matricula" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Renda/Faturamento</div>
+                <Label>Renda/Faturamento</Label>
                 <CurrencyInput name="renda" aria-label="Renda" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">WhatsApp</div>
+                <Label>WhatsApp</Label>
                 <MaskedInput name="telefone" mask="phone" aria-label="WhatsApp" />
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">CEP</div>
+                <Label>CEP</Label>
                 <MaskedInput name="cep" mask="cep" aria-label="CEP" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1 relative">
-                <div className="text-xs font-semibold text-muted-foreground">Empresa/Vinculo</div>
+                <Label>Empresa/Vinculo</Label>
                 <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId ?? ""} />
                 <input type="hidden" name="empresa" value={empresasParceiras.find(e => e.id === selectedEmpresaId)?.nome ?? empresaSearch} />
                 <Input
@@ -260,12 +261,12 @@ export default function ClientesTabClient({
                 )}
               </div>
               <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Data de Nascimento</div>
+                <Label>Data de Nascimento</Label>
                 <Input type="date" name="dataNascimento" aria-label="Data de Nascimento" />
               </div>
             </div>
             <div className="flex items-center justify-end">
-              <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Cliente</button>
+              <Button type="submit">Salvar Cliente</Button>
             </div>
           </form>
         </CardContent>
@@ -273,7 +274,7 @@ export default function ClientesTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-blue-900">Clientes</CardTitle>
+          <CardTitle className="text-primary">Clientes</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -387,7 +388,7 @@ export default function ClientesTabClient({
       {editClienteData && (
         <Card id="editar-cliente" className="mt-4 scroll-mt-24">
           <CardHeader>
-            <CardTitle className="text-blue-900">Editando cliente #{editClienteData.id}</CardTitle>
+            <CardTitle className="text-primary">Editando cliente #{editClienteData.id}</CardTitle>
           </CardHeader>
           <CardContent>
             {errorMsg && sp.editCliente && (
@@ -399,11 +400,11 @@ export default function ClientesTabClient({
               <input type="hidden" name="id" value={editClienteData.id} />
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Nome/Razao Social</div>
+                  <Label>Nome/Razao Social</Label>
                   <Input name="nome" defaultValue={editClienteData.nome} placeholder="Nome/Razao Social" aria-label="Nome" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Tipo</div>
+                  <Label>Tipo</Label>
                   <FormSelect
                     name="tipo"
                     options={[
@@ -414,31 +415,31 @@ export default function ClientesTabClient({
                   />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">CPF/CNPJ</div>
+                  <Label>CPF/CNPJ</Label>
                   <Input name="doc" defaultValue={editClienteData.cpf || editClienteData.cnpj || ""} placeholder="CPF/CNPJ" aria-label="CPF/CNPJ" />
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Matricula</div>
+                  <Label>Matricula</Label>
                   <Input name="matricula" defaultValue={editClienteData.matricula || ""} placeholder="Matricula" aria-label="Matricula" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Renda/Faturamento</div>
+                  <Label>Renda/Faturamento</Label>
                   <CurrencyInput name="renda" defaultValue={editClienteData.renda ?? 0} aria-label="Renda" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">WhatsApp</div>
+                  <Label>WhatsApp</Label>
                   <MaskedInput name="telefone" mask="phone" defaultValue={editClienteData.telefone || ""} aria-label="WhatsApp" />
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">CEP</div>
+                  <Label>CEP</Label>
                   <MaskedInput name="cep" mask="cep" defaultValue={editClienteData.cep || ""} aria-label="CEP" />
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="space-y-1 relative">
-                  <div className="text-xs font-semibold text-muted-foreground">Empresa/Vinculo</div>
+                  <Label>Empresa/Vinculo</Label>
                   <input type="hidden" name="empresaParceiraId" value={editSelectedEmpresaId ?? ""} />
                   <input type="hidden" name="empresa" value={empresasParceiras.find(e => e.id === editSelectedEmpresaId)?.nome ?? editEmpresaSearch} />
                   <Input
@@ -469,7 +470,7 @@ export default function ClientesTabClient({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <div className="text-xs font-semibold text-muted-foreground">Data de Nascimento</div>
+                  <Label>Data de Nascimento</Label>
                   <Input
                     type="date"
                     name="dataNascimento"
@@ -482,7 +483,7 @@ export default function ClientesTabClient({
                 <Link href={buildUrl({ tab: "clientes", editCliente: undefined })} className={buttonVariants({ variant: "outline" })}>
                   Cancelar
                 </Link>
-                <button className={cn(buttonVariants(), "bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar alteracoes</button>
+                <Button type="submit">Salvar alteracoes</Button>
               </div>
             </form>
           </CardContent>
