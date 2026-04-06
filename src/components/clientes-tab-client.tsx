@@ -80,21 +80,15 @@ export default function ClientesTabClient({
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [similares, setSimilares] = useState<{ id: number; nome: string }[]>([]);
-  const [empresaSearch, setEmpresaSearch] = useState("");
-  const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | null>(null);
-  const [empresaDropdownOpen, setEmpresaDropdownOpen] = useState(false);
-  const [editEmpresaSearch, setEditEmpresaSearch] = useState(
-    editClienteData?.empresaParceiraId ? "" : (editClienteData?.empresa ?? "")
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string>("");
+  const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<string>(
+    editClienteData?.empresaParceiraId ? String(editClienteData.empresaParceiraId) : ""
   );
-  const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<number | null>(editClienteData?.empresaParceiraId ?? null);
-  const [editEmpresaDropdownOpen, setEditEmpresaDropdownOpen] = useState(false);
 
-  const filteredEmpresas = empresasParceiras.filter(e =>
-    !empresaSearch || e.nome.toLowerCase().includes(empresaSearch.toLowerCase())
-  );
-  const editFilteredEmpresas = empresasParceiras.filter(e =>
-    !editEmpresaSearch || e.nome.toLowerCase().includes(editEmpresaSearch.toLowerCase())
-  );
+  const empresaOptions = [
+    { value: "", label: "Nenhuma" },
+    ...empresasParceiras.map(e => ({ value: String(e.id), label: e.nome })),
+  ];
 
   const handleNomeBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const nome = e.target.value.trim();
@@ -230,36 +224,17 @@ export default function ClientesTabClient({
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="space-y-1 relative">
+              <div className="space-y-1">
                 <Label>Empresa/Vinculo</Label>
-                <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId ?? ""} />
-                <input type="hidden" name="empresa" value={empresasParceiras.find(e => e.id === selectedEmpresaId)?.nome ?? empresaSearch} />
-                <Input
-                  placeholder="Buscar empresa..."
-                  aria-label="Empresa"
-                  value={empresaSearch}
-                  onChange={(e) => { setEmpresaSearch(e.target.value); setEmpresaDropdownOpen(true); setSelectedEmpresaId(null); }}
-                  onFocus={() => setEmpresaDropdownOpen(true)}
-                  onBlur={() => setTimeout(() => setEmpresaDropdownOpen(false), 200)}
-                  className="uppercase"
+                <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId} />
+                <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === selectedEmpresaId)?.nome ?? ""} />
+                <FormSelect
+                  name="_empresa_display"
+                  options={empresaOptions}
+                  value={selectedEmpresaId}
+                  onValueChange={setSelectedEmpresaId}
+                  placeholder="Selecione a empresa"
                 />
-                {empresaDropdownOpen && filteredEmpresas.length > 0 && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                    {filteredEmpresas.map(e => (
-                      <button
-                        key={e.id}
-                        type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer"
-                        onMouseDown={(ev) => { ev.preventDefault(); setSelectedEmpresaId(e.id); setEmpresaSearch(e.nome); setEmpresaDropdownOpen(false); }}
-                      >
-                        {e.nome}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {selectedEmpresaId && (
-                  <button type="button" onClick={() => { setSelectedEmpresaId(null); setEmpresaSearch(""); }} className="absolute right-2 top-7 text-xs text-muted-foreground hover:text-foreground">✕</button>
-                )}
               </div>
               <div className="space-y-1">
                 <Label>Data de Nascimento</Label>
@@ -439,36 +414,17 @@ export default function ClientesTabClient({
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-3">
-                <div className="space-y-1 relative">
+                <div className="space-y-1">
                   <Label>Empresa/Vinculo</Label>
-                  <input type="hidden" name="empresaParceiraId" value={editSelectedEmpresaId ?? ""} />
-                  <input type="hidden" name="empresa" value={empresasParceiras.find(e => e.id === editSelectedEmpresaId)?.nome ?? editEmpresaSearch} />
-                  <Input
-                    placeholder="Buscar empresa..."
-                    aria-label="Empresa"
-                    value={editEmpresaSearch || (editSelectedEmpresaId ? (empresasParceiras.find(e => e.id === editSelectedEmpresaId)?.nome ?? editClienteData.empresa ?? "") : editClienteData.empresa || "")}
-                    onChange={(e) => { setEditEmpresaSearch(e.target.value); setEditEmpresaDropdownOpen(true); setEditSelectedEmpresaId(null); }}
-                    onFocus={() => setEditEmpresaDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setEditEmpresaDropdownOpen(false), 200)}
-                    className="uppercase"
+                  <input type="hidden" name="empresaParceiraId" value={editSelectedEmpresaId} />
+                  <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === editSelectedEmpresaId)?.nome ?? ""} />
+                  <FormSelect
+                    name="_edit_empresa_display"
+                    options={empresaOptions}
+                    value={editSelectedEmpresaId}
+                    onValueChange={setEditSelectedEmpresaId}
+                    placeholder="Selecione a empresa"
                   />
-                  {editEmpresaDropdownOpen && editFilteredEmpresas.length > 0 && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                      {editFilteredEmpresas.map(e => (
-                        <button
-                          key={e.id}
-                          type="button"
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 cursor-pointer"
-                          onMouseDown={(ev) => { ev.preventDefault(); setEditSelectedEmpresaId(e.id); setEditEmpresaSearch(e.nome); setEditEmpresaDropdownOpen(false); }}
-                        >
-                          {e.nome}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {editSelectedEmpresaId && (
-                    <button type="button" onClick={() => { setEditSelectedEmpresaId(null); setEditEmpresaSearch(""); }} className="absolute right-2 top-7 text-xs text-muted-foreground hover:text-foreground">✕</button>
-                  )}
                 </div>
                 <div className="space-y-1">
                   <Label>Data de Nascimento</Label>
