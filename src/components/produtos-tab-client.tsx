@@ -281,7 +281,7 @@ export default function ProdutosTabClient({
                       />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-[10px] text-muted-foreground">
+                    <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-[10px] text-muted-foreground">
                       Sem foto
                     </div>
                   )}

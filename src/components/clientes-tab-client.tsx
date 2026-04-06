@@ -208,8 +208,8 @@ export default function ClientesTabClient({
                   onChange={() => setSimilares([])}
                 />
                 {similares.length > 0 && (
-                  <div role="alert" className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+                  <div role="alert" className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground dark:text-warning">
+                    <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-warning" />
                     <span>
                       <strong>Cliente(s) com nome similar:</strong>{" "}
                       {similares.map((s) => s.nome).join(", ")}. Verifique antes de salvar.

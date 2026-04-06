@@ -322,7 +322,7 @@ export default function EmpresasTabClient({
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", (e._count?.clientes ?? 0) > 0 ? "bg-blue-50 text-blue-800" : "text-muted-foreground opacity-40")}>
+                      <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", (e._count?.clientes ?? 0) > 0 ? "bg-info/10 text-info" : "text-muted-foreground opacity-40")}>
                         {e._count?.clientes ?? 0}
                       </span>
                     </TableCell>
@@ -330,7 +330,7 @@ export default function EmpresasTabClient({
                       {(e.vinculos || []).length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {(e.vinculos || []).map((v) => (
-                            <span key={v.vinculada.id} className="inline-block rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-800 border border-blue-200">
+                            <span key={v.vinculada.id} className="inline-block rounded bg-info/10 px-1.5 py-0.5 text-xs text-info border border-info/20">
                               {v.vinculada.nome}
                             </span>
                           ))}
@@ -419,7 +419,7 @@ export default function EmpresasTabClient({
 
       {/* Vinculos dialog */}
       {vinculandoId !== null && onVincularAction && (
-        <Card className="mt-4 border-blue-200">
+        <Card className="mt-4 border-info/20">
           <CardHeader>
             <CardTitle className="text-primary text-base">
               Vinculos da empresa #{vinculandoId}
