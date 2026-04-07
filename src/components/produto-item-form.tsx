@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -94,7 +94,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     onUpdate(index, newItem);
   };
 
-  const handleChange = (field: keyof ProdutoItem, value: number | string) => {
+  const handleChange = useCallback((field: keyof ProdutoItem, value: number | string) => {
     let newItem = { ...item, [field]: value };
 
     // Limitar quantidade ao estoque disponível
@@ -109,10 +109,13 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     }
 
     onUpdate(index, newItem);
-  };
+  }, [item, estoqueDisponivel, onUpdate, index]);
 
-  const lucro = (item.valorVenda * item.quantidade) - (item.custoProduto * item.quantidade);
-  const margem = item.valorVenda > 0 ? (lucro / (item.valorVenda * item.quantidade)) * 100 : 0;
+  const { lucro, margem } = useMemo(() => {
+    const l = (item.valorVenda - item.custoProduto) * item.quantidade;
+    const m = item.valorVenda > 0 ? ((item.valorVenda - item.custoProduto) / item.valorVenda) * 100 : 0;
+    return { lucro: l, margem: m };
+  }, [item.valorVenda, item.custoProduto, item.quantidade]);
   const semEstoque = estoqueDisponivel !== null && estoqueDisponivel <= 0;
 
   return (
