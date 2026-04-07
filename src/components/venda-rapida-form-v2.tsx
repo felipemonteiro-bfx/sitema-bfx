@@ -1035,109 +1035,71 @@ export default function VendaRapidaFormV2({
           <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Subtotal Produtos
-              </div>
-              <div className="text-lg font-bold text-foreground">
-                {formatBRL(subtotalProdutos)}
-              </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
+              <div className="text-base font-bold text-foreground">{formatBRL(subtotalProdutos)}</div>
             </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Frete
-              </div>
-              <div className="text-lg font-bold text-foreground">
-                {formatBRL(numFrete)}
-              </div>
+            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Frete</div>
+              <div className="text-base font-bold text-foreground">{formatBRL(numFrete)}</div>
             </div>
-            {desconto > 0 && (
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                  Desconto
-                </div>
-                <div className="text-lg font-bold text-destructive">
-                  -{formatBRL(desconto)}
-                </div>
-              </div>
-            )}
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Total Venda
-              </div>
-              <div className="text-xl font-black text-primary">
-                {formatBRL(totalVenda)}
-              </div>
+            <div className="rounded-lg bg-primary/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Venda</div>
+              <div className="text-lg font-black text-primary">{formatBRL(totalVenda)}</div>
             </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Valor Parcela
-              </div>
-              <div className="text-lg font-bold text-info">
-                {formatBRL(totalVenda / numParcelas)}
-              </div>
+            <div className="rounded-lg bg-info/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
+              <div className="text-base font-bold text-info">{formatBRL(totalVenda / numParcelas)}</div>
+            </div>
+          </div>
+
+          {desconto > 0 && (
+            <div className="text-sm text-destructive font-medium">Desconto: -{formatBRL(desconto)}</div>
+          )}
+
+          <Separator />
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Custo Total</div>
+              <div className="text-base font-bold text-foreground">{formatBRL(custoTotal)}</div>
+            </div>
+            <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
+              <div className="text-base font-bold text-success">{formatBRL(lucroBruto)}</div>
+            </div>
+            <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
+              <div className="text-base font-bold text-success">{margemPct.toFixed(1)}%</div>
+            </div>
+            <div className="rounded-lg bg-warning/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
+              <div className="text-base font-bold text-warning">{formatBRL(valorComissao)}</div>
             </div>
           </div>
 
           <Separator />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Custo Total
-              </div>
-              <div className="text-lg font-bold text-foreground">
-                {formatBRL(custoTotal)}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Lucro Bruto
-              </div>
-              <div className="text-lg font-bold text-success">
-                {formatBRL(lucroBruto)}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Margem
-              </div>
-              <div className="text-lg font-bold text-success">
-                {margemPct.toFixed(1)}%
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Comissão ({comissaoPct}%)
-              </div>
-              <div className="text-lg font-bold text-warning">
-                {formatBRL(valorComissao)}
-              </div>
-            </div>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={loading}
+              size="lg"
+              className="px-12 text-base font-bold"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>Finalizar Venda</>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Botão Finalizar */}
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          disabled={loading}
-          variant="success"
-          size="lg"
-          className="px-12 text-base font-bold shadow-lg hover:shadow-xl"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Processando...
-            </>
-          ) : (
-            <>Finalizar Venda</>
-          )}
-        </Button>
-      </div>
     </form>
   );
 }
