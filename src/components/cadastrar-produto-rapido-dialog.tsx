@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CurrencyInput } from "@/components/currency-input";
 import { FormSelect } from "@/components/form-select";
+import { DateInput } from "@/components/ui/date-input";
 import { Loader2, Tag } from "lucide-react";
 import { toast } from "sonner";
 
@@ -226,10 +227,9 @@ export function CadastrarProdutoRapidoDialog({
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Data de compra
               </Label>
-              <Input
-                type="date"
+              <DateInput
                 value={dataCompra}
-                onChange={(e) => setDataCompra(e.target.value)}
+                onChange={(v) => setDataCompra(v)}
               />
             </div>
           </div>

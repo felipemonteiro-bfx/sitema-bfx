@@ -53,19 +53,19 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
+          <button
             type="button"
-            variant="outline"
+            id={id}
             disabled={disabled}
-            rightIcon={<CalendarIcon className="opacity-50 text-muted-foreground" />}
             className={cn(
-              "w-full justify-between font-normal h-10",
+              "flex h-10 w-full items-center justify-between rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
               !date && "text-muted-foreground",
               className
             )}
           >
-            {formattedDate}
-          </Button>
+            <span>{formattedDate}</span>
+            <CalendarIcon className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+          </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
@@ -77,12 +77,10 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
         </PopoverContent>
         <input
           ref={ref}
-          id={id}
           type="hidden"
           name={name}
           value={inputValue}
           required={required}
-          {...props}
         />
       </Popover>
     )

@@ -11,6 +11,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
+import { DateInput } from "@/components/ui/date-input";
 import { Loader2, Camera, CheckCircle2, AlertCircle, Tag } from "lucide-react";
 
 type ProdutoEdit = {
@@ -349,11 +350,10 @@ export default function ProdutoFormClient({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">Data da Compra</Label>
-              <Input
-                type="date"
+              <Label>Data da Compra</Label>
+              <DateInput
                 value={dataCompra}
-                onChange={(e) => setDataCompra(e.target.value)}
+                onChange={(v) => setDataCompra(v)}
               />
             </div>
           </div>

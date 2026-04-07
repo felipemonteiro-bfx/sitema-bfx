@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormSelect } from "@/components/form-select";
 import { MaskedInput } from "@/components/masked-input";
 import { CurrencyInput } from "@/components/currency-input";
+import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
 import { AlertTriangle, Pencil, Search, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -265,7 +266,7 @@ export default function ClientesTabClient({
               </div>
               <div className="space-y-1">
                 <Label htmlFor="add-dataNascimento">Data de Nascimento</Label>
-                <Input id="add-dataNascimento" type="date" name="dataNascimento" />
+                <DateInput id="add-dataNascimento" name="dataNascimento" />
               </div>
             </div>
             <div className="flex items-center justify-end">
@@ -462,9 +463,8 @@ export default function ClientesTabClient({
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-dataNascimento">Data de Nascimento</Label>
-                  <Input
+                  <DateInput
                     id="edit-dataNascimento"
-                    type="date"
                     name="dataNascimento"
                     defaultValue={editClienteData.dataNascimento ? new Date(editClienteData.dataNascimento).toISOString().split("T")[0] : ""}
                   />
