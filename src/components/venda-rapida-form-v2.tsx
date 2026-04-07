@@ -751,7 +751,7 @@ export default function VendaRapidaFormV2({
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{c.nome}</div>
                       {c.renda && c.renda > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success font-medium">
                           Renda: {formatBRL(c.renda)}
                         </span>
                       )}
@@ -789,8 +789,8 @@ export default function VendaRapidaFormV2({
           className={cn(
             "border-2 transition-colors",
             excedeuMargem
-              ? "bg-amber-50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30"
-              : "bg-emerald-50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/30"
+              ? "bg-warning/10 border-warning/30"
+              : "bg-success/10 border-success/30"
           )}
         >
           <CardHeader className="pb-3">
@@ -800,7 +800,7 @@ export default function VendaRapidaFormV2({
                 Limite e Margem
               </span>
               {excedeuMargem && (
-                <Badge variant="secondary" className="bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
+                <Badge variant="secondary" className="bg-warning/20 text-warning-foreground dark:text-warning">
                   Excede disponível
                 </Badge>
               )}
@@ -821,23 +821,23 @@ export default function VendaRapidaFormV2({
                 <div
                   className={cn(
                     "text-sm font-bold",
-                    limiteData.margemDisponivel > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                    limiteData.margemDisponivel > 0 ? "text-success" : "text-destructive"
                   )}
                 >
                   {formatBRL(limiteData.margemDisponivel)}
                 </div>
               </div>
             </div>
-            <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
               <div
-                className={cn("h-full transition-all", excedeuMargem ? "bg-amber-500" : "bg-emerald-500")}
+                className={cn("h-full transition-all", excedeuMargem ? "bg-warning" : "bg-success")}
                 style={{
                   width: `${Math.min(100, limiteData.margemTotal > 0 ? (limiteData.comprometimentoAtual / limiteData.margemTotal) * 100 : 0)}%`,
                 }}
               />
             </div>
             {excedeuMargem && (
-              <div className="flex items-start gap-2 text-xs text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-900/30">
+              <div className="flex items-start gap-2 text-xs text-warning-foreground dark:text-warning bg-warning/10 dark:bg-warning/20 p-3 rounded-lg border border-warning/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
                   Parcela ({formatBRL(valorParcela)}) excede o valor disponível ({formatBRL(limiteData.margemDisponivel)}).
@@ -979,7 +979,7 @@ export default function VendaRapidaFormV2({
               <Label className="text-sm font-medium cursor-pointer">Boleto</Label>
             </div>
             {boleto && selectedCliente && !selectedCliente.cpf && !selectedCliente.cnpj && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-200 text-sm">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground dark:text-warning text-sm">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>
                   O cliente &quot;{selectedCliente.nome}&quot; não tem CPF ou CNPJ cadastrado. Cadastre em Cadastros → Clientes para poder gerar boleto no Asaas.

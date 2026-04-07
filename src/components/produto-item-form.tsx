@@ -174,10 +174,10 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   className={cn(
                     "text-[10px] font-bold px-1.5 py-0.5 rounded",
                     semEstoque
-                      ? "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400"
+                      ? "bg-destructive/10 text-destructive"
                       : estoqueDisponivel <= 5
-                      ? "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
-                      : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                      ? "bg-warning/10 text-warning"
+                      : "bg-success/10 text-success"
                   )}
                 >
                   {semEstoque ? "Sem estoque" : `Estoque: ${estoqueDisponivel}`}
@@ -195,7 +195,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               required
               className={hasError ? "border-destructive border-2" : ""}
             />
-            {showDropdown && (produtoSuggestions.length > 0 || true) && (
+            {showDropdown && produtoSuggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
                 {produtoSuggestions.map((p) => (
                   <button
@@ -211,10 +211,10 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                           className={cn(
                             "text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shrink-0",
                             p.qtdEstoque <= 0
-                              ? "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400"
+                              ? "bg-destructive/10 text-destructive"
                               : p.qtdEstoque <= 5
-                              ? "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
-                              : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                              ? "bg-warning/10 text-warning"
+                              : "bg-success/10 text-success"
                           )}
                         >
                           {p.qtdEstoque <= 0 ? "Sem estoque" : `${p.qtdEstoque} un`}
@@ -311,7 +311,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               <span className="font-bold text-info">{margem.toFixed(1)}%</span>
             </div>
             {semEstoque && (
-              <div className="flex items-center gap-1.5 text-xs text-red-700 dark:text-red-400">
+              <div className="flex items-center gap-1.5 text-xs text-destructive">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                 Produto sem estoque disponível
               </div>
