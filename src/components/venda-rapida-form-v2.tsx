@@ -661,7 +661,7 @@ export default function VendaRapidaFormV2({
                   validationErrors.data ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                Data da Venda {validationErrors.data && "(obrigatório)"}
+                Data da Venda <span className="text-destructive">*</span> {validationErrors.data && "(obrigatório)"}
               </Label>
               <DateInput
                 value={dataVenda}
@@ -677,7 +677,7 @@ export default function VendaRapidaFormV2({
                   validationErrors.vendedor ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                Vendedor Responsável {validationErrors.vendedor && "(obrigatório)"}
+                Vendedor Responsável <span className="text-destructive">*</span> {validationErrors.vendedor && "(obrigatório)"}
               </Label>
               <FormSelect
                 name="vendedor"
@@ -715,7 +715,7 @@ export default function VendaRapidaFormV2({
                 validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
               )}
             >
-              Buscar Cliente {validationErrors.cliente && "(obrigatório)"}
+              Buscar Cliente <span className="text-destructive">*</span> {validationErrors.cliente && "(obrigatório)"}
             </Label>
             <Input
               value={clienteQuery}

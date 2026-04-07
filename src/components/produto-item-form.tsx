@@ -167,7 +167,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   hasError ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                Produto {hasError && "(obrigatório)"}
+                Produto <span className="text-destructive">*</span> {hasError && "(obrigatório)"}
               </Label>
               {estoqueDisponivel !== null && (
                 <span
