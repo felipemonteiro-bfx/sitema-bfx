@@ -297,6 +297,31 @@ function smtpSend(cfg: SmtpConfig, recipients: string[], rawMessage: string): Pr
   });
 }
 
+/**
+ * Creates in-app notifications for admin and optionally the vendedor.
+ */
+async function criarNotificacaoVenda(
+  mensagem: string,
+  link: string,
+  vendedorNome?: string | null,
+) {
+  // Always notify admin (id=1)
+  const creates = [{ mensagem, link, usuarioId: 1 }];
+
+  // Also notify the vendedor if different from admin
+  if (vendedorNome) {
+    const vendedor = await prisma.usuario.findFirst({
+      where: { username: { equals: vendedorNome, mode: "insensitive" } },
+      select: { id: true },
+    });
+    if (vendedor && vendedor.id !== 1) {
+      creates.push({ mensagem, link, usuarioId: vendedor.id });
+    }
+  }
+
+  await prisma.notificacao.createMany({ data: creates });
+}
+
 type VendaForEmail = {
   id: number;
   dataVenda: Date;
@@ -384,8 +409,18 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
         subject: `Nova venda — ${venda.cliente?.nome || "cliente"} (${empresa.nome})`,
         html,
       });
+      await criarNotificacaoVenda(
+        `Email enviado para ${empresa.nome}: venda #${venda.id} — ${venda.cliente?.nome || "cliente"} (${formatBRL(totalValor)})`,
+        `/historico`,
+        venda.vendedor,
+      );
     } catch (err) {
       console.error("[email] Falha ao enviar notificacao de venda por email:", err);
+      await criarNotificacaoVenda(
+        `Falha ao enviar email para ${empresa.nome}: venda #${venda.id} — ${venda.cliente?.nome || "cliente"}`,
+        `/historico`,
+        venda.vendedor,
+      );
     }
     return true;
   }
@@ -395,6 +430,11 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
 
   if (!empresa.telefoneRh) {
     console.warn(`[email] Empresa ${empresa.nome} sem email configurado e sem telefone — notificacao ignorada.`);
+    await criarNotificacaoVenda(
+      `Empresa ${empresa.nome} sem email/telefone — notificação da venda #${venda.id} ignorada`,
+      `/historico`,
+      venda.vendedor,
+    );
     return false;
   }
 
@@ -411,8 +451,18 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
 
   try {
     await enviarWhatsAppTexto(empresa.telefoneRh, mensagem);
+    await criarNotificacaoVenda(
+      `WhatsApp enviado para ${empresa.nome} (sem email): venda #${venda.id} — ${venda.cliente?.nome || "cliente"} (${formatBRL(totalValor)})`,
+      `/historico`,
+      venda.vendedor,
+    );
   } catch (err) {
     console.error("[email] Falha ao enviar notificacao de venda via WhatsApp:", err);
+    await criarNotificacaoVenda(
+      `Falha ao notificar ${empresa.nome}: venda #${venda.id} — nem email nem WhatsApp funcionou`,
+      `/historico`,
+      venda.vendedor,
+    );
   }
   return true;
 }
@@ -572,10 +622,28 @@ export async function sendWeeklyReport(
 
   const cc = adminEmail ? [adminEmail] : [];
 
-  await sendEmail({
-    to: emailsTo,
-    subject: `Relatorio Semanal de Vendas — ${empresaNome} (${semanaLabel})`,
-    html,
-    cc,
-  });
+  try {
+    await sendEmail({
+      to: emailsTo,
+      subject: `Relatorio Semanal de Vendas — ${empresaNome} (${semanaLabel})`,
+      html,
+      cc,
+    });
+    await prisma.notificacao.create({
+      data: {
+        mensagem: `Relatório semanal enviado por email para ${empresaNome} (${vendas.length} vendas, ${formatBRL(totalGeral)})`,
+        link: `/relatorios`,
+        usuarioId: 1,
+      },
+    });
+  } catch (err) {
+    console.error(`[email] Falha ao enviar relatório semanal para ${empresaNome}:`, err);
+    await prisma.notificacao.create({
+      data: {
+        mensagem: `Falha ao enviar relatório semanal por email para ${empresaNome}`,
+        link: `/relatorios`,
+        usuarioId: 1,
+      },
+    });
+  }
 }

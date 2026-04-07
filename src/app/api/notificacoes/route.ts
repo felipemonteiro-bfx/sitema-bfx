@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/session';
 
 export async function GET() {
   try {
+    const session = await getSession();
+    const userId = session?.id ?? null;
+
+    // Show: notifications targeted to this user OR global (usuarioId = null)
     const notificacoes = await prisma.notificacao.findMany({
-      where: { lida: false },
+      where: {
+        lida: false,
+        OR: [
+          { usuarioId: userId },
+          { usuarioId: null },
+        ],
+      },
       orderBy: { criadoEm: 'desc' },
       take: 20,
     });
