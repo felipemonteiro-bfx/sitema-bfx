@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,7 @@ export function EditVendaHistoricoForm({
 }: Props) {
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     setLoading(true);
@@ -88,7 +88,7 @@ export function EditVendaHistoricoForm({
     } finally {
       setLoading(false);
     }
-  };
+  }, [updateAction]);
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-3">
