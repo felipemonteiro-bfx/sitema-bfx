@@ -66,6 +66,7 @@ async function askAi(formData: FormData) {
     role: session.role as "admin" | "vendedor",
     username: session.username,
     displayName: session.nomeExibicao || session.username,
+    userId: session.id,
     history,
     baseUrl,
   });
@@ -73,6 +74,7 @@ async function askAi(formData: FormData) {
   await addAssistantMessage({
     sessaoId: usuario,
     usuario,
+    usuarioId: session.id,
     content: response.text,
     promptOriginal: prompt,
     status: "done",
@@ -92,6 +94,7 @@ async function clearAi() {
 async function addAssistantMessage(msg: {
   sessaoId: string;
   usuario: string;
+  usuarioId?: number;
   content: string;
   promptOriginal: string;
   actions?: { name: string; params: Record<string, unknown> }[];
@@ -102,6 +105,7 @@ async function addAssistantMessage(msg: {
     data: {
       sessaoId: msg.sessaoId,
       usuario: msg.usuario,
+      usuarioId: msg.usuarioId ?? null,
       role: "assistant",
       content: msg.content,
       contextResumo: buildContextSummary(msg.content),

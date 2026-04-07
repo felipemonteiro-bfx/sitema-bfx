@@ -38,10 +38,15 @@ export async function POST(request: NextRequest) {
         const valorDescontoNota = temNota ? Math.trunc((valorVenda * taxaNota / 100) * 100) / 100 : 0;
         const lucro = total - (custoProduto + custoEnvio + valorDescontoNota);
 
+        const vendedorImport = row.vendedor ? await tx.usuario.findFirst({
+          where: { OR: [{ username: { equals: row.vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: row.vendedor, mode: "insensitive" } }] },
+          select: { id: true },
+        }) : null;
         await tx.venda.create({
           data: {
             dataVenda: row.dataVenda,
             vendedor: row.vendedor || "",
+            vendedorId: vendedorImport?.id ?? null,
             clienteId: cliente.id,
             produtoNome: row.produto || "",
             custoProduto,

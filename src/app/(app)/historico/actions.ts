@@ -41,11 +41,17 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const lucro = total - (totalCusto + envio + valorDescontoNota);
 
   try {
+    const vendedorTexto = String(formData.get("vendedor") || "");
+    const vendedorUser = vendedorTexto ? await prisma.usuario.findFirst({
+      where: { OR: [{ username: { equals: vendedorTexto, mode: "insensitive" } }, { nomeExibicao: { equals: vendedorTexto, mode: "insensitive" } }] },
+      select: { id: true },
+    }) : null;
     await prisma.venda.update({
       where: { id },
       data: {
         dataVenda: new Date(data),
-        vendedor: String(formData.get("vendedor") || ""),
+        vendedor: vendedorTexto,
+        vendedorId: vendedorUser?.id ?? undefined,
         produtoNome: itens.length > 0 ? (itens[0].produtoNome || "") : String(formData.get("produto") || ""),
         quantidade: itens.length > 0 ? itens.reduce((s, i) => s + i.quantidade, 0) : quantidadeLegado,
         valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,

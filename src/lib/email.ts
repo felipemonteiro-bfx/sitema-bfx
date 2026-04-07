@@ -303,25 +303,14 @@ function smtpSend(cfg: SmtpConfig, recipients: string[], rawMessage: string): Pr
 async function criarNotificacaoVenda(
   mensagem: string,
   link: string,
-  vendedorNome?: string | null,
+  vendedorId?: number | null,
 ) {
   // Always notify admin (id=1)
   const creates = [{ mensagem, link, usuarioId: 1 }];
 
   // Also notify the vendedor if different from admin
-  if (vendedorNome) {
-    const vendedor = await prisma.usuario.findFirst({
-      where: {
-        OR: [
-          { username: { equals: vendedorNome, mode: "insensitive" } },
-          { nomeExibicao: { equals: vendedorNome, mode: "insensitive" } },
-        ],
-      },
-      select: { id: true },
-    });
-    if (vendedor && vendedor.id !== 1) {
-      creates.push({ mensagem, link, usuarioId: vendedor.id });
-    }
+  if (vendedorId && vendedorId !== 1) {
+    creates.push({ mensagem, link, usuarioId: vendedorId });
   }
 
   await prisma.notificacao.createMany({ data: creates });
@@ -331,6 +320,7 @@ type VendaForEmail = {
   id: number;
   dataVenda: Date;
   vendedor?: string | null;
+  vendedorId?: number | null;
   parcelas?: number | null;
   itens?: { produtoNome: string; quantidade: number; subtotal: number }[];
   valorVenda?: number | null;
@@ -417,14 +407,14 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
       await criarNotificacaoVenda(
         `Email enviado para ${empresa.nome}: venda #${venda.id} — ${venda.cliente?.nome || "cliente"} (${formatBRL(totalValor)})`,
         `/historico`,
-        venda.vendedor,
+        venda.vendedorId,
       );
     } catch (err) {
       console.error("[email] Falha ao enviar notificacao de venda por email:", err);
       await criarNotificacaoVenda(
         `Falha ao enviar email para ${empresa.nome}: venda #${venda.id} — ${venda.cliente?.nome || "cliente"}`,
         `/historico`,
-        venda.vendedor,
+        venda.vendedorId,
       );
     }
     return true;
@@ -438,7 +428,7 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
     await criarNotificacaoVenda(
       `Empresa ${empresa.nome} sem email/telefone — notificação da venda #${venda.id} ignorada`,
       `/historico`,
-      venda.vendedor,
+      venda.vendedorId,
     );
     return false;
   }
@@ -459,14 +449,14 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
     await criarNotificacaoVenda(
       `WhatsApp enviado para ${empresa.nome} (sem email): venda #${venda.id} — ${venda.cliente?.nome || "cliente"} (${formatBRL(totalValor)})`,
       `/historico`,
-      venda.vendedor,
+      venda.vendedorId,
     );
   } catch (err) {
     console.error("[email] Falha ao enviar notificacao de venda via WhatsApp:", err);
     await criarNotificacaoVenda(
       `Falha ao notificar ${empresa.nome}: venda #${venda.id} — nem email nem WhatsApp funcionou`,
       `/historico`,
-      venda.vendedor,
+      venda.vendedorId,
     );
   }
   return true;
@@ -476,6 +466,7 @@ type VendaRelatorio = {
   id: number;
   dataVenda: Date;
   vendedor?: string | null;
+  vendedorId?: number | null;
   parcelas?: number | null;
   itens?: { produtoNome: string; quantidade: number; subtotal: number }[];
   valorVenda?: number | null;

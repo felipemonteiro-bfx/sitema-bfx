@@ -16,6 +16,7 @@ export type ActionContext = {
   role: "admin" | "vendedor";
   username: string;
   displayName: string;
+  userId: number;
 };
 
 type AiActionDef = {
@@ -762,6 +763,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       data: {
         dataHora: new Date(),
         usuario: ctx.username,
+        usuarioId: ctx.userId,
         acao: `ai:${name}:${status}`,
         detalhes: JSON.stringify(details ?? {}),
       },
@@ -820,6 +822,9 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       }
       case "criar_venda": {
         const vendedor = ctx.role === "admin" ? parsedParams?.vendedor : ctx.displayName;
+        const vendedorIdAi = vendedor
+          ? (await prisma.usuario.findFirst({ where: { OR: [{ username: { equals: vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: vendedor, mode: "insensitive" } }] }, select: { id: true } }))?.id ?? ctx.userId
+          : ctx.userId;
         const valorVenda = parsedParams.valorVenda || 0;
         const valorFrete = parsedParams.valorFrete || 0;
         const custoProduto = parsedParams.custoProduto || 0;
@@ -833,6 +838,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
               uuid: uuidv7(),
               dataVenda: new Date(parsedParams.dataVenda),
               vendedor,
+              vendedorId: vendedorIdAi,
               clienteId: Number(parsedParams.clienteId),
               produtoNome: parsedParams.produtoNome,
               custoProduto,
@@ -944,13 +950,19 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           data: parsedParams,
         });
         break;
-      case "atualizar_venda":
+      case "atualizar_venda": {
         requireAdmin(ctx);
+        let vendedorIdUpdate: number | undefined;
+        if (parsedParams.vendedor) {
+          const vu = await prisma.usuario.findFirst({ where: { OR: [{ username: { equals: parsedParams.vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: parsedParams.vendedor, mode: "insensitive" } }] }, select: { id: true } });
+          vendedorIdUpdate = vu?.id;
+        }
         result = await prisma.venda.update({
           where: { id: Number(parsedParams.id) },
           data: {
             dataVenda: parsedParams.dataVenda ? new Date(parsedParams.dataVenda) : undefined,
             vendedor: parsedParams.vendedor ?? undefined,
+            vendedorId: vendedorIdUpdate,
             produtoNome: parsedParams.produtoNome ?? undefined,
             valorVenda: parsedParams.valorVenda ?? undefined,
             valorFrete: parsedParams.valorFrete ?? undefined,
@@ -959,6 +971,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           },
         });
         break;
+      }
       case "atualizar_despesa":
         requireAdmin(ctx);
         result = await prisma.despesa.update({

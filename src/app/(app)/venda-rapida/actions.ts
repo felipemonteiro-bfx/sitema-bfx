@@ -16,6 +16,7 @@ import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 import { signReciboId } from "@/lib/recibo-url";
 import { sendVendaNotification } from "@/lib/email";
+import { getSession } from "@/lib/session";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -38,10 +39,16 @@ export async function criarVenda(formData: FormData) {
   const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
 
   if (!data || !vendedor || !clienteId) return;
+  const session = await getSession();
+  const vendedorUsuario = await prisma.usuario.findFirst({
+    where: { OR: [{ username: { equals: vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: vendedor, mode: "insensitive" } }] },
+    select: { id: true },
+  });
   const vendaCriada = await prisma.venda.create({
     data: {
       dataVenda: new Date(data),
       vendedor,
+      vendedorId: vendedorUsuario?.id ?? session?.id ?? null,
       clienteId,
       produtoNome: produto,
       custoProduto: custo,
@@ -158,6 +165,11 @@ export async function criarVendaV2(
 
     // Criar venda com transação
     const assinaturaToken = descontoEmFolha ? randomUUID() : undefined;
+    const sessionV2 = await getSession();
+    const vendedorUsuarioV2 = await prisma.usuario.findFirst({
+      where: { OR: [{ username: { equals: vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: vendedor, mode: "insensitive" } }] },
+      select: { id: true },
+    });
 
     const venda = await prisma.$transaction(async (tx) => {
       // 1. Criar venda principal
@@ -165,6 +177,7 @@ export async function criarVendaV2(
         data: {
           dataVenda: new Date(dataStr),
           vendedor,
+          vendedorId: vendedorUsuarioV2?.id ?? sessionV2?.id ?? null,
           clienteId,
           // Campos deprecated (para compatibilidade)
           produtoNome: produtosValidados[0]?.produtoNome || "",
