@@ -30,8 +30,15 @@ export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
       const formData = new FormData();
       formData.append('id', vendaId.toString());
       await deleteAction(formData);
-    } catch {
-      toast.error("Erro ao excluir venda.");
+      toast.success("Venda excluida com sucesso.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("Server Action") || msg.includes("older or newer")) {
+        toast.error("Pagina desatualizada. Recarregando...");
+        window.location.reload();
+      } else {
+        toast.error("Erro ao excluir venda. Tente novamente.");
+      }
     } finally {
       setLoading(false);
     }
