@@ -28,8 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { buildCadastrosUrl } from "@/lib/build-cadastros-url";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 type EmpresaListItem = {
   id: number;
@@ -70,6 +69,7 @@ export default function EmpresasTabClient({
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [submittingAdd, setSubmittingAdd] = useState(false);
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
+  const [editingEmpresa, setEditingEmpresa] = useState<EmpresaListItem | null>(null);
   const [vinculandoId, setVinculandoId] = useState<number | null>(null);
   const [vinculacaoIds, setVinculacaoIds] = useState<Set<number>>(new Set());
   const [savingVinculo, setSavingVinculo] = useState(false);
@@ -91,6 +91,8 @@ export default function EmpresasTabClient({
     try {
       await onUpdateAction(formData);
       toast.success("Empresa atualizada com sucesso!");
+      setEditingEmpresa(null);
+      startTransition(() => { router.refresh(); });
     } catch {
       toast.error("Erro ao atualizar. Tente novamente.");
     } finally {
@@ -103,8 +105,6 @@ export default function EmpresasTabClient({
     searchFields: ["nome", "cnpj", "responsavelRh", "emailRh", "telefoneRh"] as (keyof EmpresaListItem)[],
     defaultSort: "nome" as keyof EmpresaListItem,
   });
-
-  const buildUrl = (params: Record<string, string | undefined>) => buildCadastrosUrl(sp, params);
 
   const allSelected = empresas.length > 0 && selectedIds.size === empresas.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < empresas.length;
@@ -346,14 +346,15 @@ export default function EmpresasTabClient({
                             Vincular
                           </button>
                         )}
-                        <Link
-                          href={buildUrl({ tab: "empresas", editEmpresa: String(e.id) })}
+                        <button
+                          type="button"
+                          onClick={() => setEditingEmpresa(e)}
                           className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
                           title="Editar"
                           aria-label={`Editar ${e.nome}`}
                         >
                           <Pencil className="h-4 w-4" />
-                        </Link>
+                        </button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -366,52 +367,51 @@ export default function EmpresasTabClient({
         </CardContent>
       </Card>
 
-      {editEmpresaData && (
-        <Card id="editar-empresa" className="mt-4 scroll-mt-24">
-          <CardHeader>
-            <CardTitle className="text-primary">Editando empresa #{editEmpresaData.id}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={handleUpdate} className="grid gap-4">
-              <input type="hidden" name="id" value={editEmpresaData.id} />
-              <div className="grid gap-3 md:grid-cols-3">
+      <Sheet open={!!editingEmpresa} onOpenChange={(open) => !open && setEditingEmpresa(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Editar empresa #{editingEmpresa?.id}</SheetTitle>
+            <SheetDescription>Atualize os dados da empresa abaixo.</SheetDescription>
+          </SheetHeader>
+          {editingEmpresa && (
+            <form action={handleUpdate} className="grid gap-4 mt-4">
+              <input type="hidden" name="id" value={editingEmpresa.id} />
+              <div className="grid gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
-                  <Input id="edit-empresa-nome" name="nome" defaultValue={editEmpresaData.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
+                  <Input id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-cnpj">CNPJ</Label>
-                  <Input id="edit-empresa-cnpj" name="cnpj" defaultValue={editEmpresaData.cnpj || ""} placeholder="00.000.000/0000-00" />
+                  <Input id="edit-empresa-cnpj" name="cnpj" defaultValue={editingEmpresa.cnpj || ""} placeholder="00.000.000/0000-00" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-rh">Responsavel RH</Label>
-                  <Input id="edit-empresa-rh" name="rh" defaultValue={editEmpresaData.responsavelRh || ""} placeholder="Responsavel RH" className="uppercase" />
+                  <Input id="edit-empresa-rh" name="rh" defaultValue={editingEmpresa.responsavelRh || ""} placeholder="Responsavel RH" className="uppercase" />
                 </div>
               </div>
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-tel">Telefone RH</Label>
-                  <MaskedInput id="edit-empresa-tel" name="tel" mask="phone" defaultValue={editEmpresaData.telefoneRh || ""} />
+                  <MaskedInput id="edit-empresa-tel" name="tel" mask="phone" defaultValue={editingEmpresa.telefoneRh || ""} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-email">Email RH</Label>
-                  <Input id="edit-empresa-email" name="email" type="email" defaultValue={editEmpresaData.emailRh || ""} placeholder="email@empresa.com" />
+                  <Input id="edit-empresa-email" name="email" type="email" defaultValue={editingEmpresa.emailRh || ""} placeholder="email@empresa.com" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-emailsExtras">Emails adicionais</Label>
-                  <Input id="edit-empresa-emailsExtras" name="emailsExtras" defaultValue={editEmpresaData.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" />
+                  <Input id="edit-empresa-emailsExtras" name="emailsExtras" defaultValue={editingEmpresa.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" />
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-2">
-                <Link href={buildUrl({ tab: "empresas", editEmpresa: undefined })} className={buttonVariants({ variant: "outline" })}>
-                  Cancelar
-                </Link>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditingEmpresa(null)}>Cancelar</Button>
                 <Button type="submit" loading={submittingUpdate}>Salvar alteracoes</Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Vinculos dialog */}
       {vinculandoId !== null && onVincularAction && (

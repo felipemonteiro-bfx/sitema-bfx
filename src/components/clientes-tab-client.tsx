@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, startTransition, useCallback, useRef } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -31,8 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { buildCadastrosUrl } from "@/lib/build-cadastros-url";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 type ClienteListItem = {
   id: number;
@@ -77,8 +76,6 @@ export default function ClientesTabClient({
   empresasParceiras = [],
 }: Props) {
   const router = useRouter();
-  const pathname = usePathname();
-  const currentSearchParams = useSearchParams();
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -86,9 +83,8 @@ export default function ClientesTabClient({
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [similares, setSimilares] = useState<{ id: number; nome: string }[]>([]);
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string>("");
-  const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<string>(
-    editClienteData?.empresaParceiraId ? String(editClienteData.empresaParceiraId) : ""
-  );
+  const [editingCliente, setEditingCliente] = useState<ClienteListItem | null>(null);
+  const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<string>("");
 
   const empresaOptions = [
     { value: "", label: "Nenhuma" },
@@ -132,6 +128,8 @@ export default function ClientesTabClient({
     try {
       await onUpdateAction(formData);
       toast.success("Cliente atualizado com sucesso!");
+      setEditingCliente(null);
+      startTransition(() => { router.refresh(); });
     } catch {
       toast.error("Erro ao atualizar. Tente novamente.");
     } finally {
@@ -139,13 +137,16 @@ export default function ClientesTabClient({
     }
   };
 
+  const openEditSheet = (c: ClienteListItem) => {
+    setEditSelectedEmpresaId(c.empresaParceiraId ? String(c.empresaParceiraId) : "");
+    setEditingCliente(c);
+  };
+
   const table = useTableFeatures({
     data: clientes as (ClienteListItem & Record<string, unknown>)[],
     searchFields: ["nome", "cpf", "cnpj", "telefone", "empresa"] as (keyof ClienteListItem)[],
     defaultSort: "nome" as keyof ClienteListItem,
   });
-
-  const buildUrl = (params: Record<string, string | undefined>) => buildCadastrosUrl(sp, params);
 
   const allSelected = clientes.length > 0 && selectedIds.size === clientes.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < clientes.length;
@@ -369,14 +370,15 @@ export default function ClientesTabClient({
                     <TableCell>{c.telefone}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatBRL(c.renda || 0)}</TableCell>
                     <TableCell>
-                      <Link
-                        href={buildUrl({ tab: "clientes", editCliente: String(c.id) })}
+                      <button
+                        type="button"
+                        onClick={() => openEditSheet(c)}
                         className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
                         title="Editar"
                         aria-label={`Editar ${c.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
-                      </Link>
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -394,23 +396,19 @@ export default function ClientesTabClient({
         </CardContent>
       </Card>
 
-      {editClienteData && (
-        <Card id="editar-cliente" className="mt-4 scroll-mt-24">
-          <CardHeader>
-            <CardTitle className="text-primary">Editando cliente #{editClienteData.id}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {errorMsg && sp.editCliente && (
-              <div role="alert" className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {errorMsg}
-              </div>
-            )}
-            <form action={handleUpdate} className="grid gap-4 [&_input]:uppercase">
-              <input type="hidden" name="id" value={editClienteData.id} />
-              <div className="grid gap-3 md:grid-cols-3">
+      <Sheet open={!!editingCliente} onOpenChange={(open) => !open && setEditingCliente(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Editar cliente #{editingCliente?.id}</SheetTitle>
+            <SheetDescription>Atualize os dados do cliente abaixo.</SheetDescription>
+          </SheetHeader>
+          {editingCliente && (
+            <form action={handleUpdate} className="grid gap-4 mt-4 [&_input]:uppercase">
+              <input type="hidden" name="id" value={editingCliente.id} />
+              <div className="grid gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="edit-nome">Nome/Razao Social <span className="text-destructive">*</span></Label>
-                  <Input id="edit-nome" name="nome" defaultValue={editClienteData.nome} placeholder="Nome/Razao Social" aria-required="true" />
+                  <Input id="edit-nome" name="nome" defaultValue={editingCliente.nome} placeholder="Nome/Razao Social" aria-required="true" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-tipo">Tipo</Label>
@@ -421,33 +419,33 @@ export default function ClientesTabClient({
                       { value: "PF", label: "Pessoa Fisica" },
                       { value: "PJ", label: "Pessoa Juridica" },
                     ]}
-                    defaultValue={editClienteData.tipo || "PF"}
+                    defaultValue={editingCliente.tipo || "PF"}
                   />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-doc">CPF/CNPJ</Label>
-                  <Input id="edit-doc" name="doc" defaultValue={editClienteData.cpf || editClienteData.cnpj || ""} placeholder="CPF/CNPJ" />
+                  <Input id="edit-doc" name="doc" defaultValue={editingCliente.cpf || editingCliente.cnpj || ""} placeholder="CPF/CNPJ" />
                 </div>
               </div>
-              <div className="grid gap-3 md:grid-cols-4">
+              <div className="grid gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="edit-matricula">Matricula</Label>
-                  <Input id="edit-matricula" name="matricula" defaultValue={editClienteData.matricula || ""} placeholder="Matricula" />
+                  <Input id="edit-matricula" name="matricula" defaultValue={editingCliente.matricula || ""} placeholder="Matricula" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-renda">Renda/Faturamento</Label>
-                  <CurrencyInput id="edit-renda" name="renda" defaultValue={editClienteData.renda ?? 0} />
+                  <CurrencyInput id="edit-renda" name="renda" defaultValue={editingCliente.renda ?? 0} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-telefone">WhatsApp</Label>
-                  <MaskedInput id="edit-telefone" name="telefone" mask="phone" defaultValue={editClienteData.telefone || ""} />
+                  <MaskedInput id="edit-telefone" name="telefone" mask="phone" defaultValue={editingCliente.telefone || ""} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-cep">CEP</Label>
-                  <MaskedInput id="edit-cep" name="cep" mask="cep" defaultValue={editClienteData.cep || ""} />
+                  <MaskedInput id="edit-cep" name="cep" mask="cep" defaultValue={editingCliente.cep || ""} />
                 </div>
               </div>
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa">Empresa/Vinculo</Label>
                   <input type="hidden" name="empresaParceiraId" value={editSelectedEmpresaId} />
@@ -466,20 +464,18 @@ export default function ClientesTabClient({
                   <DateInput
                     id="edit-dataNascimento"
                     name="dataNascimento"
-                    defaultValue={editClienteData.dataNascimento ? new Date(editClienteData.dataNascimento).toISOString().split("T")[0] : ""}
+                    defaultValue={editingCliente.dataNascimento ? new Date(editingCliente.dataNascimento).toISOString().split("T")[0] : ""}
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-2">
-                <Link href={buildUrl({ tab: "clientes", editCliente: undefined })} className={buttonVariants({ variant: "outline" })}>
-                  Cancelar
-                </Link>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditingCliente(null)}>Cancelar</Button>
                 <Button type="submit" loading={submittingUpdate}>Salvar alteracoes</Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

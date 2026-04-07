@@ -28,8 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { buildCadastrosUrl } from "@/lib/build-cadastros-url";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 type FornecedorListItem = {
   id: number;
@@ -61,6 +60,7 @@ export default function FornecedoresTabClient({
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [submittingAdd, setSubmittingAdd] = useState(false);
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
+  const [editingFornecedor, setEditingFornecedor] = useState<FornecedorListItem | null>(null);
 
   const table = useTableFeatures({
     data: fornecedores as (FornecedorListItem & Record<string, unknown>)[],
@@ -86,14 +86,14 @@ export default function FornecedoresTabClient({
     try {
       await onUpdateAction(formData);
       toast.success("Fornecedor atualizado com sucesso!");
+      setEditingFornecedor(null);
+      startTransition(() => { router.refresh(); });
     } catch {
       toast.error("Erro ao atualizar. Tente novamente.");
     } finally {
       setSubmittingUpdate(false);
     }
   };
-
-  const buildUrl = (params: Record<string, string | undefined>) => buildCadastrosUrl(sp, params);
 
   const allSelected = fornecedores.length > 0 && selectedIds.size === fornecedores.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < fornecedores.length;
@@ -243,14 +243,15 @@ export default function FornecedoresTabClient({
                     <TableCell className="font-medium">{f.nome}</TableCell>
                     <TableCell>{f.telefone}</TableCell>
                     <TableCell>
-                      <Link
-                        href={buildUrl({ tab: "fornecedores", editFornecedor: String(f.id) })}
+                      <button
+                        type="button"
+                        onClick={() => setEditingFornecedor(f)}
                         className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
                         title="Editar"
                         aria-label={`Editar ${f.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
-                      </Link>
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -262,34 +263,33 @@ export default function FornecedoresTabClient({
         </CardContent>
       </Card>
 
-      {editFornecedorData && (
-        <Card id="editar-fornecedor" className="mt-4 scroll-mt-24">
-          <CardHeader>
-            <CardTitle className="text-primary">Editando fornecedor #{editFornecedorData.id}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={handleUpdate} className="grid gap-4 [&_input]:uppercase">
-              <input type="hidden" name="id" value={editFornecedorData.id} />
-              <div className="grid gap-3 md:grid-cols-2">
+      <Sheet open={!!editingFornecedor} onOpenChange={(open) => !open && setEditingFornecedor(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Editar fornecedor #{editingFornecedor?.id}</SheetTitle>
+            <SheetDescription>Atualize os dados do fornecedor abaixo.</SheetDescription>
+          </SheetHeader>
+          {editingFornecedor && (
+            <form action={handleUpdate} className="grid gap-4 mt-4 [&_input]:uppercase">
+              <input type="hidden" name="id" value={editingFornecedor.id} />
+              <div className="grid gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="edit-fornecedor-nome">Nome do Fornecedor <span className="text-destructive">*</span></Label>
-                  <Input id="edit-fornecedor-nome" name="nome" defaultValue={editFornecedorData.nome} placeholder="Razao Social ou Nome" aria-required="true" />
+                  <Input id="edit-fornecedor-nome" name="nome" defaultValue={editingFornecedor.nome} placeholder="Razao Social ou Nome" aria-required="true" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-fornecedor-telefone">Telefone/WhatsApp</Label>
-                  <MaskedInput id="edit-fornecedor-telefone" name="telefone" mask="phone" defaultValue={editFornecedorData.telefone || ""} />
+                  <MaskedInput id="edit-fornecedor-telefone" name="telefone" mask="phone" defaultValue={editingFornecedor.telefone || ""} />
                 </div>
               </div>
-              <div className="flex items-center justify-end gap-2">
-                <Link href={buildUrl({ tab: "fornecedores", editFornecedor: undefined })} className={buttonVariants({ variant: "outline" })}>
-                  Cancelar
-                </Link>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditingFornecedor(null)}>Cancelar</Button>
                 <Button type="submit" loading={submittingUpdate}>Salvar alteracoes</Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
