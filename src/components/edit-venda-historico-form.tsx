@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { EditVendaComParcelas } from "@/components/edit-venda-com-parcelas";
@@ -11,7 +14,7 @@ import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 type ProdutoItem = {
   produtoNome: string;
@@ -88,15 +91,16 @@ export function EditVendaHistoricoForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} encType="multipart/form-data" className="grid gap-4 md:grid-cols-3">
+    <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-3">
       <input type="hidden" name="id" value={editVenda.id} />
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Data da venda</label>
-        <DateInput name="data" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
+        <Label htmlFor="edit-data">Data da venda</Label>
+        <DateInput id="edit-data" name="data" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Vendedor</label>
+        <Label htmlFor="edit-vendedor">Vendedor</Label>
         <FormSelect
+          id="edit-vendedor"
           name="vendedor"
           defaultValue={editVenda.vendedor || ""}
           options={[
@@ -129,81 +133,62 @@ export function EditVendaHistoricoForm({
         dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
       />
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Frete ao cliente</label>
-        <Input name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
+        <Label htmlFor="edit-frete">Frete ao cliente</Label>
+        <Input id="edit-frete" name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Custo de envio</label>
-        <Input name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
+        <Label htmlFor="edit-envio">Custo de envio</Label>
+        <Input id="edit-envio" name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
       </div>
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Desconto (R$)</label>
-        <Input name="desconto" type="number" step="0.01" min="0" defaultValue={editVenda.desconto || 0} />
+        <Label htmlFor="edit-desconto">Desconto (R$)</Label>
+        <Input id="edit-desconto" name="desconto" type="number" step="0.01" min="0" defaultValue={editVenda.desconto || 0} />
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</label>
+        <Label>Comprovante Assinado</Label>
         <div className="flex flex-col gap-2">
           <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <a href={`/api/comprovante?vendaId=${editVenda.id}`} target="_blank" rel="noopener noreferrer" className="font-bold underline flex items-center gap-1 hover:text-foreground">
-              Ver comprovante assinado (se disponível) <ExternalLink className="h-3 w-3" />
+              Ver comprovante assinado <ExternalLink className="h-3 w-3" />
             </a>
           </div>
         </div>
       </div>
 
       <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
-        <input
-          type="checkbox"
-          name="temNota"
-          id="edit-temNota"
-          defaultChecked={editVenda.temNota}
-          className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
-        />
+        <Checkbox name="temNota" id="edit-temNota" defaultChecked={editVenda.temNota} />
         <label htmlFor="edit-temNota" className="text-xs font-medium text-foreground leading-none cursor-pointer">
           Com Nota Fiscal
         </label>
       </div>
 
       <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
-        <input
-          type="checkbox"
-          name="descontoEmFolha"
-          id="edit-descontoEmFolha"
-          defaultChecked={editVenda.descontoEmFolha ?? false}
-          className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
-        />
+        <Checkbox name="descontoEmFolha" id="edit-descontoEmFolha" defaultChecked={editVenda.descontoEmFolha ?? false} />
         <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium text-foreground leading-none cursor-pointer">
           Desconto em folha
         </label>
       </div>
 
       <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
-        <input
-          type="checkbox"
-          name="boleto"
-          id="edit-boleto"
-          defaultChecked={editVenda.boleto ?? false}
-          className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
-        />
+        <Checkbox name="boleto" id="edit-boleto" defaultChecked={editVenda.boleto ?? false} />
         <label htmlFor="edit-boleto" className="text-xs font-medium text-foreground leading-none cursor-pointer">
           Boleto
         </label>
       </div>
-      <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opções: desconto em folha ou boleto.</p>
+      <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opcoes: desconto em folha ou boleto.</p>
 
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Taxa da Nota (%)</label>
-        <Input name="taxaNota" type="number" step="0.01" defaultValue={editVenda.taxaNota || 5.97} />
+        <Label htmlFor="edit-taxaNota">Taxa da Nota (%)</Label>
+        <Input id="edit-taxaNota" name="taxaNota" type="number" step="0.01" defaultValue={editVenda.taxaNota || 5.97} />
       </div>
 
       <div className="md:col-span-3 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={loading} className={cn(buttonVariants(), "cursor-pointer gap-2")}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? "Salvando..." : "Salvar alterações"}
-          </button>
+          <Button type="submit" loading={loading}>
+            Salvar alteracoes
+          </Button>
           <ReciboDownloadLink
             vendaId={editVenda.id}
             tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}

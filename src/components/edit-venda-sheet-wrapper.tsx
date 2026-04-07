@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -41,7 +42,7 @@ export function EditVendaSheetWrapper({ editId, title, description, children }: 
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <DialogDescription>{description}</DialogDescription>
           )}
         </DialogHeader>
         {children}
