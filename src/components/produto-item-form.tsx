@@ -162,6 +162,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           <div className="space-y-2 relative lg:col-span-2">
             <div className="flex items-center justify-between">
               <Label
+                htmlFor={`produto-nome-${index}`}
                 className={cn(
                   "text-xs font-bold uppercase tracking-wider",
                   hasError ? "text-destructive" : "text-muted-foreground",
@@ -185,6 +186,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               )}
             </div>
             <Input
+              id={`produto-nome-${index}`}
               value={produtoQuery}
               onChange={(e) => {
                 setProdutoQuery(e.target.value);
@@ -193,14 +195,17 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               }}
               placeholder="Digite o nome do produto"
               required
+              aria-required="true"
               className={hasError ? "border-destructive border-2" : ""}
             />
             {showDropdown && produtoSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
+              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
                 {produtoSuggestions.map((p) => (
                   <button
                     key={p.id}
                     type="button"
+                    role="option"
+                    aria-selected={false}
                     onClick={() => handleProdutoSelect(p)}
                     className="w-full px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer text-sm"
                   >
@@ -293,6 +298,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               value={item.quantidade}
               onChange={(e) => handleChange("quantidade", Number(e.target.value))}
               required
+              aria-label={`Quantidade do produto ${index + 1}`}
             />
           </div>
 
