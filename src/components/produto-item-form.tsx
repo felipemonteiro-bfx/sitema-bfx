@@ -306,18 +306,20 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           </div>
 
           {/* Resumo */}
-          <div className="lg:col-span-3 flex flex-wrap items-center gap-4 pt-2 border-t border-border">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Subtotal: </span>
-              <span className="font-bold text-foreground">{formatBRL(item.subtotal)}</span>
-            </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Lucro: </span>
-              <span className="font-bold text-success">{formatBRL(lucro)}</span>
-            </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Margem: </span>
-              <span className="font-bold text-info">{margem.toFixed(1)}%</span>
+          <div className="lg:col-span-3 pt-3 border-t border-border space-y-2">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-muted/30 px-3 py-2 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
+                <div className="text-sm font-bold text-foreground">{formatBRL(item.subtotal)}</div>
+              </div>
+              <div className="rounded-lg bg-success/5 px-3 py-2 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro</div>
+                <div className="text-sm font-bold text-success">{formatBRL(lucro)}</div>
+              </div>
+              <div className="rounded-lg bg-info/5 px-3 py-2 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
+                <div className="text-sm font-bold text-info">{margem.toFixed(1)}%</div>
+              </div>
             </div>
             {semEstoque && (
               <div className="flex items-center gap-1.5 text-xs text-destructive">
