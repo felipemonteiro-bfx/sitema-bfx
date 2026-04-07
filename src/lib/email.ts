@@ -311,7 +311,12 @@ async function criarNotificacaoVenda(
   // Also notify the vendedor if different from admin
   if (vendedorNome) {
     const vendedor = await prisma.usuario.findFirst({
-      where: { username: { equals: vendedorNome, mode: "insensitive" } },
+      where: {
+        OR: [
+          { username: { equals: vendedorNome, mode: "insensitive" } },
+          { nomeExibicao: { equals: vendedorNome, mode: "insensitive" } },
+        ],
+      },
       select: { id: true },
     });
     if (vendedor && vendedor.id !== 1) {
