@@ -22,13 +22,13 @@ function Calendar({
       className={cn("p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row gap-4",
-        month: "flex flex-col gap-4",
-        month_caption: "flex items-center justify-between w-full pt-1 pb-2",
+        month: "grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-4",
+        month_caption: "flex items-center justify-center",
         caption_label: "text-sm font-medium capitalize",
-        nav: "flex items-center gap-1",
+        nav: "contents",
         button_previous: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground",
         button_next: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground",
-        month_grid: "w-full border-collapse",
+        month_grid: "col-span-3 w-full border-collapse",
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] capitalize",
         week: "flex w-full mt-2",
