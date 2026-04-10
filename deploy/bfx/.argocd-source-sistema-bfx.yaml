@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop:0972ce72a21181aee2106a5d6056186e7bc03465
+  - 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop:92ca95c1c5e9d43e44b036917e1075e5b5a93e34
