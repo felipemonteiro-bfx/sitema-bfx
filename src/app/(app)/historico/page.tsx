@@ -21,7 +21,12 @@ import { fuzzyFindVendas } from "@/lib/db-search";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FORMAS_PAGAMENTO_LIST, formaPagamentoLabel } from "@/lib/forma-pagamento";
+import {
+  FORMA_PAGAMENTO,
+  FORMAS_PAGAMENTO_LIST,
+  formaFromLegacyFlags,
+  formaPagamentoLabel,
+} from "@/lib/forma-pagamento";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
@@ -138,6 +143,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       taxaNota: true,
       descontoEmFolha: true,
       boleto: true,
+      formaPagamento: true,
+      parcelas: true,
       asaasPaymentId: true,
       boletoUrl: true,
       cliente: { select: { nome: true, empresaParceiraId: true, empresa: true } },
@@ -342,8 +349,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead className="text-right">Custo</TableHead>
                 <TableHead className="text-right">Margem</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
-                <TableHead className="text-center">Desconto folha</TableHead>
-                <TableHead className="text-center">Boleto</TableHead>
+                <TableHead>Pagamento</TableHead>
                 <TableHead className="text-center">Assinado</TableHead>
                 <TableHead className="sticky right-0 bg-background"></TableHead>
               </TableRow>
@@ -351,7 +357,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={13}>
+                  <TableCell colSpan={12}>
                     <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o periodo de busca." />
                   </TableCell>
                 </TableRow>
@@ -403,42 +409,41 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center">
-                      {v.descontoEmFolha ? (
-                        <span className="text-success font-bold">✓</span>
-                      ) : (
-                        <span className="text-muted-foreground opacity-30">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {v.boleto ? (
-                        (() => {
-                          const boletoUrl = v.boletoUrl;
-                          return boletoUrl ? (
-                            <a
-                              href={boletoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0")}
-                            >
-                              Ver boleto
-                            </a>
-                          ) : (
-                          <span className="flex flex-col items-center gap-1">
-                            <span className="text-warning text-xs">Pendente</span>
-                            <GerarBoletoButton
-                              vendaId={v.id}
-                              gerarBoletoAction={gerarBoletoAsaas}
-                              className="text-xs"
-                            >
-                              Gerar boleto
-                            </GerarBoletoButton>
-                          </span>
-                          );
-                        })()
-                      ) : (
-                        <span className="text-muted-foreground opacity-30">—</span>
-                      )}
+                    <TableCell>
+                      {(() => {
+                        // Forma canonica: usa a coluna nova quando preenchida, senao deriva dos flags legados.
+                        const forma = (v.formaPagamento as keyof typeof FORMA_PAGAMENTO | null) ??
+                          formaFromLegacyFlags({
+                            descontoEmFolha: v.descontoEmFolha,
+                            boleto: v.boleto,
+                            parcelas: v.parcelas,
+                          });
+                        return (
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="text-xs font-medium">{formaPagamentoLabel(forma)}</span>
+                            {forma === FORMA_PAGAMENTO.BOLETO && (
+                              v.boletoUrl ? (
+                                <a
+                                  href={v.boletoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0 text-xs")}
+                                >
+                                  Ver boleto
+                                </a>
+                              ) : (
+                                <GerarBoletoButton
+                                  vendaId={v.id}
+                                  gerarBoletoAction={gerarBoletoAsaas}
+                                  className="text-xs"
+                                >
+                                  Gerar boleto
+                                </GerarBoletoButton>
+                              )
+                            )}
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.assinatura?.assinaturaStatus === 'assinado' ? (
@@ -489,7 +494,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <TableCell className="text-right tabular-nums font-semibold">
                     {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
                   </TableCell>
-                  <TableCell colSpan={6} />
+                  <TableCell colSpan={5} />
                 </TableRow>
               </TableFooter>
             )}

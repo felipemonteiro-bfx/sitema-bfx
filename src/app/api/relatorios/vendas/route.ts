@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { formaFromLegacyFlags, formaPagamentoLabel, type FormaPagamento } from "@/lib/forma-pagamento";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
     orderBy: { dataVenda: "desc" },
   });
 
-  const header = "Matricula,Nome,Produtos,Vendedor,Data,Valor,Parcelas\n";
+  const header = "Matricula,Nome,Produtos,Vendedor,Data,Valor,Parcelas,Pagamento\n";
   const lines = vendas.map((v) => {
     const total = valorTotalVenda(v);
     const matricula = v.cliente?.matricula || "";
@@ -37,7 +38,10 @@ export async function GET(req: Request) {
     const vendedor = v.vendedor || "";
     const data = v.dataVenda.toISOString().slice(0, 10);
     const parcelas = v.parcelas || 1;
-    return [matricula, nome, produtos, vendedor, data, total, parcelas].join(",");
+    const forma = (v.formaPagamento as FormaPagamento | null) ??
+      formaFromLegacyFlags({ descontoEmFolha: v.descontoEmFolha, boleto: v.boleto, parcelas: v.parcelas });
+    const pagamento = `"${formaPagamentoLabel(forma)}"`;
+    return [matricula, nome, produtos, vendedor, data, total, parcelas, pagamento].join(",");
   });
   const csv = header + lines.join("\n");
 

@@ -2,6 +2,21 @@ import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { FORMA_PAGAMENTO, formaFromLegacyFlags, type FormaPagamento } from "@/lib/forma-pagamento";
+
+/** Label compacto da forma de pagamento para caber na coluna do PDF (max 7 chars). */
+function formaPagamentoLabelCurto(forma: FormaPagamento): string {
+  switch (forma) {
+    case FORMA_PAGAMENTO.DESCONTO_FOLHA: return "Folha";
+    case FORMA_PAGAMENTO.BOLETO: return "Boleto";
+    case FORMA_PAGAMENTO.PIX: return "Pix";
+    case FORMA_PAGAMENTO.DINHEIRO: return "Dinheiro";
+    case FORMA_PAGAMENTO.CARTAO_CREDITO: return "Credito";
+    case FORMA_PAGAMENTO.CARTAO_DEBITO: return "Debito";
+    case FORMA_PAGAMENTO.TRANSFERENCIA: return "Transf.";
+    default: return "Outro";
+  }
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -65,10 +80,10 @@ export async function GET(req: Request) {
       });
     }
 
-    // Table Header — 7 columns: Mat. | Nome | Produtos | Vendedor | Data | Valor | Parc.
+    // Table Header — 8 columns: Mat. | Nome | Produtos | Vendedor | Data | Valor | Parc. | Pagto.
     const tableTop = height - 120;
-    const colX = [40, 100, 210, 380, 490, 580, 680];
-    const headers = ["Mat.", "Nome", "Produtos", "Vendedor", "Data", "Valor", "Parc."];
+    const colX = [40, 95, 200, 360, 470, 555, 645, 685];
+    const headers = ["Mat.", "Nome", "Produtos", "Vendedor", "Data", "Valor", "Parc.", "Pagto."];
 
     page.drawRectangle({ x: 30, y: tableTop - 5, width: width - 60, height: 20, color: rgb(0.95, 0.95, 0.95) });
     headers.forEach((h, i) => {
@@ -87,12 +102,15 @@ export async function GET(req: Request) {
       const valorTotal = valorTotalVenda(v);
       totalValor += valorTotal;
 
-      const matricula = v.cliente?.matricula?.substring(0, 10) || "—";
-      const nomeCliente = v.cliente?.nome?.substring(0, 20) || "N/D";
-      const produtos = produtosTexto(v).substring(0, 30) || "N/A";
-      const vendedor = (v.vendedor || "N/D").substring(0, 16);
+      const matricula = v.cliente?.matricula?.substring(0, 9) || "—";
+      const nomeCliente = v.cliente?.nome?.substring(0, 18) || "N/D";
+      const produtos = produtosTexto(v).substring(0, 28) || "N/A";
+      const vendedor = (v.vendedor || "N/D").substring(0, 17);
       const dataStr = formatDateBR(v.dataVenda);
       const parcelas = String(v.parcelas || 1) + "x";
+      const formaPag = (v.formaPagamento as FormaPagamento | null) ??
+        formaFromLegacyFlags({ descontoEmFolha: v.descontoEmFolha, boleto: v.boleto, parcelas: v.parcelas });
+      const pagtoLabel = formaPagamentoLabelCurto(formaPag);
 
       page.drawText(matricula, { x: colX[0], y, size: 8, font });
       page.drawText(nomeCliente, { x: colX[1], y, size: 8, font });
@@ -101,6 +119,7 @@ export async function GET(req: Request) {
       page.drawText(dataStr, { x: colX[4], y, size: 8, font });
       page.drawText(formatBRL(valorTotal), { x: colX[5], y, size: 8, font });
       page.drawText(parcelas, { x: colX[6], y, size: 8, font });
+      page.drawText(pagtoLabel, { x: colX[7], y, size: 8, font });
 
       y -= 18;
       page.drawLine({

@@ -7,6 +7,7 @@ import { formatBRL, cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { custoTotalVenda, margemVenda } from "@/lib/venda-utils";
+import { FORMA_PAGAMENTO, formaFromLegacyFlags, formaPagamentoLabel } from "@/lib/forma-pagamento";
 import { useState } from "react";
 
 const formatDateBR = (value: Date) =>
@@ -44,6 +45,8 @@ type Venda = {
   taxaNota: number | null;
   descontoEmFolha: boolean | null;
   boleto: boolean | null;
+  formaPagamento?: string | null;
+  parcelas?: number | null;
   asaasPaymentId: string | null;
   boletoUrl: string | null;
   cliente: { nome: string } | null;
@@ -170,45 +173,48 @@ function VendaCard({
                     <span className="opacity-50">—</span>
                   )}
                 </span>
-                <span>Desconto folha</span>
+                <span>Pagamento</span>
                 <span className="text-foreground">
-                  {venda.descontoEmFolha ? (
-                    <span className="text-success font-medium">Sim</span>
-                  ) : (
-                    <span className="opacity-50">—</span>
-                  )}
-                </span>
-                <span>Boleto</span>
-                <span className="text-foreground">
-                  {venda.boleto ? (
-                    venda.boletoUrl ? (
-                      <a
-                        href={venda.boletoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0 text-xs")}
-                      >
-                        Ver boleto
-                      </a>
-                    ) : (
-                      <form
-                        action={async (fd) => {
-                          await gerarBoletoAction(fd);
-                        }}
-                        className="inline"
-                      >
-                        <input type="hidden" name="vendaId" value={venda.id} />
-                        <button
-                          type="submit"
-                          className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs touch-manipulation min-h-[36px]")}
-                        >
-                          Gerar boleto
-                        </button>
-                      </form>
-                    )
-                  ) : (
-                    <span className="opacity-50">—</span>
-                  )}
+                  {(() => {
+                    const forma = (venda.formaPagamento as keyof typeof FORMA_PAGAMENTO | null) ??
+                      formaFromLegacyFlags({
+                        descontoEmFolha: venda.descontoEmFolha,
+                        boleto: venda.boleto,
+                        parcelas: venda.parcelas,
+                      });
+                    return (
+                      <span className="flex flex-col items-start gap-1">
+                        <span className="text-xs font-medium">{formaPagamentoLabel(forma)}</span>
+                        {forma === FORMA_PAGAMENTO.BOLETO && (
+                          venda.boletoUrl ? (
+                            <a
+                              href={venda.boletoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0 text-xs")}
+                            >
+                              Ver boleto
+                            </a>
+                          ) : (
+                            <form
+                              action={async (fd) => {
+                                await gerarBoletoAction(fd);
+                              }}
+                              className="inline"
+                            >
+                              <input type="hidden" name="vendaId" value={venda.id} />
+                              <button
+                                type="submit"
+                                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs touch-manipulation min-h-[36px]")}
+                              >
+                                Gerar boleto
+                              </button>
+                            </form>
+                          )
+                        )}
+                      </span>
+                    );
+                  })()}
                 </span>
                 <span>Assinado</span>
                 <span className="text-foreground">
