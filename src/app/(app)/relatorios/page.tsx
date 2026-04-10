@@ -21,7 +21,7 @@ export default async function Page() {
     prisma.fornecedor.findMany({ select: { nome: true } }),
   ]);
   const nomesFornecedores = new Set(fornecedores.map((f) => f.nome.toLowerCase()));
-  const extraEmpresas = ["Amazonfive", "Gimam"];
+  const extraEmpresas = ["AMAZON FIVE", "Gimam"];
   const empresaOptions = [
     ...empresas
       .map((e) => e.nome)
@@ -62,7 +62,7 @@ export default async function Page() {
             
             <div className="flex flex-wrap gap-2 border-t pt-4">
               <span className="w-full text-[10px] font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
-              {["Amazonfive", "Gimam"].map((empresa) => (
+              {["AMAZON FIVE", "Gimam"].map((empresa) => (
                 <a 
                   key={empresa} 
                   href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}

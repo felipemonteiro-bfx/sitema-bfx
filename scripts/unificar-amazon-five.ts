@@ -1,8 +1,13 @@
 /**
- * Unifica registros duplicados de "Amazon Five" na tabela de clientes.
+ * Unifica registros duplicados de "AMAZON FIVE" na tabela de clientes.
  * Padroniza o campo `empresa` de todos os clientes que tenham variações
- * do nome (ex: "Amazon Five", "AMAZON FIVE", "amazon five", "Amazon five")
- * para "Amazon Five".
+ * do nome (ex: "Amazon Five", "AMAZON FIVE", "amazon five", "Amazonfive", "AMAOZN FIVE")
+ * para "AMAZON FIVE".
+ *
+ * NOTA: a migration `20260410010000_normalize_amazon_five` ja faz isso
+ * automaticamente para clientes E para empresas_parceiras (com merge de IDs).
+ * Este script existe como ferramenta manual de re-execucao caso novos
+ * registros com variantes apareçam.
  *
  * Uso: npx tsx scripts/unificar-amazon-five.ts
  */
@@ -29,7 +34,7 @@ async function main() {
   }
 
   // Definir nome padronizado
-  const nomePadrao = 'Amazon Five';
+  const nomePadrao = 'AMAZON FIVE';
 
   const idsParaAtualizar = clientes
     .filter(c => c.empresa !== nomePadrao)
