@@ -25,7 +25,9 @@ dist
 .vercel
 
 # Prisma
-# (migrations ficam no repo; generated fica em src/generated ou node_modules)
+# Migrations ficam no repo. O client gerado NAO — e regenerado no build
+# via `yarn prisma:generate` (Dockerfile linha 30) e `prebuild` no package.json.
+src/generated/
 
 # Logs e cache
 npm-debug.log*
