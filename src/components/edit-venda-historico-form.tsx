@@ -6,6 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/form-select";
+import {
+  FORMAS_PAGAMENTO_LIST,
+  formaFromLegacyFlags,
+  formaPagamentoLabel,
+  type FormaPagamento,
+} from "@/lib/forma-pagamento";
 import { DateInput } from "@/components/ui/date-input";
 import { EditVendaComParcelas } from "@/components/edit-venda-com-parcelas";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
@@ -46,6 +52,7 @@ type EditVendaData = {
   desconto: number | null;
   descontoEmFolha: boolean | null;
   boleto: boolean | null;
+  formaPagamento?: string | null;
   asaasPaymentId: string | null;
   boletoUrl: string | null;
   itens: ProdutoItem[];
@@ -164,20 +171,24 @@ export function EditVendaHistoricoForm({
         </label>
       </div>
 
-      <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
-        <Checkbox name="descontoEmFolha" id="edit-descontoEmFolha" defaultChecked={editVenda.descontoEmFolha ?? false} />
-        <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium text-foreground leading-none cursor-pointer">
-          Desconto em folha
-        </label>
+      {/* Forma de pagamento canonica. Quando a venda nao tem o campo (vendas antigas
+          em outras paginas), derivamos dos flags legados (descontoEmFolha/boleto/parcelas). */}
+      <div className="space-y-1 md:col-span-2">
+        <Label htmlFor="edit-formaPagamento">Forma de pagamento</Label>
+        <FormSelect
+          id="edit-formaPagamento"
+          name="formaPagamento"
+          defaultValue={
+            (editVenda.formaPagamento as FormaPagamento | null | undefined) ??
+            formaFromLegacyFlags({
+              descontoEmFolha: editVenda.descontoEmFolha,
+              boleto: editVenda.boleto,
+              parcelas: editVenda.parcelas,
+            })
+          }
+          options={FORMAS_PAGAMENTO_LIST.map((f) => ({ value: f, label: formaPagamentoLabel(f) }))}
+        />
       </div>
-
-      <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
-        <Checkbox name="boleto" id="edit-boleto" defaultChecked={editVenda.boleto ?? false} />
-        <label htmlFor="edit-boleto" className="text-xs font-medium text-foreground leading-none cursor-pointer">
-          Boleto
-        </label>
-      </div>
-      <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opcoes: desconto em folha ou boleto.</p>
 
       <div className="space-y-1">
         <Label htmlFor="edit-taxaNota">Taxa da Nota (%)</Label>

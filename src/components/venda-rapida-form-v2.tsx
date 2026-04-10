@@ -2,6 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQueryStates, parseAsString, parseAsFloat, parseAsBoolean, parseAsJson } from "nuqs";
+import {
+  FORMA_PAGAMENTO,
+  FORMAS_PAGAMENTO_LIST,
+  formaPagamentoLabel,
+  type FormaPagamento,
+} from "@/lib/forma-pagamento";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -112,15 +118,18 @@ export default function VendaRapidaFormV2({
       temNota: parseAsBoolean.withDefault(false),
       taxaNota: parseAsString.withDefault("5.97"),
       desconto: parseAsFloat.withDefault(0),
-      descontoEmFolha: parseAsBoolean.withDefault(false),
-      boleto: parseAsBoolean.withDefault(false),
+      formaPagamento: parseAsString.withDefault(""),
     },
     { history: "replace" },
   );
 
   // Desestrutura para compatibilidade com o restante do código
   const { dataVenda, vendedor, parcelas, clienteQuery, selectedCliente,
-          frete, envio, temNota, taxaNota, desconto, descontoEmFolha, boleto } = formState;
+          frete, envio, temNota, taxaNota, desconto } = formState;
+  const formaPagamentoSelected = formState.formaPagamento as FormaPagamento | "";
+  // Flags legados sao DERIVADOS da forma canonica para manter backwards-compat com o resto do componente.
+  const descontoEmFolha = formaPagamentoSelected === FORMA_PAGAMENTO.DESCONTO_FOLHA;
+  const boleto = formaPagamentoSelected === FORMA_PAGAMENTO.BOLETO;
   // produtos pode ser null quando não há param na URL → usa o item padrão
   const produtos: ProdutoItem[] = formState.produtos ?? [DEFAULT_PRODUTO_ITEM];
 
@@ -136,8 +145,7 @@ export default function VendaRapidaFormV2({
   const setTemNota = (v: boolean) => void setFormState({ temNota: v });
   const setTaxaNota = (v: string) => void setFormState({ taxaNota: v });
   const setDesconto = (v: number) => void setFormState({ desconto: v });
-  const setDescontoEmFolha = (v: boolean) => void setFormState({ descontoEmFolha: v });
-  const setBoleto = (v: boolean) => void setFormState({ boleto: v });
+  const setFormaPagamento = (v: FormaPagamento | "") => void setFormState({ formaPagamento: v });
 
   // Cliente autocomplete suggestions (transient — não persiste)
   const [clienteSuggestions, setClienteSuggestions] = useState<
@@ -546,6 +554,7 @@ export default function VendaRapidaFormV2({
     formData.append("desconto", String(desconto));
     formData.append("descontoEmFolha", String(descontoEmFolha));
     formData.append("boleto", String(boleto));
+    if (formaPagamentoSelected) formData.append("formaPagamento", formaPagamentoSelected);
     formData.append("excedeuLimite", String(excedeuLimite));
     formData.append("produtos", JSON.stringify(produtosFiltrados));
 
@@ -567,8 +576,7 @@ export default function VendaRapidaFormV2({
           parcelas: null,
           temNota: null,
           desconto: null,
-          descontoEmFolha: null,
-          boleto: null,
+          formaPagamento: null,
         });
         setParcelasVencimento([]);
         setProdutoParaSugestoes(null);
@@ -953,33 +961,24 @@ export default function VendaRapidaFormV2({
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-6 mt-4 pt-4 border-t">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={descontoEmFolha}
-                onCheckedChange={(checked) => {
-                  if (checked === true) {
-                    void setFormState({ descontoEmFolha: true, boleto: false });
-                  } else {
-                    setDescontoEmFolha(false);
-                  }
-                }}
-              />
-              <Label className="text-sm font-medium cursor-pointer">Desconto em folha</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={boleto}
-                onCheckedChange={(checked) => {
-                  if (checked === true) {
-                    void setFormState({ boleto: true, descontoEmFolha: false });
-                  } else {
-                    setBoleto(false);
-                  }
-                }}
-              />
-              <Label className="text-sm font-medium cursor-pointer">Boleto</Label>
-            </div>
+          <div className="mt-4 pt-4 border-t space-y-2">
+            <Label htmlFor="forma-pagamento" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Forma de pagamento
+            </Label>
+            <FormSelect
+              id="forma-pagamento"
+              name="formaPagamento"
+              value={formaPagamentoSelected || ""}
+              onValueChange={(v) => setFormaPagamento(v as FormaPagamento | "")}
+              placeholder="Selecione a forma de pagamento"
+              options={[
+                { value: "", label: "— Não informado —" },
+                ...FORMAS_PAGAMENTO_LIST.map((f) => ({
+                  value: f,
+                  label: formaPagamentoLabel(f),
+                })),
+              ]}
+            />
             {boleto && selectedCliente && !selectedCliente.cpf && !selectedCliente.cnpj && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground dark:text-warning text-sm">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -988,7 +987,6 @@ export default function VendaRapidaFormV2({
                 </span>
               </div>
             )}
-            <p className="text-xs text-muted-foreground w-full">Apenas uma das opções: desconto em folha ou boleto.</p>
           </div>
         </CardContent>
       </Card>

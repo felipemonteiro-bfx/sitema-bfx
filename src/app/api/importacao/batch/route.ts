@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { importacaoBatchSchema } from "@/lib/validations/importacao";
+import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +43,9 @@ export async function POST(request: NextRequest) {
           where: { OR: [{ username: { equals: row.vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: row.vendedor, mode: "insensitive" } }] },
           select: { id: true },
         }) : null;
+        // Importacao nao traz forma de pagamento — derivamos por parcelas (legacy heuristic).
+        const formaPagamentoImport = formaFromLegacyFlags({ descontoEmFolha: false, boleto: false, parcelas });
+        const flagsImport = legacyFlagsFromForma(formaPagamentoImport);
         await tx.venda.create({
           data: {
             dataVenda: row.dataVenda,
@@ -59,6 +63,9 @@ export async function POST(request: NextRequest) {
             antecipada: row.antecipada ? 1 : 0,
             temNota,
             taxaNota,
+            descontoEmFolha: flagsImport.descontoEmFolha,
+            boleto: flagsImport.boleto,
+            formaPagamento: formaPagamentoImport,
           },
         });
       }

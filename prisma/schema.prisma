@@ -77,6 +77,10 @@ model Venda {
   descontoEmFolha    Boolean   @default(false) @map("desconto_em_folha")
   desconto           Float?    @default(0) @map("desconto")
   boleto             Boolean   @default(false) @map("boleto")
+  // Forma de pagamento canônica. Os campos descontoEmFolha/boleto sao mantidos
+  // sincronizados via codigo para compatibilidade com integracoes legadas.
+  // Valores: "DESCONTO_FOLHA" | "BOLETO" | "PIX" | "DINHEIRO" | "CARTAO_CREDITO" | "CARTAO_DEBITO" | "TRANSFERENCIA" | "OUTRO"
+  formaPagamento     String?   @map("forma_pagamento")
   status             String    @default("ativa") @map("status") // "ativa" | "cancelada" | "estornada"
   asaasPaymentId     String?   @map("asaas_payment_id")
   boletoUrl          String?   @map("boleto_url")

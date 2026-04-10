@@ -19,8 +19,7 @@ type SearchParams = {
   vendedor?: string;
   produto?: string;
   cliente?: string;
-  descontoFolha?: string;
-  boleto?: string;
+  formaPagamento?: string;
   page?: string;
 };
 

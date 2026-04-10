@@ -1,11 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { FormSelect } from "@/components/form-select";
 import { Label } from "@/components/ui/label";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 import { ReportButtonsClient } from "@/components/report-buttons-client";
 import { cn } from "@/lib/utils";
@@ -52,34 +50,11 @@ export default async function Page() {
             <CardTitle className="text-primary">Relatório de vendas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <form
-              id="report-form"
-              method="GET"
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              <div className="space-y-1">
-                <Label htmlFor="rel-empresa">Empresa Parceira</Label>
-                <FormSelect
-                  id="rel-empresa"
-                  name="empresa"
-                  defaultValue="all"
-                  options={[
-                    { value: "all", label: "Todas" },
-                    ...empresaOptions.map((nome) => ({ value: nome, label: nome })),
-                  ]}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="rel-from">Data inicial</Label>
-                <DateInput id="rel-from" name="from" defaultValue={monthStartStr} />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="rel-to">Data final</Label>
-                <DateInput id="rel-to" name="to" defaultValue={today} />
-              </div>
-            </form>
-
-            <ReportButtonsClient />
+            <ReportButtonsClient
+              empresaOptions={empresaOptions}
+              defaultFrom={monthStartStr}
+              defaultTo={today}
+            />
 
             <div className="text-xs text-muted-foreground pt-2">
               Período padrão: mês atual ({formatDateBR(monthStartStr)} a {formatDateBR(today)}).

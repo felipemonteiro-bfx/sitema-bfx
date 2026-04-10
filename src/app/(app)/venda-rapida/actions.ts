@@ -17,6 +17,13 @@ import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 import { signReciboId } from "@/lib/recibo-url";
 import { sendVendaNotification } from "@/lib/email";
 import { getSession } from "@/lib/session";
+import {
+  FORMA_PAGAMENTO,
+  formaFromLegacyFlags,
+  isFormaPagamento,
+  legacyFlagsFromForma,
+  type FormaPagamento,
+} from "@/lib/forma-pagamento";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -44,6 +51,9 @@ export async function criarVenda(formData: FormData) {
     where: { OR: [{ username: { equals: vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: vendedor, mode: "insensitive" } }] },
     select: { id: true },
   });
+  // Forma canonica para a action legada (sem campo no form): derivada de parcelas.
+  const formaPagamentoLegada = formaFromLegacyFlags({ descontoEmFolha: false, boleto: false, parcelas });
+  const flagsLegado = legacyFlagsFromForma(formaPagamentoLegada);
   const vendaCriada = await prisma.venda.create({
     data: {
       dataVenda: new Date(data),
@@ -62,6 +72,9 @@ export async function criarVenda(formData: FormData) {
       antecipada: 0,
       temNota,
       taxaNota,
+      descontoEmFolha: flagsLegado.descontoEmFolha,
+      boleto: flagsLegado.boleto,
+      formaPagamento: formaPagamentoLegada,
     },
   });
   if (produto) {
@@ -124,6 +137,7 @@ export async function criarVendaV2(
       }
     }
 
+    const formaPagamentoRaw = formData.get("formaPagamento");
     const raw = {
       data: String(formData.get("data") || ""),
       vendedor: String(formData.get("vendedor") || ""),
@@ -138,6 +152,7 @@ export async function criarVendaV2(
       desconto: Number(formData.get("desconto") || 0),
       descontoEmFolha: formData.get("descontoEmFolha") === "true",
       boleto: formData.get("boleto") === "true",
+      formaPagamento: isFormaPagamento(formaPagamentoRaw) ? formaPagamentoRaw : undefined,
     };
 
     const parsed = vendaV2Schema.safeParse(raw);
@@ -149,10 +164,20 @@ export async function criarVendaV2(
 
     const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
     const desconto = parsed.data.desconto ?? 0;
-    // Apenas um: desconto em folha ou boleto (nunca os dois)
-    const descontoEmFolha = parsed.data.descontoEmFolha ?? false;
-    let boleto = parsed.data.boleto ?? false;
-    if (descontoEmFolha && boleto) boleto = false;
+
+    // Forma de pagamento canônica.
+    // Preferimos o campo `formaPagamento` quando enviado pelo form novo.
+    // Se nao veio (clientes/scripts antigos), derivamos dos flags legados.
+    const formaPagamento: FormaPagamento = parsed.data.formaPagamento
+      ? (parsed.data.formaPagamento as FormaPagamento)
+      : formaFromLegacyFlags({
+          descontoEmFolha: parsed.data.descontoEmFolha ?? false,
+          boleto: parsed.data.boleto ?? false,
+          parcelas,
+        });
+
+    // Sincroniza os flags legados a partir da forma canonica para integracoes antigas.
+    const { descontoEmFolha, boleto } = legacyFlagsFromForma(formaPagamento);
 
     // Cálculos totais
     const subtotalProdutos = produtosValidados.reduce((sum, p) => sum + p.subtotal, 0);
@@ -164,7 +189,7 @@ export async function criarVendaV2(
     const valorParcela = parcelas > 0 ? Math.trunc((totalVenda / parcelas) * 100) / 100 : 0;
 
     // Criar venda com transação
-    const assinaturaToken = descontoEmFolha ? randomUUID() : undefined;
+    const assinaturaToken = formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA ? randomUUID() : undefined;
     const sessionV2 = await getSession();
     const vendedorUsuarioV2 = await prisma.usuario.findFirst({
       where: { OR: [{ username: { equals: vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: vendedor, mode: "insensitive" } }] },
@@ -195,8 +220,9 @@ export async function criarVendaV2(
           temNota,
           taxaNota,
           desconto,
-          descontoEmFolha: descontoEmFolha ?? false,
-          boleto: boleto ?? false,
+          descontoEmFolha,
+          boleto,
+          formaPagamento,
           assinaturaToken: assinaturaToken ?? undefined,
         },
       });

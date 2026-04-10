@@ -159,6 +159,7 @@ exports.Prisma.VendaScalarFieldEnum = {
   uuid: 'uuid',
   dataVenda: 'dataVenda',
   vendedor: 'vendedor',
+  vendedorId: 'vendedorId',
   clienteId: 'clienteId',
   produtoNome: 'produtoNome',
   custoProduto: 'custoProduto',
@@ -177,6 +178,7 @@ exports.Prisma.VendaScalarFieldEnum = {
   descontoEmFolha: 'descontoEmFolha',
   desconto: 'desconto',
   boleto: 'boleto',
+  formaPagamento: 'formaPagamento',
   status: 'status',
   asaasPaymentId: 'asaasPaymentId',
   boletoUrl: 'boletoUrl',
@@ -293,6 +295,7 @@ exports.Prisma.PagamentoScalarFieldEnum = {
   id: 'id',
   dataPagamento: 'dataPagamento',
   vendedor: 'vendedor',
+  vendedorId: 'vendedorId',
   valor: 'valor',
   obs: 'obs'
 };
@@ -301,6 +304,7 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   id: 'id',
   dataHora: 'dataHora',
   usuario: 'usuario',
+  usuarioId: 'usuarioId',
   acao: 'acao',
   detalhes: 'detalhes'
 };
@@ -340,6 +344,7 @@ exports.Prisma.AiMensagemScalarFieldEnum = {
   status: 'status',
   links: 'links',
   usuario: 'usuario',
+  usuarioId: 'usuarioId',
   criadoEm: 'criadoEm'
 };
 
@@ -355,7 +360,8 @@ exports.Prisma.NotificacaoScalarFieldEnum = {
   mensagem: 'mensagem',
   lida: 'lida',
   criadoEm: 'criadoEm',
-  link: 'link'
+  link: 'link',
+  usuarioId: 'usuarioId'
 };
 
 exports.Prisma.VozDubladorScalarFieldEnum = {

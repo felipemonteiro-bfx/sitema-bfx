@@ -11,6 +11,7 @@ import {
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -832,6 +833,9 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const total = valorVenda + valorFrete;
         const lucroLiquido = total - (custoProduto + custoEnvio);
         const parcelas = parsedParams.parcelas || 1;
+        // Forma canonica derivada (a IA nao tem campo de forma de pagamento por enquanto).
+        const formaPagamentoIa = formaFromLegacyFlags({ descontoEmFolha: false, boleto: false, parcelas });
+        const flagsIa = legacyFlagsFromForma(formaPagamentoIa);
         result = await prisma.$transaction(async (tx) => {
           const venda = await tx.venda.create({
             data: {
@@ -849,6 +853,9 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
               parcelas,
               valorParcela: Math.trunc((total / parcelas) * 100) / 100,
               antecipada: parsedParams.antecipada ?? 0,
+              descontoEmFolha: flagsIa.descontoEmFolha,
+              boleto: flagsIa.boleto,
+              formaPagamento: formaPagamentoIa,
             },
           });
           await tx.itemVenda.create({

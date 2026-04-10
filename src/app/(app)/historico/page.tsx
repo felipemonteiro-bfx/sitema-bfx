@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { HistoricoBuscaFuzzy } from "@/components/historico-busca-fuzzy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ import { fuzzyFindVendas } from "@/lib/db-search";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FORMAS_PAGAMENTO_LIST, formaPagamentoLabel } from "@/lib/forma-pagamento";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
@@ -32,8 +33,7 @@ type Search = {
   vendedor?: string;
   produto?: string;
   cliente?: string;
-  descontoFolha?: string;
-  boleto?: string;
+  formaPagamento?: string;
   page?: string;
   q?: string;
 };
@@ -74,6 +74,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     fuzzyVendaIds = fuzzyResults.map((v) => v.id);
   }
 
+  // Forma de pagamento: filtro pelo campo canonico `formaPagamento`.
+  // O backfill da migration garante que toda venda tem um valor.
+  const formaPagamento = sp.formaPagamento && sp.formaPagamento !== "all" ? sp.formaPagamento : undefined;
+  const formaPagamentoWhere = formaPagamento ? { formaPagamento } : {};
+
   const where = fuzzyVendaIds !== null
     ? { id: { in: fuzzyVendaIds } }
     : {
@@ -86,12 +91,34 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           ],
         }),
         clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
-        descontoEmFolha: sp.descontoFolha === "1" ? true : sp.descontoFolha === "0" ? false : undefined,
-        boleto: sp.boleto === "1" ? true : sp.boleto === "0" ? false : undefined,
+        ...formaPagamentoWhere,
       };
 
   const totalVendas = await prisma.venda.count({ where });
   const totalPages = Math.ceil(totalVendas / pageSize);
+
+  // Totais agregados de TODOS os registros filtrados (independente de paginação).
+  // Buscamos apenas os campos necessários para valorTotalVenda/custoTotalVenda.
+  const vendasParaTotais = await prisma.venda.findMany({
+    where,
+    select: {
+      valorVenda: true,
+      quantidade: true,
+      valorFrete: true,
+      desconto: true,
+      custoProduto: true,
+      itens: { select: { subtotal: true, custoProduto: true, quantidade: true } },
+    },
+  });
+  const totaisFiltro = vendasParaTotais.reduce(
+    (acc, v) => {
+      acc.valor += valorTotalVenda(v);
+      const c = custoTotalVenda(v);
+      if (c != null) acc.custo += c;
+      return acc;
+    },
+    { valor: 0, custo: 0 },
+  );
 
   const vendas = await prisma.venda.findMany({
     where,
@@ -133,7 +160,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       id: true, dataVenda: true, vendedor: true, produtoNome: true,
       quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
-      desconto: true, descontoEmFolha: true, boleto: true,
+      desconto: true, descontoEmFolha: true, boleto: true, formaPagamento: true,
       asaasPaymentId: true, boletoUrl: true,
       itens: {
         select: { produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },
@@ -224,21 +251,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               ]}
             />
             <FormSelect
-              name="descontoFolha"
-              defaultValue={sp.descontoFolha || "all"}
+              name="formaPagamento"
+              defaultValue={sp.formaPagamento || "all"}
               options={[
-                { value: "all", label: "Desconto folha (Todos)" },
-                { value: "1", label: "Desconto folha (Sim)" },
-                { value: "0", label: "Desconto folha (Não)" },
-              ]}
-            />
-            <FormSelect
-              name="boleto"
-              defaultValue={sp.boleto || "all"}
-              options={[
-                { value: "all", label: "Boleto (Todos)" },
-                { value: "1", label: "Boleto (Sim)" },
-                { value: "0", label: "Boleto (Não)" },
+                { value: "all", label: "Pagamento (Todos)" },
+                ...FORMAS_PAGAMENTO_LIST.map((f) => ({ value: f, label: formaPagamentoLabel(f) })),
               ]}
             />
             <input type="hidden" name="page" value="1" />
@@ -284,21 +301,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ]}
               />
               <FormSelect
-                name="descontoFolha"
-                defaultValue={sp.descontoFolha || "all"}
+                name="formaPagamento"
+                defaultValue={sp.formaPagamento || "all"}
                 options={[
-                  { value: "all", label: "Desconto folha (Todos)" },
-                  { value: "1", label: "Desconto folha (Sim)" },
-                  { value: "0", label: "Desconto folha (Não)" },
-                ]}
-              />
-              <FormSelect
-                name="boleto"
-                defaultValue={sp.boleto || "all"}
-                options={[
-                  { value: "all", label: "Boleto (Todos)" },
-                  { value: "1", label: "Boleto (Sim)" },
-                  { value: "0", label: "Boleto (Não)" },
+                  { value: "all", label: "Pagamento (Todos)" },
+                  ...FORMAS_PAGAMENTO_LIST.map((f) => ({ value: f, label: formaPagamentoLabel(f) })),
                 ]}
               />
               <input type="hidden" name="page" value="1" />
@@ -470,9 +477,49 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ))
               )}
             </TableBody>
+            {vendas.length > 0 && (
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5} className="text-right font-semibold">
+                    Totais ({totalVendas} {totalVendas === 1 ? "venda" : "vendas"})
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-semibold">
+                    {formatBRL(totaisFiltro.valor)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-semibold">
+                    {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
+                  </TableCell>
+                  <TableCell colSpan={6} />
+                </TableRow>
+              </TableFooter>
+            )}
           </Table>
           </div>
           </div>
+
+          {/* Footer com totais — versão mobile */}
+          {vendas.length > 0 && (
+            <div className="md:hidden rounded-xl border bg-muted/30 px-4 py-3">
+              <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+                <span>Totais ({totalVendas})</span>
+                <span>todos os filtrados</span>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                  <div className="text-base font-semibold tabular-nums text-primary">
+                    {formatBRL(totaisFiltro.valor)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Custo</div>
+                  <div className="text-base font-semibold tabular-nums">
+                    {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t pt-4">

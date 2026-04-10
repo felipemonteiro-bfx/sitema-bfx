@@ -4,6 +4,12 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { sendVendaNotification } from "@/lib/email";
+import {
+  formaFromLegacyFlags,
+  isFormaPagamento,
+  legacyFlagsFromForma,
+  type FormaPagamento,
+} from "@/lib/forma-pagamento";
 
 export async function updateVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const id = Number(formData.get("id") || 0);
@@ -13,9 +19,17 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const temNota = formData.get("temNota") === "on";
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
   const desconto = Number(formData.get("desconto") || 0);
-  const descontoEmFolha = formData.get("descontoEmFolha") === "on";
-  let boleto = formData.get("boleto") === "on";
-  if (descontoEmFolha && boleto) boleto = false;
+  // Forma de pagamento canonica. Quando o form nao envia (legacy), derivamos dos flags.
+  const formaPagamentoRaw = formData.get("formaPagamento");
+  const parcelasNum = Number(formData.get("parcelas") || 1);
+  const formaPagamento: FormaPagamento = isFormaPagamento(formaPagamentoRaw)
+    ? formaPagamentoRaw
+    : formaFromLegacyFlags({
+        descontoEmFolha: formData.get("descontoEmFolha") === "on",
+        boleto: formData.get("boleto") === "on",
+        parcelas: parcelasNum,
+      });
+  const { descontoEmFolha, boleto } = legacyFlagsFromForma(formaPagamento);
 
   type ItemForm = { produtoNome: string; custoProduto: number; valorVenda: number; quantidade: number; subtotal: number };
   let itens: ItemForm[] = [];
@@ -57,13 +71,14 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,
         valorFrete: frete,
         custoEnvio: envio,
-        parcelas: Number(formData.get("parcelas") || 1),
+        parcelas: parcelasNum,
         temNota,
         taxaNota,
         desconto,
         lucroLiquido: lucro,
         descontoEmFolha,
         boleto,
+        formaPagamento,
       },
     });
 

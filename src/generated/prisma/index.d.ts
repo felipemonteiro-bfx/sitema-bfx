@@ -2757,6 +2757,73 @@ export namespace Prisma {
 
 
   /**
+   * Count Type UsuarioCountOutputType
+   */
+
+  export type UsuarioCountOutputType = {
+    vendas: number
+    pagamentos: number
+    notificacoes: number
+    aiMensagens: number
+    auditLogs: number
+  }
+
+  export type UsuarioCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vendas?: boolean | UsuarioCountOutputTypeCountVendasArgs
+    pagamentos?: boolean | UsuarioCountOutputTypeCountPagamentosArgs
+    notificacoes?: boolean | UsuarioCountOutputTypeCountNotificacoesArgs
+    aiMensagens?: boolean | UsuarioCountOutputTypeCountAiMensagensArgs
+    auditLogs?: boolean | UsuarioCountOutputTypeCountAuditLogsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UsuarioCountOutputType
+     */
+    select?: UsuarioCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeCountVendasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VendaWhereInput
+  }
+
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeCountPagamentosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PagamentoWhereInput
+  }
+
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeCountNotificacoesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: NotificacaoWhereInput
+  }
+
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeCountAiMensagensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AiMensagemWhereInput
+  }
+
+  /**
+   * UsuarioCountOutputType without action
+   */
+  export type UsuarioCountOutputTypeCountAuditLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AuditLogWhereInput
+  }
+
+
+  /**
    * Count Type FornecedorCountOutputType
    */
 
@@ -5351,6 +5418,7 @@ export namespace Prisma {
 
   export type VendaAvgAggregateOutputType = {
     id: number | null
+    vendedorId: number | null
     clienteId: number | null
     custoProduto: number | null
     quantidade: number | null
@@ -5369,6 +5437,7 @@ export namespace Prisma {
 
   export type VendaSumAggregateOutputType = {
     id: number | null
+    vendedorId: number | null
     clienteId: number | null
     custoProduto: number | null
     quantidade: number | null
@@ -5390,6 +5459,7 @@ export namespace Prisma {
     uuid: string | null
     dataVenda: Date | null
     vendedor: string | null
+    vendedorId: number | null
     clienteId: number | null
     produtoNome: string | null
     custoProduto: number | null
@@ -5408,6 +5478,7 @@ export namespace Prisma {
     descontoEmFolha: boolean | null
     desconto: number | null
     boleto: boolean | null
+    formaPagamento: string | null
     status: string | null
     asaasPaymentId: string | null
     boletoUrl: string | null
@@ -5419,6 +5490,7 @@ export namespace Prisma {
     uuid: string | null
     dataVenda: Date | null
     vendedor: string | null
+    vendedorId: number | null
     clienteId: number | null
     produtoNome: string | null
     custoProduto: number | null
@@ -5437,6 +5509,7 @@ export namespace Prisma {
     descontoEmFolha: boolean | null
     desconto: number | null
     boleto: boolean | null
+    formaPagamento: string | null
     status: string | null
     asaasPaymentId: string | null
     boletoUrl: string | null
@@ -5448,6 +5521,7 @@ export namespace Prisma {
     uuid: number
     dataVenda: number
     vendedor: number
+    vendedorId: number
     clienteId: number
     produtoNome: number
     custoProduto: number
@@ -5466,6 +5540,7 @@ export namespace Prisma {
     descontoEmFolha: number
     desconto: number
     boleto: number
+    formaPagamento: number
     status: number
     asaasPaymentId: number
     boletoUrl: number
@@ -5476,6 +5551,7 @@ export namespace Prisma {
 
   export type VendaAvgAggregateInputType = {
     id?: true
+    vendedorId?: true
     clienteId?: true
     custoProduto?: true
     quantidade?: true
@@ -5494,6 +5570,7 @@ export namespace Prisma {
 
   export type VendaSumAggregateInputType = {
     id?: true
+    vendedorId?: true
     clienteId?: true
     custoProduto?: true
     quantidade?: true
@@ -5515,6 +5592,7 @@ export namespace Prisma {
     uuid?: true
     dataVenda?: true
     vendedor?: true
+    vendedorId?: true
     clienteId?: true
     produtoNome?: true
     custoProduto?: true
@@ -5533,6 +5611,7 @@ export namespace Prisma {
     descontoEmFolha?: true
     desconto?: true
     boleto?: true
+    formaPagamento?: true
     status?: true
     asaasPaymentId?: true
     boletoUrl?: true
@@ -5544,6 +5623,7 @@ export namespace Prisma {
     uuid?: true
     dataVenda?: true
     vendedor?: true
+    vendedorId?: true
     clienteId?: true
     produtoNome?: true
     custoProduto?: true
@@ -5562,6 +5642,7 @@ export namespace Prisma {
     descontoEmFolha?: true
     desconto?: true
     boleto?: true
+    formaPagamento?: true
     status?: true
     asaasPaymentId?: true
     boletoUrl?: true
@@ -5573,6 +5654,7 @@ export namespace Prisma {
     uuid?: true
     dataVenda?: true
     vendedor?: true
+    vendedorId?: true
     clienteId?: true
     produtoNome?: true
     custoProduto?: true
@@ -5591,6 +5673,7 @@ export namespace Prisma {
     descontoEmFolha?: true
     desconto?: true
     boleto?: true
+    formaPagamento?: true
     status?: true
     asaasPaymentId?: true
     boletoUrl?: true
@@ -5689,6 +5772,7 @@ export namespace Prisma {
     uuid: string | null
     dataVenda: Date
     vendedor: string | null
+    vendedorId: number | null
     clienteId: number | null
     produtoNome: string | null
     custoProduto: number | null
@@ -5707,6 +5791,7 @@ export namespace Prisma {
     descontoEmFolha: boolean
     desconto: number | null
     boleto: boolean
+    formaPagamento: string | null
     status: string
     asaasPaymentId: string | null
     boletoUrl: string | null
@@ -5737,6 +5822,7 @@ export namespace Prisma {
     uuid?: boolean
     dataVenda?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     clienteId?: boolean
     produtoNome?: boolean
     custoProduto?: boolean
@@ -5755,11 +5841,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: boolean
     boleto?: boolean
+    formaPagamento?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
     assinaturaToken?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
+    vendedorUsuario?: boolean | Venda$vendedorUsuarioArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     parcelasVencimento?: boolean | Venda$parcelasVencimentoArgs<ExtArgs>
     documentos?: boolean | Venda$documentosArgs<ExtArgs>
@@ -5772,6 +5860,7 @@ export namespace Prisma {
     uuid?: boolean
     dataVenda?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     clienteId?: boolean
     produtoNome?: boolean
     custoProduto?: boolean
@@ -5790,11 +5879,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: boolean
     boleto?: boolean
+    formaPagamento?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
     assinaturaToken?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
+    vendedorUsuario?: boolean | Venda$vendedorUsuarioArgs<ExtArgs>
   }, ExtArgs["result"]["venda"]>
 
   export type VendaSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -5802,6 +5893,7 @@ export namespace Prisma {
     uuid?: boolean
     dataVenda?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     clienteId?: boolean
     produtoNome?: boolean
     custoProduto?: boolean
@@ -5820,11 +5912,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: boolean
     boleto?: boolean
+    formaPagamento?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
     assinaturaToken?: boolean
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
+    vendedorUsuario?: boolean | Venda$vendedorUsuarioArgs<ExtArgs>
   }, ExtArgs["result"]["venda"]>
 
   export type VendaSelectScalar = {
@@ -5832,6 +5926,7 @@ export namespace Prisma {
     uuid?: boolean
     dataVenda?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     clienteId?: boolean
     produtoNome?: boolean
     custoProduto?: boolean
@@ -5850,15 +5945,17 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: boolean
     boleto?: boolean
+    formaPagamento?: boolean
     status?: boolean
     asaasPaymentId?: boolean
     boletoUrl?: boolean
     assinaturaToken?: boolean
   }
 
-  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "descontoEmFolha" | "desconto" | "boleto" | "status" | "asaasPaymentId" | "boletoUrl" | "assinaturaToken", ExtArgs["result"]["venda"]>
+  export type VendaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "uuid" | "dataVenda" | "vendedor" | "vendedorId" | "clienteId" | "produtoNome" | "custoProduto" | "quantidade" | "valorVenda" | "valorFrete" | "custoEnvio" | "parcelas" | "valorParcela" | "taxaFinanceiraValor" | "lucroLiquido" | "antecipada" | "excedeuLimite" | "temNota" | "taxaNota" | "descontoEmFolha" | "desconto" | "boleto" | "formaPagamento" | "status" | "asaasPaymentId" | "boletoUrl" | "assinaturaToken", ExtArgs["result"]["venda"]>
   export type VendaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
+    vendedorUsuario?: boolean | Venda$vendedorUsuarioArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     parcelasVencimento?: boolean | Venda$parcelasVencimentoArgs<ExtArgs>
     documentos?: boolean | Venda$documentosArgs<ExtArgs>
@@ -5867,15 +5964,18 @@ export namespace Prisma {
   }
   export type VendaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
+    vendedorUsuario?: boolean | Venda$vendedorUsuarioArgs<ExtArgs>
   }
   export type VendaIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
+    vendedorUsuario?: boolean | Venda$vendedorUsuarioArgs<ExtArgs>
   }
 
   export type $VendaPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Venda"
     objects: {
       cliente: Prisma.$ClientePayload<ExtArgs> | null
+      vendedorUsuario: Prisma.$UsuarioPayload<ExtArgs> | null
       itens: Prisma.$ItemVendaPayload<ExtArgs>[]
       parcelasVencimento: Prisma.$ParcelaVencimentoPayload<ExtArgs>[]
       documentos: Prisma.$DocumentoPayload<ExtArgs>[]
@@ -5886,6 +5986,7 @@ export namespace Prisma {
       uuid: string | null
       dataVenda: Date
       vendedor: string | null
+      vendedorId: number | null
       clienteId: number | null
       produtoNome: string | null
       custoProduto: number | null
@@ -5904,6 +6005,7 @@ export namespace Prisma {
       descontoEmFolha: boolean
       desconto: number | null
       boleto: boolean
+      formaPagamento: string | null
       status: string
       asaasPaymentId: string | null
       boletoUrl: string | null
@@ -6303,6 +6405,7 @@ export namespace Prisma {
   export interface Prisma__VendaClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     cliente<T extends Venda$clienteArgs<ExtArgs> = {}>(args?: Subset<T, Venda$clienteArgs<ExtArgs>>): Prisma__ClienteClient<$Result.GetResult<Prisma.$ClientePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    vendedorUsuario<T extends Venda$vendedorUsuarioArgs<ExtArgs> = {}>(args?: Subset<T, Venda$vendedorUsuarioArgs<ExtArgs>>): Prisma__UsuarioClient<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     itens<T extends Venda$itensArgs<ExtArgs> = {}>(args?: Subset<T, Venda$itensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ItemVendaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     parcelasVencimento<T extends Venda$parcelasVencimentoArgs<ExtArgs> = {}>(args?: Subset<T, Venda$parcelasVencimentoArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ParcelaVencimentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     documentos<T extends Venda$documentosArgs<ExtArgs> = {}>(args?: Subset<T, Venda$documentosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -6340,6 +6443,7 @@ export namespace Prisma {
     readonly uuid: FieldRef<"Venda", 'String'>
     readonly dataVenda: FieldRef<"Venda", 'DateTime'>
     readonly vendedor: FieldRef<"Venda", 'String'>
+    readonly vendedorId: FieldRef<"Venda", 'Int'>
     readonly clienteId: FieldRef<"Venda", 'Int'>
     readonly produtoNome: FieldRef<"Venda", 'String'>
     readonly custoProduto: FieldRef<"Venda", 'Float'>
@@ -6358,6 +6462,7 @@ export namespace Prisma {
     readonly descontoEmFolha: FieldRef<"Venda", 'Boolean'>
     readonly desconto: FieldRef<"Venda", 'Float'>
     readonly boleto: FieldRef<"Venda", 'Boolean'>
+    readonly formaPagamento: FieldRef<"Venda", 'String'>
     readonly status: FieldRef<"Venda", 'String'>
     readonly asaasPaymentId: FieldRef<"Venda", 'String'>
     readonly boletoUrl: FieldRef<"Venda", 'String'>
@@ -6774,6 +6879,25 @@ export namespace Prisma {
      */
     include?: ClienteInclude<ExtArgs> | null
     where?: ClienteWhereInput
+  }
+
+  /**
+   * Venda.vendedorUsuario
+   */
+  export type Venda$vendedorUsuarioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Usuario
+     */
+    select?: UsuarioSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Usuario
+     */
+    omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    where?: UsuarioWhereInput
   }
 
   /**
@@ -12049,6 +12173,12 @@ export namespace Prisma {
     cep?: boolean
     metaMensal?: boolean
     comissaoPct?: boolean
+    vendas?: boolean | Usuario$vendasArgs<ExtArgs>
+    pagamentos?: boolean | Usuario$pagamentosArgs<ExtArgs>
+    notificacoes?: boolean | Usuario$notificacoesArgs<ExtArgs>
+    aiMensagens?: boolean | Usuario$aiMensagensArgs<ExtArgs>
+    auditLogs?: boolean | Usuario$auditLogsArgs<ExtArgs>
+    _count?: boolean | UsuarioCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["usuario"]>
 
   export type UsuarioSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -12097,10 +12227,26 @@ export namespace Prisma {
   }
 
   export type UsuarioOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "password" | "role" | "nomeExibicao" | "email" | "telefone" | "dataNascimento" | "endereco" | "cep" | "metaMensal" | "comissaoPct", ExtArgs["result"]["usuario"]>
+  export type UsuarioInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vendas?: boolean | Usuario$vendasArgs<ExtArgs>
+    pagamentos?: boolean | Usuario$pagamentosArgs<ExtArgs>
+    notificacoes?: boolean | Usuario$notificacoesArgs<ExtArgs>
+    aiMensagens?: boolean | Usuario$aiMensagensArgs<ExtArgs>
+    auditLogs?: boolean | Usuario$auditLogsArgs<ExtArgs>
+    _count?: boolean | UsuarioCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type UsuarioIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UsuarioIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UsuarioPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Usuario"
-    objects: {}
+    objects: {
+      vendas: Prisma.$VendaPayload<ExtArgs>[]
+      pagamentos: Prisma.$PagamentoPayload<ExtArgs>[]
+      notificacoes: Prisma.$NotificacaoPayload<ExtArgs>[]
+      aiMensagens: Prisma.$AiMensagemPayload<ExtArgs>[]
+      auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       username: string
@@ -12508,6 +12654,11 @@ export namespace Prisma {
    */
   export interface Prisma__UsuarioClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    vendas<T extends Usuario$vendasArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$vendasArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VendaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    pagamentos<T extends Usuario$pagamentosArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$pagamentosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    notificacoes<T extends Usuario$notificacoesArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$notificacoesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotificacaoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    aiMensagens<T extends Usuario$aiMensagensArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$aiMensagensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiMensagemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    auditLogs<T extends Usuario$auditLogsArgs<ExtArgs> = {}>(args?: Subset<T, Usuario$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12566,6 +12717,10 @@ export namespace Prisma {
      */
     omit?: UsuarioOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    /**
      * Filter, which Usuario to fetch.
      */
     where: UsuarioWhereUniqueInput
@@ -12584,6 +12739,10 @@ export namespace Prisma {
      */
     omit?: UsuarioOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    /**
      * Filter, which Usuario to fetch.
      */
     where: UsuarioWhereUniqueInput
@@ -12601,6 +12760,10 @@ export namespace Prisma {
      * Omit specific fields from the Usuario
      */
     omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
     /**
      * Filter, which Usuario to fetch.
      */
@@ -12650,6 +12813,10 @@ export namespace Prisma {
      */
     omit?: UsuarioOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    /**
      * Filter, which Usuario to fetch.
      */
     where?: UsuarioWhereInput
@@ -12698,6 +12865,10 @@ export namespace Prisma {
      */
     omit?: UsuarioOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    /**
      * Filter, which Usuarios to fetch.
      */
     where?: UsuarioWhereInput
@@ -12740,6 +12911,10 @@ export namespace Prisma {
      * Omit specific fields from the Usuario
      */
     omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
     /**
      * The data needed to create a Usuario.
      */
@@ -12788,6 +12963,10 @@ export namespace Prisma {
      * Omit specific fields from the Usuario
      */
     omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
     /**
      * The data needed to update a Usuario.
      */
@@ -12855,6 +13034,10 @@ export namespace Prisma {
      */
     omit?: UsuarioOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    /**
      * The filter to search for the Usuario to update in case it exists.
      */
     where: UsuarioWhereUniqueInput
@@ -12881,6 +13064,10 @@ export namespace Prisma {
      */
     omit?: UsuarioOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    /**
      * Filter which Usuario to delete.
      */
     where: UsuarioWhereUniqueInput
@@ -12901,6 +13088,126 @@ export namespace Prisma {
   }
 
   /**
+   * Usuario.vendas
+   */
+  export type Usuario$vendasArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Venda
+     */
+    select?: VendaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Venda
+     */
+    omit?: VendaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VendaInclude<ExtArgs> | null
+    where?: VendaWhereInput
+    orderBy?: VendaOrderByWithRelationInput | VendaOrderByWithRelationInput[]
+    cursor?: VendaWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VendaScalarFieldEnum | VendaScalarFieldEnum[]
+  }
+
+  /**
+   * Usuario.pagamentos
+   */
+  export type Usuario$pagamentosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    where?: PagamentoWhereInput
+    orderBy?: PagamentoOrderByWithRelationInput | PagamentoOrderByWithRelationInput[]
+    cursor?: PagamentoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PagamentoScalarFieldEnum | PagamentoScalarFieldEnum[]
+  }
+
+  /**
+   * Usuario.notificacoes
+   */
+  export type Usuario$notificacoesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Notificacao
+     */
+    select?: NotificacaoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Notificacao
+     */
+    omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
+    where?: NotificacaoWhereInput
+    orderBy?: NotificacaoOrderByWithRelationInput | NotificacaoOrderByWithRelationInput[]
+    cursor?: NotificacaoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: NotificacaoScalarFieldEnum | NotificacaoScalarFieldEnum[]
+  }
+
+  /**
+   * Usuario.aiMensagens
+   */
+  export type Usuario$aiMensagensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMensagem
+     */
+    select?: AiMensagemSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AiMensagem
+     */
+    omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
+    where?: AiMensagemWhereInput
+    orderBy?: AiMensagemOrderByWithRelationInput | AiMensagemOrderByWithRelationInput[]
+    cursor?: AiMensagemWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AiMensagemScalarFieldEnum | AiMensagemScalarFieldEnum[]
+  }
+
+  /**
+   * Usuario.auditLogs
+   */
+  export type Usuario$auditLogsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AuditLog
+     */
+    select?: AuditLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the AuditLog
+     */
+    omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    where?: AuditLogWhereInput
+    orderBy?: AuditLogOrderByWithRelationInput | AuditLogOrderByWithRelationInput[]
+    cursor?: AuditLogWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AuditLogScalarFieldEnum | AuditLogScalarFieldEnum[]
+  }
+
+  /**
    * Usuario without action
    */
   export type UsuarioDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -12912,6 +13219,10 @@ export namespace Prisma {
      * Omit specific fields from the Usuario
      */
     omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
   }
 
 
@@ -16275,11 +16586,13 @@ export namespace Prisma {
 
   export type PagamentoAvgAggregateOutputType = {
     id: number | null
+    vendedorId: number | null
     valor: number | null
   }
 
   export type PagamentoSumAggregateOutputType = {
     id: number | null
+    vendedorId: number | null
     valor: number | null
   }
 
@@ -16287,6 +16600,7 @@ export namespace Prisma {
     id: number | null
     dataPagamento: Date | null
     vendedor: string | null
+    vendedorId: number | null
     valor: number | null
     obs: string | null
   }
@@ -16295,6 +16609,7 @@ export namespace Prisma {
     id: number | null
     dataPagamento: Date | null
     vendedor: string | null
+    vendedorId: number | null
     valor: number | null
     obs: string | null
   }
@@ -16303,6 +16618,7 @@ export namespace Prisma {
     id: number
     dataPagamento: number
     vendedor: number
+    vendedorId: number
     valor: number
     obs: number
     _all: number
@@ -16311,11 +16627,13 @@ export namespace Prisma {
 
   export type PagamentoAvgAggregateInputType = {
     id?: true
+    vendedorId?: true
     valor?: true
   }
 
   export type PagamentoSumAggregateInputType = {
     id?: true
+    vendedorId?: true
     valor?: true
   }
 
@@ -16323,6 +16641,7 @@ export namespace Prisma {
     id?: true
     dataPagamento?: true
     vendedor?: true
+    vendedorId?: true
     valor?: true
     obs?: true
   }
@@ -16331,6 +16650,7 @@ export namespace Prisma {
     id?: true
     dataPagamento?: true
     vendedor?: true
+    vendedorId?: true
     valor?: true
     obs?: true
   }
@@ -16339,6 +16659,7 @@ export namespace Prisma {
     id?: true
     dataPagamento?: true
     vendedor?: true
+    vendedorId?: true
     valor?: true
     obs?: true
     _all?: true
@@ -16434,6 +16755,7 @@ export namespace Prisma {
     id: number
     dataPagamento: Date
     vendedor: string | null
+    vendedorId: number | null
     valor: number | null
     obs: string | null
     _count: PagamentoCountAggregateOutputType | null
@@ -16461,43 +16783,62 @@ export namespace Prisma {
     id?: boolean
     dataPagamento?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     valor?: boolean
     obs?: boolean
+    vendedorUsuario?: boolean | Pagamento$vendedorUsuarioArgs<ExtArgs>
   }, ExtArgs["result"]["pagamento"]>
 
   export type PagamentoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     dataPagamento?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     valor?: boolean
     obs?: boolean
+    vendedorUsuario?: boolean | Pagamento$vendedorUsuarioArgs<ExtArgs>
   }, ExtArgs["result"]["pagamento"]>
 
   export type PagamentoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     dataPagamento?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     valor?: boolean
     obs?: boolean
+    vendedorUsuario?: boolean | Pagamento$vendedorUsuarioArgs<ExtArgs>
   }, ExtArgs["result"]["pagamento"]>
 
   export type PagamentoSelectScalar = {
     id?: boolean
     dataPagamento?: boolean
     vendedor?: boolean
+    vendedorId?: boolean
     valor?: boolean
     obs?: boolean
   }
 
-  export type PagamentoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "dataPagamento" | "vendedor" | "valor" | "obs", ExtArgs["result"]["pagamento"]>
+  export type PagamentoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "dataPagamento" | "vendedor" | "vendedorId" | "valor" | "obs", ExtArgs["result"]["pagamento"]>
+  export type PagamentoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vendedorUsuario?: boolean | Pagamento$vendedorUsuarioArgs<ExtArgs>
+  }
+  export type PagamentoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vendedorUsuario?: boolean | Pagamento$vendedorUsuarioArgs<ExtArgs>
+  }
+  export type PagamentoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    vendedorUsuario?: boolean | Pagamento$vendedorUsuarioArgs<ExtArgs>
+  }
 
   export type $PagamentoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Pagamento"
-    objects: {}
+    objects: {
+      vendedorUsuario: Prisma.$UsuarioPayload<ExtArgs> | null
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       dataPagamento: Date
       vendedor: string | null
+      vendedorId: number | null
       valor: number | null
       obs: string | null
     }, ExtArgs["result"]["pagamento"]>
@@ -16894,6 +17235,7 @@ export namespace Prisma {
    */
   export interface Prisma__PagamentoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    vendedorUsuario<T extends Pagamento$vendedorUsuarioArgs<ExtArgs> = {}>(args?: Subset<T, Pagamento$vendedorUsuarioArgs<ExtArgs>>): Prisma__UsuarioClient<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -16926,6 +17268,7 @@ export namespace Prisma {
     readonly id: FieldRef<"Pagamento", 'Int'>
     readonly dataPagamento: FieldRef<"Pagamento", 'DateTime'>
     readonly vendedor: FieldRef<"Pagamento", 'String'>
+    readonly vendedorId: FieldRef<"Pagamento", 'Int'>
     readonly valor: FieldRef<"Pagamento", 'Float'>
     readonly obs: FieldRef<"Pagamento", 'String'>
   }
@@ -16945,6 +17288,10 @@ export namespace Prisma {
      */
     omit?: PagamentoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
      * Filter, which Pagamento to fetch.
      */
     where: PagamentoWhereUniqueInput
@@ -16963,6 +17310,10 @@ export namespace Prisma {
      */
     omit?: PagamentoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
      * Filter, which Pagamento to fetch.
      */
     where: PagamentoWhereUniqueInput
@@ -16980,6 +17331,10 @@ export namespace Prisma {
      * Omit specific fields from the Pagamento
      */
     omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
     /**
      * Filter, which Pagamento to fetch.
      */
@@ -17029,6 +17384,10 @@ export namespace Prisma {
      */
     omit?: PagamentoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
      * Filter, which Pagamento to fetch.
      */
     where?: PagamentoWhereInput
@@ -17077,6 +17436,10 @@ export namespace Prisma {
      */
     omit?: PagamentoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
      * Filter, which Pagamentos to fetch.
      */
     where?: PagamentoWhereInput
@@ -17120,6 +17483,10 @@ export namespace Prisma {
      */
     omit?: PagamentoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
      * The data needed to create a Pagamento.
      */
     data: XOR<PagamentoCreateInput, PagamentoUncheckedCreateInput>
@@ -17153,6 +17520,10 @@ export namespace Prisma {
      */
     data: PagamentoCreateManyInput | PagamentoCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -17167,6 +17538,10 @@ export namespace Prisma {
      * Omit specific fields from the Pagamento
      */
     omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
     /**
      * The data needed to update a Pagamento.
      */
@@ -17219,6 +17594,10 @@ export namespace Prisma {
      * Limit how many Pagamentos to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -17233,6 +17612,10 @@ export namespace Prisma {
      * Omit specific fields from the Pagamento
      */
     omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
     /**
      * The filter to search for the Pagamento to update in case it exists.
      */
@@ -17260,6 +17643,10 @@ export namespace Prisma {
      */
     omit?: PagamentoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
      * Filter which Pagamento to delete.
      */
     where: PagamentoWhereUniqueInput
@@ -17280,6 +17667,25 @@ export namespace Prisma {
   }
 
   /**
+   * Pagamento.vendedorUsuario
+   */
+  export type Pagamento$vendedorUsuarioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Usuario
+     */
+    select?: UsuarioSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Usuario
+     */
+    omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    where?: UsuarioWhereInput
+  }
+
+  /**
    * Pagamento without action
    */
   export type PagamentoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -17291,6 +17697,10 @@ export namespace Prisma {
      * Omit specific fields from the Pagamento
      */
     omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
   }
 
 
@@ -17308,16 +17718,19 @@ export namespace Prisma {
 
   export type AuditLogAvgAggregateOutputType = {
     id: number | null
+    usuarioId: number | null
   }
 
   export type AuditLogSumAggregateOutputType = {
     id: number | null
+    usuarioId: number | null
   }
 
   export type AuditLogMinAggregateOutputType = {
     id: number | null
     dataHora: Date | null
     usuario: string | null
+    usuarioId: number | null
     acao: string | null
     detalhes: string | null
   }
@@ -17326,6 +17739,7 @@ export namespace Prisma {
     id: number | null
     dataHora: Date | null
     usuario: string | null
+    usuarioId: number | null
     acao: string | null
     detalhes: string | null
   }
@@ -17334,6 +17748,7 @@ export namespace Prisma {
     id: number
     dataHora: number
     usuario: number
+    usuarioId: number
     acao: number
     detalhes: number
     _all: number
@@ -17342,16 +17757,19 @@ export namespace Prisma {
 
   export type AuditLogAvgAggregateInputType = {
     id?: true
+    usuarioId?: true
   }
 
   export type AuditLogSumAggregateInputType = {
     id?: true
+    usuarioId?: true
   }
 
   export type AuditLogMinAggregateInputType = {
     id?: true
     dataHora?: true
     usuario?: true
+    usuarioId?: true
     acao?: true
     detalhes?: true
   }
@@ -17360,6 +17778,7 @@ export namespace Prisma {
     id?: true
     dataHora?: true
     usuario?: true
+    usuarioId?: true
     acao?: true
     detalhes?: true
   }
@@ -17368,6 +17787,7 @@ export namespace Prisma {
     id?: true
     dataHora?: true
     usuario?: true
+    usuarioId?: true
     acao?: true
     detalhes?: true
     _all?: true
@@ -17463,6 +17883,7 @@ export namespace Prisma {
     id: number
     dataHora: Date
     usuario: string | null
+    usuarioId: number | null
     acao: string | null
     detalhes: string | null
     _count: AuditLogCountAggregateOutputType | null
@@ -17490,43 +17911,62 @@ export namespace Prisma {
     id?: boolean
     dataHora?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     acao?: boolean
     detalhes?: boolean
+    usuarioRef?: boolean | AuditLog$usuarioRefArgs<ExtArgs>
   }, ExtArgs["result"]["auditLog"]>
 
   export type AuditLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     dataHora?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     acao?: boolean
     detalhes?: boolean
+    usuarioRef?: boolean | AuditLog$usuarioRefArgs<ExtArgs>
   }, ExtArgs["result"]["auditLog"]>
 
   export type AuditLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     dataHora?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     acao?: boolean
     detalhes?: boolean
+    usuarioRef?: boolean | AuditLog$usuarioRefArgs<ExtArgs>
   }, ExtArgs["result"]["auditLog"]>
 
   export type AuditLogSelectScalar = {
     id?: boolean
     dataHora?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     acao?: boolean
     detalhes?: boolean
   }
 
-  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "dataHora" | "usuario" | "acao" | "detalhes", ExtArgs["result"]["auditLog"]>
+  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "dataHora" | "usuario" | "usuarioId" | "acao" | "detalhes", ExtArgs["result"]["auditLog"]>
+  export type AuditLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuarioRef?: boolean | AuditLog$usuarioRefArgs<ExtArgs>
+  }
+  export type AuditLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuarioRef?: boolean | AuditLog$usuarioRefArgs<ExtArgs>
+  }
+  export type AuditLogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuarioRef?: boolean | AuditLog$usuarioRefArgs<ExtArgs>
+  }
 
   export type $AuditLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AuditLog"
-    objects: {}
+    objects: {
+      usuarioRef: Prisma.$UsuarioPayload<ExtArgs> | null
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       dataHora: Date
       usuario: string | null
+      usuarioId: number | null
       acao: string | null
       detalhes: string | null
     }, ExtArgs["result"]["auditLog"]>
@@ -17923,6 +18363,7 @@ export namespace Prisma {
    */
   export interface Prisma__AuditLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    usuarioRef<T extends AuditLog$usuarioRefArgs<ExtArgs> = {}>(args?: Subset<T, AuditLog$usuarioRefArgs<ExtArgs>>): Prisma__UsuarioClient<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -17955,6 +18396,7 @@ export namespace Prisma {
     readonly id: FieldRef<"AuditLog", 'Int'>
     readonly dataHora: FieldRef<"AuditLog", 'DateTime'>
     readonly usuario: FieldRef<"AuditLog", 'String'>
+    readonly usuarioId: FieldRef<"AuditLog", 'Int'>
     readonly acao: FieldRef<"AuditLog", 'String'>
     readonly detalhes: FieldRef<"AuditLog", 'String'>
   }
@@ -17974,6 +18416,10 @@ export namespace Prisma {
      */
     omit?: AuditLogOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
      * Filter, which AuditLog to fetch.
      */
     where: AuditLogWhereUniqueInput
@@ -17992,6 +18438,10 @@ export namespace Prisma {
      */
     omit?: AuditLogOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
      * Filter, which AuditLog to fetch.
      */
     where: AuditLogWhereUniqueInput
@@ -18009,6 +18459,10 @@ export namespace Prisma {
      * Omit specific fields from the AuditLog
      */
     omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
     /**
      * Filter, which AuditLog to fetch.
      */
@@ -18058,6 +18512,10 @@ export namespace Prisma {
      */
     omit?: AuditLogOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
      * Filter, which AuditLog to fetch.
      */
     where?: AuditLogWhereInput
@@ -18106,6 +18564,10 @@ export namespace Prisma {
      */
     omit?: AuditLogOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
      * Filter, which AuditLogs to fetch.
      */
     where?: AuditLogWhereInput
@@ -18149,6 +18611,10 @@ export namespace Prisma {
      */
     omit?: AuditLogOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
      * The data needed to create a AuditLog.
      */
     data: XOR<AuditLogCreateInput, AuditLogUncheckedCreateInput>
@@ -18182,6 +18648,10 @@ export namespace Prisma {
      */
     data: AuditLogCreateManyInput | AuditLogCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -18196,6 +18666,10 @@ export namespace Prisma {
      * Omit specific fields from the AuditLog
      */
     omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
     /**
      * The data needed to update a AuditLog.
      */
@@ -18248,6 +18722,10 @@ export namespace Prisma {
      * Limit how many AuditLogs to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -18262,6 +18740,10 @@ export namespace Prisma {
      * Omit specific fields from the AuditLog
      */
     omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
     /**
      * The filter to search for the AuditLog to update in case it exists.
      */
@@ -18289,6 +18771,10 @@ export namespace Prisma {
      */
     omit?: AuditLogOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
+    /**
      * Filter which AuditLog to delete.
      */
     where: AuditLogWhereUniqueInput
@@ -18309,6 +18795,25 @@ export namespace Prisma {
   }
 
   /**
+   * AuditLog.usuarioRef
+   */
+  export type AuditLog$usuarioRefArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Usuario
+     */
+    select?: UsuarioSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Usuario
+     */
+    omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    where?: UsuarioWhereInput
+  }
+
+  /**
    * AuditLog without action
    */
   export type AuditLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -18320,6 +18825,10 @@ export namespace Prisma {
      * Omit specific fields from the AuditLog
      */
     omit?: AuditLogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AuditLogInclude<ExtArgs> | null
   }
 
 
@@ -21440,10 +21949,12 @@ export namespace Prisma {
 
   export type AiMensagemAvgAggregateOutputType = {
     id: number | null
+    usuarioId: number | null
   }
 
   export type AiMensagemSumAggregateOutputType = {
     id: number | null
+    usuarioId: number | null
   }
 
   export type AiMensagemMinAggregateOutputType = {
@@ -21455,6 +21966,7 @@ export namespace Prisma {
     promptOriginal: string | null
     status: string | null
     usuario: string | null
+    usuarioId: number | null
     criadoEm: Date | null
   }
 
@@ -21467,6 +21979,7 @@ export namespace Prisma {
     promptOriginal: string | null
     status: string | null
     usuario: string | null
+    usuarioId: number | null
     criadoEm: Date | null
   }
 
@@ -21481,6 +21994,7 @@ export namespace Prisma {
     status: number
     links: number
     usuario: number
+    usuarioId: number
     criadoEm: number
     _all: number
   }
@@ -21488,10 +22002,12 @@ export namespace Prisma {
 
   export type AiMensagemAvgAggregateInputType = {
     id?: true
+    usuarioId?: true
   }
 
   export type AiMensagemSumAggregateInputType = {
     id?: true
+    usuarioId?: true
   }
 
   export type AiMensagemMinAggregateInputType = {
@@ -21503,6 +22019,7 @@ export namespace Prisma {
     promptOriginal?: true
     status?: true
     usuario?: true
+    usuarioId?: true
     criadoEm?: true
   }
 
@@ -21515,6 +22032,7 @@ export namespace Prisma {
     promptOriginal?: true
     status?: true
     usuario?: true
+    usuarioId?: true
     criadoEm?: true
   }
 
@@ -21529,6 +22047,7 @@ export namespace Prisma {
     status?: true
     links?: true
     usuario?: true
+    usuarioId?: true
     criadoEm?: true
     _all?: true
   }
@@ -21630,6 +22149,7 @@ export namespace Prisma {
     status: string
     links: JsonValue | null
     usuario: string | null
+    usuarioId: number | null
     criadoEm: Date
     _count: AiMensagemCountAggregateOutputType | null
     _avg: AiMensagemAvgAggregateOutputType | null
@@ -21663,7 +22183,9 @@ export namespace Prisma {
     status?: boolean
     links?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     criadoEm?: boolean
+    usuarioRef?: boolean | AiMensagem$usuarioRefArgs<ExtArgs>
   }, ExtArgs["result"]["aiMensagem"]>
 
   export type AiMensagemSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -21677,7 +22199,9 @@ export namespace Prisma {
     status?: boolean
     links?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     criadoEm?: boolean
+    usuarioRef?: boolean | AiMensagem$usuarioRefArgs<ExtArgs>
   }, ExtArgs["result"]["aiMensagem"]>
 
   export type AiMensagemSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -21691,7 +22215,9 @@ export namespace Prisma {
     status?: boolean
     links?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     criadoEm?: boolean
+    usuarioRef?: boolean | AiMensagem$usuarioRefArgs<ExtArgs>
   }, ExtArgs["result"]["aiMensagem"]>
 
   export type AiMensagemSelectScalar = {
@@ -21705,14 +22231,26 @@ export namespace Prisma {
     status?: boolean
     links?: boolean
     usuario?: boolean
+    usuarioId?: boolean
     criadoEm?: boolean
   }
 
-  export type AiMensagemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessaoId" | "role" | "content" | "contextResumo" | "promptOriginal" | "actions" | "status" | "links" | "usuario" | "criadoEm", ExtArgs["result"]["aiMensagem"]>
+  export type AiMensagemOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sessaoId" | "role" | "content" | "contextResumo" | "promptOriginal" | "actions" | "status" | "links" | "usuario" | "usuarioId" | "criadoEm", ExtArgs["result"]["aiMensagem"]>
+  export type AiMensagemInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuarioRef?: boolean | AiMensagem$usuarioRefArgs<ExtArgs>
+  }
+  export type AiMensagemIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuarioRef?: boolean | AiMensagem$usuarioRefArgs<ExtArgs>
+  }
+  export type AiMensagemIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuarioRef?: boolean | AiMensagem$usuarioRefArgs<ExtArgs>
+  }
 
   export type $AiMensagemPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AiMensagem"
-    objects: {}
+    objects: {
+      usuarioRef: Prisma.$UsuarioPayload<ExtArgs> | null
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       sessaoId: string
@@ -21724,6 +22262,7 @@ export namespace Prisma {
       status: string
       links: Prisma.JsonValue | null
       usuario: string | null
+      usuarioId: number | null
       criadoEm: Date
     }, ExtArgs["result"]["aiMensagem"]>
     composites: {}
@@ -22119,6 +22658,7 @@ export namespace Prisma {
    */
   export interface Prisma__AiMensagemClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    usuarioRef<T extends AiMensagem$usuarioRefArgs<ExtArgs> = {}>(args?: Subset<T, AiMensagem$usuarioRefArgs<ExtArgs>>): Prisma__UsuarioClient<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -22158,6 +22698,7 @@ export namespace Prisma {
     readonly status: FieldRef<"AiMensagem", 'String'>
     readonly links: FieldRef<"AiMensagem", 'Json'>
     readonly usuario: FieldRef<"AiMensagem", 'String'>
+    readonly usuarioId: FieldRef<"AiMensagem", 'Int'>
     readonly criadoEm: FieldRef<"AiMensagem", 'DateTime'>
   }
     
@@ -22175,6 +22716,10 @@ export namespace Prisma {
      * Omit specific fields from the AiMensagem
      */
     omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
     /**
      * Filter, which AiMensagem to fetch.
      */
@@ -22194,6 +22739,10 @@ export namespace Prisma {
      */
     omit?: AiMensagemOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
+    /**
      * Filter, which AiMensagem to fetch.
      */
     where: AiMensagemWhereUniqueInput
@@ -22211,6 +22760,10 @@ export namespace Prisma {
      * Omit specific fields from the AiMensagem
      */
     omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
     /**
      * Filter, which AiMensagem to fetch.
      */
@@ -22260,6 +22813,10 @@ export namespace Prisma {
      */
     omit?: AiMensagemOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
+    /**
      * Filter, which AiMensagem to fetch.
      */
     where?: AiMensagemWhereInput
@@ -22308,6 +22865,10 @@ export namespace Prisma {
      */
     omit?: AiMensagemOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
+    /**
      * Filter, which AiMensagems to fetch.
      */
     where?: AiMensagemWhereInput
@@ -22351,6 +22912,10 @@ export namespace Prisma {
      */
     omit?: AiMensagemOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
+    /**
      * The data needed to create a AiMensagem.
      */
     data: XOR<AiMensagemCreateInput, AiMensagemUncheckedCreateInput>
@@ -22384,6 +22949,10 @@ export namespace Prisma {
      */
     data: AiMensagemCreateManyInput | AiMensagemCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -22398,6 +22967,10 @@ export namespace Prisma {
      * Omit specific fields from the AiMensagem
      */
     omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
     /**
      * The data needed to update a AiMensagem.
      */
@@ -22450,6 +23023,10 @@ export namespace Prisma {
      * Limit how many AiMensagems to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -22464,6 +23041,10 @@ export namespace Prisma {
      * Omit specific fields from the AiMensagem
      */
     omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
     /**
      * The filter to search for the AiMensagem to update in case it exists.
      */
@@ -22491,6 +23072,10 @@ export namespace Prisma {
      */
     omit?: AiMensagemOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
+    /**
      * Filter which AiMensagem to delete.
      */
     where: AiMensagemWhereUniqueInput
@@ -22511,6 +23096,25 @@ export namespace Prisma {
   }
 
   /**
+   * AiMensagem.usuarioRef
+   */
+  export type AiMensagem$usuarioRefArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Usuario
+     */
+    select?: UsuarioSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Usuario
+     */
+    omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    where?: UsuarioWhereInput
+  }
+
+  /**
    * AiMensagem without action
    */
   export type AiMensagemDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -22522,6 +23126,10 @@ export namespace Prisma {
      * Omit specific fields from the AiMensagem
      */
     omit?: AiMensagemOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AiMensagemInclude<ExtArgs> | null
   }
 
 
@@ -23622,10 +24230,12 @@ export namespace Prisma {
 
   export type NotificacaoAvgAggregateOutputType = {
     id: number | null
+    usuarioId: number | null
   }
 
   export type NotificacaoSumAggregateOutputType = {
     id: number | null
+    usuarioId: number | null
   }
 
   export type NotificacaoMinAggregateOutputType = {
@@ -23634,6 +24244,7 @@ export namespace Prisma {
     lida: boolean | null
     criadoEm: Date | null
     link: string | null
+    usuarioId: number | null
   }
 
   export type NotificacaoMaxAggregateOutputType = {
@@ -23642,6 +24253,7 @@ export namespace Prisma {
     lida: boolean | null
     criadoEm: Date | null
     link: string | null
+    usuarioId: number | null
   }
 
   export type NotificacaoCountAggregateOutputType = {
@@ -23650,16 +24262,19 @@ export namespace Prisma {
     lida: number
     criadoEm: number
     link: number
+    usuarioId: number
     _all: number
   }
 
 
   export type NotificacaoAvgAggregateInputType = {
     id?: true
+    usuarioId?: true
   }
 
   export type NotificacaoSumAggregateInputType = {
     id?: true
+    usuarioId?: true
   }
 
   export type NotificacaoMinAggregateInputType = {
@@ -23668,6 +24283,7 @@ export namespace Prisma {
     lida?: true
     criadoEm?: true
     link?: true
+    usuarioId?: true
   }
 
   export type NotificacaoMaxAggregateInputType = {
@@ -23676,6 +24292,7 @@ export namespace Prisma {
     lida?: true
     criadoEm?: true
     link?: true
+    usuarioId?: true
   }
 
   export type NotificacaoCountAggregateInputType = {
@@ -23684,6 +24301,7 @@ export namespace Prisma {
     lida?: true
     criadoEm?: true
     link?: true
+    usuarioId?: true
     _all?: true
   }
 
@@ -23779,6 +24397,7 @@ export namespace Prisma {
     lida: boolean
     criadoEm: Date
     link: string | null
+    usuarioId: number | null
     _count: NotificacaoCountAggregateOutputType | null
     _avg: NotificacaoAvgAggregateOutputType | null
     _sum: NotificacaoSumAggregateOutputType | null
@@ -23806,6 +24425,8 @@ export namespace Prisma {
     lida?: boolean
     criadoEm?: boolean
     link?: boolean
+    usuarioId?: boolean
+    usuario?: boolean | Notificacao$usuarioArgs<ExtArgs>
   }, ExtArgs["result"]["notificacao"]>
 
   export type NotificacaoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -23814,6 +24435,8 @@ export namespace Prisma {
     lida?: boolean
     criadoEm?: boolean
     link?: boolean
+    usuarioId?: boolean
+    usuario?: boolean | Notificacao$usuarioArgs<ExtArgs>
   }, ExtArgs["result"]["notificacao"]>
 
   export type NotificacaoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -23822,6 +24445,8 @@ export namespace Prisma {
     lida?: boolean
     criadoEm?: boolean
     link?: boolean
+    usuarioId?: boolean
+    usuario?: boolean | Notificacao$usuarioArgs<ExtArgs>
   }, ExtArgs["result"]["notificacao"]>
 
   export type NotificacaoSelectScalar = {
@@ -23830,19 +24455,32 @@ export namespace Prisma {
     lida?: boolean
     criadoEm?: boolean
     link?: boolean
+    usuarioId?: boolean
   }
 
-  export type NotificacaoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "mensagem" | "lida" | "criadoEm" | "link", ExtArgs["result"]["notificacao"]>
+  export type NotificacaoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "mensagem" | "lida" | "criadoEm" | "link" | "usuarioId", ExtArgs["result"]["notificacao"]>
+  export type NotificacaoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuario?: boolean | Notificacao$usuarioArgs<ExtArgs>
+  }
+  export type NotificacaoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuario?: boolean | Notificacao$usuarioArgs<ExtArgs>
+  }
+  export type NotificacaoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    usuario?: boolean | Notificacao$usuarioArgs<ExtArgs>
+  }
 
   export type $NotificacaoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Notificacao"
-    objects: {}
+    objects: {
+      usuario: Prisma.$UsuarioPayload<ExtArgs> | null
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: number
       mensagem: string
       lida: boolean
       criadoEm: Date
       link: string | null
+      usuarioId: number | null
     }, ExtArgs["result"]["notificacao"]>
     composites: {}
   }
@@ -24237,6 +24875,7 @@ export namespace Prisma {
    */
   export interface Prisma__NotificacaoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    usuario<T extends Notificacao$usuarioArgs<ExtArgs> = {}>(args?: Subset<T, Notificacao$usuarioArgs<ExtArgs>>): Prisma__UsuarioClient<$Result.GetResult<Prisma.$UsuarioPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -24271,6 +24910,7 @@ export namespace Prisma {
     readonly lida: FieldRef<"Notificacao", 'Boolean'>
     readonly criadoEm: FieldRef<"Notificacao", 'DateTime'>
     readonly link: FieldRef<"Notificacao", 'String'>
+    readonly usuarioId: FieldRef<"Notificacao", 'Int'>
   }
     
 
@@ -24287,6 +24927,10 @@ export namespace Prisma {
      * Omit specific fields from the Notificacao
      */
     omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
     /**
      * Filter, which Notificacao to fetch.
      */
@@ -24306,6 +24950,10 @@ export namespace Prisma {
      */
     omit?: NotificacaoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
+    /**
      * Filter, which Notificacao to fetch.
      */
     where: NotificacaoWhereUniqueInput
@@ -24323,6 +24971,10 @@ export namespace Prisma {
      * Omit specific fields from the Notificacao
      */
     omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
     /**
      * Filter, which Notificacao to fetch.
      */
@@ -24372,6 +25024,10 @@ export namespace Prisma {
      */
     omit?: NotificacaoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
+    /**
      * Filter, which Notificacao to fetch.
      */
     where?: NotificacaoWhereInput
@@ -24420,6 +25076,10 @@ export namespace Prisma {
      */
     omit?: NotificacaoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
+    /**
      * Filter, which Notificacaos to fetch.
      */
     where?: NotificacaoWhereInput
@@ -24463,6 +25123,10 @@ export namespace Prisma {
      */
     omit?: NotificacaoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
+    /**
      * The data needed to create a Notificacao.
      */
     data: XOR<NotificacaoCreateInput, NotificacaoUncheckedCreateInput>
@@ -24496,6 +25160,10 @@ export namespace Prisma {
      */
     data: NotificacaoCreateManyInput | NotificacaoCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -24510,6 +25178,10 @@ export namespace Prisma {
      * Omit specific fields from the Notificacao
      */
     omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
     /**
      * The data needed to update a Notificacao.
      */
@@ -24562,6 +25234,10 @@ export namespace Prisma {
      * Limit how many Notificacaos to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -24576,6 +25252,10 @@ export namespace Prisma {
      * Omit specific fields from the Notificacao
      */
     omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
     /**
      * The filter to search for the Notificacao to update in case it exists.
      */
@@ -24603,6 +25283,10 @@ export namespace Prisma {
      */
     omit?: NotificacaoOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
+    /**
      * Filter which Notificacao to delete.
      */
     where: NotificacaoWhereUniqueInput
@@ -24623,6 +25307,25 @@ export namespace Prisma {
   }
 
   /**
+   * Notificacao.usuario
+   */
+  export type Notificacao$usuarioArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Usuario
+     */
+    select?: UsuarioSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Usuario
+     */
+    omit?: UsuarioOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UsuarioInclude<ExtArgs> | null
+    where?: UsuarioWhereInput
+  }
+
+  /**
    * Notificacao without action
    */
   export type NotificacaoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -24634,6 +25337,10 @@ export namespace Prisma {
      * Omit specific fields from the Notificacao
      */
     omit?: NotificacaoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: NotificacaoInclude<ExtArgs> | null
   }
 
 
@@ -26865,6 +27572,7 @@ export namespace Prisma {
     uuid: 'uuid',
     dataVenda: 'dataVenda',
     vendedor: 'vendedor',
+    vendedorId: 'vendedorId',
     clienteId: 'clienteId',
     produtoNome: 'produtoNome',
     custoProduto: 'custoProduto',
@@ -26883,6 +27591,7 @@ export namespace Prisma {
     descontoEmFolha: 'descontoEmFolha',
     desconto: 'desconto',
     boleto: 'boleto',
+    formaPagamento: 'formaPagamento',
     status: 'status',
     asaasPaymentId: 'asaasPaymentId',
     boletoUrl: 'boletoUrl',
@@ -27026,6 +27735,7 @@ export namespace Prisma {
     id: 'id',
     dataPagamento: 'dataPagamento',
     vendedor: 'vendedor',
+    vendedorId: 'vendedorId',
     valor: 'valor',
     obs: 'obs'
   };
@@ -27037,6 +27747,7 @@ export namespace Prisma {
     id: 'id',
     dataHora: 'dataHora',
     usuario: 'usuario',
+    usuarioId: 'usuarioId',
     acao: 'acao',
     detalhes: 'detalhes'
   };
@@ -27088,6 +27799,7 @@ export namespace Prisma {
     status: 'status',
     links: 'links',
     usuario: 'usuario',
+    usuarioId: 'usuarioId',
     criadoEm: 'criadoEm'
   };
 
@@ -27109,7 +27821,8 @@ export namespace Prisma {
     mensagem: 'mensagem',
     lida: 'lida',
     criadoEm: 'criadoEm',
-    link: 'link'
+    link: 'link',
+    usuarioId: 'usuarioId'
   };
 
   export type NotificacaoScalarFieldEnum = (typeof NotificacaoScalarFieldEnum)[keyof typeof NotificacaoScalarFieldEnum]
@@ -27496,6 +28209,7 @@ export namespace Prisma {
     uuid?: UuidNullableFilter<"Venda"> | string | null
     dataVenda?: DateTimeFilter<"Venda"> | Date | string
     vendedor?: StringNullableFilter<"Venda"> | string | null
+    vendedorId?: IntNullableFilter<"Venda"> | number | null
     clienteId?: IntNullableFilter<"Venda"> | number | null
     produtoNome?: StringNullableFilter<"Venda"> | string | null
     custoProduto?: FloatNullableFilter<"Venda"> | number | null
@@ -27514,11 +28228,13 @@ export namespace Prisma {
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
     desconto?: FloatNullableFilter<"Venda"> | number | null
     boleto?: BoolFilter<"Venda"> | boolean
+    formaPagamento?: StringNullableFilter<"Venda"> | string | null
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
     assinaturaToken?: StringNullableFilter<"Venda"> | string | null
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
+    vendedorUsuario?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
     itens?: ItemVendaListRelationFilter
     parcelasVencimento?: ParcelaVencimentoListRelationFilter
     documentos?: DocumentoListRelationFilter
@@ -27530,6 +28246,7 @@ export namespace Prisma {
     uuid?: SortOrderInput | SortOrder
     dataVenda?: SortOrder
     vendedor?: SortOrderInput | SortOrder
+    vendedorId?: SortOrderInput | SortOrder
     clienteId?: SortOrderInput | SortOrder
     produtoNome?: SortOrderInput | SortOrder
     custoProduto?: SortOrderInput | SortOrder
@@ -27548,11 +28265,13 @@ export namespace Prisma {
     descontoEmFolha?: SortOrder
     desconto?: SortOrderInput | SortOrder
     boleto?: SortOrder
+    formaPagamento?: SortOrderInput | SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
     assinaturaToken?: SortOrderInput | SortOrder
     cliente?: ClienteOrderByWithRelationInput
+    vendedorUsuario?: UsuarioOrderByWithRelationInput
     itens?: ItemVendaOrderByRelationAggregateInput
     parcelasVencimento?: ParcelaVencimentoOrderByRelationAggregateInput
     documentos?: DocumentoOrderByRelationAggregateInput
@@ -27568,6 +28287,7 @@ export namespace Prisma {
     NOT?: VendaWhereInput | VendaWhereInput[]
     dataVenda?: DateTimeFilter<"Venda"> | Date | string
     vendedor?: StringNullableFilter<"Venda"> | string | null
+    vendedorId?: IntNullableFilter<"Venda"> | number | null
     clienteId?: IntNullableFilter<"Venda"> | number | null
     produtoNome?: StringNullableFilter<"Venda"> | string | null
     custoProduto?: FloatNullableFilter<"Venda"> | number | null
@@ -27586,10 +28306,12 @@ export namespace Prisma {
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
     desconto?: FloatNullableFilter<"Venda"> | number | null
     boleto?: BoolFilter<"Venda"> | boolean
+    formaPagamento?: StringNullableFilter<"Venda"> | string | null
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
+    vendedorUsuario?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
     itens?: ItemVendaListRelationFilter
     parcelasVencimento?: ParcelaVencimentoListRelationFilter
     documentos?: DocumentoListRelationFilter
@@ -27601,6 +28323,7 @@ export namespace Prisma {
     uuid?: SortOrderInput | SortOrder
     dataVenda?: SortOrder
     vendedor?: SortOrderInput | SortOrder
+    vendedorId?: SortOrderInput | SortOrder
     clienteId?: SortOrderInput | SortOrder
     produtoNome?: SortOrderInput | SortOrder
     custoProduto?: SortOrderInput | SortOrder
@@ -27619,6 +28342,7 @@ export namespace Prisma {
     descontoEmFolha?: SortOrder
     desconto?: SortOrderInput | SortOrder
     boleto?: SortOrder
+    formaPagamento?: SortOrderInput | SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrderInput | SortOrder
     boletoUrl?: SortOrderInput | SortOrder
@@ -27638,6 +28362,7 @@ export namespace Prisma {
     uuid?: UuidNullableWithAggregatesFilter<"Venda"> | string | null
     dataVenda?: DateTimeWithAggregatesFilter<"Venda"> | Date | string
     vendedor?: StringNullableWithAggregatesFilter<"Venda"> | string | null
+    vendedorId?: IntNullableWithAggregatesFilter<"Venda"> | number | null
     clienteId?: IntNullableWithAggregatesFilter<"Venda"> | number | null
     produtoNome?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     custoProduto?: FloatNullableWithAggregatesFilter<"Venda"> | number | null
@@ -27656,6 +28381,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolWithAggregatesFilter<"Venda"> | boolean
     desconto?: FloatNullableWithAggregatesFilter<"Venda"> | number | null
     boleto?: BoolWithAggregatesFilter<"Venda"> | boolean
+    formaPagamento?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     status?: StringWithAggregatesFilter<"Venda"> | string
     asaasPaymentId?: StringNullableWithAggregatesFilter<"Venda"> | string | null
     boletoUrl?: StringNullableWithAggregatesFilter<"Venda"> | string | null
@@ -28088,6 +28814,11 @@ export namespace Prisma {
     cep?: StringNullableFilter<"Usuario"> | string | null
     metaMensal?: FloatNullableFilter<"Usuario"> | number | null
     comissaoPct?: FloatNullableFilter<"Usuario"> | number | null
+    vendas?: VendaListRelationFilter
+    pagamentos?: PagamentoListRelationFilter
+    notificacoes?: NotificacaoListRelationFilter
+    aiMensagens?: AiMensagemListRelationFilter
+    auditLogs?: AuditLogListRelationFilter
   }
 
   export type UsuarioOrderByWithRelationInput = {
@@ -28103,6 +28834,11 @@ export namespace Prisma {
     cep?: SortOrderInput | SortOrder
     metaMensal?: SortOrderInput | SortOrder
     comissaoPct?: SortOrderInput | SortOrder
+    vendas?: VendaOrderByRelationAggregateInput
+    pagamentos?: PagamentoOrderByRelationAggregateInput
+    notificacoes?: NotificacaoOrderByRelationAggregateInput
+    aiMensagens?: AiMensagemOrderByRelationAggregateInput
+    auditLogs?: AuditLogOrderByRelationAggregateInput
   }
 
   export type UsuarioWhereUniqueInput = Prisma.AtLeast<{
@@ -28121,6 +28857,11 @@ export namespace Prisma {
     cep?: StringNullableFilter<"Usuario"> | string | null
     metaMensal?: FloatNullableFilter<"Usuario"> | number | null
     comissaoPct?: FloatNullableFilter<"Usuario"> | number | null
+    vendas?: VendaListRelationFilter
+    pagamentos?: PagamentoListRelationFilter
+    notificacoes?: NotificacaoListRelationFilter
+    aiMensagens?: AiMensagemListRelationFilter
+    auditLogs?: AuditLogListRelationFilter
   }, "id" | "username">
 
   export type UsuarioOrderByWithAggregationInput = {
@@ -28339,16 +29080,20 @@ export namespace Prisma {
     id?: IntFilter<"Pagamento"> | number
     dataPagamento?: DateTimeFilter<"Pagamento"> | Date | string
     vendedor?: StringNullableFilter<"Pagamento"> | string | null
+    vendedorId?: IntNullableFilter<"Pagamento"> | number | null
     valor?: FloatNullableFilter<"Pagamento"> | number | null
     obs?: StringNullableFilter<"Pagamento"> | string | null
+    vendedorUsuario?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }
 
   export type PagamentoOrderByWithRelationInput = {
     id?: SortOrder
     dataPagamento?: SortOrder
     vendedor?: SortOrderInput | SortOrder
+    vendedorId?: SortOrderInput | SortOrder
     valor?: SortOrderInput | SortOrder
     obs?: SortOrderInput | SortOrder
+    vendedorUsuario?: UsuarioOrderByWithRelationInput
   }
 
   export type PagamentoWhereUniqueInput = Prisma.AtLeast<{
@@ -28358,14 +29103,17 @@ export namespace Prisma {
     NOT?: PagamentoWhereInput | PagamentoWhereInput[]
     dataPagamento?: DateTimeFilter<"Pagamento"> | Date | string
     vendedor?: StringNullableFilter<"Pagamento"> | string | null
+    vendedorId?: IntNullableFilter<"Pagamento"> | number | null
     valor?: FloatNullableFilter<"Pagamento"> | number | null
     obs?: StringNullableFilter<"Pagamento"> | string | null
+    vendedorUsuario?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }, "id">
 
   export type PagamentoOrderByWithAggregationInput = {
     id?: SortOrder
     dataPagamento?: SortOrder
     vendedor?: SortOrderInput | SortOrder
+    vendedorId?: SortOrderInput | SortOrder
     valor?: SortOrderInput | SortOrder
     obs?: SortOrderInput | SortOrder
     _count?: PagamentoCountOrderByAggregateInput
@@ -28382,6 +29130,7 @@ export namespace Prisma {
     id?: IntWithAggregatesFilter<"Pagamento"> | number
     dataPagamento?: DateTimeWithAggregatesFilter<"Pagamento"> | Date | string
     vendedor?: StringNullableWithAggregatesFilter<"Pagamento"> | string | null
+    vendedorId?: IntNullableWithAggregatesFilter<"Pagamento"> | number | null
     valor?: FloatNullableWithAggregatesFilter<"Pagamento"> | number | null
     obs?: StringNullableWithAggregatesFilter<"Pagamento"> | string | null
   }
@@ -28393,16 +29142,20 @@ export namespace Prisma {
     id?: IntFilter<"AuditLog"> | number
     dataHora?: DateTimeFilter<"AuditLog"> | Date | string
     usuario?: StringNullableFilter<"AuditLog"> | string | null
+    usuarioId?: IntNullableFilter<"AuditLog"> | number | null
     acao?: StringNullableFilter<"AuditLog"> | string | null
     detalhes?: StringNullableFilter<"AuditLog"> | string | null
+    usuarioRef?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }
 
   export type AuditLogOrderByWithRelationInput = {
     id?: SortOrder
     dataHora?: SortOrder
     usuario?: SortOrderInput | SortOrder
+    usuarioId?: SortOrderInput | SortOrder
     acao?: SortOrderInput | SortOrder
     detalhes?: SortOrderInput | SortOrder
+    usuarioRef?: UsuarioOrderByWithRelationInput
   }
 
   export type AuditLogWhereUniqueInput = Prisma.AtLeast<{
@@ -28412,14 +29165,17 @@ export namespace Prisma {
     NOT?: AuditLogWhereInput | AuditLogWhereInput[]
     dataHora?: DateTimeFilter<"AuditLog"> | Date | string
     usuario?: StringNullableFilter<"AuditLog"> | string | null
+    usuarioId?: IntNullableFilter<"AuditLog"> | number | null
     acao?: StringNullableFilter<"AuditLog"> | string | null
     detalhes?: StringNullableFilter<"AuditLog"> | string | null
+    usuarioRef?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }, "id">
 
   export type AuditLogOrderByWithAggregationInput = {
     id?: SortOrder
     dataHora?: SortOrder
     usuario?: SortOrderInput | SortOrder
+    usuarioId?: SortOrderInput | SortOrder
     acao?: SortOrderInput | SortOrder
     detalhes?: SortOrderInput | SortOrder
     _count?: AuditLogCountOrderByAggregateInput
@@ -28436,6 +29192,7 @@ export namespace Prisma {
     id?: IntWithAggregatesFilter<"AuditLog"> | number
     dataHora?: DateTimeWithAggregatesFilter<"AuditLog"> | Date | string
     usuario?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    usuarioId?: IntNullableWithAggregatesFilter<"AuditLog"> | number | null
     acao?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     detalhes?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
   }
@@ -28616,7 +29373,9 @@ export namespace Prisma {
     status?: StringFilter<"AiMensagem"> | string
     links?: JsonNullableFilter<"AiMensagem">
     usuario?: StringNullableFilter<"AiMensagem"> | string | null
+    usuarioId?: IntNullableFilter<"AiMensagem"> | number | null
     criadoEm?: DateTimeFilter<"AiMensagem"> | Date | string
+    usuarioRef?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }
 
   export type AiMensagemOrderByWithRelationInput = {
@@ -28630,7 +29389,9 @@ export namespace Prisma {
     status?: SortOrder
     links?: SortOrderInput | SortOrder
     usuario?: SortOrderInput | SortOrder
+    usuarioId?: SortOrderInput | SortOrder
     criadoEm?: SortOrder
+    usuarioRef?: UsuarioOrderByWithRelationInput
   }
 
   export type AiMensagemWhereUniqueInput = Prisma.AtLeast<{
@@ -28647,7 +29408,9 @@ export namespace Prisma {
     status?: StringFilter<"AiMensagem"> | string
     links?: JsonNullableFilter<"AiMensagem">
     usuario?: StringNullableFilter<"AiMensagem"> | string | null
+    usuarioId?: IntNullableFilter<"AiMensagem"> | number | null
     criadoEm?: DateTimeFilter<"AiMensagem"> | Date | string
+    usuarioRef?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }, "id">
 
   export type AiMensagemOrderByWithAggregationInput = {
@@ -28661,6 +29424,7 @@ export namespace Prisma {
     status?: SortOrder
     links?: SortOrderInput | SortOrder
     usuario?: SortOrderInput | SortOrder
+    usuarioId?: SortOrderInput | SortOrder
     criadoEm?: SortOrder
     _count?: AiMensagemCountOrderByAggregateInput
     _avg?: AiMensagemAvgOrderByAggregateInput
@@ -28683,6 +29447,7 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"AiMensagem"> | string
     links?: JsonNullableWithAggregatesFilter<"AiMensagem">
     usuario?: StringNullableWithAggregatesFilter<"AiMensagem"> | string | null
+    usuarioId?: IntNullableWithAggregatesFilter<"AiMensagem"> | number | null
     criadoEm?: DateTimeWithAggregatesFilter<"AiMensagem"> | Date | string
   }
 
@@ -28747,6 +29512,8 @@ export namespace Prisma {
     lida?: BoolFilter<"Notificacao"> | boolean
     criadoEm?: DateTimeFilter<"Notificacao"> | Date | string
     link?: StringNullableFilter<"Notificacao"> | string | null
+    usuarioId?: IntNullableFilter<"Notificacao"> | number | null
+    usuario?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }
 
   export type NotificacaoOrderByWithRelationInput = {
@@ -28755,6 +29522,8 @@ export namespace Prisma {
     lida?: SortOrder
     criadoEm?: SortOrder
     link?: SortOrderInput | SortOrder
+    usuarioId?: SortOrderInput | SortOrder
+    usuario?: UsuarioOrderByWithRelationInput
   }
 
   export type NotificacaoWhereUniqueInput = Prisma.AtLeast<{
@@ -28766,6 +29535,8 @@ export namespace Prisma {
     lida?: BoolFilter<"Notificacao"> | boolean
     criadoEm?: DateTimeFilter<"Notificacao"> | Date | string
     link?: StringNullableFilter<"Notificacao"> | string | null
+    usuarioId?: IntNullableFilter<"Notificacao"> | number | null
+    usuario?: XOR<UsuarioNullableScalarRelationFilter, UsuarioWhereInput> | null
   }, "id">
 
   export type NotificacaoOrderByWithAggregationInput = {
@@ -28774,6 +29545,7 @@ export namespace Prisma {
     lida?: SortOrder
     criadoEm?: SortOrder
     link?: SortOrderInput | SortOrder
+    usuarioId?: SortOrderInput | SortOrder
     _count?: NotificacaoCountOrderByAggregateInput
     _avg?: NotificacaoAvgOrderByAggregateInput
     _max?: NotificacaoMaxOrderByAggregateInput
@@ -28790,6 +29562,7 @@ export namespace Prisma {
     lida?: BoolWithAggregatesFilter<"Notificacao"> | boolean
     criadoEm?: DateTimeWithAggregatesFilter<"Notificacao"> | Date | string
     link?: StringNullableWithAggregatesFilter<"Notificacao"> | string | null
+    usuarioId?: IntNullableWithAggregatesFilter<"Notificacao"> | number | null
   }
 
   export type VozDubladorWhereInput = {
@@ -29188,11 +29961,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
+    vendedorUsuario?: UsuarioCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
@@ -29204,6 +29979,7 @@ export namespace Prisma {
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     clienteId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
@@ -29222,6 +29998,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -29253,11 +30030,13 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    vendedorUsuario?: UsuarioUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
@@ -29269,6 +30048,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     clienteId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -29287,6 +30067,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29302,6 +30083,7 @@ export namespace Prisma {
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     clienteId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
@@ -29320,6 +30102,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -29347,6 +30130,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29358,6 +30142,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     clienteId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -29376,6 +30161,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -29862,6 +30648,11 @@ export namespace Prisma {
     cep?: string | null
     metaMensal?: number | null
     comissaoPct?: number | null
+    vendas?: VendaCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUsuarioRefInput
   }
 
   export type UsuarioUncheckedCreateInput = {
@@ -29877,6 +30668,11 @@ export namespace Prisma {
     cep?: string | null
     metaMensal?: number | null
     comissaoPct?: number | null
+    vendas?: VendaUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemUncheckedCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUsuarioRefInput
   }
 
   export type UsuarioUpdateInput = {
@@ -29891,6 +30687,11 @@ export namespace Prisma {
     cep?: NullableStringFieldUpdateOperationsInput | string | null
     metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
     comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUsuarioRefNestedInput
   }
 
   export type UsuarioUncheckedUpdateInput = {
@@ -29906,6 +30707,11 @@ export namespace Prisma {
     cep?: NullableStringFieldUpdateOperationsInput | string | null
     metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
     comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUncheckedUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUncheckedUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUsuarioRefNestedInput
   }
 
   export type UsuarioCreateManyInput = {
@@ -30117,12 +30923,14 @@ export namespace Prisma {
     vendedor?: string | null
     valor?: number | null
     obs?: string | null
+    vendedorUsuario?: UsuarioCreateNestedOneWithoutPagamentosInput
   }
 
   export type PagamentoUncheckedCreateInput = {
     id?: number
     dataPagamento: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     valor?: number | null
     obs?: string | null
   }
@@ -30132,12 +30940,14 @@ export namespace Prisma {
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
     valor?: NullableFloatFieldUpdateOperationsInput | number | null
     obs?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorUsuario?: UsuarioUpdateOneWithoutPagamentosNestedInput
   }
 
   export type PagamentoUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     valor?: NullableFloatFieldUpdateOperationsInput | number | null
     obs?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -30146,6 +30956,7 @@ export namespace Prisma {
     id?: number
     dataPagamento: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     valor?: number | null
     obs?: string | null
   }
@@ -30161,6 +30972,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     valor?: NullableFloatFieldUpdateOperationsInput | number | null
     obs?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -30170,12 +30982,14 @@ export namespace Prisma {
     usuario?: string | null
     acao?: string | null
     detalhes?: string | null
+    usuarioRef?: UsuarioCreateNestedOneWithoutAuditLogsInput
   }
 
   export type AuditLogUncheckedCreateInput = {
     id?: number
     dataHora: Date | string
     usuario?: string | null
+    usuarioId?: number | null
     acao?: string | null
     detalhes?: string | null
   }
@@ -30185,12 +30999,14 @@ export namespace Prisma {
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
     acao?: NullableStringFieldUpdateOperationsInput | string | null
     detalhes?: NullableStringFieldUpdateOperationsInput | string | null
+    usuarioRef?: UsuarioUpdateOneWithoutAuditLogsNestedInput
   }
 
   export type AuditLogUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
     dataHora?: DateTimeFieldUpdateOperationsInput | Date | string
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    usuarioId?: NullableIntFieldUpdateOperationsInput | number | null
     acao?: NullableStringFieldUpdateOperationsInput | string | null
     detalhes?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -30199,6 +31015,7 @@ export namespace Prisma {
     id?: number
     dataHora: Date | string
     usuario?: string | null
+    usuarioId?: number | null
     acao?: string | null
     detalhes?: string | null
   }
@@ -30214,6 +31031,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     dataHora?: DateTimeFieldUpdateOperationsInput | Date | string
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    usuarioId?: NullableIntFieldUpdateOperationsInput | number | null
     acao?: NullableStringFieldUpdateOperationsInput | string | null
     detalhes?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -30388,6 +31206,7 @@ export namespace Prisma {
     links?: NullableJsonNullValueInput | InputJsonValue
     usuario?: string | null
     criadoEm?: Date | string
+    usuarioRef?: UsuarioCreateNestedOneWithoutAiMensagensInput
   }
 
   export type AiMensagemUncheckedCreateInput = {
@@ -30401,6 +31220,7 @@ export namespace Prisma {
     status?: string
     links?: NullableJsonNullValueInput | InputJsonValue
     usuario?: string | null
+    usuarioId?: number | null
     criadoEm?: Date | string
   }
 
@@ -30415,6 +31235,7 @@ export namespace Prisma {
     links?: NullableJsonNullValueInput | InputJsonValue
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    usuarioRef?: UsuarioUpdateOneWithoutAiMensagensNestedInput
   }
 
   export type AiMensagemUncheckedUpdateInput = {
@@ -30428,6 +31249,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     links?: NullableJsonNullValueInput | InputJsonValue
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    usuarioId?: NullableIntFieldUpdateOperationsInput | number | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -30442,6 +31264,7 @@ export namespace Prisma {
     status?: string
     links?: NullableJsonNullValueInput | InputJsonValue
     usuario?: string | null
+    usuarioId?: number | null
     criadoEm?: Date | string
   }
 
@@ -30469,6 +31292,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     links?: NullableJsonNullValueInput | InputJsonValue
     usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    usuarioId?: NullableIntFieldUpdateOperationsInput | number | null
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -30522,6 +31346,7 @@ export namespace Prisma {
     lida?: boolean
     criadoEm?: Date | string
     link?: string | null
+    usuario?: UsuarioCreateNestedOneWithoutNotificacoesInput
   }
 
   export type NotificacaoUncheckedCreateInput = {
@@ -30530,6 +31355,7 @@ export namespace Prisma {
     lida?: boolean
     criadoEm?: Date | string
     link?: string | null
+    usuarioId?: number | null
   }
 
   export type NotificacaoUpdateInput = {
@@ -30537,6 +31363,7 @@ export namespace Prisma {
     lida?: BoolFieldUpdateOperationsInput | boolean
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     link?: NullableStringFieldUpdateOperationsInput | string | null
+    usuario?: UsuarioUpdateOneWithoutNotificacoesNestedInput
   }
 
   export type NotificacaoUncheckedUpdateInput = {
@@ -30545,6 +31372,7 @@ export namespace Prisma {
     lida?: BoolFieldUpdateOperationsInput | boolean
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     link?: NullableStringFieldUpdateOperationsInput | string | null
+    usuarioId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type NotificacaoCreateManyInput = {
@@ -30553,6 +31381,7 @@ export namespace Prisma {
     lida?: boolean
     criadoEm?: Date | string
     link?: string | null
+    usuarioId?: number | null
   }
 
   export type NotificacaoUpdateManyMutationInput = {
@@ -30568,6 +31397,7 @@ export namespace Prisma {
     lida?: BoolFieldUpdateOperationsInput | boolean
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
     link?: NullableStringFieldUpdateOperationsInput | string | null
+    usuarioId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type VozDubladorCreateInput = {
@@ -31094,6 +31924,11 @@ export namespace Prisma {
     isNot?: ClienteWhereInput | null
   }
 
+  export type UsuarioNullableScalarRelationFilter = {
+    is?: UsuarioWhereInput | null
+    isNot?: UsuarioWhereInput | null
+  }
+
   export type ItemVendaListRelationFilter = {
     every?: ItemVendaWhereInput
     some?: ItemVendaWhereInput
@@ -31134,6 +31969,7 @@ export namespace Prisma {
     uuid?: SortOrder
     dataVenda?: SortOrder
     vendedor?: SortOrder
+    vendedorId?: SortOrder
     clienteId?: SortOrder
     produtoNome?: SortOrder
     custoProduto?: SortOrder
@@ -31152,6 +31988,7 @@ export namespace Prisma {
     descontoEmFolha?: SortOrder
     desconto?: SortOrder
     boleto?: SortOrder
+    formaPagamento?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
@@ -31160,6 +31997,7 @@ export namespace Prisma {
 
   export type VendaAvgOrderByAggregateInput = {
     id?: SortOrder
+    vendedorId?: SortOrder
     clienteId?: SortOrder
     custoProduto?: SortOrder
     quantidade?: SortOrder
@@ -31181,6 +32019,7 @@ export namespace Prisma {
     uuid?: SortOrder
     dataVenda?: SortOrder
     vendedor?: SortOrder
+    vendedorId?: SortOrder
     clienteId?: SortOrder
     produtoNome?: SortOrder
     custoProduto?: SortOrder
@@ -31199,6 +32038,7 @@ export namespace Prisma {
     descontoEmFolha?: SortOrder
     desconto?: SortOrder
     boleto?: SortOrder
+    formaPagamento?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
@@ -31210,6 +32050,7 @@ export namespace Prisma {
     uuid?: SortOrder
     dataVenda?: SortOrder
     vendedor?: SortOrder
+    vendedorId?: SortOrder
     clienteId?: SortOrder
     produtoNome?: SortOrder
     custoProduto?: SortOrder
@@ -31228,6 +32069,7 @@ export namespace Prisma {
     descontoEmFolha?: SortOrder
     desconto?: SortOrder
     boleto?: SortOrder
+    formaPagamento?: SortOrder
     status?: SortOrder
     asaasPaymentId?: SortOrder
     boletoUrl?: SortOrder
@@ -31236,6 +32078,7 @@ export namespace Prisma {
 
   export type VendaSumOrderByAggregateInput = {
     id?: SortOrder
+    vendedorId?: SortOrder
     clienteId?: SortOrder
     custoProduto?: SortOrder
     quantidade?: SortOrder
@@ -31643,6 +32486,46 @@ export namespace Prisma {
     _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
+  export type PagamentoListRelationFilter = {
+    every?: PagamentoWhereInput
+    some?: PagamentoWhereInput
+    none?: PagamentoWhereInput
+  }
+
+  export type NotificacaoListRelationFilter = {
+    every?: NotificacaoWhereInput
+    some?: NotificacaoWhereInput
+    none?: NotificacaoWhereInput
+  }
+
+  export type AiMensagemListRelationFilter = {
+    every?: AiMensagemWhereInput
+    some?: AiMensagemWhereInput
+    none?: AiMensagemWhereInput
+  }
+
+  export type AuditLogListRelationFilter = {
+    every?: AuditLogWhereInput
+    some?: AuditLogWhereInput
+    none?: AuditLogWhereInput
+  }
+
+  export type PagamentoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type NotificacaoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AiMensagemOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AuditLogOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type UsuarioCountOrderByAggregateInput = {
     id?: SortOrder
     username?: SortOrder
@@ -31838,12 +32721,14 @@ export namespace Prisma {
     id?: SortOrder
     dataPagamento?: SortOrder
     vendedor?: SortOrder
+    vendedorId?: SortOrder
     valor?: SortOrder
     obs?: SortOrder
   }
 
   export type PagamentoAvgOrderByAggregateInput = {
     id?: SortOrder
+    vendedorId?: SortOrder
     valor?: SortOrder
   }
 
@@ -31851,6 +32736,7 @@ export namespace Prisma {
     id?: SortOrder
     dataPagamento?: SortOrder
     vendedor?: SortOrder
+    vendedorId?: SortOrder
     valor?: SortOrder
     obs?: SortOrder
   }
@@ -31859,12 +32745,14 @@ export namespace Prisma {
     id?: SortOrder
     dataPagamento?: SortOrder
     vendedor?: SortOrder
+    vendedorId?: SortOrder
     valor?: SortOrder
     obs?: SortOrder
   }
 
   export type PagamentoSumOrderByAggregateInput = {
     id?: SortOrder
+    vendedorId?: SortOrder
     valor?: SortOrder
   }
 
@@ -31872,18 +32760,21 @@ export namespace Prisma {
     id?: SortOrder
     dataHora?: SortOrder
     usuario?: SortOrder
+    usuarioId?: SortOrder
     acao?: SortOrder
     detalhes?: SortOrder
   }
 
   export type AuditLogAvgOrderByAggregateInput = {
     id?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type AuditLogMaxOrderByAggregateInput = {
     id?: SortOrder
     dataHora?: SortOrder
     usuario?: SortOrder
+    usuarioId?: SortOrder
     acao?: SortOrder
     detalhes?: SortOrder
   }
@@ -31892,12 +32783,14 @@ export namespace Prisma {
     id?: SortOrder
     dataHora?: SortOrder
     usuario?: SortOrder
+    usuarioId?: SortOrder
     acao?: SortOrder
     detalhes?: SortOrder
   }
 
   export type AuditLogSumOrderByAggregateInput = {
     id?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type DespesaCountOrderByAggregateInput = {
@@ -32038,11 +32931,13 @@ export namespace Prisma {
     status?: SortOrder
     links?: SortOrder
     usuario?: SortOrder
+    usuarioId?: SortOrder
     criadoEm?: SortOrder
   }
 
   export type AiMensagemAvgOrderByAggregateInput = {
     id?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type AiMensagemMaxOrderByAggregateInput = {
@@ -32054,6 +32949,7 @@ export namespace Prisma {
     promptOriginal?: SortOrder
     status?: SortOrder
     usuario?: SortOrder
+    usuarioId?: SortOrder
     criadoEm?: SortOrder
   }
 
@@ -32066,11 +32962,13 @@ export namespace Prisma {
     promptOriginal?: SortOrder
     status?: SortOrder
     usuario?: SortOrder
+    usuarioId?: SortOrder
     criadoEm?: SortOrder
   }
 
   export type AiMensagemSumOrderByAggregateInput = {
     id?: SortOrder
+    usuarioId?: SortOrder
   }
   export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -32136,10 +33034,12 @@ export namespace Prisma {
     lida?: SortOrder
     criadoEm?: SortOrder
     link?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type NotificacaoAvgOrderByAggregateInput = {
     id?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type NotificacaoMaxOrderByAggregateInput = {
@@ -32148,6 +33048,7 @@ export namespace Prisma {
     lida?: SortOrder
     criadoEm?: SortOrder
     link?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type NotificacaoMinOrderByAggregateInput = {
@@ -32156,10 +33057,12 @@ export namespace Prisma {
     lida?: SortOrder
     criadoEm?: SortOrder
     link?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type NotificacaoSumOrderByAggregateInput = {
     id?: SortOrder
+    usuarioId?: SortOrder
   }
 
   export type VozDubladorCountOrderByAggregateInput = {
@@ -32370,6 +33273,12 @@ export namespace Prisma {
     connect?: ClienteWhereUniqueInput
   }
 
+  export type UsuarioCreateNestedOneWithoutVendasInput = {
+    create?: XOR<UsuarioCreateWithoutVendasInput, UsuarioUncheckedCreateWithoutVendasInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutVendasInput
+    connect?: UsuarioWhereUniqueInput
+  }
+
   export type ItemVendaCreateNestedManyWithoutVendaInput = {
     create?: XOR<ItemVendaCreateWithoutVendaInput, ItemVendaUncheckedCreateWithoutVendaInput> | ItemVendaCreateWithoutVendaInput[] | ItemVendaUncheckedCreateWithoutVendaInput[]
     connectOrCreate?: ItemVendaCreateOrConnectWithoutVendaInput | ItemVendaCreateOrConnectWithoutVendaInput[]
@@ -32440,6 +33349,16 @@ export namespace Prisma {
     delete?: ClienteWhereInput | boolean
     connect?: ClienteWhereUniqueInput
     update?: XOR<XOR<ClienteUpdateToOneWithWhereWithoutVendasInput, ClienteUpdateWithoutVendasInput>, ClienteUncheckedUpdateWithoutVendasInput>
+  }
+
+  export type UsuarioUpdateOneWithoutVendasNestedInput = {
+    create?: XOR<UsuarioCreateWithoutVendasInput, UsuarioUncheckedCreateWithoutVendasInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutVendasInput
+    upsert?: UsuarioUpsertWithoutVendasInput
+    disconnect?: UsuarioWhereInput | boolean
+    delete?: UsuarioWhereInput | boolean
+    connect?: UsuarioWhereUniqueInput
+    update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutVendasInput, UsuarioUpdateWithoutVendasInput>, UsuarioUncheckedUpdateWithoutVendasInput>
   }
 
   export type ItemVendaUpdateManyWithoutVendaNestedInput = {
@@ -32604,6 +33523,216 @@ export namespace Prisma {
 
   export type NullableBoolFieldUpdateOperationsInput = {
     set?: boolean | null
+  }
+
+  export type VendaCreateNestedManyWithoutVendedorUsuarioInput = {
+    create?: XOR<VendaCreateWithoutVendedorUsuarioInput, VendaUncheckedCreateWithoutVendedorUsuarioInput> | VendaCreateWithoutVendedorUsuarioInput[] | VendaUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: VendaCreateOrConnectWithoutVendedorUsuarioInput | VendaCreateOrConnectWithoutVendedorUsuarioInput[]
+    createMany?: VendaCreateManyVendedorUsuarioInputEnvelope
+    connect?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+  }
+
+  export type PagamentoCreateNestedManyWithoutVendedorUsuarioInput = {
+    create?: XOR<PagamentoCreateWithoutVendedorUsuarioInput, PagamentoUncheckedCreateWithoutVendedorUsuarioInput> | PagamentoCreateWithoutVendedorUsuarioInput[] | PagamentoUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendedorUsuarioInput | PagamentoCreateOrConnectWithoutVendedorUsuarioInput[]
+    createMany?: PagamentoCreateManyVendedorUsuarioInputEnvelope
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+  }
+
+  export type NotificacaoCreateNestedManyWithoutUsuarioInput = {
+    create?: XOR<NotificacaoCreateWithoutUsuarioInput, NotificacaoUncheckedCreateWithoutUsuarioInput> | NotificacaoCreateWithoutUsuarioInput[] | NotificacaoUncheckedCreateWithoutUsuarioInput[]
+    connectOrCreate?: NotificacaoCreateOrConnectWithoutUsuarioInput | NotificacaoCreateOrConnectWithoutUsuarioInput[]
+    createMany?: NotificacaoCreateManyUsuarioInputEnvelope
+    connect?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+  }
+
+  export type AiMensagemCreateNestedManyWithoutUsuarioRefInput = {
+    create?: XOR<AiMensagemCreateWithoutUsuarioRefInput, AiMensagemUncheckedCreateWithoutUsuarioRefInput> | AiMensagemCreateWithoutUsuarioRefInput[] | AiMensagemUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AiMensagemCreateOrConnectWithoutUsuarioRefInput | AiMensagemCreateOrConnectWithoutUsuarioRefInput[]
+    createMany?: AiMensagemCreateManyUsuarioRefInputEnvelope
+    connect?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+  }
+
+  export type AuditLogCreateNestedManyWithoutUsuarioRefInput = {
+    create?: XOR<AuditLogCreateWithoutUsuarioRefInput, AuditLogUncheckedCreateWithoutUsuarioRefInput> | AuditLogCreateWithoutUsuarioRefInput[] | AuditLogUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUsuarioRefInput | AuditLogCreateOrConnectWithoutUsuarioRefInput[]
+    createMany?: AuditLogCreateManyUsuarioRefInputEnvelope
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+  }
+
+  export type VendaUncheckedCreateNestedManyWithoutVendedorUsuarioInput = {
+    create?: XOR<VendaCreateWithoutVendedorUsuarioInput, VendaUncheckedCreateWithoutVendedorUsuarioInput> | VendaCreateWithoutVendedorUsuarioInput[] | VendaUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: VendaCreateOrConnectWithoutVendedorUsuarioInput | VendaCreateOrConnectWithoutVendedorUsuarioInput[]
+    createMany?: VendaCreateManyVendedorUsuarioInputEnvelope
+    connect?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+  }
+
+  export type PagamentoUncheckedCreateNestedManyWithoutVendedorUsuarioInput = {
+    create?: XOR<PagamentoCreateWithoutVendedorUsuarioInput, PagamentoUncheckedCreateWithoutVendedorUsuarioInput> | PagamentoCreateWithoutVendedorUsuarioInput[] | PagamentoUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendedorUsuarioInput | PagamentoCreateOrConnectWithoutVendedorUsuarioInput[]
+    createMany?: PagamentoCreateManyVendedorUsuarioInputEnvelope
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+  }
+
+  export type NotificacaoUncheckedCreateNestedManyWithoutUsuarioInput = {
+    create?: XOR<NotificacaoCreateWithoutUsuarioInput, NotificacaoUncheckedCreateWithoutUsuarioInput> | NotificacaoCreateWithoutUsuarioInput[] | NotificacaoUncheckedCreateWithoutUsuarioInput[]
+    connectOrCreate?: NotificacaoCreateOrConnectWithoutUsuarioInput | NotificacaoCreateOrConnectWithoutUsuarioInput[]
+    createMany?: NotificacaoCreateManyUsuarioInputEnvelope
+    connect?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+  }
+
+  export type AiMensagemUncheckedCreateNestedManyWithoutUsuarioRefInput = {
+    create?: XOR<AiMensagemCreateWithoutUsuarioRefInput, AiMensagemUncheckedCreateWithoutUsuarioRefInput> | AiMensagemCreateWithoutUsuarioRefInput[] | AiMensagemUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AiMensagemCreateOrConnectWithoutUsuarioRefInput | AiMensagemCreateOrConnectWithoutUsuarioRefInput[]
+    createMany?: AiMensagemCreateManyUsuarioRefInputEnvelope
+    connect?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+  }
+
+  export type AuditLogUncheckedCreateNestedManyWithoutUsuarioRefInput = {
+    create?: XOR<AuditLogCreateWithoutUsuarioRefInput, AuditLogUncheckedCreateWithoutUsuarioRefInput> | AuditLogCreateWithoutUsuarioRefInput[] | AuditLogUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUsuarioRefInput | AuditLogCreateOrConnectWithoutUsuarioRefInput[]
+    createMany?: AuditLogCreateManyUsuarioRefInputEnvelope
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+  }
+
+  export type VendaUpdateManyWithoutVendedorUsuarioNestedInput = {
+    create?: XOR<VendaCreateWithoutVendedorUsuarioInput, VendaUncheckedCreateWithoutVendedorUsuarioInput> | VendaCreateWithoutVendedorUsuarioInput[] | VendaUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: VendaCreateOrConnectWithoutVendedorUsuarioInput | VendaCreateOrConnectWithoutVendedorUsuarioInput[]
+    upsert?: VendaUpsertWithWhereUniqueWithoutVendedorUsuarioInput | VendaUpsertWithWhereUniqueWithoutVendedorUsuarioInput[]
+    createMany?: VendaCreateManyVendedorUsuarioInputEnvelope
+    set?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    disconnect?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    delete?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    connect?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    update?: VendaUpdateWithWhereUniqueWithoutVendedorUsuarioInput | VendaUpdateWithWhereUniqueWithoutVendedorUsuarioInput[]
+    updateMany?: VendaUpdateManyWithWhereWithoutVendedorUsuarioInput | VendaUpdateManyWithWhereWithoutVendedorUsuarioInput[]
+    deleteMany?: VendaScalarWhereInput | VendaScalarWhereInput[]
+  }
+
+  export type PagamentoUpdateManyWithoutVendedorUsuarioNestedInput = {
+    create?: XOR<PagamentoCreateWithoutVendedorUsuarioInput, PagamentoUncheckedCreateWithoutVendedorUsuarioInput> | PagamentoCreateWithoutVendedorUsuarioInput[] | PagamentoUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendedorUsuarioInput | PagamentoCreateOrConnectWithoutVendedorUsuarioInput[]
+    upsert?: PagamentoUpsertWithWhereUniqueWithoutVendedorUsuarioInput | PagamentoUpsertWithWhereUniqueWithoutVendedorUsuarioInput[]
+    createMany?: PagamentoCreateManyVendedorUsuarioInputEnvelope
+    set?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    disconnect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    delete?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    update?: PagamentoUpdateWithWhereUniqueWithoutVendedorUsuarioInput | PagamentoUpdateWithWhereUniqueWithoutVendedorUsuarioInput[]
+    updateMany?: PagamentoUpdateManyWithWhereWithoutVendedorUsuarioInput | PagamentoUpdateManyWithWhereWithoutVendedorUsuarioInput[]
+    deleteMany?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+  }
+
+  export type NotificacaoUpdateManyWithoutUsuarioNestedInput = {
+    create?: XOR<NotificacaoCreateWithoutUsuarioInput, NotificacaoUncheckedCreateWithoutUsuarioInput> | NotificacaoCreateWithoutUsuarioInput[] | NotificacaoUncheckedCreateWithoutUsuarioInput[]
+    connectOrCreate?: NotificacaoCreateOrConnectWithoutUsuarioInput | NotificacaoCreateOrConnectWithoutUsuarioInput[]
+    upsert?: NotificacaoUpsertWithWhereUniqueWithoutUsuarioInput | NotificacaoUpsertWithWhereUniqueWithoutUsuarioInput[]
+    createMany?: NotificacaoCreateManyUsuarioInputEnvelope
+    set?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    disconnect?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    delete?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    connect?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    update?: NotificacaoUpdateWithWhereUniqueWithoutUsuarioInput | NotificacaoUpdateWithWhereUniqueWithoutUsuarioInput[]
+    updateMany?: NotificacaoUpdateManyWithWhereWithoutUsuarioInput | NotificacaoUpdateManyWithWhereWithoutUsuarioInput[]
+    deleteMany?: NotificacaoScalarWhereInput | NotificacaoScalarWhereInput[]
+  }
+
+  export type AiMensagemUpdateManyWithoutUsuarioRefNestedInput = {
+    create?: XOR<AiMensagemCreateWithoutUsuarioRefInput, AiMensagemUncheckedCreateWithoutUsuarioRefInput> | AiMensagemCreateWithoutUsuarioRefInput[] | AiMensagemUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AiMensagemCreateOrConnectWithoutUsuarioRefInput | AiMensagemCreateOrConnectWithoutUsuarioRefInput[]
+    upsert?: AiMensagemUpsertWithWhereUniqueWithoutUsuarioRefInput | AiMensagemUpsertWithWhereUniqueWithoutUsuarioRefInput[]
+    createMany?: AiMensagemCreateManyUsuarioRefInputEnvelope
+    set?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    disconnect?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    delete?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    connect?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    update?: AiMensagemUpdateWithWhereUniqueWithoutUsuarioRefInput | AiMensagemUpdateWithWhereUniqueWithoutUsuarioRefInput[]
+    updateMany?: AiMensagemUpdateManyWithWhereWithoutUsuarioRefInput | AiMensagemUpdateManyWithWhereWithoutUsuarioRefInput[]
+    deleteMany?: AiMensagemScalarWhereInput | AiMensagemScalarWhereInput[]
+  }
+
+  export type AuditLogUpdateManyWithoutUsuarioRefNestedInput = {
+    create?: XOR<AuditLogCreateWithoutUsuarioRefInput, AuditLogUncheckedCreateWithoutUsuarioRefInput> | AuditLogCreateWithoutUsuarioRefInput[] | AuditLogUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUsuarioRefInput | AuditLogCreateOrConnectWithoutUsuarioRefInput[]
+    upsert?: AuditLogUpsertWithWhereUniqueWithoutUsuarioRefInput | AuditLogUpsertWithWhereUniqueWithoutUsuarioRefInput[]
+    createMany?: AuditLogCreateManyUsuarioRefInputEnvelope
+    set?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    disconnect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    delete?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    update?: AuditLogUpdateWithWhereUniqueWithoutUsuarioRefInput | AuditLogUpdateWithWhereUniqueWithoutUsuarioRefInput[]
+    updateMany?: AuditLogUpdateManyWithWhereWithoutUsuarioRefInput | AuditLogUpdateManyWithWhereWithoutUsuarioRefInput[]
+    deleteMany?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
+  }
+
+  export type VendaUncheckedUpdateManyWithoutVendedorUsuarioNestedInput = {
+    create?: XOR<VendaCreateWithoutVendedorUsuarioInput, VendaUncheckedCreateWithoutVendedorUsuarioInput> | VendaCreateWithoutVendedorUsuarioInput[] | VendaUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: VendaCreateOrConnectWithoutVendedorUsuarioInput | VendaCreateOrConnectWithoutVendedorUsuarioInput[]
+    upsert?: VendaUpsertWithWhereUniqueWithoutVendedorUsuarioInput | VendaUpsertWithWhereUniqueWithoutVendedorUsuarioInput[]
+    createMany?: VendaCreateManyVendedorUsuarioInputEnvelope
+    set?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    disconnect?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    delete?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    connect?: VendaWhereUniqueInput | VendaWhereUniqueInput[]
+    update?: VendaUpdateWithWhereUniqueWithoutVendedorUsuarioInput | VendaUpdateWithWhereUniqueWithoutVendedorUsuarioInput[]
+    updateMany?: VendaUpdateManyWithWhereWithoutVendedorUsuarioInput | VendaUpdateManyWithWhereWithoutVendedorUsuarioInput[]
+    deleteMany?: VendaScalarWhereInput | VendaScalarWhereInput[]
+  }
+
+  export type PagamentoUncheckedUpdateManyWithoutVendedorUsuarioNestedInput = {
+    create?: XOR<PagamentoCreateWithoutVendedorUsuarioInput, PagamentoUncheckedCreateWithoutVendedorUsuarioInput> | PagamentoCreateWithoutVendedorUsuarioInput[] | PagamentoUncheckedCreateWithoutVendedorUsuarioInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendedorUsuarioInput | PagamentoCreateOrConnectWithoutVendedorUsuarioInput[]
+    upsert?: PagamentoUpsertWithWhereUniqueWithoutVendedorUsuarioInput | PagamentoUpsertWithWhereUniqueWithoutVendedorUsuarioInput[]
+    createMany?: PagamentoCreateManyVendedorUsuarioInputEnvelope
+    set?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    disconnect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    delete?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    update?: PagamentoUpdateWithWhereUniqueWithoutVendedorUsuarioInput | PagamentoUpdateWithWhereUniqueWithoutVendedorUsuarioInput[]
+    updateMany?: PagamentoUpdateManyWithWhereWithoutVendedorUsuarioInput | PagamentoUpdateManyWithWhereWithoutVendedorUsuarioInput[]
+    deleteMany?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+  }
+
+  export type NotificacaoUncheckedUpdateManyWithoutUsuarioNestedInput = {
+    create?: XOR<NotificacaoCreateWithoutUsuarioInput, NotificacaoUncheckedCreateWithoutUsuarioInput> | NotificacaoCreateWithoutUsuarioInput[] | NotificacaoUncheckedCreateWithoutUsuarioInput[]
+    connectOrCreate?: NotificacaoCreateOrConnectWithoutUsuarioInput | NotificacaoCreateOrConnectWithoutUsuarioInput[]
+    upsert?: NotificacaoUpsertWithWhereUniqueWithoutUsuarioInput | NotificacaoUpsertWithWhereUniqueWithoutUsuarioInput[]
+    createMany?: NotificacaoCreateManyUsuarioInputEnvelope
+    set?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    disconnect?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    delete?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    connect?: NotificacaoWhereUniqueInput | NotificacaoWhereUniqueInput[]
+    update?: NotificacaoUpdateWithWhereUniqueWithoutUsuarioInput | NotificacaoUpdateWithWhereUniqueWithoutUsuarioInput[]
+    updateMany?: NotificacaoUpdateManyWithWhereWithoutUsuarioInput | NotificacaoUpdateManyWithWhereWithoutUsuarioInput[]
+    deleteMany?: NotificacaoScalarWhereInput | NotificacaoScalarWhereInput[]
+  }
+
+  export type AiMensagemUncheckedUpdateManyWithoutUsuarioRefNestedInput = {
+    create?: XOR<AiMensagemCreateWithoutUsuarioRefInput, AiMensagemUncheckedCreateWithoutUsuarioRefInput> | AiMensagemCreateWithoutUsuarioRefInput[] | AiMensagemUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AiMensagemCreateOrConnectWithoutUsuarioRefInput | AiMensagemCreateOrConnectWithoutUsuarioRefInput[]
+    upsert?: AiMensagemUpsertWithWhereUniqueWithoutUsuarioRefInput | AiMensagemUpsertWithWhereUniqueWithoutUsuarioRefInput[]
+    createMany?: AiMensagemCreateManyUsuarioRefInputEnvelope
+    set?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    disconnect?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    delete?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    connect?: AiMensagemWhereUniqueInput | AiMensagemWhereUniqueInput[]
+    update?: AiMensagemUpdateWithWhereUniqueWithoutUsuarioRefInput | AiMensagemUpdateWithWhereUniqueWithoutUsuarioRefInput[]
+    updateMany?: AiMensagemUpdateManyWithWhereWithoutUsuarioRefInput | AiMensagemUpdateManyWithWhereWithoutUsuarioRefInput[]
+    deleteMany?: AiMensagemScalarWhereInput | AiMensagemScalarWhereInput[]
+  }
+
+  export type AuditLogUncheckedUpdateManyWithoutUsuarioRefNestedInput = {
+    create?: XOR<AuditLogCreateWithoutUsuarioRefInput, AuditLogUncheckedCreateWithoutUsuarioRefInput> | AuditLogCreateWithoutUsuarioRefInput[] | AuditLogUncheckedCreateWithoutUsuarioRefInput[]
+    connectOrCreate?: AuditLogCreateOrConnectWithoutUsuarioRefInput | AuditLogCreateOrConnectWithoutUsuarioRefInput[]
+    upsert?: AuditLogUpsertWithWhereUniqueWithoutUsuarioRefInput | AuditLogUpsertWithWhereUniqueWithoutUsuarioRefInput[]
+    createMany?: AuditLogCreateManyUsuarioRefInputEnvelope
+    set?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    disconnect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    delete?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    connect?: AuditLogWhereUniqueInput | AuditLogWhereUniqueInput[]
+    update?: AuditLogUpdateWithWhereUniqueWithoutUsuarioRefInput | AuditLogUpdateWithWhereUniqueWithoutUsuarioRefInput[]
+    updateMany?: AuditLogUpdateManyWithWhereWithoutUsuarioRefInput | AuditLogUpdateManyWithWhereWithoutUsuarioRefInput[]
+    deleteMany?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
   }
 
   export type ProdutoCreateNestedManyWithoutFornecedorInput = {
@@ -32802,6 +33931,54 @@ export namespace Prisma {
     update?: XOR<XOR<EmpresaParceiraUpdateToOneWithWhereWithoutVinculadaPorInput, EmpresaParceiraUpdateWithoutVinculadaPorInput>, EmpresaParceiraUncheckedUpdateWithoutVinculadaPorInput>
   }
 
+  export type UsuarioCreateNestedOneWithoutPagamentosInput = {
+    create?: XOR<UsuarioCreateWithoutPagamentosInput, UsuarioUncheckedCreateWithoutPagamentosInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutPagamentosInput
+    connect?: UsuarioWhereUniqueInput
+  }
+
+  export type UsuarioUpdateOneWithoutPagamentosNestedInput = {
+    create?: XOR<UsuarioCreateWithoutPagamentosInput, UsuarioUncheckedCreateWithoutPagamentosInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutPagamentosInput
+    upsert?: UsuarioUpsertWithoutPagamentosInput
+    disconnect?: UsuarioWhereInput | boolean
+    delete?: UsuarioWhereInput | boolean
+    connect?: UsuarioWhereUniqueInput
+    update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutPagamentosInput, UsuarioUpdateWithoutPagamentosInput>, UsuarioUncheckedUpdateWithoutPagamentosInput>
+  }
+
+  export type UsuarioCreateNestedOneWithoutAuditLogsInput = {
+    create?: XOR<UsuarioCreateWithoutAuditLogsInput, UsuarioUncheckedCreateWithoutAuditLogsInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutAuditLogsInput
+    connect?: UsuarioWhereUniqueInput
+  }
+
+  export type UsuarioUpdateOneWithoutAuditLogsNestedInput = {
+    create?: XOR<UsuarioCreateWithoutAuditLogsInput, UsuarioUncheckedCreateWithoutAuditLogsInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutAuditLogsInput
+    upsert?: UsuarioUpsertWithoutAuditLogsInput
+    disconnect?: UsuarioWhereInput | boolean
+    delete?: UsuarioWhereInput | boolean
+    connect?: UsuarioWhereUniqueInput
+    update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutAuditLogsInput, UsuarioUpdateWithoutAuditLogsInput>, UsuarioUncheckedUpdateWithoutAuditLogsInput>
+  }
+
+  export type UsuarioCreateNestedOneWithoutAiMensagensInput = {
+    create?: XOR<UsuarioCreateWithoutAiMensagensInput, UsuarioUncheckedCreateWithoutAiMensagensInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutAiMensagensInput
+    connect?: UsuarioWhereUniqueInput
+  }
+
+  export type UsuarioUpdateOneWithoutAiMensagensNestedInput = {
+    create?: XOR<UsuarioCreateWithoutAiMensagensInput, UsuarioUncheckedCreateWithoutAiMensagensInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutAiMensagensInput
+    upsert?: UsuarioUpsertWithoutAiMensagensInput
+    disconnect?: UsuarioWhereInput | boolean
+    delete?: UsuarioWhereInput | boolean
+    connect?: UsuarioWhereUniqueInput
+    update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutAiMensagensInput, UsuarioUpdateWithoutAiMensagensInput>, UsuarioUncheckedUpdateWithoutAiMensagensInput>
+  }
+
   export type VendaCreateNestedOneWithoutAssinaturaInput = {
     create?: XOR<VendaCreateWithoutAssinaturaInput, VendaUncheckedCreateWithoutAssinaturaInput>
     connectOrCreate?: VendaCreateOrConnectWithoutAssinaturaInput
@@ -32814,6 +33991,22 @@ export namespace Prisma {
     upsert?: VendaUpsertWithoutAssinaturaInput
     connect?: VendaWhereUniqueInput
     update?: XOR<XOR<VendaUpdateToOneWithWhereWithoutAssinaturaInput, VendaUpdateWithoutAssinaturaInput>, VendaUncheckedUpdateWithoutAssinaturaInput>
+  }
+
+  export type UsuarioCreateNestedOneWithoutNotificacoesInput = {
+    create?: XOR<UsuarioCreateWithoutNotificacoesInput, UsuarioUncheckedCreateWithoutNotificacoesInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutNotificacoesInput
+    connect?: UsuarioWhereUniqueInput
+  }
+
+  export type UsuarioUpdateOneWithoutNotificacoesNestedInput = {
+    create?: XOR<UsuarioCreateWithoutNotificacoesInput, UsuarioUncheckedCreateWithoutNotificacoesInput>
+    connectOrCreate?: UsuarioCreateOrConnectWithoutNotificacoesInput
+    upsert?: UsuarioUpsertWithoutNotificacoesInput
+    disconnect?: UsuarioWhereInput | boolean
+    delete?: UsuarioWhereInput | boolean
+    connect?: UsuarioWhereUniqueInput
+    update?: XOR<XOR<UsuarioUpdateToOneWithWhereWithoutNotificacoesInput, UsuarioUpdateWithoutNotificacoesInput>, UsuarioUncheckedUpdateWithoutNotificacoesInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -33176,10 +34369,12 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     assinaturaToken?: string | null
+    vendedorUsuario?: UsuarioCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
@@ -33191,6 +34386,7 @@ export namespace Prisma {
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
     quantidade?: number | null
@@ -33208,6 +34404,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -33286,6 +34483,7 @@ export namespace Prisma {
     uuid?: UuidNullableFilter<"Venda"> | string | null
     dataVenda?: DateTimeFilter<"Venda"> | Date | string
     vendedor?: StringNullableFilter<"Venda"> | string | null
+    vendedorId?: IntNullableFilter<"Venda"> | number | null
     clienteId?: IntNullableFilter<"Venda"> | number | null
     produtoNome?: StringNullableFilter<"Venda"> | string | null
     custoProduto?: FloatNullableFilter<"Venda"> | number | null
@@ -33304,6 +34502,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFilter<"Venda"> | boolean
     desconto?: FloatNullableFilter<"Venda"> | number | null
     boleto?: BoolFilter<"Venda"> | boolean
+    formaPagamento?: StringNullableFilter<"Venda"> | string | null
     status?: StringFilter<"Venda"> | string
     asaasPaymentId?: StringNullableFilter<"Venda"> | string | null
     boletoUrl?: StringNullableFilter<"Venda"> | string | null
@@ -33388,6 +34587,48 @@ export namespace Prisma {
   export type ClienteCreateOrConnectWithoutVendasInput = {
     where: ClienteWhereUniqueInput
     create: XOR<ClienteCreateWithoutVendasInput, ClienteUncheckedCreateWithoutVendasInput>
+  }
+
+  export type UsuarioCreateWithoutVendasInput = {
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    pagamentos?: PagamentoCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioUncheckedCreateWithoutVendasInput = {
+    id?: number
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemUncheckedCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioCreateOrConnectWithoutVendasInput = {
+    where: UsuarioWhereUniqueInput
+    create: XOR<UsuarioCreateWithoutVendasInput, UsuarioUncheckedCreateWithoutVendasInput>
   }
 
   export type ItemVendaCreateWithoutVendaInput = {
@@ -33537,6 +34778,54 @@ export namespace Prisma {
     empresaParceiraId?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
+  export type UsuarioUpsertWithoutVendasInput = {
+    update: XOR<UsuarioUpdateWithoutVendasInput, UsuarioUncheckedUpdateWithoutVendasInput>
+    create: XOR<UsuarioCreateWithoutVendasInput, UsuarioUncheckedCreateWithoutVendasInput>
+    where?: UsuarioWhereInput
+  }
+
+  export type UsuarioUpdateToOneWithWhereWithoutVendasInput = {
+    where?: UsuarioWhereInput
+    data: XOR<UsuarioUpdateWithoutVendasInput, UsuarioUncheckedUpdateWithoutVendasInput>
+  }
+
+  export type UsuarioUpdateWithoutVendasInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    pagamentos?: PagamentoUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUsuarioRefNestedInput
+  }
+
+  export type UsuarioUncheckedUpdateWithoutVendasInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUncheckedUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUncheckedUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUsuarioRefNestedInput
+  }
+
   export type ItemVendaUpsertWithWhereUniqueWithoutVendaInput = {
     where: ItemVendaWhereUniqueInput
     update: XOR<ItemVendaUpdateWithoutVendaInput, ItemVendaUncheckedUpdateWithoutVendaInput>
@@ -33668,11 +34957,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
+    vendedorUsuario?: UsuarioCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
@@ -33683,6 +34974,7 @@ export namespace Prisma {
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     clienteId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
@@ -33701,6 +34993,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -33747,11 +35040,13 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    vendedorUsuario?: UsuarioUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
@@ -33762,6 +35057,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     clienteId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -33780,6 +35076,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33810,11 +35107,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
+    vendedorUsuario?: UsuarioCreateNestedOneWithoutVendasInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
     assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
@@ -33825,6 +35124,7 @@ export namespace Prisma {
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     clienteId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
@@ -33843,6 +35143,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -33889,11 +35190,13 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    vendedorUsuario?: UsuarioUpdateOneWithoutVendasNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
     assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
@@ -33904,6 +35207,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     clienteId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -33922,6 +35226,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33952,11 +35257,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
+    vendedorUsuario?: UsuarioCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
     assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
@@ -33967,6 +35274,7 @@ export namespace Prisma {
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     clienteId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
@@ -33985,6 +35293,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -34031,11 +35340,13 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    vendedorUsuario?: UsuarioUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
     assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
@@ -34046,6 +35357,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     clienteId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -34064,6 +35376,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34071,6 +35384,329 @@ export namespace Prisma {
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
     assinatura?: AssinaturaUncheckedUpdateOneWithoutVendaNestedInput
+  }
+
+  export type VendaCreateWithoutVendedorUsuarioInput = {
+    uuid?: string | null
+    dataVenda: Date | string
+    vendedor?: string | null
+    produtoNome?: string | null
+    custoProduto?: number | null
+    quantidade?: number | null
+    valorVenda?: number | null
+    valorFrete?: number | null
+    custoEnvio?: number | null
+    parcelas?: number | null
+    valorParcela?: number | null
+    taxaFinanceiraValor?: number | null
+    lucroLiquido?: number | null
+    antecipada?: number | null
+    excedeuLimite?: number | null
+    temNota?: boolean
+    taxaNota?: number | null
+    descontoEmFolha?: boolean
+    desconto?: number | null
+    boleto?: boolean
+    formaPagamento?: string | null
+    status?: string
+    asaasPaymentId?: string | null
+    boletoUrl?: string | null
+    assinaturaToken?: string | null
+    cliente?: ClienteCreateNestedOneWithoutVendasInput
+    itens?: ItemVendaCreateNestedManyWithoutVendaInput
+    parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaCreateNestedOneWithoutVendaInput
+  }
+
+  export type VendaUncheckedCreateWithoutVendedorUsuarioInput = {
+    id?: number
+    uuid?: string | null
+    dataVenda: Date | string
+    vendedor?: string | null
+    clienteId?: number | null
+    produtoNome?: string | null
+    custoProduto?: number | null
+    quantidade?: number | null
+    valorVenda?: number | null
+    valorFrete?: number | null
+    custoEnvio?: number | null
+    parcelas?: number | null
+    valorParcela?: number | null
+    taxaFinanceiraValor?: number | null
+    lucroLiquido?: number | null
+    antecipada?: number | null
+    excedeuLimite?: number | null
+    temNota?: boolean
+    taxaNota?: number | null
+    descontoEmFolha?: boolean
+    desconto?: number | null
+    boleto?: boolean
+    formaPagamento?: string | null
+    status?: string
+    asaasPaymentId?: string | null
+    boletoUrl?: string | null
+    assinaturaToken?: string | null
+    itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
+    parcelasVencimento?: ParcelaVencimentoUncheckedCreateNestedManyWithoutVendaInput
+    documentos?: DocumentoUncheckedCreateNestedManyWithoutVendaInput
+    assinatura?: AssinaturaUncheckedCreateNestedOneWithoutVendaInput
+  }
+
+  export type VendaCreateOrConnectWithoutVendedorUsuarioInput = {
+    where: VendaWhereUniqueInput
+    create: XOR<VendaCreateWithoutVendedorUsuarioInput, VendaUncheckedCreateWithoutVendedorUsuarioInput>
+  }
+
+  export type VendaCreateManyVendedorUsuarioInputEnvelope = {
+    data: VendaCreateManyVendedorUsuarioInput | VendaCreateManyVendedorUsuarioInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PagamentoCreateWithoutVendedorUsuarioInput = {
+    dataPagamento: Date | string
+    vendedor?: string | null
+    valor?: number | null
+    obs?: string | null
+  }
+
+  export type PagamentoUncheckedCreateWithoutVendedorUsuarioInput = {
+    id?: number
+    dataPagamento: Date | string
+    vendedor?: string | null
+    valor?: number | null
+    obs?: string | null
+  }
+
+  export type PagamentoCreateOrConnectWithoutVendedorUsuarioInput = {
+    where: PagamentoWhereUniqueInput
+    create: XOR<PagamentoCreateWithoutVendedorUsuarioInput, PagamentoUncheckedCreateWithoutVendedorUsuarioInput>
+  }
+
+  export type PagamentoCreateManyVendedorUsuarioInputEnvelope = {
+    data: PagamentoCreateManyVendedorUsuarioInput | PagamentoCreateManyVendedorUsuarioInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type NotificacaoCreateWithoutUsuarioInput = {
+    mensagem: string
+    lida?: boolean
+    criadoEm?: Date | string
+    link?: string | null
+  }
+
+  export type NotificacaoUncheckedCreateWithoutUsuarioInput = {
+    id?: number
+    mensagem: string
+    lida?: boolean
+    criadoEm?: Date | string
+    link?: string | null
+  }
+
+  export type NotificacaoCreateOrConnectWithoutUsuarioInput = {
+    where: NotificacaoWhereUniqueInput
+    create: XOR<NotificacaoCreateWithoutUsuarioInput, NotificacaoUncheckedCreateWithoutUsuarioInput>
+  }
+
+  export type NotificacaoCreateManyUsuarioInputEnvelope = {
+    data: NotificacaoCreateManyUsuarioInput | NotificacaoCreateManyUsuarioInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type AiMensagemCreateWithoutUsuarioRefInput = {
+    sessaoId: string
+    role: string
+    content: string
+    contextResumo?: string | null
+    promptOriginal?: string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type AiMensagemUncheckedCreateWithoutUsuarioRefInput = {
+    id?: number
+    sessaoId: string
+    role: string
+    content: string
+    contextResumo?: string | null
+    promptOriginal?: string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type AiMensagemCreateOrConnectWithoutUsuarioRefInput = {
+    where: AiMensagemWhereUniqueInput
+    create: XOR<AiMensagemCreateWithoutUsuarioRefInput, AiMensagemUncheckedCreateWithoutUsuarioRefInput>
+  }
+
+  export type AiMensagemCreateManyUsuarioRefInputEnvelope = {
+    data: AiMensagemCreateManyUsuarioRefInput | AiMensagemCreateManyUsuarioRefInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type AuditLogCreateWithoutUsuarioRefInput = {
+    dataHora: Date | string
+    usuario?: string | null
+    acao?: string | null
+    detalhes?: string | null
+  }
+
+  export type AuditLogUncheckedCreateWithoutUsuarioRefInput = {
+    id?: number
+    dataHora: Date | string
+    usuario?: string | null
+    acao?: string | null
+    detalhes?: string | null
+  }
+
+  export type AuditLogCreateOrConnectWithoutUsuarioRefInput = {
+    where: AuditLogWhereUniqueInput
+    create: XOR<AuditLogCreateWithoutUsuarioRefInput, AuditLogUncheckedCreateWithoutUsuarioRefInput>
+  }
+
+  export type AuditLogCreateManyUsuarioRefInputEnvelope = {
+    data: AuditLogCreateManyUsuarioRefInput | AuditLogCreateManyUsuarioRefInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type VendaUpsertWithWhereUniqueWithoutVendedorUsuarioInput = {
+    where: VendaWhereUniqueInput
+    update: XOR<VendaUpdateWithoutVendedorUsuarioInput, VendaUncheckedUpdateWithoutVendedorUsuarioInput>
+    create: XOR<VendaCreateWithoutVendedorUsuarioInput, VendaUncheckedCreateWithoutVendedorUsuarioInput>
+  }
+
+  export type VendaUpdateWithWhereUniqueWithoutVendedorUsuarioInput = {
+    where: VendaWhereUniqueInput
+    data: XOR<VendaUpdateWithoutVendedorUsuarioInput, VendaUncheckedUpdateWithoutVendedorUsuarioInput>
+  }
+
+  export type VendaUpdateManyWithWhereWithoutVendedorUsuarioInput = {
+    where: VendaScalarWhereInput
+    data: XOR<VendaUpdateManyMutationInput, VendaUncheckedUpdateManyWithoutVendedorUsuarioInput>
+  }
+
+  export type PagamentoUpsertWithWhereUniqueWithoutVendedorUsuarioInput = {
+    where: PagamentoWhereUniqueInput
+    update: XOR<PagamentoUpdateWithoutVendedorUsuarioInput, PagamentoUncheckedUpdateWithoutVendedorUsuarioInput>
+    create: XOR<PagamentoCreateWithoutVendedorUsuarioInput, PagamentoUncheckedCreateWithoutVendedorUsuarioInput>
+  }
+
+  export type PagamentoUpdateWithWhereUniqueWithoutVendedorUsuarioInput = {
+    where: PagamentoWhereUniqueInput
+    data: XOR<PagamentoUpdateWithoutVendedorUsuarioInput, PagamentoUncheckedUpdateWithoutVendedorUsuarioInput>
+  }
+
+  export type PagamentoUpdateManyWithWhereWithoutVendedorUsuarioInput = {
+    where: PagamentoScalarWhereInput
+    data: XOR<PagamentoUpdateManyMutationInput, PagamentoUncheckedUpdateManyWithoutVendedorUsuarioInput>
+  }
+
+  export type PagamentoScalarWhereInput = {
+    AND?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+    OR?: PagamentoScalarWhereInput[]
+    NOT?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+    id?: IntFilter<"Pagamento"> | number
+    dataPagamento?: DateTimeFilter<"Pagamento"> | Date | string
+    vendedor?: StringNullableFilter<"Pagamento"> | string | null
+    vendedorId?: IntNullableFilter<"Pagamento"> | number | null
+    valor?: FloatNullableFilter<"Pagamento"> | number | null
+    obs?: StringNullableFilter<"Pagamento"> | string | null
+  }
+
+  export type NotificacaoUpsertWithWhereUniqueWithoutUsuarioInput = {
+    where: NotificacaoWhereUniqueInput
+    update: XOR<NotificacaoUpdateWithoutUsuarioInput, NotificacaoUncheckedUpdateWithoutUsuarioInput>
+    create: XOR<NotificacaoCreateWithoutUsuarioInput, NotificacaoUncheckedCreateWithoutUsuarioInput>
+  }
+
+  export type NotificacaoUpdateWithWhereUniqueWithoutUsuarioInput = {
+    where: NotificacaoWhereUniqueInput
+    data: XOR<NotificacaoUpdateWithoutUsuarioInput, NotificacaoUncheckedUpdateWithoutUsuarioInput>
+  }
+
+  export type NotificacaoUpdateManyWithWhereWithoutUsuarioInput = {
+    where: NotificacaoScalarWhereInput
+    data: XOR<NotificacaoUpdateManyMutationInput, NotificacaoUncheckedUpdateManyWithoutUsuarioInput>
+  }
+
+  export type NotificacaoScalarWhereInput = {
+    AND?: NotificacaoScalarWhereInput | NotificacaoScalarWhereInput[]
+    OR?: NotificacaoScalarWhereInput[]
+    NOT?: NotificacaoScalarWhereInput | NotificacaoScalarWhereInput[]
+    id?: IntFilter<"Notificacao"> | number
+    mensagem?: StringFilter<"Notificacao"> | string
+    lida?: BoolFilter<"Notificacao"> | boolean
+    criadoEm?: DateTimeFilter<"Notificacao"> | Date | string
+    link?: StringNullableFilter<"Notificacao"> | string | null
+    usuarioId?: IntNullableFilter<"Notificacao"> | number | null
+  }
+
+  export type AiMensagemUpsertWithWhereUniqueWithoutUsuarioRefInput = {
+    where: AiMensagemWhereUniqueInput
+    update: XOR<AiMensagemUpdateWithoutUsuarioRefInput, AiMensagemUncheckedUpdateWithoutUsuarioRefInput>
+    create: XOR<AiMensagemCreateWithoutUsuarioRefInput, AiMensagemUncheckedCreateWithoutUsuarioRefInput>
+  }
+
+  export type AiMensagemUpdateWithWhereUniqueWithoutUsuarioRefInput = {
+    where: AiMensagemWhereUniqueInput
+    data: XOR<AiMensagemUpdateWithoutUsuarioRefInput, AiMensagemUncheckedUpdateWithoutUsuarioRefInput>
+  }
+
+  export type AiMensagemUpdateManyWithWhereWithoutUsuarioRefInput = {
+    where: AiMensagemScalarWhereInput
+    data: XOR<AiMensagemUpdateManyMutationInput, AiMensagemUncheckedUpdateManyWithoutUsuarioRefInput>
+  }
+
+  export type AiMensagemScalarWhereInput = {
+    AND?: AiMensagemScalarWhereInput | AiMensagemScalarWhereInput[]
+    OR?: AiMensagemScalarWhereInput[]
+    NOT?: AiMensagemScalarWhereInput | AiMensagemScalarWhereInput[]
+    id?: IntFilter<"AiMensagem"> | number
+    sessaoId?: StringFilter<"AiMensagem"> | string
+    role?: StringFilter<"AiMensagem"> | string
+    content?: StringFilter<"AiMensagem"> | string
+    contextResumo?: StringNullableFilter<"AiMensagem"> | string | null
+    promptOriginal?: StringNullableFilter<"AiMensagem"> | string | null
+    actions?: JsonNullableFilter<"AiMensagem">
+    status?: StringFilter<"AiMensagem"> | string
+    links?: JsonNullableFilter<"AiMensagem">
+    usuario?: StringNullableFilter<"AiMensagem"> | string | null
+    usuarioId?: IntNullableFilter<"AiMensagem"> | number | null
+    criadoEm?: DateTimeFilter<"AiMensagem"> | Date | string
+  }
+
+  export type AuditLogUpsertWithWhereUniqueWithoutUsuarioRefInput = {
+    where: AuditLogWhereUniqueInput
+    update: XOR<AuditLogUpdateWithoutUsuarioRefInput, AuditLogUncheckedUpdateWithoutUsuarioRefInput>
+    create: XOR<AuditLogCreateWithoutUsuarioRefInput, AuditLogUncheckedCreateWithoutUsuarioRefInput>
+  }
+
+  export type AuditLogUpdateWithWhereUniqueWithoutUsuarioRefInput = {
+    where: AuditLogWhereUniqueInput
+    data: XOR<AuditLogUpdateWithoutUsuarioRefInput, AuditLogUncheckedUpdateWithoutUsuarioRefInput>
+  }
+
+  export type AuditLogUpdateManyWithWhereWithoutUsuarioRefInput = {
+    where: AuditLogScalarWhereInput
+    data: XOR<AuditLogUpdateManyMutationInput, AuditLogUncheckedUpdateManyWithoutUsuarioRefInput>
+  }
+
+  export type AuditLogScalarWhereInput = {
+    AND?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
+    OR?: AuditLogScalarWhereInput[]
+    NOT?: AuditLogScalarWhereInput | AuditLogScalarWhereInput[]
+    id?: IntFilter<"AuditLog"> | number
+    dataHora?: DateTimeFilter<"AuditLog"> | Date | string
+    usuario?: StringNullableFilter<"AuditLog"> | string | null
+    usuarioId?: IntNullableFilter<"AuditLog"> | number | null
+    acao?: StringNullableFilter<"AuditLog"> | string | null
+    detalhes?: StringNullableFilter<"AuditLog"> | string | null
   }
 
   export type ProdutoCreateWithoutFornecedorInput = {
@@ -34429,6 +36065,276 @@ export namespace Prisma {
     vinculos?: EmpresaVinculoUncheckedUpdateManyWithoutEmpresaNestedInput
   }
 
+  export type UsuarioCreateWithoutPagamentosInput = {
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioUncheckedCreateWithoutPagamentosInput = {
+    id?: number
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemUncheckedCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioCreateOrConnectWithoutPagamentosInput = {
+    where: UsuarioWhereUniqueInput
+    create: XOR<UsuarioCreateWithoutPagamentosInput, UsuarioUncheckedCreateWithoutPagamentosInput>
+  }
+
+  export type UsuarioUpsertWithoutPagamentosInput = {
+    update: XOR<UsuarioUpdateWithoutPagamentosInput, UsuarioUncheckedUpdateWithoutPagamentosInput>
+    create: XOR<UsuarioCreateWithoutPagamentosInput, UsuarioUncheckedCreateWithoutPagamentosInput>
+    where?: UsuarioWhereInput
+  }
+
+  export type UsuarioUpdateToOneWithWhereWithoutPagamentosInput = {
+    where?: UsuarioWhereInput
+    data: XOR<UsuarioUpdateWithoutPagamentosInput, UsuarioUncheckedUpdateWithoutPagamentosInput>
+  }
+
+  export type UsuarioUpdateWithoutPagamentosInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUsuarioRefNestedInput
+  }
+
+  export type UsuarioUncheckedUpdateWithoutPagamentosInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUncheckedUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUncheckedUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUsuarioRefNestedInput
+  }
+
+  export type UsuarioCreateWithoutAuditLogsInput = {
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioUncheckedCreateWithoutAuditLogsInput = {
+    id?: number
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutUsuarioInput
+    aiMensagens?: AiMensagemUncheckedCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioCreateOrConnectWithoutAuditLogsInput = {
+    where: UsuarioWhereUniqueInput
+    create: XOR<UsuarioCreateWithoutAuditLogsInput, UsuarioUncheckedCreateWithoutAuditLogsInput>
+  }
+
+  export type UsuarioUpsertWithoutAuditLogsInput = {
+    update: XOR<UsuarioUpdateWithoutAuditLogsInput, UsuarioUncheckedUpdateWithoutAuditLogsInput>
+    create: XOR<UsuarioCreateWithoutAuditLogsInput, UsuarioUncheckedCreateWithoutAuditLogsInput>
+    where?: UsuarioWhereInput
+  }
+
+  export type UsuarioUpdateToOneWithWhereWithoutAuditLogsInput = {
+    where?: UsuarioWhereInput
+    data: XOR<UsuarioUpdateWithoutAuditLogsInput, UsuarioUncheckedUpdateWithoutAuditLogsInput>
+  }
+
+  export type UsuarioUpdateWithoutAuditLogsInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUpdateManyWithoutUsuarioRefNestedInput
+  }
+
+  export type UsuarioUncheckedUpdateWithoutAuditLogsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUncheckedUpdateManyWithoutUsuarioNestedInput
+    aiMensagens?: AiMensagemUncheckedUpdateManyWithoutUsuarioRefNestedInput
+  }
+
+  export type UsuarioCreateWithoutAiMensagensInput = {
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoCreateNestedManyWithoutUsuarioInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioUncheckedCreateWithoutAiMensagensInput = {
+    id?: number
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    notificacoes?: NotificacaoUncheckedCreateNestedManyWithoutUsuarioInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioCreateOrConnectWithoutAiMensagensInput = {
+    where: UsuarioWhereUniqueInput
+    create: XOR<UsuarioCreateWithoutAiMensagensInput, UsuarioUncheckedCreateWithoutAiMensagensInput>
+  }
+
+  export type UsuarioUpsertWithoutAiMensagensInput = {
+    update: XOR<UsuarioUpdateWithoutAiMensagensInput, UsuarioUncheckedUpdateWithoutAiMensagensInput>
+    create: XOR<UsuarioCreateWithoutAiMensagensInput, UsuarioUncheckedCreateWithoutAiMensagensInput>
+    where?: UsuarioWhereInput
+  }
+
+  export type UsuarioUpdateToOneWithWhereWithoutAiMensagensInput = {
+    where?: UsuarioWhereInput
+    data: XOR<UsuarioUpdateWithoutAiMensagensInput, UsuarioUncheckedUpdateWithoutAiMensagensInput>
+  }
+
+  export type UsuarioUpdateWithoutAiMensagensInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUpdateManyWithoutUsuarioNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUsuarioRefNestedInput
+  }
+
+  export type UsuarioUncheckedUpdateWithoutAiMensagensInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    notificacoes?: NotificacaoUncheckedUpdateManyWithoutUsuarioNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUsuarioRefNestedInput
+  }
+
   export type VendaCreateWithoutAssinaturaInput = {
     uuid?: string | null
     dataVenda: Date | string
@@ -34450,11 +36356,13 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
     assinaturaToken?: string | null
     cliente?: ClienteCreateNestedOneWithoutVendasInput
+    vendedorUsuario?: UsuarioCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     parcelasVencimento?: ParcelaVencimentoCreateNestedManyWithoutVendaInput
     documentos?: DocumentoCreateNestedManyWithoutVendaInput
@@ -34465,6 +36373,7 @@ export namespace Prisma {
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     clienteId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
@@ -34483,6 +36392,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -34529,11 +36439,13 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    vendedorUsuario?: UsuarioUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
@@ -34544,6 +36456,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     clienteId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
@@ -34562,6 +36475,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34571,11 +36485,102 @@ export namespace Prisma {
     documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
+  export type UsuarioCreateWithoutNotificacoesInput = {
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendedorUsuarioInput
+    aiMensagens?: AiMensagemCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioUncheckedCreateWithoutNotificacoesInput = {
+    id?: number
+    username: string
+    password: string
+    role?: string | null
+    nomeExibicao?: string | null
+    email?: string | null
+    telefone?: string | null
+    dataNascimento?: Date | string | null
+    endereco?: string | null
+    cep?: string | null
+    metaMensal?: number | null
+    comissaoPct?: number | null
+    vendas?: VendaUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendedorUsuarioInput
+    aiMensagens?: AiMensagemUncheckedCreateNestedManyWithoutUsuarioRefInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUsuarioRefInput
+  }
+
+  export type UsuarioCreateOrConnectWithoutNotificacoesInput = {
+    where: UsuarioWhereUniqueInput
+    create: XOR<UsuarioCreateWithoutNotificacoesInput, UsuarioUncheckedCreateWithoutNotificacoesInput>
+  }
+
+  export type UsuarioUpsertWithoutNotificacoesInput = {
+    update: XOR<UsuarioUpdateWithoutNotificacoesInput, UsuarioUncheckedUpdateWithoutNotificacoesInput>
+    create: XOR<UsuarioCreateWithoutNotificacoesInput, UsuarioUncheckedCreateWithoutNotificacoesInput>
+    where?: UsuarioWhereInput
+  }
+
+  export type UsuarioUpdateToOneWithWhereWithoutNotificacoesInput = {
+    where?: UsuarioWhereInput
+    data: XOR<UsuarioUpdateWithoutNotificacoesInput, UsuarioUncheckedUpdateWithoutNotificacoesInput>
+  }
+
+  export type UsuarioUpdateWithoutNotificacoesInput = {
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendedorUsuarioNestedInput
+    aiMensagens?: AiMensagemUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUsuarioRefNestedInput
+  }
+
+  export type UsuarioUncheckedUpdateWithoutNotificacoesInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: NullableStringFieldUpdateOperationsInput | string | null
+    nomeExibicao?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    telefone?: NullableStringFieldUpdateOperationsInput | string | null
+    dataNascimento?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endereco?: NullableStringFieldUpdateOperationsInput | string | null
+    cep?: NullableStringFieldUpdateOperationsInput | string | null
+    metaMensal?: NullableFloatFieldUpdateOperationsInput | number | null
+    comissaoPct?: NullableFloatFieldUpdateOperationsInput | number | null
+    vendas?: VendaUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendedorUsuarioNestedInput
+    aiMensagens?: AiMensagemUncheckedUpdateManyWithoutUsuarioRefNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUsuarioRefNestedInput
+  }
+
   export type VendaCreateManyClienteInput = {
     id?: number
     uuid?: string | null
     dataVenda: Date | string
     vendedor?: string | null
+    vendedorId?: number | null
     produtoNome?: string | null
     custoProduto?: number | null
     quantidade?: number | null
@@ -34593,6 +36598,7 @@ export namespace Prisma {
     descontoEmFolha?: boolean
     desconto?: number | null
     boleto?: boolean
+    formaPagamento?: string | null
     status?: string
     asaasPaymentId?: string | null
     boletoUrl?: string | null
@@ -34620,10 +36626,12 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
     assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorUsuario?: UsuarioUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
     documentos?: DocumentoUpdateManyWithoutVendaNestedInput
@@ -34635,6 +36643,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
     quantidade?: NullableIntFieldUpdateOperationsInput | number | null
@@ -34652,6 +36661,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34667,6 +36677,7 @@ export namespace Prisma {
     uuid?: NullableStringFieldUpdateOperationsInput | string | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    vendedorId?: NullableIntFieldUpdateOperationsInput | number | null
     produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
     custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
     quantidade?: NullableIntFieldUpdateOperationsInput | number | null
@@ -34684,6 +36695,7 @@ export namespace Prisma {
     descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
     desconto?: NullableFloatFieldUpdateOperationsInput | number | null
     boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
     boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34797,6 +36809,281 @@ export namespace Prisma {
     conteudo?: BytesFieldUpdateOperationsInput | Bytes
     tamanhoBytes?: IntFieldUpdateOperationsInput | number
     criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VendaCreateManyVendedorUsuarioInput = {
+    id?: number
+    uuid?: string | null
+    dataVenda: Date | string
+    vendedor?: string | null
+    clienteId?: number | null
+    produtoNome?: string | null
+    custoProduto?: number | null
+    quantidade?: number | null
+    valorVenda?: number | null
+    valorFrete?: number | null
+    custoEnvio?: number | null
+    parcelas?: number | null
+    valorParcela?: number | null
+    taxaFinanceiraValor?: number | null
+    lucroLiquido?: number | null
+    antecipada?: number | null
+    excedeuLimite?: number | null
+    temNota?: boolean
+    taxaNota?: number | null
+    descontoEmFolha?: boolean
+    desconto?: number | null
+    boleto?: boolean
+    formaPagamento?: string | null
+    status?: string
+    asaasPaymentId?: string | null
+    boletoUrl?: string | null
+    assinaturaToken?: string | null
+  }
+
+  export type PagamentoCreateManyVendedorUsuarioInput = {
+    id?: number
+    dataPagamento: Date | string
+    vendedor?: string | null
+    valor?: number | null
+    obs?: string | null
+  }
+
+  export type NotificacaoCreateManyUsuarioInput = {
+    id?: number
+    mensagem: string
+    lida?: boolean
+    criadoEm?: Date | string
+    link?: string | null
+  }
+
+  export type AiMensagemCreateManyUsuarioRefInput = {
+    id?: number
+    sessaoId: string
+    role: string
+    content: string
+    contextResumo?: string | null
+    promptOriginal?: string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: string | null
+    criadoEm?: Date | string
+  }
+
+  export type AuditLogCreateManyUsuarioRefInput = {
+    id?: number
+    dataHora: Date | string
+    usuario?: string | null
+    acao?: string | null
+    detalhes?: string | null
+  }
+
+  export type VendaUpdateWithoutVendedorUsuarioInput = {
+    uuid?: NullableStringFieldUpdateOperationsInput | string | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
+    custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantidade?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    valorFrete?: NullableFloatFieldUpdateOperationsInput | number | null
+    custoEnvio?: NullableFloatFieldUpdateOperationsInput | number | null
+    parcelas?: NullableIntFieldUpdateOperationsInput | number | null
+    valorParcela?: NullableFloatFieldUpdateOperationsInput | number | null
+    taxaFinanceiraValor?: NullableFloatFieldUpdateOperationsInput | number | null
+    lucroLiquido?: NullableFloatFieldUpdateOperationsInput | number | null
+    antecipada?: NullableIntFieldUpdateOperationsInput | number | null
+    excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
+    temNota?: BoolFieldUpdateOperationsInput | boolean
+    taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
+    descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
+    boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    itens?: ItemVendaUpdateManyWithoutVendaNestedInput
+    parcelasVencimento?: ParcelaVencimentoUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUpdateOneWithoutVendaNestedInput
+  }
+
+  export type VendaUncheckedUpdateWithoutVendedorUsuarioInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uuid?: NullableStringFieldUpdateOperationsInput | string | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    clienteId?: NullableIntFieldUpdateOperationsInput | number | null
+    produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
+    custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantidade?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    valorFrete?: NullableFloatFieldUpdateOperationsInput | number | null
+    custoEnvio?: NullableFloatFieldUpdateOperationsInput | number | null
+    parcelas?: NullableIntFieldUpdateOperationsInput | number | null
+    valorParcela?: NullableFloatFieldUpdateOperationsInput | number | null
+    taxaFinanceiraValor?: NullableFloatFieldUpdateOperationsInput | number | null
+    lucroLiquido?: NullableFloatFieldUpdateOperationsInput | number | null
+    antecipada?: NullableIntFieldUpdateOperationsInput | number | null
+    excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
+    temNota?: BoolFieldUpdateOperationsInput | boolean
+    taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
+    descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
+    boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+    itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
+    parcelasVencimento?: ParcelaVencimentoUncheckedUpdateManyWithoutVendaNestedInput
+    documentos?: DocumentoUncheckedUpdateManyWithoutVendaNestedInput
+    assinatura?: AssinaturaUncheckedUpdateOneWithoutVendaNestedInput
+  }
+
+  export type VendaUncheckedUpdateManyWithoutVendedorUsuarioInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    uuid?: NullableStringFieldUpdateOperationsInput | string | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    clienteId?: NullableIntFieldUpdateOperationsInput | number | null
+    produtoNome?: NullableStringFieldUpdateOperationsInput | string | null
+    custoProduto?: NullableFloatFieldUpdateOperationsInput | number | null
+    quantidade?: NullableIntFieldUpdateOperationsInput | number | null
+    valorVenda?: NullableFloatFieldUpdateOperationsInput | number | null
+    valorFrete?: NullableFloatFieldUpdateOperationsInput | number | null
+    custoEnvio?: NullableFloatFieldUpdateOperationsInput | number | null
+    parcelas?: NullableIntFieldUpdateOperationsInput | number | null
+    valorParcela?: NullableFloatFieldUpdateOperationsInput | number | null
+    taxaFinanceiraValor?: NullableFloatFieldUpdateOperationsInput | number | null
+    lucroLiquido?: NullableFloatFieldUpdateOperationsInput | number | null
+    antecipada?: NullableIntFieldUpdateOperationsInput | number | null
+    excedeuLimite?: NullableIntFieldUpdateOperationsInput | number | null
+    temNota?: BoolFieldUpdateOperationsInput | boolean
+    taxaNota?: NullableFloatFieldUpdateOperationsInput | number | null
+    descontoEmFolha?: BoolFieldUpdateOperationsInput | boolean
+    desconto?: NullableFloatFieldUpdateOperationsInput | number | null
+    boleto?: BoolFieldUpdateOperationsInput | boolean
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    asaasPaymentId?: NullableStringFieldUpdateOperationsInput | string | null
+    boletoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    assinaturaToken?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PagamentoUpdateWithoutVendedorUsuarioInput = {
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    valor?: NullableFloatFieldUpdateOperationsInput | number | null
+    obs?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PagamentoUncheckedUpdateWithoutVendedorUsuarioInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    valor?: NullableFloatFieldUpdateOperationsInput | number | null
+    obs?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PagamentoUncheckedUpdateManyWithoutVendedorUsuarioInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+    vendedor?: NullableStringFieldUpdateOperationsInput | string | null
+    valor?: NullableFloatFieldUpdateOperationsInput | number | null
+    obs?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NotificacaoUpdateWithoutUsuarioInput = {
+    mensagem?: StringFieldUpdateOperationsInput | string
+    lida?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NotificacaoUncheckedUpdateWithoutUsuarioInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    mensagem?: StringFieldUpdateOperationsInput | string
+    lida?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type NotificacaoUncheckedUpdateManyWithoutUsuarioInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    mensagem?: StringFieldUpdateOperationsInput | string
+    lida?: BoolFieldUpdateOperationsInput | boolean
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+    link?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AiMensagemUpdateWithoutUsuarioRefInput = {
+    sessaoId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    contextResumo?: NullableStringFieldUpdateOperationsInput | string | null
+    promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: StringFieldUpdateOperationsInput | string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMensagemUncheckedUpdateWithoutUsuarioRefInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessaoId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    contextResumo?: NullableStringFieldUpdateOperationsInput | string | null
+    promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: StringFieldUpdateOperationsInput | string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMensagemUncheckedUpdateManyWithoutUsuarioRefInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    sessaoId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    content?: StringFieldUpdateOperationsInput | string
+    contextResumo?: NullableStringFieldUpdateOperationsInput | string | null
+    promptOriginal?: NullableStringFieldUpdateOperationsInput | string | null
+    actions?: NullableJsonNullValueInput | InputJsonValue
+    status?: StringFieldUpdateOperationsInput | string
+    links?: NullableJsonNullValueInput | InputJsonValue
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    criadoEm?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AuditLogUpdateWithoutUsuarioRefInput = {
+    dataHora?: DateTimeFieldUpdateOperationsInput | Date | string
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    acao?: NullableStringFieldUpdateOperationsInput | string | null
+    detalhes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AuditLogUncheckedUpdateWithoutUsuarioRefInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    dataHora?: DateTimeFieldUpdateOperationsInput | Date | string
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    acao?: NullableStringFieldUpdateOperationsInput | string | null
+    detalhes?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AuditLogUncheckedUpdateManyWithoutUsuarioRefInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    dataHora?: DateTimeFieldUpdateOperationsInput | Date | string
+    usuario?: NullableStringFieldUpdateOperationsInput | string | null
+    acao?: NullableStringFieldUpdateOperationsInput | string | null
+    detalhes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ProdutoCreateManyFornecedorInput = {

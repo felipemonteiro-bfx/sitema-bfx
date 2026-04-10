@@ -50,11 +50,12 @@ model Produto {
 }
 
 model Venda {
-  id        Int      @id @default(autoincrement())
-  uuid      String?  @unique @db.Uuid
-  dataVenda DateTime @map("data_venda")
-  vendedor  String?
-  clienteId Int?     @map("cliente_id")
+  id         Int      @id @default(autoincrement())
+  uuid       String?  @unique @db.Uuid
+  dataVenda  DateTime @map("data_venda")
+  vendedor   String? // DEPRECATED: manter para compatibilidade, usar vendedorId
+  vendedorId Int?     @map("vendedor_id")
+  clienteId  Int?     @map("cliente_id")
 
   // DEPRECATED: Campos mantidos para compatibilidade com vendas antigas
   produtoNome  String? @map("produto_nome")
@@ -76,6 +77,10 @@ model Venda {
   descontoEmFolha     Boolean @default(false) @map("desconto_em_folha")
   desconto            Float?  @default(0) @map("desconto")
   boleto              Boolean @default(false) @map("boleto")
+  // Forma de pagamento canônica. Os campos descontoEmFolha/boleto sao mantidos
+  // sincronizados via codigo para compatibilidade com integracoes legadas.
+  // Valores: "DESCONTO_FOLHA" | "BOLETO" | "PIX" | "DINHEIRO" | "CARTAO_CREDITO" | "CARTAO_DEBITO" | "TRANSFERENCIA" | "OUTRO"
+  formaPagamento      String? @map("forma_pagamento")
   status              String  @default("ativa") @map("status") // "ativa" | "cancelada" | "estornada"
   asaasPaymentId      String? @map("asaas_payment_id")
   boletoUrl           String? @map("boleto_url")
@@ -83,6 +88,7 @@ model Venda {
 
   // Relacionamentos
   cliente            Cliente?            @relation(fields: [clienteId], references: [id])
+  vendedorUsuario    Usuario?            @relation("vendas_vendedor", fields: [vendedorId], references: [id])
   itens              ItemVenda[]
   parcelasVencimento ParcelaVencimento[]
   documentos         Documento[]
@@ -194,6 +200,12 @@ model Usuario {
   metaMensal     Float?    @default(50000.0) @map("meta_mensal")
   comissaoPct    Float?    @default(2.0) @map("comissao_pct")
 
+  vendas       Venda[]       @relation("vendas_vendedor")
+  pagamentos   Pagamento[]   @relation("pagamentos_vendedor")
+  notificacoes Notificacao[]
+  aiMensagens  AiMensagem[]
+  auditLogs    AuditLog[]
+
   @@map("usuarios")
 }
 
@@ -237,20 +249,27 @@ model EmpresaVinculo {
 model Pagamento {
   id            Int      @id @default(autoincrement())
   dataPagamento DateTime @map("data_pagamento")
-  vendedor      String?
+  vendedor      String? // DEPRECATED: manter para compatibilidade, usar vendedorId
+  vendedorId    Int?     @map("vendedor_id")
   valor         Float?
   obs           String?
+
+  vendedorUsuario Usuario? @relation("pagamentos_vendedor", fields: [vendedorId], references: [id])
 
   @@map("pagamentos")
 }
 
 model AuditLog {
-  id       Int      @id @default(autoincrement())
-  dataHora DateTime @map("data_hora")
-  usuario  String?
-  acao     String?
-  detalhes String?
+  id        Int      @id @default(autoincrement())
+  dataHora  DateTime @map("data_hora")
+  usuario   String? // DEPRECATED: manter para compatibilidade, usar usuarioId
+  usuarioId Int?     @map("usuario_id")
+  acao      String?
+  detalhes  String?
 
+  usuarioRef Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([usuarioId])
   @@map("audit_logs")
 }
 
@@ -296,10 +315,14 @@ model AiMensagem {
   actions        Json?
   status         String   @default("done")
   links          Json?
-  usuario        String?
+  usuario        String? // DEPRECATED: manter para compatibilidade, usar usuarioId
+  usuarioId      Int?     @map("usuario_id")
   criadoEm       DateTime @default(now()) @map("criado_em")
 
+  usuarioRef Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
   @@index([sessaoId, criadoEm])
+  @@index([usuarioId])
   @@map("ai_mensagens")
 }
 
@@ -314,12 +337,16 @@ model Assinatura {
 }
 
 model Notificacao {
-  id       Int      @id @default(autoincrement())
-  mensagem String
-  lida     Boolean  @default(false)
-  criadoEm DateTime @default(now()) @map("criado_em")
-  link     String?
+  id        Int      @id @default(autoincrement())
+  mensagem  String
+  lida      Boolean  @default(false)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  link      String?
+  usuarioId Int?     @map("usuario_id")
 
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([usuarioId, lida])
   @@map("notificacoes")
 }
 

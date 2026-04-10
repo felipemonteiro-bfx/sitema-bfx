@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { FORMAS_PAGAMENTO_LIST } from "@/lib/forma-pagamento"
 
 /**
  * Schema de validação para venda rápida (formato antigo)
@@ -64,6 +65,7 @@ export const vendaV2Schema = z.object({
   desconto: z.number().min(0, "Desconto não pode ser negativo").optional().default(0),
   descontoEmFolha: z.boolean().optional().default(false),
   boleto: z.boolean().optional().default(false),
+  formaPagamento: z.enum(FORMAS_PAGAMENTO_LIST as [string, ...string[]]).optional(),
 })
 
 export type VendaV2FormData = z.infer<typeof vendaV2Schema>
