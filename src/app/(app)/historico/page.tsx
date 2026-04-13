@@ -8,7 +8,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Download } from "lucide-react";
 import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
 import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
@@ -204,6 +204,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     return `/historico?${search.toString()}`;
   };
 
+  const xlsxParams = new URLSearchParams();
+  xlsxParams.set("from", start.toISOString().slice(0, 10));
+  xlsxParams.set("to", end.toISOString().slice(0, 10));
+  if (sp.vendedor && sp.vendedor !== "all") xlsxParams.set("vendedor", sp.vendedor);
+  if (sp.cliente && sp.cliente !== "all") xlsxParams.set("cliente", sp.cliente);
+  if (sp.produto && sp.produto !== "all") xlsxParams.set("produto", sp.produto);
+  if (sp.formaPagamento && sp.formaPagamento !== "all") xlsxParams.set("formaPagamento", sp.formaPagamento);
+  const xlsxHref = `/api/relatorios/vendas-xlsx?${xlsxParams.toString()}`;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -327,7 +336,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Vendas ({totalVendas})</CardTitle>
-          <div className="text-xs text-muted-foreground">Página {page} de {totalPages || 1}</div>
+          <div className="flex items-center gap-3">
+            <a
+              href={xlsxHref}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
+              download
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Exportar Excel</span>
+            </a>
+            <div className="text-xs text-muted-foreground">Pg {page}/{totalPages || 1}</div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <HistoricoVendasCards
