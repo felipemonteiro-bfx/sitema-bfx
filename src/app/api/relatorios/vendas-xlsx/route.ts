@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-utils";
 import { formaPagamentoLabel, formaFromLegacyFlags, type FormaPagamento } from "@/lib/forma-pagamento";
+import { getSession } from "@/lib/session";
+import { resolveVendedorScope } from "@/lib/vendedor-scope";
 
 function formatDateBR(date: Date): string {
   const d = new Date(date);
@@ -80,12 +82,17 @@ ${dataRows}
 }
 
 export async function GET(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
 
   const today = new Date();
   const fromStr = searchParams.get("from") || `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-01`;
   const toStr = searchParams.get("to") || today.toISOString().slice(0, 10);
-  const vendedor = searchParams.get("vendedor") || undefined;
+  const vendedor = resolveVendedorScope(searchParams.get("vendedor") || undefined, session);
   const clienteId = searchParams.get("cliente") || undefined;
   const produto = searchParams.get("produto") || undefined;
   const formaPagamentoFilter = searchParams.get("formaPagamento") || undefined;

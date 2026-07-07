@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { valorTotalVenda, produtosTexto } from '@/lib/venda-utils';
 import { buildComissoesWhere } from '@/lib/comissoes-utils';
+import { getSession } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
-    const where = buildComissoesWhere(searchParams);
+    const where = buildComissoesWhere(searchParams, session);
 
     // Buscar dados (incluir itens para valorTotalVenda/produtosTexto)
     const vendas = await prisma.venda.findMany({
