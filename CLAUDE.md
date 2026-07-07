@@ -7,6 +7,17 @@
 - `remark-gfm` nao esta instalado e nao pode ser instalado — usar parser nativo
 - Criar novos arquivos na raiz do projeto requer `sudo` (diretorio e `root:root`)
 
+## Fluxo de trabalho para correcoes e features
+
+Para qualquer correcao de bug ou feature nao-trivial (nao vale para fix de uma linha/typo), seguir esta ordem, sem pular etapa:
+
+1. **Spec** — escrever o que vai mudar e por que, antes de tocar em codigo: comportamento atual vs. esperado, arquivos afetados, decisoes de escopo (o que fica de fora).
+2. **TDD** — escrever o teste que falha por causa do bug/ausencia da feature *antes* da implementacao (`superpowers:test-driven-development`).
+3. **Implementacao** — codigo minimo pra fazer o teste passar, sem expandir escopo alem da spec.
+4. **Review em modo subagentes** — depois de implementado, disparar subagente(s) de revisao (Agent tool, nao inline) pra revisar o diff antes de considerar a tarefa concluida. Aplicar os findings confirmados antes de commitar.
+
+So pular esse fluxo se o usuario pedir explicitamente algo mais rapido/direto.
+
 ## Hooks de seguranca
 - Hook bloqueia edicoes com padrao de `RegExp exec` — usar `.split()` + regex em vez disso
 - Hook tambem bloqueia escrita de arquivos com esse padrao no conteudo
