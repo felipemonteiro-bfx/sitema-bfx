@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
 import { vendaV2Schema } from "@/lib/validations/venda";
+import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
+import { checkCredito } from "@/lib/credit";
 import { createAuditLog } from "@/lib/audit";
 import {
   getAsaasConfig,
@@ -165,6 +167,19 @@ export async function criarVendaV2(
     const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
     const desconto = parsed.data.desconto ?? 0;
 
+    // Valida cada item contra o catálogo: subtotal precisa bater com valorVenda×quantidade,
+    // e o custo informado não pode ser menor que o custo cadastrado do produto (evita
+    // inflar lucro/comissão). O preço de venda fica livre — o vendedor pode dar desconto.
+    const nomesProdutos = [...new Set(produtosValidados.map((p) => p.produtoNome))];
+    const catalogo = await prisma.produto.findMany({
+      where: { nome: { in: nomesProdutos, mode: "insensitive" } },
+      select: { nome: true, custoPadrao: true },
+    });
+    const erroValidacao = validarItensContraCatalogo(produtosValidados, catalogo);
+    if (erroValidacao) {
+      return errorResponse(erroValidacao);
+    }
+
     // Forma de pagamento canônica.
     // Preferimos o campo `formaPagamento` quando enviado pelo form novo.
     // Se nao veio (clientes/scripts antigos), derivamos dos flags legados.
@@ -187,6 +202,11 @@ export async function criarVendaV2(
       produtosValidados.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0) + envio + valorDescontoNota;
     const lucroLiquido = totalVenda - custoTotal;
     const valorParcela = parcelas > 0 ? Math.trunc((totalVenda / parcelas) * 100) / 100 : 0;
+
+    // Limite de crédito é sempre recalculado no servidor — o valor de "excedeuLimite"
+    // vindo do client é só um aviso de UX e nunca é usado para gravar no banco.
+    const credito = await checkCredito(clienteId, valorParcela);
+    const excedeuLimite = credito.ok ? 0 : 1;
 
     // Criar venda com transação
     const assinaturaToken = formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA ? randomUUID() : undefined;
@@ -216,7 +236,7 @@ export async function criarVendaV2(
           valorParcela,
           lucroLiquido,
           antecipada: 0,
-          excedeuLimite: formData.get("excedeuLimite") === "1" ? 1 : 0,
+          excedeuLimite,
           temNota,
           taxaNota,
           desconto,

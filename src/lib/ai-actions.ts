@@ -12,6 +12,8 @@ import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
+import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
+import { checkCredito } from "@/lib/credit";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -833,6 +835,33 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const total = valorVenda + valorFrete;
         const lucroLiquido = total - (custoProduto + custoEnvio);
         const parcelas = parsedParams.parcelas || 1;
+        const valorParcelaIa = parcelas > 0 ? Math.trunc((total / parcelas) * 100) / 100 : 0;
+
+        // Mesma validação de criarVendaV2: subtotal precisa bater com valorVenda×quantidade
+        // (aqui quantidade é sempre 1) e o custo informado não pode ser menor que o
+        // custo cadastrado do produto no catálogo (evita inflar lucro/comissão via chat).
+        const catalogoIa = parsedParams.produtoNome
+          ? await prisma.produto.findMany({
+              where: { nome: { equals: parsedParams.produtoNome, mode: "insensitive" } },
+              select: { nome: true, custoPadrao: true },
+            })
+          : [];
+        const erroValidacaoIa = validarItensContraCatalogo(
+          [{
+            produtoNome: parsedParams.produtoNome || "",
+            custoProduto,
+            valorVenda,
+            quantidade: 1,
+            subtotal: valorVenda,
+          }],
+          catalogoIa
+        );
+        if (erroValidacaoIa) { result = { erro: erroValidacaoIa }; break; }
+
+        // Limite de crédito é sempre recalculado no servidor, igual ao fluxo manual.
+        const creditoIa = await checkCredito(Number(parsedParams.clienteId), valorParcelaIa);
+        const excedeuLimiteIa = creditoIa.ok ? 0 : 1;
+
         // Forma canonica derivada (a IA nao tem campo de forma de pagamento por enquanto).
         const formaPagamentoIa = formaFromLegacyFlags({ descontoEmFolha: false, boleto: false, parcelas });
         const flagsIa = legacyFlagsFromForma(formaPagamentoIa);
@@ -851,8 +880,9 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
               custoEnvio,
               lucroLiquido,
               parcelas,
-              valorParcela: Math.trunc((total / parcelas) * 100) / 100,
+              valorParcela: valorParcelaIa,
               antecipada: parsedParams.antecipada ?? 0,
+              excedeuLimite: excedeuLimiteIa,
               descontoEmFolha: flagsIa.descontoEmFolha,
               boleto: flagsIa.boleto,
               formaPagamento: formaPagamentoIa,
