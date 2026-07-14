@@ -1,9 +1,18 @@
 /**
- * Integração com Evolution API para envio de mensagens WhatsApp.
- * Documentação: https://doc.evolution-api.com/v2/api-reference/message-controller/send-text
+ * Envio de mensagens WhatsApp.
+ *
+ * Este módulo é o ponto de entrada estável para todos os consumidores (crons,
+ * email.ts, boleto-actions.ts, fluxo de venda). O transporte real é escolhido
+ * pela abstração de provider (`whatsapp-provider.ts`): Evolution (padrão) ou
+ * Meta WhatsApp Business Cloud API (oficial). As assinaturas públicas abaixo
+ * NÃO mudam ao trocar de provider.
  */
 
 import { prisma } from "@/lib/db";
+import {
+  resolveWhatsAppProviders,
+  type WhatsAppTemplate,
+} from "@/lib/whatsapp-provider";
 
 export type WhatsAppConfig = {
   baseUrl: string;
@@ -77,84 +86,87 @@ function normalizarTelefone(telefone: string | null | undefined): string | null 
   return nums;
 }
 
+/** Deriva um nome de arquivo a partir da URL (para o campo filename dos providers). */
+function filenameFromUrl(url: string): string {
+  const semQuery = url.split("?")[0] ?? url;
+  const partes = semQuery.split("/");
+  const nome = partes[partes.length - 1];
+  return nome && nome.length > 0 ? nome : "arquivo.pdf";
+}
+
 /**
- * Envia mensagem de texto via Evolution API.
- * Retorna true se enviado com sucesso, false caso contrário (sem throw).
+ * Envia mensagem de texto pelo provider configurado (Evolution ou Meta).
+ * Retorna true se enviado, false caso contrário (sem throw). Com Meta como
+ * primário e fallback ligado, retenta via Evolution se o Meta falhar.
  */
 export async function enviarWhatsAppTexto(
   telefone: string | null | undefined,
   texto: string
 ): Promise<boolean> {
-  const config = await getWhatsAppConfig();
-  if (!config) return false;
-
   const numero = normalizarTelefone(telefone);
   if (!numero) return false;
 
-  const url = `${config.baseUrl}/message/sendText/${config.instance}`;
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: config.apiKey,
-      },
-      body: JSON.stringify({
-        number: numero,
-        text: texto,
-        linkPreview: true,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      console.error("[WhatsApp] Erro Evolution API:", res.status, body);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error("[WhatsApp] Erro ao enviar:", err);
-    return false;
+  const { primary, fallback } = await resolveWhatsAppProviders();
+  if (!primary) return false;
+
+  const result = await primary.sendText(numero, texto);
+  if (result.ok) return true;
+  if (fallback) {
+    const fb = await fallback.sendText(numero, texto);
+    return fb.ok;
   }
+  return false;
 }
 
 /**
- * Envia arquivo (URL) via Evolution API - sendMedia.
- * Útil para enviar link de PDF (recibo, boleto).
+ * Envia arquivo por URL (PDF de recibo/boleto) pelo provider configurado.
+ * Útil para enviar link de documento. Retorna true se enviado.
  */
 export async function enviarWhatsAppArquivo(
   telefone: string | null | undefined,
   urlArquivo: string,
   legenda?: string
 ): Promise<boolean> {
-  const config = await getWhatsAppConfig();
-  if (!config) return false;
-
   const numero = normalizarTelefone(telefone);
   if (!numero) return false;
 
-  const url = `${config.baseUrl}/message/sendMedia/${config.instance}`;
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: config.apiKey,
-      },
-      body: JSON.stringify({
-        number: numero,
-        mediatype: "document",
-        media: urlArquivo,
-        caption: legenda || "",
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      console.error("[WhatsApp] Erro Evolution API (sendMedia):", res.status, body);
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error("[WhatsApp] Erro ao enviar arquivo:", err);
-    return false;
+  const { primary, fallback } = await resolveWhatsAppProviders();
+  if (!primary) return false;
+
+  const doc = {
+    url: urlArquivo,
+    filename: filenameFromUrl(urlArquivo),
+    mimetype: "application/pdf",
+    caption: legenda || "",
+  };
+  const result = await primary.sendDocument(numero, doc);
+  if (result.ok) return true;
+  if (fallback) {
+    const fb = await fallback.sendDocument(numero, doc);
+    return fb.ok;
   }
+  return false;
+}
+
+/**
+ * Envia um template aprovado (mensagens business-initiated na Meta Cloud API).
+ * No Evolution, cai para texto livre (`fallbackText`). Retorna true se enviado.
+ */
+export async function enviarWhatsAppTemplate(
+  telefone: string | null | undefined,
+  template: WhatsAppTemplate
+): Promise<boolean> {
+  const numero = normalizarTelefone(telefone);
+  if (!numero) return false;
+
+  const { primary, fallback } = await resolveWhatsAppProviders();
+  if (!primary) return false;
+
+  const result = await primary.sendTemplate(numero, template);
+  if (result.ok) return true;
+  if (fallback) {
+    const fb = await fallback.sendTemplate(numero, template);
+    return fb.ok;
+  }
+  return false;
 }

@@ -270,6 +270,28 @@ async function carregarGrupos(): Promise<GrupoEconomico[]> {
   return resolverGruposEconomicos(empresasLite, vinculos);
 }
 
+/**
+ * Regenera os artefatos (PDF + XLSX) do relatorio de uma empresa/periodo, sem enviar.
+ * Usado pela rota de download da pagina admin. Retorna null se a empresa nao existir.
+ */
+export async function gerarArtefatosRelatorioMensal(
+  empresaId: number,
+  periodo: string
+): Promise<{ pdf: Buffer; xlsx: Buffer; empresaNome: string } | null> {
+  const grupos = await carregarGrupos();
+  const grupo = grupos.find((g) => g.empresaIds.includes(empresaId));
+  if (!grupo) return null;
+
+  const vendas = await buscarVendasDoGrupo(grupo, periodo);
+  const dados = montarDadosRelatorio(vendas);
+  const cfgRow = await prisma.config.findFirst();
+  const logoPath = (cfgRow?.logoPath as string | undefined) ?? null;
+
+  const pdf = await gerarRelatorioMensalPdf({ empresaNome: grupo.canonica.nome, periodo, dados, logoPath });
+  const xlsx = gerarRelatorioMensalXlsx(dados);
+  return { pdf, xlsx, empresaNome: grupo.canonica.nome };
+}
+
 export type ProcessarRelatorioMensalOptions = {
   periodo: string;
   /** Se informado, processa apenas o grupo que contem esta empresa. */

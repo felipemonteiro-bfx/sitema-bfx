@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { logCron, logCronError } from "@/lib/logger";
 
 /**
  * GET /api/cron/alertas-admin
@@ -108,15 +109,12 @@ export async function GET(req: Request) {
       }
     }
 
-    console.log(
-      JSON.stringify({
-        job: "alertas-admin",
-        parcelasVencidas,
-        assinaturasPendentes,
-        estoqueBaixo,
-        notificacoesCriadas: criadas,
-      })
-    );
+    logCron("alertas-admin", "concluido", {
+      parcelasVencidas,
+      assinaturasPendentes,
+      estoqueBaixo,
+      notificacoesCriadas: criadas,
+    });
 
     return NextResponse.json({
       ok: true,
@@ -125,7 +123,7 @@ export async function GET(req: Request) {
       notificacoesCriadas: criadas,
     });
   } catch (error) {
-    console.error("[alertas-admin] Erro:", error);
+    logCronError("alertas-admin", "erro_geral", error);
     return NextResponse.json({ error: "Erro ao gerar alertas admin" }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { processarRelatorioMensal } from "@/lib/relatorio-mensal-service";
 import { periodoMesAnterior } from "@/lib/relatorio-mensal";
+import { logCron, logCronError } from "@/lib/logger";
 
 /**
  * GET /api/cron/relatorio-mensal
@@ -43,12 +44,10 @@ export async function GET(req: Request) {
       sem_email: resultados.filter((r) => r.status === "sem_email").length,
       erro: resultados.filter((r) => r.status === "erro").length,
     };
-    console.log(
-      JSON.stringify({ job: "relatorio-mensal", periodo, total: resultados.length, ...contagem })
-    );
+    logCron("relatorio-mensal", "concluido", { periodo, total: resultados.length, ...contagem });
     return NextResponse.json({ ok: true, periodo, contagem, resultados });
   } catch (error) {
-    console.error("[relatorio-mensal] Erro geral:", error);
+    logCronError("relatorio-mensal", "erro_geral", error, { periodo });
     return NextResponse.json({ error: "Erro ao processar relatorio mensal" }, { status: 500 });
   }
 }

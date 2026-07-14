@@ -25,8 +25,6 @@ const eslintConfig = defineConfig([
     "src/generated/**",
     "prisma/*.js",
     "scripts/**",
-    "streamlit/**",
-    "sistema_bfx.py",
   ]),
 ]);
 

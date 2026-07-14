@@ -10,13 +10,24 @@ sem SDK npm (mesmo padrão já usado com Asaas/Evolution) — respeita a restri�
 BSPs (Twilio, 360dialog, Gupshup) só adicionam markup de preço e/ou SDK npm. Plano B: **360dialog**,
 que expõe API compatível com a da Meta, caso a verificação do Meta Business trave.
 
-## Groundwork já aplicado neste repositório
+## Já implementado neste repositório
 
-- **Schema `Config`** (migração `20260714000000_relatorio_envio_log`): novos campos
+- **Schema `Config`** (migração `20260714000000_relatorio_envio_log`): campos
   `whatsappProvider` (default `evolution`), `metaWhatsappToken`, `metaWhatsappPhoneNumberId`,
   `metaWhatsappBusinessId`, `metaWhatsappApiVersion` (default `v21.0`), `metaWebhookVerifyToken`,
   `whatsappFallbackEvolution` (default `1`). Coluna `provider` em `WhatsAppEnvioLog`.
+- **Abstração de provider** (código):
+  - `src/lib/whatsapp-provider.ts` — interface `WhatsAppProvider` + `resolveWhatsAppProviders()`.
+  - `src/lib/providers/whatsapp-evolution.ts` e `whatsapp-meta.ts` — implementações.
+  - `src/lib/whatsapp.ts` — agora roteia por `Config.whatsappProvider`, **mantendo as
+    assinaturas públicas** (`enviarWhatsAppTexto`, `enviarWhatsAppArquivo`, `getWhatsAppConfig`);
+    nova `enviarWhatsAppTemplate`. Padrão = `evolution` → **zero mudança de comportamento**.
+  - `src/app/api/webhooks/meta-whatsapp/route.ts` — webhook (GET handshake + POST → pré-atendimento).
 - **`.env.example`**: bloco `META_WHATSAPP_*` documentado.
+
+**Para ativar o Meta:** depois de configurar Meta Business + número + templates (abaixo),
+setar `Config.whatsappProvider = "meta_cloud"` (fallback Evolution segue ligado via
+`whatsappFallbackEvolution = 1`). Validar em runtime antes de desligar o fallback.
 
 ## Pré-requisitos operacionais (fora do código)
 
