@@ -313,6 +313,16 @@ export async function criarVendaV2(
 
     await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
 
+    // CRM: ao comprar, um lead vira "cliente" (integração funil -> venda).
+    if (clienteId) {
+      void prisma.cliente
+        .updateMany({
+          where: { id: clienteId, estagioCrm: { in: ["novo_lead", "contatado", "negociando"] } },
+          data: { estagioCrm: "cliente" },
+        })
+        .catch((e) => console.error("[crm] Falha ao converter lead em cliente:", e));
+    }
+
     // Fire-and-forget: notify partner company via email
     if (clienteId) {
       void (async () => {

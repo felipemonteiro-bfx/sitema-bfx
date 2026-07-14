@@ -27,8 +27,36 @@ model Cliente {
   empresaParceiraId Int?    @map("empresa_parceira_id")
   empresaParceira   EmpresaParceira? @relation(fields: [empresaParceiraId], references: [id])
   vendas         Venda[]
+  // CRM: estágio no funil e origem do relacionamento. Um "lead" é um Cliente que
+  // ainda não comprou (importado da lista de funcionários da empresa parceira);
+  // ao registrar a 1ª venda, o estágio vira "cliente" automaticamente.
+  estagioCrm     String?  @default("cliente") @map("estagio_crm") // novo_lead | contatado | negociando | cliente | inativo
+  origem         String?  @map("origem")                          // import_funcionarios | manual | venda | catalogo
+  tags           ClienteTag[]
 
   @@map("clientes")
+  @@index([estagioCrm])
+}
+
+model Tag {
+  id       Int          @id @default(autoincrement())
+  nome     String       @unique
+  cor      String?                                    // token de cor (ex.: "success", "warning") ou hex
+  clientes ClienteTag[]
+
+  @@map("tags")
+}
+
+model ClienteTag {
+  clienteId Int @map("cliente_id")
+  tagId     Int @map("tag_id")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([clienteId, tagId])
+  @@index([tagId])
+  @@map("cliente_tags")
 }
 
 model Produto {
