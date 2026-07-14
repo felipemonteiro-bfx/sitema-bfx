@@ -33,12 +33,20 @@ parceira). Ao registrar a 1ª venda, ele vira **cliente** automaticamente.
 - **Só WhatsApp**, reusando `enviarWhatsAppTexto`/`enviarWhatsAppTemplate` (provider oficial Meta
   quando ativo). Um cron dispara campanhas agendadas. Reaproveita as jornadas já existentes.
 
-## Fase 4 — Fidelidade
+## Fase 4 — Fidelidade (pontos) ✅ nesta entrega
 
-- `Cliente.pontos` + ledger `PontoTransacao` (ganho na venda, resgate, ajuste).
-- Regras (ex.: X pontos por real), níveis (bronze/prata/ouro), resgate (desconto na próxima compra).
-- Exibir no perfil do cliente e usar o nível como critério de segmento (fecha o ciclo:
-  fidelidade → segmento → campanha → venda → pontos).
+- **Mecânica escolhida:** pontos por real gasto. `1 ponto por real`; `1 ponto = R$0,05`
+  (1.000 pontos = R$50). Configurável por env (`FIDELIDADE_PONTOS_POR_REAL`, `FIDELIDADE_VALOR_POR_PONTO`).
+- `Cliente.pontos` (saldo) + ledger `PontoTransacao` (ganho | resgate | ajuste). Migração
+  `20260714140000_crm_fidelidade`.
+- `src/lib/fidelidade.ts` (regras puras + testes) e `fidelidade-service.ts`
+  (`creditarPontosVenda` idempotente por venda, `resgatarPontos`).
+- **Integração:** cada venda credita pontos automaticamente (`venda-rapida/actions.ts`).
+- **UI:** `/crm/fidelidade` — saldo por cliente (com valor em R$), resgate manual e extrato.
+
+### Próximos passos (fora do escopo desta entrega)
+- Aplicar o resgate automaticamente como desconto no fluxo de venda (hoje é manual).
+- Níveis/tiers por volume como critério de segmento (fecha o ciclo fidelidade → campanha).
 
 ## Ordem e porquê
 

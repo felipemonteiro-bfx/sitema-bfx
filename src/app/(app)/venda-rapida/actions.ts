@@ -18,6 +18,7 @@ import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 import { signReciboId } from "@/lib/recibo-url";
 import { sendVendaNotification } from "@/lib/email";
+import { creditarPontosVenda } from "@/lib/fidelidade-service";
 import { getSession } from "@/lib/session";
 import {
   FORMA_PAGAMENTO,
@@ -321,6 +322,11 @@ export async function criarVendaV2(
           data: { estagioCrm: "cliente" },
         })
         .catch((e) => console.error("[crm] Falha ao converter lead em cliente:", e));
+
+      // Fidelidade: credita pontos pela compra (idempotente por venda).
+      void creditarPontosVenda(clienteId, venda.id, totalVenda).catch((e) =>
+        console.error("[fidelidade] Falha ao creditar pontos:", e)
+      );
     }
 
     // Fire-and-forget: notify partner company via email
