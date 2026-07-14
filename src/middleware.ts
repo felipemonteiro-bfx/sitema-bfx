@@ -18,6 +18,7 @@ const PUBLIC_API_PATHS = [
   "/api/assinatura",
   "/api/webhooks",
   "/api/catalogo",
+  "/api/health",
 ];
 
 function isPublicApiPath(pathname: string): boolean {

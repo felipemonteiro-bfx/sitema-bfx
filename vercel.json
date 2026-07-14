@@ -1,11 +1,4 @@
 {
-  "crons": [
-    {"path":"/api/cron/cleanup-uploads","schedule":"0 3 * * 0"},
-    {"path":"/api/cron/lembrete-parcelas","schedule":"0 11 * * *"},
-    {"path":"/api/cron/reativacao-inativos","schedule":"0 10 * * *"},
-    {"path":"/api/cron/aniversario","schedule":"0 9 * * *"},
-    {"path":"/api/cron/parcela-vencida","schedule":"0 12 * * *"},
-    {"path":"/api/cron/pesquisa-satisfacao","schedule":"0 14 * * *"},
-    {"path":"/api/cron/agradecimento-pos-venda","schedule":"0 13 * * *"}
-  ]
+  "$comment": "Producao roda em Kubernetes/ArgoCD — os crons agora vivem em deploy/bfx/cronjobs-app.yaml. Mantido vazio para evitar disparo duplo caso um deploy Vercel esteja conectado.",
+  "crons": []
 }

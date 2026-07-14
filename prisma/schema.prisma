@@ -157,6 +157,14 @@ model Config {
   evolutionApiUrl       String? @map("evolution_api_url")
   evolutionApiKey       String? @map("evolution_api_key")
   evolutionInstance     String? @map("evolution_instance")    // Nome da instância na Evolution API
+  // WhatsApp provider: "evolution" (padrão, não-oficial) | "meta_cloud" (oficial, sem risco de ban)
+  whatsappProvider          String?  @default("evolution") @map("whatsapp_provider")
+  metaWhatsappToken         String?  @map("meta_whatsapp_token")
+  metaWhatsappPhoneNumberId String?  @map("meta_whatsapp_phone_number_id")
+  metaWhatsappBusinessId    String?  @map("meta_whatsapp_business_id")
+  metaWhatsappApiVersion    String?  @default("v21.0") @map("meta_whatsapp_api_version")
+  metaWebhookVerifyToken    String?  @map("meta_webhook_verify_token")
+  whatsappFallbackEvolution Int?     @default(1) @map("whatsapp_fallback_evolution") // 1=usa Evolution se Meta falhar
   whatsappAutoEnabled      Int?    @default(1) @map("whatsapp_auto_enabled")       // 1=ativado, 0=desativado
   whatsappAutoRecibo       Int?    @default(1) @map("whatsapp_auto_recibo")        // Enviar recibo/assinatura ao finalizar venda
   whatsappAutoBoleto       Int?    @default(1) @map("whatsapp_auto_boleto")        // Enviar link boleto ao gerar
@@ -230,6 +238,7 @@ model EmpresaParceira {
   clientes      Cliente[]
   vinculos      EmpresaVinculo[] @relation("empresa_origem")
   vinculadaPor  EmpresaVinculo[] @relation("empresa_destino")
+  relatoriosEnviados RelatorioEnvioLog[]
 
   @@map("empresas_parceiras")
 }
@@ -298,11 +307,33 @@ model WhatsAppEnvioLog {
   clienteId   Int      @map("cliente_id")
   tipo        String   // reativacao, aniversario, inadimplencia, nps, boasvindas, agradecimento
   referencia  Int?     // vendaId quando aplicável
+  provider    String?  // evolution | meta_cloud (provider usado no envio)
   dataEnvio   DateTime @default(now()) @map("data_envio")
 
   @@index([clienteId, tipo])
   @@index([tipo, referencia])
   @@map("whatsapp_envio_log")
+}
+
+model RelatorioEnvioLog {
+  id            Int      @id @default(autoincrement())
+  empresaId     Int      @map("empresa_id")      // empresa canônica do grupo econômico
+  periodo       String                            // "2026-06" (YYYY-MM)
+  tipo          String   @default("mensal")       // mensal | semanal
+  destinatarios String?                            // e-mails separados por vírgula
+  status        String                            // enviado | erro | sem_vendas | sem_email
+  erro          String?
+  totalVendas   Int      @default(0) @map("total_vendas")
+  valorTotal    Float    @default(0) @map("valor_total")
+  pdfKey        String?  @map("pdf_key")           // chave no MinIO (download/reenvio)
+  xlsxKey       String?  @map("xlsx_key")
+  enviadoEm     DateTime @default(now()) @map("enviado_em")
+
+  empresa EmpresaParceira @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, periodo, tipo])
+  @@index([periodo])
+  @@map("relatorio_envio_log")
 }
 
 model AiMensagem {
