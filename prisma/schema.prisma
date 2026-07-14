@@ -47,6 +47,39 @@ model Tag {
   @@map("tags")
 }
 
+model Campanha {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  canal      String   @default("whatsapp")            // por ora só whatsapp
+  filtroJson String   @map("filtro_json")             // SegmentoFiltro serializado
+  mensagem   String                                   // usa {nome} como placeholder
+  status     String   @default("rascunho")            // rascunho | enviando | concluida
+  totalAlvo  Int      @default(0) @map("total_alvo")
+  totalEnviado Int    @default(0) @map("total_enviado")
+  criadaEm   DateTime @default(now()) @map("criada_em")
+  enviadaEm  DateTime? @map("enviada_em")
+
+  envios     CampanhaEnvio[]
+
+  @@map("campanhas")
+  @@index([status])
+}
+
+model CampanhaEnvio {
+  id         Int      @id @default(autoincrement())
+  campanhaId Int      @map("campanha_id")
+  clienteId  Int      @map("cliente_id")
+  status     String                                   // enviado | falha | sem_telefone
+  erro       String?
+  enviadoEm  DateTime @default(now()) @map("enviado_em")
+
+  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+
+  @@unique([campanhaId, clienteId])
+  @@index([clienteId])
+  @@map("campanha_envios")
+}
+
 model ClienteTag {
   clienteId Int @map("cliente_id")
   tagId     Int @map("tag_id")

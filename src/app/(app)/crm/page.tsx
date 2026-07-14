@@ -112,9 +112,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         description="Funil de relacionamento: leads, clientes e segmentação. Tudo sobre a mesma base de clientes."
         breadcrumbs={[{ label: "CRM" }]}
         actions={
-          <a href="/crm/importar-leads" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
-            Importar leads
-          </a>
+          <div className="flex flex-wrap gap-2">
+            <a href="/crm/campanhas" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+              Campanhas
+            </a>
+            <a href="/crm/importar-leads" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
+              Importar leads
+            </a>
+          </div>
         }
       />
 
