@@ -192,9 +192,14 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               id={`produto-nome-${index}`}
               value={produtoQuery}
               onChange={(e) => {
-                setProdutoQuery(e.target.value);
+                const nome = e.target.value;
+                setProdutoQuery(nome);
                 setEstoqueDisponivel(null);
                 setIsSearching(true);
+                // Propaga o nome digitado para o item do pai — sem isso, um produto
+                // digitado mas nao selecionado no dropdown fica com produtoNome vazio
+                // e e descartado no envio ("some e nao contabiliza").
+                onUpdate(index, { ...item, produtoNome: nome });
               }}
               placeholder="Digite o nome do produto"
               required
