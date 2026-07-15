@@ -177,35 +177,46 @@ function SidebarNavGroup({ group, pathname, startIndex }: SidebarNavGroupProps) 
 export function SidebarNav({ menu }: { menu: MenuItem[] }) {
   const pathname = usePathname();
   
-  const groups: MenuGroup[] = [
+  const baseGroups: MenuGroup[] = [
     {
       label: "Visão geral",
       items: menu.filter(item => ["/dashboard"].includes(item.href)),
     },
     {
       label: "Vendas & Operações",
-      items: menu.filter(item => 
+      items: menu.filter(item =>
         ["/venda-rapida", "/historico", "/importacao"].includes(item.href)
       ),
     },
     {
       label: "Financeiro",
-      items: menu.filter(item => 
+      items: menu.filter(item =>
         ["/financeiro", "/boletos", "/prudent"].includes(item.href)
       ),
     },
     {
       label: "Inteligência & Dados",
-      items: menu.filter(item => 
-        ["/inteligencia", "/relatorios", "/cadastros", "/gestao-rh", "/comissoes"].includes(item.href)
+      items: menu.filter(item =>
+        ["/inteligencia", "/crm", "/relatorios", "/cadastros", "/gestao-rh", "/comissoes"].includes(item.href)
       ),
     },
     {
       label: "Sistema",
-      items: menu.filter(item => 
+      items: menu.filter(item =>
         ["/configuracoes", "/perfil"].includes(item.href)
       ),
     },
+  ];
+
+  // Rede de seguranca: qualquer item do menu que nao caiu em nenhum grupo acima
+  // (ex.: rota nova adicionada em layout.tsx mas esquecida aqui) vai para "Outros"
+  // em vez de sumir silenciosamente do sidebar. Foi o que aconteceu com /crm.
+  const agrupados = new Set(baseGroups.flatMap(g => g.items.map(i => i.href)));
+  const semGrupo = menu.filter(item => !agrupados.has(item.href));
+
+  const groups: MenuGroup[] = [
+    ...baseGroups,
+    { label: "Outros", items: semGrupo },
   ].filter(group => group.items.length > 0);
 
   let itemIndex = 0;
