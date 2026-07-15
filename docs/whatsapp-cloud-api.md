@@ -103,6 +103,24 @@ await fetch(`https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`
 });
 ```
 
+## Templates dos crons (business-initiated)
+
+Mensagens iniciadas pelo sistema (lembrete, cobrança, aniversário, NPS, etc.) exigem
+**templates aprovados** no Meta. O registry `src/lib/whatsapp-templates.ts` centraliza os
+nomes (`TEMPLATES`) e o helper `comFallback(name, bodyParams, fallbackText)`.
+
+Os crons chamam `enviarWhatsAppTemplate(telefone, comFallback(...))`:
+- No **Evolution** (provider padrão): envia o `fallbackText` como texto livre — **comportamento
+  idêntico ao atual**.
+- No **Meta**: envia o template `name` com os `bodyParams` ({{1}}, {{2}}, ...).
+
+Já convertido como referência: `cron/lembrete-parcelas`. Os demais crons
+(`parcela-vencida`, `aniversario`, `agradecimento-pos-venda`, `pesquisa-satisfacao`,
+`reativacao-inativos`) seguem o **mesmo padrão** — trocar `enviarWhatsAppTexto(tel, msg)` por
+`enviarWhatsAppTemplate(tel, comFallback(TEMPLATES.x, [params], msg))`. Antes de ativar o Meta,
+**crie os templates com esses nomes** (ou ajuste os nomes em `TEMPLATES` para os seus) e defina
+`META_TEMPLATE_LANG` se não for `pt_BR`.
+
 ## Webhook de entrada (chatbot)
 
 `src/app/api/webhooks/meta-whatsapp/route.ts`:

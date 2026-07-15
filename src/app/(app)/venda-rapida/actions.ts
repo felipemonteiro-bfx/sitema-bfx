@@ -20,6 +20,7 @@ import { signReciboId } from "@/lib/recibo-url";
 import { sendVendaNotification } from "@/lib/email";
 import { creditarPontosVenda, resgatarPontos } from "@/lib/fidelidade-service";
 import { valorEmReais } from "@/lib/fidelidade";
+import { logError } from "@/lib/logger";
 import { getSession } from "@/lib/session";
 import {
   FORMA_PAGAMENTO,
@@ -520,7 +521,7 @@ export async function criarVendaV2(
       ...(assinaturaToken && { assinaturaToken }),
     });
   } catch (error) {
-    console.error("Erro ao criar venda:", error);
+    logError("venda", "criar_venda_falhou", error);
     const err = error as Error & { code?: string };
     const errMsg = err?.message ?? String(error);
 
