@@ -216,9 +216,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Historico de Vendas"
-        description="Filtre e edite vendas do periodo."
-        breadcrumbs={[{ label: "Historico de Vendas" }]}
+        title="Histórico de Vendas"
+        description="Filtre e edite vendas do período."
+        breadcrumbs={[{ label: "Histórico de Vendas" }]}
       />
 
       <HistoricoBuscaFuzzy defaultValue={sp.q || ""} />
@@ -377,7 +377,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               {vendas.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={12}>
-                    <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o periodo de busca." />
+                    <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o período de busca." />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -423,7 +423,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
-                        <span className="text-success font-bold" title={`Taxa: ${v.taxaNota}%`}>✓</span>
+                        <span title={`Taxa: ${v.taxaNota}%`} aria-label="Com nota" className="inline-flex justify-center">
+                          <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
+                        </span>
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}

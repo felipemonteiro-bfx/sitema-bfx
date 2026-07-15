@@ -10,6 +10,7 @@ resources:
 - app.yaml
 - ingress.yaml
 - cronjob-cleanup-uploads.yaml
+- cronjobs-app.yaml
 - evolution-api.yaml
 - ecr-creds-renew.yaml
 

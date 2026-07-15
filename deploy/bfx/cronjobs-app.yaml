@@ -1,0 +1,445 @@
+# CronJobs da aplicacao BFX — chamam os endpoints /api/cron/* autenticados por CRON_SECRET.
+# Clonam o template de cronjob-cleanup-uploads.yaml (curlimages/curl + Bearer + APP_URL interno).
+# Horarios em UTC (BRT = UTC-3). Producao roda em K8s/ArgoCD — estes substituem os crons do vercel.json.
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-aniversario
+  labels:
+    app: bfx-aniversario
+spec:
+  schedule: "0 9 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-aniversario
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/aniversario")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-reativacao-inativos
+  labels:
+    app: bfx-reativacao-inativos
+spec:
+  schedule: "0 10 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-reativacao-inativos
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/reativacao-inativos")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-alertas-admin
+  labels:
+    app: bfx-alertas-admin
+spec:
+  schedule: "30 10 * * 1-5"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-alertas-admin
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/alertas-admin")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-lembrete-parcelas
+  labels:
+    app: bfx-lembrete-parcelas
+spec:
+  schedule: "0 11 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-lembrete-parcelas
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/lembrete-parcelas")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-relatorio-semanal
+  labels:
+    app: bfx-relatorio-semanal
+spec:
+  schedule: "0 11 * * 1"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-relatorio-semanal
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/relatorio-semanal")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-parcela-vencida
+  labels:
+    app: bfx-parcela-vencida
+spec:
+  schedule: "0 12 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-parcela-vencida
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/parcela-vencida")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-agradecimento
+  labels:
+    app: bfx-agradecimento
+spec:
+  schedule: "0 13 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-agradecimento
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/agradecimento-pos-venda")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-pesquisa-satisfacao
+  labels:
+    app: bfx-pesquisa-satisfacao
+spec:
+  schedule: "0 14 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-pesquisa-satisfacao
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/pesquisa-satisfacao")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-relatorio-mensal
+  labels:
+    app: bfx-relatorio-mensal
+spec:
+  # Dia 1 de cada mes as 12:00 UTC (09:00 BRT) — envia o relatorio do mes anterior.
+  schedule: "0 12 1 * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-relatorio-mensal
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/relatorio-mensal")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-campanhas-agendadas
+  labels:
+    app: bfx-campanhas-agendadas
+spec:
+  # A cada 15 minutos — dispara campanhas cujo horario agendado ja chegou.
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-campanhas-agendadas
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/campanhas-agendadas")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"

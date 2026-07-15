@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
+import { enviarWhatsAppTemplate, getWhatsAppConfig } from "@/lib/whatsapp";
+import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 import { formatBRL } from "@/lib/utils";
 
 const DIAS_ANTES = 2; // Enviar lembrete X dias antes (inclui 2 dias e 1 dia = última chance)
@@ -64,14 +65,23 @@ export async function GET(req: Request) {
         p.dataVencimento.getMonth() === amanha.getMonth() &&
         p.dataVencimento.getFullYear() === amanha.getFullYear();
 
+      const vencimentoStr = venceAmanha ? "amanhã" : formatDateBr(p.dataVencimento);
       let msg = venceAmanha
         ? `Atenção, ${clienteNome}! Sua parcela ${p.numeroParcela} de ${p.venda.parcelas || 1} da venda #${p.venda.id} vence AMANHÃ. Valor: ${formatBRL(p.valorParcela)}. Evite atraso!`
-        : `Olá ${clienteNome}! Lembrete: a parcela ${p.numeroParcela} de ${p.venda.parcelas || 1} da venda #${p.venda.id} vence em ${formatDateBr(p.dataVencimento)}. Valor: ${formatBRL(p.valorParcela)}.`;
+        : `Olá ${clienteNome}! Lembrete: a parcela ${p.numeroParcela} de ${p.venda.parcelas || 1} da venda #${p.venda.id} vence em ${vencimentoStr}. Valor: ${formatBRL(p.valorParcela)}.`;
       if (p.venda.boletoUrl) {
         msg += `\n\nBoleto: ${p.venda.boletoUrl}`;
       }
 
-      const ok = await enviarWhatsAppTexto(telefone, msg);
+      // Envia via template (Meta) ou texto livre (Evolution, via fallbackText).
+      const ok = await enviarWhatsAppTemplate(
+        telefone,
+        comFallback(
+          TEMPLATES.lembreteParcela,
+          [clienteNome, String(p.numeroParcela), String(p.venda.id), vencimentoStr, formatBRL(p.valorParcela)],
+          msg
+        )
+      );
       if (ok) enviados++;
       else erros.push(`Parcela ${p.id} (cliente ${clienteNome})`);
     }

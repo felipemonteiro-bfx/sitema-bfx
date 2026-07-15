@@ -27,8 +27,87 @@ model Cliente {
   empresaParceiraId Int?    @map("empresa_parceira_id")
   empresaParceira   EmpresaParceira? @relation(fields: [empresaParceiraId], references: [id])
   vendas         Venda[]
+  // CRM: estágio no funil e origem do relacionamento. Um "lead" é um Cliente que
+  // ainda não comprou (importado da lista de funcionários da empresa parceira);
+  // ao registrar a 1ª venda, o estágio vira "cliente" automaticamente.
+  estagioCrm     String?  @default("cliente") @map("estagio_crm") // novo_lead | contatado | negociando | cliente | inativo
+  origem         String?  @map("origem")                          // import_funcionarios | manual | venda | catalogo
+  pontos         Int?     @default(0)                              // fidelidade: saldo de pontos
+  tags           ClienteTag[]
+  pontoTransacoes PontoTransacao[]
 
   @@map("clientes")
+  @@index([estagioCrm])
+}
+
+model PontoTransacao {
+  id         Int      @id @default(autoincrement())
+  clienteId  Int      @map("cliente_id")
+  vendaId    Int?     @map("venda_id")                            // venda que gerou o ganho (quando aplicável)
+  tipo       String                                               // ganho | resgate | ajuste
+  pontos     Int                                                  // positivo (ganho/ajuste+) ou negativo (resgate)
+  descricao  String?
+  criadoEm   DateTime @default(now()) @map("criado_em")
+
+  cliente    Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@index([clienteId])
+  @@map("ponto_transacoes")
+}
+
+model Tag {
+  id       Int          @id @default(autoincrement())
+  nome     String       @unique
+  cor      String?                                    // token de cor (ex.: "success", "warning") ou hex
+  clientes ClienteTag[]
+
+  @@map("tags")
+}
+
+model Campanha {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  canal      String   @default("whatsapp")            // por ora só whatsapp
+  filtroJson String   @map("filtro_json")             // SegmentoFiltro serializado
+  mensagem   String                                   // usa {nome} como placeholder
+  status     String   @default("rascunho")            // rascunho | agendada | enviando | concluida
+  totalAlvo  Int      @default(0) @map("total_alvo")
+  totalEnviado Int    @default(0) @map("total_enviado")
+  agendadaPara DateTime? @map("agendada_para")         // quando status=agendada, disparo automático via cron
+  criadaEm   DateTime @default(now()) @map("criada_em")
+  enviadaEm  DateTime? @map("enviada_em")
+
+  envios     CampanhaEnvio[]
+
+  @@map("campanhas")
+  @@index([status])
+}
+
+model CampanhaEnvio {
+  id         Int      @id @default(autoincrement())
+  campanhaId Int      @map("campanha_id")
+  clienteId  Int      @map("cliente_id")
+  status     String                                   // enviado | falha | sem_telefone
+  erro       String?
+  enviadoEm  DateTime @default(now()) @map("enviado_em")
+
+  campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+
+  @@unique([campanhaId, clienteId])
+  @@index([clienteId])
+  @@map("campanha_envios")
+}
+
+model ClienteTag {
+  clienteId Int @map("cliente_id")
+  tagId     Int @map("tag_id")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([clienteId, tagId])
+  @@index([tagId])
+  @@map("cliente_tags")
 }
 
 model Produto {
@@ -157,6 +236,14 @@ model Config {
   evolutionApiUrl       String? @map("evolution_api_url")
   evolutionApiKey       String? @map("evolution_api_key")
   evolutionInstance     String? @map("evolution_instance")    // Nome da instância na Evolution API
+  // WhatsApp provider: "evolution" (padrão, não-oficial) | "meta_cloud" (oficial, sem risco de ban)
+  whatsappProvider          String?  @default("evolution") @map("whatsapp_provider")
+  metaWhatsappToken         String?  @map("meta_whatsapp_token")
+  metaWhatsappPhoneNumberId String?  @map("meta_whatsapp_phone_number_id")
+  metaWhatsappBusinessId    String?  @map("meta_whatsapp_business_id")
+  metaWhatsappApiVersion    String?  @default("v21.0") @map("meta_whatsapp_api_version")
+  metaWebhookVerifyToken    String?  @map("meta_webhook_verify_token")
+  whatsappFallbackEvolution Int?     @default(1) @map("whatsapp_fallback_evolution") // 1=usa Evolution se Meta falhar
   whatsappAutoEnabled      Int?    @default(1) @map("whatsapp_auto_enabled")       // 1=ativado, 0=desativado
   whatsappAutoRecibo       Int?    @default(1) @map("whatsapp_auto_recibo")        // Enviar recibo/assinatura ao finalizar venda
   whatsappAutoBoleto       Int?    @default(1) @map("whatsapp_auto_boleto")        // Enviar link boleto ao gerar
@@ -230,6 +317,7 @@ model EmpresaParceira {
   clientes      Cliente[]
   vinculos      EmpresaVinculo[] @relation("empresa_origem")
   vinculadaPor  EmpresaVinculo[] @relation("empresa_destino")
+  relatoriosEnviados RelatorioEnvioLog[]
 
   @@map("empresas_parceiras")
 }
@@ -298,11 +386,33 @@ model WhatsAppEnvioLog {
   clienteId   Int      @map("cliente_id")
   tipo        String   // reativacao, aniversario, inadimplencia, nps, boasvindas, agradecimento
   referencia  Int?     // vendaId quando aplicável
+  provider    String?  // evolution | meta_cloud (provider usado no envio)
   dataEnvio   DateTime @default(now()) @map("data_envio")
 
   @@index([clienteId, tipo])
   @@index([tipo, referencia])
   @@map("whatsapp_envio_log")
+}
+
+model RelatorioEnvioLog {
+  id            Int      @id @default(autoincrement())
+  empresaId     Int      @map("empresa_id")      // empresa canônica do grupo econômico
+  periodo       String                            // "2026-06" (YYYY-MM)
+  tipo          String   @default("mensal")       // mensal | semanal
+  destinatarios String?                            // e-mails separados por vírgula
+  status        String                            // enviado | erro | sem_vendas | sem_email
+  erro          String?
+  totalVendas   Int      @default(0) @map("total_vendas")
+  valorTotal    Float    @default(0) @map("valor_total")
+  pdfKey        String?  @map("pdf_key")           // chave no MinIO (download/reenvio)
+  xlsxKey       String?  @map("xlsx_key")
+  enviadoEm     DateTime @default(now()) @map("enviado_em")
+
+  empresa EmpresaParceira @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, periodo, tipo])
+  @@index([periodo])
+  @@map("relatorio_envio_log")
 }
 
 model AiMensagem {

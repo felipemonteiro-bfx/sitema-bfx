@@ -18,6 +18,9 @@ import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
 import { signReciboId } from "@/lib/recibo-url";
 import { sendVendaNotification } from "@/lib/email";
+import { creditarPontosVenda, resgatarPontos } from "@/lib/fidelidade-service";
+import { valorEmReais } from "@/lib/fidelidade";
+import { logError } from "@/lib/logger";
 import { getSession } from "@/lib/session";
 import {
   FORMA_PAGAMENTO,
@@ -80,10 +83,17 @@ export async function criarVenda(formData: FormData) {
     },
   });
   if (produto) {
-    await prisma.produto.updateMany({
-      where: { nome: produto },
-      data: { qtdEstoque: { decrement: quantidade } },
+    const prod = await prisma.produto.findFirst({
+      where: { nome: { equals: produto, mode: "insensitive" } },
+      orderBy: { qtdEstoque: "desc" },
+      select: { id: true },
     });
+    if (prod) {
+      await prisma.produto.update({
+        where: { id: prod.id },
+        data: { qtdEstoque: { decrement: quantidade } },
+      });
+    }
   }
   // Fire-and-forget: notify partner company via email
   if (clienteId) {
@@ -152,6 +162,7 @@ export async function criarVendaV2(
       produtos,
       parcelasVencimento: parcelasVencimento.length > 0 ? parcelasVencimento : undefined,
       desconto: Number(formData.get("desconto") || 0),
+      pontosResgatar: Number(formData.get("pontosResgatar") || 0),
       descontoEmFolha: formData.get("descontoEmFolha") === "true",
       boleto: formData.get("boleto") === "true",
       formaPagamento: isFormaPagamento(formaPagamentoRaw) ? formaPagamentoRaw : undefined,
@@ -165,7 +176,22 @@ export async function criarVendaV2(
     }
 
     const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
-    const desconto = parsed.data.desconto ?? 0;
+    const descontoManual = parsed.data.desconto ?? 0;
+
+    // Fidelidade: resgate de pontos vira desconto na venda (limitado ao saldo do cliente).
+    const pontosResgatarPedido = parsed.data.pontosResgatar ?? 0;
+    let pontosUsar = 0;
+    let descontoPontos = 0;
+    if (pontosResgatarPedido > 0) {
+      const cliPontos = await prisma.cliente.findUnique({
+        where: { id: clienteId },
+        select: { pontos: true },
+      });
+      const saldo = cliPontos?.pontos ?? 0;
+      pontosUsar = Math.min(pontosResgatarPedido, saldo);
+      descontoPontos = valorEmReais(pontosUsar);
+    }
+    const desconto = descontoManual + descontoPontos;
 
     // Valida cada item contra o catálogo: subtotal precisa bater com valorVenda×quantidade,
     // e o custo informado não pode ser menor que o custo cadastrado do produto (evita
@@ -296,12 +322,21 @@ export async function criarVendaV2(
         });
       }
 
-      // 4. Debitar estoque
+      // 4. Debitar estoque — casa por nome case-insensitive e debita UM produto
+      //    (evita miss por maiúsc/minúsc e super-decremento quando 2 fornecedores
+      //    têm produto de mesmo nome). Heurística: prefere o de maior estoque.
       for (const p of produtosValidados) {
-        await tx.produto.updateMany({
-          where: { nome: p.produtoNome },
-          data: { qtdEstoque: { decrement: p.quantidade } },
+        const prod = await tx.produto.findFirst({
+          where: { nome: { equals: p.produtoNome, mode: "insensitive" } },
+          orderBy: { qtdEstoque: "desc" },
+          select: { id: true },
         });
+        if (prod) {
+          await tx.produto.update({
+            where: { id: prod.id },
+            data: { qtdEstoque: { decrement: p.quantidade } },
+          });
+        }
       }
 
       return vendaCriada;
@@ -312,6 +347,28 @@ export async function criarVendaV2(
     revalidatePath("/dashboard");
 
     await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
+
+    // CRM: ao comprar, um lead vira "cliente" (integração funil -> venda).
+    if (clienteId) {
+      void prisma.cliente
+        .updateMany({
+          where: { id: clienteId, estagioCrm: { in: ["novo_lead", "contatado", "negociando"] } },
+          data: { estagioCrm: "cliente" },
+        })
+        .catch((e) => console.error("[crm] Falha ao converter lead em cliente:", e));
+
+      // Fidelidade: credita pontos pela compra (idempotente por venda).
+      void creditarPontosVenda(clienteId, venda.id, totalVenda).catch((e) =>
+        console.error("[fidelidade] Falha ao creditar pontos:", e)
+      );
+
+      // Fidelidade: debita os pontos resgatados como desconto nesta venda.
+      if (pontosUsar > 0) {
+        void resgatarPontos(clienteId, pontosUsar, `Resgate na venda #${venda.id}`).catch((e) =>
+          console.error("[fidelidade] Falha ao debitar pontos resgatados:", e)
+        );
+      }
+    }
 
     // Fire-and-forget: notify partner company via email
     if (clienteId) {
@@ -464,7 +521,7 @@ export async function criarVendaV2(
       ...(assinaturaToken && { assinaturaToken }),
     });
   } catch (error) {
-    console.error("Erro ao criar venda:", error);
+    logError("venda", "criar_venda_falhou", error);
     const err = error as Error & { code?: string };
     const errMsg = err?.message ?? String(error);
 

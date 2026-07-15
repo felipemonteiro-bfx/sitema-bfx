@@ -117,6 +117,14 @@ async function saveWhatsApp(formData: FormData) {
   const preAtendimento = formData.get("whatsappPreAtendimento") === "on" ? 1 : 0;
   const diasInativo = Math.max(30, Math.min(365, Number(formData.get("whatsappDiasInativo") || 60) || 60));
   const takeoverMinutos = Math.max(5, Math.min(480, Number(formData.get("whatsappTakeoverMinutos") || 60) || 60));
+  // Provider oficial (Meta Cloud API) — token so e sobrescrito se informado (padrao Asaas).
+  const provider = String(formData.get("whatsappProvider") || "evolution").trim() === "meta_cloud" ? "meta_cloud" : "evolution";
+  const metaToken = String(formData.get("metaWhatsappToken") || "").trim();
+  const metaPhoneId = String(formData.get("metaWhatsappPhoneNumberId") || "").trim();
+  const metaBusinessId = String(formData.get("metaWhatsappBusinessId") || "").trim();
+  const metaApiVersion = String(formData.get("metaWhatsappApiVersion") || "v21.0").trim() || "v21.0";
+  const metaVerifyToken = String(formData.get("metaWebhookVerifyToken") || "").trim();
+  const fallbackEvolution = formData.get("whatsappFallbackEvolution") === "on" ? 1 : 0;
   const cfg = await prisma.config.findFirst();
   const data = {
     evolutionApiUrl: url || null,
@@ -135,6 +143,13 @@ async function saveWhatsApp(formData: FormData) {
     whatsappDiasInativo: diasInativo,
     whatsappPreAtendimento: preAtendimento,
     whatsappTakeoverMinutos: takeoverMinutos,
+    whatsappProvider: provider,
+    metaWhatsappPhoneNumberId: metaPhoneId || null,
+    metaWhatsappBusinessId: metaBusinessId || null,
+    metaWhatsappApiVersion: metaApiVersion,
+    metaWebhookVerifyToken: metaVerifyToken || null,
+    whatsappFallbackEvolution: fallbackEvolution,
+    ...(metaToken ? { metaWhatsappToken: metaToken } : {}),
   };
   if (cfg) {
     await prisma.config.update({ where: { id: cfg.id }, data });
@@ -389,6 +404,86 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </CardHeader>
                 <CardContent>
                   <form action={saveWhatsApp} className="space-y-4">
+                    {/* Provider oficial (Meta Cloud API) — sem risco de ban do numero */}
+                    <div className="space-y-3 rounded-lg border border-info/30 bg-info/5 p-4">
+                      <div className="text-sm font-semibold text-info">Provider de envio</div>
+                      <div className="space-y-1">
+                        <Label htmlFor="whatsappProvider">Qual API usar</Label>
+                        <select
+                          id="whatsappProvider"
+                          name="whatsappProvider"
+                          defaultValue={String((cfg as Record<string, unknown>)?.whatsappProvider ?? "evolution")}
+                          className="block h-input w-full max-w-xs rounded-md border-2 border-input bg-background px-3 text-sm"
+                        >
+                          <option value="evolution">Evolution API (não-oficial)</option>
+                          <option value="meta_cloud">Meta WhatsApp Cloud API (oficial)</option>
+                        </select>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappToken">Meta — Token permanente</Label>
+                          <Input
+                            id="metaWhatsappToken"
+                            name="metaWhatsappToken"
+                            type="password"
+                            placeholder={(cfg as Record<string, unknown>)?.metaWhatsappToken ? "•••••••• (salvo)" : "System User token"}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappPhoneNumberId">Meta — Phone Number ID</Label>
+                          <Input
+                            id="metaWhatsappPhoneNumberId"
+                            name="metaWhatsappPhoneNumberId"
+                            placeholder="123456789012345"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappPhoneNumberId ?? "")}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappBusinessId">Meta — Business Account ID</Label>
+                          <Input
+                            id="metaWhatsappBusinessId"
+                            name="metaWhatsappBusinessId"
+                            placeholder="opcional"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappBusinessId ?? "")}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappApiVersion">Meta — Versão da API</Label>
+                          <Input
+                            id="metaWhatsappApiVersion"
+                            name="metaWhatsappApiVersion"
+                            placeholder="v21.0"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappApiVersion ?? "v21.0")}
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label htmlFor="metaWebhookVerifyToken">Meta — Verify token do webhook</Label>
+                          <Input
+                            id="metaWebhookVerifyToken"
+                            name="metaWebhookVerifyToken"
+                            placeholder="token de verificação do webhook"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWebhookVerifyToken ?? "")}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="whatsappFallbackEvolution"
+                          name="whatsappFallbackEvolution"
+                          defaultChecked={(cfg as Record<string, unknown>)?.whatsappFallbackEvolution !== 0}
+                          className="h-4 w-4"
+                        />
+                        <label htmlFor="whatsappFallbackEvolution" className="text-sm">
+                          Usar Evolution como fallback se o Meta falhar (durante a transição)
+                        </label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Webhook do Meta: aponte para <code>…/api/webhooks/meta-whatsapp</code>. Mensagens
+                        automáticas (lembrete, cobrança, etc.) exigem templates aprovados no Meta.
+                      </p>
+                    </div>
+
                     <div className="space-y-1">
                       <Label htmlFor="evolutionApiUrl">URL da Evolution API</Label>
                       <Input

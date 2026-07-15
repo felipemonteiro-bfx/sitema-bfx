@@ -31,15 +31,10 @@ Depois acesse http://localhost:8080/manager, crie a instância `bfx` e escaneie 
 
 Aplicação: `http://localhost:3008`  
 MinIO Console: `http://localhost:9001` (minioadmin/minioadmin)
-Streamlit legado (via proxy + layout): `http://localhost:3008/streamlit`
 
 Login inicial:
 - usuario: `admin`
 - senha: `admin`
-
-## Streamlit dentro do Next.js
-
-O Nginx faz proxy de `/_streamlit` para o container Streamlit (com suporte a WebSocket). A pagina `/streamlit` exibe dentro do layout do Next.
 
 ## Scripts
 
@@ -179,20 +174,3 @@ Manifests em **`k8s/`**: Namespace, Deployment, Service, Secret/ConfigMap (exemp
 - **GitHub Actions:** em todo push/PR roda lint e build (`.github/workflows/ci.yml`). O deploy em produção é feito pela integração Git da Vercel no push para o branch configurado.
 - **Variáveis Vercel:** checklist em **docs/VERCEL-ENV.md** (obrigatórias: `DATABASE_URL`, `SESSION_SECRET`).
 - **Dependabot:** abre PRs semanais (segunda-feira) para atualizar dependências npm e GitHub Actions (`.github/dependabot.yml`). Revise e faça merge quando quiser.
-
-## Importar dados do SQLite (Streamlit)
-
-O banco legado do Streamlit fica em `streamlit/bfx_sistema.db`. Para importar tudo para o Postgres:
-
-```bash
-# dentro do container da app
-docker exec bfx_app sh -lc "RESET=1 node prisma/import_sqlite.js"
-```
-
-Se preferir rodar fora do container:
-
-```bash
-set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bfx?schema=public
-set RESET=1
-node prisma/import_sqlite.js
-```

@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db";
 import { produtosTexto, valorTotalVenda } from "@/lib/venda-utils";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
 
 type SmtpConfig = {
   host: string;
@@ -27,6 +28,7 @@ type SendEmailOptions = {
   subject: string;
   html: string;
   cc?: string[];
+  attachments?: EmailAttachment[];
 };
 
 async function getSmtpConfig(): Promise<SmtpConfig | null> {
@@ -97,30 +99,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
 
   if (allRecipients.length === 0) return;
 
-  // Build MIME message
-  const boundary = `bfx_${Date.now()}`;
-  const toHeader = toList.join(", ");
-  const ccHeader = ccList.length ? `Cc: ${ccList.join(", ")}\r\n` : "";
-  const dateHeader = new Date().toUTCString();
-  const message = [
-    `From: ${cfg.from}`,
-    `To: ${toHeader}`,
-    ccHeader.trim() ? ccHeader.trim() : null,
-    `Subject: =?UTF-8?B?${toBase64(opts.subject)}?=`,
-    `Date: ${dateHeader}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/html; charset=UTF-8`,
-    `Content-Transfer-Encoding: base64`,
-    ``,
-    toBase64(opts.html),
-    ``,
-    `--${boundary}--`,
-  ]
-    .filter((l) => l !== null)
-    .join("\r\n");
+  const message = buildMimeMessage(opts, cfg.from);
 
   await smtpSend(cfg, allRecipients, message);
 }

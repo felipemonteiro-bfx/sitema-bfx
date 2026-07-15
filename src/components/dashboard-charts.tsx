@@ -68,10 +68,10 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         <div className="border-t border-border/40 pt-2 space-y-1.5">
           <div className="flex items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <div className={`h-2.5 w-2.5 rounded-full ${isNeg ? "bg-destructive" : "bg-emerald-500"}`} />
+              <div className={`h-2.5 w-2.5 rounded-full ${isNeg ? "bg-destructive" : "bg-success"}`} />
               <span className="text-xs text-muted-foreground">Lucro líquido</span>
             </div>
-            <span className={`text-xs font-bold tabular-nums ${isNeg ? "text-destructive" : "text-emerald-500"}`}>
+            <span className={`text-xs font-bold tabular-nums ${isNeg ? "text-destructive" : "text-success"}`}>
               {currency(lucro)}
             </span>
           </div>
@@ -134,12 +134,12 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
       <ComposedChart data={chartData} margin={{ left: 8, right: 8, top: 10, bottom: 10 }}>
         <defs>
           <linearGradient id="profitFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" stopOpacity={0.5} />
-            <stop offset="100%" stopColor="#10b981" stopOpacity={0.08} />
+            <stop offset="0%" stopColor="var(--success)" stopOpacity={0.5} />
+            <stop offset="100%" stopColor="var(--success)" stopOpacity={0.08} />
           </linearGradient>
           <linearGradient id="lossFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.12} />
-            <stop offset="100%" stopColor="#ef4444" stopOpacity={0.5} />
+            <stop offset="0%" stopColor="var(--destructive)" stopOpacity={0.12} />
+            <stop offset="100%" stopColor="var(--destructive)" stopOpacity={0.5} />
           </linearGradient>
         </defs>
 
@@ -217,7 +217,7 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
           dot={(props: { cx?: number; cy?: number; payload?: ChartRow }) => {
             const { cx, cy, payload } = props;
             if (cx == null || cy == null || !payload) return <g key="empty" />;
-            const color = payload._lucro < 0 ? "#ef4444" : "#10b981";
+            const color = payload._lucro < 0 ? "var(--destructive)" : "var(--success)";
             return (
               <circle
                 key={`dot-fat-${payload.mes}`}
@@ -267,7 +267,7 @@ export function DashboardCharts({
               Custo
             </Badge>
             <Badge variant="outline" size="sm" className="gap-1">
-              <div className={`h-2 w-2 rounded-full ${hasNeg ? "bg-destructive" : "bg-emerald-500"}`} />
+              <div className={`h-2 w-2 rounded-full ${hasNeg ? "bg-destructive" : "bg-success"}`} />
               Faturamento
             </Badge>
           </div>

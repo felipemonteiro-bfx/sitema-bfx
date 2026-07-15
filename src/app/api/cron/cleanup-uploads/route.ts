@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import fs from "fs/promises";
 import path from "path";
+import { cleanupMinIOPrefix, isMinIOConfigured } from "@/lib/minio";
+import { logCron, logCronError } from "@/lib/logger";
 
 const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_AGE_DAYS = 90;
+// Artefatos de relatorio no MinIO sao regeneraveis sob demanda — limpeza mais agressiva.
+const MINIO_REPORT_MAX_AGE_DAYS = 180;
 
 /**
  * Remove arquivos em public/uploads que não estão referenciados no banco
@@ -61,9 +65,20 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ ok: true, deleted });
+    // Housekeeping do MinIO: remove apenas artefatos de relatorio antigos (regeneraveis).
+    let minioRemovidos = 0;
+    if (isMinIOConfigured()) {
+      try {
+        minioRemovidos = await cleanupMinIOPrefix("relatorios/mensal/", MINIO_REPORT_MAX_AGE_DAYS);
+      } catch (e) {
+        logCronError("cleanup-uploads", "minio_cleanup_falhou", e);
+      }
+    }
+
+    logCron("cleanup-uploads", "concluido", { deleted, minioRemovidos });
+    return NextResponse.json({ ok: true, deleted, minioRemovidos });
   } catch (error) {
-    console.error("Erro no cleanup de uploads:", error);
+    logCronError("cleanup-uploads", "erro_geral", error);
     return NextResponse.json(
       { error: "Erro ao executar limpeza" },
       { status: 500 }

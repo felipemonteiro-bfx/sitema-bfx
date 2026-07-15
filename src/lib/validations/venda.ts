@@ -63,6 +63,7 @@ export const vendaV2Schema = z.object({
   produtos: z.array(produtoItemSchema).min(1, "Adicione pelo menos um produto"),
   parcelasVencimento: z.array(parcelaVencimentoSchema).optional(),
   desconto: z.number().min(0, "Desconto não pode ser negativo").optional().default(0),
+  pontosResgatar: z.number().int().min(0, "Pontos a resgatar não pode ser negativo").optional().default(0),
   descontoEmFolha: z.boolean().optional().default(false),
   boleto: z.boolean().optional().default(false),
   formaPagamento: z.enum(FORMAS_PAGAMENTO_LIST as [string, ...string[]]).optional(),

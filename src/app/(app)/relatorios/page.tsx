@@ -122,13 +122,19 @@ export default async function Page() {
             <CardTitle className="text-primary">Atalhos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <a 
+            <a
+              href="/relatorios/mensais"
+              className={cn(buttonVariants({ variant: "default" }), "w-full")}
+            >
+              Relatórios mensais por empresa
+            </a>
+            <a
               href="/relatorios"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
               Limpar filtros
             </a>
-            <a 
+            <a
               href="/financeiro"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
