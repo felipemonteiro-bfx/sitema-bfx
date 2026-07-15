@@ -26,6 +26,7 @@ import {
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
+import { valorEmReais } from "@/lib/fidelidade";
 import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -118,6 +119,7 @@ export default function VendaRapidaFormV2({
       temNota: parseAsBoolean.withDefault(false),
       taxaNota: parseAsString.withDefault("5.97"),
       desconto: parseAsFloat.withDefault(0),
+      pontosResgatar: parseAsFloat.withDefault(0),
       formaPagamento: parseAsString.withDefault(""),
     },
     { history: "replace" },
@@ -125,7 +127,7 @@ export default function VendaRapidaFormV2({
 
   // Desestrutura para compatibilidade com o restante do código
   const { dataVenda, vendedor, parcelas, clienteQuery, selectedCliente,
-          frete, envio, temNota, taxaNota, desconto } = formState;
+          frete, envio, temNota, taxaNota, desconto, pontosResgatar } = formState;
   const formaPagamentoSelected = formState.formaPagamento as FormaPagamento | "";
   // Flags legados sao DERIVADOS da forma canonica para manter backwards-compat com o resto do componente.
   const descontoEmFolha = formaPagamentoSelected === FORMA_PAGAMENTO.DESCONTO_FOLHA;
@@ -145,6 +147,7 @@ export default function VendaRapidaFormV2({
   const setTemNota = (v: boolean) => void setFormState({ temNota: v });
   const setTaxaNota = (v: string) => void setFormState({ taxaNota: v });
   const setDesconto = (v: number) => void setFormState({ desconto: v });
+  const setPontosResgatar = (v: number) => void setFormState({ pontosResgatar: v });
   const setFormaPagamento = (v: FormaPagamento | "") => void setFormState({ formaPagamento: v });
 
   // Cliente autocomplete suggestions (transient — não persiste)
@@ -287,7 +290,8 @@ export default function VendaRapidaFormV2({
   const numTaxaNota = Number(taxaNota) || 0;
   const numParcelas = Number(parcelas) || 1;
 
-  const totalVenda = subtotalProdutos + numFrete - desconto;
+  const descontoPontos = valorEmReais(pontosResgatar);
+  const totalVenda = subtotalProdutos + numFrete - desconto - descontoPontos;
   const valorDescontoNota = temNota
     ? (subtotalProdutos * numTaxaNota) / 100
     : 0;
@@ -552,6 +556,7 @@ export default function VendaRapidaFormV2({
     formData.append("temNota", String(temNota));
     formData.append("taxaNota", taxaNota);
     formData.append("desconto", String(desconto));
+    formData.append("pontosResgatar", String(pontosResgatar));
     formData.append("descontoEmFolha", String(descontoEmFolha));
     formData.append("boleto", String(boleto));
     if (formaPagamentoSelected) formData.append("formaPagamento", formaPagamentoSelected);
@@ -939,6 +944,25 @@ export default function VendaRapidaFormV2({
                 Desconto (R$)
               </Label>
               <CurrencyInput value={desconto} onChange={setDesconto} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Resgatar pontos
+              </Label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={pontosResgatar || ""}
+                onChange={(e) => setPontosResgatar(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+                placeholder="0"
+                className="h-input w-full rounded-md border-2 border-input bg-background px-3 text-sm"
+              />
+              {pontosResgatar > 0 && (
+                <p className="text-[11px] text-success">
+                  Desconto por pontos: -{formatBRL(descontoPontos)} (limitado ao saldo do cliente)
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
