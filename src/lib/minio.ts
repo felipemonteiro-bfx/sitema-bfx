@@ -10,6 +10,7 @@ import {
   PutBucketPolicyCommand,
   ListObjectsV2Command,
   DeleteObjectsCommand,
+  type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 
 const bucket = process.env.MINIO_BUCKET ?? "produtos";
@@ -90,7 +91,7 @@ export async function cleanupMinIOPrefix(prefix: string, maxAgeDays: number): Pr
   let continuationToken: string | undefined = undefined;
 
   do {
-    const list = await client.send(
+    const list: ListObjectsV2CommandOutput = await client.send(
       new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix, ContinuationToken: continuationToken })
     );
     const antigos = (list.Contents ?? []).filter(
