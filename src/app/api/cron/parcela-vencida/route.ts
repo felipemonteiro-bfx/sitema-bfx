@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
+import { enviarWhatsAppTemplate, getWhatsAppConfig } from "@/lib/whatsapp";
+import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 import { formatBRL } from "@/lib/utils";
 
 /**
@@ -49,7 +50,14 @@ export async function GET(req: Request) {
         msg += `\n\nBoleto: ${p.venda.boletoUrl}`;
       }
 
-      const ok = await enviarWhatsAppTexto(telefone, msg);
+      const ok = await enviarWhatsAppTemplate(
+        telefone,
+        comFallback(
+          TEMPLATES.parcelaVencida,
+          [clienteNome, String(p.numeroParcela), String(p.venda.id), formatBRL(p.valorParcela)],
+          msg
+        )
+      );
       if (ok) enviados++;
       else erros.push(`Parcela ${p.id} (${clienteNome})`);
     }
