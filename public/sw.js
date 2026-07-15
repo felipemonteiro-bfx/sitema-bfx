@@ -1,8 +1,8 @@
-// IMPORTANTE: incremente a versao a cada deploy que mude assets estaticos.
-// O handler de 'activate' apaga todo cache com nome != CACHE_NAME, entao
-// bumpar a versao limpa o cache antigo automaticamente (evita "deployei mas
-// o site nao atualiza" por causa do cache-first de assets).
-const CACHE_NAME = 'bfx-manager-v2';
+// CACHE_NAME e estampado AUTOMATICAMENTE no build por scripts/stamp-sw.mjs,
+// que troca 'bfx-manager-dev' pelo BUILD_ID unico do Next. Nao bumpar a mao.
+// Cada deploy vira um cache novo -> o handler 'activate' abaixo apaga os
+// caches antigos sozinho (evita "deployei mas o site nao atualiza").
+const CACHE_NAME = 'bfx-manager-dev';
 
 // Assets to pre-cache on install
 const PRECACHE = ['/dashboard', '/venda-rapida', '/offline'];
