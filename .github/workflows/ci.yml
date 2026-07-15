@@ -1,4 +1,4 @@
-# CI: lint e build em todo push/PR (deploy é feito pela integração Git da Vercel)
+# CI: lint, test e build em todo push/PR (deploy em producao é via ECR + ArgoCD)
 name: CI
 
 on:
@@ -16,11 +16,11 @@ env:
   BUILD_DATABASE_URL: "postgresql://user:pass@localhost:5432/bfx?schema=public"
   SESSION_SECRET: "ci-build-dummy-secret-min-32-chars-long"
   SKIP_ENV_VALIDATION: "1"
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   lint-and-build:
-    runs-on: self-hosted
+    # Runner hospedado do GitHub (sai do self-hosted, que travava os jobs na fila).
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
