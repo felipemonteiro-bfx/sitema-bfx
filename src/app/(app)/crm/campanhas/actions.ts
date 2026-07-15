@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { ESTAGIOS_ORDEM, type EstagioCrm, type SegmentoFiltro } from "@/lib/crm";
+import { NIVEIS_FIDELIDADE, nivelParaFaixaPontos, type NivelFidelidade } from "@/lib/fidelidade";
 import { contarAlvo, enviarCampanha } from "@/lib/campanha-service";
 
 function filtroFromForm(formData: FormData): SegmentoFiltro {
@@ -12,12 +13,16 @@ function filtroFromForm(formData: FormData): SegmentoFiltro {
   const empresa = Number(formData.get("empresa") || 0);
   const tag = Number(formData.get("tag") || 0);
   const comprou = String(formData.get("comprou") || "");
+  const nivel = String(formData.get("nivel") || "");
   const filtro: SegmentoFiltro = {};
   if ((ESTAGIOS_ORDEM as string[]).includes(estagio)) filtro.estagios = [estagio as EstagioCrm];
   if (empresa > 0) filtro.empresaParceiraId = empresa;
   if (tag > 0) filtro.tagIds = [tag];
   if (comprou === "sim") filtro.comprou = true;
   else if (comprou === "nao") filtro.comprou = false;
+  if ((NIVEIS_FIDELIDADE as string[]).includes(nivel)) {
+    filtro.pontosRange = nivelParaFaixaPontos(nivel as NivelFidelidade);
+  }
   return filtro;
 }
 

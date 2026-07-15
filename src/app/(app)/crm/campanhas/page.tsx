@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { estagioLabel, ESTAGIOS_ORDEM } from "@/lib/crm";
+import { NIVEIS_FIDELIDADE, nivelLabel, NIVEL_PRATA_MIN, NIVEL_OURO_MIN } from "@/lib/fidelidade";
 import { parseFiltro } from "@/lib/campanha-service";
 import { criarCampanha, dispararCampanha, excluirCampanha } from "./actions";
 
@@ -32,6 +33,11 @@ function resumoFiltro(filtroJson: string): string {
   if (f.comprou === true) partes.push("já comprou");
   if (f.empresaParceiraId) partes.push(`empresa #${f.empresaParceiraId}`);
   if (f.tagIds?.length) partes.push(`tag #${f.tagIds.join(",")}`);
+  if (f.pontosRange) {
+    if (f.pontosRange.gte === NIVEL_OURO_MIN) partes.push("nível Ouro");
+    else if (f.pontosRange.gte === NIVEL_PRATA_MIN) partes.push("nível Prata");
+    else if (f.pontosRange.lt === NIVEL_PRATA_MIN) partes.push("nível Bronze");
+  }
   return partes.length ? partes.join(" · ") : "todos os clientes";
 }
 
@@ -66,7 +72,7 @@ export default async function Page() {
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
               <div className="space-y-1">
                 <label htmlFor="estagio" className="text-xs font-medium text-muted-foreground">Estágio</label>
                 <select id="estagio" name="estagio" className="block h-input w-full rounded-md border-2 border-input bg-background px-2 text-sm">
@@ -100,6 +106,15 @@ export default async function Page() {
                   <option value="">Todos</option>
                   <option value="sim">Já comprou</option>
                   <option value="nao">Nunca comprou (lead)</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="nivel" className="text-xs font-medium text-muted-foreground">Nível</label>
+                <select id="nivel" name="nivel" className="block h-input w-full rounded-md border-2 border-input bg-background px-2 text-sm">
+                  <option value="">Todos</option>
+                  {NIVEIS_FIDELIDADE.map((n) => (
+                    <option key={n} value={n}>{nivelLabel(n)}</option>
+                  ))}
                 </select>
               </div>
             </div>

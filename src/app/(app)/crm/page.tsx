@@ -16,6 +16,13 @@ import {
   type EstagioCrm,
   type SegmentoFiltro,
 } from "@/lib/crm";
+import {
+  nivelFidelidade,
+  nivelLabel,
+  nivelParaFaixaPontos,
+  NIVEIS_FIDELIDADE,
+  type NivelFidelidade,
+} from "@/lib/fidelidade";
 import { mudarEstagioCliente, criarTag, toggleTagCliente } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +33,7 @@ type Search = {
   empresa?: string;
   tag?: string;
   comprou?: string;
+  nivel?: string;
 };
 
 function estagioBadgeVariant(estagio: string | null | undefined) {
@@ -56,6 +64,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const empresaId = sp.empresa ? Number(sp.empresa) : undefined;
   const tagId = sp.tag ? Number(sp.tag) : undefined;
   const comprou = sp.comprou === "sim" ? true : sp.comprou === "nao" ? false : undefined;
+  const nivelFiltro = (NIVEIS_FIDELIDADE as string[]).includes(sp.nivel || "")
+    ? (sp.nivel as NivelFidelidade)
+    : undefined;
 
   const filtro: SegmentoFiltro = {
     busca: sp.q,
@@ -63,6 +74,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     empresaParceiraId: empresaId,
     tagIds: tagId ? [tagId] : undefined,
     comprou,
+    pontosRange: nivelFiltro ? nivelParaFaixaPontos(nivelFiltro) : undefined,
   };
   const where = buildClienteSegmentWhere(filtro) as unknown as Prisma.ClienteWhereInput;
 
@@ -75,6 +87,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         telefone: true,
         empresa: true,
         estagioCrm: true,
+        pontos: true,
         empresaParceira: { select: { nome: true } },
         tags: { select: { tag: { select: { id: true, nome: true, cor: true } } } },
         _count: { select: { vendas: true } },
@@ -98,6 +111,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       empresa: sp.empresa,
       tag: sp.tag,
       comprou: sp.comprou,
+      nivel: sp.nivel,
       ...extra,
     };
     for (const [k, v] of Object.entries(base)) if (v) params.set(k, v);
@@ -187,6 +201,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <option value="nao">Nunca comprou (lead)</option>
               </select>
             </div>
+            <div className="space-y-1">
+              <label htmlFor="nivel" className="text-xs font-medium text-muted-foreground">Nível</label>
+              <select id="nivel" name="nivel" defaultValue={sp.nivel ?? ""} className="block h-input rounded-md border-2 border-input bg-background px-3 text-sm">
+                <option value="">Todos</option>
+                {NIVEIS_FIDELIDADE.map((n) => (
+                  <option key={n} value={n}>{nivelLabel(n)}</option>
+                ))}
+              </select>
+            </div>
             <Button type="submit">Filtrar</Button>
             <a href="/crm" className={cn(buttonVariants({ variant: "ghost" }))}>Limpar</a>
           </form>
@@ -228,6 +251,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <th className="py-2 pr-3 font-medium">Nome</th>
                     <th className="py-2 pr-3 font-medium">Empresa</th>
                     <th className="py-2 pr-3 font-medium">Estágio</th>
+                    <th className="py-2 pr-3 font-medium">Nível</th>
                     <th className="py-2 pr-3 font-medium">Tags</th>
                     <th className="py-2 pr-3 font-medium">Compras</th>
                     <th className="py-2 pr-3 font-medium">Ações</th>
@@ -243,6 +267,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <td className="py-2 pr-3">{c.empresaParceira?.nome ?? c.empresa ?? "—"}</td>
                       <td className="py-2 pr-3">
                         <Badge variant={estagioBadgeVariant(c.estagioCrm)}>{estagioLabel(c.estagioCrm)}</Badge>
+                      </td>
+                      <td className="py-2 pr-3">
+                        <span className="text-xs text-muted-foreground">
+                          {nivelLabel(nivelFidelidade(c.pontos))} · {c.pontos ?? 0} pts
+                        </span>
                       </td>
                       <td className="py-2 pr-3">
                         <div className="flex flex-wrap gap-1">

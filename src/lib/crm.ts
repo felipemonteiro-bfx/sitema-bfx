@@ -64,6 +64,8 @@ export type SegmentoFiltro = {
   inativoDias?: number;
   /** true = só quem já comprou; false = só quem nunca comprou (leads puros). */
   comprou?: boolean;
+  /** Faixa de pontos (nível de fidelidade) — { gte?, lt? }. */
+  pontosRange?: { gte?: number; lt?: number };
   /** Busca textual por nome. */
   busca?: string;
   /** Data de referência para o cálculo de inatividade (default: agora, injetável em teste). */
@@ -75,6 +77,7 @@ export type ClienteSegmentWhere = {
   estagioCrm?: { in: string[] };
   empresaParceiraId?: number;
   nome?: { contains: string; mode: "insensitive" };
+  pontos?: { gte?: number; lt?: number };
   AND?: unknown[];
   vendas?: unknown;
 };
@@ -97,6 +100,10 @@ export function buildClienteSegmentWhere(filtro: SegmentoFiltro): ClienteSegment
 
   if (filtro.busca && filtro.busca.trim()) {
     where.nome = { contains: filtro.busca.trim(), mode: "insensitive" };
+  }
+
+  if (filtro.pontosRange && (filtro.pontosRange.gte !== undefined || filtro.pontosRange.lt !== undefined)) {
+    where.pontos = filtro.pontosRange;
   }
 
   // Tags: exige TODAS as tags (AND de "some").

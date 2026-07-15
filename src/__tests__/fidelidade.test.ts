@@ -4,6 +4,8 @@ import {
   valorEmReais,
   pontosParaValor,
   podeResgatar,
+  nivelFidelidade,
+  nivelParaFaixaPontos,
   PONTOS_POR_REAL,
   VALOR_POR_PONTO,
 } from "@/lib/fidelidade";
@@ -40,5 +42,20 @@ describe("fidelidade — regras de pontos", () => {
     expect(podeResgatar(1000, 0)).toBe(false);
     expect(podeResgatar(1000, -5)).toBe(false);
     expect(podeResgatar(1000, 10.5)).toBe(false);
+  });
+
+  it("nivelFidelidade: bronze < 1000 <= prata < 5000 <= ouro", () => {
+    expect(nivelFidelidade(0)).toBe("bronze");
+    expect(nivelFidelidade(999)).toBe("bronze");
+    expect(nivelFidelidade(1000)).toBe("prata");
+    expect(nivelFidelidade(4999)).toBe("prata");
+    expect(nivelFidelidade(5000)).toBe("ouro");
+    expect(nivelFidelidade(null)).toBe("bronze");
+  });
+
+  it("nivelParaFaixaPontos: gera a faixa de filtro correta", () => {
+    expect(nivelParaFaixaPontos("bronze")).toEqual({ lt: 1000 });
+    expect(nivelParaFaixaPontos("prata")).toEqual({ gte: 1000, lt: 5000 });
+    expect(nivelParaFaixaPontos("ouro")).toEqual({ gte: 5000 });
   });
 });

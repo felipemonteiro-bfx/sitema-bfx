@@ -31,3 +31,44 @@ export function pontosParaValor(reais: number): number {
 export function podeResgatar(saldo: number, pontos: number): boolean {
   return Number.isInteger(pontos) && pontos > 0 && saldo >= pontos;
 }
+
+/**
+ * Níveis de fidelidade por saldo de pontos (filtrável em segmentos/campanhas).
+ * Limiares configuráveis por env.
+ */
+export const NIVEL_PRATA_MIN = Number(process.env.FIDELIDADE_NIVEL_PRATA || 1000);
+export const NIVEL_OURO_MIN = Number(process.env.FIDELIDADE_NIVEL_OURO || 5000);
+
+export type NivelFidelidade = "bronze" | "prata" | "ouro";
+
+export function nivelFidelidade(pontos: number | null | undefined): NivelFidelidade {
+  const p = pontos ?? 0;
+  if (p >= NIVEL_OURO_MIN) return "ouro";
+  if (p >= NIVEL_PRATA_MIN) return "prata";
+  return "bronze";
+}
+
+export function nivelLabel(nivel: NivelFidelidade): string {
+  switch (nivel) {
+    case "ouro":
+      return "Ouro";
+    case "prata":
+      return "Prata";
+    default:
+      return "Bronze";
+  }
+}
+
+/** Faixa de pontos (para filtro Prisma) correspondente a um nível. */
+export function nivelParaFaixaPontos(nivel: NivelFidelidade): { gte?: number; lt?: number } {
+  switch (nivel) {
+    case "ouro":
+      return { gte: NIVEL_OURO_MIN };
+    case "prata":
+      return { gte: NIVEL_PRATA_MIN, lt: NIVEL_OURO_MIN };
+    default:
+      return { lt: NIVEL_PRATA_MIN };
+  }
+}
+
+export const NIVEIS_FIDELIDADE: NivelFidelidade[] = ["bronze", "prata", "ouro"];

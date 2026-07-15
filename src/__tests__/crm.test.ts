@@ -65,6 +65,12 @@ describe("buildClienteSegmentWhere", () => {
     ]);
   });
 
+  it("pontosRange vira filtro pontos (nível de fidelidade)", () => {
+    expect(buildClienteSegmentWhere({ pontosRange: { gte: 5000 } }).pontos).toEqual({ gte: 5000 });
+    expect(buildClienteSegmentWhere({ pontosRange: { gte: 1000, lt: 5000 } }).pontos).toEqual({ gte: 1000, lt: 5000 });
+    expect(buildClienteSegmentWhere({ pontosRange: {} }).pontos).toBeUndefined();
+  });
+
   it("combina múltiplos critérios", () => {
     const w = buildClienteSegmentWhere({
       estagios: [ESTAGIOS_CRM.CLIENTE],
