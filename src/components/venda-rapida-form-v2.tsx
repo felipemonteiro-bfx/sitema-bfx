@@ -521,12 +521,13 @@ export default function VendaRapidaFormV2({
     const produtoIndices: number[] = [];
     produtosFiltrados.forEach((p, i) => {
       const custoInvalido = p.custoProduto < 0;
-      const valorInvalido = p.valorVenda < 0;
+      // Valor de venda precisa ser > 0 — impede venda registrada com R$ 0,00.
+      const valorInvalido = p.valorVenda <= 0;
       const qtdInvalida = p.quantidade < 1;
       if (custoInvalido || valorInvalido || qtdInvalida) {
         const idxOriginal = produtos.findIndex((x) => x.id === p.id);
         if (idxOriginal >= 0) produtoIndices.push(idxOriginal);
-        msgs.push(`Produto #${i + 1} (preencha valores corretamente)`);
+        msgs.push(`Produto #${i + 1} (informe o valor de venda)`);
       }
     });
     if (produtoIndices.length) errors.produtoIndices = produtoIndices;
