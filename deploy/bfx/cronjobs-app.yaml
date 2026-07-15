@@ -398,3 +398,48 @@ spec:
                       key: CRON_SECRET
                 - name: APP_URL
                   value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-campanhas-agendadas
+  labels:
+    app: bfx-campanhas-agendadas
+spec:
+  # A cada 15 minutos — dispara campanhas cujo horario agendado ja chegou.
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-campanhas-agendadas
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/campanhas-agendadas")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"

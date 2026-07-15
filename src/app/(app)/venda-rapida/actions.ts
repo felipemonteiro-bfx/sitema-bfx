@@ -82,10 +82,17 @@ export async function criarVenda(formData: FormData) {
     },
   });
   if (produto) {
-    await prisma.produto.updateMany({
-      where: { nome: produto },
-      data: { qtdEstoque: { decrement: quantidade } },
+    const prod = await prisma.produto.findFirst({
+      where: { nome: { equals: produto, mode: "insensitive" } },
+      orderBy: { qtdEstoque: "desc" },
+      select: { id: true },
     });
+    if (prod) {
+      await prisma.produto.update({
+        where: { id: prod.id },
+        data: { qtdEstoque: { decrement: quantidade } },
+      });
+    }
   }
   // Fire-and-forget: notify partner company via email
   if (clienteId) {
@@ -314,12 +321,21 @@ export async function criarVendaV2(
         });
       }
 
-      // 4. Debitar estoque
+      // 4. Debitar estoque — casa por nome case-insensitive e debita UM produto
+      //    (evita miss por maiúsc/minúsc e super-decremento quando 2 fornecedores
+      //    têm produto de mesmo nome). Heurística: prefere o de maior estoque.
       for (const p of produtosValidados) {
-        await tx.produto.updateMany({
-          where: { nome: p.produtoNome },
-          data: { qtdEstoque: { decrement: p.quantidade } },
+        const prod = await tx.produto.findFirst({
+          where: { nome: { equals: p.produtoNome, mode: "insensitive" } },
+          orderBy: { qtdEstoque: "desc" },
+          select: { id: true },
         });
+        if (prod) {
+          await tx.produto.update({
+            where: { id: prod.id },
+            data: { qtdEstoque: { decrement: p.quantidade } },
+          });
+        }
       }
 
       return vendaCriada;

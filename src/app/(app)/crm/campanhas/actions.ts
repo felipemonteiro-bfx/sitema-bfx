@@ -26,12 +26,20 @@ function filtroFromForm(formData: FormData): SegmentoFiltro {
   return filtro;
 }
 
-/** Cria uma campanha em rascunho a partir do segmento e da mensagem. */
+/** Cria uma campanha (rascunho ou agendada) a partir do segmento e da mensagem. */
 export async function criarCampanha(formData: FormData): Promise<void> {
   await requireAdminOrThrow();
   const nome = String(formData.get("nome") || "").trim();
   const mensagem = String(formData.get("mensagem") || "").trim();
   if (!nome || !mensagem) redirect("/crm/campanhas?erro=dados");
+
+  // Agendamento opcional (input datetime-local). Só agenda se for no futuro.
+  const agendarStr = String(formData.get("agendadaPara") || "").trim();
+  let agendadaPara: Date | null = null;
+  if (agendarStr) {
+    const d = new Date(agendarStr);
+    if (!Number.isNaN(d.getTime()) && d.getTime() > Date.now()) agendadaPara = d;
+  }
 
   const filtro = filtroFromForm(formData);
   const totalAlvo = await contarAlvo(filtro);
@@ -42,7 +50,8 @@ export async function criarCampanha(formData: FormData): Promise<void> {
       mensagem,
       canal: "whatsapp",
       filtroJson: JSON.stringify(filtro),
-      status: "rascunho",
+      status: agendadaPara ? "agendada" : "rascunho",
+      agendadaPara,
       totalAlvo,
     },
   });

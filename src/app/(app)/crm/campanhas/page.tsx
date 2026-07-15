@@ -20,9 +20,15 @@ function statusBadge(status: string) {
       return <Badge variant="success">Concluída</Badge>;
     case "enviando":
       return <Badge variant="warning">Enviando…</Badge>;
+    case "agendada":
+      return <Badge variant="info">Agendada</Badge>;
     default:
       return <Badge variant="outline">Rascunho</Badge>;
   }
+}
+
+function formatDataHora(d: Date): string {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(d);
 }
 
 function resumoFiltro(filtroJson: string): string {
@@ -126,7 +132,19 @@ export default async function Page() {
               <textarea id="mensagem" name="mensagem" required rows={4} placeholder="Olá {primeiroNome}! Temos novidades pra você…" className="block w-full rounded-md border-2 border-input bg-background p-3 text-sm" />
             </div>
 
-            <Button type="submit">Criar campanha (rascunho)</Button>
+            <div className="space-y-1">
+              <label htmlFor="agendadaPara" className="text-xs font-medium text-muted-foreground">
+                Agendar para (opcional) — se vazio, fica em rascunho
+              </label>
+              <input
+                id="agendadaPara"
+                name="agendadaPara"
+                type="datetime-local"
+                className="block h-input w-full max-w-xs rounded-md border-2 border-input bg-background px-3 text-sm"
+              />
+            </div>
+
+            <Button type="submit">Criar campanha</Button>
           </form>
         </CardContent>
       </Card>
@@ -145,6 +163,7 @@ export default async function Page() {
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     Segmento: {resumoFiltro(c.filtroJson)} · Alvo: {c.totalAlvo} · Enviados: {c.totalEnviado}
+                    {c.agendadaPara && ` · Agendada: ${formatDataHora(c.agendadaPara)}`}
                   </div>
                   <div className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">{c.mensagem}</div>
                 </div>
