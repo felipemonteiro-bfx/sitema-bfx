@@ -77,6 +77,10 @@ spec:
       containers:
         - name: evolution
           image: atendai/evolution-api:latest
+          # Docker Hub tornou atendai/evolution-api PRIVADO (pull anonimo = 401).
+          # IfNotPresent usa a imagem ja cacheada no containerd do worker-202
+          # (onde o pod e fixado pelo PVC hostpath). Ver cura duravel via ECR.
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
