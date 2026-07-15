@@ -423,7 +423,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
-                        <CheckCircle2 className="mx-auto h-4 w-4 text-success" aria-label="Com nota" title={`Taxa: ${v.taxaNota}%`} />
+                        <span title={`Taxa: ${v.taxaNota}%`} aria-label="Com nota" className="inline-flex justify-center">
+                          <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
+                        </span>
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}
