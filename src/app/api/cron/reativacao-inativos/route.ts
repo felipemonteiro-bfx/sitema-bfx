@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
+import { enviarWhatsAppTemplate, getWhatsAppConfig } from "@/lib/whatsapp";
+import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 
 /**
  * Reativação de clientes inativos: envia WhatsApp para clientes sem compra há X dias.
@@ -57,7 +58,7 @@ export async function GET(req: Request) {
     for (const c of clientes) {
       if (!c.telefone) continue;
       const msg = `Olá ${c.nome}! Sentimos sua falta. Temos novidades e condições especiais. Quer ver?`;
-      const ok = await enviarWhatsAppTexto(c.telefone, msg);
+      const ok = await enviarWhatsAppTemplate(c.telefone, comFallback(TEMPLATES.reativacao, [c.nome], msg));
       if (ok) {
         enviados++;
         await prisma.whatsAppEnvioLog.create({
