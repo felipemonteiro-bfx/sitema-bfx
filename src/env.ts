@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 const isProduction = process.env.NODE_ENV === "production";
-const skipValidation = !!process.env.SKIP_ENV_VALIDATION;
+// Aceita apenas "1"/"true" como sinal de pular — "false"/"0"/"" NAO pulam a validacao.
+// (o `!!` antigo tratava qualquer string nao-vazia, incl. "false", como verdadeira).
+const skipValidation =
+  process.env.SKIP_ENV_VALIDATION === "1" || process.env.SKIP_ENV_VALIDATION === "true";
 
 const envSchema = z.object({
   // Obrigatorias
