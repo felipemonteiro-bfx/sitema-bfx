@@ -1,4 +1,8 @@
-const CACHE_NAME = 'bfx-manager-v1';
+// IMPORTANTE: incremente a versao a cada deploy que mude assets estaticos.
+// O handler de 'activate' apaga todo cache com nome != CACHE_NAME, entao
+// bumpar a versao limpa o cache antigo automaticamente (evita "deployei mas
+// o site nao atualiza" por causa do cache-first de assets).
+const CACHE_NAME = 'bfx-manager-v2';
 
 // Assets to pre-cache on install
 const PRECACHE = ['/dashboard', '/venda-rapida', '/offline'];
