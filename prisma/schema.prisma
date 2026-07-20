@@ -70,6 +70,8 @@ model Campanha {
   canal      String   @default("whatsapp")            // por ora só whatsapp
   filtroJson String   @map("filtro_json")             // SegmentoFiltro serializado
   mensagem   String                                   // usa {nome} como placeholder
+  templateNome  String?  @map("template_nome")   // template aprovado na Meta
+  variaveisJson String?  @map("variaveis_json")  // array JSON de variáveis, com {nome} suportado
   status     String   @default("rascunho")            // rascunho | agendada | enviando | concluida
   totalAlvo  Int      @default(0) @map("total_alvo")
   totalEnviado Int    @default(0) @map("total_enviado")

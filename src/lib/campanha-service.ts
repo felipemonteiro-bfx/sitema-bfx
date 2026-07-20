@@ -2,11 +2,13 @@
  * Envio de campanhas de WhatsApp por segmento (CRM Fase 3).
  *
  * Reusa `buildClienteSegmentWhere` (mesmo motor de segmentação do /crm) e o
- * provider de WhatsApp (`enviarWhatsAppTexto` → Evolution/Meta). Cada envio é
- * registrado em `CampanhaEnvio` (idempotente por campanha+cliente).
+ * provider de WhatsApp (`enviarWhatsAppDetalhado` → Meta Cloud API), disparando
+ * sempre por template aprovado. Cada envio é registrado em `CampanhaEnvio`
+ * (idempotente por campanha+cliente) e ligado à `WhatsAppMensagem` via `mensagemId`.
  */
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { enviarWhatsAppDetalhado } from "@/lib/whatsapp";
+import { comFallback } from "@/lib/whatsapp-templates";
 import { buildClienteSegmentWhere, type SegmentoFiltro } from "@/lib/crm";
 import type { Prisma } from "@/generated/prisma";
 import { logCron } from "@/lib/logger";
@@ -42,6 +44,18 @@ export function renderMensagem(mensagem: string, nome: string): string {
   return mensagem.split("{nome}").join(nome).split("{primeiroNome}").join(primeiro);
 }
 
+/** Renderiza as variáveis do template, aplicando {nome}/{primeiroNome} em cada uma. */
+export function renderVariaveis(variaveisJson: string | null, nome: string): string[] {
+  if (!variaveisJson) return [];
+  try {
+    const arr = JSON.parse(variaveisJson);
+    if (!Array.isArray(arr)) return [];
+    return arr.map((v) => renderMensagem(String(v), nome));
+  } catch {
+    return [];
+  }
+}
+
 /** Parseia o filtro salvo da campanha, tolerante a JSON inválido. */
 export function parseFiltro(filtroJson: string): SegmentoFiltro {
   try {
@@ -69,6 +83,11 @@ export async function enviarCampanha(campanhaId: number): Promise<{
 }> {
   const campanha = await prisma.campanha.findUnique({ where: { id: campanhaId } });
   if (!campanha) throw new Error("Campanha não encontrada");
+  if (!campanha.templateNome) {
+    throw new Error(
+      "Campanha sem template aprovado. Campanhas criadas antes da migração para a Cloud API são somente-leitura; recrie-a escolhendo um template."
+    );
+  }
   if (campanha.status === "enviando") {
     return { enviados: 0, falhas: 0, semTelefone: 0 };
   }
@@ -132,14 +151,32 @@ export async function enviarCampanha(campanhaId: number): Promise<{
     }
 
     const texto = renderMensagem(campanha.mensagem, c.nome);
-    const ok = await enviarWhatsAppTexto(c.telefone, texto);
+    const { ok, mensagemId } = await enviarWhatsAppDetalhado({
+      telefone: c.telefone,
+      clienteId: c.id,
+      origem: "campanha",
+      template: comFallback(
+        campanha.templateNome ?? "",
+        renderVariaveis(campanha.variaveisJson, c.nome),
+        texto
+      ),
+    });
     if (ok) enviados++;
     else falhas++;
 
     await prisma.campanhaEnvio.upsert({
       where: { campanhaId_clienteId: { campanhaId, clienteId: c.id } },
-      create: { campanhaId, clienteId: c.id, status: ok ? "enviado" : "falha" },
-      update: { status: ok ? "enviado" : "falha", erro: ok ? null : "envio falhou" },
+      create: {
+        campanhaId,
+        clienteId: c.id,
+        status: ok ? "enviado" : "falha",
+        mensagemId,
+      },
+      update: {
+        status: ok ? "enviado" : "falha",
+        erro: ok ? null : "envio falhou",
+        mensagemId,
+      },
     });
   }
 
