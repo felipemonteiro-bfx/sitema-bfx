@@ -37,10 +37,17 @@ export async function GET() {
   try {
     const flags = await getWhatsAppFlags();
     const cfg = await prisma.config.findFirst();
+    // Resolve baseUrl/instance com o mesmo fallback env + default "bfx" de
+    // whatsapp-provider.ts::buildEvolution, senao o diagnostico mostraria
+    // null quando a config vem de variaveis de ambiente (falso negativo).
     diagnostico.whatsappConfig = flags
       ? {
-          baseUrl: cfg?.evolutionApiUrl || null,
-          instance: cfg?.evolutionInstance || null,
+          baseUrl:
+            cfg?.evolutionApiUrl?.trim() || process.env.EVOLUTION_API_URL?.trim() || null,
+          instance:
+            cfg?.evolutionInstance?.trim() ||
+            process.env.EVOLUTION_INSTANCE?.trim() ||
+            "bfx",
           enabled: flags.enabled,
         }
       : { error: "WhatsApp desabilitado (whatsappAutoEnabled=0)" };
