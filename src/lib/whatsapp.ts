@@ -13,6 +13,13 @@ import {
   resolveWhatsAppProviders,
   type WhatsAppTemplate,
 } from "@/lib/whatsapp-provider";
+import {
+  registrarSaida,
+  marcarEnviada,
+  marcarFalha,
+  dentroDaJanela24h,
+  type OrigemMensagem,
+} from "@/lib/whatsapp-mensagem";
 
 export type WhatsAppConfig = {
   baseUrl: string;
@@ -169,4 +176,67 @@ export async function enviarWhatsAppTemplate(
     return fb.ok;
   }
   return false;
+}
+
+export type EnvioWhatsApp = {
+  telefone: string | null | undefined;
+  clienteId?: number | null;
+  origem: OrigemMensagem;
+  template: WhatsAppTemplate;
+};
+
+/**
+ * Ponto de entrada único de envio.
+ *
+ * Dentro da janela de 24h (houve inbound do cliente) envia texto livre, que é
+ * mais barato e é o único formato que comporta resposta gerada por IA. Fora da
+ * janela, a Meta só aceita template aprovado. Todo envio é registrado em
+ * `WhatsAppMensagem` antes da chamada, para que o callback de status tenha onde
+ * pousar.
+ */
+export async function enviarWhatsAppDetalhado(
+  input: EnvioWhatsApp
+): Promise<{ ok: boolean; mensagemId: number | null }> {
+  const numero = normalizarTelefone(input.telefone);
+  if (!numero) return { ok: false, mensagemId: null };
+
+  const naJanela = await dentroDaJanela24h(numero);
+  const usaTemplate = !naJanela;
+  const corpo = input.template.fallbackText;
+
+  const mensagemId = await registrarSaida({
+    telefone: numero,
+    clienteId: input.clienteId ?? null,
+    origem: input.origem,
+    templateNome: usaTemplate ? input.template.name : null,
+    corpo,
+  });
+
+  if (usaTemplate && !input.template.name) {
+    await marcarFalha(mensagemId, "janela_expirada");
+    return { ok: false, mensagemId };
+  }
+
+  const { primary } = await resolveWhatsAppProviders();
+  if (!primary) {
+    await marcarFalha(mensagemId, "provider_nao_configurado");
+    return { ok: false, mensagemId };
+  }
+
+  const resultado = usaTemplate
+    ? await primary.sendTemplate(numero, input.template)
+    : await primary.sendText(numero, corpo);
+
+  if (resultado.ok) {
+    await marcarEnviada(mensagemId, resultado.messageId);
+    return { ok: true, mensagemId };
+  }
+  await marcarFalha(mensagemId, resultado.error || "erro_desconhecido");
+  return { ok: false, mensagemId };
+}
+
+/** Invólucro para quem só precisa saber se o envio deu certo. */
+export async function enviarWhatsApp(input: EnvioWhatsApp): Promise<boolean> {
+  const { ok } = await enviarWhatsAppDetalhado(input);
+  return ok;
 }
