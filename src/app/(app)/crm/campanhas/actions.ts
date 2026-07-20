@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
+import { requireAdminOrThrow } from "@/lib/guards";
 import { ESTAGIOS_ORDEM, type EstagioCrm, type SegmentoFiltro } from "@/lib/crm";
 import { NIVEIS_FIDELIDADE, nivelParaFaixaPontos, type NivelFidelidade } from "@/lib/fidelidade";
 import { contarAlvo, enviarCampanha, verificarCota } from "@/lib/campanha-service";
@@ -11,13 +11,15 @@ import { listarTemplatesAprovados, type TemplateAprovado } from "@/lib/meta-temp
 
 /** Lista os templates aprovados na Meta para a galeria de campanhas. */
 export async function carregarTemplates(forcar = false): Promise<TemplateAprovado[]> {
-  await requireAdmin();
+  // requireAdminOrThrow lança se não for admin — requireAdmin() só retorna
+  // booleano e, se ignorado, expõe dados da conta Meta a não-admins.
+  await requireAdminOrThrow();
   return listarTemplatesAprovados(forcar);
 }
 
 /** Verifica se `alvo` destinatários cabem na cota das próximas 24h. */
 export async function consultarCota(alvo: number) {
-  await requireAdmin();
+  await requireAdminOrThrow();
   return verificarCota(alvo);
 }
 
