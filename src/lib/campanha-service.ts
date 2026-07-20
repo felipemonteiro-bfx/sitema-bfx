@@ -10,8 +10,31 @@ import { enviarWhatsAppTexto } from "@/lib/whatsapp";
 import { buildClienteSegmentWhere, type SegmentoFiltro } from "@/lib/crm";
 import type { Prisma } from "@/generated/prisma";
 import { logCron } from "@/lib/logger";
+import { contarContatosUnicos24h } from "@/lib/whatsapp-mensagem";
 
 const MAX_ALVO = 1000;
+
+/**
+ * Teto de clientes únicos contatados por 24h no messaging tier inicial da Meta.
+ * O limite é COMPARTILHADO com os envios transacionais (lembrete de parcela,
+ * cobrança, aniversário) — por isso a reserva abaixo.
+ * Sobe para 10.000 automaticamente com histórico de qualidade boa.
+ */
+export const LIMITE_TIER_24H = 1000;
+
+/** Folga que campanhas de marketing não consomem, para não sufocar o transacional. */
+export const RESERVA_TRANSACIONAL = 150;
+
+/** Verifica se uma campanha de `alvo` destinatários cabe na cota das próximas 24h. */
+export async function verificarCota(alvo: number): Promise<{
+  cabe: boolean;
+  disponivel: number;
+  usados: number;
+}> {
+  const usados = await contarContatosUnicos24h();
+  const disponivel = Math.max(0, LIMITE_TIER_24H - RESERVA_TRANSACIONAL - usados);
+  return { cabe: alvo <= disponivel, disponivel, usados };
+}
 
 /** Substitui {nome} (e {primeiroNome}) na mensagem. */
 export function renderMensagem(mensagem: string, nome: string): string {
@@ -58,6 +81,23 @@ export async function enviarCampanha(campanhaId: number): Promise<{
     select: { id: true, nome: true, telefone: true },
     take: MAX_ALVO,
   });
+
+  const cota = await verificarCota(clientes.length);
+  if (!cota.cabe) {
+    await prisma.campanha.update({
+      where: { id: campanhaId },
+      data: { status: "rascunho" },
+    });
+    logCron("campanha", "cota_excedida", {
+      campanhaId,
+      alvo: clientes.length,
+      disponivel: cota.disponivel,
+      usados: cota.usados,
+    });
+    throw new Error(
+      `Campanha excede a cota de 24h da Meta: ${clientes.length} destinatários, ${cota.disponivel} disponíveis.`
+    );
+  }
 
   await prisma.campanha.update({
     where: { id: campanhaId },
