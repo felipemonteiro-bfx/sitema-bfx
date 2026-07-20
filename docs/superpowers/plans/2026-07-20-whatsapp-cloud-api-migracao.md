@@ -13,13 +13,15 @@
 ## Global Constraints
 
 - Cliente Prisma é importado de `@/lib/db` (`import { prisma } from "@/lib/db"`); os tipos vêm de `@/generated/prisma`.
-- Testes ficam em `src/__tests__/**/*.test.ts` (padrão do `vitest.config.ts`). Rodar com `npx vitest run <arquivo>`.
+- Testes ficam em `src/__tests__/**/*.test.ts` (padrão do `vitest.config.ts`). Rodar com `yarn vitest run <arquivo>`.
 - Nenhum teste chama a rede: `fetch` sempre mockado com `vi.stubGlobal("fetch", ...)`, seguindo `src/__tests__/whatsapp-provider.test.ts`.
 - **Proibido o padrão `RegExp exec`** — um hook de segurança do projeto bloqueia a edição. Usar `.split()` + regex simples.
-- **Não rodar `npm install`** — falha por permissões em `node_modules`. Nenhuma dependência nova neste plano.
+- **Gerenciador de pacotes: Yarn 1.22 — sempre `yarn <cmd>`, nunca `npx`.** `npx prisma` baixa o Prisma 7 do registro (o projeto usa 6.5) e quebra no `prisma.config.ts`. Dependências já instaladas em `node_modules`; nenhuma dependência nova neste plano.
+- **Banco de desenvolvimento: `bfx_dev`**, apontado pelo `.env` local (já configurado). O banco `bfx` do mesmo container tem dados reais e histórico de migrations divergente do repo — `prisma migrate dev` o resetaria. Não apontar o `.env` para `bfx`.
+- Baseline verde antes de começar: 16 arquivos de teste, 114 testes passando; 45 migrations aplicadas.
 - Não criar arquivos na raiz do projeto (requer `sudo`). Todos os caminhos abaixo são em subdiretórios.
 - Idioma do código e comentários: português, seguindo o restante do projeto.
-- TDD obrigatório: o teste que falha vem antes da implementação (regra do `CLAUDE.md` do projeto).
+- TDD obrigatório para lógica: o teste que falha vem antes da implementação (regra do `CLAUDE.md` do projeto). **Exceção: componentes de UI.** O projeto não tem infraestrutura de teste de componente — o Playwright existente não cobre o CRM, e adicionar Testing Library traria dependências novas, fora do escopo desta migração. A Task 11 é verificada manualmente; isso é decisão explícita, não omissão.
 - Commit ao fim de cada task. `git pull --rebase` antes de qualquer push (o CI faz commits automáticos no branch).
 - Branch de trabalho: `nextjs-migration`.
 - **Todo o código entra com `Config.whatsappProvider` ainda em `"evolution"`.** Nenhuma task deste plano vira a chave; o cutover é operacional e vem depois da Task 12.
@@ -93,13 +95,13 @@ Em `prisma/schema.prisma`, no modelo `Config`, logo abaixo de `metaWebhookVerify
 
 - [ ] **Step 4: Gerar a migração**
 
-Run: `npx prisma migrate dev --name whatsapp_mensagem`
+Run: `yarn prisma migrate dev --name whatsapp_mensagem`
 Expected: cria `prisma/migrations/<timestamp>_whatsapp_mensagem/migration.sql` com `CREATE TABLE "whatsapp_mensagens"`, `ALTER TABLE "campanha_envios" ADD COLUMN "mensagem_id"` e `ALTER TABLE "config" ADD COLUMN "meta_app_secret"`. Termina com "Your database is now in sync with your schema."
 
 - [ ] **Step 5: Verificar que o cliente Prisma tem o novo modelo**
 
-Run: `npx tsc --noEmit -p tsconfig.json`
-Expected: sem erros. (O `migrate dev` já roda `prisma generate`; se `prisma.whatsAppMensagem` não existir, rodar `npx prisma generate`.)
+Run: `yarn tsc --noEmit -p tsconfig.json`
+Expected: sem erros. (O `migrate dev` já roda `prisma generate`; se `prisma.whatsAppMensagem` não existir, rodar `yarn prisma generate`.)
 
 - [ ] **Step 6: Commit**
 
@@ -278,7 +280,7 @@ describe("contarContatosUnicos24h", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/whatsapp-mensagem.test.ts`
+Run: `yarn vitest run src/__tests__/whatsapp-mensagem.test.ts`
 Expected: FAIL — "Cannot find module '@/lib/whatsapp-mensagem'"
 
 - [ ] **Step 3: Implementar**
@@ -447,7 +449,7 @@ export async function contarContatosUnicos24h(): Promise<number> {
 
 - [ ] **Step 4: Rodar o teste e confirmar que passa**
 
-Run: `npx vitest run src/__tests__/whatsapp-mensagem.test.ts`
+Run: `yarn vitest run src/__tests__/whatsapp-mensagem.test.ts`
 Expected: PASS — 12 testes.
 
 - [ ] **Step 5: Commit**
@@ -599,7 +601,7 @@ describe("enviarWhatsApp", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/whatsapp-envio.test.ts`
+Run: `yarn vitest run src/__tests__/whatsapp-envio.test.ts`
 Expected: FAIL — `enviarWhatsApp is not a function`
 
 - [ ] **Step 3: Implementar `enviarWhatsApp`**
@@ -692,12 +694,12 @@ As funções `enviarWhatsAppTexto`, `enviarWhatsAppArquivo` e `enviarWhatsAppTem
 
 - [ ] **Step 4: Rodar o teste e confirmar que passa**
 
-Run: `npx vitest run src/__tests__/whatsapp-envio.test.ts`
+Run: `yarn vitest run src/__tests__/whatsapp-envio.test.ts`
 Expected: PASS — 8 testes.
 
 - [ ] **Step 5: Garantir que os testes existentes seguem verdes**
 
-Run: `npm test`
+Run: `yarn test`
 Expected: PASS em todos os arquivos, incluindo `whatsapp-provider.test.ts`.
 
 - [ ] **Step 6: Commit**
@@ -769,7 +771,7 @@ describe("verificarAssinaturaMeta", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/meta-webhook-signature.test.ts`
+Run: `yarn vitest run src/__tests__/meta-webhook-signature.test.ts`
 Expected: FAIL — "Cannot find module '@/lib/meta-webhook-signature'"
 
 - [ ] **Step 3: Implementar**
@@ -813,7 +815,7 @@ export function verificarAssinaturaMeta(
 
 - [ ] **Step 4: Rodar o teste e confirmar que passa**
 
-Run: `npx vitest run src/__tests__/meta-webhook-signature.test.ts`
+Run: `yarn vitest run src/__tests__/meta-webhook-signature.test.ts`
 Expected: PASS — 7 testes.
 
 - [ ] **Step 5: Commit**
@@ -951,7 +953,7 @@ describe("extrairStatuses", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/meta-webhook-payload.test.ts`
+Run: `yarn vitest run src/__tests__/meta-webhook-payload.test.ts`
 Expected: FAIL — "Cannot find module '@/lib/meta-webhook-payload'"
 
 - [ ] **Step 3: Implementar o módulo de extração**
@@ -1080,7 +1082,7 @@ export function extrairStatuses(body: unknown): StatusMeta[] {
 
 - [ ] **Step 4: Rodar o teste e confirmar que passa**
 
-Run: `npx vitest run src/__tests__/meta-webhook-payload.test.ts`
+Run: `yarn vitest run src/__tests__/meta-webhook-payload.test.ts`
 Expected: PASS — 8 testes.
 
 - [ ] **Step 5: Reescrever a rota do webhook**
@@ -1179,7 +1181,7 @@ export async function POST(req: Request) {
 
 - [ ] **Step 6: Verificar tipos e suíte completa**
 
-Run: `npx tsc --noEmit -p tsconfig.json && npm test`
+Run: `yarn tsc --noEmit -p tsconfig.json && yarn test`
 Expected: sem erros de tipo; todos os testes PASS.
 
 - [ ] **Step 7: Commit**
@@ -1259,7 +1261,7 @@ describe("comFallback", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/whatsapp-templates.test.ts`
+Run: `yarn vitest run src/__tests__/whatsapp-templates.test.ts`
 Expected: FAIL — o array de chaves não bate (faltam `recibo`, `boleto`, `relatorioEmpresa`).
 
 - [ ] **Step 3: Adicionar os templates ao registry**
@@ -1283,7 +1285,7 @@ export const TEMPLATES = {
 
 - [ ] **Step 4: Rodar o teste e confirmar que passa**
 
-Run: `npx vitest run src/__tests__/whatsapp-templates.test.ts`
+Run: `yarn vitest run src/__tests__/whatsapp-templates.test.ts`
 Expected: PASS — 4 testes.
 
 - [ ] **Step 5: Migrar venda-rápida**
@@ -1385,7 +1387,7 @@ E, na linha ~189, substituir a chamada por:
 
 - [ ] **Step 9: Verificar que nenhum call site de texto livre sobrou**
 
-Run: `npx tsc --noEmit -p tsconfig.json`
+Run: `yarn tsc --noEmit -p tsconfig.json`
 Expected: sem erros.
 
 Run: `grep -rn "enviarWhatsAppTexto" src --include=*.ts --include=*.tsx | grep -v "src/lib/whatsapp.ts"`
@@ -1393,7 +1395,7 @@ Expected: apenas `src/lib/campanha-service.ts` (migrado na Task 8) e comentário
 
 - [ ] **Step 10: Rodar a suíte completa**
 
-Run: `npm test`
+Run: `yarn test`
 Expected: todos PASS.
 
 - [ ] **Step 11: Commit**
@@ -1466,7 +1468,7 @@ describe("getWhatsAppFlags", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/whatsapp-flags.test.ts`
+Run: `yarn vitest run src/__tests__/whatsapp-flags.test.ts`
 Expected: FAIL — `getWhatsAppFlags is not a function`
 
 - [ ] **Step 3: Substituir `getWhatsAppConfig` por `getWhatsAppFlags`**
@@ -1528,7 +1530,7 @@ Expected: nenhum resultado.
 
 - [ ] **Step 5: Rodar testes e tipos**
 
-Run: `npx tsc --noEmit -p tsconfig.json && npm test`
+Run: `yarn tsc --noEmit -p tsconfig.json && yarn test`
 Expected: sem erros de tipo; todos os testes PASS (incluindo os 4 novos).
 
 - [ ] **Step 6: Commit**
@@ -1613,7 +1615,7 @@ describe("verificarCota", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/campanha-cota.test.ts`
+Run: `yarn vitest run src/__tests__/campanha-cota.test.ts`
 Expected: FAIL — `verificarCota is not a function`
 
 - [ ] **Step 3: Implementar a cota**
@@ -1675,7 +1677,7 @@ Em `src/lib/campanha-service.ts`, dentro de `enviarCampanha`, logo após o bloco
 
 - [ ] **Step 5: Rodar o teste e confirmar que passa**
 
-Run: `npx vitest run src/__tests__/campanha-cota.test.ts`
+Run: `yarn vitest run src/__tests__/campanha-cota.test.ts`
 Expected: PASS — 4 testes.
 
 - [ ] **Step 6: Commit**
@@ -1818,7 +1820,7 @@ describe("listarTemplatesAprovados", () => {
 
 - [ ] **Step 2: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/meta-templates.test.ts`
+Run: `yarn vitest run src/__tests__/meta-templates.test.ts`
 Expected: FAIL — "Cannot find module '@/lib/meta-templates'"
 
 - [ ] **Step 3: Implementar**
@@ -1921,7 +1923,7 @@ export async function listarTemplatesAprovados(
 
 - [ ] **Step 4: Rodar o teste e confirmar que passa**
 
-Run: `npx vitest run src/__tests__/meta-templates.test.ts`
+Run: `yarn vitest run src/__tests__/meta-templates.test.ts`
 Expected: PASS — 7 testes.
 
 - [ ] **Step 5: Commit**
@@ -1958,7 +1960,7 @@ Em `prisma/schema.prisma`, no modelo `Campanha`, logo abaixo de `mensagem String
 
 `mensagem` continua obrigatório e passa a guardar o corpo renderizado para exibição no histórico. Campanhas antigas mantêm `templateNome = null` e ficam somente-leitura.
 
-Run: `npx prisma migrate dev --name campanha_template`
+Run: `yarn prisma migrate dev --name campanha_template`
 Expected: `ALTER TABLE "campanhas" ADD COLUMN "template_nome"` e `"variaveis_json"`.
 
 - [ ] **Step 2: Escrever o teste que falha**
@@ -2011,7 +2013,7 @@ describe("renderMensagem", () => {
 
 - [ ] **Step 3: Rodar o teste e confirmar a falha**
 
-Run: `npx vitest run src/__tests__/campanha-template.test.ts`
+Run: `yarn vitest run src/__tests__/campanha-template.test.ts`
 Expected: FAIL — `renderVariaveis is not a function`
 
 - [ ] **Step 4: Implementar `renderVariaveis` e trocar o envio**
@@ -2099,7 +2101,7 @@ Em `enviarCampanha`, logo após `if (!campanha) throw new Error("Campanha não e
 
 - [ ] **Step 6: Rodar testes e tipos**
 
-Run: `npx vitest run src/__tests__/campanha-template.test.ts && npx tsc --noEmit -p tsconfig.json`
+Run: `yarn vitest run src/__tests__/campanha-template.test.ts && yarn tsc --noEmit -p tsconfig.json`
 Expected: 6 testes PASS; sem erros de tipo.
 
 - [ ] **Step 7: Commit**
@@ -2349,7 +2351,7 @@ Na listagem de campanhas em `page.tsx`, quando `campanha.templateNome` for nulo,
 
 - [ ] **Step 5: Verificação manual**
 
-Run: `npm run dev`
+Run: `yarn dev`
 
 Abrir `http://localhost:3008/crm/campanhas` e confirmar:
 - o seletor de templates carrega (vazio é esperado até haver templates aprovados na Meta — nesse caso o `<select>` fica sem opções e o formulário não permite submeter)
@@ -2358,7 +2360,7 @@ Abrir `http://localhost:3008/crm/campanhas` e confirmar:
 
 - [ ] **Step 6: Verificar build e tipos**
 
-Run: `npx tsc --noEmit -p tsconfig.json && npm run lint`
+Run: `yarn tsc --noEmit -p tsconfig.json && yarn lint`
 Expected: sem erros.
 
 - [ ] **Step 7: Commit**
@@ -2465,7 +2467,7 @@ Só depois de confirmada a estabilidade. Remover:
 
 - [ ] **Step 3: Verificar a suíte completa uma última vez**
 
-Run: `npm test && npx tsc --noEmit -p tsconfig.json && npm run lint`
+Run: `yarn test && yarn tsc --noEmit -p tsconfig.json && yarn lint`
 Expected: tudo PASS, sem erros.
 
 - [ ] **Step 4: Commit e push**
