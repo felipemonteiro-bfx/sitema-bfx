@@ -89,9 +89,11 @@ model CampanhaEnvio {
   clienteId  Int      @map("cliente_id")
   status     String                                   // enviado | falha | sem_telefone
   erro       String?
+  mensagemId Int?     @map("mensagem_id")
   enviadoEm  DateTime @default(now()) @map("enviado_em")
 
   campanha   Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  mensagem   WhatsAppMensagem? @relation(fields: [mensagemId], references: [id], onDelete: SetNull)
 
   @@unique([campanhaId, clienteId])
   @@index([clienteId])
@@ -243,6 +245,7 @@ model Config {
   metaWhatsappBusinessId    String?  @map("meta_whatsapp_business_id")
   metaWhatsappApiVersion    String?  @default("v21.0") @map("meta_whatsapp_api_version")
   metaWebhookVerifyToken    String?  @map("meta_webhook_verify_token")
+  metaAppSecret             String?  @map("meta_app_secret")  // valida X-Hub-Signature-256 do webhook
   whatsappFallbackEvolution Int?     @default(1) @map("whatsapp_fallback_evolution") // 1=usa Evolution se Meta falhar
   whatsappAutoEnabled      Int?    @default(1) @map("whatsapp_auto_enabled")       // 1=ativado, 0=desativado
   whatsappAutoRecibo       Int?    @default(1) @map("whatsapp_auto_recibo")        // Enviar recibo/assinatura ao finalizar venda
@@ -486,4 +489,31 @@ model AnticipacaoBatch {
   periodoFim        DateTime? @map("periodo_fim")
 
   @@map("antecipacao_batches")
+}
+
+/// Registro unificado de mensagens WhatsApp (entrada e saída).
+/// Fonte de verdade do histórico por cliente, do status de entrega e da
+/// janela de 24h. Não substitui WhatsAppEnvioLog, que segue sendo o guarda
+/// de deduplicação dos crons.
+model WhatsAppMensagem {
+  id           Int      @id @default(autoincrement())
+  clienteId    Int?     @map("cliente_id")
+  telefone     String
+  direcao      String                                  // in | out
+  waMessageId  String?  @unique @map("wa_message_id")  // id da Meta (wamid.*)
+  origem       String                                  // cron | campanha | venda | boleto | relatorio | pre_atendimento | manual
+  templateNome String?  @map("template_nome")          // null quando texto livre
+  corpo        String
+  status       String   @default("pendente")           // pendente | enviado | entregue | lido | falhou
+  erroCodigo   Int?     @map("erro_codigo")
+  erroMsg      String?  @map("erro_msg")
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  envios       CampanhaEnvio[]
+
+  @@index([clienteId, criadoEm])
+  @@index([status, criadoEm])
+  @@index([telefone, direcao, criadoEm])
+  @@map("whatsapp_mensagens")
 }
