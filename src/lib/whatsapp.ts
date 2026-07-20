@@ -21,10 +21,7 @@ import {
   type OrigemMensagem,
 } from "@/lib/whatsapp-mensagem";
 
-export type WhatsAppConfig = {
-  baseUrl: string;
-  apiKey: string;
-  instance: string;
+export type WhatsAppFlags = {
   enabled: boolean;
   autoRecibo: boolean;
   autoBoleto: boolean;
@@ -38,46 +35,33 @@ export type WhatsAppConfig = {
   diasInativo: number;
 };
 
-/** Obtém configuração do WhatsApp (Evolution API) - prioriza Config do DB, fallback para env. */
-export async function getWhatsAppConfig(): Promise<WhatsAppConfig | null> {
+/**
+ * Flags de automação do WhatsApp. Devolve null quando o master switch está
+ * desligado — os crons usam isso para sair cedo.
+ *
+ * Não carrega dados de conexão: a resolução de provider vive inteiramente em
+ * `whatsapp-provider.ts`.
+ */
+export async function getWhatsAppFlags(): Promise<WhatsAppFlags | null> {
   const cfg = await prisma.config.findFirst();
-  const url =
-    cfg?.evolutionApiUrl?.trim() || process.env.EVOLUTION_API_URL?.trim();
-  const key =
-    cfg?.evolutionApiKey?.trim() || process.env.EVOLUTION_API_KEY?.trim();
-  const instance =
-    cfg?.evolutionInstance?.trim() || process.env.EVOLUTION_INSTANCE?.trim() || "bfx";
   const enabled =
-    cfg?.whatsappAutoEnabled !== undefined
+    cfg?.whatsappAutoEnabled !== undefined && cfg?.whatsappAutoEnabled !== null
       ? cfg.whatsappAutoEnabled === 1
       : process.env.WHATSAPP_AUTO_ENABLED !== "0";
-  const autoRecibo = cfg?.whatsappAutoRecibo !== 0;
-  const autoBoleto = cfg?.whatsappAutoBoleto !== 0;
-  const autoLembrete = cfg?.whatsappAutoLembrete !== 0;
-  const autoReativacao = cfg?.whatsappAutoReativacao === 1;
-  const autoAniversario = cfg?.whatsappAutoAniversario === 1;
-  const autoInadimplencia = cfg?.whatsappAutoInadimplencia === 1;
-  const autoNPS = cfg?.whatsappAutoNPS === 1;
-  const autoBoasVindas = cfg?.whatsappAutoBoasVindas === 1;
-  const autoAgradecimento = cfg?.whatsappAutoAgradecimento === 1;
-  const diasInativo = cfg?.whatsappDiasInativo ?? 60;
+  if (!enabled) return null;
 
-  if (!url || !key || !instance || !enabled) return null;
   return {
-    baseUrl: url.replace(/\/$/, ""),
-    apiKey: key,
-    instance,
     enabled,
-    autoRecibo,
-    autoBoleto,
-    autoLembrete,
-    autoReativacao,
-    autoAniversario,
-    autoInadimplencia,
-    autoNPS,
-    autoBoasVindas,
-    autoAgradecimento,
-    diasInativo,
+    autoRecibo: cfg?.whatsappAutoRecibo !== 0,
+    autoBoleto: cfg?.whatsappAutoBoleto !== 0,
+    autoLembrete: cfg?.whatsappAutoLembrete !== 0,
+    autoReativacao: cfg?.whatsappAutoReativacao === 1,
+    autoAniversario: cfg?.whatsappAutoAniversario === 1,
+    autoInadimplencia: cfg?.whatsappAutoInadimplencia === 1,
+    autoNPS: cfg?.whatsappAutoNPS === 1,
+    autoBoasVindas: cfg?.whatsappAutoBoasVindas === 1,
+    autoAgradecimento: cfg?.whatsappAutoAgradecimento === 1,
+    diasInativo: cfg?.whatsappDiasInativo ?? 60,
   };
 }
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTemplate, getWhatsAppConfig } from "@/lib/whatsapp";
+import { enviarWhatsAppTemplate, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 
 const DIAS_APOS_COMPRA = 7;
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const waConfig = await getWhatsAppConfig();
+    const waConfig = await getWhatsAppFlags();
     if (!waConfig?.autoNPS) {
       return NextResponse.json({ ok: true, enviados: 0, total: 0, desativado: true });
     }

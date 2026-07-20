@@ -15,7 +15,7 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
-import { enviarWhatsApp, getWhatsAppConfig } from "@/lib/whatsapp";
+import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { signReciboId } from "@/lib/recibo-url";
 import { sendVendaNotification } from "@/lib/email";
@@ -481,7 +481,7 @@ export async function criarVendaV2(
     }
 
     // Envio automático WhatsApp - conforme config: recibo/assinatura, boleto, boas-vindas
-    const waConfig = await getWhatsAppConfig();
+    const waConfig = await getWhatsAppFlags();
     if (clienteId) {
       const cliente = await prisma.cliente.findUnique({
         where: { id: clienteId },

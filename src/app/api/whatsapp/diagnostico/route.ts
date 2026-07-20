@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { getWhatsAppConfig } from "@/lib/whatsapp";
+import { getWhatsAppFlags } from "@/lib/whatsapp";
 import { getInstanceState } from "@/lib/evolution";
 
 /**
@@ -32,12 +32,18 @@ export async function GET() {
     diagnostico.config = { error: String(err) };
   }
 
-  // 2. Check WhatsApp config resolution
+  // 2. Check WhatsApp flags/master switch (dados de conexao ficam a cargo de
+  // whatsapp-provider.ts; aqui reaproveitamos o cfg bruto so para exibicao).
   try {
-    const whatsappCfg = await getWhatsAppConfig();
-    diagnostico.whatsappConfig = whatsappCfg
-      ? { baseUrl: whatsappCfg.baseUrl, instance: whatsappCfg.instance, enabled: whatsappCfg.enabled }
-      : { error: "WhatsApp nao configurado ou desabilitado (url/key/instance vazio ou enabled=0)" };
+    const flags = await getWhatsAppFlags();
+    const cfg = await prisma.config.findFirst();
+    diagnostico.whatsappConfig = flags
+      ? {
+          baseUrl: cfg?.evolutionApiUrl || null,
+          instance: cfg?.evolutionInstance || null,
+          enabled: flags.enabled,
+        }
+      : { error: "WhatsApp desabilitado (whatsappAutoEnabled=0)" };
   } catch (err) {
     diagnostico.whatsappConfig = { error: String(err) };
   }
