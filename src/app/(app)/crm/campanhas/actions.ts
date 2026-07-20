@@ -3,10 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { requireAdminOrThrow } from "@/lib/guards";
+import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { ESTAGIOS_ORDEM, type EstagioCrm, type SegmentoFiltro } from "@/lib/crm";
 import { NIVEIS_FIDELIDADE, nivelParaFaixaPontos, type NivelFidelidade } from "@/lib/fidelidade";
-import { contarAlvo, enviarCampanha } from "@/lib/campanha-service";
+import { contarAlvo, enviarCampanha, verificarCota } from "@/lib/campanha-service";
+import { listarTemplatesAprovados, type TemplateAprovado } from "@/lib/meta-templates";
+
+/** Lista os templates aprovados na Meta para a galeria de campanhas. */
+export async function carregarTemplates(forcar = false): Promise<TemplateAprovado[]> {
+  await requireAdmin();
+  return listarTemplatesAprovados(forcar);
+}
+
+/** Verifica se `alvo` destinatários cabem na cota das próximas 24h. */
+export async function consultarCota(alvo: number) {
+  await requireAdmin();
+  return verificarCota(alvo);
+}
 
 function filtroFromForm(formData: FormData): SegmentoFiltro {
   const estagio = String(formData.get("estagio") || "");
@@ -26,12 +39,22 @@ function filtroFromForm(formData: FormData): SegmentoFiltro {
   return filtro;
 }
 
-/** Cria uma campanha (rascunho ou agendada) a partir do segmento e da mensagem. */
+/** Cria uma campanha (rascunho ou agendada) a partir do segmento e do template escolhido. */
 export async function criarCampanha(formData: FormData): Promise<void> {
   await requireAdminOrThrow();
   const nome = String(formData.get("nome") || "").trim();
-  const mensagem = String(formData.get("mensagem") || "").trim();
-  if (!nome || !mensagem) redirect("/crm/campanhas?erro=dados");
+  const templateNome = String(formData.get("templateNome") || "").trim();
+  const variaveis = formData.getAll("variaveis").map((v) => String(v));
+  if (!nome || !templateNome) redirect("/crm/campanhas?erro=dados");
+
+  const template = (await listarTemplatesAprovados()).find((t) => t.nome === templateNome);
+  if (!template) throw new Error("Template não encontrado ou não aprovado.");
+
+  // `mensagem` guarda o corpo renderizado, para exibição no histórico.
+  let mensagem = template.corpo;
+  variaveis.forEach((v, i) => {
+    mensagem = mensagem.split("{{" + (i + 1) + "}}").join(v);
+  });
 
   // Agendamento opcional (input datetime-local). Só agenda se for no futuro.
   const agendarStr = String(formData.get("agendadaPara") || "").trim();
@@ -48,6 +71,8 @@ export async function criarCampanha(formData: FormData): Promise<void> {
     data: {
       nome,
       mensagem,
+      templateNome,
+      variaveisJson: JSON.stringify(variaveis),
       canal: "whatsapp",
       filtroJson: JSON.stringify(filtro),
       status: agendadaPara ? "agendada" : "rascunho",

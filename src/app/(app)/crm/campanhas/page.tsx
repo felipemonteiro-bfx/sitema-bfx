@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 import { estagioLabel, ESTAGIOS_ORDEM } from "@/lib/crm";
 import { NIVEIS_FIDELIDADE, nivelLabel, NIVEL_PRATA_MIN, NIVEL_OURO_MIN } from "@/lib/fidelidade";
 import { parseFiltro } from "@/lib/campanha-service";
-import { criarCampanha, dispararCampanha, excluirCampanha } from "./actions";
+import { CampanhaTemplatePicker } from "@/components/campanha-template-picker";
+import { criarCampanha, carregarTemplates, dispararCampanha, excluirCampanha } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +52,11 @@ export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div className="p-6 text-sm text-muted-foreground">Acesso restrito.</div>;
 
-  const [campanhas, empresas, tags] = await Promise.all([
+  const [campanhas, empresas, tags, templates] = await Promise.all([
     prisma.campanha.findMany({ orderBy: { criadaEm: "desc" }, take: 100 }),
     prisma.empresaParceira.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
     prisma.tag.findMany({ orderBy: { nome: "asc" } }),
+    carregarTemplates(),
   ]);
 
   return (
@@ -126,10 +128,16 @@ export default async function Page() {
             </div>
 
             <div className="space-y-1">
-              <label htmlFor="mensagem" className="text-xs font-medium text-muted-foreground">
-                Mensagem — use <code>{"{nome}"}</code> ou <code>{"{primeiroNome}"}</code>
-              </label>
-              <textarea id="mensagem" name="mensagem" required rows={4} placeholder="Olá {primeiroNome}! Temos novidades pra você…" className="block w-full rounded-md border-2 border-input bg-background p-3 text-sm" />
+              <span className="text-xs font-medium text-muted-foreground">
+                Template — use <code>{"{nome}"}</code> ou <code>{"{primeiroNome}"}</code> nas variáveis
+              </span>
+              <CampanhaTemplatePicker
+                templates={templates}
+                onAtualizar={async () => {
+                  "use server";
+                  return carregarTemplates(true);
+                }}
+              />
             </div>
 
             <div className="space-y-1">
@@ -166,9 +174,14 @@ export default async function Page() {
                     {c.agendadaPara && ` · Agendada: ${formatDataHora(c.agendadaPara)}`}
                   </div>
                   <div className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">{c.mensagem}</div>
+                  {!c.templateNome && (
+                    <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                      Campanha anterior à migração para a Cloud API — somente leitura. Recrie escolhendo um template.
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {c.status !== "concluida" && (
+                  {c.status !== "concluida" && c.templateNome && (
                     <form action={dispararCampanha}>
                       <input type="hidden" name="campanhaId" value={c.id} />
                       <Button type="submit" size="sm">Disparar agora</Button>
