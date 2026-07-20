@@ -2,14 +2,22 @@
  * Webhook do WhatsApp Business Cloud API (Meta).
  *
  * GET  — handshake de verificação (hub.mode / hub.verify_token / hub.challenge).
- * POST — mensagens recebidas; normaliza o payload da Meta para o mesmo shape que
- *        o webhook da Evolution entrega e delega a `processarMensagemRecebida`.
+ * POST — valida X-Hub-Signature-256, persiste mensagens recebidas, processa
+ *        callbacks de status e (se habilitado) aciona o pré-atendimento por IA.
  *
- * Ativado apenas se `Config.whatsappPreAtendimento === 1` (igual à Evolution).
+ * A rota é isenta do middleware de sessão (`/api/webhooks`), então a assinatura
+ * HMAC é a única barreira de autenticação — sem ela, qualquer um acionaria a IA
+ * e provocaria envio de WhatsApp para um número escolhido pelo atacante.
+ *
+ * Responde sempre 200 (exceto assinatura inválida → 401): 5xx faz a Meta
+ * reentregar com backoff e, com falhas repetidas, desativar a inscrição.
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { processarMensagemRecebida } from "@/lib/whatsapp-pre-atendimento";
+import { verificarAssinaturaMeta } from "@/lib/meta-webhook-signature";
+import { extrairMensagens, extrairStatuses } from "@/lib/meta-webhook-payload";
+import { registrarEntrada, avancarStatusPorWaMessageId } from "@/lib/whatsapp-mensagem";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -29,58 +37,48 @@ export async function GET(req: Request) {
   return NextResponse.json({ error: "Verificação inválida" }, { status: 403 });
 }
 
-type MetaMessage = {
-  from?: string;
-  id?: string;
-  type?: string;
-  text?: { body?: string };
-};
-
-type MetaContact = { profile?: { name?: string }; wa_id?: string };
-
-/** Extrai (telefone, texto, nomeContato) de mensagens de texto recebidas. */
-function extrairMensagens(body: unknown): { telefone: string; texto: string; nome?: string }[] {
-  const out: { telefone: string; texto: string; nome?: string }[] = [];
-  if (!body || typeof body !== "object") return out;
-  const entries = (body as { entry?: unknown[] }).entry;
-  if (!Array.isArray(entries)) return out;
-
-  for (const entry of entries) {
-    const changes = (entry as { changes?: unknown[] }).changes;
-    if (!Array.isArray(changes)) continue;
-    for (const change of changes) {
-      const value = (change as { value?: unknown }).value as
-        | { messages?: MetaMessage[]; contacts?: MetaContact[] }
-        | undefined;
-      if (!value?.messages) continue;
-      const nomePorWaId = new Map<string, string>();
-      for (const c of value.contacts ?? []) {
-        if (c.wa_id && c.profile?.name) nomePorWaId.set(c.wa_id, c.profile.name);
-      }
-      for (const msg of value.messages) {
-        if (msg.type !== "text" || !msg.from) continue;
-        const texto = msg.text?.body?.trim();
-        if (!texto) continue;
-        out.push({ telefone: msg.from, texto, nome: nomePorWaId.get(msg.from) });
-      }
-    }
-  }
-  return out;
-}
-
 export async function POST(req: Request) {
+  // Lê o corpo cru UMA vez: o HMAC é sobre os bytes exatos enviados pela Meta.
+  const rawBody = await req.text();
+
+  const cfg = await prisma.config.findFirst();
+  const appSecret =
+    ((cfg as Record<string, unknown> | null)?.metaAppSecret as string | undefined)?.trim() ||
+    process.env.META_APP_SECRET?.trim() ||
+    "";
+
+  const assinatura = req.headers.get("x-hub-signature-256");
+  if (!verificarAssinaturaMeta(rawBody, assinatura, appSecret)) {
+    console.warn("[Webhook Meta] Assinatura inválida — payload descartado");
+    return NextResponse.json({ error: "Assinatura inválida" }, { status: 401 });
+  }
+
   try {
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ ok: true }, { status: 200 });
+    const body = JSON.parse(rawBody) as unknown;
 
-    const cfg = await prisma.config.findFirst();
-    const preAtendimentoAtivo = cfg?.whatsappPreAtendimento === 1;
-    if (!preAtendimentoAtivo) return NextResponse.json({ ok: true }, { status: 200 });
-
-    const mensagens = extrairMensagens(body);
-    for (const m of mensagens) {
-      void processarMensagemRecebida(m.telefone, m.texto, m.nome);
+    // Callbacks de status: avançam o estado da mensagem já registrada.
+    for (const s of extrairStatuses(body)) {
+      await avancarStatusPorWaMessageId(s.waMessageId, s.status, {
+        codigo: s.erroCodigo,
+        msg: s.erroMsg,
+      });
     }
+
+    // Mensagens recebidas: persistidas SEMPRE — alimentam a janela de 24h e o
+    // histórico, independentemente de o pré-atendimento estar ligado.
+    const preAtendimentoAtivo = cfg?.whatsappPreAtendimento === 1;
+    for (const m of extrairMensagens(body)) {
+      const nova = await registrarEntrada({
+        telefone: m.telefone,
+        waMessageId: m.waMessageId,
+        corpo: m.texto,
+      });
+      // `nova === false` é reentrega da Meta: não responder duas vezes.
+      if (nova && preAtendimentoAtivo) {
+        void processarMensagemRecebida(m.telefone, m.texto, m.nome);
+      }
+    }
+
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("[Webhook Meta]", err);
