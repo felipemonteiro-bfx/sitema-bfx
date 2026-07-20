@@ -7,7 +7,8 @@ import {
   getOrCreateCustomer,
   createBoletoPayment,
 } from "@/lib/asaas";
-import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
+import { enviarWhatsApp, getWhatsAppConfig } from "@/lib/whatsapp";
+import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 
 export type GerarBoletoResult = { success: boolean; error?: string };
 
@@ -93,7 +94,12 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
     const waConfig = await getWhatsAppConfig();
     if (waConfig?.autoBoleto && payment.bankSlipUrl && cliente.telefone) {
       const msg = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${payment.bankSlipUrl}`;
-      void enviarWhatsAppTexto(cliente.telefone, msg);
+      void enviarWhatsApp({
+        telefone: cliente.telefone,
+        clienteId: cliente.id,
+        origem: "boleto",
+        template: comFallback(TEMPLATES.boleto, [cliente.nome], msg),
+      });
     }
 
     revalidatePath("/historico");

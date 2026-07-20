@@ -23,6 +23,9 @@ export const TEMPLATES = {
   nps: "bfx_nps",
   reativacao: "bfx_reativacao",
   boasVindas: "bfx_boas_vindas",
+  recibo: "bfx_recibo",
+  boleto: "bfx_boleto",
+  relatorioEmpresa: "bfx_relatorio_empresa",
 } as const;
 
 /**

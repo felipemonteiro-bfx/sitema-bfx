@@ -15,7 +15,8 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
-import { enviarWhatsAppTexto, getWhatsAppConfig } from "@/lib/whatsapp";
+import { enviarWhatsApp, getWhatsAppConfig } from "@/lib/whatsapp";
+import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { signReciboId } from "@/lib/recibo-url";
 import { sendVendaNotification } from "@/lib/email";
 import { creditarPontosVenda, resgatarPontos } from "@/lib/fidelidade-service";
@@ -500,7 +501,14 @@ export async function criarVendaV2(
         } else if (boletoUrl && waConfig?.autoBoleto) {
           mensagem = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${boletoUrl}`;
         }
-        if (mensagem) void enviarWhatsAppTexto(cliente.telefone, mensagem);
+        if (mensagem) {
+          void enviarWhatsApp({
+            telefone: cliente.telefone,
+            clienteId,
+            origem: "venda",
+            template: comFallback(TEMPLATES.recibo, [cliente.nome ?? "Cliente"], mensagem),
+          });
+        }
 
         // Boas-vindas para cliente novo (primeira compra)
         if (waConfig?.autoBoasVindas) {
@@ -509,7 +517,12 @@ export async function criarVendaV2(
           });
           if (totalVendas === 1) {
             const msgBoasVindas = `Bem-vindo(a), ${cliente.nome ?? "Cliente"}! Obrigado pela primeira compra. Em caso de dúvidas, estamos à disposição.`;
-            void enviarWhatsAppTexto(cliente.telefone, msgBoasVindas);
+            void enviarWhatsApp({
+              telefone: cliente.telefone,
+              clienteId,
+              origem: "venda",
+              template: comFallback(TEMPLATES.boasVindas, [cliente.nome ?? "Cliente"], msgBoasVindas),
+            });
           }
         }
       }

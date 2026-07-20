@@ -11,7 +11,8 @@ import * as tls from "tls";
 import { prisma } from "@/lib/db";
 import { produtosTexto, valorTotalVenda } from "@/lib/venda-utils";
 import { formatBRL, formatDateBR } from "@/lib/utils";
-import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { enviarWhatsApp } from "@/lib/whatsapp";
+import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
 
 type SmtpConfig = {
@@ -424,7 +425,11 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
   ].join("\n");
 
   try {
-    await enviarWhatsAppTexto(empresa.telefoneRh, mensagem);
+    await enviarWhatsApp({
+      telefone: empresa.telefoneRh,
+      origem: "relatorio",
+      template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
+    });
     await criarNotificacaoVenda(
       `WhatsApp enviado para ${empresa.nome} (sem email): venda #${venda.id} — ${venda.cliente?.nome || "cliente"} (${formatBRL(totalValor)})`,
       `/historico`,
@@ -491,7 +496,11 @@ export async function sendWeeklyReport(
       `Valor total: ${formatBRL(totalGeralFallback)}`,
     ].join("\n");
     try {
-      await enviarWhatsAppTexto(telefoneFallback, mensagem);
+      await enviarWhatsApp({
+        telefone: telefoneFallback,
+        origem: "relatorio",
+        template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
+      });
     } catch (err) {
       console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);
     }
@@ -517,7 +526,11 @@ export async function sendWeeklyReport(
       `Valor total: ${formatBRL(totalGeralWa)}`,
     ].join("\n");
     try {
-      await enviarWhatsAppTexto(telefoneFallback, mensagem);
+      await enviarWhatsApp({
+        telefone: telefoneFallback,
+        origem: "relatorio",
+        template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
+      });
     } catch (err) {
       console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);
     }

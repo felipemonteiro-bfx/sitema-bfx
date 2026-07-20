@@ -10,7 +10,8 @@
  */
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { enviarWhatsApp } from "@/lib/whatsapp";
+import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { uploadToMinIO, isMinIOConfigured } from "@/lib/minio";
 import { formatBRL } from "@/lib/utils";
 import {
@@ -202,7 +203,11 @@ async function processarGrupo(
           `A descontar em folha: ${formatBRL(dados.totalDescontoFolha)}`,
         ].join("\n");
         try {
-          await enviarWhatsAppTexto(telefone, msg);
+          await enviarWhatsApp({
+            telefone,
+            origem: "relatorio",
+            template: comFallback(TEMPLATES.relatorioEmpresa, [msg], msg),
+          });
         } catch (err) {
           console.error(`[relatorio-mensal] Falha WhatsApp fallback ${empresaNome}:`, err);
         }

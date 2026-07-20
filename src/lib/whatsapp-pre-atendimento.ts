@@ -4,7 +4,7 @@
 
 import { prisma } from "@/lib/db";
 import { runAi } from "@/lib/ai";
-import { enviarWhatsAppTexto } from "@/lib/whatsapp";
+import { enviarWhatsApp } from "@/lib/whatsapp";
 import { formatBRL } from "@/lib/utils";
 
 const MAX_RESPONSE_CHARS = 1500;
@@ -186,7 +186,16 @@ Responda de forma personalizada baseado no histórico e na mensagem.`;
       resposta = resposta.slice(0, MAX_RESPONSE_CHARS - 3) + "...";
     }
 
-    const enviado = await enviarWhatsAppTexto(telefone, resposta || `Olá, ${nome}! Como posso ajudar?`);
+    const textoResposta = resposta || `Olá, ${nome}! Como posso ajudar?`;
+    const enviado = await enviarWhatsApp({
+      telefone,
+      clienteId: cliente?.id ?? null,
+      origem: "pre_atendimento",
+      // Sem template: resposta de IA é conteúdo arbitrário e só pode sair
+      // dentro da janela de 24h. Fora dela, `enviarWhatsApp` marca a mensagem
+      // como falhou com motivo `janela_expirada`.
+      template: { name: "", language: "pt_BR", bodyParams: [], fallbackText: textoResposta },
+    });
     return enviado ? { ok: true } : { ok: false, error: "Falha ao enviar" };
   } catch (err) {
     console.error("[PreAtendimento] Erro:", err);
