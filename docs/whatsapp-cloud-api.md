@@ -137,3 +137,70 @@ Já convertido como referência: `cron/lembrete-parcelas`. Os demais crons
 4. Monitorar `WhatsAppEnvioLog.provider` e a taxa de erro por alguns dias.
 5. Desligar fallback (`whatsappFallbackEvolution = 0`) e remover `deploy/bfx/evolution-api.yaml`
    do `deploy/bfx/kustomization.yaml`.
+
+## Runbook de cutover
+
+Pré-requisitos (não dependem de código, e são o gargalo):
+
+1. Verificação de negócio aprovada na Meta.
+2. Número conectado à WABA.
+3. Os 10 templates transacionais aprovados: `bfx_lembrete_parcela`,
+   `bfx_parcela_vencida`, `bfx_aniversario`, `bfx_agradecimento`, `bfx_nps`,
+   `bfx_reativacao`, `bfx_boas_vindas`, `bfx_recibo`, `bfx_boleto`,
+   `bfx_relatorio_empresa`. Os nomes devem bater EXATAMENTE com
+   `src/lib/whatsapp-templates.ts`, e a contagem de variáveis do corpo deve
+   bater com os `bodyParams` passados em cada call site.
+
+Passos:
+
+1. Preencher em Config (ou por env): `metaWhatsappToken`,
+   `metaWhatsappPhoneNumberId`, `metaWhatsappBusinessId`,
+   `metaWebhookVerifyToken`, `metaAppSecret`.
+2. Registrar o webhook no App Dashboard apontando para
+   `https://<dominio>/api/webhooks/meta-whatsapp`, assinando os campos
+   `messages`. O handshake GET deve retornar o challenge.
+3. Enviar uma mensagem de teste do número de teste da Meta para o sistema e
+   confirmar que aparece em `whatsapp_mensagens` com `direcao = 'in'`.
+4. Antes de virar: verificar se há campanha com `status = 'agendada'` e
+   `agendada_para` no futuro. Campanhas anteriores à migração têm
+   `template_nome` nulo e vão falhar — recriar sobre um template.
+
+   ```sql
+   SELECT id, nome, agendada_para FROM campanhas
+   WHERE status = 'agendada' AND template_nome IS NULL;
+   ```
+
+5. Virar a chave: `UPDATE config SET whatsapp_provider = 'meta_cloud';`
+6. Monitorar por alguns dias:
+
+   ```sql
+   SELECT status, count(*) FROM whatsapp_mensagens
+   WHERE criado_em > now() - interval '24 hours' GROUP BY status;
+   ```
+
+   Falhas com `erro_codigo = 131047` significam envio fora da janela de 24h sem
+   template válido — indica template não aprovado ou nome divergente.
+
+## Rollback
+
+Entre o passo 5 e a remoção da Evolution:
+`UPDATE config SET whatsapp_provider = 'evolution';`
+
+**Isto vale para o código, não para o número.** A migração de número é de mão
+única: uma vez que o número entra na Meta, tirá-lo de lá implica
+indisponibilidade. Se o problema for com o próprio número, o rollback acima não
+resolve.
+
+## Remoção da Evolution (PR separado, dias após a virada)
+
+Só depois de confirmada a estabilidade. Remover:
+
+- `src/lib/providers/whatsapp-evolution.ts`, `src/lib/evolution.ts`
+- `src/app/api/webhooks/evolution/route.ts`, `src/app/api/whatsapp/route.ts`
+- `src/components/whatsapp-connect.tsx`
+- o `fallbackText` de `WhatsAppTemplate` e o `comFallback` correspondente
+- `docker-compose.evolution.yml`, `deploy/bfx/evolution-api.yaml`
+- `scripts/registrar-webhook-evolution.js`, `scripts/config-whatsapp.js`,
+  `scripts/whatsapp-qrcode.ps1`, `scripts/whatsapp-pairing-code.ps1`
+- os scripts `evolution:up` / `evolution:down` do `package.json`
+- os campos `evolution*` e `whatsappFallbackEvolution` de `Config` (migração)
