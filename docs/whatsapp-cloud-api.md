@@ -204,3 +204,25 @@ Só depois de confirmada a estabilidade. Remover:
   `scripts/whatsapp-qrcode.ps1`, `scripts/whatsapp-pairing-code.ps1`
 - os scripts `evolution:up` / `evolution:down` do `package.json`
 - os campos `evolution*` e `whatsappFallbackEvolution` de `Config` (migração)
+
+## Novos gatilhos (recompra, primeira compra, comemorativas)
+
+Três automações adicionais, todas dormentes por padrão (flag `Config` = 0):
+
+- **Recompra** (`whatsappAutoRecompra`, `whatsappDiasRecompra` padrão 30) — cron
+  `/api/cron/recompra`. Cliente cuja última compra está na faixa
+  [diasRecompra, diasInativo) dias atrás. Não colide com reativação (60+).
+- **Primeira compra** (`whatsappAutoPrimeiraCompra`) — cron
+  `/api/cron/primeira-compra`. Dia seguinte à 1ª compra do cliente. Quando
+  ligada, o agradecimento genérico deixa de enviar a essas vendas.
+- **Datas comemorativas** (`whatsappAutoComemorativas`,
+  `whatsappMesesAtivoComemorativa` padrão 6) — cron `/api/cron/datas-comemorativas`.
+  6 datas fixas (Ano Novo, Dia das Mulheres, Namorados, Cliente, Crianças, Natal).
+  Só clientes ativos; respeita a cota de 24h (envia o disponível, loga o excedente).
+
+### Templates a aprovar na Meta (8)
+
+Transacionais (utilitário): `bfx_recompra`, `bfx_primeira_compra`.
+Marketing: `bfx_natal`, `bfx_ano_novo`, `bfx_dia_cliente`, `bfx_dia_criancas`,
+`bfx_dia_namorados`, `bfx_dia_mulheres`. Os nomes devem bater com o registry em
+`src/lib/whatsapp-templates.ts`. Ligar cada flag só após o template aprovado.
