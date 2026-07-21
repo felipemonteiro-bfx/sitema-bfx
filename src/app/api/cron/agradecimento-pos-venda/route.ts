@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTemplate, getWhatsAppFlags } from "@/lib/whatsapp";
+import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 
 const DIAS_APOS_COMPRA = 1;
@@ -59,7 +59,12 @@ export async function GET(req: Request) {
       const clienteNome = v.cliente?.nome ?? "Cliente";
       const msg = `Olá ${clienteNome}! Como foi sua compra? Estamos à disposição para qualquer dúvida. Obrigado por escolher a BFX!`;
 
-      const ok = await enviarWhatsAppTemplate(telefone, comFallback(TEMPLATES.agradecimento, [clienteNome], msg));
+      const ok = await enviarWhatsApp({
+        telefone,
+        clienteId: v.clienteId!,
+        origem: "cron",
+        template: comFallback(TEMPLATES.agradecimento, [clienteNome], msg),
+      });
       if (ok) {
         enviados++;
         await prisma.whatsAppEnvioLog.create({

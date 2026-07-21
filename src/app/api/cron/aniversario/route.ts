@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTemplate, getWhatsAppFlags } from "@/lib/whatsapp";
+import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 
 /**
@@ -42,7 +42,12 @@ export async function GET(req: Request) {
     for (const c of aniversariantes) {
       if (!c.telefone) continue;
       const msg = `Feliz aniversário, ${c.nome}! Desejamos muito sucesso e esperamos vê-lo(a) em breve por aqui.`;
-      const ok = await enviarWhatsAppTemplate(c.telefone, comFallback(TEMPLATES.aniversario, [c.nome], msg));
+      const ok = await enviarWhatsApp({
+        telefone: c.telefone,
+        clienteId: c.id,
+        origem: "cron",
+        template: comFallback(TEMPLATES.aniversario, [c.nome], msg),
+      });
       if (ok) enviados++;
       else erros.push(c.nome);
     }

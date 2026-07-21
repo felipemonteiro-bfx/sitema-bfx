@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTemplate, getWhatsAppFlags } from "@/lib/whatsapp";
+import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 
 /**
@@ -58,7 +58,12 @@ export async function GET(req: Request) {
     for (const c of clientes) {
       if (!c.telefone) continue;
       const msg = `Olá ${c.nome}! Sentimos sua falta. Temos novidades e condições especiais. Quer ver?`;
-      const ok = await enviarWhatsAppTemplate(c.telefone, comFallback(TEMPLATES.reativacao, [c.nome], msg));
+      const ok = await enviarWhatsApp({
+        telefone: c.telefone,
+        clienteId: c.id,
+        origem: "cron",
+        template: comFallback(TEMPLATES.reativacao, [c.nome], msg),
+      });
       if (ok) {
         enviados++;
         await prisma.whatsAppEnvioLog.create({

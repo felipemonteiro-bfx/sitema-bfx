@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { enviarWhatsAppTemplate, getWhatsAppFlags } from "@/lib/whatsapp";
+import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 import { formatBRL } from "@/lib/utils";
 
@@ -74,14 +74,16 @@ export async function GET(req: Request) {
       }
 
       // Envia via template (Meta) ou texto livre (Evolution, via fallbackText).
-      const ok = await enviarWhatsAppTemplate(
+      const ok = await enviarWhatsApp({
         telefone,
-        comFallback(
+        clienteId: p.venda.clienteId,
+        origem: "cron",
+        template: comFallback(
           TEMPLATES.lembreteParcela,
           [clienteNome, String(p.numeroParcela), String(p.venda.id), vencimentoStr, formatBRL(p.valorParcela)],
           msg
-        )
-      );
+        ),
+      });
       if (ok) enviados++;
       else erros.push(`Parcela ${p.id} (cliente ${clienteNome})`);
     }
