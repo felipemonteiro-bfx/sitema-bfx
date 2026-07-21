@@ -33,6 +33,11 @@ export type WhatsAppFlags = {
   autoBoasVindas: boolean;
   autoAgradecimento: boolean;
   diasInativo: number;
+  autoRecompra: boolean;
+  diasRecompra: number;
+  autoPrimeiraCompra: boolean;
+  autoComemorativas: boolean;
+  mesesAtivoComemorativa: number;
 };
 
 /**
@@ -62,6 +67,11 @@ export async function getWhatsAppFlags(): Promise<WhatsAppFlags | null> {
     autoBoasVindas: cfg?.whatsappAutoBoasVindas === 1,
     autoAgradecimento: cfg?.whatsappAutoAgradecimento === 1,
     diasInativo: cfg?.whatsappDiasInativo ?? 60,
+    autoRecompra: cfg?.whatsappAutoRecompra === 1,
+    diasRecompra: cfg?.whatsappDiasRecompra ?? 30,
+    autoPrimeiraCompra: cfg?.whatsappAutoPrimeiraCompra === 1,
+    autoComemorativas: cfg?.whatsappAutoComemorativas === 1,
+    mesesAtivoComemorativa: cfg?.whatsappMesesAtivoComemorativa ?? 6,
   };
 }
 

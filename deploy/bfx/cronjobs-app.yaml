@@ -402,6 +402,138 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
+  name: bfx-recompra
+  labels:
+    app: bfx-recompra
+spec:
+  schedule: "0 11 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-recompra
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/recompra")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-primeira-compra
+  labels:
+    app: bfx-primeira-compra
+spec:
+  schedule: "30 9 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-primeira-compra
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/primeira-compra")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bfx-datas-comemorativas
+  labels:
+    app: bfx-datas-comemorativas
+spec:
+  schedule: "0 8 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: bfx-datas-comemorativas
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: curl-cron
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  response=$(curl -sf -w "\n%{http_code}" \
+                    -H "Authorization: Bearer $CRON_SECRET" \
+                    "$APP_URL/api/cron/datas-comemorativas")
+                  http_code=$(echo "$response" | tail -n1)
+                  body=$(echo "$response" | sed '$d')
+                  echo "HTTP $http_code - $body"
+                  [ "$http_code" = "200" ] || exit 1
+              env:
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: bfx-app-secrets
+                      key: CRON_SECRET
+                - name: APP_URL
+                  value: "http://bfx-app"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
   name: bfx-campanhas-agendadas
   labels:
     app: bfx-campanhas-agendadas

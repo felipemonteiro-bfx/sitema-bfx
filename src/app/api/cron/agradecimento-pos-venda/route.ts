@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
+import { ehPrimeiraCompra } from "@/lib/primeira-compra";
 
 const DIAS_APOS_COMPRA = 1;
 
@@ -49,10 +50,20 @@ export async function GET(req: Request) {
 
     const vendasPendentes = vendasCompletas.filter((v) => !idsEnviados.has(v.id));
 
+    // Quando a primeira compra está ativa, ela assume os clientes de primeira
+    // viagem — o agradecimento genérico não os envia para não duplicar.
+    let vendasParaEnviar = vendasPendentes;
+    if (waConfig.autoPrimeiraCompra) {
+      const flags = await Promise.all(
+        vendasPendentes.map((v) => ehPrimeiraCompra(v.clienteId!, v.id))
+      );
+      vendasParaEnviar = vendasPendentes.filter((_, i) => !flags[i]);
+    }
+
     let enviados = 0;
     const erros: string[] = [];
 
-    for (const v of vendasPendentes) {
+    for (const v of vendasParaEnviar) {
       const telefone = v.cliente?.telefone;
       if (!telefone) continue;
 
@@ -81,7 +92,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      total: vendasPendentes.length,
+      total: vendasParaEnviar.length,
       enviados,
       erros: erros.length > 0 ? erros : undefined,
     });
