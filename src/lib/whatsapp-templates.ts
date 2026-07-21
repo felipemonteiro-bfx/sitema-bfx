@@ -26,6 +26,14 @@ export const TEMPLATES = {
   recibo: "bfx_recibo",
   boleto: "bfx_boleto",
   relatorioEmpresa: "bfx_relatorio_empresa",
+  recompra: "bfx_recompra",
+  primeiraCompra: "bfx_primeira_compra",
+  natal: "bfx_natal",
+  anoNovo: "bfx_ano_novo",
+  diaCliente: "bfx_dia_cliente",
+  diaCriancas: "bfx_dia_criancas",
+  diaNamorados: "bfx_dia_namorados",
+  diaMulheres: "bfx_dia_mulheres",
 } as const;
 
 /**
