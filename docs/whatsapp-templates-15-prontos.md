@@ -1,6 +1,6 @@
 # 15 templates prontos para aprovar — WhatsApp Manager
 
-Aprove estes 15 já. Os outros 3 (`bfx_relatorio_empresa`, `bfx_recibo`, `bfx_boleto`) estão sendo corrigidos no código — aguarde.
+Aprove estes 15 já. Os 6 restantes (relatório, recibo, assinatura, boleto) já foram corrigidos no código e estão prontos em `docs/whatsapp-templates-meta.md`.
 
 **Ao criar cada um:** Idioma = **Português (BR)** / `pt_BR`. Nome EXATO (não dá pra renomear depois). Nº de variáveis = coluna Vars. Categoria conforme indicado.
 
