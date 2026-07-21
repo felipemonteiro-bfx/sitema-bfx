@@ -98,7 +98,11 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
         telefone: cliente.telefone,
         clienteId: cliente.id,
         origem: "boleto",
-        template: comFallback(TEMPLATES.boleto, [cliente.nome], msg),
+        template: comFallback(
+          TEMPLATES.boleto,
+          [cliente.nome ?? "Cliente", String(venda.id), payment.bankSlipUrl],
+          msg
+        ),
       });
     }
 

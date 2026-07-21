@@ -18,6 +18,7 @@ import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { signReciboId } from "@/lib/recibo-url";
+import { montarEnviosVenda } from "@/lib/envios-venda";
 import { sendVendaNotification } from "@/lib/email";
 import { creditarPontosVenda, resgatarPontos } from "@/lib/fidelidade-service";
 import { valorEmReais } from "@/lib/fidelidade";
@@ -489,24 +490,23 @@ export async function criarVendaV2(
       });
       if (cliente?.telefone) {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
-        let mensagem = "";
-        if (waConfig?.autoRecibo) {
-          mensagem =
-            descontoEmFolha && assinaturaToken
-              ? `Olá! Segue o link para assinar sua autorização de desconto em folha: ${baseUrl}/assinatura/${assinaturaToken}`
-              : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}&sig=${signReciboId(venda.id)}${descontoEmFolha ? "&tipo=autorizacao" : ""}`;
-          if (boletoUrl && waConfig.autoBoleto) {
-            mensagem += `\n\nSeu boleto: ${boletoUrl}`;
-          }
-        } else if (boletoUrl && waConfig?.autoBoleto) {
-          mensagem = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${boletoUrl}`;
-        }
-        if (mensagem) {
+        const envios = montarEnviosVenda({
+          nome: cliente.nome ?? "Cliente",
+          vendaId: venda.id,
+          baseUrl,
+          autoRecibo: waConfig?.autoRecibo ?? false,
+          autoBoleto: waConfig?.autoBoleto ?? false,
+          descontoEmFolha,
+          assinaturaToken: assinaturaToken ?? null,
+          boletoUrl: boletoUrl ?? null,
+          reciboSig: signReciboId(venda.id),
+        });
+        for (const e of envios) {
           void enviarWhatsApp({
             telefone: cliente.telefone,
             clienteId,
             origem: "venda",
-            template: comFallback(TEMPLATES.recibo, [cliente.nome ?? "Cliente"], mensagem),
+            template: comFallback(e.template, e.params, e.fallbackText),
           });
         }
 

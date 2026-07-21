@@ -144,12 +144,14 @@ Pré-requisitos (não dependem de código, e são o gargalo):
 
 1. Verificação de negócio aprovada na Meta.
 2. Número conectado à WABA.
-3. Os 10 templates transacionais aprovados: `bfx_lembrete_parcela`,
+3. Os templates transacionais aprovados: `bfx_lembrete_parcela`,
    `bfx_parcela_vencida`, `bfx_aniversario`, `bfx_agradecimento`, `bfx_nps`,
-   `bfx_reativacao`, `bfx_boas_vindas`, `bfx_recibo`, `bfx_boleto`,
-   `bfx_relatorio_empresa`. Os nomes devem bater EXATAMENTE com
-   `src/lib/whatsapp-templates.ts`, e a contagem de variáveis do corpo deve
-   bater com os `bodyParams` passados em cada call site.
+   `bfx_reativacao`, `bfx_boas_vindas`, `bfx_recibo`, `bfx_assinatura`,
+   `bfx_boleto`, `bfx_relatorio_venda`, `bfx_relatorio_semanal`,
+   `bfx_relatorio_mensal`. (`bfx_relatorio_empresa` foi aposentado — não criar.)
+   A lista completa e os corpos prontos estão em `docs/whatsapp-templates-meta.md`.
+   Os nomes devem bater EXATAMENTE com `src/lib/whatsapp-templates.ts`, e a
+   contagem de variáveis do corpo deve bater com os `bodyParams` de cada call site.
 
 Passos:
 
