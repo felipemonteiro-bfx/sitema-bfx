@@ -12,10 +12,12 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { CurrencyInput } from "@/components/currency-input";
 import { ProdutoItemForm } from "@/components/produto-item-form";
 import { DeleteVendaButton } from "@/components/delete-venda-button";
+import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { formatBRL, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2, ExternalLink, Plus } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
+import { ReciboDownloadLink } from "@/components/recibo-download-link";
 
 type ProdutoItem = {
   id: string;
@@ -35,11 +37,11 @@ type EditVendaData = {
   parcelas: number | null;
   temNota: boolean;
   taxaNota: number;
+  desconto: number;
   descontoEmFolha: boolean;
   boleto: boolean;
-  comprovantePdf: string | null;
   assinaturaToken?: string | null;
-  assinaturaStatus?: string | null;
+  assinatura?: { assinaturaStatus: string | null } | null;
   boletoUrl: string | null;
   itens: Array<{
     id?: number;
@@ -56,7 +58,7 @@ type Props = {
   vendedores: { nomeExibicao: string | null; username: string }[];
   updateAction: (formData: FormData) => Promise<{ success?: boolean; error?: string }>;
   deleteAction: (formData: FormData) => Promise<void>;
-  gerarBoletoAction?: (formData: FormData) => Promise<void>;
+  gerarBoletoAction?: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
 };
 
 function buildProdutosFromVenda(v: EditVendaData): ProdutoItem[] {
@@ -102,10 +104,11 @@ export function EditVendaFormClient({
   );
   const [frete, setFrete] = useState(editVenda.valorFrete ?? 0);
   const [envio, setEnvio] = useState(editVenda.custoEnvio ?? 0);
+  const [descontoValor, setDescontoValor] = useState(editVenda.desconto ?? 0);
   const [loading, setLoading] = useState(false);
 
   const subtotalProdutos = produtos.reduce((s, p) => s + p.subtotal, 0);
-  const totalVenda = subtotalProdutos + frete;
+  const totalVenda = subtotalProdutos + frete - descontoValor;
   const numParcelas = editVenda.parcelas || 1;
   const valorParcela = numParcelas > 0 ? totalVenda / numParcelas : 0;
 
@@ -149,6 +152,7 @@ export function EditVendaFormClient({
     formData.set("produtos", JSON.stringify(produtos));
     formData.set("frete", String(frete));
     formData.set("envio", String(envio));
+    formData.set("desconto", String(descontoValor));
 
     setLoading(true);
     try {
@@ -159,7 +163,7 @@ export function EditVendaFormClient({
       }
       toast.success("Venda atualizada com sucesso!");
       router.refresh();
-    } catch (err) {
+    } catch {
       toast.error("Erro ao salvar alterações.");
     } finally {
       setLoading(false);
@@ -201,8 +205,7 @@ export function EditVendaFormClient({
           <div className="md:col-span-3 space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-medium text-muted-foreground">Produtos da venda</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addProduto} className="gap-2">
-                <Plus className="h-4 w-4" />
+              <Button type="button" variant="outline" size="sm" onClick={addProduto} leftIcon={<Plus className="h-4 w-4" />}>
                 Adicionar produto
               </Button>
             </div>
@@ -229,6 +232,10 @@ export function EditVendaFormClient({
             <CurrencyInput value={envio} onChange={setEnvio} />
           </div>
           <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground">Desconto (R$)</Label>
+            <CurrencyInput value={descontoValor} onChange={setDescontoValor} />
+          </div>
+          <div className="space-y-1">
             <Label className="text-xs font-medium text-muted-foreground">Parcelas</Label>
             <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
           </div>
@@ -237,8 +244,8 @@ export function EditVendaFormClient({
             <Label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</Label>
             <div className="flex flex-col gap-2">
               <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
-              {editVenda.comprovantePdf ? (
-                <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400 px-2 py-1.5 rounded-md border border-emerald-100 dark:border-emerald-900/50">
+              {editVenda.assinatura?.assinaturaStatus === "assinado" ? (
+                <div className="flex flex-wrap items-center gap-2 text-xs text-success bg-success/10 px-2 py-1.5 rounded-md border border-success/20">
                   <CheckCircle2 className="h-3 w-3 shrink-0" />
                   <span>Comprovante assinado.</span>
                   <a href={`/api/comprovante?vendaId=${editVenda.id}`} target="_blank" rel="noopener noreferrer" className="font-bold underline flex items-center gap-1 hover:underline">
@@ -255,7 +262,7 @@ export function EditVendaFormClient({
                   </div>
                   <LinkAssinaturaButton
                     token={editVenda.assinaturaToken}
-                    status={editVenda.assinaturaStatus}
+                    status={editVenda.assinatura?.assinaturaStatus}
                     label="Copiar link de assinatura"
                     showQr
                   />
@@ -269,7 +276,7 @@ export function EditVendaFormClient({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end">
+          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
             <input
               type="checkbox"
               name="temNota"
@@ -277,11 +284,11 @@ export function EditVendaFormClient({
               defaultChecked={editVenda.temNota}
               className="h-4 w-4 rounded border-input"
             />
-            <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer">
+            <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Com Nota Fiscal
             </label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end">
+          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
             <input
               type="checkbox"
               name="descontoEmFolha"
@@ -289,11 +296,11 @@ export function EditVendaFormClient({
               defaultChecked={editVenda.descontoEmFolha ?? false}
               className="h-4 w-4 rounded border-input"
             />
-            <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer">
+            <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Desconto em folha
             </label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end">
+          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
             <input
               type="checkbox"
               name="boleto"
@@ -301,7 +308,7 @@ export function EditVendaFormClient({
               defaultChecked={editVenda.boleto ?? false}
               className="h-4 w-4 rounded border-input"
             />
-            <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer">
+            <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Boleto
             </label>
           </div>
@@ -322,6 +329,12 @@ export function EditVendaFormClient({
               <span className="text-muted-foreground">Frete</span>
               <span className="font-semibold">{formatBRL(frete)}</span>
             </div>
+            {descontoValor > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Desconto</span>
+                <span className="font-semibold text-destructive">-{formatBRL(descontoValor)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-sm font-bold border-t pt-2">
               <span>Total</span>
               <span>{formatBRL(totalVenda)}</span>
@@ -338,14 +351,12 @@ export function EditVendaFormClient({
               <button type="submit" disabled={loading} className={cn(buttonVariants(), "cursor-pointer")}>
                 {loading ? "Salvando..." : "Salvar alterações"}
               </button>
-              <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}`}>
-                Recibo de Venda
-              </a>
-              {editVenda.descontoEmFolha && (
-                <a className="text-xs text-muted-foreground hover:text-foreground" href={`/api/recibo?id=${editVenda.id}&tipo=autorizacao`}>
-                  Autorização (Desconto em Folha)
-                </a>
-              )}
+              <ReciboDownloadLink
+                vendaId={editVenda.id}
+                tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}
+                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                label={editVenda.descontoEmFolha ? "Autorização" : "Recibo de Venda"}
+              />
               {editVenda.boletoUrl ? (
                 <a
                   href={editVenda.boletoUrl}
@@ -356,12 +367,7 @@ export function EditVendaFormClient({
                   Ver boleto Asaas
                 </a>
               ) : editVenda.boleto && gerarBoletoAction ? (
-                <form action={gerarBoletoAction} className="inline">
-                  <input type="hidden" name="vendaId" value={editVenda.id} />
-                  <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-                    Gerar boleto Asaas
-                  </button>
-                </form>
+                <GerarBoletoButton vendaId={editVenda.id} gerarBoletoAction={gerarBoletoAction} />
               ) : null}
             </div>
             <DeleteVendaButton vendaId={editVenda.id} deleteAction={deleteAction} />

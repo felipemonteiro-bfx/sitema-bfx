@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import { formatBRL } from "@/lib/utils";
+import { formatBRL, calcularPrimeiroVencimento } from "@/lib/utils";
 import { DateInput } from "@/components/ui/date-input";
 
 interface Parcela {
@@ -19,27 +19,28 @@ interface Props {
   valorTotal: number;
   parcelas: Parcela[];
   onChange: (parcelas: Parcela[]) => void;
+  dataVenda?: string; // YYYY-MM-DD — usada para calcular vencimento pela regra do dia 20
+  disableAutoInit?: boolean; // Em modo de edição com parcelas existentes, evita reinicializar
 }
 
-export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, onChange }: Props) {
+export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit = false }: Props) {
   // Inicializar parcelas automaticamente
   useEffect(() => {
-    if (numeroParcelas > 0 && (parcelas.length !== numeroParcelas || parcelas[0]?.valorParcela !== valorTotal / numeroParcelas)) {
-      const hoje = new Date();
+    if (disableAutoInit) return;
+    if (numeroParcelas > 0 && (parcelas.length !== numeroParcelas || parcelas[0]?.valorParcela !== Math.trunc((valorTotal / numeroParcelas) * 100) / 100)) {
+      const dataBase = dataVenda ? new Date(dataVenda) : new Date();
+      const primeiroVencimento = calcularPrimeiroVencimento(dataBase);
       const novasParcelas: Parcela[] = Array.from({ length: numeroParcelas }).map((_, i) => {
-        const dataVencimento = new Date(hoje);
-        dataVencimento.setMonth(dataVencimento.getMonth() + i + 1);
-        dataVencimento.setDate(10); // Padrão: dia 10 de cada mês
-
+        const dataVencimento = new Date(Date.UTC(primeiroVencimento.getUTCFullYear(), primeiroVencimento.getUTCMonth() + i, 10));
         return {
           numeroParcela: i + 1,
           dataVencimento: dataVencimento.toISOString().split('T')[0],
-          valorParcela: valorTotal / numeroParcelas,
+          valorParcela: Math.trunc((valorTotal / numeroParcelas) * 100) / 100,
         };
       });
       onChange(novasParcelas);
     }
-  }, [numeroParcelas, valorTotal]);
+  }, [numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit]);
 
   const handleDataChange = (index: number, newData: string) => {
     const novasParcelas = [...parcelas];

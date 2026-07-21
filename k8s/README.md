@@ -76,6 +76,10 @@ No `deployment.yaml`, use `image: seu-registry/sitema-bfx:latest`.
 
 Rode as migrações Prisma **uma vez** apontando para o mesmo Postgres que o cluster usa (mesma `DATABASE_URL` do Secret). Ver **docs/ONDE-ESTA-DATABASE-URL.md**.
 
+## Debug (erro em produção)
+
+Se a aplicação funciona em localhost mas falha no K8s, ver **docs/K8S-DEBUG.md** para passos de diagnóstico e como exibir o erro real.
+
 ## Arquivos
 
 | Arquivo | Uso |

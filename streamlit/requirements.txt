@@ -1,8 +1,0 @@
-streamlit
-pandas
-fpdf
-python-dateutil
-requests
-matplotlib
-python-dotenv
-google-generativeai

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { FORMAS_PAGAMENTO_LIST } from "@/lib/forma-pagamento"
 
 /**
  * Schema de validação para venda rápida (formato antigo)
@@ -33,9 +34,10 @@ export type VendaRapidaFormData = z.infer<typeof vendaRapidaSchema>
 const produtoItemSchema = z.object({
   produtoNome: z.string().min(1, "Nome do produto é obrigatório"),
   custoProduto: z.number().min(0, "Custo não pode ser negativo"),
-  valorVenda: z.number().min(0, "Valor de venda não pode ser negativo"),
+  // Valor de venda deve ser > 0: impede venda salva com R$ 0,00 (produto sem preço).
+  valorVenda: z.number().positive("Informe o valor de venda do produto (maior que zero)"),
   quantidade: z.number().int().min(1, "Quantidade deve ser pelo menos 1"),
-  subtotal: z.number().min(0, "Subtotal não pode ser negativo"),
+  subtotal: z.number().positive("Subtotal deve ser maior que zero"),
 })
 
 /**
@@ -61,8 +63,11 @@ export const vendaV2Schema = z.object({
   taxaNota: z.number().min(0).max(100, "Taxa de nota deve ser entre 0 e 100"),
   produtos: z.array(produtoItemSchema).min(1, "Adicione pelo menos um produto"),
   parcelasVencimento: z.array(parcelaVencimentoSchema).optional(),
+  desconto: z.number().min(0, "Desconto não pode ser negativo").optional().default(0),
+  pontosResgatar: z.number().int().min(0, "Pontos a resgatar não pode ser negativo").optional().default(0),
   descontoEmFolha: z.boolean().optional().default(false),
   boleto: z.boolean().optional().default(false),
+  formaPagamento: z.enum(FORMAS_PAGAMENTO_LIST as [string, ...string[]]).optional(),
 })
 
 export type VendaV2FormData = z.infer<typeof vendaV2Schema>

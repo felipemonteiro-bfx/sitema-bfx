@@ -5,6 +5,7 @@ const ctx = {
   role: "admin" as const,
   username: "admin",
   displayName: "Admin",
+  userId: 1,
 };
 
 const now = new Date();

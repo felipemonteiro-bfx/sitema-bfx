@@ -61,13 +61,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         )}
         {!loading && leftIcon && (
-          <span className="mr-2 inline-flex">{leftIcon}</span>
+          <span className="mr-2 inline-flex shrink-0 items-center justify-center">{leftIcon}</span>
         )}
         <span className={cn(loading && !loadingText && "opacity-0")}>
           {loading && loadingText ? loadingText : children}
         </span>
         {!loading && rightIcon && (
-          <span className="ml-2 inline-flex">{rightIcon}</span>
+          <span className="ml-2 inline-flex shrink-0 items-center justify-center">{rightIcon}</span>
         )}
       </Comp>
     )

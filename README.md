@@ -2,23 +2,39 @@
 
 ## Desenvolvimento local
 
-1. Copie o `.env.example` para `.env` e ajuste se necessario.
-2. Suba o Postgres e a app:
+1. Copie o `.env.example` para `.env.local` e ajuste se necessário.
+2. Suba MinIO (imagens) e Postgres:
 
 ```bash
-docker compose up --build
+yarn db:minio    # MinIO em localhost:9000 (console: 9001)
+yarn db:start    # Postgres
 ```
 
-Aplicacao: `http://localhost:3008`
-Streamlit legado (via proxy + layout): `http://localhost:3008/streamlit`
+3. Execute as migrações e suba a app:
+
+```bash
+yarn db:migrate
+yarn dev
+```
+
+**Ou via Docker (stack completo):**
+
+```bash
+yarn docker:up
+```
+
+**WhatsApp (Evolution API):** Para envio automático de recibo, boleto e lembretes:
+```bash
+yarn evolution:up
+```
+Depois acesse http://localhost:8080/manager, crie a instância `bfx` e escaneie o QR Code. Ver **docs/WHATSAPP-EVOLUTION.md**.
+
+Aplicação: `http://localhost:3008`  
+MinIO Console: `http://localhost:9001` (minioadmin/minioadmin)
 
 Login inicial:
 - usuario: `admin`
 - senha: `admin`
-
-## Streamlit dentro do Next.js
-
-O Nginx faz proxy de `/_streamlit` para o container Streamlit (com suporte a WebSocket). A pagina `/streamlit` exibe dentro do layout do Next.
 
 ## Scripts
 
@@ -81,8 +97,16 @@ Em **Settings** → **Environment Variables** adicione (Production e Preview, se
 | `SESSION_SECRET` | Sim | Chave secreta para sessão JWT (mín. 32 caracteres). |
 | `NEXT_PUBLIC_APP_URL` | Não (recomendado) | URL pública do app (ex.: `https://sitema-bfx.vercel.app`). |
 | `CRON_SECRET` | Não | Secret para o Cron de limpeza de uploads (domingo 03:00 UTC). Defina para o Cron da Vercel autorizar. |
+| `MINIO_ENDPOINT` | Não* | URL do MinIO (ex.: `http://localhost:9000`). Sem isso, imagens vão para `public/uploads/produtos`. |
+| `MINIO_ACCESS_KEY` | Não* | Chave de acesso MinIO. |
+| `MINIO_SECRET_KEY` | Não* | Chave secreta MinIO. |
+| `MINIO_BUCKET` | Não | Bucket (default: `produtos`). |
+| `MINIO_PUBLIC_URL` | Não | URL pública para acessar imagens (ex.: `http://localhost:9000`). |
 | `ASAAS_API_KEY` | Não | Chave da API Asaas para geração de boleto. Sem isso, boleto fica desabilitado. |
 | `ASAAS_ENV` | Não | `sandbox` ou `production` (default: sandbox). |
+| `EVOLUTION_API_URL` | Não | URL da Evolution API para envio automático WhatsApp (recibo, boleto, lembretes). |
+| `EVOLUTION_API_KEY` | Não | API Key da Evolution API. |
+| `EVOLUTION_INSTANCE` | Não | Nome da instância (default: `bfx`). |
 | `OPENAI_API_KEY` | Não | Chave OpenAI (ou compatível) para rotas de AI/chat, se usadas. |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Não | Chave Google Generative AI / Gemini para rotas de AI, se usadas. |
 
@@ -150,20 +174,3 @@ Manifests em **`k8s/`**: Namespace, Deployment, Service, Secret/ConfigMap (exemp
 - **GitHub Actions:** em todo push/PR roda lint e build (`.github/workflows/ci.yml`). O deploy em produção é feito pela integração Git da Vercel no push para o branch configurado.
 - **Variáveis Vercel:** checklist em **docs/VERCEL-ENV.md** (obrigatórias: `DATABASE_URL`, `SESSION_SECRET`).
 - **Dependabot:** abre PRs semanais (segunda-feira) para atualizar dependências npm e GitHub Actions (`.github/dependabot.yml`). Revise e faça merge quando quiser.
-
-## Importar dados do SQLite (Streamlit)
-
-O banco legado do Streamlit fica em `streamlit/bfx_sistema.db`. Para importar tudo para o Postgres:
-
-```bash
-# dentro do container da app
-docker exec bfx_app sh -lc "RESET=1 node prisma/import_sqlite.js"
-```
-
-Se preferir rodar fora do container:
-
-```bash
-set DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bfx?schema=public
-set RESET=1
-node prisma/import_sqlite.js
-```

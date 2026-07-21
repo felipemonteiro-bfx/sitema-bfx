@@ -5,9 +5,19 @@ import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { DateInput } from "@/components/ui/date-input";
-import { Loader2, AlertCircle, CheckCircle2, Trash2, Sparkles } from "lucide-react";
+import { Loader2, CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import Papa from "papaparse";
 
 interface RowData {
@@ -29,6 +39,7 @@ export default function ImportacaoClient() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,7 +54,7 @@ export default function ImportacaoClient() {
       skipEmptyLines: true,
       delimiter: ";", // Comum no Excel brasileiro
       complete: (results) => {
-        const mapped = (results.data as any[]).map((row, index) => ({
+        const mapped = (results.data as Record<string, string | undefined>[]).map((row) => ({
           id: Math.random().toString(36).substr(2, 9),
           dataVenda: row["Data (AAAA-MM-DD)"] || row["Data"] || new Date().toISOString().slice(0, 10),
           vendedor: row["Vendedor"] || "",
@@ -112,8 +123,10 @@ export default function ImportacaoClient() {
       return;
     }
 
-    if (!confirm(`Confirmar a importação de ${data.length} vendas?`)) return;
+    setConfirmOpen(true);
+  };
 
+  const handleConfirmImport = async () => {
     setSaving(true);
     try {
       const res = await fetch('/api/importacao/batch', {
@@ -129,7 +142,7 @@ export default function ImportacaoClient() {
       } else {
         toast.error("Erro ao salvar dados no servidor.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro de conexão.");
     } finally {
       setSaving(false);
@@ -137,6 +150,23 @@ export default function ImportacaoClient() {
   };
 
   return (
+    <>
+    <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmar importação de {data.length} vendas?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Os dados serão salvos permanentemente no sistema. Certifique-se de que as informações estão corretas antes de confirmar.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmImport}>
+            Importar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <div className="space-y-6">
       <Card>
         <CardHeader>
@@ -184,18 +214,17 @@ export default function ImportacaoClient() {
                 onClick={sugerirComIA}
                 disabled={suggesting || saving}
                 className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                leftIcon={suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               >
-                {suggesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
                 Sugerir com IA
               </Button>
-              <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90">
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+              <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90" leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
                 Subir {data.length} Vendas
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border bg-white overflow-hidden overflow-x-auto">
+            <ScrollArea className="rounded-md border bg-white w-full">
               <Table>
                 <TableHeader className="bg-muted">
                   <TableRow>
@@ -275,10 +304,11 @@ export default function ImportacaoClient() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       )}
     </div>
+    </>
   );
 }

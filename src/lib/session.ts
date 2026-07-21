@@ -1,7 +1,11 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const secret = new TextEncoder().encode(process.env.SESSION_SECRET || "dev-secret");
+const rawSecret = process.env.SESSION_SECRET;
+if (process.env.NODE_ENV === "production" && !process.env.SKIP_ENV_VALIDATION && (!rawSecret || rawSecret === "dev-secret")) {
+  throw new Error("SESSION_SECRET nao configurado em producao. Defina uma chave com minimo 32 caracteres.");
+}
+const secret = new TextEncoder().encode(rawSecret || "dev-secret");
 
 export type SessionPayload = {
   id: number;

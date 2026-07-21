@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatBRL } from "@/lib/utils";
+import { Label } from "@/components/ui/label";
+import { FormSelect } from "@/components/form-select";
+import { DateInput } from "@/components/ui/date-input";
+import { PageHeader } from "@/components/page-header";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface Props {
   vendedores: string[];
 }
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatBRL } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { FormSelect } from "@/components/form-select";
-import { DateInput } from "@/components/ui/date-input";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function CommissionsDashboardClient({ vendedores: vendedoresFromDb }: Props) {
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
   const [dataInicio, setDataInicio] = useState<string>('');
   const [dataFim, setDataFim] = useState<string>('');
 
-  const fetchCommissions = async () => {
+  const fetchCommissions = useCallback(async () => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams();
@@ -38,6 +39,13 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
       const commData = await commRes.json();
       const detailsData = await detailsRes.json();
 
+      if (!commRes.ok) {
+        toast.error(commData?.error ?? "Erro ao buscar comissões.");
+      }
+      if (!detailsRes.ok) {
+        toast.error(detailsData?.error ?? "Erro ao buscar detalhes de comissões.");
+      }
+
       setCommissions(Array.isArray(commData) ? commData : []);
       setDetails(Array.isArray(detailsData) ? detailsData : []);
     } catch (error) {
@@ -45,11 +53,11 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
     } finally {
       setLoading(false);
     }
-  };
+  }, [vendedorFiltro, dataInicio, dataFim]);
 
   useEffect(() => {
     fetchCommissions();
-  }, [vendedorFiltro, dataInicio, dataFim]);
+  }, [fetchCommissions]);
 
   const totalComissoes = commissions.reduce((sum, item) => sum + item.valorComissao, 0);
   const vendedores = ["all", ...(vendedoresFromDb || [])];
@@ -58,17 +66,22 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
     label: v === "all" ? "Todos os Vendedores" : v,
   }));
 
-  // Cores harmônicas seguindo a Lei Suprema #1
-  const COLORS = ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
+  // Cores usando variáveis CSS para compatibilidade com temas
+  const COLORS = [
+    'hsl(var(--primary))',
+    'hsl(var(--primary) / 0.8)',
+    'hsl(var(--primary) / 0.6)',
+    'hsl(var(--primary) / 0.4)',
+    'hsl(var(--primary) / 0.25)',
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Gerenciamento de Comissões</h1>
-          <p className="text-sm text-muted-foreground">Visão geral e detalhada das comissões de vendas.</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Gerenciamento de Comissões"
+        description="Visão geral e detalhada das comissões de vendas."
+        breadcrumbs={[{ label: "Comissões" }]}
+      />
 
       {/* Filtros */}
       <Card>
@@ -142,17 +155,17 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             ) : (
               <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
                 <BarChart data={commissions}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="vendedor" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis 
-                    stroke="#64748b" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tickFormatter={(value) => `R$ ${value}`} 
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="vendedor" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `R$ ${value}`}
                   />
-                  <Tooltip 
-                    cursor={{fill: '#f1f5f9'}}
+                  <Tooltip
+                    cursor={{fill: 'hsl(var(--muted))'}}
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     formatter={(value: any) => [formatBRL(Number(value)), 'Comissão']}
                   />

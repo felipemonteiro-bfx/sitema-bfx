@@ -1,19 +1,32 @@
 import { prisma } from "@/lib/db";
+import { PageHeader } from "@/components/page-header";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatBRL, cn } from "@/lib/utils";
 import VendaRapidaFormV2 from "@/components/venda-rapida-form-v2";
 import { ShoppingCart, CheckCircle2 } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
+import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { Separator } from "@/components/ui/separator";
 import { criarVendaV2 } from "./actions";
+import { signReciboId } from "@/lib/recibo-url";
 
 export default async function Page() {
-  const vendedores = await prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } });
-  const ultima = await prisma.venda.findFirst({
-    orderBy: { id: "desc" },
-    include: { itens: true },
-  });
+  const [vendedores, ultima, fornecedores, produtosComCategoria] = await Promise.all([
+    prisma.usuario.findMany({ orderBy: { nomeExibicao: "asc" } }),
+    prisma.venda.findFirst({
+      orderBy: { id: "desc" },
+      include: { itens: true, assinatura: true },
+    }),
+    prisma.fornecedor.findMany({ orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
+    prisma.produto.findMany({
+      where: { categoria: { not: null } },
+      select: { categoria: true },
+      distinct: ["categoria"],
+      orderBy: { categoria: "asc" },
+    }),
+  ]);
 
   const vendedorOptions = vendedores.map((v) => ({
     value: String(v.nomeExibicao || v.username),
@@ -26,19 +39,20 @@ export default async function Page() {
     label: String(i + 1),
   }));
 
-  const totalUltima = ultima
-    ? ultima.itens && ultima.itens.length > 0
-      ? ultima.itens.reduce((s, i) => s + i.subtotal, 0) + (ultima.valorFrete || 0)
-      : (ultima.valorVenda || 0) + (ultima.valorFrete || 0)
-    : 0;
+  const categoriasExistentes = produtosComCategoria
+    .map((p) => p.categoria as string)
+    .filter(Boolean);
+
+  const totalUltima = ultima ? valorTotalVenda(ultima) : 0;
 
   return (
     <div className="space-y-8 max-w-[1400px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">Terminal de Vendas</h1>
-          <p className="text-muted-foreground font-medium">PDV Inteligente BFX Intelligence</p>
-        </div>
+        <PageHeader
+          title="Terminal de Vendas"
+          description="PDV Inteligente BFX Intelligence"
+          breadcrumbs={[{ label: "Venda Rapida" }]}
+        />
 
         {ultima && (
           <div className="flex items-center gap-3 bg-card p-2 rounded-2xl shadow-sm border border-border pr-4">
@@ -51,26 +65,16 @@ export default async function Page() {
             </div>
             <Separator orientation="vertical" className="h-8 mx-2" />
             <div className="flex flex-wrap gap-2">
-              <a
-                href={`/api/recibo?id=${ultima.id}`}
+              <ReciboDownloadLink
+                vendaId={ultima.id}
+                tipo={ultima.descontoEmFolha ? "autorizacao" : "venda"}
                 className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
-                title="Recibo de Venda de Mercadoria"
-              >
-                Recibo
-              </a>
-              {ultima.descontoEmFolha && (
-                <a
-                  href={`/api/recibo?id=${ultima.id}&tipo=autorizacao`}
-                  className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
-                  title="Autorização de Desconto em Folha"
-                >
-                  Autorização
-                </a>
-              )}
+                label={ultima.descontoEmFolha ? "Autorização" : "Recibo"}
+              />
               {ultima.descontoEmFolha && ultima.assinaturaToken && (
                 <LinkAssinaturaButton
                   token={ultima.assinaturaToken}
-                  status={ultima.assinaturaStatus}
+                  status={ultima.assinatura?.assinaturaStatus}
                   label="Link Assinatura"
                   showQr
                 />
@@ -79,7 +83,7 @@ export default async function Page() {
                 href={`https://wa.me/?text=${encodeURIComponent(
                   ultima.descontoEmFolha && ultima.assinaturaToken
                     ? `Segue o link para assinar sua autorização: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/assinatura/${ultima.assinaturaToken}`
-                    : `Segue seu recibo: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/api/recibo?id=${ultima.id}`
+                    : `Segue seu recibo: ${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008"}/api/recibo?id=${ultima.id}&sig=${signReciboId(ultima.id)}${ultima.descontoEmFolha ? "&tipo=autorizacao" : ""}`
                 )}`}
                 target="_blank"
                 rel="noreferrer"
@@ -95,6 +99,8 @@ export default async function Page() {
       <VendaRapidaFormV2
         vendedorOptions={vendedorOptions}
         parcelasOptions={parcelasOptions}
+        fornecedores={fornecedores}
+        categoriasExistentes={categoriasExistentes}
         onSubmit={criarVendaV2}
       />
 

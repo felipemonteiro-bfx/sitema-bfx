@@ -1,10 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Input } from "@/components/ui/input";
-import { FormSelect } from "@/components/form-select";
+import { Label } from "@/components/ui/label";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { DateInput } from "@/components/ui/date-input";
 import { format } from "date-fns";
 import { ReportButtonsClient } from "@/components/report-buttons-client";
 import { cn } from "@/lib/utils";
@@ -22,7 +21,7 @@ export default async function Page() {
     prisma.fornecedor.findMany({ select: { nome: true } }),
   ]);
   const nomesFornecedores = new Set(fornecedores.map((f) => f.nome.toLowerCase()));
-  const extraEmpresas = ["Amazonfive", "Gimam"];
+  const extraEmpresas = ["AMAZON FIVE", "Gimam"];
   const empresaOptions = [
     ...empresas
       .map((e) => e.nome)
@@ -35,50 +34,27 @@ export default async function Page() {
   ];
 
   const formatDateBR = (value: string) =>
-    new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(new Date(value + "T00:00:00"));
+    new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(new Date(value + "T00:00:00"));
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Relatórios</h1>
-        <p className="text-sm text-muted-foreground">
-          Gere exportações rápidas e compartilhe com o time financeiro.
-        </p>
-      </div>
+      <PageHeader
+        title="Relatorios"
+        description="Exporte relatorios de vendas e financeiro."
+        breadcrumbs={[{ label: "Relatorios" }]}
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-blue-900">Relatório de vendas</CardTitle>
+            <CardTitle className="text-primary">Relatório de vendas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <form
-              id="report-form"
-              method="GET"
-              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-            >
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Empresa Parceira</div>
-                <FormSelect
-                  name="empresa"
-                  defaultValue="all"
-                  options={[
-                    { value: "all", label: "Todas" },
-                    ...empresaOptions.map((nome) => ({ value: nome, label: nome })),
-                  ]}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Data inicial</div>
-                <DateInput name="from" defaultValue={monthStartStr} aria-label="Data inicial" />
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs font-semibold text-muted-foreground">Data final</div>
-                <DateInput name="to" defaultValue={today} aria-label="Data final" />
-              </div>
-            </form>
-
-            <ReportButtonsClient />
+            <ReportButtonsClient
+              empresaOptions={empresaOptions}
+              defaultFrom={monthStartStr}
+              defaultTo={today}
+            />
 
             <div className="text-xs text-muted-foreground pt-2">
               Período padrão: mês atual ({formatDateBR(monthStartStr)} a {formatDateBR(today)}).
@@ -86,11 +62,11 @@ export default async function Page() {
             
             <div className="flex flex-wrap gap-2 border-t pt-4">
               <span className="w-full text-[10px] font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
-              {["Amazonfive", "Gimam"].map((empresa) => (
+              {["AMAZON FIVE", "Gimam"].map((empresa) => (
                 <a 
                   key={empresa} 
                   href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}
-                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-rose-200 text-rose-700 hover:bg-rose-50")}
+                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-destructive/30 text-destructive hover:bg-destructive/5")}
                 >
                   PDF {empresa}
                 </a>
@@ -101,19 +77,19 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900">Outros Relatórios</CardTitle>
+            <CardTitle className="text-primary">Outros Relatórios</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1">
-              <div className="text-xs font-semibold text-muted-foreground">Inadimplência</div>
+              <Label>Inadimplencia</Label>
               <div className="flex gap-2">
-                <a 
+                <a
                   href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=csv`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
                   CSV
                 </a>
-                <a 
+                <a
                   href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=pdf`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
@@ -122,15 +98,15 @@ export default async function Page() {
               </div>
             </div>
             <div className="space-y-1">
-              <div className="text-xs font-semibold text-muted-foreground">Margem por Produto</div>
+              <Label>Margem por Produto</Label>
               <div className="flex gap-2">
-                <a 
+                <a
                   href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=csv`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
                   CSV
                 </a>
-                <a 
+                <a
                   href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=pdf`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
@@ -143,16 +119,22 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900">Atalhos</CardTitle>
+            <CardTitle className="text-primary">Atalhos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <a 
+            <a
+              href="/relatorios/mensais"
+              className={cn(buttonVariants({ variant: "default" }), "w-full")}
+            >
+              Relatórios mensais por empresa
+            </a>
+            <a
               href="/relatorios"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
               Limpar filtros
             </a>
-            <a 
+            <a
               href="/financeiro"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >

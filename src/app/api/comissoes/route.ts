@@ -1,39 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/db';
+import { buildComissoesWhere } from '@/lib/comissoes-utils';
+import { valorTotalVenda } from '@/lib/venda-utils';
+import { getSession } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
-    // Extrair parâmetros de consulta
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
-    const vendedorFiltro = searchParams.get('vendedor');
-    const dataInicioStr = searchParams.get('dataInicio');
-    const dataFimStr = searchParams.get('dataFim');
-
-    // Construir filtros para o Prisma
-    const where: any = {};
-
-    if (vendedorFiltro) {
-      where.vendedor = vendedorFiltro;
-    }
-
-    if (dataInicioStr || dataFimStr) {
-      where.dataVenda = {};
-      if (dataInicioStr) {
-        where.dataVenda.gte = new Date(dataInicioStr);
-      }
-      if (dataFimStr) {
-        where.dataVenda.lte = new Date(dataFimStr);
-      }
-    }
+    const where = buildComissoesWhere(searchParams, session);
 
     // Buscar as vendas com os filtros aplicados
     const vendas = await prisma.venda.findMany({
       where,
       select: {
         vendedor: true,
-        lucroLiquido: true,
+        valorVenda: true,
+        quantidade: true,
+        valorFrete: true, desconto: true,
+        itens: { select: { subtotal: true } },
       },
     });
 
@@ -58,10 +46,10 @@ export async function GET(request: NextRequest) {
     const comissoesPorVendedor = new Map<string, number>();
 
     vendas.forEach(venda => {
-      if (venda.vendedor && venda.lucroLiquido !== null) {
+      if (venda.vendedor) {
         const percentual = comissaoPctMap.get(venda.vendedor);
         if (percentual !== undefined) {
-          const comissao = (venda.lucroLiquido * percentual) / 100;
+          const comissao = (valorTotalVenda(venda) * percentual) / 100;
           comissoesPorVendedor.set(venda.vendedor, (comissoesPorVendedor.get(venda.vendedor) || 0) + comissao);
         }
       }
@@ -76,8 +64,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(comissoes);
   } catch (error) {
     console.error('Erro ao buscar comissões:', error);
-    return NextResponse.json({ error: 'Failed to fetch commissions' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect(); // Disconnect Prisma Client
+    return NextResponse.json({ error: 'Erro ao buscar comissões.' }, { status: 500 });
   }
 }

@@ -1,27 +1,74 @@
 import { prisma } from "@/lib/db";
 import { aiActions, type ActionContext } from "@/lib/ai-actions";
 import { callMcpTool } from "@/lib/mcp";
-import { generateText, tool } from "ai";
+import { generateText, tool, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 
 const toolSchema = z.object({}).passthrough();
 
-export async function runAi(prompt: string, provider: "openai" | "gemini") {
+function stripThinkTags(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+}
+
+const SYSTEM_PROMPT = `Você é o assistente BFX, especialista em gestão de vendas, estoque e finanças.
+
+CAPACIDADES COMPLETAS:
+- Consultas (executam automaticamente): listar vendas, clientes, produtos, despesas, empresas, usuários; consultar parcelas, inadimplentes, limite de crédito, boletos, comissões, auditoria; resumo financeiro, fluxo de caixa, relatório de vendas, margens de produto
+- Ações de escrita (executadas diretamente): criar venda, criar cliente, cadastrar produto, registrar entrada de estoque, criar despesa, atualizar venda/produto/usuário/despesa, criar empresa/usuário/fornecedor, gerar catálogo
+
+REGRAS:
+- Responda SEMPRE em português do Brasil
+- Use formatação Markdown nas respostas: **negrito** para destaques, listas com - para enumerar itens, ## para títulos de seção quando necessário
+- Para consultas: execute a ação e apresente os resultados de forma clara e amigável, usando listas e tabelas quando adequado
+- Para ações de escrita: siga o FLUXO DE CADASTRO abaixo
+- Se o usuário pedir "cadastrar entrada de produto", use registrar_entrada_estoque
+- Respeite o perfil do usuário: vendedor não tem acesso a ações administrativas
+
+FLUXO DE CADASTRO (acoes de escrita):
+- ANTES de executar qualquer cadastro, resolva TODAS as referencias usando ferramentas de consulta:
+  * Se o usuario menciona um fornecedor por nome, use listar_fornecedores para buscar e encontrar o ID correto
+  * Se menciona um cliente por nome, use listar_clientes para encontrar o ID
+  * Se menciona um produto, use listar_produtos para verificar se ja existe
+- Ao cadastrar produto: use listar_produtos para ver categorias e marcas existentes e escolha a mais adequada. Inclua TODOS os campos (categoria, marca, custoPadrao, valorVenda, fornecedorId, qtdEstoque).
+- Execute a acao de escrita diretamente apos resolver as referencias
+- Apresente um resumo do que foi criado apos a execucao
+- Se alguma referencia nao for encontrada (ex: fornecedor "XYZ" nao existe), informe o usuario e pergunte se deseja criar primeiro`;
+
+export async function runAi(prompt: string, provider: "openai" | "gemini" | "litellm") {
   const cfg = await prisma.config.findFirst();
+  if (provider === "litellm") {
+    const litellmUrl = cfg?.litellmUrl || process.env.LITELLM_URL || "";
+    const litellmKey = cfg?.litellmKey || process.env.LITELLM_KEY || "";
+    if (!litellmUrl || !litellmKey) return "LiteLLM nao configurado.";
+    const baseURL = litellmUrl.startsWith("http") ? litellmUrl : `https://${litellmUrl}`;
+    const litellm = createOpenAI({ baseURL, apiKey: litellmKey });
+    const enableThinking = cfg?.litellmEnableThinking ?? (process.env.LITELLM_ENABLE_THINKING === "true");
+    const litellmProviderOptions = enableThinking
+      ? { openai: { body: { chat_template_kwargs: { enable_thinking: true } } } }
+      : undefined;
+    const { text } = await generateText({
+      model: litellm.chat(cfg?.litellmModel || process.env.LITELLM_MODEL || "gpt-4o"),
+      prompt,
+      ...(litellmProviderOptions && { providerOptions: litellmProviderOptions }),
+    });
+    return stripThinkTags(text) || "Sem resposta.";
+  }
   if (provider === "openai") {
-    if (!cfg?.openaiKey) return "Chave OpenAI nao configurada.";
-    const openai = createOpenAI({ apiKey: cfg.openaiKey });
+    const openaiKey = cfg?.openaiKey || process.env.OPENAI_API_KEY || "";
+    if (!openaiKey) return "Chave OpenAI nao configurada.";
+    const openai = createOpenAI({ apiKey: openaiKey });
     const { text } = await generateText({
       model: openai("gpt-4o-mini"),
       prompt,
     });
-    return text || "Sem resposta.";
+    return stripThinkTags(text) || "Sem resposta.";
   }
 
-  if (!cfg?.geminiKey) return "Chave Gemini nao configurada.";
-  const google = createGoogleGenerativeAI({ apiKey: cfg.geminiKey });
+  const geminiKey = cfg?.geminiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
+  if (!geminiKey) return "Chave Gemini nao configurada.";
+  const google = createGoogleGenerativeAI({ apiKey: geminiKey });
   const { text } = await generateText({
     model: google("gemini-2.5-flash"),
     prompt,
@@ -29,63 +76,20 @@ export async function runAi(prompt: string, provider: "openai" | "gemini") {
   return text || "Sem resposta.";
 }
 
-export const readOnlyActions = new Set([
-  "listar_vendas",
-  "listar_clientes",
-  "listar_produtos",
-  "listar_despesas",
-  "listar_empresas",
-  "listar_usuarios",
-  "gerar_catalogo_produtos",
-]);
+export const readOnlyActions = new Set(
+  aiActions.filter((a) => a.readOnly === true).map((a) => a.name)
+);
 
-function inferReadOnlyActions(prompt: string) {
-  const p = prompt.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-  const rules: { name: string; re: RegExp }[] = [
-    { name: "listar_clientes", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(clientes?)/i },
-    { name: "listar_produtos", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(produtos?)/i },
-    { name: "listar_vendas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(vendas?)/i },
-    { name: "listar_despesas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(despesa|gasto|custos?)/i },
-    { name: "listar_empresas", re: /(listar|liste|lista|mostre|exiba|quantas|qtd).*(empresa|parceira)s?/i },
-    { name: "listar_usuarios", re: /(listar|liste|lista|mostre|exiba|quantos|qtd).*(usuarios?|vendedores?)/i },
-    { name: "gerar_catalogo_produtos", re: /(catalogo|gerar catalogo)/i },
-  ];
-  const hasQuantos = /quantos|quantas|qtd/.test(p);
-  const limitMatch = p.match(/\b(\d{1,3})\b/);
-  const limit = !hasQuantos && limitMatch ? Number(limitMatch[1]) : undefined;
-  const dateMatches = [...p.matchAll(/\b(\d{4}-\d{2}-\d{2})\b/g)].map((m) => m[1]);
-  const dateParams =
-    dateMatches.length >= 2 ? { from: dateMatches[0], to: dateMatches[1] } : {};
-  const baseParams = {
-    ...(limit ? { limit } : {}),
-    ...dateParams,
-  };
-  const actions = rules
-    .filter((r) => r.re.test(p))
-    .map((r) => {
-      if (r.name === "gerar_catalogo_produtos") return { name: r.name, params: {} };
-      if (r.name === "listar_vendas" || r.name === "listar_despesas") {
-        return { name: r.name, params: baseParams };
-      }
-      const { from, to, ...rest } = baseParams;
-      return { name: r.name, params: rest };
-    });
-  return actions.filter((a) => readOnlyActions.has(a.name));
-}
+type AiResult = { text: string; actions: unknown[]; links?: { label: string; url: string }[] };
 
 export async function runAiWithActions(
   prompt: string,
-  provider: "openai" | "gemini",
+  provider: "openai" | "gemini" | "litellm",
   ctx: ActionContext & {
-    mode?: "plan" | "execute";
-    executeAction?: { name: string; params: Record<string, unknown> };
     baseUrl?: string;
+    history?: { role: "user" | "assistant"; content: string }[];
   }
-) {
-  const languageHint =
-    "Responda sempre em portugues do Brasil. " +
-    "Quando precisar criar/atualizar algo, descreva o que pretende fazer e " +
-    "inclua uma linha no final com ACTIONS: [ {\"name\":\"...\",\"params\":{...}} ].";
+): Promise<AiResult> {
   const currency = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -96,12 +100,12 @@ export async function runAiWithActions(
     return `Despesas encontradas: ${rows.length}. Total: ${currency.format(total)}.`;
   };
 
-  if (ctx.mode === "plan") {
-    const inferred = inferReadOnlyActions(prompt);
-    if (inferred.length) {
-      return { text: "", actions: inferred };
-    }
-  }
+  const buildMarkdownTable = (headers: string[], rows: string[][]): string => {
+    const sep = headers.map(() => "---").join(" | ");
+    const header = headers.join(" | ");
+    const body = rows.map((r) => r.join(" | ")).join("\n");
+    return `| ${header} |\n| ${sep} |\n${rows.map((r) => `| ${r.join(" | ")} |`).join("\n")}`;
+  };
 
   const buildToolSummary = (executed: { name: string; result: unknown }[]) => {
     if (!executed.length) return "";
@@ -109,50 +113,155 @@ export async function runAiWithActions(
     for (const item of executed) {
       if (item.name === "listar_clientes" && Array.isArray(item.result)) {
         const rows = item.result as any[];
-        const nomes = rows.slice(0, 5).map((c) => c.nome).filter(Boolean);
-        parts.push(
-          rows.length
-            ? `Clientes encontrados: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
-            : "Nenhum cliente encontrado."
-        );
+        if (!rows.length) {
+          parts.push("Nenhum cliente encontrado.");
+        } else {
+          const tableRows = rows.slice(0, 15).map((c) => [
+            c.nome ?? "-",
+            c.telefone ?? "-",
+            c.email ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} cliente(s) encontrado(s):**\n\n${buildMarkdownTable(["Nome", "Telefone", "E-mail"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_produtos" && Array.isArray(item.result)) {
         const rows = item.result as any[];
-        const nomes = rows.slice(0, 5).map((p) => p.nome).filter(Boolean);
-        parts.push(
-          rows.length
-            ? `Produtos encontrados: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
-            : "Nenhum produto encontrado."
-        );
+        if (!rows.length) {
+          parts.push("Nenhum produto encontrado.");
+        } else {
+          const totalEstoque = rows.reduce((s: number, p: any) => s + (p.qtdEstoque ?? 0), 0);
+          const tableRows = rows.slice(0, 15).map((p) => [
+            p.nome ?? "-",
+            String(p.qtdEstoque ?? 0),
+            p.preco != null ? currency.format(Number(p.preco)) : "-",
+          ]);
+          parts.push(
+            `**${rows.length} produto(s) — estoque total: ${totalEstoque}:**\n\n${buildMarkdownTable(["Produto", "Estoque", "Preço"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_vendas" && Array.isArray(item.result)) {
-        parts.push(`Vendas encontradas: ${(item.result as any[]).length}.`);
+        const rows = item.result as any[];
+        if (!rows.length) {
+          parts.push("Nenhuma venda encontrada.");
+        } else {
+          const total = rows.reduce((s, v) => s + Number(v?.valorTotal ?? 0), 0);
+          const tableRows = rows.slice(0, 15).map((v) => [
+            v.cliente?.nome ?? v.clienteNome ?? "-",
+            v.createdAt ? new Date(v.createdAt).toLocaleDateString("pt-BR") : "-",
+            v.valorTotal != null ? currency.format(Number(v.valorTotal)) : "-",
+            v.status ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} venda(s) — total: ${currency.format(total)}:**\n\n${buildMarkdownTable(["Cliente", "Data", "Valor", "Status"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_despesas" && Array.isArray(item.result)) {
-        parts.push(summarizeDespesas(item.result as any[]));
+        const rows = item.result as any[];
+        if (!rows.length) {
+          parts.push("Nenhuma despesa encontrada.");
+        } else {
+          const total = rows.reduce((s, d) => s + Number(d?.valor ?? 0), 0);
+          const tableRows = rows.slice(0, 15).map((d) => [
+            d.descricao ?? "-",
+            d.data ? new Date(d.data).toLocaleDateString("pt-BR") : "-",
+            d.valor != null ? currency.format(Number(d.valor)) : "-",
+          ]);
+          parts.push(
+            `**${rows.length} despesa(s) — total: ${currency.format(total)}:**\n\n${buildMarkdownTable(["Descrição", "Data", "Valor"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_empresas" && Array.isArray(item.result)) {
         const rows = item.result as any[];
-        const nomes = rows.slice(0, 5).map((e) => e.nome).filter(Boolean);
-        parts.push(
-          rows.length
-            ? `Empresas encontradas: ${rows.length}. ${nomes.length ? `Exemplos: ${nomes.join(", ")}.` : ""}`.trim()
-            : "Nenhuma empresa encontrada."
-        );
+        if (!rows.length) {
+          parts.push("Nenhuma empresa encontrada.");
+        } else {
+          const tableRows = rows.slice(0, 10).map((e) => [
+            e.nome ?? "-",
+            e.cnpj ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} empresa(s) encontrada(s):**\n\n${buildMarkdownTable(["Nome", "CNPJ"], tableRows)}`
+          );
+        }
       } else if (item.name === "listar_usuarios" && Array.isArray(item.result)) {
-        const nomes = (item.result as any[])
-          .slice(0, 5)
-          .map((u) => u.nomeExibicao || u.username)
-          .filter(Boolean);
-        parts.push(
-          nomes.length
-            ? `Usuarios encontrados: ${nomes.join(", ")}.`
-            : "Nenhum usuario encontrado."
-        );
+        const rows = item.result as any[];
+        if (!rows.length) {
+          parts.push("Nenhum usuário encontrado.");
+        } else {
+          const tableRows = rows.slice(0, 10).map((u) => [
+            u.nomeExibicao ?? u.username ?? "-",
+            u.email ?? "-",
+            u.role ?? "-",
+          ]);
+          parts.push(
+            `**${rows.length} usuário(s):**\n\n${buildMarkdownTable(["Nome", "E-mail", "Perfil"], tableRows)}`
+          );
+        }
       } else if (item.name === "gerar_catalogo_produtos") {
         const total = (item.result as any)?.total ?? 0;
-        parts.push(`Catalogo gerado com ${total} produtos.`);
+        parts.push(`Catálogo gerado com ${total} produto(s).`);
+      } else if (item.result && typeof item.result === "object" && "error" in (item.result as object)) {
+        parts.push(`⚠️ ${(item.result as any).error}`);
+      } else if (item.name === "criar_produto") {
+        const r = item.result as any;
+        parts.push(`✅ **Produto cadastrado com sucesso!**\n- **Nome:** ${r?.nome ?? "-"}\n- **Valor de venda:** ${r?.valorVenda != null ? currency.format(Number(r.valorVenda)) : "-"}\n- **Estoque:** ${r?.qtdEstoque ?? 0} unidades`);
+      } else if (item.name === "criar_cliente") {
+        const r = item.result as any;
+        parts.push(`✅ **Cliente cadastrado com sucesso!**\n- **Nome:** ${r?.nome ?? "-"}\n- **Telefone:** ${r?.telefone ?? "-"}\n- **E-mail:** ${r?.email ?? "-"}`);
+      } else if (item.name === "criar_venda") {
+        const r = item.result as any;
+        parts.push(`✅ **Venda registrada com sucesso!** (ID: ${r?.id ?? "-"})`);
+      } else if (item.name === "criar_despesa") {
+        const r = item.result as any;
+        const valor = r?.valor != null ? currency.format(Number(r.valor)) : "-";
+        parts.push(`✅ **Despesa registrada!**\n- **Descrição:** ${r?.descricao ?? "-"}\n- **Valor:** ${valor}`);
+      } else if (item.name === "criar_empresa") {
+        const r = item.result as any;
+        parts.push(`✅ **Empresa cadastrada!**\n- **Nome:** ${r?.nome ?? "-"}`);
+      } else if (item.name === "criar_usuario") {
+        const r = item.result as any;
+        parts.push(`✅ **Usuário criado!**\n- **Nome:** ${r?.nomeExibicao ?? r?.username ?? "-"}`);
+      } else if (item.name === "criar_fornecedor") {
+        const r = item.result as any;
+        parts.push(`✅ **Fornecedor cadastrado!**\n- **Nome:** ${r?.nome ?? "-"}`);
+      } else if (item.name === "atualizar_produto") {
+        const r = item.result as any;
+        parts.push(`✅ **Produto atualizado!**\n- **Nome:** ${r?.produto ?? r?.nome ?? "-"}`);
+      } else if (item.name === "atualizar_venda") {
+        const r = item.result as any;
+        parts.push(`✅ **Venda atualizada!** (ID: ${r?.id ?? "-"})`);
+      } else if (item.name === "atualizar_usuario") {
+        const r = item.result as any;
+        parts.push(`✅ **Usuário atualizado!**\n- **Nome:** ${r?.nomeExibicao ?? r?.username ?? "-"}`);
+      } else if (item.name === "atualizar_despesa") {
+        const r = item.result as any;
+        parts.push(`✅ **Despesa atualizada!**\n- **Descrição:** ${r?.descricao ?? "-"}`);
+      } else if (item.name === "registrar_entrada_estoque") {
+        const r = item.result as any;
+        parts.push(`✅ **Estoque atualizado!**\n- **Produto:** ${r?.produto ?? "-"}\n- **Estoque anterior:** ${r?.qtdEstoqueAnterior ?? 0}\n- **Estoque novo:** ${r?.qtdEstoqueNova ?? 0}`);
       } else {
-        parts.push(`Acao executada: ${item.name}.`);
+        parts.push(`✅ Ação **${item.name.replace(/_/g, " ")}** executada com sucesso.`);
       }
     }
-    return parts.join("\n");
+    return parts.join("\n\n");
+  };
+
+  const buildLinks = (executed: { name: string; result: unknown }[]): { label: string; url: string }[] => {
+    const links: { label: string; url: string }[] = [];
+    for (const item of executed) {
+      if (item.name === "criar_venda" && item.result && typeof item.result === "object") {
+        const venda = item.result as { uuid?: string; id?: number };
+        const token = venda.uuid ?? String(venda.id ?? "");
+        if (token && ctx.baseUrl) {
+          links.push({ label: "Recibo PDF", url: `${ctx.baseUrl}/api/recibo?id=${token}` });
+        }
+      }
+      if (item.name === "gerar_catalogo_produtos" && ctx.baseUrl) {
+        links.push({ label: "Catalogo de Produtos (PDF)", url: `${ctx.baseUrl}/api/catalogo` });
+      }
+    }
+    return links;
   };
 
   const shouldAppendSummary = (text: string) =>
@@ -160,39 +269,76 @@ export async function runAiWithActions(
   const normalizedPrompt = prompt.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
   const isDespesasMes = /despesa|gasto|gastando/.test(normalizedPrompt) && /mes/.test(normalizedPrompt);
 
-  if (ctx.mode === "execute" && ctx.executeAction) {
-    const execResult = await callMcpTool(ctx.executeAction.name, ctx.executeAction.params, ctx);
-    const links: { label: string; url: string }[] = [];
-    if (ctx.executeAction.name === "criar_venda" && execResult && typeof execResult === "object") {
-      const venda = execResult as { uuid?: string; id?: number };
-      const token = venda.uuid ?? String(venda.id ?? "");
-      if (token) {
-        const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
-        links.push({ label: "Recibo PDF", url: `${baseUrl}/api/recibo?id=${token}` });
-      }
-    }
-    if (ctx.executeAction.name === "gerar_catalogo_produtos") {
-      const baseUrl = ctx.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
-      const search = (ctx.executeAction.params?.search as string | undefined) || "";
-      const url = search
-        ? `${baseUrl}/api/catalogo?q=${encodeURIComponent(search)}`
-        : `${baseUrl}/api/catalogo`;
-      links.push({ label: "Catalogo de Produtos (PDF)", url });
-    }
-    const summary = buildToolSummary([{ name: ctx.executeAction.name, result: execResult }]);
-    return { text: summary || "Acao executada com sucesso.", actions: [ctx.executeAction], links };
-  }
-
-  if (provider === "gemini") {
+  if (provider === "litellm") {
     const cfg = await prisma.config.findFirst();
-    if (!cfg?.geminiKey) return { text: "Chave Gemini nao configurada.", actions: [] };
-
-    const google = createGoogleGenerativeAI({ apiKey: cfg.geminiKey });
+    const litellmUrl = cfg?.litellmUrl || process.env.LITELLM_URL || "";
+    const litellmKey = cfg?.litellmKey || process.env.LITELLM_KEY || "";
+    if (!litellmUrl || !litellmKey) return { text: "LiteLLM nao configurado.", actions: [] };
+    const baseURL = litellmUrl.startsWith("http") ? litellmUrl : `https://${litellmUrl}`;
+    const litellm = createOpenAI({ baseURL, apiKey: litellmKey });
+    // .chat() forces the /chat/completions endpoint instead of /responses (Responses API)
+    const litellmModel = litellm.chat(cfg?.litellmModel || process.env.LITELLM_MODEL || "gpt-4o");
+    const enableThinking = cfg?.litellmEnableThinking ?? (process.env.LITELLM_ENABLE_THINKING === "true");
+    const litellmProviderOptions = enableThinking
+      ? { openai: { body: { chat_template_kwargs: { enable_thinking: true } } } }
+      : undefined;
     const executed: { name: string; result: unknown }[] = [];
     const tools = Object.fromEntries(
       aiActions
         .filter((action) => action.roles?.includes(ctx.role) ?? true)
-        .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
+        .map((action) => [
+          action.name,
+          tool({
+            description: action.description,
+            inputSchema: toolSchema,
+            execute: async (args) => {
+              const result = await callMcpTool(action.name, args ?? {}, ctx);
+              executed.push({ name: action.name, result });
+              return result;
+            },
+          }),
+        ])
+    );
+    let text = "";
+    try {
+    const result = await generateText({
+      model: litellmModel,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...(ctx.history ?? []),
+        { role: "user", content: prompt },
+      ],
+      tools,
+      stopWhen: stepCountIs(5),
+      ...(litellmProviderOptions && { providerOptions: litellmProviderOptions }),
+    });
+    text = stripThinkTags(result.text ?? "");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { text: `Erro ao chamar LiteLLM: ${msg.slice(0, 200)}`, actions: [] };
+    }
+    if (text && text.trim()) {
+      const summary = buildToolSummary(executed);
+      const links = buildLinks(executed);
+      if (summary && shouldAppendSummary(text)) return { text: summary, actions: executed, links };
+      if (summary) return { text: `${text}\n\n${summary}`, actions: executed, links };
+      return { text, actions: executed, links };
+    }
+    if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
+    const fallbackText = buildToolSummary(executed) || "Acao executada.";
+    return { text: fallbackText, actions: executed, links: buildLinks(executed) };
+  }
+
+  if (provider === "gemini") {
+    const cfg = await prisma.config.findFirst();
+    const geminiKey = cfg?.geminiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
+    if (!geminiKey) return { text: "Chave Gemini nao configurada.", actions: [] };
+
+    const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+    const executed: { name: string; result: unknown }[] = [];
+    const tools = Object.fromEntries(
+      aiActions
+        .filter((action) => action.roles?.includes(ctx.role) ?? true)
         .map((action) => [
           action.name,
           tool({
@@ -212,31 +358,30 @@ export async function runAiWithActions(
       const result = await generateText({
         model: google("gemini-2.5-flash"),
         messages: [
-          { role: "system", content: languageHint },
+          { role: "system", content: SYSTEM_PROMPT },
+          ...(ctx.history ?? []),
           { role: "user", content: prompt },
         ],
         tools,
+        stopWhen: stepCountIs(5),
       });
-      text = result.text ?? "";
+      text = stripThinkTags(result.text ?? "");
     } catch {
-      if (cfg?.openaiKey) {
-        const openai = createOpenAI({ apiKey: cfg.openaiKey });
+      const openaiKeyFallback = cfg?.openaiKey || process.env.OPENAI_API_KEY || "";
+      if (openaiKeyFallback) {
+        const openai = createOpenAI({ apiKey: openaiKeyFallback });
         try {
           const result = await generateText({
             model: openai("gpt-4o-mini"),
             messages: [
-              {
-                role: "system",
-                content:
-                  "Voce e um assistente do sistema BFX. Use as funcoes disponiveis para executar acoes. " +
-                  "Quando precisar criar/atualizar algo, descreva e inclua ACTIONS: [...] no final. " +
-                  "Responda sempre em portugues do Brasil.",
-              },
+              { role: "system", content: SYSTEM_PROMPT },
+              ...(ctx.history ?? []),
               { role: "user", content: prompt },
             ],
             tools,
+            stopWhen: stepCountIs(5),
           });
-          text = result.text ?? "";
+          text = stripThinkTags(result.text ?? "");
         } catch {
           return {
             text:
@@ -271,53 +416,31 @@ export async function runAiWithActions(
       }
     }
 
-    if (ctx.mode === "plan") {
-      const inferred = inferReadOnlyActions(prompt);
-      if (inferred.length) {
-        return { text: stripActions(text), actions: inferred };
-      }
-      const planned = extractActions(text);
-      return { text: stripActions(text), actions: planned };
-    }
     if (text && text.trim()) {
       const summary = buildToolSummary(executed);
+      const links = buildLinks(executed);
       if (summary && shouldAppendSummary(text)) {
-        return { text: summary, actions: executed };
+        return { text: summary, actions: executed, links };
       }
       if (summary) {
-        return { text: `${text}\n\n${summary}`, actions: executed };
+        return { text: `${text}\n\n${summary}`, actions: executed, links };
       }
-      return { text, actions: executed };
+      return { text, actions: executed, links };
     }
     if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
-    const fallbackText = executed
-      .map((a) => {
-        if (a.name === "listar_clientes" && Array.isArray(a.result)) {
-          const items = (a.result as any[]).slice(0, 3).map((c) => c.nome).filter(Boolean);
-          return items.length
-            ? `Clientes encontrados: ${items.join(", ")}.`
-            : "Nenhum cliente encontrado.";
-        }
-        if (a.name === "listar_despesas" && Array.isArray(a.result)) {
-          return summarizeDespesas(a.result as any[]);
-        }
-        return `Acao executada: ${a.name}.`;
-      })
-      .join("\n");
-
-    return { text: fallbackText, actions: executed };
+    return { text: buildToolSummary(executed) || "Ação executada.", actions: executed, links: buildLinks(executed) };
   }
 
   const cfg = await prisma.config.findFirst();
-  if (!cfg?.openaiKey) return { text: "Chave OpenAI nao configurada.", actions: [] };
+  const openaiKey = cfg?.openaiKey || process.env.OPENAI_API_KEY || "";
+  if (!openaiKey) return { text: "Chave OpenAI nao configurada.", actions: [] };
 
-  const openai = createOpenAI({ apiKey: cfg.openaiKey });
+  const openai = createOpenAI({ apiKey: openaiKey });
   const executed: { name: string; result: unknown }[] = [];
   const tools = Object.fromEntries(
     aiActions
       .filter((action) => action.roles?.includes(ctx.role) ?? true)
-      .filter((action) => (ctx.mode === "plan" ? readOnlyActions.has(action.name) : true))
       .map((action) => [
         action.name,
         tool({
@@ -335,14 +458,8 @@ export async function runAiWithActions(
   const { text } = await generateText({
     model: openai("gpt-4o-mini"),
     messages: [
-      {
-        role: "system",
-        content:
-          "Voce e um assistente do sistema BFX. Use as funcoes disponiveis para executar acoes. " +
-          "Respeite o perfil do usuario. Se for vendedor, nao tente acoes administrativas. " +
-          "Quando precisar criar/atualizar algo, descreva e inclua ACTIONS: [...] no final. " +
-          "Responda sempre em portugues do Brasil.",
-      },
+      { role: "system", content: SYSTEM_PROMPT },
+      ...(ctx.history ?? []),
       { role: "user", content: prompt },
     ],
     tools,
@@ -366,61 +483,18 @@ export async function runAiWithActions(
     }
   }
 
-  if (ctx.mode === "plan") {
-    const inferred = inferReadOnlyActions(prompt);
-    if (inferred.length) {
-      return { text: stripActions(text), actions: inferred };
-    }
-    const planned = extractActions(text);
-    return { text: stripActions(text), actions: planned };
-  }
   if (text && text.trim()) {
     const summary = buildToolSummary(executed);
+    const links = buildLinks(executed);
     if (summary && shouldAppendSummary(text)) {
-      return { text: summary, actions: executed };
+      return { text: summary, actions: executed, links };
     }
     if (summary) {
-      return { text: `${text}\n\n${summary}`, actions: executed };
+      return { text: `${text}\n\n${summary}`, actions: executed, links };
     }
-    return { text, actions: executed };
+    return { text, actions: executed, links };
   }
   if (executed.length === 0) return { text: "Sem resposta.", actions: executed };
 
-  const fallbackText = executed
-    .map((a) => {
-      if (a.name === "listar_clientes" && Array.isArray(a.result)) {
-        const items = (a.result as any[]).slice(0, 3).map((c) => c.nome).filter(Boolean);
-        return items.length
-          ? `Clientes encontrados: ${items.join(", ")}.`
-          : "Nenhum cliente encontrado.";
-      }
-      if (a.name === "listar_despesas" && Array.isArray(a.result)) {
-        return summarizeDespesas(a.result as any[]);
-      }
-      return `Acao executada: ${a.name}.`;
-    })
-    .join("\n");
-
-  return { text: fallbackText, actions: executed };
-}
-
-function extractActions(text: string) {
-  const marker = "ACTIONS:";
-  const idx = text.indexOf(marker);
-  if (idx === -1) return [];
-  const raw = text.slice(idx + marker.length).trim();
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as { name: string; params: Record<string, unknown> }[];
-  } catch {
-    // ignore
-  }
-  return [];
-}
-
-function stripActions(text: string) {
-  const marker = "ACTIONS:";
-  const idx = text.indexOf(marker);
-  if (idx === -1) return text.trim();
-  return text.slice(0, idx).trim();
+  return { text: buildToolSummary(executed) || "Ação executada.", actions: executed, links: buildLinks(executed) };
 }

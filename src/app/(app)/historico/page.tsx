@@ -1,215 +1,48 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { HistoricoBuscaFuzzy } from "@/components/historico-busca-fuzzy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
-import { revalidatePath } from "next/cache";
 import { FormSelect } from "@/components/form-select";
-import { DeleteVendaButton } from "@/components/delete-venda-button";
-import { EditVendaFormClient } from "@/components/edit-venda-form-client";
 import { DateInput } from "@/components/ui/date-input";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
-import fs from "fs";
-import { createAuditLog } from "@/lib/audit";
+import { CheckCircle2, Download } from "lucide-react";
+import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
+import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
+import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
+import { EditVendaSheetWrapper } from "@/components/edit-venda-sheet-wrapper";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
-import { CheckCircle2, AlertCircle, AlertTriangle, Printer } from "lucide-react";
-import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
+import { GerarBoletoButton } from "@/components/gerar-boleto-button";
+import { valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
+import { updateVenda, deleteVenda, enviarEmailEmpresa } from "@/app/(app)/historico/actions";
+import { fuzzyFindVendas } from "@/lib/db-search";
+import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
+import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  FORMA_PAGAMENTO,
+  FORMAS_PAGAMENTO_LIST,
+  formaFromLegacyFlags,
+  formaPagamentoLabel,
+} from "@/lib/forma-pagamento";
 
 const formatDateBR = (value: Date) =>
-  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo" }).format(value);
+  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
 
-type Search = { 
-  from?: string; 
-  to?: string; 
-  edit?: string; 
-  vendedor?: string; 
+type Search = {
+  from?: string;
+  to?: string;
+  edit?: string;
+  vendedor?: string;
   produto?: string;
   cliente?: string;
-  descontoFolha?: string;
-  boleto?: string;
+  formaPagamento?: string;
   page?: string;
+  q?: string;
 };
 
-async function updateVenda(formData: FormData) {
-  "use server";
-  const id = Number(formData.get("id") || 0);
-  const data = String(formData.get("data") || "");
-  const valor = Number(formData.get("valor") || 0);
-  const quantidade = Number(formData.get("quantidade") || 1);
-  const frete = Number(formData.get("frete") || 0);
-  const envio = Number(formData.get("envio") || 0);
-  const custo = Number(formData.get("custo_prod") || 0);
-  const temNota = formData.get("temNota") === "on";
-  const taxaNota = Number(formData.get("taxaNota") || 5.97);
-  const descontoEmFolha = formData.get("descontoEmFolha") === "on";
-  let boleto = formData.get("boleto") === "on";
-  if (descontoEmFolha && boleto) boleto = false;
-
-  const file = formData.get("comprovante") as File | null;
-
-  if (!id || !data) return;
-
-  const subtotal = valor * quantidade;
-  const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
-  const total = subtotal + frete;
-  const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
-
-  let comprovantePath: string | undefined = undefined;
-
-  const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
-  if (file && file.size > 0 && file.name) {
-    const ext = path.extname(file.name).toLowerCase();
-    if (allowedExtensions.includes(ext)) {
-      try {
-        const uploadDir = path.join(process.cwd(), "public/uploads/recibos");
-        if (!fs.existsSync(uploadDir)) {
-          await mkdir(uploadDir, { recursive: true });
-        }
-
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const baseName = path.basename(file.name, ext).replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "") || "anexo";
-        const filename = `${id}-${Date.now()}-${baseName}${ext}`;
-        const filePath = path.join(uploadDir, filename);
-
-        await writeFile(filePath, buffer);
-        comprovantePath = `/uploads/recibos/${filename}`;
-      } catch (error) {
-        console.error("Erro ao fazer upload do comprovante:", error);
-      }
-    }
-  }
-
-  await prisma.venda.update({
-    where: { id },
-    data: {
-      dataVenda: new Date(data),
-      vendedor: String(formData.get("vendedor") || ""),
-      produtoNome: String(formData.get("produto") || ""),
-      quantidade,
-      valorVenda: valor,
-      valorFrete: frete,
-      custoEnvio: envio,
-      parcelas: Number(formData.get("parcelas") || 1),
-      temNota,
-      taxaNota,
-      lucroLiquido: lucro,
-      descontoEmFolha,
-      boleto,
-      ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
-    },
-  });
-  await createAuditLog("venda:update", { vendaId: id, valor, quantidade, lucro });
-  revalidatePath("/historico");
-}
-
-async function updateVendaV2(formData: FormData): Promise<{ success: boolean; error?: string }> {
-  "use server";
-  const id = Number(formData.get("id") || 0);
-  const dataStr = String(formData.get("data") || "");
-  const frete = Number(formData.get("frete") || 0);
-  const envio = Number(formData.get("envio") || 0);
-  const temNota = formData.get("temNota") === "on";
-  const taxaNota = Number(formData.get("taxaNota") || 5.97);
-  const descontoEmFolha = formData.get("descontoEmFolha") === "on";
-  let boleto = formData.get("boleto") === "on";
-  if (descontoEmFolha && boleto) boleto = false;
-
-  const produtosJson = formData.get("produtos");
-  if (!produtosJson || !id || !dataStr) {
-    return { success: false, error: "Dados inválidos" };
-  }
-
-  let produtos: Array<{ produtoNome: string; custoProduto: number; valorVenda: number; quantidade: number; subtotal: number }>;
-  try {
-    produtos = JSON.parse(String(produtosJson));
-  } catch {
-    return { success: false, error: "Dados de produtos inválidos" };
-  }
-
-  if (!Array.isArray(produtos) || produtos.length === 0) {
-    return { success: false, error: "Nenhum produto informado" };
-  }
-
-  const subtotalProdutos = produtos.reduce((s, p) => s + p.subtotal, 0);
-  const totalVenda = subtotalProdutos + frete;
-  const valorDescontoNota = temNota ? (subtotalProdutos * taxaNota) / 100 : 0;
-  const custoTotal =
-    produtos.reduce((s, p) => s + p.custoProduto * p.quantidade, 0) + envio + valorDescontoNota;
-  const lucroLiquido = totalVenda - custoTotal;
-  const parcelas = Number(formData.get("parcelas") || 1);
-  const valorParcela = parcelas > 0 ? totalVenda / parcelas : 0;
-
-  const file = formData.get("comprovante") as File | null;
-  let comprovantePath: string | undefined;
-  const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
-  if (file && file.size > 0 && file.name) {
-    const ext = path.extname(file.name).toLowerCase();
-    if (allowedExtensions.includes(ext)) {
-      try {
-        const uploadDir = path.join(process.cwd(), "public/uploads/recibos");
-        if (!fs.existsSync(uploadDir)) await mkdir(uploadDir, { recursive: true });
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const baseName = path.basename(file.name, ext).replace(/\s+/g, "-").replace(/[^a-zA-Z0-9._-]/g, "") || "anexo";
-        const filename = `${id}-${Date.now()}-${baseName}${ext}`;
-        await writeFile(path.join(uploadDir, filename), buffer);
-        comprovantePath = `/uploads/recibos/${filename}`;
-      } catch (e) {
-        console.error("Erro upload comprovante:", e);
-      }
-    }
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.itemVenda.deleteMany({ where: { vendaId: id } });
-    await tx.itemVenda.createMany({
-      data: produtos.map((p) => ({
-        vendaId: id,
-        produtoNome: p.produtoNome,
-        custoProduto: p.custoProduto,
-        valorVenda: p.valorVenda,
-        quantidade: p.quantidade,
-        subtotal: p.subtotal,
-      })),
-    });
-    await tx.venda.update({
-      where: { id },
-      data: {
-        dataVenda: new Date(dataStr),
-        vendedor: String(formData.get("vendedor") || ""),
-        produtoNome: produtos[0]?.produtoNome || "",
-        custoProduto: produtos[0]?.custoProduto || 0,
-        quantidade: produtos[0]?.quantidade || 1,
-        valorVenda: produtos[0]?.valorVenda || 0,
-        valorFrete: frete,
-        custoEnvio: envio,
-        parcelas,
-        valorParcela,
-        lucroLiquido,
-        temNota,
-        taxaNota,
-        descontoEmFolha,
-        boleto,
-        ...(comprovantePath ? { comprovantePdf: comprovantePath } : {}),
-      },
-    });
-  });
-
-  await createAuditLog("venda:update", { vendaId: id, total: totalVenda, lucro: lucroLiquido });
-  revalidatePath("/historico");
-  return { success: true };
-}
-
-async function deleteVenda(formData: FormData) {
-  "use server";
-  const id = Number(formData.get("id") || 0);
-  if (!id) return;
-  await prisma.venda.delete({ where: { id } });
-  await createAuditLog("venda:delete", { vendaId: id });
-  revalidatePath("/historico");
-}
 
 function parseDateStart(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
@@ -220,6 +53,8 @@ function parseDateEnd(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999);
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
@@ -234,21 +69,65 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const produtos = await prisma.produto.findMany({ select: { nome: true }, orderBy: { nome: "asc" } });
   const clientes = await prisma.cliente.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } });
 
-  const where = {
-    dataVenda: { gte: start, lte: end },
-    vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
-    produtoNome: sp.produto && sp.produto !== "all" ? sp.produto : undefined,
-    clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
-    descontoEmFolha: sp.descontoFolha === "1" ? true : sp.descontoFolha === "0" ? false : undefined,
-    boleto: sp.boleto === "1" ? true : sp.boleto === "0" ? false : undefined,
-  };
+  const produtoFilter = sp.produto && sp.produto !== "all" ? sp.produto : undefined;
+  const queryBusca = sp.q?.trim() || "";
+
+  // Fuzzy search mode: quando `q` está presente, busca por cliente/produto/vendedor
+  let fuzzyVendaIds: number[] | null = null;
+  if (queryBusca) {
+    const fuzzyResults = await fuzzyFindVendas(queryBusca, 200);
+    fuzzyVendaIds = fuzzyResults.map((v) => v.id);
+  }
+
+  // Forma de pagamento: filtro pelo campo canonico `formaPagamento`.
+  // O backfill da migration garante que toda venda tem um valor.
+  const formaPagamento = sp.formaPagamento && sp.formaPagamento !== "all" ? sp.formaPagamento : undefined;
+  const formaPagamentoWhere = formaPagamento ? { formaPagamento } : {};
+
+  const where = fuzzyVendaIds !== null
+    ? { id: { in: fuzzyVendaIds } }
+    : {
+        dataVenda: { gte: start, lte: end },
+        vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
+        ...(produtoFilter && {
+          OR: [
+            { produtoNome: produtoFilter },
+            { itens: { some: { produtoNome: produtoFilter } } },
+          ],
+        }),
+        clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
+        ...formaPagamentoWhere,
+      };
 
   const totalVendas = await prisma.venda.count({ where });
   const totalPages = Math.ceil(totalVendas / pageSize);
 
+  // Totais agregados de TODOS os registros filtrados (independente de paginação).
+  // Buscamos apenas os campos necessários para valorTotalVenda/custoTotalVenda.
+  const vendasParaTotais = await prisma.venda.findMany({
+    where,
+    select: {
+      valorVenda: true,
+      quantidade: true,
+      valorFrete: true,
+      desconto: true,
+      custoProduto: true,
+      itens: { select: { subtotal: true, custoProduto: true, quantidade: true } },
+    },
+  });
+  const totaisFiltro = vendasParaTotais.reduce(
+    (acc, v) => {
+      acc.valor += valorTotalVenda(v);
+      const c = custoTotalVenda(v);
+      if (c != null) acc.custo += c;
+      return acc;
+    },
+    { valor: 0, custo: 0 },
+  );
+
   const vendas = await prisma.venda.findMany({
     where,
-    orderBy: { dataVenda: "desc" },
+    orderBy: [{ dataVenda: "desc" }, { id: "desc" }],
     skip: (page - 1) * pageSize,
     take: pageSize,
     select: {
@@ -258,18 +137,27 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       produtoNome: true,
       quantidade: true,
       valorVenda: true,
-      valorFrete: true,
+      valorFrete: true, desconto: true,
+      custoProduto: true,
       temNota: true,
       taxaNota: true,
       descontoEmFolha: true,
       boleto: true,
-      comprovantePdf: true,
-      assinaturaToken: true,
-      assinaturaStatus: true,
+      formaPagamento: true,
+      parcelas: true,
       asaasPaymentId: true,
       boletoUrl: true,
-      excedeuLimite: true,
-      cliente: { select: { nome: true } },
+      cliente: { select: { nome: true, empresaParceiraId: true, empresa: true } },
+      itens: {
+        select: { produtoNome: true, custoProduto: true, quantidade: true, subtotal: true },
+        orderBy: { id: "asc" },
+      },
+      assinaturaToken: true,
+      assinatura: {
+        select: {
+          assinaturaStatus: true,
+        },
+      },
     },
   });
 
@@ -279,17 +167,33 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       id: true, dataVenda: true, vendedor: true, produtoNome: true,
       quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
-      descontoEmFolha: true, boleto: true, comprovantePdf: true,
-      assinaturaToken: true, assinaturaStatus: true,
+      desconto: true, descontoEmFolha: true, boleto: true, formaPagamento: true,
       asaasPaymentId: true, boletoUrl: true,
       itens: {
-        select: {
-          produtoNome: true, custoProduto: true, valorVenda: true,
-          quantidade: true, subtotal: true,
-        },
+        select: { produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },
+        orderBy: { id: "asc" as const },
       },
     },
   }) : null;
+
+  // Buscar parcelas existentes separadamente para compatibilidade com produção
+  let editParcelasVenc: { numeroParcela: number; dataVencimento: string; valorParcela: number }[] = [];
+  if (editVenda && (editVenda.parcelas || 1) > 1) {
+    try {
+      const raw = await prisma.parcelaVencimento.findMany({
+        where: { vendaId: editVenda.id },
+        select: { numeroParcela: true, dataVencimento: true, valorParcela: true },
+        orderBy: { numeroParcela: "asc" },
+      });
+      editParcelasVenc = raw.map((p) => ({
+        numeroParcela: p.numeroParcela,
+        dataVencimento: p.dataVencimento.toISOString().slice(0, 10),
+        valorParcela: p.valorParcela,
+      }));
+    } catch {
+      // Tabela parcelas_vencimento pode não existir em produção antiga
+    }
+  }
 
   const buildUrl = (params: Partial<Search>) => {
     const newParams = { ...sp, ...params };
@@ -300,19 +204,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     return `/historico?${search.toString()}`;
   };
 
+  const xlsxParams = new URLSearchParams();
+  xlsxParams.set("from", start.toISOString().slice(0, 10));
+  xlsxParams.set("to", end.toISOString().slice(0, 10));
+  if (sp.vendedor && sp.vendedor !== "all") xlsxParams.set("vendedor", sp.vendedor);
+  if (sp.cliente && sp.cliente !== "all") xlsxParams.set("cliente", sp.cliente);
+  if (sp.produto && sp.produto !== "all") xlsxParams.set("produto", sp.produto);
+  if (sp.formaPagamento && sp.formaPagamento !== "all") xlsxParams.set("formaPagamento", sp.formaPagamento);
+  const xlsxHref = `/api/relatorios/vendas-xlsx?${xlsxParams.toString()}`;
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Histórico (Editar)</h1>
-        <p className="text-sm text-muted-foreground">Filtre e edite vendas do período.</p>
-      </div>
+      <PageHeader
+        title="Histórico de Vendas"
+        description="Filtre e edite vendas do período."
+        breadcrumbs={[{ label: "Histórico de Vendas" }]}
+      />
+
+      <HistoricoBuscaFuzzy defaultValue={sp.q || ""} />
 
       <Card>
         <CardHeader>
           <CardTitle>Filtro avançado</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <CardContent className="space-y-4">
+          <form className="hidden md:grid gap-3 sm:grid-cols-2 lg:grid-cols-6 items-center">
             <DateInput
               name="from"
               defaultValue={start.toISOString().slice(0, 10)}
@@ -351,35 +267,95 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               ]}
             />
             <FormSelect
-              name="descontoFolha"
-              defaultValue={sp.descontoFolha || "all"}
+              name="formaPagamento"
+              defaultValue={sp.formaPagamento || "all"}
               options={[
-                { value: "all", label: "Desconto folha (Todos)" },
-                { value: "1", label: "Desconto folha (Sim)" },
-                { value: "0", label: "Desconto folha (Não)" },
-              ]}
-            />
-            <FormSelect
-              name="boleto"
-              defaultValue={sp.boleto || "all"}
-              options={[
-                { value: "all", label: "Boleto (Todos)" },
-                { value: "1", label: "Boleto (Sim)" },
-                { value: "0", label: "Boleto (Não)" },
+                { value: "all", label: "Pagamento (Todos)" },
+                ...FORMAS_PAGAMENTO_LIST.map((f) => ({ value: f, label: formaPagamentoLabel(f) })),
               ]}
             />
             <input type="hidden" name="page" value="1" />
             <button className={cn(buttonVariants(), "cursor-pointer")}>Filtrar</button>
           </form>
+          <HistoricoFiltroSheet>
+            <form className="grid gap-4 grid-cols-1">
+              <DateInput
+                name="from"
+                defaultValue={start.toISOString().slice(0, 10)}
+                aria-label="Data inicial"
+              />
+              <DateInput
+                name="to"
+                defaultValue={end.toISOString().slice(0, 10)}
+                aria-label="Data final"
+              />
+              <FormSelect
+                name="vendedor"
+                defaultValue={sp.vendedor || "all"}
+                options={[
+                  { value: "all", label: "Vendedor (Todos)" },
+                  ...vendedores.map((v) => ({
+                    value: String(v.nomeExibicao || v.username),
+                    label: String(v.nomeExibicao || v.username),
+                  })),
+                ]}
+              />
+              <FormSelect
+                name="cliente"
+                defaultValue={sp.cliente || "all"}
+                options={[
+                  { value: "all", label: "Cliente (Todos)" },
+                  ...clientes.map((c) => ({ value: String(c.id), label: c.nome })),
+                ]}
+              />
+              <FormSelect
+                name="produto"
+                defaultValue={sp.produto || "all"}
+                options={[
+                  { value: "all", label: "Produto (Todos)" },
+                  ...produtos.map((p) => ({ value: p.nome, label: p.nome })),
+                ]}
+              />
+              <FormSelect
+                name="formaPagamento"
+                defaultValue={sp.formaPagamento || "all"}
+                options={[
+                  { value: "all", label: "Pagamento (Todos)" },
+                  ...FORMAS_PAGAMENTO_LIST.map((f) => ({ value: f, label: formaPagamentoLabel(f) })),
+                ]}
+              />
+              <input type="hidden" name="page" value="1" />
+              <button type="submit" className={cn(buttonVariants(), "cursor-pointer w-full touch-manipulation min-h-[44px]")}>
+                Aplicar filtros
+              </button>
+            </form>
+          </HistoricoFiltroSheet>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Vendas ({totalVendas})</CardTitle>
-          <div className="text-xs text-muted-foreground">Página {page} de {totalPages || 1}</div>
+          <div className="flex items-center gap-3">
+            <a
+              href={xlsxHref}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
+              download
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Exportar Excel</span>
+            </a>
+            <div className="text-xs text-muted-foreground">Pg {page}/{totalPages || 1}</div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <HistoricoVendasCards
+            vendas={vendas}
+            searchParams={sp}
+            gerarBoletoAction={gerarBoletoAsaas}
+          />
+          <div className="hidden md:block">
+          <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -389,19 +365,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-center">Qtd</TableHead>
                 <TableHead className="text-right">Valor Total</TableHead>
+                <TableHead className="text-right">Custo</TableHead>
+                <TableHead className="text-right">Margem</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
-                <TableHead className="text-center">Desconto folha</TableHead>
-                <TableHead className="text-center">Boleto</TableHead>
+                <TableHead>Pagamento</TableHead>
                 <TableHead className="text-center">Assinado</TableHead>
-                <TableHead className="text-center" title="Parcela excedeu o limite disponível">Excedeu</TableHead>
-                <TableHead></TableHead>
+                <TableHead className="sticky right-0 bg-background"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
-                    Sem dados para os filtros selecionados.
+                  <TableCell colSpan={12}>
+                    <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o período de busca." />
                   </TableCell>
                 </TableRow>
               ) : (
@@ -410,111 +386,116 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
-                    <TableCell>{v.produtoNome}</TableCell>
-                    <TableCell className="text-center font-medium">{v.quantidade || 1}</TableCell>
+                    <TableCell className="max-w-[250px]">
+                      {v.itens && v.itens.length > 1 ? (
+                        <details className="cursor-pointer">
+                          <summary className="truncate text-sm">
+                            {v.itens.length} produtos
+                          </summary>
+                          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                            {v.itens.map((item, idx) => (
+                              <li key={idx} className="flex justify-between gap-2">
+                                <span className="truncate">{item.produtoNome} ({item.quantidade}x)</span>
+                                <span className="tabular-nums shrink-0">{formatBRL(item.subtotal)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </details>
+                      ) : (
+                        <span className="block truncate" title={produtosTexto(v)}>
+                          {produtosTexto(v)}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center font-medium">{quantidadeTotal(v)}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatBRL(((v.valorVenda || 0) * (v.quantidade || 1)) + (v.valorFrete || 0))}
+                      {formatBRL(valorTotalVenda(v))}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {custoTotalVenda(v) != null ? formatBRL(custoTotalVenda(v)!) : <span className="text-muted-foreground opacity-30">—</span>}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {(() => {
+                        const m = margemVenda(v);
+                        if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
+                        return <span className={m > 0 ? "text-success" : m === 0 ? "text-warning" : "text-destructive"}>{m.toFixed(1)}%</span>;
+                      })()}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
-                        <span className="text-success font-bold" title={`Taxa: ${v.taxaNota}%`}>✓</span>
-                      ) : (
-                        <span className="text-muted-foreground opacity-30">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {v.descontoEmFolha ? (
-                        <span className="text-success font-bold">✓</span>
-                      ) : (
-                        <span className="text-muted-foreground opacity-30">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {v.boleto ? (
-                        (() => {
-                          const boletoUrl = v.boletoUrl;
-                          return boletoUrl ? (
-                            <a
-                              href={boletoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0")}
-                            >
-                              Ver boleto
-                            </a>
-                          ) : (
-                          <span className="flex flex-col items-center gap-1">
-                            <span className="text-amber-600 text-xs">Pendente</span>
-                            <form action={gerarBoletoAsaas} className="inline">
-                              <input type="hidden" name="vendaId" value={v.id} />
-                              <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs")}>
-                                Gerar boleto
-                              </button>
-                            </form>
-                          </span>
-                          );
-                        })()
-                      ) : (
-                        <span className="text-muted-foreground opacity-30">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {v.comprovantePdf ? (
-                        <div className="flex flex-col items-center gap-1">
-                          <span title="Documento assinado"><CheckCircle2 className="h-4 w-4 text-emerald-600 mx-auto" /></span>
-                          <a
-                            href={`/api/comprovante?vendaId=${v.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-6 text-[10px] gap-1 px-2")}
-                            title="Abrir e imprimir documento assinado"
-                          >
-                            <Printer className="h-3 w-3" />
-                            Imprimir
-                          </a>
-                        </div>
-                      ) : v.descontoEmFolha && v.assinaturaToken ? (
-                        <LinkAssinaturaButton
-                          token={v.assinaturaToken}
-                          status={v.assinaturaStatus}
-                          label="Link"
-                        />
-                      ) : (
-                        <span title="Aguardando assinatura"><AlertCircle className="h-4 w-4 text-amber-500 mx-auto" /></span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {v.excedeuLimite === 1 ? (
-                        <span title="Parcela excedeu o limite disponível">
-                          <AlertTriangle className="h-4 w-4 text-amber-500 mx-auto" />
+                        <span title={`Taxa: ${v.taxaNota}%`} aria-label="Com nota" className="inline-flex justify-center">
+                          <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
                         </span>
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
                       )}
                     </TableCell>
                     <TableCell>
+                      {(() => {
+                        // Forma canonica: usa a coluna nova quando preenchida, senao deriva dos flags legados.
+                        const forma = (v.formaPagamento as keyof typeof FORMA_PAGAMENTO | null) ??
+                          formaFromLegacyFlags({
+                            descontoEmFolha: v.descontoEmFolha,
+                            boleto: v.boleto,
+                            parcelas: v.parcelas,
+                          });
+                        return (
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="text-xs font-medium">{formaPagamentoLabel(forma)}</span>
+                            {forma === FORMA_PAGAMENTO.BOLETO && (
+                              v.boletoUrl ? (
+                                <a
+                                  href={v.boletoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0 text-xs")}
+                                >
+                                  Ver boleto
+                                </a>
+                              ) : (
+                                <GerarBoletoButton
+                                  vendaId={v.id}
+                                  gerarBoletoAction={gerarBoletoAsaas}
+                                  className="text-xs"
+                                >
+                                  Gerar boleto
+                                </GerarBoletoButton>
+                              )
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {v.assinatura?.assinaturaStatus === 'assinado' ? (
+                        <CheckCircle2 className="h-4 w-4 text-success mx-auto" />
+                      ) : v.assinaturaToken ? (
+                        <span className="inline-block h-2 w-2 rounded-full bg-warning" title="Aguardando assinatura" />
+                      ) : (
+                        <span className="text-muted-foreground opacity-30">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="sticky right-0 bg-background">
                       <div className="flex flex-wrap items-center gap-2 justify-end">
                         <Link
-                          href={buildUrl({ edit: v.id.toString() }) + "#editar-venda"}
+                          href={buildUrl({ edit: v.id.toString() })}
                           className={buttonVariants({ variant: "outline", size: "sm" })}
                         >
                           Editar
                         </Link>
-                        <a 
-                          href={`/api/recibo?id=${v.id}`}
-                          className={buttonVariants({ variant: "ghost", size: "sm" })}
-                          title="Recibo de Venda"
-                        >
-                          Recibo
-                        </a>
-                        {v.descontoEmFolha && (
-                          <a 
-                            href={`/api/recibo?id=${v.id}&tipo=autorizacao`}
+                        {v.assinatura?.assinaturaStatus === 'assinado' ? (
+                          <a
+                            href={`/api/assinatura/documento?vendaId=${v.id}`}
+                            download={`recibo-assinado-${v.id}.pdf`}
                             className={buttonVariants({ variant: "ghost", size: "sm" })}
-                            title="Autorização de Desconto em Folha"
                           >
-                            Autorização
+                            Baixar Assinado
                           </a>
+                        ) : v.assinaturaToken ? (
+                          <CopiarLinkAssinatura token={v.assinaturaToken} />
+                        ) : null}
+                        {(v.cliente?.empresaParceiraId || v.cliente?.empresa) && (
+                          <EnviarEmailEmpresaButton vendaId={v.id} onSend={enviarEmailEmpresa} />
                         )}
                       </div>
                     </TableCell>
@@ -522,16 +503,58 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ))
               )}
             </TableBody>
+            {vendas.length > 0 && (
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5} className="text-right font-semibold">
+                    Totais ({totalVendas} {totalVendas === 1 ? "venda" : "vendas"})
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-semibold">
+                    {formatBRL(totaisFiltro.valor)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums font-semibold">
+                    {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
+                  </TableCell>
+                  <TableCell colSpan={5} />
+                </TableRow>
+              </TableFooter>
+            )}
           </Table>
+          </div>
+          </div>
+
+          {/* Footer com totais — versão mobile */}
+          {vendas.length > 0 && (
+            <div className="md:hidden rounded-xl border bg-muted/30 px-4 py-3">
+              <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
+                <span>Totais ({totalVendas})</span>
+                <span>todos os filtrados</span>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                  <div className="text-base font-semibold tabular-nums text-primary">
+                    {formatBRL(totaisFiltro.valor)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase text-muted-foreground">Custo</div>
+                  <div className="text-base font-semibold tabular-nums">
+                    {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t pt-4">
-              <div className="text-xs text-muted-foreground">Mostrando {vendas.length} de {totalVendas} resultados</div>
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t pt-4">
+              <div className="text-xs text-muted-foreground order-2 sm:order-1">Mostrando {vendas.length} de {totalVendas} resultados</div>
+              <div className="flex items-center gap-2 order-1 sm:order-2">
                 {page > 1 ? (
                   <Link 
                     href={buildUrl({ page: (page - 1).toString() })}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
                   >
                     Anterior
                   </Link>
@@ -543,7 +566,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {page < totalPages ? (
                   <Link 
                     href={buildUrl({ page: (page + 1).toString() })}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
                   >
                     Próxima
                   </Link>
@@ -559,39 +582,21 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       </Card>
 
       {editVenda && (
-        <EditVendaFormClient
-          editVenda={{
-            id: editVenda.id,
-            dataVenda: editVenda.dataVenda,
-            vendedor: editVenda.vendedor,
-            valorFrete: editVenda.valorFrete ?? 0,
-            custoEnvio: editVenda.custoEnvio ?? 0,
-            parcelas: editVenda.parcelas,
-            temNota: editVenda.temNota,
-            taxaNota: editVenda.taxaNota ?? 5.97,
-            descontoEmFolha: editVenda.descontoEmFolha ?? false,
-            boleto: editVenda.boleto ?? false,
-            comprovantePdf: editVenda.comprovantePdf,
-            assinaturaToken: editVenda.assinaturaToken,
-            assinaturaStatus: editVenda.assinaturaStatus,
-            boletoUrl: editVenda.boletoUrl,
-            itens: editVenda.itens?.length
-              ? editVenda.itens
-              : editVenda.produtoNome
-                ? [{
-                    produtoNome: editVenda.produtoNome,
-                    custoProduto: editVenda.custoProduto ?? 0,
-                    valorVenda: editVenda.valorVenda ?? 0,
-                    quantidade: editVenda.quantidade ?? 1,
-                    subtotal: (editVenda.valorVenda ?? 0) * (editVenda.quantidade ?? 1),
-                  }]
-                : [],
-          }}
-          vendedores={vendedores}
-          updateAction={updateVendaV2}
-          deleteAction={deleteVenda}
-          gerarBoletoAction={gerarBoletoAsaas}
-        />
+        <EditVendaSheetWrapper
+          editId={editVenda.id}
+          title={`Editando venda #${editVenda.id}`}
+          description="Ajuste os dados e salve para atualizar o Histórico."
+        >
+          <EditVendaHistoricoForm
+            editVenda={editVenda}
+            editParcelasVenc={editParcelasVenc}
+            vendedores={vendedores}
+            updateAction={updateVenda}
+            deleteAction={deleteVenda}
+            gerarBoletoAction={gerarBoletoAsaas}
+            initialTotal={valorTotalVenda(editVenda)}
+          />
+        </EditVendaSheetWrapper>
       )}
     </div>
   );

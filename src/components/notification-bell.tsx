@@ -1,0 +1,160 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import { Bell } from 'lucide-react';
+import { toast } from 'sonner';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+type Notificacao = {
+  id: number;
+  mensagem: string;
+  lida: boolean;
+  criadoEm: string;
+  link: string | null;
+};
+
+function formatTimeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'agora';
+  if (diffMins < 60) return `${diffMins} min atrás`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h atrás`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d atrás`;
+}
+
+export function NotificationBell() {
+  const [notifications, setNotifications] = useState<Notificacao[]>([]);
+  const [open, setOpen] = useState(false);
+  const seenIds = useRef<Set<number>>(new Set());
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notificacoes');
+      if (!res.ok) return;
+      const data: Notificacao[] = await res.json();
+
+      for (const n of data) {
+        if (!seenIds.current.has(n.id)) {
+          seenIds.current.add(n.id);
+          if (seenIds.current.size > data.length) {
+            toast.info(n.mensagem);
+          }
+        }
+      }
+
+      setNotifications(data);
+    } catch {
+      // silently ignore fetch errors
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const markOneRead = async (id: number) => {
+    try {
+      await fetch('/api/notificacoes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch {
+      // silently ignore
+    }
+  };
+
+  const markAllRead = async () => {
+    const ids = notifications.map((n) => n.id);
+    if (ids.length === 0) return;
+    try {
+      await fetch('/api/notificacoes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      setNotifications([]);
+      setOpen(false);
+    } catch {
+      // silently ignore
+    }
+  };
+
+  const unreadCount = notifications.length;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] hover:bg-sidebar-accent hover:text-[var(--sidebar-foreground)] transition-colors"
+          aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
+        >
+          <Bell className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <span className="text-sm font-semibold text-foreground">Notificações</span>
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllRead}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Marcar todas como lidas
+            </button>
+          )}
+        </div>
+        {notifications.length === 0 ? (
+          <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+            Nenhuma notificação pendente.
+          </div>
+        ) : (
+          <ul className="max-h-96 overflow-y-auto divide-y divide-border">
+            {notifications.map((n) => (
+              <li key={n.id} className="px-4 py-3 hover:bg-muted/50 transition-colors">
+                {n.link ? (
+                  <a
+                    href={n.link}
+                    className="block"
+                    onClick={() => { markOneRead(n.id); setOpen(false); }}
+                  >
+                    <p className="text-sm text-foreground">{n.mensagem}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatTimeAgo(n.criadoEm)}
+                    </p>
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    className="w-full text-left"
+                    onClick={() => markOneRead(n.id)}
+                  >
+                    <p className="text-sm text-foreground">{n.mensagem}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formatTimeAgo(n.criadoEm)}
+                    </p>
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}

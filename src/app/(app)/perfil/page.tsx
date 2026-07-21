@@ -1,7 +1,9 @@
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { MaskedInput } from "@/components/masked-input";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { revalidatePath } from "next/cache";
@@ -33,11 +35,11 @@ export default async function Page() {
   // Buscar comissões do usuário (vendedor)
   const vendas = await prisma.venda.findMany({
     where: { vendedor: user.nomeExibicao || user.username || undefined },
-    select: { lucroLiquido: true }
+    select: { valorVenda: true, quantidade: true, valorFrete: true, desconto: true, itens: { select: { subtotal: true } } }
   });
 
   const pct = user.comissaoPct || 0;
-  const totalComissao = vendas.reduce((sum, v) => sum + ((v.lucroLiquido || 0) * pct) / 100, 0);
+  const totalComissao = vendas.reduce((sum, v) => sum + (valorTotalVenda(v) * pct) / 100, 0);
 
   return (
     <div className="space-y-6">
@@ -52,17 +54,32 @@ export default async function Page() {
         {/* Dados Pessoais */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-blue-900">Dados pessoais</CardTitle>
+            <CardTitle className="text-primary">Dados pessoais</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={savePerfil} className="grid gap-3 md:grid-cols-2">
               <input type="hidden" name="id" value={user.id} />
-              <Input name="nome" defaultValue={user.nomeExibicao || ""} placeholder="Nome" aria-label="Nome" />
-              <Input name="email" defaultValue={user.email || ""} placeholder="Email" aria-label="Email" />
-              <MaskedInput name="telefone" mask="phone" defaultValue={user.telefone || ""} aria-label="Telefone" />
-              <Input name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" aria-label="Endereço" />
-              <Input name="senha" defaultValue={user.password} placeholder="Senha" aria-label="Senha" />
-              <button className={cn(buttonVariants(), "md:col-span-2 bg-blue-900 hover:bg-blue-800 cursor-pointer")}>Salvar Alterações</button>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-nome">Nome</Label>
+                <Input id="perfil-nome" name="nome" defaultValue={user.nomeExibicao || ""} placeholder="Nome" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-email">E-mail</Label>
+                <Input id="perfil-email" name="email" defaultValue={user.email || ""} placeholder="Email" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-telefone">Telefone</Label>
+                <MaskedInput id="perfil-telefone" name="telefone" mask="phone" defaultValue={user.telefone || ""} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-endereco">Endereço</Label>
+                <Input id="perfil-endereco" name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="perfil-senha">Senha</Label>
+                <Input id="perfil-senha" name="senha" defaultValue={user.password} placeholder="Senha" type="password" />
+              </div>
+              <button className={cn(buttonVariants(), "md:col-span-2 bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
             </form>
           </CardContent>
         </Card>
@@ -70,16 +87,16 @@ export default async function Page() {
         {/* Resumo de Comissões */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-blue-900">Suas Comissões</CardTitle>
+            <CardTitle className="text-primary">Suas Comissões</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Total Acumulado</p>
-              <div className="text-2xl font-bold text-emerald-700">{formatBRL(totalComissao)}</div>
+              <div className="text-2xl font-bold text-primary">{formatBRL(totalComissao)}</div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Sua Taxa</p>
-              <div className="text-lg font-semibold text-blue-900">{pct}%</div>
+              <div className="text-lg font-semibold text-primary">{pct}%</div>
             </div>
             <Link 
               href="/comissoes"

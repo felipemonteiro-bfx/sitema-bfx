@@ -7,27 +7,47 @@ import {
   getOrCreateCustomer,
   createBoletoPayment,
 } from "@/lib/asaas";
+import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
+import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 
-/** Gera boleto Asaas para uma venda com opção boleto e sem boletoUrl. */
-export async function gerarBoletoAsaas(formData: FormData) {
+export type GerarBoletoResult = { success: boolean; error?: string };
+
+/** Gera boleto Asaas para uma venda com opção boleto e sem boletoUrl. Retorna erro legível para o usuário. */
+export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoResult> {
   const vendaId = Number(formData.get("vendaId") || 0);
-  if (!vendaId || !getAsaasConfig()) return;
+  if (!vendaId) return { success: false, error: "ID da venda inválido." };
+  const cfg = await prisma.config.findFirst();
+  const asaasConfig = getAsaasConfig(cfg ?? undefined);
+  if (!asaasConfig) {
+    return { success: false, error: "Asaas não configurado. Configure em Configurações → Asaas ou ASAAS_API_KEY no servidor." };
+  }
 
   const venda = await prisma.venda.findUnique({
     where: { id: vendaId },
     include: {
       cliente: true,
       parcelasVencimento: { orderBy: { numeroParcela: "asc" }, take: 1 },
+      itens: { select: { subtotal: true } },
     },
   });
 
-  if (!venda || !venda.boleto || venda.boletoUrl || !venda.clienteId || !venda.cliente) return;
+  if (!venda) return { success: false, error: "Venda não encontrada." };
+  if (!venda.boleto) return { success: false, error: "Esta venda não está marcada como boleto." };
+  if (venda.boletoUrl) return { success: false, error: "Boleto já foi gerado." };
+  if (!venda.clienteId || !venda.cliente) return { success: false, error: "Cliente não vinculado à venda." };
   const cliente = venda.cliente;
-  if (!cliente.cpf && !cliente.cnpj) return;
+  if (!cliente.cpf && !cliente.cnpj) {
+    return {
+      success: false,
+      error: `O cliente "${cliente.nome}" precisa ter CPF ou CNPJ cadastrado. Edite em Cadastros → Clientes.`,
+    };
+  }
 
   try {
     const totalVenda =
-      ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
+      venda.itens && venda.itens.length > 0
+        ? venda.itens.reduce((s, i) => s + i.subtotal, 0) + (venda.valorFrete ?? 0)
+        : ((venda.valorVenda || 0) * (venda.quantidade || 1)) + (venda.valorFrete || 0);
     const firstDue =
       venda.parcelasVencimento[0]?.dataVencimento?.toISOString().slice(0, 10) ||
       (() => {
@@ -52,7 +72,8 @@ export async function gerarBoletoAsaas(formData: FormData) {
         telefone: cliente.telefone,
         asaasCustomerId: clienteAsaas.asaasCustomerId ?? null,
       },
-      prisma
+      prisma,
+      asaasConfig
     );
 
     const parcelas = venda.parcelas || 1;
@@ -63,16 +84,33 @@ export async function gerarBoletoAsaas(formData: FormData) {
       ...(parcelas > 1 && { installmentCount: parcelas, totalValue: totalVenda }),
       description: `Venda #${venda.id}`,
       externalReference: String(venda.id),
-    });
+    }, asaasConfig);
 
     await prisma.venda.update({
       where: { id: vendaId },
       data: { asaasPaymentId: payment.id, boletoUrl: payment.bankSlipUrl || null },
     });
-  } catch (err) {
-    console.error("Erro ao gerar boleto Asaas:", err);
-  }
 
-  revalidatePath("/historico");
-  revalidatePath("/boletos");
+    const waConfig = await getWhatsAppFlags();
+    if (waConfig?.autoBoleto && payment.bankSlipUrl && cliente.telefone) {
+      const msg = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${payment.bankSlipUrl}`;
+      void enviarWhatsApp({
+        telefone: cliente.telefone,
+        clienteId: cliente.id,
+        origem: "boleto",
+        template: comFallback(TEMPLATES.boleto, [cliente.nome], msg),
+      });
+    }
+
+    revalidatePath("/historico");
+    revalidatePath("/boletos");
+    return { success: true };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error("Erro ao gerar boleto Asaas:", err);
+    return {
+      success: false,
+      error: errMsg || "Falha ao gerar boleto no Asaas. Tente novamente.",
+    };
+  }
 }

@@ -5,7 +5,7 @@ import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm transition-all duration-200 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg~*]:pl-7",
+  "relative flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-sm transition-all duration-200",
   {
     variants: {
       variant: {
@@ -61,12 +61,18 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         className={cn(alertVariants({ variant, animated }), className)}
         {...props}
       >
-        {showIcon && Icon && <Icon className="h-4 w-4" />}
-        {children}
+        {showIcon && Icon && (
+          <span className="mt-0.5 inline-flex h-4 w-4 shrink-0 items-center justify-center">
+            <Icon className="h-4 w-4" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          {children}
+        </div>
         {dismissible && (
           <button
             onClick={onDismiss}
-            className="absolute right-3 top-3 rounded-md p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            className="inline-flex h-6 w-6 shrink-0 items-center justify-center self-start rounded-md p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" />
@@ -115,7 +121,7 @@ const AlertBanner = React.forwardRef<HTMLDivElement, AlertBannerProps>(
       variant={variant}
       showIcon
       animated
-      className={cn("flex items-start justify-between gap-4", className)}
+      className={cn("justify-between gap-4", className)}
       {...props}
     >
       <div className="flex-1">

@@ -23,7 +23,7 @@ export async function GET(
 
     // Buscar vendas para calcular comprometimento atual
     const vendas = await prisma.venda.findMany({
-      where: { clienteId }
+      where: { clienteId, status: { not: { in: ["cancelada", "estornada"] } } }
     });
 
     let comprometimentoAtual = 0;
@@ -52,7 +52,7 @@ export async function GET(
       margemDisponivel,
       tetoParcelaMax
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Erro ao consultar limite" }, { status: 500 });
   }
 }

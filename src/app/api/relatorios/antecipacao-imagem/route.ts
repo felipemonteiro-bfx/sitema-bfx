@@ -1,0 +1,277 @@
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+
+function formatBRL(value: number): string {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+}
+
+function formatDateBR(value: Date | string): string {
+  const d = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(d);
+}
+
+function getMesAnoLabel(date: Date): string {
+  const months = ["Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  return `${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
+
+function getMesAnoKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const idsStr = searchParams.get("ids");
+
+  if (!idsStr) {
+    return new Response("Nenhum ID fornecido", { status: 400 });
+  }
+
+  const ids = idsStr.split(",").map(Number).filter((n) => !isNaN(n));
+
+  if (ids.length === 0) {
+    return new Response("IDs invalidos", { status: 400 });
+  }
+
+  try {
+    const vendas = await prisma.venda.findMany({
+      where: { id: { in: ids } },
+      include: {
+        cliente: {
+          select: {
+            nome: true,
+            cpf: true,
+            cnpj: true,
+            empresa: true,
+            telefone: true,
+            email: true,
+          },
+        },
+        itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
+        parcelasVencimento: {
+          select: {
+            numeroParcela: true,
+            dataVencimento: true,
+            valorParcela: true,
+          },
+          orderBy: { dataVencimento: "asc" },
+        },
+      },
+    });
+
+    // Agrupar por empresa
+    const empresaMap: Record<string, {
+      vendas: typeof vendas;
+      parcelas: { numeroParcela: number; dataVencimento: Date; valorParcela: number; vendaId: number }[];
+    }> = {};
+
+    for (const venda of vendas) {
+      const empresaNome = venda.cliente?.empresa || "Sem empresa";
+      if (!empresaMap[empresaNome]) {
+        empresaMap[empresaNome] = { vendas: [], parcelas: [] };
+      }
+      empresaMap[empresaNome].vendas.push(venda);
+      for (const p of venda.parcelasVencimento) {
+        empresaMap[empresaNome].parcelas.push({ ...p, vendaId: venda.id });
+      }
+    }
+
+    // Buscar dados das empresas parceiras para CNPJ e contato
+    const empresaNomes = Object.keys(empresaMap);
+    const empresasParceiras = await prisma.empresaParceira.findMany({
+      where: { nome: { in: empresaNomes } },
+    });
+    const empresaParceiraMap: Record<string, { cnpj: string | null; telefoneRh: string | null; emailRh: string | null }> = {};
+    for (const ep of empresasParceiras) {
+      empresaParceiraMap[ep.nome] = { cnpj: ep.cnpj, telefoneRh: ep.telefoneRh, emailRh: ep.emailRh };
+    }
+
+    // --- GERAR PDF ---
+    const PAGE_WIDTH = 595;
+    const MARGIN = 36;
+    const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+
+    const pdfDoc = await PDFDocument.create();
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    // Calcular altura total estimada para dimensionar a pagina
+    let estimatedHeight = 120; // header
+    for (const empresa of Object.keys(empresaMap)) {
+      const data = empresaMap[empresa];
+      estimatedHeight += 80; // bloco empresa
+      // Agrupar parcelas por mes
+      const parcelasPorMes: Record<string, typeof data.parcelas> = {};
+      for (const p of data.parcelas) {
+        const key = getMesAnoKey(p.dataVencimento);
+        if (!parcelasPorMes[key]) parcelasPorMes[key] = [];
+        parcelasPorMes[key].push(p);
+      }
+      const numMeses = Object.keys(parcelasPorMes).length;
+      const numParcelas = data.parcelas.length;
+      estimatedHeight += numMeses * 30 + numParcelas * 18 + 40; // linhas de parcelas + subtotal
+    }
+    estimatedHeight += 60; // footer
+
+    const PAGE_HEIGHT = Math.max(842, estimatedHeight + 80);
+    const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+
+    // Cor primaria: azul escuro
+    const colorPrimary = rgb(0.07, 0.15, 0.3);
+    const colorLight = rgb(0.95, 0.95, 0.97);
+    const colorBorder = rgb(0.82, 0.82, 0.85);
+    const colorText = rgb(0.15, 0.15, 0.15);
+    const colorMuted = rgb(0.5, 0.5, 0.55);
+    const colorSuccess = rgb(0.08, 0.55, 0.25);
+    const colorWhite = rgb(1, 1, 1);
+
+    let y = PAGE_HEIGHT;
+
+    // --- HEADER ---
+    page.drawRectangle({ x: 0, y: PAGE_HEIGHT - 70, width: PAGE_WIDTH, height: 70, color: colorPrimary });
+    page.drawText("RELATORIO DE ANTECIPACAO", {
+      x: MARGIN, y: PAGE_HEIGHT - 35, size: 18, font: fontBold, color: colorWhite,
+    });
+    const dataGeracao = `Gerado em: ${new Date().toLocaleDateString("pt-BR")}`;
+    const dataGeracaoWidth = font.widthOfTextAtSize(dataGeracao, 9);
+    page.drawText(dataGeracao, {
+      x: PAGE_WIDTH - MARGIN - dataGeracaoWidth, y: PAGE_HEIGHT - 35, size: 9, font, color: rgb(0.8, 0.85, 0.95),
+    });
+    const totalVendas = vendas.reduce((sum, v) => sum + valorTotalVenda(v), 0);
+    page.drawText(`${ids.length} venda(s) selecionada(s)  |  Total Geral: ${formatBRL(totalVendas)}`, {
+      x: MARGIN, y: PAGE_HEIGHT - 55, size: 9, font, color: rgb(0.75, 0.82, 0.95),
+    });
+
+    y = PAGE_HEIGHT - 90;
+
+    // --- BLOCOS POR EMPRESA ---
+    let totalGeral = 0;
+
+    for (const [empresaNome, data] of Object.entries(empresaMap)) {
+      const parceiro = empresaParceiraMap[empresaNome];
+      const totalEmpresa = data.vendas.reduce((sum, v) => sum + valorTotalVenda(v), 0);
+      totalGeral += totalEmpresa;
+
+      // Agrupar parcelas por mes
+      const parcelasPorMes: Record<string, typeof data.parcelas> = {};
+      for (const p of data.parcelas) {
+        const key = getMesAnoKey(p.dataVencimento);
+        if (!parcelasPorMes[key]) parcelasPorMes[key] = [];
+        parcelasPorMes[key].push(p);
+      }
+
+      // Calcular bloco altura para cabecalho
+      const blocoHeaderH = 50;
+      const blocoX = MARGIN;
+      const blocoW = CONTENT_WIDTH;
+
+      // Fundo do header da empresa
+      page.drawRectangle({ x: blocoX, y: y - blocoHeaderH, width: blocoW, height: blocoHeaderH, color: colorLight });
+      page.drawLine({ start: { x: blocoX, y: y - blocoHeaderH }, end: { x: blocoX + blocoW, y: y - blocoHeaderH }, thickness: 1, color: colorBorder });
+      page.drawLine({ start: { x: blocoX, y }, end: { x: blocoX + blocoW, y }, thickness: 1, color: colorBorder });
+      page.drawLine({ start: { x: blocoX, y: y - blocoHeaderH }, end: { x: blocoX, y }, thickness: 1, color: colorBorder });
+      page.drawLine({ start: { x: blocoX + blocoW, y: y - blocoHeaderH }, end: { x: blocoX + blocoW, y }, thickness: 1, color: colorBorder });
+
+      // Nome da empresa (grande e bold)
+      page.drawText(empresaNome, {
+        x: blocoX + 10, y: y - 22, size: 14, font: fontBold, color: colorPrimary,
+      });
+
+      // CNPJ e contato
+      const cnpjText = parceiro?.cnpj ? `CNPJ: ${parceiro.cnpj}` : "";
+      const contatoText = parceiro?.telefoneRh ? `Tel: ${parceiro.telefoneRh}` : (parceiro?.emailRh ? `Email: ${parceiro.emailRh}` : "");
+
+      if (cnpjText) {
+        page.drawText(cnpjText, { x: blocoX + 10, y: y - 38, size: 8, font, color: colorMuted });
+      }
+      if (contatoText) {
+        const cnpjWidth = cnpjText ? font.widthOfTextAtSize(cnpjText, 8) + 16 : 0;
+        page.drawText(contatoText, { x: blocoX + 10 + cnpjWidth, y: y - 38, size: 8, font, color: colorMuted });
+      }
+
+      // Badge total empresa (direita)
+      const totalEmpresaText = formatBRL(totalEmpresa);
+      const totalEmpresaWidth = fontBold.widthOfTextAtSize(totalEmpresaText, 11);
+      page.drawText(totalEmpresaText, {
+        x: blocoX + blocoW - 10 - totalEmpresaWidth, y: y - 22, size: 11, font: fontBold, color: colorSuccess,
+      });
+      page.drawText("Subtotal empresa", {
+        x: blocoX + blocoW - 10 - font.widthOfTextAtSize("Subtotal empresa", 7), y: y - 34, size: 7, font, color: colorMuted,
+      });
+
+      y -= blocoHeaderH + 4;
+
+      // Parcelas por mes
+      for (const [mesKey, parcelas] of Object.entries(parcelasPorMes).sort((a, b) => a[0].localeCompare(b[0]))) {
+        const mesLabel = getMesAnoLabel(new Date(mesKey + "-02"));
+        const totalMes = parcelas.reduce((sum, p) => sum + p.valorParcela, 0);
+
+        // Cabecalho do mes
+        page.drawRectangle({ x: blocoX, y: y - 20, width: blocoW, height: 20, color: rgb(0.9, 0.93, 0.98) });
+        page.drawText(mesLabel.toUpperCase(), {
+          x: blocoX + 10, y: y - 14, size: 8, font: fontBold, color: colorPrimary,
+        });
+        const totalMesText = formatBRL(totalMes);
+        page.drawText(totalMesText, {
+          x: blocoX + blocoW - 10 - fontBold.widthOfTextAtSize(totalMesText, 8), y: y - 14, size: 8, font: fontBold, color: colorPrimary,
+        });
+        y -= 22;
+
+        // Cabecalho de colunas das parcelas
+        const COL_NUM = blocoX + 10;
+        const COL_VENC = blocoX + 60;
+        const COL_VAL = blocoX + blocoW - 90;
+
+        page.drawText("Parcela", { x: COL_NUM, y: y - 10, size: 7, font: fontBold, color: colorMuted });
+        page.drawText("Vencimento", { x: COL_VENC, y: y - 10, size: 7, font: fontBold, color: colorMuted });
+        page.drawText("Valor", { x: COL_VAL, y: y - 10, size: 7, font: fontBold, color: colorMuted });
+        y -= 16;
+
+        for (const p of parcelas) {
+          // Linha separadora leve
+          page.drawLine({ start: { x: blocoX, y: y + 12 }, end: { x: blocoX + blocoW, y: y + 12 }, thickness: 0.3, color: colorBorder });
+
+          page.drawText(`${p.numeroParcela}`, { x: COL_NUM, y, size: 8, font, color: colorText });
+          page.drawText(formatDateBR(p.dataVencimento), { x: COL_VENC, y, size: 8, font, color: colorText });
+          const parcelaValText = formatBRL(p.valorParcela);
+          page.drawText(parcelaValText, {
+            x: COL_VAL + 50 - font.widthOfTextAtSize(parcelaValText, 8), y, size: 8, font: fontBold, color: colorText,
+          });
+          y -= 16;
+        }
+        y -= 4;
+      }
+
+      y -= 12;
+    }
+
+    // --- FOOTER: TOTAL GERAL ---
+    y -= 8;
+    page.drawLine({ start: { x: MARGIN, y: y + 4 }, end: { x: PAGE_WIDTH - MARGIN, y: y + 4 }, thickness: 1.5, color: colorPrimary });
+    page.drawRectangle({ x: MARGIN, y: y - 36, width: CONTENT_WIDTH, height: 36, color: colorPrimary });
+    page.drawText("TOTAL GERAL", {
+      x: MARGIN + 12, y: y - 22, size: 13, font: fontBold, color: colorWhite,
+    });
+    const totalGeralText = formatBRL(totalGeral);
+    const totalGeralWidth = fontBold.widthOfTextAtSize(totalGeralText, 13);
+    page.drawText(totalGeralText, {
+      x: MARGIN + CONTENT_WIDTH - 12 - totalGeralWidth, y: y - 22, size: 13, font: fontBold, color: colorWhite,
+    });
+
+    const pdfBytes = await pdfDoc.save();
+
+    return new Response(new Uint8Array(pdfBytes), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="relatorio-antecipacao-${Date.now()}.pdf"`,
+        "Cache-Control": "no-cache, no-transform",
+        "Content-Length": String(pdfBytes.length),
+      },
+    });
+  } catch (error) {
+    console.error("Erro ao gerar relatorio de antecipacao imagem:", error);
+    return new Response("Erro ao gerar relatorio", { status: 500 });
+  }
+}

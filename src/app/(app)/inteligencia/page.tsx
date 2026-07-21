@@ -1,11 +1,36 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { readOnlyActions, runAiWithActions } from "@/lib/ai";
+import { runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 import { IntelligenceChatClient } from "@/components/intelligence-chat-client";
 import { headers } from "next/headers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
+import { prisma } from "@/lib/db";
+
+async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
+  try {
+    const cfg = await prisma.config.findFirst();
+    const p = (cfg as Record<string, unknown>)?.aiProvider as string | undefined;
+    if (p === "litellm" || p === "openai" || p === "gemini") return p;
+  } catch { /* ignore */ }
+  const envProvider = process.env.AI_PROVIDER;
+  if (envProvider === "litellm" || envProvider === "openai" || envProvider === "gemini") return envProvider;
+  return "gemini";
+}
+
+function buildContextSummary(content: string): string {
+  // Remove markdown tables (they bloat context and are display-only)
+  // Split on table blocks (3+ consecutive pipe-starting lines) and keep non-table parts
+  const parts = content.split(/((?:^\|.+\|\s*$\n?){3,})/gm);
+  const withoutTables = parts
+    .filter((s) => !/^\|/.test(s.trimStart()))
+    .join(" ");
+  // Collapse whitespace and truncate
+  const cleaned = withoutTables.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= 300) return cleaned;
+  return cleaned.slice(0, 297) + "...";
+}
 
 async function askAi(formData: FormData) {
   "use server";
@@ -19,7 +44,7 @@ async function askAi(formData: FormData) {
       ? (attachment as File)
       : null;
   let prompt = String(formData.get("prompt") || "");
-  const provider = "gemini" as const;
+  const provider = await getAiProvider();
   if (!prompt && file) {
     prompt = `Arquivo anexado: ${file.name}`;
   } else if (file && file.name) {
@@ -28,77 +53,8 @@ async function askAi(formData: FormData) {
   if (!prompt) return;
   const session = await getSession();
   if (!session) return;
-  const response = await runAiWithActions(prompt, provider, {
-    role: session.role as "admin" | "vendedor",
-    username: session.username,
-    displayName: session.nomeExibicao || session.username,
-    mode: "plan",
-  });
-  const plannedActions = Array.isArray(response.actions)
-    ? (response.actions.filter((a) => "params" in (a as any)) as {
-        name: string;
-        params: Record<string, unknown>;
-      }[])
-    : undefined;
-  const autoActions = plannedActions?.filter((a) => readOnlyActions.has(a.name)) ?? [];
-
-  if (autoActions.length > 0 && autoActions.length === (plannedActions?.length ?? 0)) {
-    const headerList = await headers();
-    const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
-    const proto = headerList.get("x-forwarded-proto") ?? "http";
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3008");
-
-    const results: string[] = [];
-    const links: { label: string; url: string }[] = [];
-    for (const action of autoActions) {
-      const result = await runAiWithActions("", provider, {
-        role: session.role as "admin" | "vendedor",
-        username: session.username,
-        displayName: session.nomeExibicao || session.username,
-        mode: "execute",
-        executeAction: action,
-        baseUrl,
-      });
-      if (result.text) results.push(result.text);
-      if (result.links?.length) links.push(...result.links);
-    }
-
-    prismaMessageStore.add({
-      prompt,
-      response: results.join("\n") || response.text,
-      provider,
-      status: "done",
-      links,
-    });
-    revalidatePath("/inteligencia");
-    return;
-  }
-
-  prismaMessageStore.add({
-    prompt,
-    response: response.text,
-    provider,
-    actions: plannedActions,
-    status: plannedActions && plannedActions.length > 0 ? "pending" : "done",
-  });
-  revalidatePath("/inteligencia");
-}
-
-async function confirmAi(formData: FormData) {
-  "use server";
-  const raw = String(formData.get("actions") || "");
-  if (!raw) return;
-  const session = await getSession();
-  if (!session) return;
-
-  let actions: { name: string; params: Record<string, unknown> }[] = [];
-  try {
-    actions = JSON.parse(raw);
-  } catch {
-    return;
-  }
-  if (!Array.isArray(actions) || actions.length === 0) return;
+  const usuario = session.username;
+  const history = await getContextHistory(usuario);
 
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
@@ -106,68 +62,105 @@ async function confirmAi(formData: FormData) {
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : "http://localhost:3008");
 
-  const results: string[] = [];
-  const links: { label: string; url: string }[] = [];
-  for (const action of actions) {
-    try {
-      const result = await runAiWithActions("", "gemini", {
-        role: session.role as "admin" | "vendedor",
-        username: session.username,
-        displayName: session.nomeExibicao || session.username,
-        mode: "execute",
-        executeAction: action,
-        baseUrl,
-      });
-      if (result.text) results.push(result.text);
-      if (result.links?.length) links.push(...result.links);
-    } catch (error) {
-      results.push(
-        `Falha ao executar ${action.name}: ${error instanceof Error ? error.message : String(error)}.`
-      );
-    }
-  }
+  const response = await runAiWithActions(prompt, provider, {
+    role: session.role as "admin" | "vendedor",
+    username: session.username,
+    displayName: session.nomeExibicao || session.username,
+    userId: session.id,
+    history,
+    baseUrl,
+  });
 
-  prismaMessageStore.add({
-    prompt: "Confirmação de ações",
-    response: results.join("\n"),
-    provider: "gemini",
+  await addAssistantMessage({
+    sessaoId: usuario,
+    usuario,
+    usuarioId: session.id,
+    content: response.text,
+    promptOriginal: prompt,
     status: "done",
-    links,
+    links: response.links,
   });
   revalidatePath("/inteligencia");
 }
 
 async function clearAi() {
   "use server";
-  prismaMessageStore.data = [];
+  const session = await getSession();
+  if (!session) return;
+  await prisma.aiMensagem.deleteMany({ where: { sessaoId: session.username } });
   revalidatePath("/inteligencia");
 }
 
-const prismaMessageStore = {
-  data: [] as {
-    prompt: string;
-    response: string;
-    provider: string;
-    at: string;
-    actions?: { name: string; params: Record<string, unknown> }[];
-    status?: "pending" | "done";
-    links?: { label: string; url: string }[];
-  }[],
-  add(msg: {
-    prompt: string;
-    response: string;
-    provider: string;
-    actions?: { name: string; params: Record<string, unknown> }[];
-    status?: "pending" | "done";
-    links?: { label: string; url: string }[];
-  }) {
-    this.data.unshift({ ...msg, at: new Date().toISOString() });
-  },
-};
+async function addAssistantMessage(msg: {
+  sessaoId: string;
+  usuario: string;
+  usuarioId?: number;
+  content: string;
+  promptOriginal: string;
+  actions?: { name: string; params: Record<string, unknown> }[];
+  status?: "pending" | "done";
+  links?: { label: string; url: string }[];
+}) {
+  await prisma.aiMensagem.create({
+    data: {
+      sessaoId: msg.sessaoId,
+      usuario: msg.usuario,
+      usuarioId: msg.usuarioId ?? null,
+      role: "assistant",
+      content: msg.content,
+      contextResumo: buildContextSummary(msg.content),
+      promptOriginal: msg.promptOriginal,
+      actions: msg.actions ? (msg.actions as any) : undefined,
+      status: msg.status ?? "done",
+      links: msg.links ? (msg.links as any) : undefined,
+    },
+  });
+}
+
+async function getDisplayHistory(sessaoId: string) {
+  return prisma.aiMensagem.findMany({
+    where: { sessaoId, role: "assistant" },
+    orderBy: { criadoEm: "desc" },
+    take: 20,
+  });
+}
+
+async function getContextHistory(sessaoId: string) {
+  // Get last 5 assistant messages (with their prompts) for AI context
+  // Uses contextResumo (token-optimized) if available, falls back to full content
+  const rows = await prisma.aiMensagem.findMany({
+    where: { sessaoId, role: "assistant" },
+    orderBy: { criadoEm: "desc" },
+    take: 5,
+    select: { promptOriginal: true, content: true, contextResumo: true },
+  });
+  rows.reverse(); // put back in chronological order for the AI
+  // Reconstruct as conversation pairs
+  const history: { role: "user" | "assistant"; content: string }[] = [];
+  for (const row of rows) {
+    if (row.promptOriginal === "Confirmacao de acoes") continue;
+    if (row.promptOriginal) {
+      history.push({ role: "user", content: row.promptOriginal });
+    }
+    // Use summarized context if available, fall back to full content
+    history.push({ role: "assistant", content: row.contextResumo ?? row.content });
+  }
+  return history;
+}
 
 export default async function Page() {
   const formId = "intelligence-chat-form";
-  const history = prismaMessageStore.data.slice(0, 20);
+  const session = await getSession();
+  const dbRows = session ? await getDisplayHistory(session.username) : [];
+  const history = dbRows.map((m) => ({
+    prompt: m.promptOriginal ?? "",
+    response: m.content,
+    provider: "gemini",
+    at: m.criadoEm.toISOString(),
+    actions: m.actions as any,
+    status: m.status as "pending" | "done",
+    links: m.links as any,
+  }));
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
@@ -196,7 +189,6 @@ export default async function Page() {
           <IntelligenceChatClient
             history={history}
             action={askAi}
-            confirmAction={confirmAi}
             formId={formId}
           />
         </CardContent>

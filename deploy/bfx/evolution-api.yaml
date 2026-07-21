@@ -1,0 +1,125 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bfx-evolution-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: microk8s-hostpath
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bfx-evolution-config
+data:
+  .env: |
+    SERVER_TYPE=http
+    SERVER_PORT=8080
+    SERVER_URL=http://bfx-evolution:8080
+
+    CORS_ORIGIN=*
+    CORS_METHODS=GET,POST,PUT,DELETE
+    CORS_CREDENTIALS=true
+
+    LOG_LEVEL=ERROR
+    LOG_COLOR=false
+    LOG_BAILEYS=error
+
+    EVENT_EMITTER_MAX_LISTENERS=50
+
+    DATABASE_ENABLED=true
+    DATABASE_PROVIDER=postgresql
+    DATABASE_CONNECTION_URI=postgresql://postgres:postgres@bfx-db:5432/evolution?schema=public
+    DATABASE_CONNECTION_CLIENT_NAME=evolution_bfx
+    DATABASE_SAVE_DATA_INSTANCE=true
+    DATABASE_SAVE_DATA_NEW_MESSAGE=false
+    DATABASE_SAVE_MESSAGE_UPDATE=false
+    DATABASE_SAVE_DATA_CONTACTS=false
+    DATABASE_SAVE_DATA_CHATS=false
+    DATABASE_SAVE_DATA_LABELS=false
+    DATABASE_SAVE_DATA_HISTORIC=false
+    DATABASE_SAVE_IS_ON_WHATSAPP=false
+    DATABASE_DELETE_MESSAGE=false
+
+    AUTHENTICATION_TYPE=apikey
+    AUTHENTICATION_API_KEY=bfx-evolution-key-2024
+    AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
+
+    RABBITMQ_ENABLED=false
+    SQS_ENABLED=false
+    WEBSOCKET_ENABLED=false
+    WA_BUSINESS_TOKEN_WEBHOOK=false
+    CACHE_REDIS_ENABLED=false
+    CACHE_LOCAL_ENABLED=false
+    OPENAI_ENABLED=false
+    DIFY_ENABLED=false
+    TYPEBOT_ENABLED=false
+    CHATWOOT_ENABLED=false
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bfx-evolution
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bfx-evolution
+  template:
+    metadata:
+      labels:
+        app: bfx-evolution
+    spec:
+      containers:
+        - name: evolution
+          # atendai/evolution-api ficou PRIVADO no Docker Hub (pull anonimo=401);
+          # a Evolution API migrou para evoapicloud/evolution-api. Espelhado para
+          # o ECR (path confiavel do cluster, sem dependencia/rate-limit do Hub).
+          # Auth ECR vem do SA default (imagePullSecrets: ecr-creds).
+          image: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/evolution-api:v2.3.7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DATABASE_ENABLED
+              value: "true"
+            - name: DATABASE_PROVIDER
+              value: "postgresql"
+            - name: DATABASE_CONNECTION_URI
+              value: "postgresql://postgres:postgres@bfx-db:5432/evolution?schema=public"
+          volumeMounts:
+            - name: evolution-data
+              mountPath: /evolution/instances
+            - name: evolution-config
+              mountPath: /evolution/.env
+              subPath: .env
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: evolution-data
+          persistentVolumeClaim:
+            claimName: bfx-evolution-data
+        - name: evolution-config
+          configMap:
+            name: bfx-evolution-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bfx-evolution
+spec:
+  selector:
+    app: bfx-evolution
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP

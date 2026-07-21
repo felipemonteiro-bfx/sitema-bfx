@@ -11,10 +11,15 @@ export type AsaasConfig = {
   apiKey: string;
 };
 
-export function getAsaasConfig(): AsaasConfig | null {
-  const apiKey = process.env.ASAAS_API_KEY?.trim();
+/** dbConfig: opcional, de Config (asaasApiKey, asaasEnv). Se ausente, usa ASAAS_API_KEY e ASAAS_ENV do env. */
+export function getAsaasConfig(
+  dbConfig?: { asaasApiKey?: string | null; asaasEnv?: string | null }
+): AsaasConfig | null {
+  const apiKey =
+    (dbConfig?.asaasApiKey?.trim() || process.env.ASAAS_API_KEY?.trim()) ?? "";
   if (!apiKey) return null;
-  const env = process.env.ASAAS_ENV?.toLowerCase();
+  const env =
+    (dbConfig?.asaasEnv?.toLowerCase() || process.env.ASAAS_ENV?.toLowerCase()) ?? "";
   const baseUrl =
     env === "production" ? ASAAS_BASE_PRODUCTION : ASAAS_BASE_SANDBOX;
   return { baseUrl, apiKey };
@@ -42,6 +47,7 @@ export type CreateBoletoParams = {
   dueDate: string; // YYYY-MM-DD
   installmentCount?: number;
   totalValue?: number;
+  installmentValue?: number;
   description?: string;
   externalReference?: string;
 };
@@ -135,13 +141,23 @@ async function asaasFetch<T>(
   const data = (await res.json().catch(() => ({}))) as T & AsaasErrorResponse;
 
   if (!res.ok) {
-    const msg =
-      (data as AsaasErrorResponse).errors?.[0]?.description ||
-      `Asaas API error: ${res.status}`;
+    const firstError = (data as AsaasErrorResponse).errors?.[0];
+    const code = firstError?.code || "";
+    const desc = firstError?.description || "";
+    const msg = code ? `[${code}] ${desc}` : desc || `Asaas API error: ${res.status}`;
     throw new Error(msg);
   }
 
   return data as T;
+}
+
+/** Extrai o code do primeiro erro Asaas de uma mensagem de Error. */
+function isAsaasDuplicateError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const message = err.message.toLowerCase();
+  // Substrings conhecidas de erro de duplicata (pt-BR e en)
+  const duplicateSubstrings = ["invalid", "ja", "already", "duplicate", "ja cadastrado", "cpf_cnpj_already_in_use"];
+  return duplicateSubstrings.some((s) => message.includes(s));
 }
 
 /**
@@ -151,11 +167,12 @@ async function asaasFetch<T>(
  */
 export async function getOrCreateCustomer(
   cliente: ClienteForAsaas,
-  prisma: { cliente: { update: (args: { where: { id: number }; data: { asaasCustomerId: string } }) => Promise<unknown> } }
+  prisma: { cliente: { update: (args: { where: { id: number }; data: { asaasCustomerId: string } }) => Promise<unknown> } },
+  asaasConfig?: AsaasConfig | null
 ): Promise<string> {
   if (cliente.asaasCustomerId) return cliente.asaasCustomerId;
 
-  const config = getAsaasConfig();
+  const config = asaasConfig ?? getAsaasConfig();
   if (!config) throw new Error("Asaas não configurado (ASAAS_API_KEY).");
 
   const cpfCnpj = onlyNumbers(cliente.cpf || cliente.cnpj || "");
@@ -181,9 +198,8 @@ export async function getOrCreateCustomer(
     });
     return customerId;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
     // Cliente já existe com esse CPF/CNPJ: tentar listar e usar o primeiro
-    if (message.includes("invalid") || message.includes("já") || message.includes("already") || message.includes("duplicate")) {
+    if (isAsaasDuplicateError(err)) {
       const list = await asaasFetch<AsaasCustomersListResponse>(
         config,
         `/v3/customers?cpfCnpj=${encodeURIComponent(cpfCnpj)}`
@@ -207,9 +223,10 @@ export async function getOrCreateCustomer(
  * Para parcelado: installmentCount + totalValue (ou installmentValue) + dueDate (primeiro vencimento).
  */
 export async function createBoletoPayment(
-  params: CreateBoletoParams
+  params: CreateBoletoParams,
+  asaasConfig?: AsaasConfig | null
 ): Promise<CreateBoletoResult> {
-  const config = getAsaasConfig();
+  const config = asaasConfig ?? getAsaasConfig();
   if (!config) throw new Error("Asaas não configurado (ASAAS_API_KEY).");
 
   const body: Record<string, unknown> = {
@@ -223,7 +240,11 @@ export async function createBoletoPayment(
 
   if (params.installmentCount != null && params.installmentCount > 1) {
     body.installmentCount = params.installmentCount;
-    if (params.totalValue != null) body.totalValue = params.totalValue;
+    if (params.totalValue != null) {
+      body.totalValue = params.totalValue;
+      // Asaas v3 pode exigir installmentValue; calcular a partir do total
+      body.installmentValue = params.installmentValue ?? Math.round((params.totalValue / params.installmentCount) * 100) / 100;
+    }
   }
 
   const res = await asaasFetch<AsaasPaymentResponse>(config, "/v3/payments", {

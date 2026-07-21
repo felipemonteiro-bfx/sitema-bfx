@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { formaFromLegacyFlags, formaPagamentoLabel, type FormaPagamento } from "@/lib/forma-pagamento";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -9,7 +11,7 @@ export async function GET(req: Request) {
   const end = to ? new Date(to + "T23:59:59") : new Date();
 
   const vendas = await prisma.venda.findMany({
-    where: { 
+    where: {
       dataVenda: { gte: start, lte: end },
       cliente: empresa && empresa !== "all" ? {
         empresa: {
@@ -20,27 +22,27 @@ export async function GET(req: Request) {
     },
     include: {
       cliente: {
-        select: { empresa: true, nome: true }
-      }
+        select: { empresa: true, nome: true, matricula: true }
+      },
+      itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
     },
     orderBy: { dataVenda: "desc" },
   });
 
-  const header = "Data,Vendedor,Empresa,Cliente,Produto,Valor,Frete,Total,Parcelas,ValorParcela\n";
-  const lines = vendas.map((v) =>
-    [
-      v.dataVenda.toISOString().slice(0, 10),
-      v.vendedor || "",
-      v.cliente?.empresa || "N/D",
-      v.cliente?.nome || "N/D",
-      v.produtoNome || "",
-      v.valorVenda || 0,
-      v.valorFrete || 0,
-      (v.valorVenda || 0) + (v.valorFrete || 0),
-      v.parcelas || 0,
-      v.valorParcela || 0,
-    ].join(",")
-  );
+  const header = "Matricula,Nome,Produtos,Vendedor,Data,Valor,Parcelas,Pagamento\n";
+  const lines = vendas.map((v) => {
+    const total = valorTotalVenda(v);
+    const matricula = v.cliente?.matricula || "";
+    const nome = v.cliente?.nome || "N/D";
+    const produtos = `"${produtosTexto(v).replace(/"/g, '""')}"`;
+    const vendedor = v.vendedor || "";
+    const data = v.dataVenda.toISOString().slice(0, 10);
+    const parcelas = v.parcelas || 1;
+    const forma = (v.formaPagamento as FormaPagamento | null) ??
+      formaFromLegacyFlags({ descontoEmFolha: v.descontoEmFolha, boleto: v.boleto, parcelas: v.parcelas });
+    const pagamento = `"${formaPagamentoLabel(forma)}"`;
+    return [matricula, nome, produtos, vendedor, data, total, parcelas, pagamento].join(",");
+  });
   const csv = header + lines.join("\n");
 
   return new Response(csv, {

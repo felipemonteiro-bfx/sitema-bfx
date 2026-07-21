@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function GlobalError() {
   return (
     <html lang="pt-BR">
@@ -11,18 +13,18 @@ export default function GlobalError() {
               Ocorreu um erro ao carregar a aplica??o. Tente novamente.
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-              <a
+              <Link
                 href="/"
                 className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground"
               >
                 Voltar ao in?cio
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/"
                 className="inline-flex h-10 items-center justify-center rounded-lg border border-input bg-background px-4 text-sm font-medium"
               >
                 Recarregar
-              </a>
+              </Link>
             </div>
           </div>
         </div>

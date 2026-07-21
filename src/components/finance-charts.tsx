@@ -13,7 +13,7 @@ import {
   LineChart,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, ArrowRightLeft } from "lucide-react";
+import { TrendingUp, ArrowRightLeft } from "lucide-react";
 
 type FluxoRow = { mes: string; entradas: number; saidas: number; saldo: number };
 

@@ -11,6 +11,7 @@ export async function createAuditLog(acao: string, detalhes?: Record<string, unk
     data: {
       dataHora: new Date(),
       usuario,
+      usuarioId: session?.id ?? null,
       acao,
       detalhes: typeof detalhes === "string" ? detalhes : JSON.stringify(detalhes ?? {}),
     },

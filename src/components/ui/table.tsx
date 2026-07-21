@@ -26,10 +26,10 @@ interface TableProps
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, variant, stickyHeader, ...props }, ref) => (
-    <div className="relative w-full overflow-auto custom-scrollbar rounded-lg">
+    <div className="relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-lg">
       <table
         ref={ref}
-        className={cn(tableVariants({ variant }), className)}
+        className={cn(tableVariants({ variant }), stickyHeader && "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10", className)}
         {...props}
       />
     </div>
@@ -136,7 +136,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
         ref={ref}
         className={cn(
           "h-11 px-3 text-left align-middle text-xs font-semibold uppercase tracking-wider text-muted-foreground",
-          "[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+          "[&:has([role=checkbox])]:pr-0",
           sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
           className
         )}
@@ -179,7 +179,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
         ref={ref}
         className={cn(
           "p-3 align-middle",
-          "[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+          "[&:has([role=checkbox])]:pr-0",
           numeric && "tabular-nums text-right font-mono",
           highlight && highlightClasses[highlight],
           className

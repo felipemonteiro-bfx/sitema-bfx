@@ -3,6 +3,8 @@ FROM node:20-bullseye-slim AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN apt-get update && apt-get install -y git --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
 # Install Yarn
 RUN corepack enable && corepack prepare yarn@stable --activate
 
@@ -21,6 +23,9 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+ENV DATABASE_URL="postgresql://user:pass@localhost:5432/bfx?schema=public"
+ENV SKIP_ENV_VALIDATION=1
 
 RUN yarn prisma:generate
 RUN yarn build

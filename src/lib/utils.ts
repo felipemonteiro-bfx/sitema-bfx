@@ -17,6 +17,11 @@ export function formatBRL(value?: number | null) {
   }).format(v);
 }
 
+export function formatDateBR(value: Date | string): string {
+  const d = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("pt-BR").format(d);
+}
+
 export function maskCpf(val?: string | null) {
   const v = cleanStr(val || "");
   if (v.length !== 11) return val || "";
@@ -43,6 +48,18 @@ export function maskCep(val?: string | null) {
   const v = cleanStr(val || "");
   if (v.length !== 8) return val || "";
   return `${v.slice(0, 5)}-${v.slice(5)}`;
+}
+
+/**
+ * Calcula o primeiro vencimento do boleto/parcela:
+ * - Compra até dia 20 → dia 10 do próximo mês
+ * - Compra após dia 20 → dia 10 do mês subsequente (dois meses à frente)
+ */
+export function calcularPrimeiroVencimento(dataCompra: Date): Date {
+  // Use UTC methods to avoid timezone offset affecting the day-of-month check
+  const dia = dataCompra.getUTCDate();
+  const mesesAFrente = dia <= 20 ? 1 : 2;
+  return new Date(Date.UTC(dataCompra.getUTCFullYear(), dataCompra.getUTCMonth() + mesesAFrente, 10));
 }
 
 export function sugerirNcm(nome?: string | null) {

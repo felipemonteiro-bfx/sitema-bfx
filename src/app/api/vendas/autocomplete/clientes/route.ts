@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { valorTotalVenda } from "@/lib/venda-utils";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -35,7 +36,8 @@ export async function GET(request: NextRequest) {
             id: true,
             dataVenda: true,
             valorVenda: true,
-            valorFrete: true,
+            quantidade: true,
+            valorFrete: true, desconto: true,
             itens: {
               select: {
                 subtotal: true,
@@ -51,12 +53,7 @@ export async function GET(request: NextRequest) {
       let valorUltimaVenda = 0;
 
       if (ultimaVenda) {
-        if (ultimaVenda.itens && ultimaVenda.itens.length > 0) {
-          valorUltimaVenda = ultimaVenda.itens.reduce((sum, item) => sum + item.subtotal, 0);
-        } else {
-          valorUltimaVenda = ultimaVenda.valorVenda || 0;
-        }
-        valorUltimaVenda += ultimaVenda.valorFrete || 0;
+        valorUltimaVenda = valorTotalVenda(ultimaVenda);
       }
 
       return {
@@ -81,6 +78,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(clientesComResumo);
   } catch (error) {
     console.error("Erro no autocomplete de clientes:", error);
-    return NextResponse.json({ error: "Failed to fetch customers" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao buscar clientes." }, { status: 500 });
   }
 }

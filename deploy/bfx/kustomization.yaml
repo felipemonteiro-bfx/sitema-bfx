@@ -3,10 +3,17 @@ kind: Kustomization
 namespace: bfx
 
 resources:
-  - namespace.yaml
-  - serviceaccount.yaml
-  - secrets.yaml
-  - postgres.yaml
-  - app.yaml
-  - ingress.yaml
-  - cronjob-cleanup-uploads.yaml
+- namespace.yaml
+- serviceaccount.yaml
+- secrets.yaml
+- postgres.yaml
+- app.yaml
+- ingress.yaml
+- cronjob-cleanup-uploads.yaml
+- cronjobs-app.yaml
+- evolution-api.yaml
+- ecr-creds-renew.yaml
+
+images:
+- name: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop
+  newTag: f78e703f4b05130ad49e40dfbefc297901fadb5c

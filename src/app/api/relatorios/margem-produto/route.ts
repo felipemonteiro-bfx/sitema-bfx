@@ -1,13 +1,6 @@
 import { prisma } from "@/lib/db";
+import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR").format(d);
-}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -74,7 +67,7 @@ export async function GET(req: Request) {
     page.drawText("MARGEM POR PRODUTO", {
       x: 40, y: height - 45, size: 18, font: fontBold, color: rgb(1, 1, 1),
     });
-    page.drawText(`Período: ${formatDate(start)} até ${formatDate(end)}`, {
+    page.drawText(`Período: ${formatDateBR(start)} até ${formatDateBR(end)}`, {
       x: 40, y: height - 65, size: 10, font, color: rgb(0.9, 0.9, 0.9),
     });
 
@@ -108,10 +101,12 @@ export async function GET(req: Request) {
     page.drawText(`Lucro total: ${formatBRL(totalLucro)} | ${rows.length} produto(s)`, { x: 40, y, size: 11, font: fontBold, color: rgb(1, 1, 1) });
 
     const pdfBytes = await pdfDoc.save();
-    return new Response(Buffer.from(pdfBytes), {
+    return new Response(new Uint8Array(pdfBytes), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": 'attachment; filename="relatorio_margem_produto.pdf"',
+        "Cache-Control": "no-cache, no-transform",
+        "Content-Length": String(pdfBytes.length),
       },
     });
   }

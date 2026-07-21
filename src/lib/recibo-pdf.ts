@@ -1,15 +1,9 @@
 import { prisma } from "@/lib/db";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises";
 import path from "path";
-
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR").format(d);
-}
 
 function wrapText(text: string, font: { widthOfTextAtSize: (t: string, s: number) => number }, size: number, maxWidth: number) {
   const words = text.split(/\s+/);
@@ -33,7 +27,6 @@ function fillTemplate(template: string, data: Record<string, string>) {
   return template.replace(/\{(\w+)\}/g, (_, key) => data[key] ?? "");
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function drawTableRow(
   page: any,
   font: { widthOfTextAtSize: (t: string, s: number) => number },
@@ -95,8 +88,13 @@ export async function generateReciboPdf(
   vendaId: number,
   tipo: "venda" | "autorizacao" = "autorizacao"
 ): Promise<Uint8Array> {
-  const venda = await prisma.venda.findUnique({ where: { id: vendaId } });
+  const venda = await prisma.venda.findUnique({
+    where: { id: vendaId },
+    include: { itens: { select: { subtotal: true, produtoNome: true, quantidade: true } } },
+  });
   if (!venda) throw new Error("Venda não encontrada");
+
+  const showAssinatura = venda.descontoEmFolha;
 
   let parcelasVenc: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] = [];
   try {
@@ -130,7 +128,7 @@ export async function generateReciboPdf(
   const centerX = 595 / 2;
 
   let logoImage: Awaited<ReturnType<PDFDocument["embedPng"]>> | Awaited<ReturnType<PDFDocument["embedJpg"]>> | null = null;
-  let logoDims = { width: 0, height: 0 };
+  const logoDims = { width: 0, height: 0 };
   const logoHeight = 50;
 
   if (cfg?.logoPath) {
@@ -173,24 +171,26 @@ export async function generateReciboPdf(
       color: rgb(0.35, 0.38, 0.42),
     });
     page.drawText(`Recibo #${venda.id}`, { x: 470, y: headerTop + 10, size: 9, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Data: ${formatDateBR(venda.dataVenda)}`, { x: 470, y: headerTop - 2, size: 8, font, color: rgb(0.35, 0.38, 0.42) });
   } else {
     const subtituloFallback = tipo === "autorizacao" ? "Autorização de Desconto em Folha" : "Recibo de Venda";
     page.drawText("BFX Manager", { x: marginX, y: headerTop + 5, size: 16, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
     page.drawText(subtituloFallback, { x: marginX, y: headerTop - 17, size: 12, font, color: rgb(0.35, 0.38, 0.42) });
     page.drawText(`Recibo #${venda.id}`, { x: 420, y: headerTop + 5, size: 11, font: fontBold, color: rgb(0.2, 0.24, 0.3) });
-    page.drawText(`Data: ${formatDate(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
+    page.drawText(`Data: ${formatDateBR(venda.dataVenda)}`, { x: 420, y: headerTop - 15, size: 10, font, color: rgb(0.35, 0.38, 0.42) });
   }
 
   y = headerTop - 60;
 
   const clienteDoc = cliente?.cpf || cliente?.cnpj || "N/D";
-  const dataCompraFormatada = formatDate(venda.dataVenda);
-  const valor = venda.valorVenda || 0;
-  const frete = venda.valorFrete || 0;
-  const total = valor + frete;
+  const dataCompraFormatada = formatDateBR(venda.dataVenda);
+  const total = valorTotalVenda(venda);
+  const subtotalProd = venda.itens?.length
+    ? venda.itens.reduce((s, i) => s + i.subtotal, 0)
+    : (venda.valorVenda ?? 0) * (venda.quantidade ?? 1);
+  const frete = venda.valorFrete ?? 0;
   const nParcelas = venda.parcelas || 1;
-  const valorParc = venda.valorParcela || (nParcelas > 0 ? total / nParcelas : total);
+  const valorParc = venda.valorParcela || (nParcelas > 0 ? Math.trunc((total / nParcelas) * 100) / 100 : total);
 
   page.drawText("Detalhes da venda", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
@@ -199,7 +199,7 @@ export async function generateReciboPdf(
     `Cliente: ${cliente?.nome || "N/D"}`,
     `Documento: ${clienteDoc}`,
     `Vendedor: ${venda.vendedor || "N/D"}`,
-    `Produto: ${venda.produtoNome || "N/D"}`,
+    `Produto: ${produtosTexto(venda)}`,
   ]) {
     page.drawText(line, { x: marginX, y, size: 11, font, color: rgb(0.2, 0.2, 0.22) });
     y -= 16;
@@ -212,7 +212,7 @@ export async function generateReciboPdf(
   page.drawText("Valores", { x: marginX, y, size: 12, font: fontBold, color: rgb(0.1, 0.1, 0.12) });
   y -= 18;
   for (const [label, val] of [
-    ["Valor do produto", formatBRL(valor)],
+    ["Valor do produto", formatBRL(subtotalProd)],
     ["Frete", formatBRL(frete)],
     ["Total", formatBRL(total)],
     [`Parcelas (${nParcelas}x)`, formatBRL(valorParc)],
@@ -275,7 +275,7 @@ export async function generateReciboPdf(
         fontBold,
         false,
         cols,
-        [String(dias), formatDate(pv.dataVencimento), formaPag, formatBRL(pv.valorParcela), ""],
+        [String(dias), formatDateBR(pv.dataVencimento), formaPag, formatBRL(Math.trunc(pv.valorParcela * 100) / 100), ""],
         y,
         rowHeight,
         tableLeft,
@@ -332,28 +332,30 @@ export async function generateReciboPdf(
   }
 
   page.drawText("Documento gerado automaticamente pelo BFX Manager.", {
-    x: marginX,
-    y: 110,
+    x: centerX - font.widthOfTextAtSize("Documento gerado automaticamente pelo BFX Manager.", 8) / 2,
+    y: 15,
     size: 8,
     font,
     color: rgb(0.5, 0.5, 0.5),
   });
 
-  const signatureY = 70;
-  page.drawLine({
-    start: { x: centerX - 100, y: signatureY },
-    end: { x: centerX + 100, y: signatureY },
-    thickness: 1,
-    color: rgb(0.1, 0.1, 0.1),
-  });
-  const signatureText = `Assinatura: ${cliente?.nome || "________________________"}`;
-  page.drawText(signatureText, {
-    x: centerX - font.widthOfTextAtSize(signatureText, 10) / 2,
-    y: signatureY - 15,
-    size: 10,
-    font,
-    color: rgb(0.1, 0.1, 0.1),
-  });
+  if (showAssinatura) {
+    const signatureY = 70;
+    page.drawLine({
+      start: { x: centerX - 100, y: signatureY },
+      end: { x: centerX + 100, y: signatureY },
+      thickness: 1,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+    const signatureText = `Assinatura: ${cliente?.nome || "________________________"}`;
+    page.drawText(signatureText, {
+      x: centerX - font.widthOfTextAtSize(signatureText, 10) / 2,
+      y: signatureY - 15,
+      size: 10,
+      font,
+      color: rgb(0.1, 0.1, 0.1),
+    });
+  }
 
   return new Uint8Array(await pdf.save());
 }

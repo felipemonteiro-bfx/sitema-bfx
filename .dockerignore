@@ -12,6 +12,7 @@ dist
 docker-compose*.yml
 Dockerfile.dev
 README.md
-scripts
+scripts/*
+!scripts/stamp-sw.mjs
 streamlit
 prisma/*.db

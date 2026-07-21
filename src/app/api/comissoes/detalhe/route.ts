@@ -1,31 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/db';
+import { valorTotalVenda, produtosTexto } from '@/lib/venda-utils';
+import { buildComissoesWhere } from '@/lib/comissoes-utils';
+import { getSession } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 });
+    }
     const { searchParams } = new URL(request.url);
-    const vendedorFiltro = searchParams.get('vendedor');
-    const dataInicioStr = searchParams.get('dataInicio');
-    const dataFimStr = searchParams.get('dataFim');
-
-    // Construir filtros para o Prisma
-    const where: any = {};
-
-    if (vendedorFiltro) {
-      where.vendedor = vendedorFiltro;
-    }
-
-    if (dataInicioStr || dataFimStr) {
-      where.dataVenda = {};
-      if (dataInicioStr) {
-        where.dataVenda.gte = new Date(dataInicioStr);
-      }
-      if (dataFimStr) {
-        where.dataVenda.lte = new Date(dataFimStr);
-      }
-    }
+    const where = buildComissoesWhere(searchParams, session);
 
     // Buscar vendas com detalhes
     const vendas = await prisma.venda.findMany({
@@ -36,6 +22,7 @@ export async function GET(request: NextRequest) {
             nome: true,
           },
         },
+        itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
       },
       orderBy: {
         dataVenda: 'desc',
@@ -60,8 +47,8 @@ export async function GET(request: NextRequest) {
     // Calcular detalhes
     const detalhes = vendas.map(venda => {
       const percentual = venda.vendedor ? comissaoPctMap.get(venda.vendedor) : 0;
-      const valorComissao = (percentual !== undefined && venda.lucroLiquido !== null)
-        ? (venda.lucroLiquido * percentual) / 100
+      const valorComissao = percentual !== undefined
+        ? (valorTotalVenda(venda) * percentual) / 100
         : 0;
 
       return {
@@ -69,8 +56,8 @@ export async function GET(request: NextRequest) {
         data: venda.dataVenda,
         vendedor: venda.vendedor,
         cliente: venda.cliente?.nome || 'N/A',
-        produto: venda.produtoNome,
-        valorVenda: venda.valorVenda,
+        produto: produtosTexto(venda),
+        valorVenda: valorTotalVenda(venda),
         lucroLiquido: venda.lucroLiquido,
         percentualComissao: percentual,
         valorComissao: parseFloat(valorComissao.toFixed(2)),
@@ -80,8 +67,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(detalhes);
   } catch (error) {
     console.error('Erro ao buscar detalhes de comissões:', error);
-    return NextResponse.json({ error: 'Failed to fetch commission details' }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
+    return NextResponse.json({ error: 'Erro ao buscar detalhes de comissões.' }, { status: 500 });
   }
 }

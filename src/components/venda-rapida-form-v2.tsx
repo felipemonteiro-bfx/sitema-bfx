@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useQueryStates, parseAsString, parseAsFloat, parseAsBoolean, parseAsJson } from "nuqs";
+import {
+  FORMA_PAGAMENTO,
+  FORMAS_PAGAMENTO_LIST,
+  formaPagamentoLabel,
+  type FormaPagamento,
+} from "@/lib/forma-pagamento";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +26,8 @@ import {
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
+import { valorEmReais } from "@/lib/fidelidade";
+import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
@@ -45,9 +54,30 @@ interface Parcela {
   valorParcela: number;
 }
 
+type ClienteSelected = {
+  id: number;
+  nome: string;
+  endereco?: string | null;
+  cep?: string | null;
+  telefone?: string | null;
+  cpf?: string | null;
+  cnpj?: string | null;
+};
+
+const DEFAULT_PRODUTO_ITEM: ProdutoItem = {
+  id: "new-0",
+  produtoNome: "",
+  custoProduto: 0,
+  valorVenda: 0,
+  quantidade: 1,
+  subtotal: 0,
+};
+
 interface Props {
   vendedorOptions: { value: string; label: string; comissaoPct: number }[];
   parcelasOptions: { value: string; label: string }[];
+  fornecedores: { id: number; nome: string }[];
+  categoriasExistentes: string[];
   onSubmit: (
     formData: FormData,
   ) => Promise<ActionResponse<{ vendaId: number; boletoUrl?: string; assinaturaToken?: string }>>;
@@ -56,6 +86,8 @@ interface Props {
 export default function VendaRapidaFormV2({
   vendedorOptions,
   parcelasOptions,
+  fornecedores,
+  categoriasExistentes,
   onSubmit,
 }: Props) {
   const [loading, setLoading] = useState(false);
@@ -66,22 +98,59 @@ export default function VendaRapidaFormV2({
     produtoIndices?: number[];
   }>({});
 
-  // Form states
-  const [dataVenda, setDataVenda] = useState(
-    new Date().toISOString().split("T")[0],
+  // Form states persistentes na URL (sobrevivem a refresh/navegação)
+  const [formState, setFormState] = useQueryStates(
+    {
+      dataVenda: parseAsString.withDefault(new Date().toISOString().split("T")[0]),
+      vendedor: parseAsString.withDefault(vendedorOptions[0]?.value || ""),
+      parcelas: parseAsString.withDefault("1"),
+      clienteQuery: parseAsString.withDefault(""),
+      selectedCliente: parseAsJson<ClienteSelected>((v) => {
+        if (typeof v === "object" && v !== null && "id" in v && "nome" in v)
+          return v as ClienteSelected;
+        return null;
+      }),
+      produtos: parseAsJson<ProdutoItem[]>((v) => {
+        if (Array.isArray(v) && (v as unknown[]).length > 0) return v as ProdutoItem[];
+        return null;
+      }),
+      frete: parseAsFloat.withDefault(0),
+      envio: parseAsFloat.withDefault(0),
+      temNota: parseAsBoolean.withDefault(false),
+      taxaNota: parseAsString.withDefault("5.97"),
+      desconto: parseAsFloat.withDefault(0),
+      pontosResgatar: parseAsFloat.withDefault(0),
+      formaPagamento: parseAsString.withDefault(""),
+    },
+    { history: "replace" },
   );
-  const [vendedor, setVendedor] = useState(vendedorOptions[0]?.value || "");
-  const [parcelas, setParcelas] = useState("1");
 
-  // Cliente autocomplete
-  const [clienteQuery, setClienteQuery] = useState("");
-  const [selectedCliente, setSelectedCliente] = useState<{
-    id: number;
-    nome: string;
-    endereco?: string | null;
-    cep?: string | null;
-    telefone?: string | null;
-  } | null>(null);
+  // Desestrutura para compatibilidade com o restante do código
+  const { dataVenda, vendedor, parcelas, clienteQuery, selectedCliente,
+          frete, envio, temNota, taxaNota, desconto, pontosResgatar } = formState;
+  const formaPagamentoSelected = formState.formaPagamento as FormaPagamento | "";
+  // Flags legados sao DERIVADOS da forma canonica para manter backwards-compat com o resto do componente.
+  const descontoEmFolha = formaPagamentoSelected === FORMA_PAGAMENTO.DESCONTO_FOLHA;
+  const boleto = formaPagamentoSelected === FORMA_PAGAMENTO.BOLETO;
+  // produtos pode ser null quando não há param na URL → usa o item padrão
+  const produtos: ProdutoItem[] = formState.produtos ?? [DEFAULT_PRODUTO_ITEM];
+
+  // Wrappers com assinatura idêntica aos setState originais
+  const setDataVenda = (v: string) => void setFormState({ dataVenda: v });
+  const setVendedor = (v: string) => void setFormState({ vendedor: v });
+  const setParcelas = (v: string) => void setFormState({ parcelas: v });
+  const setClienteQuery = (v: string) => void setFormState({ clienteQuery: v });
+  const setSelectedCliente = (v: ClienteSelected | null) => void setFormState({ selectedCliente: v ?? null });
+  const setProdutos = (v: ProdutoItem[]) => void setFormState({ produtos: v.length > 0 ? v : null });
+  const setFrete = (v: number) => void setFormState({ frete: v });
+  const setEnvio = (v: number) => void setFormState({ envio: v });
+  const setTemNota = (v: boolean) => void setFormState({ temNota: v });
+  const setTaxaNota = (v: string) => void setFormState({ taxaNota: v });
+  const setDesconto = (v: number) => void setFormState({ desconto: v });
+  const setPontosResgatar = (v: number) => void setFormState({ pontosResgatar: v });
+  const setFormaPagamento = (v: FormaPagamento | "") => void setFormState({ formaPagamento: v });
+
+  // Cliente autocomplete suggestions (transient — não persiste)
   const [clienteSuggestions, setClienteSuggestions] = useState<
     {
       id: number;
@@ -95,26 +164,6 @@ export default function VendaRapidaFormV2({
       ultimaVenda?: { data: string; valor: number } | null;
     }[]
   >([]);
-
-  // Produtos (múltiplos)
-  const [produtos, setProdutos] = useState<ProdutoItem[]>([
-    {
-      id: crypto.randomUUID(),
-      produtoNome: "",
-      custoProduto: 0,
-      valorVenda: 0,
-      quantidade: 1,
-      subtotal: 0,
-    },
-  ]);
-
-  // Outras despesas
-  const [frete, setFrete] = useState(0);
-  const [envio, setEnvio] = useState(0);
-  const [temNota, setTemNota] = useState(false);
-  const [taxaNota, setTaxaNota] = useState("5.97");
-  const [descontoEmFolha, setDescontoEmFolha] = useState(false);
-  const [boleto, setBoleto] = useState(false);
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
@@ -152,24 +201,33 @@ export default function VendaRapidaFormV2({
   const submitLockRef = useRef(false);
 
   // Limpar erro do campo ao editar
+  const selectedClienteId = selectedCliente?.id ?? null;
+  const produtosKey = produtos.map((p) => `${p.id}:${p.produtoNome}:${p.quantidade}:${p.valorVenda}`).join("|");
   useEffect(() => {
     setValidationErrors((prev) => {
-      const next = { ...prev };
-      if (dataVenda && prev.data) next.data = false;
-      if (vendedor?.trim() && prev.vendedor) next.vendedor = false;
-      if (selectedCliente && prev.cliente) next.cliente = false;
-      if (prev.produtoIndices?.length) {
-        const stillInvalid = prev.produtoIndices.filter((i) => {
-          const p = produtos[i];
-          if (!p) return false;
-          const ok = p.produtoNome?.trim() && p.custoProduto >= 0 && p.valorVenda >= 0 && p.quantidade >= 1;
-          return !ok;
-        });
-        next.produtoIndices = stillInvalid.length > 0 ? stillInvalid : undefined;
+      const hasClienteOk = selectedClienteId != null;
+      const dataOk = !!dataVenda;
+      const vendedorOk = !!(vendedor?.trim());
+      const nextData = dataOk && prev.data ? false : prev.data;
+      const nextVendedor = vendedorOk && prev.vendedor ? false : prev.vendedor;
+      const nextCliente = hasClienteOk && prev.cliente ? false : prev.cliente;
+      const nextProdutoIndices = prev.produtoIndices?.length
+        ? (() => {
+            const stillInvalid = prev.produtoIndices.filter((i) => {
+              const p = produtos[i];
+              if (!p) return false;
+              return !(p.produtoNome?.trim() && p.custoProduto >= 0 && p.valorVenda >= 0 && p.quantidade >= 1);
+            });
+            return stillInvalid.length > 0 ? stillInvalid : undefined;
+          })()
+        : prev.produtoIndices;
+      if (nextData === prev.data && nextVendedor === prev.vendedor && nextCliente === prev.cliente && nextProdutoIndices === prev.produtoIndices) {
+        return prev;
       }
-      return next;
+      return { ...prev, data: nextData, vendedor: nextVendedor, cliente: nextCliente, produtoIndices: nextProdutoIndices };
     });
-  }, [dataVenda, vendedor, selectedCliente, produtos]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataVenda, vendedor, selectedClienteId, produtosKey]);
 
   // Cliente Autocomplete
   useEffect(() => {
@@ -195,7 +253,8 @@ export default function VendaRapidaFormV2({
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [clienteQuery, selectedCliente]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clienteQuery, selectedClienteId]);
 
   // Uber Direct status
   useEffect(() => {
@@ -221,7 +280,8 @@ export default function VendaRapidaFormV2({
     } else {
       setLimiteData(null);
     }
-  }, [selectedCliente]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClienteId]);
 
   // Cálculos totais
   const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);
@@ -230,7 +290,8 @@ export default function VendaRapidaFormV2({
   const numTaxaNota = Number(taxaNota) || 0;
   const numParcelas = Number(parcelas) || 1;
 
-  const totalVenda = subtotalProdutos + numFrete;
+  const descontoPontos = valorEmReais(pontosResgatar);
+  const totalVenda = subtotalProdutos + numFrete - desconto - descontoPontos;
   const valorDescontoNota = temNota
     ? (subtotalProdutos * numTaxaNota) / 100
     : 0;
@@ -251,6 +312,14 @@ export default function VendaRapidaFormV2({
   const excedeuMargem = limiteData
     ? valorParcela > limiteData.margemDisponivel + 1
     : false;
+
+  // Sugestão automática de parcelas (apenas desconto em folha)
+  useEffect(() => {
+    if (descontoEmFolha && totalVenda > 0) {
+      const sugerido = sugerirParcelasDescontoEmFolha(totalVenda);
+      setParcelas(String(sugerido));
+    }
+  }, [descontoEmFolha, totalVenda]);
 
   // Handlers
   const addProduto = () => {
@@ -452,12 +521,13 @@ export default function VendaRapidaFormV2({
     const produtoIndices: number[] = [];
     produtosFiltrados.forEach((p, i) => {
       const custoInvalido = p.custoProduto < 0;
-      const valorInvalido = p.valorVenda < 0;
+      // Valor de venda precisa ser > 0 — impede venda registrada com R$ 0,00.
+      const valorInvalido = p.valorVenda <= 0;
       const qtdInvalida = p.quantidade < 1;
       if (custoInvalido || valorInvalido || qtdInvalida) {
         const idxOriginal = produtos.findIndex((x) => x.id === p.id);
         if (idxOriginal >= 0) produtoIndices.push(idxOriginal);
-        msgs.push(`Produto #${i + 1} (preencha valores corretamente)`);
+        msgs.push(`Produto #${i + 1} (informe o valor de venda)`);
       }
     });
     if (produtoIndices.length) errors.produtoIndices = produtoIndices;
@@ -486,8 +556,11 @@ export default function VendaRapidaFormV2({
     formData.append("parcelas", parcelas);
     formData.append("temNota", String(temNota));
     formData.append("taxaNota", taxaNota);
+    formData.append("desconto", String(desconto));
+    formData.append("pontosResgatar", String(pontosResgatar));
     formData.append("descontoEmFolha", String(descontoEmFolha));
     formData.append("boleto", String(boleto));
+    if (formaPagamentoSelected) formData.append("formaPagamento", formaPagamentoSelected);
     formData.append("excedeuLimite", String(excedeuLimite));
     formData.append("produtos", JSON.stringify(produtosFiltrados));
 
@@ -499,25 +572,18 @@ export default function VendaRapidaFormV2({
     try {
       const result = await onSubmit(formData);
       if (result.success) {
-        // Reset form
-        setClienteQuery("");
-        setSelectedCliente(null);
-        setProdutos([
-          {
-            id: crypto.randomUUID(),
-            produtoNome: "",
-            custoProduto: 0,
-            valorVenda: 0,
-            quantidade: 1,
-            subtotal: 0,
-          },
-        ]);
-        setFrete(0);
-        setEnvio(0);
-        setParcelas("1");
-        setTemNota(false);
-        setDescontoEmFolha(false);
-        setBoleto(false);
+        // Reset form — null remove o param da URL e reverte ao default
+        void setFormState({
+          clienteQuery: null,
+          selectedCliente: null,
+          produtos: null,
+          frete: null,
+          envio: null,
+          parcelas: null,
+          temNota: null,
+          desconto: null,
+          formaPagamento: null,
+        });
         setParcelasVencimento([]);
         setProdutoParaSugestoes(null);
         const boletoUrl = result.data?.boletoUrl;
@@ -609,7 +675,7 @@ export default function VendaRapidaFormV2({
                   validationErrors.data ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                Data da Venda {validationErrors.data && "(obrigatório)"}
+                Data da Venda <span className="text-destructive">*</span> {validationErrors.data && "(obrigatório)"}
               </Label>
               <DateInput
                 value={dataVenda}
@@ -625,7 +691,7 @@ export default function VendaRapidaFormV2({
                   validationErrors.vendedor ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                Vendedor Responsável {validationErrors.vendedor && "(obrigatório)"}
+                Vendedor Responsável <span className="text-destructive">*</span> {validationErrors.vendedor && "(obrigatório)"}
               </Label>
               <FormSelect
                 name="vendedor"
@@ -663,30 +729,36 @@ export default function VendaRapidaFormV2({
                 validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
               )}
             >
-              Buscar Cliente {validationErrors.cliente && "(obrigatório)"}
+              Buscar Cliente <span className="text-destructive">*</span> {validationErrors.cliente && "(obrigatório)"}
             </Label>
             <Input
               value={clienteQuery}
               onChange={(e) => setClienteQuery(e.target.value)}
               placeholder="Digite o nome do cliente"
               required
-              className={validationErrors.cliente ? "border-destructive border-2" : ""}
+              className={cn("min-h-[44px] touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
             />
             {clienteSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
+              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
                 {clienteSuggestions.map((c) => (
                   <button
                     key={c.id}
                     type="button"
+                    role="option"
+                    aria-selected={false}
                     onClick={() => {
-                      setSelectedCliente({
-                        id: c.id,
-                        nome: c.nome,
-                        endereco: c.endereco,
-                        cep: c.cep,
-                        telefone: c.telefone,
+                      void setFormState({
+                        selectedCliente: {
+                          id: c.id,
+                          nome: c.nome,
+                          endereco: c.endereco,
+                          cep: c.cep,
+                          telefone: c.telefone,
+                          cpf: c.cpf,
+                          cnpj: c.cnpj,
+                        },
+                        clienteQuery: c.nome,
                       });
-                      setClienteQuery(c.nome);
                       setClienteSuggestions([]);
                       setProdutoParaSugestoes(null);
                     }}
@@ -695,7 +767,7 @@ export default function VendaRapidaFormV2({
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{c.nome}</div>
                       {c.renda && c.renda > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-medium">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success font-medium">
                           Renda: {formatBRL(c.renda)}
                         </span>
                       )}
@@ -733,8 +805,8 @@ export default function VendaRapidaFormV2({
           className={cn(
             "border-2 transition-colors",
             excedeuMargem
-              ? "bg-amber-50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30"
-              : "bg-emerald-50 dark:bg-emerald-950/10 border-emerald-200 dark:border-emerald-900/30"
+              ? "bg-warning/10 border-warning/30"
+              : "bg-success/10 border-success/30"
           )}
         >
           <CardHeader className="pb-3">
@@ -744,14 +816,14 @@ export default function VendaRapidaFormV2({
                 Limite e Margem
               </span>
               {excedeuMargem && (
-                <Badge variant="secondary" className="bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">
+                <Badge variant="secondary" className="bg-warning/20 text-warning-foreground dark:text-warning">
                   Excede disponível
                 </Badge>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-[10px] font-bold uppercase text-muted-foreground">Limite</div>
                 <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.margemTotal)}</div>
@@ -765,23 +837,23 @@ export default function VendaRapidaFormV2({
                 <div
                   className={cn(
                     "text-sm font-bold",
-                    limiteData.margemDisponivel > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                    limiteData.margemDisponivel > 0 ? "text-success" : "text-destructive"
                   )}
                 >
                   {formatBRL(limiteData.margemDisponivel)}
                 </div>
               </div>
             </div>
-            <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
               <div
-                className={cn("h-full transition-all", excedeuMargem ? "bg-amber-500" : "bg-emerald-500")}
+                className={cn("h-full transition-all", excedeuMargem ? "bg-warning" : "bg-success")}
                 style={{
                   width: `${Math.min(100, limiteData.margemTotal > 0 ? (limiteData.comprometimentoAtual / limiteData.margemTotal) * 100 : 0)}%`,
                 }}
               />
             </div>
             {excedeuMargem && (
-              <div className="flex items-start gap-2 text-xs text-amber-800 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-900/30">
+              <div className="flex items-start gap-2 text-xs text-warning-foreground dark:text-warning bg-warning/10 dark:bg-warning/20 p-3 rounded-lg border border-warning/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
                   Parcela ({formatBRL(valorParcela)}) excede o valor disponível ({formatBRL(limiteData.margemDisponivel)}).
@@ -805,9 +877,8 @@ export default function VendaRapidaFormV2({
             onClick={addProduto}
             variant="outline"
             size="sm"
-            className="gap-2"
+            leftIcon={<Plus className="h-4 w-4" />}
           >
-            <Plus className="h-4 w-4" />
             Adicionar Produto
           </Button>
         </div>
@@ -821,6 +892,8 @@ export default function VendaRapidaFormV2({
             onRemove={removeProduto}
             canRemove={produtos.length > 1}
             hasError={validationErrors.produtoIndices?.includes(index)}
+            fornecedores={fornecedores}
+            categoriasExistentes={categoriasExistentes}
           />
         ))}
       </div>
@@ -834,7 +907,7 @@ export default function VendaRapidaFormV2({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Frete (Cobrado)
@@ -868,6 +941,31 @@ export default function VendaRapidaFormV2({
               <CurrencyInput value={envio} onChange={setEnvio} />
             </div>
             <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Desconto (R$)
+              </Label>
+              <CurrencyInput value={desconto} onChange={setDesconto} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Resgatar pontos
+              </Label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={pontosResgatar || ""}
+                onChange={(e) => setPontosResgatar(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+                placeholder="0"
+                className="h-input w-full rounded-md border-2 border-input bg-background px-3 text-sm"
+              />
+              {pontosResgatar > 0 && (
+                <p className="text-[11px] text-success">
+                  Desconto por pontos: -{formatBRL(descontoPontos)} (limitado ao saldo do cliente)
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
               <div className="flex items-center gap-2 mb-2">
                 <Checkbox
                   checked={temNota}
@@ -888,36 +986,32 @@ export default function VendaRapidaFormV2({
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-6 mt-4 pt-4 border-t">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={descontoEmFolha}
-                onCheckedChange={(checked) => {
-                  if (checked === true) {
-                    setDescontoEmFolha(true);
-                    setBoleto(false);
-                  } else {
-                    setDescontoEmFolha(false);
-                  }
-                }}
-              />
-              <Label className="text-sm font-medium cursor-pointer">Desconto em folha</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={boleto}
-                onCheckedChange={(checked) => {
-                  if (checked === true) {
-                    setBoleto(true);
-                    setDescontoEmFolha(false);
-                  } else {
-                    setBoleto(false);
-                  }
-                }}
-              />
-              <Label className="text-sm font-medium cursor-pointer">Boleto</Label>
-            </div>
-            <p className="text-xs text-muted-foreground w-full">Apenas uma das opções: desconto em folha ou boleto.</p>
+          <div className="mt-4 pt-4 border-t space-y-2">
+            <Label htmlFor="forma-pagamento" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Forma de pagamento
+            </Label>
+            <FormSelect
+              id="forma-pagamento"
+              name="formaPagamento"
+              value={formaPagamentoSelected || ""}
+              onValueChange={(v) => setFormaPagamento(v as FormaPagamento | "")}
+              placeholder="Selecione a forma de pagamento"
+              options={[
+                { value: "", label: "— Não informado —" },
+                ...FORMAS_PAGAMENTO_LIST.map((f) => ({
+                  value: f,
+                  label: formaPagamentoLabel(f),
+                })),
+              ]}
+            />
+            {boleto && selectedCliente && !selectedCliente.cpf && !selectedCliente.cnpj && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground dark:text-warning text-sm">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>
+                  O cliente &quot;{selectedCliente.nome}&quot; não tem CPF ou CNPJ cadastrado. Cadastre em Cadastros → Clientes para poder gerar boleto no Asaas.
+                </span>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -952,6 +1046,7 @@ export default function VendaRapidaFormV2({
         valorTotal={totalVenda}
         parcelas={parcelasVencimento}
         onChange={setParcelasVencimento}
+        dataVenda={dataVenda}
       />
 
       {/* Seção 7: Resumo Financeiro */}
@@ -963,99 +1058,71 @@ export default function VendaRapidaFormV2({
           <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Subtotal Produtos
-              </div>
-              <div className="text-lg font-bold text-foreground">
-                {formatBRL(subtotalProdutos)}
-              </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
+              <div className="text-base font-bold text-foreground">{formatBRL(subtotalProdutos)}</div>
             </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Frete
-              </div>
-              <div className="text-lg font-bold text-foreground">
-                {formatBRL(numFrete)}
-              </div>
+            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Frete</div>
+              <div className="text-base font-bold text-foreground">{formatBRL(numFrete)}</div>
             </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Total Venda
-              </div>
-              <div className="text-xl font-black text-primary">
-                {formatBRL(totalVenda)}
-              </div>
+            <div className="rounded-lg bg-primary/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Venda</div>
+              <div className="text-lg font-black text-primary">{formatBRL(totalVenda)}</div>
             </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Valor Parcela
-              </div>
-              <div className="text-lg font-bold text-info">
-                {formatBRL(totalVenda / numParcelas)}
-              </div>
+            <div className="rounded-lg bg-info/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
+              <div className="text-base font-bold text-info">{formatBRL(totalVenda / numParcelas)}</div>
+            </div>
+          </div>
+
+          {desconto > 0 && (
+            <div className="text-sm text-destructive font-medium">Desconto: -{formatBRL(desconto)}</div>
+          )}
+
+          <Separator />
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Custo Total</div>
+              <div className="text-base font-bold text-foreground">{formatBRL(custoTotal)}</div>
+            </div>
+            <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
+              <div className="text-base font-bold text-success">{formatBRL(lucroBruto)}</div>
+            </div>
+            <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
+              <div className="text-base font-bold text-success">{margemPct.toFixed(1)}%</div>
+            </div>
+            <div className="rounded-lg bg-warning/5 px-3 py-2.5 text-center">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
+              <div className="text-base font-bold text-warning">{formatBRL(valorComissao)}</div>
             </div>
           </div>
 
           <Separator />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Custo Total
-              </div>
-              <div className="text-lg font-bold text-foreground">
-                {formatBRL(custoTotal)}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Lucro Bruto
-              </div>
-              <div className="text-lg font-bold text-success">
-                {formatBRL(lucroBruto)}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Margem
-              </div>
-              <div className="text-lg font-bold text-success">
-                {margemPct.toFixed(1)}%
-              </div>
-            </div>
-            <div className="space-y-1">
-              <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                Comissão ({comissaoPct}%)
-              </div>
-              <div className="text-lg font-bold text-warning">
-                {formatBRL(valorComissao)}
-              </div>
-            </div>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={loading}
+              size="lg"
+              className="px-12 text-base font-bold"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>Finalizar Venda</>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Botão Finalizar */}
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          disabled={loading}
-          variant="success"
-          size="lg"
-          className="px-12 text-base font-bold shadow-lg hover:shadow-xl"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Processando...
-            </>
-          ) : (
-            <>Finalizar Venda</>
-          )}
-        </Button>
-      </div>
     </form>
   );
 }

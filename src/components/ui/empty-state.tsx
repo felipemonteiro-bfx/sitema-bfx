@@ -145,9 +145,6 @@ export function EmptyState({
   const sizeStyles = sizeConfig[size];
   const Icon = icon || config.icon;
 
-  const ActionButton = action?.href ? "a" : "button";
-  const SecondaryButton = secondaryAction?.href ? "a" : "button";
-
   return (
     <div
       className={cn(

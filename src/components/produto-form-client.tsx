@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useId, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
@@ -10,8 +11,8 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
+import { DateInput } from "@/components/ui/date-input";
 import { Loader2, Camera, CheckCircle2, AlertCircle, Tag } from "lucide-react";
-import Image from 'next/image';
 
 type ProdutoEdit = {
   id: number;
@@ -24,19 +25,36 @@ type ProdutoEdit = {
   qtdEstoque: number | null;
   imagem: string | null;
   fornecedorId: number | null;
+  dataCompra: Date | null;
 };
+
+const normalizeProductName = (value: string) => value.toLocaleUpperCase("pt-BR");
+const normalizeCadastroText = (value: string) => value.toLocaleUpperCase("pt-BR");
 
 interface Props {
   produto?: ProdutoEdit | null;
   onSuccessAction: (formData: FormData) => Promise<void>;
   onUpdateAction?: (formData: FormData) => Promise<void>;
   fornecedores: { id: number; nome: string }[];
+  categoriasExistentes?: string[];
   cancelHref?: string;
+  onCancel?: () => void;
+  onEditSuccess?: () => void;
 }
 
-export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAction, fornecedores, cancelHref }: Props) {
+export default function ProdutoFormClient({
+  produto,
+  onSuccessAction,
+  onUpdateAction,
+  fornecedores,
+  categoriasExistentes = [],
+  cancelHref,
+  onCancel,
+  onEditSuccess,
+}: Props) {
   const router = useRouter();
   const isEdit = Boolean(produto && onUpdateAction);
+  const categoryListId = useId();
 
   const [nome, setNome] = useState('');
   const [custo, setCusto] = useState(0);
@@ -46,14 +64,23 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
   const [ncm, setNcm] = useState('');
   const [valor, setValor] = useState(0);
   const [imagemPath, setImagemPath] = useState('');
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fornecedorId, setFornecedorId] = useState('');
+  const [dataCompra, setDataCompra] = useState('');
 
   const [isUploading, setIsUploading] = useState(false);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [ncmSuggestions, setNcmSuggestions] = useState<{ codigo: string; descricao: string }[]>([]);
   const [isSearchingNcm, setIsSearchingNcm] = useState(false);
+
+  const filteredCategorias = useMemo(() => {
+    const query = categoria.trim().toLocaleLowerCase("pt-BR");
+    if (!query) return categoriasExistentes.slice(0, 12);
+    return categoriasExistentes
+      .filter((item) => item.toLocaleLowerCase("pt-BR").includes(query))
+      .slice(0, 12);
+  }, [categoria, categoriasExistentes]);
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const ncmTimer = useRef<NodeJS.Timeout | null>(null);
@@ -61,22 +88,30 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
   // Preencher formulário no modo edição
   useEffect(() => {
     if (produto) {
-      setNome(produto.nome || '');
+      setNome(normalizeProductName(produto.nome || ''));
       setCusto(produto.custoPadrao ?? 0);
       setEstoque(produto.qtdEstoque != null ? String(produto.qtdEstoque) : '0');
-      setMarca(produto.marca || '');
-      setCategoria(produto.categoria || '');
-      setNcm(produto.ncm || '');
+      setMarca(normalizeCadastroText(produto.marca || ''));
+      setCategoria(normalizeCadastroText(produto.categoria || ''));
+      setNcm(normalizeCadastroText(produto.ncm || ''));
       setValor(produto.valorVenda ?? 0);
       setImagemPath(produto.imagem || '');
+      setPreviewUrl(null);
       setFornecedorId(produto.fornecedorId != null ? String(produto.fornecedorId) : '');
+      setDataCompra(produto.dataCompra ? new Date(produto.dataCompra).toISOString().split('T')[0] : '');
     }
-  }, [produto?.id]);
+  }, [produto]);
+
+  // Limpar object URL ao desmontar
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   // Autocomplete e verificação de duplicidade
   useEffect(() => {
     if (nome.length < 2) {
-      setSuggestions([]);
       setIsDuplicate(false);
       return;
     }
@@ -87,12 +122,11 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
       try {
         const res = await fetch(`/api/produtos/autocomplete?q=${encodeURIComponent(nome)}`);
         const data = await res.json();
-        setSuggestions(data.matches || []);
         // No modo edição, ignorar duplicidade se o nome for o mesmo do produto atual
         const dup = data.isDuplicate || false;
-        setIsDuplicate(isEdit && produto && nome === produto.nome ? false : dup);
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
+        setIsDuplicate(isEdit && produto && nome === normalizeProductName(produto.nome) ? false : dup);
+      } catch {
+        setIsDuplicate(false);
       }
     }, 500);
 
@@ -115,7 +149,7 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
         const res = await fetch(`/api/ncm/search?q=${encodeURIComponent(nome)}`);
         const data = await res.json();
         setNcmSuggestions(Array.isArray(data.items) ? data.items : []);
-      } catch (error) {
+      } catch {
         setNcmSuggestions([]);
       } finally {
         setIsSearchingNcm(false);
@@ -132,6 +166,11 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Preview instantâneo antes do upload
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const objUrl = URL.createObjectURL(file);
+    setPreviewUrl(objUrl);
+
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -142,10 +181,14 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
         body: formData
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.filePath) {
         setImagemPath(data.filePath);
+        URL.revokeObjectURL(objUrl);
+        setPreviewUrl(null);
+      } else {
+        toast.error(data.error || "Falha no upload da imagem.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro no upload da imagem.");
     } finally {
       setIsUploading(false);
@@ -154,19 +197,21 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome) return;
+    const normalizedNome = normalizeProductName(nome.trim());
+    if (!normalizedNome) return;
 
     setIsSubmitting(true);
     const formData = new FormData();
-    formData.append('nome', nome);
+    formData.append('nome', normalizedNome);
     formData.append('custo', String(custo));
-    formData.append('marca', marca);
-    formData.append('categoria', categoria);
-    formData.append('ncm', ncm);
+    formData.append('marca', normalizeCadastroText(marca.trim()));
+    formData.append('categoria', normalizeCadastroText(categoria.trim()));
+    formData.append('ncm', normalizeCadastroText(ncm.trim()));
     formData.append('valor', String(valor));
     formData.append('estoque', estoque);
     formData.append('imagem', imagemPath);
     formData.append('fornecedorId', fornecedorId);
+    formData.append('dataCompra', dataCompra);
 
     const action = isEdit && onUpdateAction && produto ? onUpdateAction : onSuccessAction;
     if (isEdit && produto) {
@@ -175,9 +220,13 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
 
     try {
       await action(formData);
-      if (isEdit && cancelHref) {
+      if (isEdit && onEditSuccess) {
+        toast.success("Produto atualizado com sucesso!");
+        onEditSuccess();
+      } else if (isEdit && cancelHref) {
         toast.success("Produto atualizado com sucesso!");
         router.push(cancelHref);
+        router.refresh();
       } else if (!isEdit) {
         toast.success("Produto cadastrado com sucesso!");
         setNome('');
@@ -188,12 +237,14 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
         setNcm('');
         setValor(0);
         setImagemPath('');
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
         setFornecedorId('');
-        setSuggestions([]);
+        setDataCompra('');
         setIsDuplicate(false);
         setNcmSuggestions([]);
       }
-    } catch (err) {
+    } catch {
       toast.error("Erro ao salvar. Tente novamente.");
     } finally {
       setIsSubmitting(false);
@@ -206,19 +257,20 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
         <div className="md:col-span-1 space-y-4">
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-muted-foreground">Imagem do Produto</Label>
-            <div className="relative w-full aspect-square rounded-xl border border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition">
-              {imagemPath ? (
+              <div className="relative w-full aspect-square rounded-xl border border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition overflow-hidden">
+              {(previewUrl || imagemPath) ? (
                 <Image
-                  src={imagemPath}
+                  src={previewUrl || imagemPath}
                   alt="Produto"
                   fill
-                  className="object-cover rounded-xl"
+                  unoptimized
+                  className="absolute inset-0 object-cover rounded-xl"
                 />
               ) : (
                 <Camera className="h-10 w-10 text-muted-foreground" />
               )}
             </div>
-            <Input type="file" onChange={handleImageUpload} disabled={isUploading} />
+            <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
           </div>
         </div>
 
@@ -229,9 +281,9 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
               <div className="relative">
                 <Input
                   value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  onChange={(e) => setNome(normalizeProductName(e.target.value))}
                   placeholder="Ex: Teclado Mecânico RGB"
-                  className={isDuplicate ? "border-amber-500" : ""}
+                  className={cn("uppercase", isDuplicate ? "border-amber-500" : "")}
                 />
                 {isDuplicate && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-amber-600">
@@ -247,12 +299,26 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Categoria</Label>
-              <Input value={categoria} onChange={(e) => setCategoria(e.target.value)} placeholder="Ex: Eletrônicos" />
+              <Input
+                value={categoria}
+                onChange={(e) => setCategoria(normalizeCadastroText(e.target.value))}
+                placeholder="Ex: Eletrônicos"
+                list={categoryListId}
+                className="uppercase"
+              />
+              <datalist id={categoryListId}>
+                {filteredCategorias.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
+              <div className="text-[11px] text-muted-foreground">
+                Sugere categorias já cadastradas, mas você pode digitar uma nova se precisar.
+              </div>
             </div>
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">Marca</Label>
-              <Input value={marca} onChange={(e) => setMarca(e.target.value)} placeholder="Marca" />
+              <Input value={marca} onChange={(e) => setMarca(normalizeCadastroText(e.target.value))} placeholder="Marca" className="uppercase" />
             </div>
           </div>
 
@@ -282,12 +348,20 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
                 options={fornecedores.map((f) => ({ value: String(f.id), label: f.nome }))}
               />
             </div>
+
+            <div className="space-y-1">
+              <Label>Data da Compra</Label>
+              <DateInput
+                value={dataCompra}
+                onChange={(v) => setDataCompra(v)}
+              />
+            </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs font-semibold text-muted-foreground">NCM</Label>
-              <Input value={ncm} onChange={(e) => setNcm(e.target.value)} placeholder="8 dígitos" maxLength={8} />
+              <Input value={ncm} onChange={(e) => setNcm(normalizeCadastroText(e.target.value))} placeholder="8 dígitos" maxLength={8} className="uppercase" />
               <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 p-2">
                 <div className="flex items-center gap-2 text-[11px] uppercase text-muted-foreground">
                   <Tag className="h-3.5 w-3.5" />
@@ -320,13 +394,21 @@ export default function ProdutoFormClient({ produto, onSuccessAction, onUpdateAc
       </div>
 
       <div className="flex items-center justify-end gap-2">
-        {cancelHref && (
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancelar
+          </Button>
+        ) : cancelHref ? (
           <a href={cancelHref} className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}>
             Cancelar
           </a>
-        )}
-        <Button disabled={isSubmitting || isUploading || isDuplicate} type="submit" className="bg-primary hover:bg-primary/90">
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+        ) : null}
+        <Button
+          disabled={isSubmitting || isUploading || isDuplicate}
+          type="submit"
+          className="bg-primary hover:bg-primary/90"
+          leftIcon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+        >
           {isEdit ? "Atualizar Produto" : "Cadastrar Produto"}
         </Button>
       </div>

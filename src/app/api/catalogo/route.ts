@@ -1,11 +1,8 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
+import { formatBRL } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { readFile } from "fs/promises";
 import path from "path";
-
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
 
 function wrapText(text: string, font: any, size: number, maxWidth: number) {
   const words = text.split(/\s+/);
@@ -25,10 +22,20 @@ function wrapText(text: string, font: any, size: number, maxWidth: number) {
   return lines;
 }
 
-async function tryLoadImage(pdf: PDFDocument, filePath: string) {
+async function tryLoadImage(pdf: PDFDocument, filePathOrUrl: string) {
   try {
-    const bytes = await readFile(filePath);
-    const ext = path.extname(filePath).toLowerCase();
+    let bytes: Buffer;
+    if (filePathOrUrl.startsWith("http://") || filePathOrUrl.startsWith("https://")) {
+      const res = await fetch(filePathOrUrl);
+      if (!res.ok) return null;
+      const ab = await res.arrayBuffer();
+      bytes = Buffer.from(ab);
+    } else {
+      const localPath = path.join(process.cwd(), "public", filePathOrUrl.replace(/^\//, ""));
+      bytes = await readFile(localPath);
+    }
+    const baseName = filePathOrUrl.startsWith("http") ? new URL(filePathOrUrl).pathname : filePathOrUrl;
+    const ext = path.extname(baseName).toLowerCase();
     if (ext === ".png") return pdf.embedPng(bytes);
     if (ext === ".jpg" || ext === ".jpeg") return pdf.embedJpg(bytes);
   } catch {
@@ -62,7 +69,7 @@ export async function GET(req: Request) {
 
   const cfg = await prisma.config.findFirst();
   let logoImage = null;
-  let logoDims = { width: 0, height: 0 };
+  const logoDims = { width: 0, height: 0 };
 
   if (cfg?.logoPath) {
     const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath);
@@ -127,7 +134,7 @@ export async function GET(req: Request) {
       borderWidth: 1,
     });
 
-    const imgPath = produto.imagem ? path.join(process.cwd(), "public", produto.imagem) : null;
+    const imgPath = produto.imagem || null;
     let img = null;
     if (imgPath) {
       img = await tryLoadImage(pdf, imgPath);
@@ -190,10 +197,12 @@ export async function GET(req: Request) {
 
   const pdfBytes = await pdf.save();
 
-  return new Response(Buffer.from(pdfBytes), {
+  return new Response(new Uint8Array(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": "attachment; filename=\"catalogo_produtos.pdf\"",
+      "Cache-Control": "no-cache, no-transform",
+      "Content-Length": String(pdfBytes.length),
     },
   });
 }

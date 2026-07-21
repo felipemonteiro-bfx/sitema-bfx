@@ -5,30 +5,33 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/notification-bell";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, LayoutDashboard } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 const adminMenu = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/boletos", label: "Boletos" },
+  { href: "/dashboard", label: "Início" },
+  { href: "/venda-rapida", label: "Venda Rápida" },
+  { href: "/historico", label: "Histórico" },
+  { href: "/importacao", label: "Importação" },
   { href: "/financeiro", label: "Financeiro & DRE" },
+  { href: "/boletos", label: "Boletos" },
   { href: "/prudent", label: "Prudent (Antecipação)" },
   { href: "/inteligencia", label: "BFX Intelligence", isNew: true },
-  { href: "/importacao", label: "Importação" },
-  { href: "/venda-rapida", label: "Venda Rápida" },
-  { href: "/historico", label: "Histórico (Editar)" },
+  { href: "/crm", label: "CRM", isNew: true },
+  { href: "/relatorios", label: "Relatórios" },
   { href: "/cadastros", label: "Cadastros" },
   { href: "/gestao-rh", label: "Gestão de RH" },
-  { href: "/relatorios", label: "Relatórios" },
   { href: "/configuracoes", label: "Configurações" },
 ];
 
 const sellerMenu = [
+  { href: "/dashboard", label: "Início" },
   { href: "/venda-rapida", label: "Venda Rápida" },
   { href: "/comissoes", label: "Minhas Comissões" },
-  { href: "/historico", label: "Histórico (Editar)" },
+  { href: "/historico", label: "Histórico" },
   { href: "/cadastros", label: "Cadastros" },
   { href: "/relatorios", label: "Relatórios PDF" },
   { href: "/perfil", label: "Meu Perfil" },
@@ -48,18 +51,18 @@ export default async function AppLayout({
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-3 py-5 lg:px-6">
         <aside className="hidden w-72 shrink-0 lg:flex animate-slide-in-left">
-          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-border bg-card px-5 py-6 text-card-foreground shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl dark:shadow-[var(--shadow-lg)] dark:hover:shadow-[var(--glow-card)]">
+          <div className="sidebar-dark sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-sidebar-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl transition-all duration-300">
             <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
           </div>
         </aside>
         <main className="flex-1 min-w-0 rounded-2xl border border-border bg-card px-4 py-5 shadow-lg backdrop-blur-sm transition-all duration-300 dark:shadow-[var(--shadow-md)] lg:px-8 lg:py-7 animate-fade-in">
           <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <MobileMenuTrigger>
                 <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
               </MobileMenuTrigger>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-foreground">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="text-sm font-medium text-foreground truncate max-w-[120px] sm:max-w-[160px]">
                   {session.nomeExibicao || session.username}
                 </span>
                 <Badge variant={session.role === "admin" ? "info" : "secondary"} size="sm">
@@ -67,7 +70,10 @@ export default async function AppLayout({
                 </Badge>
               </div>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <ThemeToggle />
+            </div>
           </div>
           <div className="animate-fade-in-up">
             {children}
@@ -88,32 +94,35 @@ function SidebarContent({
   role?: string;
 }) {
   return (
-    <div className="flex h-full flex-col">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-md">
-              <LayoutDashboard className="h-4 w-4 text-primary-foreground" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sidebar-primary)] to-rose-500 shadow-md">
+              <LayoutDashboard className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text">
+              <h1 className="text-lg font-bold tracking-tight text-[var(--sidebar-foreground)]">
                 BFX Manager
               </h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{userLabel}</span>
+            <span className="text-sm text-[var(--sidebar-muted)]">{userLabel}</span>
             <Badge variant={role === "admin" ? "info" : "secondary"} size="sm">
               {role === "admin" ? "Admin" : "Vendedor"}
             </Badge>
           </div>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <ThemeToggle />
+        </div>
       </div>
-      <Separator className="my-5" />
+      <Separator className="my-5 bg-[var(--sidebar-border)]" />
       <SidebarNav menu={menu} />
       <div className="mt-auto">
-        <Separator className="my-4" />
+        <Separator className="my-4 bg-[var(--sidebar-border)]" />
         <LogoutButton />
       </div>
     </div>

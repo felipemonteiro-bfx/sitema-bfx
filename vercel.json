@@ -1,8 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/cleanup-uploads",
-      "schedule": "0 3 * * 0"
-    }
-  ]
+  "$comment": "Producao roda em Kubernetes/ArgoCD — os crons agora vivem em deploy/bfx/cronjobs-app.yaml. Mantido vazio para evitar disparo duplo caso um deploy Vercel esteja conectado.",
+  "crons": []
 }

@@ -1,4 +1,4 @@
-# CI: lint e build em todo push/PR (deploy é feito pela integração Git da Vercel)
+# CI: lint, test e build em todo push/PR (deploy em producao é via ECR + ArgoCD)
 name: CI
 
 on:
@@ -12,15 +12,17 @@ on:
     branches: [main, nextjs-migration]
 
 env:
+  DATABASE_URL: "postgresql://user:pass@localhost:5432/bfx?schema=public"
   BUILD_DATABASE_URL: "postgresql://user:pass@localhost:5432/bfx?schema=public"
   SESSION_SECRET: "ci-build-dummy-secret-min-32-chars-long"
   SKIP_ENV_VALIDATION: "1"
 
 jobs:
   lint-and-build:
+    # Runner hospedado do GitHub (sai do self-hosted, que travava os jobs na fila).
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -37,10 +39,9 @@ jobs:
 
       - name: Generate Prisma Client
         run: npx prisma generate
-        env:
-          DATABASE_URL: ${{ env.BUILD_DATABASE_URL }}
+
+      - name: Test
+        run: npx vitest run
 
       - name: Build
         run: npm run build
-        env:
-          DATABASE_URL: ${{ env.BUILD_DATABASE_URL }}

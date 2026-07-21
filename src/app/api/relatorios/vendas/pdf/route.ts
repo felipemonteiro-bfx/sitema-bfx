@@ -1,12 +1,21 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { FORMA_PAGAMENTO, formaFromLegacyFlags, type FormaPagamento } from "@/lib/forma-pagamento";
 
-function formatBRL(value: number) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat("pt-BR").format(d);
+/** Label compacto da forma de pagamento para caber na coluna do PDF (max 7 chars). */
+function formaPagamentoLabelCurto(forma: FormaPagamento): string {
+  switch (forma) {
+    case FORMA_PAGAMENTO.DESCONTO_FOLHA: return "Folha";
+    case FORMA_PAGAMENTO.BOLETO: return "Boleto";
+    case FORMA_PAGAMENTO.PIX: return "Pix";
+    case FORMA_PAGAMENTO.DINHEIRO: return "Dinheiro";
+    case FORMA_PAGAMENTO.CARTAO_CREDITO: return "Credito";
+    case FORMA_PAGAMENTO.CARTAO_DEBITO: return "Debito";
+    case FORMA_PAGAMENTO.TRANSFERENCIA: return "Transf.";
+    default: return "Outro";
+  }
 }
 
 export async function GET(req: Request) {
@@ -32,13 +41,14 @@ export async function GET(req: Request) {
             : undefined,
       },
       include: {
-        cliente: { select: { nome: true, empresa: true } },
+        cliente: { select: { nome: true, empresa: true, matricula: true } },
+        itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
       },
       orderBy: { dataVenda: "desc" },
     });
 
     const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([595, 842]);
+    let page = pdfDoc.addPage([842, 595]); // Landscape A4
     const { width, height } = page.getSize();
 
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -53,7 +63,7 @@ export async function GET(req: Request) {
       font: fontBold,
       color: rgb(1, 1, 1),
     });
-    page.drawText(`Período: ${formatDate(start)} até ${formatDate(end)}`, {
+    page.drawText(`Período: ${formatDateBR(start)} até ${formatDateBR(end)}`, {
       x: 40,
       y: height - 65,
       size: 10,
@@ -62,7 +72,7 @@ export async function GET(req: Request) {
     });
     if (empresa && empresa !== "all") {
       page.drawText(`Empresa: ${empresa}`, {
-        x: 400,
+        x: 560,
         y: height - 65,
         size: 10,
         font,
@@ -70,14 +80,14 @@ export async function GET(req: Request) {
       });
     }
 
-    // Table Header
+    // Table Header — 8 columns: Mat. | Nome | Produtos | Vendedor | Data | Valor | Parc. | Pagto.
     const tableTop = height - 120;
-    const colX = [40, 100, 220, 320, 420, 500];
-    const headers = ["Data", "Cliente", "Produto", "Vendedor", "Valor", "Status"];
+    const colX = [40, 95, 200, 360, 470, 555, 645, 685];
+    const headers = ["Mat.", "Nome", "Produtos", "Vendedor", "Data", "Valor", "Parc.", "Pagto."];
 
     page.drawRectangle({ x: 30, y: tableTop - 5, width: width - 60, height: 20, color: rgb(0.95, 0.95, 0.95) });
     headers.forEach((h, i) => {
-      page.drawText(h, { x: colX[i], y: tableTop, size: 10, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
+      page.drawText(h, { x: colX[i], y: tableTop, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
     });
 
     let y = tableTop - 25;
@@ -85,28 +95,33 @@ export async function GET(req: Request) {
 
     for (const v of vendas) {
       if (y < 50) {
-        page = pdfDoc.addPage([595, 842]);
+        page = pdfDoc.addPage([842, 595]);
         y = height - 50;
       }
 
-      const valorTotal = (v.valorVenda || 0) + (v.valorFrete || 0);
+      const valorTotal = valorTotalVenda(v);
       totalValor += valorTotal;
 
-      page.drawText(formatDate(v.dataVenda), { x: colX[0], y, size: 9, font });
-      page.drawText(v.cliente?.nome?.substring(0, 20) || "N/D", { x: colX[1], y, size: 9, font });
-      page.drawText(v.produtoNome?.substring(0, 18) || "N/A", { x: colX[2], y, size: 9, font });
-      page.drawText(v.vendedor || "N/D", { x: colX[3], y, size: 9, font });
-      page.drawText(formatBRL(valorTotal), { x: colX[4], y, size: 9, font });
-      page.drawText(v.temNota ? "C/ Nota" : "S/ Nota", {
-        x: colX[5],
-        y,
-        size: 8,
-        font,
-        color: v.temNota ? rgb(0, 0.5, 0) : rgb(0.5, 0.5, 0.5),
-      });
+      const matricula = v.cliente?.matricula?.substring(0, 9) || "—";
+      const nomeCliente = v.cliente?.nome?.substring(0, 18) || "N/D";
+      const produtos = produtosTexto(v).substring(0, 28) || "N/A";
+      const vendedor = (v.vendedor || "N/D").substring(0, 17);
+      const dataStr = formatDateBR(v.dataVenda);
+      const parcelas = String(v.parcelas || 1) + "x";
+      const formaPag = (v.formaPagamento as FormaPagamento | null) ??
+        formaFromLegacyFlags({ descontoEmFolha: v.descontoEmFolha, boleto: v.boleto, parcelas: v.parcelas });
+      const pagtoLabel = formaPagamentoLabelCurto(formaPag);
+
+      page.drawText(matricula, { x: colX[0], y, size: 8, font });
+      page.drawText(nomeCliente, { x: colX[1], y, size: 8, font });
+      page.drawText(produtos, { x: colX[2], y, size: 8, font });
+      page.drawText(vendedor, { x: colX[3], y, size: 8, font });
+      page.drawText(dataStr, { x: colX[4], y, size: 8, font });
+      page.drawText(formatBRL(valorTotal), { x: colX[5], y, size: 8, font });
+      page.drawText(parcelas, { x: colX[6], y, size: 8, font });
+      page.drawText(pagtoLabel, { x: colX[7], y, size: 8, font });
 
       y -= 18;
-      // Linha separadora leve
       page.drawLine({
         start: { x: 30, y: y + 10 },
         end: { x: width - 30, y: y + 10 },
@@ -119,14 +134,16 @@ export async function GET(req: Request) {
     y -= 20;
     page.drawRectangle({ x: 30, y: y - 10, width: width - 60, height: 30, color: rgb(0.07, 0.15, 0.3) });
     page.drawText(`TOTAL DO PERÍODO: ${formatBRL(totalValor)}`, { x: 40, y, size: 12, font: fontBold, color: rgb(1, 1, 1) });
-    page.drawText(`Vendas emitidas: ${vendas.length}`, { x: 400, y, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+    page.drawText(`Vendas: ${vendas.length}`, { x: 650, y, size: 10, font: fontBold, color: rgb(1, 1, 1) });
 
     const pdfBytes = await pdfDoc.save();
 
-    return new Response(Buffer.from(pdfBytes), {
+    return new Response(new Uint8Array(pdfBytes), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="relatorio_vendas_${Date.now()}.pdf"`,
+        "Cache-Control": "no-cache, no-transform",
+        "Content-Length": String(pdfBytes.length),
       },
     });
   } catch (error) {

@@ -10,6 +10,7 @@ export async function GET() {
       role: session.role as "admin" | "vendedor",
       username: session.username,
       displayName: session.nomeExibicao || session.username,
+      userId: session.id,
     },
     "plan"
   );
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
     role: session.role as "admin" | "vendedor",
     username: session.username,
     displayName: session.nomeExibicao || session.username,
+    userId: session.id,
   });
   return NextResponse.json({ result });
 }

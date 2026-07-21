@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { X, Package } from "lucide-react";
+import { X, Package, AlertTriangle, Plus } from "lucide-react";
 import { formatBRL, cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/currency-input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { CadastrarProdutoRapidoDialog } from "@/components/cadastrar-produto-rapido-dialog";
 
 interface ProdutoItem {
   id: string; // ID temporário para o frontend
@@ -25,17 +27,25 @@ interface Props {
   onRemove: (index: number) => void;
   canRemove: boolean;
   hasError?: boolean;
+  fornecedores?: { id: number; nome: string }[];
+  categoriasExistentes?: string[];
 }
 
-export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, hasError }: Props) {
+export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, hasError, fornecedores = [], categoriasExistentes = [] }: Props) {
   const [produtoQuery, setProdutoQuery] = useState(item.produtoNome);
   const [produtoSuggestions, setProdutoSuggestions] = useState<{
     id: number;
     nome: string;
     valorVenda?: number;
     custoPadrao?: number;
+    qtdEstoque?: number | null;
   }[]>([]);
+  const [estoqueDisponivel, setEstoqueDisponivel] = useState<number | null>(null);
+  const [cadastrarOpen, setCadastrarOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const showDropdown = isSearching && produtoQuery.length >= 2;
 
   // Autocomplete de produtos
   useEffect(() => {
@@ -67,9 +77,12 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     nome: string;
     valorVenda?: number;
     custoPadrao?: number;
+    qtdEstoque?: number | null;
   }) => {
     setProdutoQuery(p.nome);
     setProdutoSuggestions([]);
+    setIsSearching(false);
+    setEstoqueDisponivel(p.qtdEstoque ?? null);
 
     const newItem: ProdutoItem = {
       ...item,
@@ -81,8 +94,14 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     onUpdate(index, newItem);
   };
 
-  const handleChange = (field: keyof ProdutoItem, value: number | string) => {
-    const newItem = { ...item, [field]: value };
+  const handleChange = useCallback((field: keyof ProdutoItem, value: number | string) => {
+    let newItem = { ...item, [field]: value };
+
+    // Limitar quantidade ao estoque disponível
+    if (field === "quantidade" && estoqueDisponivel !== null && estoqueDisponivel > 0) {
+      const qtd = Math.min(Number(value), estoqueDisponivel);
+      newItem = { ...newItem, quantidade: qtd };
+    }
 
     // Recalcular subtotal
     if (field === "quantidade" || field === "valorVenda") {
@@ -90,17 +109,21 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     }
 
     onUpdate(index, newItem);
-  };
+  }, [item, estoqueDisponivel, onUpdate, index]);
 
-  const lucro = (item.valorVenda * item.quantidade) - (item.custoProduto * item.quantidade);
-  const margem = item.valorVenda > 0 ? (lucro / (item.valorVenda * item.quantidade)) * 100 : 0;
+  const { lucro, margem } = useMemo(() => {
+    const l = (item.valorVenda - item.custoProduto) * item.quantidade;
+    const m = item.valorVenda > 0 ? ((item.valorVenda - item.custoProduto) / item.valorVenda) * 100 : 0;
+    return { lucro: l, margem: m };
+  }, [item.valorVenda, item.custoProduto, item.quantidade]);
+  const semEstoque = estoqueDisponivel !== null && estoqueDisponivel <= 0;
 
   return (
     <Card
       variant="elevated"
       className={cn(
         "relative overflow-visible border-primary/20 transition-all hover:border-primary/40",
-        produtoSuggestions.length > 0 && "z-10",
+        (produtoSuggestions.length > 0 || showDropdown) && "z-10",
         hasError && "border-destructive border-2",
       )}
     >
@@ -117,46 +140,100 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
             </div>
           </div>
           {canRemove && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => onRemove(index)}
-              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemove(index)}
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    aria-label="Remover produto"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Remover produto</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Produto Nome */}
           <div className="space-y-2 relative lg:col-span-2">
-            <Label
-              className={cn(
-                "text-xs font-bold uppercase tracking-wider",
-                hasError ? "text-destructive" : "text-muted-foreground",
+            <div className="flex items-center justify-between">
+              <Label
+                htmlFor={`produto-nome-${index}`}
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  hasError ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                Produto <span className="text-destructive">*</span> {hasError && "(obrigatório)"}
+              </Label>
+              {estoqueDisponivel !== null && (
+                <span
+                  className={cn(
+                    "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                    semEstoque
+                      ? "bg-destructive/10 text-destructive"
+                      : estoqueDisponivel <= 5
+                      ? "bg-warning/10 text-warning"
+                      : "bg-success/10 text-success"
+                  )}
+                >
+                  {semEstoque ? "Sem estoque" : `Estoque: ${estoqueDisponivel}`}
+                </span>
               )}
-            >
-              Produto {hasError && "(obrigatório)"}
-            </Label>
+            </div>
             <Input
+              id={`produto-nome-${index}`}
               value={produtoQuery}
-              onChange={(e) => setProdutoQuery(e.target.value)}
+              onChange={(e) => {
+                const nome = e.target.value;
+                setProdutoQuery(nome);
+                setEstoqueDisponivel(null);
+                setIsSearching(true);
+                // Propaga o nome digitado para o item do pai — sem isso, um produto
+                // digitado mas nao selecionado no dropdown fica com produtoNome vazio
+                // e e descartado no envio ("some e nao contabiliza").
+                onUpdate(index, { ...item, produtoNome: nome });
+              }}
               placeholder="Digite o nome do produto"
               required
+              aria-required="true"
               className={hasError ? "border-destructive border-2" : ""}
             />
-            {produtoSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-48 overflow-y-auto">
+            {showDropdown && produtoSuggestions.length > 0 && (
+              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
                 {produtoSuggestions.map((p) => (
                   <button
                     key={p.id}
                     type="button"
+                    role="option"
+                    aria-selected={false}
                     onClick={() => handleProdutoSelect(p)}
                     className="w-full px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer text-sm"
                   >
-                    <div className="font-medium">{p.nome}</div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{p.nome}</span>
+                      {p.qtdEstoque !== undefined && p.qtdEstoque !== null && (
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shrink-0",
+                            p.qtdEstoque <= 0
+                              ? "bg-destructive/10 text-destructive"
+                              : p.qtdEstoque <= 5
+                              ? "bg-warning/10 text-warning"
+                              : "bg-success/10 text-success"
+                          )}
+                        >
+                          {p.qtdEstoque <= 0 ? "Sem estoque" : `${p.qtdEstoque} un`}
+                        </span>
+                      )}
+                    </div>
                     {p.valorVenda && (
                       <div className="text-xs text-muted-foreground">
                         {formatBRL(p.valorVenda)}
@@ -164,8 +241,33 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                     )}
                   </button>
                 ))}
+                {produtoSuggestions.length === 0 && (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    Nenhum produto encontrado
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProdutoSuggestions([]);
+                    setIsSearching(false);
+                    setCadastrarOpen(true);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-primary/10 transition-colors cursor-pointer text-sm border-t border-border flex items-center gap-2 text-primary font-medium"
+                >
+                  <Plus className="h-3.5 w-3.5 shrink-0" />
+                  Cadastrar &ldquo;{produtoQuery}&rdquo;
+                </button>
               </div>
             )}
+            <CadastrarProdutoRapidoDialog
+              open={cadastrarOpen}
+              onOpenChange={setCadastrarOpen}
+              nomeInicial={produtoQuery}
+              fornecedores={fornecedores}
+              categoriasExistentes={categoriasExistentes}
+              onCriado={(p) => handleProdutoSelect({ nome: p.nome, valorVenda: p.valorVenda, custoPadrao: p.custoPadrao, qtdEstoque: p.qtdEstoque })}
+            />
           </div>
 
           {/* Custo */}
@@ -193,31 +295,43 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           {/* Quantidade */}
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Qtd
+              Qtd {estoqueDisponivel !== null && estoqueDisponivel > 0 && (
+                <span className="text-muted-foreground font-normal">/ {estoqueDisponivel}</span>
+              )}
             </Label>
             <Input
               type="number"
               min="1"
+              max={estoqueDisponivel !== null && estoqueDisponivel > 0 ? estoqueDisponivel : undefined}
               value={item.quantidade}
               onChange={(e) => handleChange("quantidade", Number(e.target.value))}
               required
+              aria-label={`Quantidade do produto ${index + 1}`}
             />
           </div>
 
           {/* Resumo */}
-          <div className="lg:col-span-3 flex items-center gap-4 pt-2 border-t border-border">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Subtotal: </span>
-              <span className="font-bold text-foreground">{formatBRL(item.subtotal)}</span>
+          <div className="lg:col-span-3 pt-3 border-t border-border space-y-2">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-muted/30 px-3 py-2 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
+                <div className="text-sm font-bold text-foreground">{formatBRL(item.subtotal)}</div>
+              </div>
+              <div className="rounded-lg bg-success/5 px-3 py-2 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro</div>
+                <div className="text-sm font-bold text-success">{formatBRL(lucro)}</div>
+              </div>
+              <div className="rounded-lg bg-info/5 px-3 py-2 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
+                <div className="text-sm font-bold text-info">{margem.toFixed(1)}%</div>
+              </div>
             </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Lucro: </span>
-              <span className="font-bold text-success">{formatBRL(lucro)}</span>
-            </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Margem: </span>
-              <span className="font-bold text-info">{margem.toFixed(1)}%</span>
-            </div>
+            {semEstoque && (
+              <div className="flex items-center gap-1.5 text-xs text-destructive">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                Produto sem estoque disponível
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

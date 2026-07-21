@@ -36,7 +36,7 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
         </div>
         {logoPath && (
           <div className="relative w-20 h-20">
-            <Image src={logoPath} alt="Company Logo" layout="fill" objectFit="contain" />
+            <Image src={logoPath} alt="Company Logo" fill style={{ objectFit: "contain" }} />
           </div>
         )}
       </div>

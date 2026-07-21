@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     let cliente: { renda: number | null } | null = null;
     let historicoCliente = "";
     let ticketMedio = 0;
-    let produtosAnteriores: string[] = [];
+    const produtosAnteriores: string[] = [];
 
     if (clienteId) {
       cliente = await prisma.cliente.findUnique({

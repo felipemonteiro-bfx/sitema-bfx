@@ -17,10 +17,12 @@ export async function GET(
 
   try {
     const pdfBytes = await generateReciboPdf(venda.id, "autorizacao");
-    return new NextResponse(Buffer.from(pdfBytes), {
+    return new NextResponse(new Uint8Array(pdfBytes), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="autorizacao_${venda.id}.pdf"`,
+        "Cache-Control": "no-cache, no-transform",
+        "Content-Length": String(pdfBytes.length),
       },
     });
   } catch (err) {

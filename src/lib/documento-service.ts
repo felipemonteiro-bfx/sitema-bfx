@@ -19,7 +19,7 @@ export async function salvarDocumento(
       vendaId,
       tipo,
       mimeType,
-      conteudo: buffer,
+      conteudo: new Uint8Array(buffer),
       tamanhoBytes: buffer.length,
     },
   });

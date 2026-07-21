@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { formatBRL } from "@/lib/utils";
 
 export async function GET() {
   try {
@@ -14,9 +15,6 @@ export async function GET() {
         categoria: true
       }
     });
-
-    const formatBRL = (v: number | null) => 
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
     const html = `
       <!DOCTYPE html>
@@ -85,6 +83,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Erro ao gerar catálogo:", error);
-    return NextResponse.json({ error: "Failed to generate catalog" }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao gerar catálogo." }, { status: 500 });
   }
 }

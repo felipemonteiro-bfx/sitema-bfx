@@ -10,7 +10,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
-  BarChart3,
   Brain,
   FileText,
   FolderPlus,
@@ -24,6 +23,7 @@ import {
   History,
   Upload,
   Sparkles,
+  Home,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,7 +41,7 @@ type MenuGroup = {
 };
 
 const iconMap: Record<string, LucideIcon> = {
-  "/dashboard": BarChart3,
+  "/dashboard": Home,
   "/boletos": ReceiptText,
   "/financeiro": Wallet,
   "/prudent": ReceiptText,
@@ -80,32 +80,32 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
       className={cn(
         "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
         "transition-all duration-200 ease-out",
-        "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
         active
-          ? "bg-accent text-accent-foreground shadow-md dark:shadow-[var(--glow-primary)]"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-accent-foreground hover:shadow-sm",
+          ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-foreground)] shadow-md"
+          : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-accent)]/80 hover:text-[var(--sidebar-foreground)]",
         "animate-fade-in-up fill-both"
       )}
       style={{ animationDelay: `${index * 30}ms` }}
     >
       {active && (
         <span 
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-success animate-fade-in-scale"
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-[var(--sidebar-primary)] animate-fade-in-scale"
           aria-hidden="true"
         />
       )}
       
       <span className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200",
+        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
         active
-          ? "bg-accent-foreground/10"
-          : "bg-muted/50 group-hover:bg-accent/30 group-hover:scale-110"
+          ? "bg-[var(--sidebar-primary)]/20"
+          : "bg-white/5 group-hover:bg-[var(--sidebar-primary)]/15 group-hover:scale-105"
       )}>
         {Icon && (
           <Icon className={cn(
             "h-4 w-4 transition-transform duration-200",
-            active && "text-accent-foreground",
-            !active && "group-hover:scale-110"
+            active && "text-[var(--sidebar-primary)]",
+            !active && "group-hover:scale-105"
           )} />
         )}
       </span>
@@ -113,7 +113,7 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
       <span className="flex-1 truncate">{item.label}</span>
       
       {item.isNew && (
-        <span className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-success animate-pulse-soft">
+        <span className="flex items-center gap-1 rounded-full bg-[var(--sidebar-primary)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-primary)] animate-pulse-soft">
           <Sparkles className="h-3 w-3" />
           Novo
         </span>
@@ -122,7 +122,7 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
       {item.badge && !item.isNew && (
         <span className={cn(
           "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
-          "bg-primary text-primary-foreground",
+          "bg-[var(--sidebar-primary)] text-white",
           "animate-fade-in-scale"
         )}>
           {item.badge}
@@ -157,7 +157,7 @@ function SidebarNavGroup({ group, pathname, startIndex }: SidebarNavGroupProps) 
     <div className="space-y-1">
       {group.label && (
         <div className="px-3 py-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-muted)]/80">
             {group.label}
           </span>
         </div>
@@ -177,37 +177,52 @@ function SidebarNavGroup({ group, pathname, startIndex }: SidebarNavGroupProps) 
 export function SidebarNav({ menu }: { menu: MenuItem[] }) {
   const pathname = usePathname();
   
-  const groups: MenuGroup[] = [
+  const baseGroups: MenuGroup[] = [
     {
-      label: "Principal",
-      items: menu.filter(item => 
-        ["/dashboard", "/venda-rapida", "/historico"].includes(item.href)
+      label: "Visão geral",
+      items: menu.filter(item => ["/dashboard"].includes(item.href)),
+    },
+    {
+      label: "Vendas & Operações",
+      items: menu.filter(item =>
+        ["/venda-rapida", "/historico", "/importacao"].includes(item.href)
       ),
     },
     {
-      label: "Gestão",
-      items: menu.filter(item => 
-        ["/financeiro", "/boletos", "/prudent", "/cadastros", "/gestao-rh"].includes(item.href)
+      label: "Financeiro",
+      items: menu.filter(item =>
+        ["/financeiro", "/boletos", "/prudent"].includes(item.href)
       ),
     },
     {
-      label: "Ferramentas",
-      items: menu.filter(item => 
-        ["/inteligencia", "/importacao", "/relatorios", "/comissoes"].includes(item.href)
+      label: "Inteligência & Dados",
+      items: menu.filter(item =>
+        ["/inteligencia", "/crm", "/relatorios", "/cadastros", "/gestao-rh", "/comissoes"].includes(item.href)
       ),
     },
     {
       label: "Sistema",
-      items: menu.filter(item => 
+      items: menu.filter(item =>
         ["/configuracoes", "/perfil"].includes(item.href)
       ),
     },
+  ];
+
+  // Rede de seguranca: qualquer item do menu que nao caiu em nenhum grupo acima
+  // (ex.: rota nova adicionada em layout.tsx mas esquecida aqui) vai para "Outros"
+  // em vez de sumir silenciosamente do sidebar. Foi o que aconteceu com /crm.
+  const agrupados = new Set(baseGroups.flatMap(g => g.items.map(i => i.href)));
+  const semGrupo = menu.filter(item => !agrupados.has(item.href));
+
+  const groups: MenuGroup[] = [
+    ...baseGroups,
+    { label: "Outros", items: semGrupo },
   ].filter(group => group.items.length > 0);
 
   let itemIndex = 0;
 
   return (
-    <nav className="flex flex-1 flex-col gap-4 overflow-y-auto custom-scrollbar">
+    <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto custom-scrollbar">
       {groups.map((group, groupIndex) => {
         const startIndex = itemIndex;
         itemIndex += group.items.length;
