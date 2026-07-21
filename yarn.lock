@@ -2,14 +2,14 @@
 # yarn lockfile v1
 
 
-"@ai-sdk/gateway@3.0.52":
-  version "3.0.52"
-  resolved "https://registry.npmjs.org/@ai-sdk/gateway/-/gateway-3.0.52.tgz"
-  integrity sha512-lYCXP8T3YnIDiz8DP7loAMT27wnblc3IAYzQ7igg89RCRyTUjk6ffbxHXXQ5Pmv8jrdLF0ZIJnH54Dsr1OCKHg==
+"@ai-sdk/gateway@4.0.26":
+  version "4.0.26"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-4.0.26.tgz#910663fc3ee4eb9ee20e0ff6d5d5fe6300e09715"
+  integrity sha512-b/nc3COKtk8IxzgcCi418IoZFky/Bw+Jg8+J0/SBBnu/mOXA4bkIKCu81coEtJAWuH2g5Fvvsa0ar7EpmzNWTw==
   dependencies:
-    "@ai-sdk/provider" "3.0.8"
-    "@ai-sdk/provider-utils" "4.0.15"
-    "@vercel/oidc" "3.1.0"
+    "@ai-sdk/provider" "4.0.3"
+    "@ai-sdk/provider-utils" "5.0.12"
+    "@vercel/oidc" "3.2.0"
 
 "@ai-sdk/google@^3.0.20":
   version "3.0.30"
@@ -36,10 +36,27 @@
     "@standard-schema/spec" "^1.1.0"
     eventsource-parser "^3.0.6"
 
+"@ai-sdk/provider-utils@5.0.12":
+  version "5.0.12"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-5.0.12.tgz#fa26c4988094e6430b222c17399fb0ef69ff4b40"
+  integrity sha512-bbhlOgHeYwrIGheLkM6fhS8hVger8uFPmcOLg+kxc9EFh7y30XYorWhthlYAgpadO3SJhFZrIcEknN7qEqEVvA==
+  dependencies:
+    "@ai-sdk/provider" "4.0.3"
+    "@standard-schema/spec" "^1.1.0"
+    "@workflow/serde" "4.1.0"
+    eventsource-parser "^3.0.8"
+
 "@ai-sdk/provider@3.0.8":
   version "3.0.8"
   resolved "https://registry.npmjs.org/@ai-sdk/provider/-/provider-3.0.8.tgz"
   integrity sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==
+  dependencies:
+    json-schema "^0.4.0"
+
+"@ai-sdk/provider@4.0.3":
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/provider/-/provider-4.0.3.tgz#308624f81547a73556a67dc2465bf6f1d67fb77f"
+  integrity sha512-e0CpNWJUY7OxAFAnCZkw+ri9QOHWwTs1tXP42782KFGCU07qt8NiXCrCVowyCB5dP2r5/Uls+g2oPd8kOJn9dw==
   dependencies:
     json-schema "^0.4.0"
 
@@ -1587,11 +1604,6 @@
   version "2.1.0"
   resolved "https://registry.npmjs.org/@open-draft/until/-/until-2.1.0.tgz"
   integrity sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==
-
-"@opentelemetry/api@1.9.0":
-  version "1.9.0"
-  resolved "https://registry.npmjs.org/@opentelemetry/api/-/api-1.9.0.tgz"
-  integrity sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==
 
 "@oxc-project/types@=0.122.0":
   version "0.122.0"
@@ -3339,10 +3351,10 @@
   resolved "https://registry.yarnpkg.com/@unrs/resolver-binding-win32-x64-msvc/-/resolver-binding-win32-x64-msvc-1.11.1.tgz#538b1e103bf8d9864e7b85cc96fa8d6fb6c40777"
   integrity sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==
 
-"@vercel/oidc@3.1.0":
-  version "3.1.0"
-  resolved "https://registry.npmjs.org/@vercel/oidc/-/oidc-3.1.0.tgz"
-  integrity sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==
+"@vercel/oidc@3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@vercel/oidc/-/oidc-3.2.0.tgz#5782a4d4904443f015808705b5537cf9c3b68528"
+  integrity sha512-UycprH3T6n3jH0k44NHMa7pnFHGu/N05MjojYr+Mc6I7obkoLIJujSWwin1pCvdy/eOxrI/l3uDLQsmcrOb4ug==
 
 "@vitest/expect@4.1.2":
   version "4.1.2"
@@ -3404,6 +3416,11 @@
     convert-source-map "^2.0.0"
     tinyrainbow "^3.1.0"
 
+"@workflow/serde@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@workflow/serde/-/serde-4.1.0.tgz#82dbbaf2370f7b8ae46d9a9a4ab0917258f8db62"
+  integrity sha512-pav4F2BoirECWR7Nf1TKt+2eETcBj7jj4cBefQ8VXQCA6NPkaKeLfj/zMgi+3zYV5ZIBT4GuUiphsj0/b9hPQQ==
+
 accepts@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/accepts/-/accepts-2.0.0.tgz"
@@ -3434,15 +3451,14 @@ agent-base@^7.1.2:
   resolved "https://registry.npmjs.org/agent-base/-/agent-base-7.1.4.tgz"
   integrity sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==
 
-ai@^6.0.69:
-  version "6.0.94"
-  resolved "https://registry.npmjs.org/ai/-/ai-6.0.94.tgz"
-  integrity sha512-/F9wh262HbK05b/5vILh38JvPiheonT+kBj1L97712E7VPchqmcx7aJuZN3QSk5Pj6knxUJLm2FFpYJI1pHXUA==
+ai@^7.0.34:
+  version "7.0.34"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-7.0.34.tgz#6d6ec0a0964eae86e73bb930c2daf56023f125bc"
+  integrity sha512-jDqclWYqPGFKcUG4CQiKcBiwi5XqVMqvYy6eJdujVpvE1SDoB6j7RtjrGYz3Bn5B1dzTj1StAlrOebY//WK9/Q==
   dependencies:
-    "@ai-sdk/gateway" "3.0.52"
-    "@ai-sdk/provider" "3.0.8"
-    "@ai-sdk/provider-utils" "4.0.15"
-    "@opentelemetry/api" "1.9.0"
+    "@ai-sdk/gateway" "4.0.26"
+    "@ai-sdk/provider" "4.0.3"
+    "@ai-sdk/provider-utils" "5.0.12"
 
 ajv-formats@^3.0.1:
   version "3.0.1"
@@ -4901,6 +4917,11 @@ eventsource-parser@^3.0.0, eventsource-parser@^3.0.1, eventsource-parser@^3.0.6:
   version "3.0.6"
   resolved "https://registry.npmjs.org/eventsource-parser/-/eventsource-parser-3.0.6.tgz"
   integrity sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==
+
+eventsource-parser@^3.0.8:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/eventsource-parser/-/eventsource-parser-3.1.0.tgz#4e198eb91cd333d0a8ddcc036502b3618a25f449"
+  integrity sha512-kJezFj9YFAMLeORyi7aCLxLbD5/qWMQnoMVlVPyHIll7lgRJCc3JVln9Vgl9nwQi0YkMnhdGTMNn7CkRRAptMg==
 
 eventsource@^3.0.2:
   version "3.0.7"
