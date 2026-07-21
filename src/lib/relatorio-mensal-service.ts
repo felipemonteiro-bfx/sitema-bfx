@@ -206,7 +206,16 @@ async function processarGrupo(
           await enviarWhatsApp({
             telefone,
             origem: "relatorio",
-            template: comFallback(TEMPLATES.relatorioEmpresa, [msg], msg),
+            template: comFallback(
+              TEMPLATES.relatorioMensal,
+              [
+                empresaNome,
+                String(dados.totalVendas),
+                formatBRL(dados.valorTotal),
+                formatBRL(dados.totalDescontoFolha),
+              ],
+              msg
+            ),
           });
         } catch (err) {
           console.error(`[relatorio-mensal] Falha WhatsApp fallback ${empresaNome}:`, err);

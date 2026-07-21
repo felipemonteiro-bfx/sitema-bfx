@@ -428,7 +428,16 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
     await enviarWhatsApp({
       telefone: empresa.telefoneRh,
       origem: "relatorio",
-      template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
+      template: comFallback(
+        TEMPLATES.relatorioVenda,
+        [
+          venda.cliente?.nome || "N/D",
+          formatBRL(totalValor),
+          `${venda.parcelas || 1}x`,
+          venda.vendedor || "N/D",
+        ],
+        mensagem
+      ),
     });
     await criarNotificacaoVenda(
       `WhatsApp enviado para ${empresa.nome} (sem email): venda #${venda.id} — ${venda.cliente?.nome || "cliente"} (${formatBRL(totalValor)})`,
@@ -499,7 +508,11 @@ export async function sendWeeklyReport(
       await enviarWhatsApp({
         telefone: telefoneFallback,
         origem: "relatorio",
-        template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
+        template: comFallback(
+          TEMPLATES.relatorioSemanal,
+          [empresaNome, semanaLabelFallback, String(vendas.length), formatBRL(totalGeralFallback)],
+          mensagem
+        ),
       });
     } catch (err) {
       console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);
@@ -529,7 +542,11 @@ export async function sendWeeklyReport(
       await enviarWhatsApp({
         telefone: telefoneFallback,
         origem: "relatorio",
-        template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
+        template: comFallback(
+          TEMPLATES.relatorioSemanal,
+          [empresaNome, semanaLabelWa, String(vendas.length), formatBRL(totalGeralWa)],
+          mensagem
+        ),
       });
     } catch (err) {
       console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);

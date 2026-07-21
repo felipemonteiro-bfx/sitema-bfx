@@ -25,7 +25,6 @@ export const TEMPLATES = {
   boasVindas: "bfx_boas_vindas",
   recibo: "bfx_recibo",
   boleto: "bfx_boleto",
-  relatorioEmpresa: "bfx_relatorio_empresa",
   recompra: "bfx_recompra",
   primeiraCompra: "bfx_primeira_compra",
   natal: "bfx_natal",
