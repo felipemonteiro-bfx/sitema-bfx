@@ -34,6 +34,10 @@ export const TEMPLATES = {
   diaCriancas: "bfx_dia_criancas",
   diaNamorados: "bfx_dia_namorados",
   diaMulheres: "bfx_dia_mulheres",
+  relatorioVenda: "bfx_relatorio_venda",
+  relatorioSemanal: "bfx_relatorio_semanal",
+  relatorioMensal: "bfx_relatorio_mensal",
+  assinatura: "bfx_assinatura",
 } as const;
 
 /**
