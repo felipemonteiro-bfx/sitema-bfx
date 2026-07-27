@@ -66,10 +66,18 @@ async function saveAiProvider(formData: FormData) {
   "use server";
   const aiProvider = String(formData.get("aiProvider") || "gemini");
   const litellmUrl = String(formData.get("litellmUrl") || "").trim() || null;
-  const litellmKey = String(formData.get("litellmKey") || "").trim() || null;
+  // Campo password vem sempre vazio no reload: so sobrescreve a chave quando o
+  // admin digitar uma nova (mesmo padrao do Asaas/Meta). Sem isso, salvar o
+  // formulario apagava a chave e a listagem de /v1/models voltava vazia.
+  const litellmKey = String(formData.get("litellmKey") || "").trim();
   const litellmModel = String(formData.get("litellmModel") || "").trim() || null;
   const cfg = await prisma.config.findFirst();
-  const data = { aiProvider, litellmUrl, litellmKey, litellmModel } as Record<string, unknown>;
+  const data = {
+    aiProvider,
+    litellmUrl,
+    litellmModel,
+    ...(litellmKey ? { litellmKey } : {}),
+  } as Record<string, unknown>;
   if (cfg) {
     await prisma.config.update({ where: { id: cfg.id }, data });
   } else {
@@ -349,7 +357,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             defaultValue={(cfg as Record<string, unknown>)?.litellmModel as string || ""}
                           />
                           <div className="text-xs text-muted-foreground">
-                            Lista carregada da sua instância LiteLLM. Salve a URL e chave primeiro se não aparecer.
+                            Lista carregada de <code>/v1/models</code> da sua instância LiteLLM, usando a URL e a
+                            chave digitadas acima — não é preciso salvar antes.
                           </div>
                         </div>
                       </div>
