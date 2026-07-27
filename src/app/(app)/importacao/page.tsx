@@ -13,7 +13,11 @@ export default async function Page() {
   if (!ok) return <div>Acesso restrito.</div>;
   
   const count = await prisma.venda.count();
-  
+  const empresasParceiras = await prisma.empresaParceira.findMany({
+    select: { id: true, nome: true },
+    orderBy: { nome: "asc" },
+  });
+
   const csvModel = [
     "Data (AAAA-MM-DD);Vendedor;Cliente;Produto;Custo Produto;Valor Venda;Frete Cobrado;Custo Envio;Parcelas;Antecipada (S/N)",
     "2026-02-01;Maria;João da Silva;Notebook;2500;3200;120;80;6;S",
@@ -42,7 +46,7 @@ export default async function Page() {
         }
       />
 
-      <ImportacaoClient />
+      <ImportacaoClient empresasParceiras={empresasParceiras} />
 
       {/* Os importadores de fornecedores e clientes viviam sem nenhum link na UI —
           so eram alcancaveis digitando a URL. */}

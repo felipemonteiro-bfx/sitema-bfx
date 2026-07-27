@@ -48,4 +48,22 @@ export const importacaoRowSchema = z.object({
 
 export const importacaoBatchSchema = z.array(importacaoRowSchema);
 
+const toEmpresaId = (v: unknown): number | null => {
+  const n = typeof v === "number" ? v : Number(String(v ?? "").trim());
+  return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+/**
+ * Payload do POST /api/importacao/batch.
+ * Aceita o formato antigo (array puro de linhas) e o novo, com a empresa
+ * parceira que deve ser aplicada aos clientes criados durante a importacao.
+ */
+export const importacaoPayloadSchema = z.union([
+  z.array(importacaoRowSchema).transform((rows) => ({ empresaParceiraId: null, rows })),
+  z.object({
+    empresaParceiraId: z.unknown().optional().transform(toEmpresaId),
+    rows: z.array(importacaoRowSchema),
+  }),
+]);
+
 export type ImportacaoRow = z.infer<typeof importacaoRowSchema>;

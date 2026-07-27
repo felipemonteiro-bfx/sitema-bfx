@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { importacaoBatchSchema } from "@/lib/validations/importacao";
+import { importacaoPayloadSchema } from "@/lib/validations/importacao";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { revalidarVenda, revalidarCliente } from "@/lib/revalidacao";
 import { registrarRejeicaoVenda } from "@/lib/venda-observabilidade";
@@ -8,20 +8,30 @@ import { registrarRejeicaoVenda } from "@/lib/venda-observabilidade";
 export async function POST(request: NextRequest) {
   try {
     const raw = await request.json();
-    if (!Array.isArray(raw)) {
-      registrarRejeicaoVenda({ origem: "importacao", motivo: "Corpo da importação não é uma lista" });
-      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
-    }
 
-    const parsed = importacaoBatchSchema.safeParse(raw);
+    const parsed = importacaoPayloadSchema.safeParse(raw);
     if (!parsed.success) {
       const first = parsed.error.issues[0];
       const msg = first?.path?.length ? `${first.path.join(".")}: ${first.message}` : first?.message ?? "Dados inválidos";
-      registrarRejeicaoVenda({ origem: "importacao", motivo: msg, itens: raw.length });
+      registrarRejeicaoVenda({ origem: "importacao", motivo: msg, itens: Array.isArray(raw) ? raw.length : undefined });
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
-    const data = parsed.data;
+    const { empresaParceiraId, rows: data } = parsed.data;
+
+    // Empresa aplicada aos clientes criados aqui. Sem isso, cliente novo nascia
+    // sem vinculo — ficava fora do relatorio mensal por empresa e a notificacao
+    // de venda era bloqueada ("Cliente nao vinculado a nenhuma empresa").
+    let empresa: { id: number; nome: string } | null = null;
+    if (empresaParceiraId !== null) {
+      empresa = await prisma.empresaParceira.findUnique({
+        where: { id: empresaParceiraId },
+        select: { id: true, nome: true },
+      });
+      if (!empresa) {
+        return NextResponse.json({ error: "Empresa parceira não encontrada." }, { status: 400 });
+      }
+    }
 
     await prisma.$transaction(async (tx) => {
       for (const row of data) {
@@ -30,7 +40,20 @@ export async function POST(request: NextRequest) {
 
         let cliente = await tx.cliente.findFirst({ where: { nome: clienteNome } });
         if (!cliente) {
-          cliente = await tx.cliente.create({ data: { nome: clienteNome, tipo: "PF" } });
+          cliente = await tx.cliente.create({
+            data: {
+              nome: clienteNome,
+              tipo: "PF",
+              ...(empresa ? { empresaParceiraId: empresa.id, empresa: empresa.nome } : {}),
+            },
+          });
+        } else if (empresa && !cliente.empresaParceiraId) {
+          // Cliente ja existia sem vinculo: aproveita a importacao pra corrigir,
+          // sem nunca sobrescrever um vinculo que ja exista.
+          cliente = await tx.cliente.update({
+            where: { id: cliente.id },
+            data: { empresaParceiraId: empresa.id, empresa: empresa.nome },
+          });
         }
 
         const valorVenda = row.valor;
