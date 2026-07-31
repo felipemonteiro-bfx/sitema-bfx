@@ -4,6 +4,12 @@ metadata:
   name: bfx-app
   labels:
     app: bfx-app
+  annotations:
+    # bfx-app-secrets agora vem do SSM via ExternalSecret e muda fora do git.
+    # envFrom so e lido na criacao do container, entao sem isto uma troca de
+    # secret (ex: rotacionar CRON_SECRET) nao chegaria no pod ate alguem
+    # reiniciar na mao.
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1
   strategy:

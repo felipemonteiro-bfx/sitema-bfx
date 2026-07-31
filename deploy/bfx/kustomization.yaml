@@ -6,6 +6,7 @@ resources:
 - namespace.yaml
 - serviceaccount.yaml
 - secrets.yaml
+- externalsecret-app.yaml
 - postgres.yaml
 - app.yaml
 - ingress.yaml
