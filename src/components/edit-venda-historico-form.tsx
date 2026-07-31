@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, startTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,7 @@ export function EditVendaHistoricoForm({
   initialTotal,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,12 +92,14 @@ export function EditVendaHistoricoForm({
         return;
       }
       toast.success("Venda atualizada com sucesso!");
+      // Sem isso os valores editados so aparecem no card depois de F5.
+      startTransition(() => { router.refresh(); });
     } catch {
       toast.error("Erro ao salvar alterações. Tente novamente.");
     } finally {
       setLoading(false);
     }
-  }, [updateAction]);
+  }, [updateAction, router]);
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-3">
