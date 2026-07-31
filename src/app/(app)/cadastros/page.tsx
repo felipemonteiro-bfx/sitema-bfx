@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { fuzzyFindProdutos } from "@/lib/db-search";
+import { fuzzyFindProdutos, unaccentFindClienteIds } from "@/lib/db-search";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
@@ -322,10 +322,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     ? "Erro ao salvar. Tente novamente."
     : null;
 
+  // Nome vai por f_unaccent (ver db-search): `contains` + `mode: insensitive` so
+  // ignora maiuscula, nao ignora acento — buscar "JOSE" nao achava
+  // "JOSÉ LOPES DOLZANE", que existia e so aparecia no aviso de duplicado.
+  const clienteIdsPorNome = sp.q_clientes
+    ? await unaccentFindClienteIds(sp.q_clientes)
+    : [];
+
   const clientes = await prisma.cliente.findMany({
     where: sp.q_clientes ? {
       OR: [
-        { nome: { contains: sp.q_clientes, mode: 'insensitive' } },
+        { id: { in: clienteIdsPorNome } },
         { cpf: { contains: sp.q_clientes, mode: 'insensitive' } },
         { cnpj: { contains: sp.q_clientes, mode: 'insensitive' } },
       ]
