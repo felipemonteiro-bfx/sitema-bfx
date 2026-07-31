@@ -35,6 +35,44 @@ async function fuzzyIds(
   return rows.map((r) => r.id);
 }
 
+/**
+ * Returns IDs from `table` where `column` CONTAINS `query`, ignoring case AND
+ * accents. Same semantics as Prisma's `contains` + `mode: "insensitive"`, minus
+ * the accent trap: Postgres ILIKE only case-folds, so `'%JOSE%'` never matched
+ * "JOSÉ LOPES DOLZANE" and the client looked missing from every search box.
+ *
+ * Use this (not `fuzzyIds`) wherever the user typed a query and expects to see
+ * only what they asked for: trigram similarity pulls in unrelated names that
+ * merely share a surname, which is fine for duplicate detection but noisy in a
+ * search box.
+ */
+async function unaccentContainsIds(
+  table: string,
+  column: string,
+  query: string,
+  limit: number
+): Promise<number[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const rows = await prisma.$queryRawUnsafe<IdRow[]>(
+    `SELECT id
+     FROM "${table}"
+     WHERE f_unaccent(lower("${column}")) LIKE '%' || f_unaccent(lower($1)) || '%'
+     LIMIT $2`,
+    q,
+    limit
+  );
+  return rows.map((r) => r.id);
+}
+
+/**
+ * Accent-insensitive "nome contains" lookup for clients. Returns IDs only, so
+ * callers keep their own Prisma `select`.
+ */
+export async function unaccentFindClienteIds(search: string, limit = 500) {
+  return unaccentContainsIds("clientes", "nome", search, limit);
+}
+
 export async function fuzzyFindClientes(search: string, limit = 50) {
   const ids = await fuzzyIds("clientes", "nome", search, limit);
   if (!ids.length) return [];

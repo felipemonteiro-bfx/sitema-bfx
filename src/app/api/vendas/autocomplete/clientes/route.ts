@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { unaccentFindClienteIds } from "@/lib/db-search";
 import { valorTotalVenda } from "@/lib/venda-utils";
 
 export async function GET(request: NextRequest) {
@@ -11,13 +12,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // f_unaccent: `contains` + `mode: insensitive` ignora maiuscula mas NAO
+    // ignora acento, entao digitar "JOSE" nao sugeria "JOSÉ LOPES DOLZANE" e o
+    // vendedor acabava cadastrando o cliente de novo, sem acento (duplicata).
+    const ids = await unaccentFindClienteIds(query, 10);
+    if (ids.length === 0) {
+      return NextResponse.json([]);
+    }
+
     const clientes = await prisma.cliente.findMany({
-      where: {
-        nome: {
-          contains: query,
-          mode: "insensitive",
-        },
-      },
+      where: { id: { in: ids } },
+      orderBy: { nome: "asc" },
       take: 10,
       select: {
         id: true,

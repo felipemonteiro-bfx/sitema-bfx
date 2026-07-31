@@ -2,10 +2,17 @@
 
 import { useMemo, useState } from "react";
 
+// Lowercase + remove accents, so digitar "JOSE" acha "JOSÉ" (o filtro compara
+// caractere a caractere: sem isso "E" nunca casa com "É" e o cliente some da
+// tabela mesmo estando cadastrado).
+export function normalize(value: string): string {
+  return value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+}
+
 // Fuzzy search: matches characters in order (not necessarily adjacent)
-function fuzzyMatch(text: string, query: string): boolean {
-  const t = text.toLowerCase();
-  const q = query.toLowerCase();
+export function fuzzyMatch(text: string, query: string): boolean {
+  const t = normalize(text);
+  const q = normalize(query);
   let ti = 0;
   for (let qi = 0; qi < q.length; qi++) {
     const idx = t.indexOf(q[qi], ti);
@@ -17,8 +24,8 @@ function fuzzyMatch(text: string, query: string): boolean {
 
 // Score: lower is better match (fewer gaps between matched chars)
 function fuzzyScore(text: string, query: string): number {
-  const t = text.toLowerCase();
-  const q = query.toLowerCase();
+  const t = normalize(text);
+  const q = normalize(query);
   let score = 0;
   let ti = 0;
   for (let qi = 0; qi < q.length; qi++) {
