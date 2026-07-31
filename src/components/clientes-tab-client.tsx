@@ -116,6 +116,9 @@ export default function ClientesTabClient({
     try {
       await onAddAction(formData);
       toast.success("Cliente salvo com sucesso!");
+      // Sem isso a lista so mostra o registro novo depois de F5. handleUpdate e
+      // handleBulkDelete ja faziam; o cadastro tinha ficado de fora.
+      startTransition(() => { router.refresh(); });
     } catch {
       toast.error("Erro ao salvar. Tente novamente.");
     } finally {

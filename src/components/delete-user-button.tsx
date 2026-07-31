@@ -14,7 +14,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { UserMinus, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, startTransition } from "react";
+import { useRouter } from "next/navigation";
 
 interface Props {
   userId: number;
@@ -24,6 +25,7 @@ interface Props {
 
 export function DeleteUserButton({ userId, userName, deleteAction }: Props) {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -31,6 +33,8 @@ export function DeleteUserButton({ userId, userName, deleteAction }: Props) {
       const formData = new FormData();
       formData.append('id', userId.toString());
       await deleteAction(formData);
+      // Sem isso o vendedor removido continua na tela ate dar F5.
+      startTransition(() => { router.refresh(); });
     } catch {
       toast.error("Erro ao remover usuário.");
     } finally {

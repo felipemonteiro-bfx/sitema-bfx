@@ -8,7 +8,8 @@ import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react"
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { FORMA_PAGAMENTO, formaFromLegacyFlags, formaPagamentoLabel } from "@/lib/forma-pagamento";
-import { useState } from "react";
+import { useState, startTransition } from "react";
+import { useRouter } from "next/navigation";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
@@ -92,6 +93,7 @@ function VendaCard({
   gerarBoletoAction: (formData: FormData) => Promise<unknown>;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const router = useRouter();
   const valorTotal =
     venda.itens && venda.itens.length > 0
       ? venda.itens.reduce((s, i) => s + i.subtotal, 0) + (venda.valorFrete ?? 0)
@@ -199,6 +201,9 @@ function VendaCard({
                             <form
                               action={async (fd) => {
                                 await gerarBoletoAction(fd);
+                                // Sem isso o botao continua "Gerar boleto" ate dar
+                                // F5, em vez de virar o link "Ver boleto".
+                                startTransition(() => { router.refresh(); });
                               }}
                               className="inline"
                             >
