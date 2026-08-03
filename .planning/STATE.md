@@ -5,15 +5,15 @@ milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
 status: verifying
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-08-03T19:36:18.288Z"
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-08-03T19:40:05.889Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 16
-  completed_plans: 15
+  completed_plans: 16
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: 4 of 4
 Status: Phase complete — ready for verification
 Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [█████████░] 94%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -72,6 +72,7 @@ Progress: [█████████░] 94%
 | Phase 08 P03 | 3min | 3 tasks | 4 files |
 | Phase 09 P01 | 15min | 3 tasks | 8 files |
 | Phase 09 P02 | 8min | 3 tasks | 7 files |
+| Phase 09 P03 | 12min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,7 @@ Recent decisions affecting current work:
 - [Phase ?]: UXP-04 tratado como resolvido no discuss (2026-08-03); evidencia versionada em 08-EVIDENCE-UXP-04.md sem reconsultar o cluster
 - [Phase ?]: INT-02: classificarProntidaoUber ficou pronta na Task 1 (mesmo arquivo do contrato de interface), um commit antes do previsto pelo plano — sem impacto de correcao
 - [Phase ?]: 09-02: importador CSV de clientes com idempotencia por CPF/nome (D-04), reserva de nomes contra @unique de Cliente.nome, vinculo obrigatorio a empresa parceira (D-05)
+- [Phase ?]: INT-01 (cotacao Uber): runbook completo em deploy/bfx/README.md + trava de CI contra deriva de env; criacao das credenciais no SSM fica como acao humana pendente do Andre (D-01)
 
 ### Roadmap Evolution
 
@@ -154,6 +156,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T19:36:18.280Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-08-03T19:40:05.881Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
