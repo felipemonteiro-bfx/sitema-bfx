@@ -17,11 +17,18 @@ caminho em `Config.logoPath`. Todo rollout recria o pod e apaga os uploads, deix
 mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
 
 - [ ] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
-      (codigo pronto; **so vira verdade depois** de aplicar os manifestos no cluster — acao humana)
+      Infraestrutura no ar e app configurado (ver STO-02). Falta a **prova empirica**: subir uma
+      logo em `/configuracoes`, rodar `kubectl -n bfx rollout restart deploy/bfx-app` e confirmar
+      que a imagem continua carregando. So marcar apos esse teste.
 
-- [ ] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
-      (manifestos escritos em `deploy/bfx/minio.yaml` e registrados no kustomization;
-      **nao aplicados** — verificado em 2026-08-03 que nao ha MinIO no namespace)
+- [x] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
+      **VERIFICADO em producao em 2026-08-03**, apos o merge do PR #36: pod `bfx-minio` Running,
+      PVC `bfx-minio-data` Bound (10Gi, `microk8s-hostpath`), Service com 9000/9001,
+      ExternalSecret `bfx-minio-secrets` SecretSynced. O app enxerga as 5 envs `MINIO_*`
+      (parametros criados no AWS SSM: `bfx-minio-secrets` novo e `bfx-app-secrets` de 17 -> 22
+      chaves, as 17 originais intactas). `GET /minio/health/live` responde 200 de dentro do pod e
+      a rota publica `https://bfx.softlive.dev/produtos/` devolve 403 do proprio MinIO
+      (listagem negada por policy, objetos liberados) — ou seja, o roteamento do Ingress funciona.
 
 - [ ] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod
 - [x] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
