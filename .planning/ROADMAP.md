@@ -42,7 +42,13 @@ nota na Fase 7).
   3. Depois de um `kubectl delete pod` ou de um rollout do ArgoCD, o logo e as imagens de produto continuam acessíveis, sem link quebrado (STO-01)
   4. Em produção, se o storage não estiver configurado, o upload falha com um erro explícito em vez de reportar sucesso sobre disco efêmero (STO-04)
   5. O logo aparece corretamente no preview de configurações, no recibo em PDF e no catálogo; o cron `cleanup-uploads` roda sobre o MinIO e nunca apaga um objeto ainda referenciado no banco (STO-05, STO-06)
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Fatia vertical: upload da logo no MinIO (prefixo `logo/`, URL absoluta) e leitura de volta, com recusa explícita em produção sem storage (STO-03, STO-04)
+- [ ] 05-02-PLAN.md — MinIO no cluster como código: Deployment + PVC retido + Service, ExternalSecret apontando pro SSM e rota pública de leitura no Ingress (STO-01, STO-02)
+- [ ] 05-03-PLAN.md — Leitores da logo: os 4 geradores de PDF e os 3 pontos de renderização no navegador passam a tratar URL absoluta e caminho legado (STO-05)
+- [ ] 05-04-PLAN.md — Guarda de produção na imagem de produto, trava de regressão do cron `cleanup-uploads` e verificação no cluster (STO-04, STO-06, STO-01)
 
 ### Phase 6: Integridade de dados: fornecedores e exportação
 **Goal**: Fornecedores apagados em produção são reconstruídos a partir da trilha de auditoria, a exclusão deixa de ser uma operação destrutiva sem rede de proteção, e a exportação rápida reflete as empresas parceiras reais do banco.
@@ -107,7 +113,7 @@ Fases executam em ordem: 5 → 6 → 7 → 8 → 9 (Fase 9 tem um item interno �
 | 2. Descontos e Parcelamento | — | Complete (parcelas; desconto por item movido ao Backlog como PDV-05/06) | 2026-08-03 |
 | 3. Busca Rápida de Cliente | — | Complete (v1.0, verificado no código) | 2026-08-03 |
 | 4. Infra e Qualidade | 4/4 | Complete | 2026-03-30 |
-| 5. Storage durável (MinIO no cluster) | 0/? | Not started | - |
+| 5. Storage durável (MinIO no cluster) | 0/4 | Planned | - |
 | 6. Integridade de dados: fornecedores e exportação | 0/? | Not started | - |
 | 7. PDV sem fricção | 0/? | Not started | - |
 | 8. Estoque e identidade visual | 0/? | Not started | - |
