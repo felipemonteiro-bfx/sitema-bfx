@@ -166,8 +166,16 @@ fornecedores perdidos:
 **Já corrigido:** o dump foi movido para `s3://softlive-db-dumps/manual/` (ETag conferido antes de
 remover o original) e o `BackupStorageLocation default` voltou para `Available`.
 
-**Falta aplicar** — bloqueado no dia por `database is locked` no dqlite do microk8s, que recusava
-escritas no control plane. Rodar quando o cluster aceitar escritas:
+**Aplicado em 2026-08-03.** O BFX entrou na lista `DATABASES` do ConfigMap
+`postgres-backup-script` como `bfx:bfx-db-0:bfx-db-secrets:POSTGRES_PASSWORD`, e um job manual
+confirmou o funcionamento:
+
+```
+[2026-08-03 21:10:16] --- Backup: bfx / bfx-db-0 ---
+[2026-08-03 21:10:17] OK: 176K salvo em /backups/bfx/bfx_20260803_210944.sql.gz
+```
+
+O cron roda 2x/dia (02h e 14h). Comandos de referencia:
 
 ```bash
 # 1. Incluir o BFX no backup diario de postgres.
@@ -200,3 +208,47 @@ kubectl get backupstoragelocation -n velero   # deve estar Available
 (`rpc error: exec (try: 500): database is locked`) e o kubelet do node `soft-k8s` chegou a parar de
 reportar status por alguns minutos. Os pods de aplicação não foram afetados — apenas operações de
 control plane. Vale investigar a contenção do dqlite antes que ela cause algo pior.
+
+## dqlite do microk8s — `database is locked`
+
+Durante a correcao dos backups, escritas no control plane falhavam de forma intermitente com
+`rpc error: code = Unknown desc = exec (try: 500): database is locked`. O mesmo sintoma coincidiu
+com o kubelet do node `soft-k8s` parar de reportar status por alguns minutos (o node voltou
+sozinho). **Leituras nunca falharam e nenhum pod de aplicacao foi afetado** — o BFX seguiu
+respondendo 200 o tempo todo.
+
+**O que foi descartado por medicao (2026-08-03):**
+
+- Volume de objetos: 308 pods, 384 secrets, 274 configmaps, 229 events, 240 endpoints — modesto.
+- Pressao de recursos: `DiskPressure`, `MemoryPressure` e `PIDPressure` = `False` nos 4 nodes.
+- Acumulo de eventos: 279 no cluster inteiro.
+
+**Evidencia do que sobrou** — latencia de escrita no datastore, via `/metrics` do apiserver
+(`etcd_request_duration_seconds`, operacao `create` em `events`):
+
+| Percentil | Latencia |
+|-----------|----------|
+| ~63%      | <= 5ms   |
+| ~87%      | <= 100ms |
+| ~99%      | <= 1s    |
+| cauda     | 1.25s    |
+
+Media de 61ms por escrita (17.1s / 280). Um datastore local saudavel fica na casa de 1-5ms. A
+cauda longa com o corpo rapido e assinatura de **contencao intermitente de I/O**, nao de
+sobrecarga por volume.
+
+**Correcao definitiva exige acesso ao host** `192.168.150.200` (a chave SSH usada no dia nao tem
+acesso). A investigar por la:
+
+```bash
+microk8s status                      # saude geral e addons
+microk8s inspect                     # relatorio completo, inclui I/O e dqlite
+ls -la /var/snap/microk8s/current/var/kubernetes/backend/   # tamanho do dqlite
+journalctl -u snap.microk8s.daemon-k8s-dqlite -n 200        # erros do dqlite
+iostat -x 5                          # latencia real do disco (await, %util)
+```
+
+Se o disco do control plane for lento (HDD ou storage de rede), a correcao e mover o diretorio do
+dqlite para SSD local — o dqlite faz `fsync` a cada escrita e e muito sensivel a isso. Com o
+cluster em HA (3 nodes servindo API), a escrita so confirma apos quorum, entao **um unico node
+lento trava a escrita do cluster inteiro**.
