@@ -7,11 +7,16 @@ type MutableEnv = Record<string, string | undefined>;
 
 const OLD_MTIME = Date.now() - 200 * 24 * 60 * 60 * 1000; // 200 dias atras (> MAX_AGE_DAYS=90)
 
-vi.mock("fs/promises", () => ({
-  readdir: vi.fn(),
-  stat: vi.fn(),
-  unlink: vi.fn(),
-}));
+// A rota faz `import fs from "fs/promises"` (default import), entao o mock precisa expor
+// `default` alem dos named exports — senao `fs` chega undefined e a rota estoura em 500.
+// Os named exports e o default compartilham as mesmas instancias de vi.fn(), de modo que
+// `await import("fs/promises")` nos testes observa exatamente as chamadas que a rota fez.
+vi.mock("fs/promises", () => {
+  const readdir = vi.fn();
+  const stat = vi.fn();
+  const unlink = vi.fn();
+  return { readdir, stat, unlink, default: { readdir, stat, unlink } };
+});
 
 vi.mock("@/lib/db", () => ({
   prisma: {
