@@ -51,13 +51,12 @@ describe("validarItensContraCatalogo", () => {
     expect(erro).toBeNull();
   });
 
-  it("rejeita custoProduto informado abaixo do custo cadastrado no catalogo (fraude de comissao)", () => {
+  it("aceita custoProduto informado abaixo do custo cadastrado no catalogo (PDV-14, D-01: piso removido)", () => {
     const erro = validarItensContraCatalogo(
       [item({ produtoNome: "Fone Bluetooth X", custoProduto: 50, valorVenda: 1000, subtotal: 1000 })],
       [{ nome: "Fone Bluetooth X", custoPadrao: 700 }]
     );
-    expect(erro).not.toBeNull();
-    expect(erro).toMatch(/custo/i);
+    expect(erro).toBeNull();
   });
 
   it("aceita custoProduto igual ao catalogo (dentro da tolerancia)", () => {
@@ -76,12 +75,12 @@ describe("validarItensContraCatalogo", () => {
     expect(erro).toBeNull();
   });
 
-  it("faz o match do nome do produto ignorando maiusculas/minusculas e espacos", () => {
+  it("casar o nome ignorando maiusculas/minusculas e espacos nao gera erro de custo (PDV-14)", () => {
     const erro = validarItensContraCatalogo(
       [item({ produtoNome: "  fone bluetooth x  ", custoProduto: 50, valorVenda: 1000, subtotal: 1000 })],
       [{ nome: "Fone Bluetooth X", custoPadrao: 700 }]
     );
-    expect(erro).not.toBeNull();
+    expect(erro).toBeNull();
   });
 
   it("quando ha duplicidade de produto por fornecedor, basta bater com um dos custos cadastrados", () => {
