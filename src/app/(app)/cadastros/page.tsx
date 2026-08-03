@@ -187,8 +187,12 @@ export async function addFornecedor(formData: FormData) {
   if (classificacao.acao === "erro") return;
 
   if (classificacao.acao === "criar") {
-    await prisma.fornecedor.create({
+    const fornecedor = await prisma.fornecedor.create({
       data: { nome: classificacao.nomeNormalizado, telefone },
+    });
+    await createAuditLog("fornecedor:create", {
+      fornecedorId: fornecedor.id,
+      nome: classificacao.nomeNormalizado,
     });
     revalidatePath("/cadastros");
     return;
@@ -198,6 +202,10 @@ export async function addFornecedor(formData: FormData) {
     await prisma.fornecedor.update({
       where: { id: classificacao.id },
       data: { deletedAt: null, telefone },
+    });
+    await createAuditLog("fornecedor:restore", {
+      fornecedorId: classificacao.id,
+      nome: classificacao.nomeNormalizado,
     });
     revalidatePath("/cadastros");
     return;
