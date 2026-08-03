@@ -35,7 +35,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
-        continue-on-error: true
+
+      - name: Cor crua (catraca)
+        run: npm run cores:check
 
       - name: Generate Prisma Client
         run: npx prisma generate
