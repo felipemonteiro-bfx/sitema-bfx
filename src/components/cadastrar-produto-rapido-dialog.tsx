@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { CurrencyInput } from "@/components/currency-input";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
+import { CadastrarFornecedorRapidoDialog } from "@/components/cadastrar-fornecedor-rapido-dialog";
 import { Loader2, Tag } from "lucide-react";
 import { toast } from "sonner";
 
@@ -44,6 +45,20 @@ export function CadastrarProdutoRapidoDialog({
   const [fornecedorId, setFornecedorId] = useState("");
   const [dataCompra, setDataCompra] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fornecedorDialogOpen, setFornecedorDialogOpen] = useState(false);
+  const [fornecedoresCriados, setFornecedoresCriados] = useState<{ id: number; nome: string }[]>(
+    []
+  );
+
+  // D-07: junta a prop `fornecedores` (server component, nao se atualiza
+  // sozinha) com os fornecedores criados nesta sessao do modal, dedupe por
+  // id, ordenado por nome com localeCompare pt-BR.
+  const opcoesFornecedor = useMemo(() => {
+    const mapa = new Map<number, { id: number; nome: string }>();
+    for (const f of fornecedores) mapa.set(f.id, f);
+    for (const f of fornecedoresCriados) mapa.set(f.id, f);
+    return Array.from(mapa.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  }, [fornecedores, fornecedoresCriados]);
 
   const [ncmSuggestions, setNcmSuggestions] = useState<{ codigo: string; descricao: string }[]>([]);
   const [isSearchingNcm, setIsSearchingNcm] = useState(false);
@@ -166,15 +181,24 @@ export function CadastrarProdutoRapidoDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Fornecedor
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Fornecedor
+                </Label>
+                <button
+                  type="button"
+                  onClick={() => setFornecedorDialogOpen(true)}
+                  className="text-[11px] font-medium text-primary hover:underline"
+                >
+                  + Novo fornecedor
+                </button>
+              </div>
               <FormSelect
                 name="fornecedorId"
                 value={fornecedorId}
                 onValueChange={setFornecedorId}
                 placeholder="Selecionar..."
-                options={fornecedores.map((f) => ({ value: String(f.id), label: f.nome }))}
+                options={opcoesFornecedor.map((f) => ({ value: String(f.id), label: f.nome }))}
               />
             </div>
           </div>
@@ -275,6 +299,20 @@ export function CadastrarProdutoRapidoDialog({
             </Button>
           </div>
         </form>
+
+        {/* Dialog aninhado (Radix): o onOpenChange interno so mexe no
+            proprio estado — fechar este nao fecha o modal de produto. */}
+        <CadastrarFornecedorRapidoDialog
+          open={fornecedorDialogOpen}
+          onOpenChange={setFornecedorDialogOpen}
+          nomeInicial=""
+          onCriado={(f) => {
+            setFornecedoresCriados((prev) =>
+              prev.some((x) => x.id === f.id) ? prev : [...prev, { id: f.id, nome: f.nome }]
+            );
+            setFornecedorId(String(f.id));
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
