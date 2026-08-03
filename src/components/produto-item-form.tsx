@@ -10,6 +10,7 @@ import { formatBRL, cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/currency-input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { CadastrarProdutoRapidoDialog } from "@/components/cadastrar-produto-rapido-dialog";
+import { aplicarTetoQuantidade } from "@/lib/estoque-venda-policy";
 
 interface ProdutoItem {
   id: string; // ID temporário para o frontend
@@ -97,10 +98,9 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
   const handleChange = useCallback((field: keyof ProdutoItem, value: number | string) => {
     let newItem = { ...item, [field]: value };
 
-    // Limitar quantidade ao estoque disponível
-    if (field === "quantidade" && estoqueDisponivel !== null && estoqueDisponivel > 0) {
-      const qtd = Math.min(Number(value), estoqueDisponivel);
-      newItem = { ...newItem, quantidade: qtd };
+    // UXP-02, D-03: sem teto de quantidade baseado em estoque disponivel.
+    if (field === "quantidade") {
+      newItem = { ...newItem, quantidade: aplicarTetoQuantidade(Number(value)) };
     }
 
     // Recalcular subtotal
@@ -109,7 +109,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     }
 
     onUpdate(index, newItem);
-  }, [item, estoqueDisponivel, onUpdate, index]);
+  }, [item, onUpdate, index]);
 
   const { lucro, margem } = useMemo(() => {
     const l = (item.valorVenda - item.custoProduto) * item.quantidade;
