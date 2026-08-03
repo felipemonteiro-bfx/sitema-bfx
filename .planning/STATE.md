@@ -5,8 +5,8 @@ milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
 status: planning
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-08-03T17:20:45.787Z"
+stopped_at: Completado 05-04-PLAN.md (Tasks 1-2 executadas; Task 3 checkpoint humano pendente — ver runbook em 05-04-SUMMARY.md)
+last_updated: "2026-08-03T17:21:13.333Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 5 of 9 (Storage durável (MinIO no cluster)) — first phase of milestone v1.1
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 05 P02 | 20min | 3 tasks | 6 files |
+| Phase 5 P4 | 20min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,7 @@ Recent decisions affecting current work:
 - [Phase 04-melhorias-infra]: env-validation tests use await import() rejects pattern because env.ts runs validateEnv() at module scope
 - [Phase 04-melhorias-infra]: session-secret test mocks next/headers to keep unit tests in pure Node.js without cookie dependency
 - [Phase ?]: Plano 05-02: imagem MinIO mantida em latest (mesma tag do docker-compose.yml); strategy Recreate obrigatoria com PVC ReadWriteOnce; console 9001 nunca exposto por Ingress (T-05-06)
+- [Phase ?]: 05-04: guarda de producao replicada na rota de imagem de produto (mesmo padrao do plano 05-01); cron cleanup-uploads travado por teste sem mudanca de logica (D-05); Task 3 (checkpoint no cluster) documentada como runbook pendente, nao executada pelo agente
 
 ### Roadmap Evolution
 
@@ -100,6 +102,7 @@ None yet.
 - INT-03 (import de clientes da Equilibrium, Fase 9) está bloqueado por um arquivo que o cliente ainda não entregou (layout, regras de duplicata, vínculo com empresa parceira). Não bloqueia as demais fases.
 - Fase 7 (PDV-14) reabre o vetor de comissão/margem inflados fechado no commit `a63dc04` ao liberar custo abaixo de `custoPadrao` para todos os vendedores — decisão consciente do André, marcada "⚠️ Revisit" no PROJECT.md
 - Verificar se `produto-item-form.tsx` e `parcelas-vencimento-form.tsx` são reutilizáveis ou precisam ser reescritos (herdado do v1.0)
+- Fase 5 (Storage MinIO): STO-01/STO-02/STO-05 dependem de checkpoint humano no cluster (SSM secrets, sync ArgoCD, kubectl delete pod) — runbook completo em 05-04-SUMMARY.md '## Acoes humanas pendentes'. Fase so fecha apos passo 6 (sobrevivencia ao delete pod) confirmado.
 
 ### Quick Tasks Completed
 
@@ -127,6 +130,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T15:32:00.635Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-08-03T17:21:08.766Z
+Stopped at: Completado 05-04-PLAN.md (Tasks 1-2 executadas; Task 3 checkpoint humano pendente — ver runbook em 05-04-SUMMARY.md)
 Resume file: None

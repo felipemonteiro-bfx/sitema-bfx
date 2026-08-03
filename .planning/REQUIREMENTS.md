@@ -18,13 +18,15 @@ mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
 
 - [ ] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
       (codigo pronto; **so vira verdade depois** de aplicar os manifestos no cluster — acao humana)
+
 - [ ] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
       (manifestos escritos em `deploy/bfx/minio.yaml` e registrados no kustomization;
       **nao aplicados** — verificado em 2026-08-03 que nao ha MinIO no namespace)
+
 - [ ] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod
-- [ ] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
+- [x] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
 - [ ] **STO-05**: Logo aparece no preview de configuracoes, no recibo PDF e no catalogo
-- [ ] **STO-06**: Cron `cleanup-uploads` opera sobre o novo storage sem apagar objeto ainda referenciado no banco
+- [x] **STO-06**: Cron `cleanup-uploads` opera sobre o novo storage sem apagar objeto ainda referenciado no banco
 
 ### Integridade de Dados (DAT)
 
@@ -173,9 +175,9 @@ demandas do cliente.
 | STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-03 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-05 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | DAT-01 | Phase 6 — Integridade de dados | Pending |
 | DAT-02 | Phase 6 — Integridade de dados | Pending |
 | DAT-03 | Phase 6 — Integridade de dados | Pending |
