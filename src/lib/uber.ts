@@ -2,6 +2,11 @@
  * Integração com Uber Direct API para cotação de frete.
  * Documentação: https://developer.uber.com/docs/deliveries/direct
  */
+import {
+  interpretarRespostaUber,
+  interpretarFalhaDeRede,
+  type ResultadoCotacaoUber,
+} from "@/lib/uber-quote-result";
 
 const UBER_API_BASE = "https://api.uber.com/v1";
 
@@ -37,14 +42,6 @@ export type UberQuoteRequest = {
   orderValueCents: number;
 };
 
-export type UberQuoteResponse = {
-  id: string;
-  fee: number; // centavos
-  duration: number; // minutos
-  dropoffEta?: string;
-  currencyType: string;
-};
-
 function formatPhone(phone: string | null | undefined): string | undefined {
   if (!phone || typeof phone !== "string") return undefined;
   const digits = phone.replace(/\D/g, "");
@@ -55,7 +52,7 @@ function formatPhone(phone: string | null | undefined): string | undefined {
 export async function getDeliveryQuote(
   config: UberDirectConfig,
   req: UberQuoteRequest
-): Promise<UberQuoteResponse | null> {
+): Promise<ResultadoCotacaoUber> {
   const pickupAddressJson = JSON.stringify(req.pickupAddress);
   const dropoffAddressJson = JSON.stringify(req.dropoffAddress);
 
@@ -100,32 +97,16 @@ export async function getDeliveryQuote(
       body: JSON.stringify(body),
     });
 
-    const data = (await res.json()) as {
-      id?: string;
-      fee?: number;
-      duration?: number;
-      dropoff_eta?: string;
-      currency_type?: string;
-      errors?: { code?: string; message?: string }[];
-    };
+    const data = await res.json();
 
     if (!res.ok) {
+      // Corpo cru da Uber so aparece aqui (servidor) — nunca na resposta ao navegador (T-09-01).
       console.error("Uber Direct quote error:", data);
-      return null;
     }
 
-    if (data.id && typeof data.fee === "number") {
-      return {
-        id: data.id,
-        fee: data.fee,
-        duration: data.duration ?? 0,
-        dropoffEta: data.dropoff_eta,
-        currencyType: data.currency_type ?? "BRL",
-      };
-    }
-    return null;
+    return interpretarRespostaUber(res.status, data);
   } catch (err) {
     console.error("Uber Direct API error:", err);
-    return null;
+    return interpretarFalhaDeRede();
   }
 }

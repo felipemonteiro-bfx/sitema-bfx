@@ -28,6 +28,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
 import { valorEmReais } from "@/lib/fidelidade";
 import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
+import { mensagemFalhaUber } from "@/lib/uber-quote-result";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
@@ -392,14 +393,14 @@ export default function VendaRapidaFormV2({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data?.error || "Erro ao obter cotação Uber.");
+        toast.error(data?.mensagem || data?.error || "Erro ao obter cotação Uber.");
         return;
       }
       setFrete(data.fee ?? 0);
       toast.success(`Frete Uber: R$ ${(data.fee ?? 0).toFixed(2)} (${data.duration ?? "?"} min)`);
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao cotar frete Uber.");
+      toast.error(mensagemFalhaUber("erro_upstream"));
     } finally {
       setUberQuoteLoading(false);
     }
