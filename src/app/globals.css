@@ -40,21 +40,28 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-hover: var(--accent-hover);
   --color-destructive: var(--destructive);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-success-bg: var(--success-bg);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-warning-bg: var(--warning-bg);
   --color-error: var(--error);
   --color-error-foreground: var(--error-foreground);
+  --color-error-bg: var(--error-bg);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-info-bg: var(--info-bg);
+  --color-card-elevated: var(--card-elevated);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -97,12 +104,16 @@
   /* Semantic Colors */
   --success: oklch(0.65 0.18 145); /* green */
   --success-foreground: oklch(0.985 0 0);
+  --success-bg: oklch(0.96 0.05 145); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
   --warning: oklch(0.77 0.15 85); /* amber */
   --warning-foreground: oklch(0.145 0 0);
+  --warning-bg: oklch(0.96 0.06 85); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
   --error: oklch(0.60 0.24 25); /* red */
   --error-foreground: oklch(0.985 0 0);
+  --error-bg: oklch(0.95 0.05 25); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
   --info: oklch(0.57 0.18 240); /* blue */
   --info-foreground: oklch(0.985 0 0);
+  --info-bg: oklch(0.95 0.04 240); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
 
   /* Destructive (mantido para compatibilidade) */
   --destructive: oklch(0.60 0.24 25);
@@ -111,6 +122,7 @@
   /* Surfaces */
   --card: oklch(0.995 0 0);
   --card-foreground: oklch(0.145 0 0);
+  --card-elevated: oklch(0.96 0.008 250); /* degrau acima de --card, perceptível sem virar cinza sujo (D-06) */
   --popover: oklch(0.995 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --muted: oklch(0.97 0 0);

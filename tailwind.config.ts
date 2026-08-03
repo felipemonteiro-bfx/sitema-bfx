@@ -11,6 +11,7 @@ export default {
         card: {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
+          elevated: "var(--card-elevated)",
         },
         popover: {
           DEFAULT: "var(--popover)",
@@ -41,18 +42,22 @@ export default {
         success: {
           DEFAULT: "var(--success)",
           foreground: "var(--success-foreground)",
+          bg: "var(--success-bg)",
         },
         warning: {
           DEFAULT: "var(--warning)",
           foreground: "var(--warning-foreground)",
+          bg: "var(--warning-bg)",
         },
         error: {
           DEFAULT: "var(--error)",
           foreground: "var(--error-foreground)",
+          bg: "var(--error-bg)",
         },
         info: {
           DEFAULT: "var(--info)",
           foreground: "var(--info-foreground)",
+          bg: "var(--info-bg)",
         },
         border: "var(--border)",
         input: "var(--input)",
