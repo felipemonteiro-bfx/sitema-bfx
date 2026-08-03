@@ -60,7 +60,7 @@ Contexto: o campo de custo ja e editavel no UI (`produto-item-form.tsx:274`); o 
 validacao de servidor `validarItensContraCatalogo` (`src/lib/venda-item-validation.ts:47-52`),
 que recusa custo menor que `custoPadrao`. Essa e a causa real da demanda 7.
 
-- [ ] **PDV-14**: Vendedor pode lancar qualquer custo na venda rapida, inclusive abaixo do custo de catalogo, e o valor digitado e gravado em `item_venda.custo_produto`
+- [x] **PDV-14**: Vendedor pode lancar qualquer custo na venda rapida, inclusive abaixo do custo de catalogo, e o valor digitado e gravado em `item_venda.custo_produto`
 - [ ] **PDV-15**: Vendedor pode cadastrar cliente novo por modal, sem sair da tela do PDV, e o cliente ja fica selecionado na venda
 - [ ] **PDV-16**: Vendedor pode cadastrar fornecedor novo no fluxo de produto rapido do PDV, e o fornecedor ja fica selecionado
 
@@ -181,7 +181,7 @@ demandas do cliente.
 | DAT-01 | Phase 6 — Integridade de dados | Complete |
 | DAT-02 | Phase 6 — Integridade de dados | Complete |
 | DAT-03 | Phase 6 — Integridade de dados | Pending |
-| PDV-14 | Phase 7 — PDV sem friccao | Pending |
+| PDV-14 | Phase 7 — PDV sem friccao | Complete |
 | PDV-15 | Phase 7 — PDV sem friccao | Pending |
 | PDV-16 | Phase 7 — PDV sem friccao | Pending |
 | UXP-01 | Phase 8 — Estoque e identidade visual | Pending |
