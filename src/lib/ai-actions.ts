@@ -14,6 +14,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
+import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -1174,15 +1175,45 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const limit = Math.min(Number(parsedParams?.limit || 50), 200);
         result = parsedParams?.search
           ? await fuzzyFindFornecedores(parsedParams.search, limit)
-          : await prisma.fornecedor.findMany({ take: limit, orderBy: { nome: "asc" } });
+          : await prisma.fornecedor.findMany({ where: { deletedAt: null }, take: limit, orderBy: { nome: "asc" } });
         break;
       }
-      case "criar_fornecedor":
+      case "criar_fornecedor": {
         requireAdmin(ctx);
-        result = await prisma.fornecedor.create({
-          data: { nome: parsedParams.nome, telefone: parsedParams.telefone ?? null },
+        // D-03: nome ja existe soft-deletado reativa o registro (limpa
+        // deletedAt) em vez de tentar inserir e estourar o @unique de `nome`
+        // — mesma logica de addFornecedor em cadastros/page.tsx (06-01).
+        // Esta leitura NAO leva deletedAt: null: precisa enxergar os
+        // excluidos para poder classificar/reativar.
+        const candidatos = await prisma.fornecedor.findMany({
+          select: { id: true, nome: true, deletedAt: true },
         });
+        const classificacao = classificarNomeFornecedor(parsedParams.nome, candidatos);
+
+        if (classificacao.acao === "erro") {
+          result = { error: "Nome de fornecedor invalido." };
+          break;
+        }
+
+        if (classificacao.acao === "criar") {
+          result = await prisma.fornecedor.create({
+            data: { nome: classificacao.nomeNormalizado, telefone: parsedParams.telefone ?? null },
+          });
+          break;
+        }
+
+        if (classificacao.acao === "reativar" && classificacao.id != null) {
+          result = await prisma.fornecedor.update({
+            where: { id: classificacao.id },
+            data: { deletedAt: null, telefone: parsedParams.telefone ?? null },
+          });
+          break;
+        }
+
+        // "ignorar": nome ja existe ativo, devolve o registro existente sem escrever.
+        result = await prisma.fornecedor.findUnique({ where: { id: classificacao.id! } });
         break;
+      }
       case "resumo_relatorio_vendas": {
         requireAdmin(ctx);
         const from = parsedParams?.from ? new Date(parsedParams.from) : undefined;
