@@ -56,12 +56,20 @@ Plans:
 
 ### Phase 6: Integridade de dados: fornecedores e exportação
 
-**Goal**: Fornecedores apagados em produção são reconstruídos a partir da trilha de auditoria, a exclusão deixa de ser uma operação destrutiva sem rede de proteção, e a exportação rápida reflete as empresas parceiras reais do banco.
+**Goal**: O cadastro de fornecedores volta a ser populável e deixa de ser destrutível sem rede de proteção, e a exportação rápida reflete as empresas parceiras reais do banco.
 **Depends on**: Fase 5 (ordem de execução definida por risco de dados; sem acoplamento técnico com o storage)
 **Requirements**: DAT-01, DAT-02, DAT-03
+
+**Premissa corrigida em 2026-08-03** (consulta somente-leitura ao banco de produção): não há nada
+a restaurar. `fornecedores` = 0, mas `audit_logs` com `acao='fornecedor:delete'` = **0 também** —
+nunca houve nenhuma ação de fornecedor registrada; os 197 produtos têm `fornecedor_id` NULL; não
+existe banco legado nem backup no pod. Os fornecedores nunca existiram neste banco (ficaram no
+sistema legado Streamlit). DAT-01 deixa de ser "restaurar via audit log" e passa a ser "entregar
+o importador", decidido com o André.
+
 **Success Criteria** (o que deve ser VERDADE ao final):
 
-  1. Os fornecedores apagados em produção (identificados via `audit_logs`, `acao = 'fornecedor:delete'`) foram reconstruídos no cadastro, sem violar o unique de `nome` (DAT-01)
+  1. Existe um importador de fornecedores por CSV com dry-run (reporta criados/ignorados/erros antes de escrever) e commit idempotente por nome — a carga dos dados reais depende do arquivo que o cliente ainda deve (DAT-01)
   2. Excluir um fornecedor deixa de ser destrutivo sem rede de proteção — soft-delete e/ou confirmação reforçada + RBAC substituem o hard delete atual (DAT-02)
   3. Um fornecedor excluído por engano pode ser restaurado sem acesso direto ao banco de dados (DAT-02)
   4. A tela de Exportação Rápida (Relatórios) exibe um botão por empresa parceira vinda do banco, sem lista hardcoded (`extraEmpresas`) no código (DAT-03)
