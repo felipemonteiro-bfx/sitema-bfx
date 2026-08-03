@@ -106,3 +106,77 @@ describe("embedLogoNoPdf", () => {
     expect(result).toBeNull();
   });
 });
+
+// ── gerarRelatorioMensalPdf ───────────────────────────────────────────────────
+// `@/lib/logo-loader` e um modulo EXTERNO ao arquivo sob teste
+// (src/lib/relatorio-mensal-pdf.ts), entao mockar essa chamada e legitimo —
+// diferente do bloco acima, que testa o proprio logo-loader.ts.
+//
+// IMPORTANTE: nao usamos `vi.mock(...)` de topo de arquivo aqui porque o
+// hoisting do vitest o executaria ANTES do `import { embedLogoNoPdf } from
+// "@/lib/logo-loader"` da linha 17 — substituindo a implementacao REAL usada
+// pelo describe("embedLogoNoPdf") acima por este mock. Usamos `vi.doMock`
+// (nao hoisted) + `vi.resetModules()` + import dinamico, isolado neste bloco,
+// para que os dois describes coexistam no mesmo arquivo sem um contaminar o
+// outro.
+
+describe("gerarRelatorioMensalPdf - logo", () => {
+  const dadosVazios = { totalVendas: 0, valorTotal: 0, totalDescontoFolha: 0, linhas: [] };
+
+  afterEach(() => {
+    vi.doUnmock("@/lib/logo-loader");
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
+
+  async function carregarComMockDeLogo() {
+    vi.resetModules();
+    vi.doMock("@/lib/logo-loader", () => ({ embedLogoNoPdf: vi.fn().mockResolvedValue(null) }));
+    const logoLoaderMod = await import("@/lib/logo-loader");
+    const { gerarRelatorioMensalPdf } = await import("@/lib/relatorio-mensal-pdf");
+    return { embedMock: logoLoaderMod.embedLogoNoPdf as ReturnType<typeof vi.fn>, gerarRelatorioMensalPdf };
+  }
+
+  it("logoPath em URL absoluta -> embedLogoNoPdf recebe exatamente esse valor e o PDF e gerado", async () => {
+    const { embedMock, gerarRelatorioMensalPdf } = await carregarComMockDeLogo();
+
+    const logoPath = "https://bfx.softlive.dev/produtos/logo/1-x.png";
+    const bytes = await gerarRelatorioMensalPdf({
+      empresaNome: "Empresa X",
+      periodo: "2026-07",
+      dados: dadosVazios as any,
+      logoPath,
+    });
+
+    expect(embedMock).toHaveBeenCalledWith(expect.anything(), logoPath);
+    expect(bytes.length).toBeGreaterThan(0);
+  });
+
+  it("logoPath legado /uploads/x.png -> embedLogoNoPdf recebe exatamente esse valor", async () => {
+    const { embedMock, gerarRelatorioMensalPdf } = await carregarComMockDeLogo();
+
+    const logoPath = "/uploads/x.png";
+    await gerarRelatorioMensalPdf({
+      empresaNome: "Empresa X",
+      periodo: "2026-07",
+      dados: dadosVazios as any,
+      logoPath,
+    });
+
+    expect(embedMock).toHaveBeenCalledWith(expect.anything(), logoPath);
+  });
+
+  it("logoPath null -> embedLogoNoPdf nao e chamado e o PDF ainda e gerado", async () => {
+    const { embedMock, gerarRelatorioMensalPdf } = await carregarComMockDeLogo();
+
+    const bytes = await gerarRelatorioMensalPdf({
+      empresaNome: "Empresa X",
+      periodo: "2026-07",
+      dados: dadosVazios as any,
+      logoPath: null,
+    });
+
+    expect(embedMock).not.toHaveBeenCalled();
+    expect(bytes.length).toBeGreaterThan(0);
+  });
+});

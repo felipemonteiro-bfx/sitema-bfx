@@ -2,8 +2,7 @@ import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { readFile } from "fs/promises";
-import path from "path";
+import { embedLogoNoPdf } from "@/lib/logo-loader";
 
 function wrapText(text: string, font: { widthOfTextAtSize: (t: string, s: number) => number }, size: number, maxWidth: number) {
   const words = text.split(/\s+/);
@@ -127,25 +126,14 @@ export async function generateReciboPdf(
   const contentWidth = 515;
   const centerX = 595 / 2;
 
-  let logoImage: Awaited<ReturnType<PDFDocument["embedPng"]>> | Awaited<ReturnType<PDFDocument["embedJpg"]>> | null = null;
-  const logoDims = { width: 0, height: 0 };
   const logoHeight = 50;
+  const logoImage = cfg?.logoPath ? await embedLogoNoPdf(pdf, cfg.logoPath) : null;
+  const logoDims = { width: 0, height: 0 };
 
-  if (cfg?.logoPath) {
-    try {
-      const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath);
-      const logoBytes = await readFile(logoFullPath);
-      const imageType = path.extname(cfg.logoPath).toLowerCase();
-      if (imageType === ".png") logoImage = await pdf.embedPng(logoBytes);
-      else if (imageType === ".jpg" || imageType === ".jpeg") logoImage = await pdf.embedJpg(logoBytes);
-      if (logoImage) {
-        const aspectRatio = logoImage.width / logoImage.height;
-        logoDims.height = logoHeight;
-        logoDims.width = logoHeight * aspectRatio;
-      }
-    } catch {
-      // ignore
-    }
+  if (logoImage) {
+    const aspectRatio = logoImage.width / logoImage.height;
+    logoDims.height = logoHeight;
+    logoDims.width = logoHeight * aspectRatio;
   }
 
   const headerTop = pageHeight - 50;
