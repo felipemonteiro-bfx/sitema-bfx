@@ -179,6 +179,61 @@ export function scanPaths(roots) {
   return { files, total };
 }
 
+// --- Baseline ---------------------------------------------------------
+
+/**
+ * Grava o baseline em disco. Arquivos declarados como excecao ficam de fora da
+ * contagem e da lista `files` — eles nao entram no medidor de progresso, mas
+ * seguem registrados em `exceptions` para que o motivo continue explicito.
+ */
+export function writeBaseline(baselinePath, scanResult, exceptions = []) {
+  const isentos = new Set(exceptions.map((e) => e.file));
+  const files = {};
+  for (const [file, count] of Object.entries(scanResult.files ?? {})) {
+    if (isentos.has(file)) continue;
+    files[file] = count;
+  }
+
+  const baseline = {
+    generatedAt: new Date().toISOString(),
+    command: "node scripts/design-tokens/raw-color-scan.mjs src --write-baseline",
+    total: Object.values(files).reduce((soma, n) => soma + n, 0),
+    files,
+    exceptions,
+  };
+
+  fs.mkdirSync(path.dirname(baselinePath), { recursive: true });
+  fs.writeFileSync(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
+  return baseline;
+}
+
+export function readBaseline(baselinePath) {
+  return JSON.parse(fs.readFileSync(baselinePath, "utf8"));
+}
+
+/**
+ * Compara a varredura atual com o baseline. O contrato e de catraca: contagem
+ * pode cair (melhoria) mas nunca subir (regressao). Arquivo novo com cor crua e
+ * regressao; arquivo que sumiu do scan nao e — pode ter sido migrado ou apagado.
+ */
+export function compareToBaseline(atual, baseline) {
+  const isentos = new Set((baseline.exceptions ?? []).map((e) => e.file));
+  const arquivosAtuais = atual.files ?? {};
+  const arquivosBase = baseline.files ?? {};
+
+  const regressions = [];
+  const improvements = [];
+
+  for (const [file, count] of Object.entries(arquivosAtuais)) {
+    if (isentos.has(file)) continue;
+    const antes = arquivosBase[file] ?? 0;
+    if (count > antes) regressions.push({ file, antes, agora: count });
+    else if (count < antes) improvements.push({ file, antes, agora: count });
+  }
+
+  return { ok: regressions.length === 0, regressions, improvements };
+}
+
 // --- CLI --------------------------------------------------------------
 
 function printTable(result) {
@@ -190,24 +245,146 @@ function printTable(result) {
 }
 
 function parseArgs(argv) {
+  const flags = { check: false, baseline: false, baselineFile: null };
   const roots = [];
 
   for (const arg of argv) {
-    if (arg.startsWith("--")) {
+    if (arg === "--check") {
+      flags.check = true;
+    } else if (arg === "--baseline") {
+      flags.baseline = true;
+    } else if (arg.startsWith("--baseline-file=")) {
+      flags.baselineFile = arg.slice("--baseline-file=".length);
+    } else if (arg.startsWith("--")) {
       throw new Error(`Flag desconhecida: ${arg}`);
+    } else {
+      roots.push(arg);
     }
-    roots.push(arg);
   }
 
   if (roots.length === 0) roots.push("src");
-  return { roots };
+  return { ...flags, roots };
 }
 
 function runCli(argv) {
-  const { roots } = parseArgs(argv);
+  const { check, baseline, baselineFile, roots } = parseArgs(argv);
   const result = scanPaths(roots);
+  const baselinePath = baselineFile ?? DEFAULT_BASELINE_PATH;
+
+  if (baseline) {
+    const written = writeBaseline(baselinePath, result, DEFAULT_EXCEPTIONS);
+    console.log(
+      `Baseline gravado em ${baselinePath} — TOTAL: ${written.total} (${
+        Object.keys(written.files).length
+      } arquivos)`
+    );
+    return 0;
+  }
+
+  if (check) {
+    const baselineData = readBaseline(baselinePath);
+    const comparison = compareToBaseline(result, baselineData);
+
+    if (!comparison.ok) {
+      console.log("Regressoes encontradas:");
+      for (const r of comparison.regressions) {
+        console.log(`  ${r.file}: baseline=${r.baseline} atual=${r.current}`);
+      }
+      return 1;
+    }
+
+    const exceptionFiles = new Set((baselineData.exceptions ?? []).map((e) => e.file));
+    const currentTotal = Object.entries(result.files).reduce(
+      (sum, [file, count]) => (exceptionFiles.has(file) ? sum : sum + count),
+      0
+    );
+    const saldo = baselineData.total - currentTotal;
+    console.log(
+      `OK — sem regressoes. Saldo: ${saldo} a menos que o baseline (atual=${currentTotal}, baseline=${baselineData.total}).`
+    );
+    return 0;
+  }
+
   printTable(result);
   return 0;
+}
+
+// --- Baseline -------------------------------------------------------------
+
+/** Caminho padrão do baseline versionado — marco zero das fases 11-14 (D-05). */
+export const DEFAULT_BASELINE_PATH = "design-system/raw-color-baseline.json";
+
+/**
+ * Única exceção declarada do projeto (D-04 previa "nenhuma" — o inventário
+ * revelou esta; ver SUMMARY do plano para o registro da divergência).
+ */
+export const DEFAULT_EXCEPTIONS = [
+  {
+    file: "src/app/api/relatorios/catalogo/route.ts",
+    reason:
+      "Rota devolve um documento HTML autonomo que carrega Tailwind por CDN, fora do pipeline de tokens do app — as classes cruas dela nao tem token correspondente. Unica excecao declarada do projeto.",
+  },
+];
+
+export function readBaseline(filePath) {
+  const raw = fs.readFileSync(filePath, "utf8");
+  return JSON.parse(raw);
+}
+
+export function writeBaseline(filePath, scanResult, exceptions = []) {
+  const exceptionFiles = new Set(exceptions.map((e) => e.file));
+  const files = {};
+  for (const [file, count] of Object.entries(scanResult.files)) {
+    if (exceptionFiles.has(file)) continue;
+    files[file] = count;
+  }
+  const total = Object.values(files).reduce((sum, n) => sum + n, 0);
+
+  const baseline = {
+    generatedAt: new Date().toISOString(),
+    command: "node scripts/design-tokens/raw-color-scan.mjs src --baseline",
+    exceptions,
+    files,
+    total,
+  };
+
+  const dir = path.dirname(filePath);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(filePath, `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
+  return baseline;
+}
+
+/**
+ * Compara o scan atual contra o baseline. Arquivo listado em `exceptions` é
+ * ignorado nos dois sentidos. Arquivo ausente de um dos lados é tratado como
+ * contagem 0 nesse lado — isso cobre "arquivo novo com cor crua" (regressão,
+ * baseline implícito 0) e "arquivo que sumiu do scan" (melhoria, atual
+ * implícito 0) com a mesma regra geral de comparação.
+ */
+export function compareToBaseline(atual, baseline) {
+  const exceptionFiles = new Set((baseline.exceptions ?? []).map((e) => e.file));
+  const baselineFiles = baseline.files ?? {};
+  const currentFiles = atual.files ?? {};
+  const allFiles = new Set([...Object.keys(baselineFiles), ...Object.keys(currentFiles)]);
+
+  const regressions = [];
+  const improvements = [];
+  let ok = true;
+
+  for (const file of allFiles) {
+    if (exceptionFiles.has(file)) continue;
+    const baselineCount = baselineFiles[file] ?? 0;
+    const currentCount = currentFiles[file] ?? 0;
+
+    if (currentCount > baselineCount) {
+      regressions.push({ file, baseline: baselineCount, current: currentCount });
+      ok = false;
+    } else if (currentCount < baselineCount) {
+      improvements.push({ file, baseline: baselineCount, current: currentCount });
+    }
+  }
+
+  return { ok, regressions, improvements };
 }
 
 // --- Entry point --------------------------------------------------------
