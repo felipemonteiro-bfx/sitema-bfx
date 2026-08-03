@@ -3,6 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import fs from "fs";
 import { uploadToMinIO, isMinIOConfigured } from "@/lib/minio";
+import { deveRecusarUpload, exigeStorageDuravel } from "@/lib/storage-policy";
 
 export async function POST(req: Request) {
   try {
@@ -13,15 +14,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
     }
 
+    // Guarda de producao (STO-04): sem storage duravel configurado, recusar
+    // explicitamente ANTES de qualquer escrita em disco. O disco do pod e
+    // efemero e o fallback silencioso mascarou o problema por meses (mesma
+    // guarda usada em @/app/api/upload-logo/route.ts).
+    if (deveRecusarUpload(process.env)) {
+      return NextResponse.json(
+        { error: "Armazenamento de arquivos nao configurado." },
+        { status: 503 }
+      );
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
     const contentType = file.type || "image/jpeg";
 
     // Preferir MinIO quando configurado
     if (isMinIOConfigured()) {
-      const url = await uploadToMinIO(buffer, filename, contentType);
-      if (url) {
-        return NextResponse.json({ success: true, filePath: url });
+      try {
+        const url = await uploadToMinIO(buffer, filename, contentType);
+        if (url) {
+          return NextResponse.json({ success: true, filePath: url });
+        }
+      } catch (err) {
+        console.error("Error uploading product image to MinIO:", err);
+      }
+
+      // uploadToMinIO devolveu null ou lancou: em producao o disco efemero
+      // nunca e alternativa.
+      if (exigeStorageDuravel(process.env)) {
+        return NextResponse.json(
+          { error: "Falha ao enviar arquivo para o armazenamento." },
+          { status: 503 }
+        );
       }
     }
 
