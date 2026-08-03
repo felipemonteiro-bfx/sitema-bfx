@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { CatalogoPublicoClient } from "@/components/catalogo-publico-client";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { logoSrcParaBrowser } from "@/lib/storage-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +40,11 @@ export default async function CatalogoPage() {
             {cfg?.logoPath ? (
               <div className="relative h-12 w-auto">
                 <Image
-                  src={cfg.logoPath}
+                  src={logoSrcParaBrowser(cfg.logoPath)}
                   alt="Logo"
                   width={120}
                   height={48}
+                  unoptimized
                   className="h-12 w-auto object-contain"
                 />
               </div>

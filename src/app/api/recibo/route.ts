@@ -3,8 +3,7 @@ import { prisma } from "@/lib/db";
 import { verifyReciboSig } from "@/lib/recibo-url";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage, breakTextIntoLines } from "pdf-lib";
-import { readFile } from "fs/promises";
-import path from "path";
+import { embedLogoNoPdf } from "@/lib/logo-loader";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -287,20 +286,12 @@ export async function GET(req: Request) {
     let y = pageHeight - 28;
 
     // ── Logo & Header ─────────────────────────────────────────────────────────
-    let logoImage: Awaited<ReturnType<PDFDocument["embedPng"]>> | Awaited<ReturnType<PDFDocument["embedJpg"]>> | null = null;
+    const logoImage = cfg?.logoPath ? await embedLogoNoPdf(pdf, cfg.logoPath) : null;
     const logoDims = { width: 0, height: 0 };
 
-    if (cfg?.logoPath) {
-      try {
-        const logoBytes = await readFile(path.join(process.cwd(), "public", cfg.logoPath));
-        const ext = path.extname(cfg.logoPath).toLowerCase();
-        if (ext === ".png") logoImage = await pdf.embedPng(logoBytes);
-        else if (ext === ".jpg" || ext === ".jpeg") logoImage = await pdf.embedJpg(logoBytes);
-        if (logoImage) {
-          logoDims.height = 44;
-          logoDims.width = logoDims.height * (logoImage.width / logoImage.height);
-        }
-      } catch { /* sem logo */ }
+    if (logoImage) {
+      logoDims.height = 44;
+      logoDims.width = logoDims.height * (logoImage.width / logoImage.height);
     }
 
     const headerH = 70;

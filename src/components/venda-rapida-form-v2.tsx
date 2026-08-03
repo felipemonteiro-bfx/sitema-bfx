@@ -28,6 +28,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
 import { valorEmReais } from "@/lib/fidelidade";
 import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
+import { mensagemFalhaUber, type MotivoFalhaUber } from "@/lib/uber-quote-result";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
@@ -37,6 +38,7 @@ import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { CurrencyInput } from "@/components/currency-input";
 import { Badge } from "@/components/ui/badge";
+import { CadastrarClienteRapidoDialog } from "@/components/cadastrar-cliente-rapido-dialog";
 import type { ActionResponse } from "@/lib/action-response";
 
 interface ProdutoItem {
@@ -164,6 +166,8 @@ export default function VendaRapidaFormV2({
       ultimaVenda?: { data: string; valor: number } | null;
     }[]
   >([]);
+  // Modal de cadastro rapido de cliente pelo PDV (D-04, D-07, PDV-15)
+  const [clienteDialogOpen, setClienteDialogOpen] = useState(false);
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
@@ -178,6 +182,8 @@ export default function VendaRapidaFormV2({
     country: string;
   } | null>(null);
   const [uberQuoteLoading, setUberQuoteLoading] = useState(false);
+  const [uberMotivo, setUberMotivo] = useState<MotivoFalhaUber | null>(null);
+  const [uberMensagem, setUberMensagem] = useState<string>(mensagemFalhaUber("sem_credencial"));
 
   // Produto selecionado para sugestões de upsell/cross-sell
   const [produtoParaSugestoes, setProdutoParaSugestoes] = useState<{
@@ -263,8 +269,14 @@ export default function VendaRapidaFormV2({
       .then((data) => {
         setUberEnabled(!!data?.enabled);
         setUberPickupAddress(data?.pickupAddress ?? null);
+        setUberMotivo(data?.motivo ?? null);
+        setUberMensagem(data?.mensagem || mensagemFalhaUber("sem_credencial"));
       })
-      .catch(() => setUberEnabled(false));
+      .catch(() => {
+        setUberEnabled(false);
+        setUberMotivo("sem_credencial");
+        setUberMensagem(mensagemFalhaUber("sem_credencial"));
+      });
   }, []);
 
   // Consulta de Limite ao selecionar cliente
@@ -346,7 +358,7 @@ export default function VendaRapidaFormV2({
       return;
     }
     if (!uberEnabled || !uberPickupAddress) {
-      toast.error("Uber Direct não configurado. Configure UBER_DIRECT_CUSTOMER_ID, UBER_DIRECT_TOKEN e UBER_PICKUP_ADDRESS_JSON no servidor.");
+      toast.error(uberMensagem);
       return;
     }
     const orderValue = produtos.reduce((s, p) => s + p.subtotal, 0);
@@ -389,14 +401,14 @@ export default function VendaRapidaFormV2({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data?.error || "Erro ao obter cotação Uber.");
+        toast.error(data?.mensagem || data?.error || "Erro ao obter cotação Uber.");
         return;
       }
       setFrete(data.fee ?? 0);
       toast.success(`Frete Uber: R$ ${(data.fee ?? 0).toFixed(2)} (${data.duration ?? "?"} min)`);
     } catch (err) {
       console.error(err);
-      toast.error("Erro ao cotar frete Uber.");
+      toast.error(mensagemFalhaUber("erro_upstream"));
     } finally {
       setUberQuoteLoading(false);
     }
@@ -723,14 +735,24 @@ export default function VendaRapidaFormV2({
         </CardHeader>
         <CardContent className="overflow-visible">
           <div className="relative">
-            <Label
-              className={cn(
-                "text-xs font-bold uppercase tracking-wider",
-                validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
-              )}
-            >
-              Buscar Cliente <span className="text-destructive">*</span> {validationErrors.cliente && "(obrigatório)"}
-            </Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                Buscar Cliente <span className="text-destructive">*</span> {validationErrors.cliente && "(obrigatório)"}
+              </Label>
+              <button
+                type="button"
+                onClick={() => setClienteDialogOpen(true)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-info hover:underline"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Cadastrar cliente
+              </button>
+            </div>
             <Input
               value={clienteQuery}
               onChange={(e) => setClienteQuery(e.target.value)}
@@ -786,6 +808,26 @@ export default function VendaRapidaFormV2({
                 ))}
               </div>
             )}
+            <CadastrarClienteRapidoDialog
+              open={clienteDialogOpen}
+              onOpenChange={setClienteDialogOpen}
+              nomeInicial={clienteQuery}
+              onCriado={(cliente) => {
+                void setFormState({
+                  selectedCliente: {
+                    id: cliente.id,
+                    nome: cliente.nome,
+                    endereco: cliente.endereco,
+                    cep: cliente.cep,
+                    telefone: cliente.telefone,
+                    cpf: cliente.cpf,
+                    cnpj: cliente.cnpj,
+                  },
+                  clienteQuery: cliente.nome,
+                });
+                setClienteSuggestions([]);
+              }}
+            />
           </div>
         </CardContent>
       </Card>
@@ -933,6 +975,9 @@ export default function VendaRapidaFormV2({
                   )}
                 </Button>
               </div>
+              {!uberEnabled && (
+                <p className="text-xs text-muted-foreground">{uberMensagem}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

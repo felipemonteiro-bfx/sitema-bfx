@@ -6,11 +6,10 @@
  * total a descontar em folha) e tabela paginada (Colaborador | Matricula | Data |
  * Produtos | Valor | Parcelas). Quebra de pagina automatica.
  */
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
-import { readFile } from "fs/promises";
-import path from "path";
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage, type PDFImage } from "pdf-lib";
 import { formatBRL } from "@/lib/utils";
 import { periodoLabel, type RelatorioMensalData } from "@/lib/relatorio-mensal";
+import { embedLogoNoPdf } from "@/lib/logo-loader";
 
 const AZUL = rgb(0.07, 0.13, 0.31);
 const CINZA_TEXTO = rgb(0.2, 0.2, 0.22);
@@ -91,22 +90,14 @@ export async function gerarRelatorioMensalPdf(input: RelatorioMensalPdfInput): P
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  let logoImage: Awaited<ReturnType<PDFDocument["embedPng"]>> | null = null;
+  let logoImage: PDFImage | null = null;
   const logoDims = { width: 0, height: 0 };
   if (logoPath) {
-    try {
-      const full = path.join(process.cwd(), "public", logoPath);
-      const bytes = await readFile(full);
-      const ext = path.extname(logoPath).toLowerCase();
-      if (ext === ".png") logoImage = await pdf.embedPng(bytes);
-      else if (ext === ".jpg" || ext === ".jpeg") logoImage = await pdf.embedJpg(bytes);
-      if (logoImage) {
-        const ratio = logoImage.width / logoImage.height;
-        logoDims.height = 40;
-        logoDims.width = 40 * ratio;
-      }
-    } catch {
-      // logo opcional — segue sem
+    logoImage = await embedLogoNoPdf(pdf, logoPath);
+    if (logoImage) {
+      const ratio = logoImage.width / logoImage.height;
+      logoDims.height = 40;
+      logoDims.width = 40 * ratio;
     }
   }
 

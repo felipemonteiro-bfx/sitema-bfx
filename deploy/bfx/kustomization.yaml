@@ -7,7 +7,9 @@ resources:
 - serviceaccount.yaml
 - secrets.yaml
 - externalsecret-app.yaml
+- externalsecret-minio.yaml
 - postgres.yaml
+- minio.yaml
 - app.yaml
 - ingress.yaml
 - cronjob-cleanup-uploads.yaml

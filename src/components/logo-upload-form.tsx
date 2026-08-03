@@ -5,6 +5,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { logoSrcParaBrowser } from "@/lib/storage-policy";
 
 export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }) {
   const [file, setFile] = useState<File | null>(null);
@@ -54,7 +55,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
     }
   };
 
-  const displayUrl = previewUrl || (currentLogoPath ? (currentLogoPath.startsWith("/") ? currentLogoPath : `/${currentLogoPath}`) : null);
+  const displayUrl = previewUrl || (currentLogoPath ? logoSrcParaBrowser(currentLogoPath) : null);
 
   return (
     <div className="space-y-4">

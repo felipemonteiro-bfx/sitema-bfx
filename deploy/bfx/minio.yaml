@@ -1,0 +1,113 @@
+# MinIO no namespace bfx — espelha o docker-compose.yml (dev): imagem
+# minio/minio:latest, comando `server /data --console-address ":9001"`, dados
+# em /data.
+#
+# (a) Tag "latest": mantida igual ao docker-compose.yml de proposito. Fixar
+#     uma tag RELEASE.* (item T-05-03 do threat model) fica para depois que o
+#     Andre confirmar qual release ja esta rodando no cluster.
+# (b) O console de administracao (porta 9001) NAO e exposto por Ingress e nao
+#     deve ser — ver T-05-06. Acesso ao console e so via
+#     `kubectl port-forward svc/bfx-minio 9001:9001`.
+apiVersion: v1
+kind: Service
+metadata:
+  name: bfx-minio
+  labels:
+    app: bfx-minio
+spec:
+  type: ClusterIP
+  selector:
+    app: bfx-minio
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bfx-minio-data
+  labels:
+    app: bfx-minio
+  annotations:
+    # Mesmas anotacoes de retencao do PVC do postgres (deploy/bfx/postgres.yaml)
+    # — sem elas o ArgoCD pode apagar o volume num prune e o objetivo STO-01
+    # nao se sustenta.
+    argocd.argoproj.io/sync-options: "Delete=false,Prune=false"
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: microk8s-hostpath
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bfx-minio
+  labels:
+    app: bfx-minio
+  annotations:
+    # bfx-minio-secrets vem do SSM via ExternalSecret (externalsecret-minio.yaml)
+    # e muda fora do git. envFrom so e lido na criacao do container, entao sem
+    # o Reloader uma rotacao de credencial no SSM nao chegaria no pod — mesmo
+    # motivo documentado em deploy/bfx/app.yaml.
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: 1
+  strategy:
+    # Obrigatorio: com PVC ReadWriteOnce um RollingUpdate trava esperando um
+    # segundo pod montar o mesmo volume.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: bfx-minio
+  template:
+    metadata:
+      labels:
+        app: bfx-minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args:
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          ports:
+            - containerPort: 9000
+              name: api
+            - containerPort: 9001
+              name: console
+          envFrom:
+            - secretRef:
+                name: bfx-minio-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: bfx-minio-data

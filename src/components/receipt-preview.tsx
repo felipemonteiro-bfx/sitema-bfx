@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import Image from "next/image";
+import { logoSrcParaBrowser } from "@/lib/storage-policy";
 
 interface ReceiptPreviewProps {
   template: string;
@@ -36,7 +37,13 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
         </div>
         {logoPath && (
           <div className="relative w-20 h-20">
-            <Image src={logoPath} alt="Company Logo" fill style={{ objectFit: "contain" }} />
+            <Image
+              src={logoSrcParaBrowser(logoPath)}
+              alt="Company Logo"
+              fill
+              unoptimized
+              style={{ objectFit: "contain" }}
+            />
           </div>
         )}
       </div>

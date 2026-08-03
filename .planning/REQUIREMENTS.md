@@ -17,21 +17,41 @@ caminho em `Config.logoPath`. Todo rollout recria o pod e apaga os uploads, deix
 mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
 
 - [ ] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
+      (codigo pronto; **so vira verdade depois** de aplicar os manifestos no cluster — acao humana)
+
 - [ ] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
+      (manifestos escritos em `deploy/bfx/minio.yaml` e registrados no kustomization;
+      **nao aplicados** — verificado em 2026-08-03 que nao ha MinIO no namespace)
+
 - [ ] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod
-- [ ] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
+- [x] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
 - [ ] **STO-05**: Logo aparece no preview de configuracoes, no recibo PDF e no catalogo
-- [ ] **STO-06**: Cron `cleanup-uploads` opera sobre o novo storage sem apagar objeto ainda referenciado no banco
+- [x] **STO-06**: Cron `cleanup-uploads` opera sobre o novo storage sem apagar objeto ainda referenciado no banco
 
 ### Integridade de Dados (DAT)
 
-Contexto: `model Fornecedor` nao tem soft-delete e `src/app/(app)/cadastros/page.tsx:209` faz
-`deleteMany` direto. Todos os fornecedores sumiram em producao (demanda 9). Fator atenuante:
-`createAuditLog("fornecedor:delete", { fornecedorId, nome })` registrou os nomes em `audit_logs`,
-o que torna a lista reconstruivel.
+Contexto **revisado em 2026-08-03 contra o banco de producao** (consulta somente-leitura via
+`kubectl exec` no pod `bfx-db-0`):
 
-- [ ] **DAT-01**: Fornecedores apagados sao reconstruidos a partir de `audit_logs` (`acao = 'fornecedor:delete'`)
-- [ ] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
+- `SELECT count(*) FROM fornecedores` → **0**. A demanda 9 e real.
+- `SELECT count(*) FROM audit_logs WHERE acao = 'fornecedor:delete'` → **0**. Nao ha nenhum
+  registro de exclusao. Na verdade **nenhuma acao de fornecedor jamais foi registrada** — o
+  `GROUP BY acao` so devolve venda/produto/cliente/despesa/LOGIN/EXCLUSAO.
+
+- `SELECT count(*), count(fornecedor_id) FROM produtos` → **197 produtos, 0 com fornecedor_id**.
+- Audit log comeca em 2026-01-31; so existe o banco `bfx` (sem banco legado); sem backup no pod;
+  sem seed nem CSV de fornecedores no repositorio.
+
+**Conclusao:** os fornecedores nao foram apagados pela tela de cadastros — nunca existiram neste
+banco. Provavelmente ficaram no sistema legado (tag `legacy-streamlit-final`) e a migracao para o
+Next.js nao os trouxe. **Nao ha fonte de dados recuperavel**; a lista precisa vir do cliente.
+A hipotese original (reconstruir via `audit_logs`) esta descartada por evidencia.
+
+- [x] **DAT-01**: Existe um importador de fornecedores por CSV com dry-run (reporta criados/
+      ignorados/erros antes de escrever) e commit idempotente por nome. Entregue como capacidade —
+      a carga dos dados reais depende do arquivo que o cliente ainda deve fornecer.
+
+- [x] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
 - [ ] **DAT-03**: Exportacao rapida exibe um botao por empresa parceira vinda do banco, sem lista hardcoded
 
 ### PDV — Fricção Zero (PDV)
@@ -40,9 +60,9 @@ Contexto: o campo de custo ja e editavel no UI (`produto-item-form.tsx:274`); o 
 validacao de servidor `validarItensContraCatalogo` (`src/lib/venda-item-validation.ts:47-52`),
 que recusa custo menor que `custoPadrao`. Essa e a causa real da demanda 7.
 
-- [ ] **PDV-14**: Vendedor pode lancar qualquer custo na venda rapida, inclusive abaixo do custo de catalogo, e o valor digitado e gravado em `item_venda.custo_produto`
-- [ ] **PDV-15**: Vendedor pode cadastrar cliente novo por modal, sem sair da tela do PDV, e o cliente ja fica selecionado na venda
-- [ ] **PDV-16**: Vendedor pode cadastrar fornecedor novo no fluxo de produto rapido do PDV, e o fornecedor ja fica selecionado
+- [x] **PDV-14**: Vendedor pode lancar qualquer custo na venda rapida, inclusive abaixo do custo de catalogo, e o valor digitado e gravado em `item_venda.custo_produto`
+- [x] **PDV-15**: Vendedor pode cadastrar cliente novo por modal, sem sair da tela do PDV, e o cliente ja fica selecionado na venda
+- [x] **PDV-16**: Vendedor pode cadastrar fornecedor novo no fluxo de produto rapido do PDV, e o fornecedor ja fica selecionado
 
 ### Experiência de Uso (UXP)
 
@@ -53,17 +73,25 @@ Sobre o "amarelo": `globals.css` define `--background: oklch(0.985 0.01 90)` (qu
 nao ha amarelo dominante no codigo, mas os 3 screenshots do cliente sao amarelos. A origem
 precisa ser determinada antes de mexer em token.
 
-- [ ] **UXP-01**: Venda rapida nao exibe badge nem alerta de estoque baixo ou sem estoque
-- [ ] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
-- [ ] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
-- [ ] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
-- [ ] **UXP-05**: Paleta reflete as cores oficiais da BFX
+- [x] **UXP-01**: Venda rapida nao exibe badge nem alerta de estoque baixo ou sem estoque
+- [x] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
+- [x] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
+- [x] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
+- [x] **UXP-05**: Paleta reflete as cores oficiais da BFX
+- [ ] **UXP-06**: Paleta completa da marca BFX aplicada aos tokens semanticos (bloqueado: os hex oficiais — primary, accent, fundo — nao foram fornecidos pelo cliente; sem eles qualquer escolha seria chute, D-02)
 
 ### Integrações e Carga de Dados (INT)
 
+Contexto verificado em 2026-08-03: o Secret `bfx-app-secrets` no cluster tem 17 chaves e
+**nenhuma `UBER_*`**. O codigo de cotacao (`src/lib/uber.ts`, `src/app/api/frete/uber/*`) existe,
+mas a integracao nunca funcionou em producao por falta de credencial — nao por falta de codigo.
+
 - [ ] **INT-01**: Cotacao Uber funciona em producao e preenche o frete para endereco valido
-- [ ] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
-- [ ] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
+      (bloqueado por credencial: as envs `UBER_*` precisam ser criadas no AWS SSM pelo André)
+
+- [x] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
+- [x] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
+      (capacidade entregue em 09-02; carga real ainda depende do arquivo que o cliente deve fornecer — D-03)
 
 ## Entregue em v1.0
 
@@ -146,28 +174,30 @@ demandas do cliente.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
+| STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-03 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-05 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| DAT-01 | Phase 6 — Integridade de dados | Pending |
-| DAT-02 | Phase 6 — Integridade de dados | Pending |
+| STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
+| DAT-01 | Phase 6 — Integridade de dados | Complete |
+| DAT-02 | Phase 6 — Integridade de dados | Complete |
 | DAT-03 | Phase 6 — Integridade de dados | Pending |
-| PDV-14 | Phase 7 — PDV sem friccao | Pending |
-| PDV-15 | Phase 7 — PDV sem friccao | Pending |
-| PDV-16 | Phase 7 — PDV sem friccao | Pending |
-| UXP-01 | Phase 8 — Estoque e identidade visual | Pending |
-| UXP-02 | Phase 8 — Estoque e identidade visual | Pending |
-| UXP-03 | Phase 8 — Estoque e identidade visual | Pending |
-| UXP-04 | Phase 8 — Estoque e identidade visual | Pending |
-| UXP-05 | Phase 8 — Estoque e identidade visual | Pending |
+| PDV-14 | Phase 7 — PDV sem friccao | Complete |
+| PDV-15 | Phase 7 — PDV sem friccao | Complete |
+| PDV-16 | Phase 7 — PDV sem friccao | Complete |
+| UXP-01 | Phase 8 — Estoque e identidade visual | Complete |
+| UXP-02 | Phase 8 — Estoque e identidade visual | Complete |
+| UXP-03 | Phase 8 — Estoque e identidade visual | Complete |
+| UXP-04 | Phase 8 — Estoque e identidade visual | Complete |
+| UXP-05 | Phase 8 — Estoque e identidade visual | Complete |
+| UXP-06 | Backlog | Blocked (hex oficiais da BFX pendentes do cliente, D-02) |
 | INT-01 | Phase 9 — Integracoes e carga de dados | Pending |
-| INT-02 | Phase 9 — Integracoes e carga de dados | Pending |
-| INT-03 | Phase 9 — Integracoes e carga de dados | Blocked (arquivo da Equilibrium pendente) |
+| INT-02 | Phase 9 — Integracoes e carga de dados | Complete |
+| INT-03 | Phase 9 — Integracoes e carga de dados | Complete |
 
 **Coverage:**
+
 - v1.1 requirements: 20 total
 - Mapped to phases: 20
 - Unmapped: 0 ✓

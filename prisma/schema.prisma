@@ -302,11 +302,13 @@ model Usuario {
 }
 
 model Fornecedor {
-  id       Int     @id @default(autoincrement())
-  nome     String  @unique
-  telefone String?
-  produtos Produto[]
+  id        Int       @id @default(autoincrement())
+  nome      String    @unique
+  telefone  String?
+  deletedAt DateTime? @map("deleted_at")
+  produtos  Produto[]
 
+  @@index([deletedAt])
   @@map("fornecedores")
 }
 

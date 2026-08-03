@@ -1,12 +1,15 @@
 import { NextRequest } from "next/server";
 import { getUberDirectConfig, getDeliveryQuote, type UberAddress } from "@/lib/uber";
+import { statusHttpParaFalhaUber, mensagemFalhaUber } from "@/lib/uber-quote-result";
 
 export async function POST(req: NextRequest) {
   const config = getUberDirectConfig();
   if (!config) {
+    const motivo = "sem_credencial" as const;
+    const mensagem = mensagemFalhaUber(motivo);
     return Response.json(
-      { error: "Uber Direct não configurado. Defina UBER_DIRECT_CUSTOMER_ID e UBER_DIRECT_TOKEN." },
-      { status: 503 }
+      { motivo, mensagem, error: mensagem },
+      { status: statusHttpParaFalhaUber(motivo) }
     );
   }
 
@@ -35,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   const orderValueCents = Math.round(Number(orderValue) * 100);
 
-  const quote = await getDeliveryQuote(config, {
+  const resultado = await getDeliveryQuote(config, {
     pickupAddress,
     dropoffAddress,
     pickupPhone,
@@ -43,18 +46,19 @@ export async function POST(req: NextRequest) {
     orderValueCents,
   });
 
-  if (!quote) {
+  if (!resultado.ok) {
+    const mensagem = mensagemFalhaUber(resultado.motivo);
     return Response.json(
-      { error: "Não foi possível obter cotação. Verifique os endereços ou tente novamente." },
-      { status: 502 }
+      { motivo: resultado.motivo, mensagem, error: mensagem },
+      { status: statusHttpParaFalhaUber(resultado.motivo) }
     );
   }
 
   return Response.json({
-    fee: quote.fee / 100,
-    feeCents: quote.fee,
-    duration: quote.duration,
-    quoteId: quote.id,
-    currency: quote.currencyType,
+    fee: resultado.fee,
+    feeCents: resultado.feeCents,
+    duration: resultado.duration,
+    quoteId: resultado.quoteId,
+    currency: resultado.currency,
   });
 }

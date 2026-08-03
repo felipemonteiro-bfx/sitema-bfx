@@ -19,7 +19,7 @@ export default async function Page() {
       orderBy: { id: "desc" },
       include: { itens: true, assinatura: true },
     }),
-    prisma.fornecedor.findMany({ orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
+    prisma.fornecedor.findMany({ where: { deletedAt: null }, orderBy: { nome: "asc" }, select: { id: true, nome: true } }),
     prisma.produto.findMany({
       where: { categoria: { not: null } },
       select: { categoria: true },

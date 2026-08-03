@@ -85,10 +85,18 @@ export async function fuzzyFindProdutos(search: string, limit = 50) {
   return prisma.produto.findMany({ where: { id: { in: ids } }, take: limit });
 }
 
+/**
+ * DAT-02: o `where` filtra `deletedAt: null` para nao ressuscitar fornecedor
+ * excluido na busca fuzzy. O SQL cru de `fuzzyIds` aplica `LIMIT` antes deste
+ * filtro, entao uma busca pode devolver menos que `limit` resultados quando
+ * ha excluidos parecidos no meio do ranking de similaridade — tradeoff aceito
+ * e consciente: a tabela e pequena, e mudar o SQL cru exigiria duplicar a
+ * regra de soft-delete em string SQL.
+ */
 export async function fuzzyFindFornecedores(search: string, limit = 50) {
   const ids = await fuzzyIds("fornecedores", "nome", search, limit);
   if (!ids.length) return [];
-  return prisma.fornecedor.findMany({ where: { id: { in: ids } }, take: limit });
+  return prisma.fornecedor.findMany({ where: { id: { in: ids }, deletedAt: null }, take: limit });
 }
 
 /**

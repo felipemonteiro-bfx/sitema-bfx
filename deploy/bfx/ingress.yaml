@@ -1,3 +1,16 @@
+# /produtos -> bfx-minio:9000 torna os objetos do bucket (imagens de produto e
+# logo, MINIO_PUBLIC_URL=https://bfx.softlive.dev + MINIO_BUCKET=produtos)
+# alcancaveis pelo navegador: uploadToMinIO devolve
+# ${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key} e o MinIO usa path-style, entao
+# https://bfx.softlive.dev/produtos/<key> chega no objeto sem reescrita.
+#
+# RESTRICAO: nao criar uma pagina Next em /produtos — hoje nao existe
+# (src/app/(app) nao tem essa rota; /api/produtos fica sob /api e nao colide)
+# e o Traefik resolve pelo prefixo mais longo, entao uma rota Next em
+# /produtos teria que competir com este path do MinIO.
+#
+# O console de administracao do MinIO (porta 9001) fica de fora de proposito
+# — ver T-05-06 no threat model do plano 05-02.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -11,6 +24,13 @@ spec:
     - host: bfx.softlive.dev
       http:
         paths:
+          - path: /produtos
+            pathType: Prefix
+            backend:
+              service:
+                name: bfx-minio
+                port:
+                  number: 9000
           - path: /
             pathType: Prefix
             backend:

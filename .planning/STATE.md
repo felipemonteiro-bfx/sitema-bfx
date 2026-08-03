@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Demandas do Cliente BFX
-status: planning
-last_updated: "2026-08-03T15:00:00.000Z"
+current_phase: 5
+current_phase_name: first phase of milestone v1.1
+status: verifying
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-08-03T19:40:05.889Z"
 last_activity: 2026-08-03
+last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
   total_phases: 5
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 5
+  total_plans: 16
+  completed_plans: 16
 ---
 
 # Project State
@@ -25,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 5 of 9 (Storage durável (MinIO no cluster)) — first phase of milestone v1.1
-Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-08-03 — ROADMAP.md criado para milestone v1.1 (Fases 5-9)
+Plan: 4 of 4
+Status: Phase complete — ready for verification
+Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -53,6 +56,23 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 05 P02 | 20min | 3 tasks | 6 files |
+| Phase 5 P4 | 20min | 2 tasks | 4 files |
+| Phase 06 P01 | 5min | 3 tasks | 7 files |
+| Phase 06 P02 | 12min | 3 tasks | 7 files |
+| Phase 07 P01 | 16min | 3 tasks | 5 files |
+| Phase 07 P03 | 3min | 3 tasks | 4 files |
+| Phase 07 P02 | 6min | 3 tasks | 6 files |
+| Phase 08 P01 | 20min | 3 tasks | 4 files |
+| Phase 08 P02 | 12min | 2 tasks | 3 files |
+| Phase 08 P03 | 3min | 3 tasks | 4 files |
+| Phase 09 P01 | 15min | 3 tasks | 8 files |
+| Phase 09 P02 | 8min | 3 tasks | 7 files |
+| Phase 09 P03 | 12min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -76,6 +96,23 @@ Recent decisions affecting current work:
 - [Phase 04-melhorias-infra]: installmentValue calculado automaticamente (totalValue/installmentCount) com suporte a valor explicito via ?? operator
 - [Phase 04-melhorias-infra]: env-validation tests use await import() rejects pattern because env.ts runs validateEnv() at module scope
 - [Phase 04-melhorias-infra]: session-secret test mocks next/headers to keep unit tests in pure Node.js without cookie dependency
+- [Phase ?]: Plano 05-02: imagem MinIO mantida em latest (mesma tag do docker-compose.yml); strategy Recreate obrigatoria com PVC ReadWriteOnce; console 9001 nunca exposto por Ingress (T-05-06)
+- [Phase ?]: 05-04: guarda de producao replicada na rota de imagem de produto (mesmo padrao do plano 05-01); cron cleanup-uploads travado por teste sem mudanca de logica (D-05); Task 3 (checkpoint no cluster) documentada como runbook pendente, nao executada pelo agente
+- [Phase ?]: 06-01: bulkDeleteFornecedores e addFornecedor exportados de page.tsx para serem testaveis; auditoria create/restore adicionada so na Task 3 (unica mudanca de producao dela)
+- [Phase ?]: 06-02: importador CSV de fornecedores dry-run + commit idempotente, com dedupe interno ao arquivo e reconstrucao de 2 commits GREEN apos bundling acidental por execucao paralela na mesma working tree
+- [Phase ?]: D-01/D-02/D-03 (PDV-14): piso de custo removido do servidor, regra de subtotal mantida, casos de teste invertidos (nao apagados), liberado para todos os vendedores
+- [Phase ?]: 07-03: rota POST /api/fornecedores reusa classificarNomeFornecedor da Fase 6 (criar/reativar/ignorar) implementada de uma vez na Task 1, sem reimplementar normalizacao/comparacao de nome
+- [Phase ?]: 07-03: modal CadastrarFornecedorRapidoDialog diferencia toast por reativado/jaExistia do corpo da resposta, nao pelo status HTTP
+- [Phase ?]: D-04/D-07: POST /api/clientes criada com modal de cadastro rapido no PDV, cliente ja fica selecionado na venda
+- [Phase ?]: D-05: aviso de nome parecido via GET /api/clientes/similar e deliberadamente nao bloqueante
+- [Phase ?]: D-03 (08-01): venda rapida perde alertas de estoque e teto de quantidade; decremento de estoque e aba Estoque do /financeiro nao sao tocados
+- [Phase ?]: UXP-03: metricas de estoque extraidas para modulo puro sem alterar formulas (D-04), travadas por suite de nao-regressao
+- [Phase ?]: D-01 aplicada: tokens de fundo do tema claro zerados para croma 0 (UXP-05), travados por gate de CI
+- [Phase ?]: D-02 registrada: paleta oficial da BFX vira UXP-06 bloqueada em REQUIREMENTS.md, aguardando hex do cliente
+- [Phase ?]: UXP-04 tratado como resolvido no discuss (2026-08-03); evidencia versionada em 08-EVIDENCE-UXP-04.md sem reconsultar o cluster
+- [Phase ?]: INT-02: classificarProntidaoUber ficou pronta na Task 1 (mesmo arquivo do contrato de interface), um commit antes do previsto pelo plano — sem impacto de correcao
+- [Phase ?]: 09-02: importador CSV de clientes com idempotencia por CPF/nome (D-04), reserva de nomes contra @unique de Cliente.nome, vinculo obrigatorio a empresa parceira (D-05)
+- [Phase ?]: INT-01 (cotacao Uber): runbook completo em deploy/bfx/README.md + trava de CI contra deriva de env; criacao das credenciais no SSM fica como acao humana pendente do Andre (D-01)
 
 ### Roadmap Evolution
 
@@ -91,6 +128,7 @@ None yet.
 - INT-03 (import de clientes da Equilibrium, Fase 9) está bloqueado por um arquivo que o cliente ainda não entregou (layout, regras de duplicata, vínculo com empresa parceira). Não bloqueia as demais fases.
 - Fase 7 (PDV-14) reabre o vetor de comissão/margem inflados fechado no commit `a63dc04` ao liberar custo abaixo de `custoPadrao` para todos os vendedores — decisão consciente do André, marcada "⚠️ Revisit" no PROJECT.md
 - Verificar se `produto-item-form.tsx` e `parcelas-vencimento-form.tsx` são reutilizáveis ou precisam ser reescritos (herdado do v1.0)
+- Fase 5 (Storage MinIO): STO-01/STO-02/STO-05 dependem de checkpoint humano no cluster (SSM secrets, sync ArgoCD, kubectl delete pod) — runbook completo em 05-04-SUMMARY.md '## Acoes humanas pendentes'. Fase so fecha apos passo 6 (sobrevivencia ao delete pod) confirmado.
 
 ### Quick Tasks Completed
 
@@ -118,6 +156,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T15:00:00.000Z
-Stopped at: ROADMAP.md e STATE.md criados para milestone v1.1 (Fases 5-9); aguardando `/gsd-plan-phase 5`
+Last session: 2026-08-03T19:40:05.881Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
