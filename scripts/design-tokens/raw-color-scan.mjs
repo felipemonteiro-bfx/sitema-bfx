@@ -190,141 +190,24 @@ function printTable(result) {
 }
 
 function parseArgs(argv) {
-  const flags = { check: false, baseline: false, baselineFile: null };
   const roots = [];
 
   for (const arg of argv) {
-    if (arg === "--check") {
-      flags.check = true;
-    } else if (arg === "--baseline") {
-      flags.baseline = true;
-    } else if (arg.startsWith("--baseline-file=")) {
-      flags.baselineFile = arg.slice("--baseline-file=".length);
-    } else if (arg.startsWith("--")) {
+    if (arg.startsWith("--")) {
       throw new Error(`Flag desconhecida: ${arg}`);
-    } else {
-      roots.push(arg);
     }
+    roots.push(arg);
   }
 
   if (roots.length === 0) roots.push("src");
-  return { ...flags, roots };
+  return { roots };
 }
 
 function runCli(argv) {
-  const { check, baseline, baselineFile, roots } = parseArgs(argv);
+  const { roots } = parseArgs(argv);
   const result = scanPaths(roots);
-  const baselinePath = baselineFile ?? DEFAULT_BASELINE_PATH;
-
-  if (baseline) {
-    const written = writeBaseline(baselinePath, result, DEFAULT_EXCEPTIONS);
-    console.log(
-      `Baseline gravado em ${baselinePath} — TOTAL: ${written.total} (${
-        Object.keys(written.files).length
-      } arquivos)`
-    );
-    return 0;
-  }
-
-  if (check) {
-    const baselineData = readBaseline(baselinePath);
-    const comparison = compareToBaseline(result, baselineData);
-
-    if (!comparison.ok) {
-      console.log("Regressoes encontradas:");
-      for (const r of comparison.regressions) {
-        console.log(`  ${r.file}: baseline=${r.baseline} atual=${r.current}`);
-      }
-      return 1;
-    }
-
-    const exceptionFiles = new Set((baselineData.exceptions ?? []).map((e) => e.file));
-    const currentTotal = Object.entries(result.files).reduce(
-      (sum, [file, count]) => (exceptionFiles.has(file) ? sum : sum + count),
-      0
-    );
-    const saldo = baselineData.total - currentTotal;
-    console.log(
-      `OK — sem regressoes. Saldo: ${saldo} a menos que o baseline (atual=${currentTotal}, baseline=${baselineData.total}).`
-    );
-    return 0;
-  }
-
   printTable(result);
   return 0;
-}
-
-// --- Baseline -----------------------------------------------------------
-
-export const DEFAULT_BASELINE_PATH = "design-system/raw-color-baseline.json";
-
-export const DEFAULT_EXCEPTIONS = [
-  {
-    file: "src/app/api/relatorios/catalogo/route.ts",
-    reason:
-      "Rota devolve um documento HTML autonomo que carrega Tailwind por CDN, fora do pipeline de tokens do app — as classes cruas dela nao tem token correspondente. Unica excecao declarada do projeto.",
-  },
-];
-
-export function readBaseline(filePath) {
-  const raw = fs.readFileSync(filePath, "utf8");
-  return JSON.parse(raw);
-}
-
-export function writeBaseline(filePath, scanResult, exceptions = []) {
-  const exceptionFiles = new Set(exceptions.map((e) => e.file));
-  const files = {};
-  for (const [file, count] of Object.entries(scanResult.files)) {
-    if (exceptionFiles.has(file)) continue;
-    files[file] = count;
-  }
-  const total = Object.values(files).reduce((sum, n) => sum + n, 0);
-
-  const baseline = {
-    generatedAt: new Date().toISOString(),
-    command: "node scripts/design-tokens/raw-color-scan.mjs src --baseline",
-    exceptions,
-    files,
-    total,
-  };
-
-  const dir = path.dirname(filePath);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(filePath, `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
-  return baseline;
-}
-
-/**
- * Compara o scan atual contra o baseline. Arquivo listado em `exceptions` é
- * ignorado nos dois sentidos. Arquivo ausente de um dos lados é tratado como
- * contagem 0 nesse lado — isso cobre "arquivo novo com cor crua" (regressão,
- * baseline implícito 0) e "arquivo que sumiu do scan" (melhoria, atual
- * implícito 0) com a mesma regra geral de comparação.
- */
-export function compareToBaseline(atual, baseline) {
-  const exceptionFiles = new Set((baseline.exceptions ?? []).map((e) => e.file));
-  const baselineFiles = baseline.files ?? {};
-  const currentFiles = atual.files ?? {};
-  const allFiles = new Set([...Object.keys(baselineFiles), ...Object.keys(currentFiles)]);
-
-  const regressions = [];
-  const improvements = [];
-  let ok = true;
-
-  for (const file of allFiles) {
-    if (exceptionFiles.has(file)) continue;
-    const baselineCount = baselineFiles[file] ?? 0;
-    const currentCount = currentFiles[file] ?? 0;
-
-    if (currentCount > baselineCount) {
-      regressions.push({ file, baseline: baselineCount, current: currentCount });
-      ok = false;
-    } else if (currentCount < baselineCount) {
-      improvements.push({ file, baseline: baselineCount, current: currentCount });
-    }
-  }
-
-  return { ok, regressions, improvements };
 }
 
 // --- Entry point --------------------------------------------------------
