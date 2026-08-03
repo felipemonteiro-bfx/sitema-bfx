@@ -18,6 +18,33 @@ Para qualquer correcao de bug ou feature nao-trivial (nao vale para fix de uma l
 
 So pular esse fluxo se o usuario pedir explicitamente algo mais rapido/direto.
 
+## Grok como cerebro, Claude como maos
+
+Decisao do Andre (2026-08-03): em planejamento de fase e decisoes de arquitetura, o **Grok** e o
+cerebro (analisa e critica) e o **Claude Opus** sao as maos (implementa). Antes de planejar uma
+fase do GSD ou tomar uma decisao de arquitetura, passar o plano pelo Grok primeiro.
+
+Como chamar o Grok em modo nao-interativo:
+
+```bash
+grok --prompt-file <briefing.md> --no-plan --always-approve --output-format plain --effort high --no-alt-screen
+```
+
+- `--no-plan` e **obrigatorio**: sem ele o Grok entra em plan mode, narra a investigacao e sai
+  sem emitir o parecer (o stdout fica so com as frases de narracao).
+- `--prompt-file` evita problemas de escape em briefings longos.
+- O Grok le o repo do cwd. Instruir no briefing que ele nao deve editar arquivos, e conferir com
+  `git status` depois.
+- Rodar em background: a analise leva de 5 a 10 minutos.
+
+Para revisao de codigo (nao de plano) ja existe o comando global `/grok-review`, que roda
+`~/.claude/scripts/grok-review.sh` e tambem atua como Stop hook (bloqueia so em gravidade alta).
+
+O GSD **nao** tem adapter nativo do Grok — `/gsd-review` so conhece gemini, codex, claude,
+opencode, qwen, cursor, antigravity, coderabbit, kimi-code, llama_cpp, lm_studio e ollama.
+Nao registrar uma `reviewer_instance` chamada "grok" apontando para outro CLI: ela chamaria o
+outro modelo com um rotulo enganoso.
+
 ## Hooks de seguranca
 - Hook bloqueia edicoes com padrao de `RegExp exec` — usar `.split()` + regex em vez disso
 - Hook tambem bloqueia escrita de arquivos com esse padrao no conteudo
