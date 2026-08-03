@@ -25,18 +25,32 @@ export type MetricasEstoque<T extends ProdutoEstoque> = {
   estoqueItensZerados: number;
 };
 
-// RED (TDD): stub deliberado que ainda nao implementa as formulas — existe so
-// para provar que o one-liner de `<verify>` falha por causa de valores errados
-// (nao por "modulo nao existe"), antes da implementacao real chegar no proximo
-// commit (GREEN).
+// Transplantado de `financeiro/page.tsx:106-121`, sem edicao semantica.
 export function calcularMetricasEstoque<T extends ProdutoEstoque>(
   produtos: readonly T[],
 ): MetricasEstoque<T> {
+  const produtosOrdenados = [...produtos].sort((a, b) => {
+    const imobA = (a.custoPadrao ?? 0) * (a.qtdEstoque ?? 0);
+    const imobB = (b.custoPadrao ?? 0) * (b.qtdEstoque ?? 0);
+    return imobB - imobA;
+  });
+
+  const estoqueImobilizado = produtos.reduce(
+    (s, p) => s + (p.custoPadrao ?? 0) * (p.qtdEstoque ?? 0), 0
+  );
+  const estoquePotencialReceita = produtos.reduce(
+    (s, p) => s + (p.valorVenda ?? 0) * (p.qtdEstoque ?? 0), 0
+  );
+  const estoqueMargemPct = estoquePotencialReceita > 0
+    ? ((estoquePotencialReceita - estoqueImobilizado) / estoquePotencialReceita) * 100
+    : 0;
+  const estoqueItensZerados = produtos.filter(p => (p.qtdEstoque ?? 0) === 0).length;
+
   return {
-    produtosOrdenados: [...produtos],
-    estoqueImobilizado: 0,
-    estoquePotencialReceita: 0,
-    estoqueMargemPct: 0,
-    estoqueItensZerados: 0,
+    produtosOrdenados,
+    estoqueImobilizado,
+    estoquePotencialReceita,
+    estoqueMargemPct,
+    estoqueItensZerados,
   };
 }

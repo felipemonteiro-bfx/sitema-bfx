@@ -8,6 +8,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
+import { calcularMetricasEstoque } from "@/lib/estoque-metrics";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FormSelect } from "@/components/form-select";
@@ -103,22 +104,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     select: { nome: true, custoPadrao: true, qtdEstoque: true, valorVenda: true },
   });
 
-  const produtosOrdenados = [...produtos].sort((a, b) => {
-    const imobA = (a.custoPadrao ?? 0) * (a.qtdEstoque ?? 0);
-    const imobB = (b.custoPadrao ?? 0) * (b.qtdEstoque ?? 0);
-    return imobB - imobA;
-  });
-
-  const estoqueImobilizado = produtos.reduce(
-    (s, p) => s + (p.custoPadrao ?? 0) * (p.qtdEstoque ?? 0), 0
-  );
-  const estoquePotencialReceita = produtos.reduce(
-    (s, p) => s + (p.valorVenda ?? 0) * (p.qtdEstoque ?? 0), 0
-  );
-  const estoqueMargemPct = estoquePotencialReceita > 0
-    ? ((estoquePotencialReceita - estoqueImobilizado) / estoquePotencialReceita) * 100
-    : 0;
-  const estoqueItensZerados = produtos.filter(p => (p.qtdEstoque ?? 0) === 0).length;
+  const {
+    produtosOrdenados,
+    estoqueImobilizado,
+    estoquePotencialReceita,
+    estoqueMargemPct,
+    estoqueItensZerados,
+  } = calcularMetricasEstoque(produtos);
 
   return (
     <div className="space-y-6">
