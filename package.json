@@ -10,6 +10,7 @@
     "lint": "eslint",
     "cores:scan": "node scripts/design-tokens/raw-color-scan.mjs src",
     "cores:check": "node scripts/design-tokens/raw-color-scan.mjs src --check",
+    "contraste:check": "node scripts/design-tokens/token-contrast.mjs",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose",
     "db:start": "docker compose up -d db",

@@ -2,8 +2,10 @@
 //
 // RED antes da implementacao: este arquivo e escrito e roda (falhando) antes
 // de `token-contrast.mjs` existir. Depois da implementacao os testes de
-// conversao/formula/parsing devem passar; o CLI, ao rodar contra o
-// `globals.css` atual, deve REPROVAR de proposito (ver token-contrast.mjs).
+// conversao/formula/parsing devem passar. O teste de integracao contra o
+// `globals.css` real (ring/background) documentava a reprovacao proposital
+// do plano 03 (UI-06); a partir do plano 04, que corrigiu `--ring` no tema
+// claro, ele documenta a aprovacao (>=3:1) — ver token-contrast.mjs.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -142,11 +144,11 @@ test("checkPairs: par com token de alfa e reportado como skipped, nunca aprovado
   }
 });
 
-test("checkPairs: ring/background no tema claro do globals.css atual reprova (RED proposital)", async () => {
+test("checkPairs: ring/background no tema claro do globals.css atual aprova (UI-06, corrigido no plano 04)", async () => {
   const fs = await import("node:fs");
   const css = fs.readFileSync(new URL("../../src/app/globals.css", import.meta.url), "utf8");
   const tokens = parseTokens(css);
   const rows = checkPairs(tokens, [{ foreground: "ring", background: "background", min: 3, label: "foco" }]);
   const lightRow = rows.find((r) => r.theme === "light");
-  assert.equal(lightRow.pass, false, "ring/background no tema claro deveria reprovar hoje");
+  assert.equal(lightRow.pass, true, "ring/background no tema claro deveria aprovar (>=3:1) apos o plano 04");
 });
