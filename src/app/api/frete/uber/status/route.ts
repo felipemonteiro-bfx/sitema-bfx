@@ -1,24 +1,16 @@
-import { getUberDirectConfig } from "@/lib/uber";
-import type { UberAddress } from "@/lib/uber";
+import { classificarProntidaoUber } from "@/lib/uber-quote-result";
 
 export async function GET() {
-  const config = getUberDirectConfig();
-  if (!config) {
-    return Response.json({ enabled: false });
-  }
-
-  let pickupAddress: UberAddress | undefined;
-  const pickupJson = process.env.UBER_PICKUP_ADDRESS_JSON?.trim();
-  if (pickupJson) {
-    try {
-      pickupAddress = JSON.parse(pickupJson) as UberAddress;
-    } catch {
-      // ignore
-    }
-  }
+  const prontidao = classificarProntidaoUber({
+    customerId: process.env.UBER_DIRECT_CUSTOMER_ID,
+    token: process.env.UBER_DIRECT_TOKEN,
+    pickupAddressJson: process.env.UBER_PICKUP_ADDRESS_JSON,
+  });
 
   return Response.json({
-    enabled: true,
-    pickupAddress: pickupAddress ?? undefined,
+    enabled: prontidao.pronto,
+    motivo: prontidao.motivo,
+    mensagem: prontidao.mensagem,
+    pickupAddress: prontidao.pickupAddress ?? undefined,
   });
 }

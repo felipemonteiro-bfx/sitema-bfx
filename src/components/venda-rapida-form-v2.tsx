@@ -28,7 +28,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
 import { valorEmReais } from "@/lib/fidelidade";
 import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
-import { mensagemFalhaUber } from "@/lib/uber-quote-result";
+import { mensagemFalhaUber, type MotivoFalhaUber } from "@/lib/uber-quote-result";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
@@ -182,6 +182,8 @@ export default function VendaRapidaFormV2({
     country: string;
   } | null>(null);
   const [uberQuoteLoading, setUberQuoteLoading] = useState(false);
+  const [uberMotivo, setUberMotivo] = useState<MotivoFalhaUber | null>(null);
+  const [uberMensagem, setUberMensagem] = useState<string>(mensagemFalhaUber("sem_credencial"));
 
   // Produto selecionado para sugestões de upsell/cross-sell
   const [produtoParaSugestoes, setProdutoParaSugestoes] = useState<{
@@ -267,8 +269,14 @@ export default function VendaRapidaFormV2({
       .then((data) => {
         setUberEnabled(!!data?.enabled);
         setUberPickupAddress(data?.pickupAddress ?? null);
+        setUberMotivo(data?.motivo ?? null);
+        setUberMensagem(data?.mensagem || mensagemFalhaUber("sem_credencial"));
       })
-      .catch(() => setUberEnabled(false));
+      .catch(() => {
+        setUberEnabled(false);
+        setUberMotivo("sem_credencial");
+        setUberMensagem(mensagemFalhaUber("sem_credencial"));
+      });
   }, []);
 
   // Consulta de Limite ao selecionar cliente
@@ -350,7 +358,7 @@ export default function VendaRapidaFormV2({
       return;
     }
     if (!uberEnabled || !uberPickupAddress) {
-      toast.error("Uber Direct não configurado. Configure UBER_DIRECT_CUSTOMER_ID, UBER_DIRECT_TOKEN e UBER_PICKUP_ADDRESS_JSON no servidor.");
+      toast.error(uberMensagem);
       return;
     }
     const orderValue = produtos.reduce((s, p) => s + p.subtotal, 0);
@@ -967,6 +975,9 @@ export default function VendaRapidaFormV2({
                   )}
                 </Button>
               </div>
+              {!uberEnabled && (
+                <p className="text-xs text-muted-foreground">{uberMensagem}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
