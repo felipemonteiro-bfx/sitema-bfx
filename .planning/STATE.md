@@ -4,15 +4,15 @@ milestone: v1.2
 milestone_name: Consistência Visual e UX
 current_phase: 10
 status: executing
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-08-03T22:11:57.770Z"
+stopped_at: Completed 10-03-PLAN.md
+last_updated: "2026-08-03T22:17:49.569Z"
 last_activity: 2026-08-03
 last_activity_desc: 10-01-PLAN.md executed (detector de cor crua)
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
 current_phase_name: defining requirements
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 10-fundacao-visual
-Plan: 2 of 4 complete
+Plan: 3 of 4 complete
 Status: Ready to execute
 Last activity: 2026-08-03 — 10-01-PLAN.md executed (detector de cor crua)
 
@@ -73,6 +73,7 @@ Last activity: 2026-08-03 — 10-01-PLAN.md executed (detector de cor crua)
 | Phase 09 P03 | 12min | 1 tasks | 3 files |
 | Phase 10-fundacao-visual P01 | 5min | 2 tasks | 3 files |
 | Phase 10 P02 | 15min | 3 tasks | 8 files |
+| Phase 10-fundacao-visual P03 | 45min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,9 @@ Recent decisions affecting current work:
 - [Phase ?]: 10-01: baseline real de cor crua e 299/22 (313/23 antes da excecao), nao 250/18 como constava na medicao inicial do milestone — grep inicial so olhava bg-/text-/border- e perdia 13 prefixos + arquivos .ts
 - [Phase ?]: Regra de lint de cor crua entra como plugin ESLint inline (bfx/no-raw-color) em eslint.config.mjs, sem instalar pacote, com severidade error/warn/off derivada de design-system/raw-color-baseline.json
 - [Phase ?]: CI ganhou dois portoes independentes sem tolerancia a falha: step Lint (Camada A, nao verificavel nesta maquina) e step Cor crua (catraca) rodando npm run cores:check em node puro (Camada B, verificada de ponta a ponta)
+- [Phase ?]: De-para: purple/indigo/violet/cyan em bfx-intelligence-panel viram info/info-bg (destaque de recurso/IA); purple em antecipacao-client vira status-partial (4o estado sem token existente)
+- [Phase ?]: Gradiente rosa->violeta do botao "gradient" e do icone da sidebar propoe par novo gradient-cta-from/gradient-cta-to (decorativo, sem token semantico existente)
+- [Phase ?]: Verificador de contraste (token-contrast.mjs) reprova 11 de 34 pares no globals.css atual, incluindo ring/background no tema claro (2.48 < 3.0) e border/background e border/card nos dois temas -- lista de trabalho do plano 04
 
 ### Roadmap Evolution
 
@@ -159,8 +163,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T22:11:57.764Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-08-03T22:17:49.563Z
+Stopped at: Completed 10-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

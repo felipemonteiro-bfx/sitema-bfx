@@ -49,7 +49,7 @@ Plans:
 
 - [x] 10-01-PLAN.md — Detector de cor crua: módulo + CLI + baseline versionado (o medidor das fases 11-14)
 - [x] 10-02-PLAN.md — A trava: regra ESLint inline, CI bloqueante em duas camadas, dívida de lint quitada
-- [ ] 10-03-PLAN.md — De-para cor crua → token semântico + verificador de contraste dos tokens
+- [x] 10-03-PLAN.md — De-para cor crua → token semântico + verificador de contraste dos tokens
 - [ ] 10-04-PLAN.md — Tokens faltantes nos dois temas, foco visível e nome acessível nos botões apenas-ícone
 
 ### Phase 11: Telas de operação
