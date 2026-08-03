@@ -190,7 +190,9 @@ export default function FornecedoresTabClient({
                   <AlertDialogHeader>
                     <AlertDialogTitle>Excluir {selectedIds.size} fornecedor(es)</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja excluir {selectedIds.size} fornecedor(es)? Esta acao nao pode ser desfeita.
+                      Tem certeza que deseja excluir {selectedIds.size} fornecedor(es)? Eles saem das
+                      listagens e do PDV, mas nao sao apagados do banco — cadastrar o mesmo nome de
+                      novo reativa o registro, com o historico preservado.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>

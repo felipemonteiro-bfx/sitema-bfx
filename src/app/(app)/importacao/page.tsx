@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import ImportacaoClient from "@/components/importacao-client";
@@ -43,6 +44,29 @@ export default async function Page() {
       </div>
 
       <ImportacaoClient />
+
+      {/* Os importadores de fornecedores e clientes viviam sem nenhum link na UI —
+          so eram alcancaveis digitando a URL. */}
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold text-foreground">Outras importações</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Cada uma analisa o arquivo e mostra o que seria criado antes de gravar qualquer coisa.
+        </p>
+        <div className="flex flex-wrap gap-3 mt-3">
+          <Link
+            href="/importacao/fornecedores"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            Importar fornecedores
+          </Link>
+          <Link
+            href="/importacao/clientes"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            Importar clientes
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

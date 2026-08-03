@@ -59,7 +59,7 @@ A hipotese original (reconstruir via `audit_logs`) esta descartada por evidencia
       a carga dos dados reais depende do arquivo que o cliente ainda deve fornecer.
 
 - [x] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
-- [ ] **DAT-03**: Exportacao rapida exibe um botao por empresa parceira vinda do banco, sem lista hardcoded
+- [x] **DAT-03**: Exportacao rapida exibe um botao por empresa parceira vinda do banco, sem lista hardcoded
 
 ### PDV — Fricção Zero (PDV)
 
@@ -84,7 +84,9 @@ precisa ser determinada antes de mexer em token.
 - [x] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
 - [x] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
 - [x] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
-- [x] **UXP-05**: Paleta reflete as cores oficiais da BFX
+- [x] **UXP-05**: Tokens de fundo do tema claro sem tom quente (croma zero) — leitura estreita
+      da demanda 6 ("trocar cor amarela por branco"). A paleta oficial completa da marca NAO
+      esta entregue: virou UXP-06, bloqueada pelos hex que o cliente nao forneceu.
 - [ ] **UXP-06**: Paleta completa da marca BFX aplicada aos tokens semanticos (bloqueado: os hex oficiais — primary, accent, fundo — nao foram fornecidos pelo cliente; sem eles qualquer escolha seria chute, D-02)
 
 ### Integrações e Carga de Dados (INT)
@@ -181,7 +183,7 @@ demandas do cliente.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
+| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Pending (falta prova empirica de rollout) |
 | STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-03 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
 | STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
@@ -189,7 +191,7 @@ demandas do cliente.
 | STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | DAT-01 | Phase 6 — Integridade de dados | Complete |
 | DAT-02 | Phase 6 — Integridade de dados | Complete |
-| DAT-03 | Phase 6 — Integridade de dados | Pending |
+| DAT-03 | Phase 6 — Integridade de dados | Complete |
 | PDV-14 | Phase 7 — PDV sem friccao | Complete |
 | PDV-15 | Phase 7 — PDV sem friccao | Complete |
 | PDV-16 | Phase 7 — PDV sem friccao | Complete |
