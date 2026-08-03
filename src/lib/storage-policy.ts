@@ -47,6 +47,22 @@ export function resolverOrigemLogo(logoPath: string): OrigemLogo {
   return { tipo: "arquivo", caminhoRelativo };
 }
 
+/**
+ * Resolve o `src` de navegador (next/image) para o logo, tratando os dois
+ * formatos que convivem em `Config.logoPath` (Fase 5 — D-01/D-03).
+ *
+ * URL absoluta (http/https) e devolvida intacta — este e o bug real de hoje
+ * em `logo-upload-form.tsx`, que prefixava uma barra em qualquer valor sem
+ * barra inicial, transformando a URL absoluta num caminho relativo invalido
+ * (`/http://...`). Caminho legado ganha a barra inicial quando ausente;
+ * entrada vazia devolve vazio.
+ */
+export function logoSrcParaBrowser(logoPath: string): string {
+  if (!logoPath) return "";
+  if (ehUrlAbsoluta(logoPath)) return logoPath;
+  return logoPath.startsWith("/") ? logoPath : `/${logoPath}`;
+}
+
 export function extensaoLogo(logoPath: string): string {
   const semQuery = logoPath.split("?")[0].split("#")[0];
   const partesBarra = semQuery.split("/");
