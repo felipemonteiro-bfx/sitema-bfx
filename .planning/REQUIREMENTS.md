@@ -61,7 +61,7 @@ validacao de servidor `validarItensContraCatalogo` (`src/lib/venda-item-validati
 que recusa custo menor que `custoPadrao`. Essa e a causa real da demanda 7.
 
 - [x] **PDV-14**: Vendedor pode lancar qualquer custo na venda rapida, inclusive abaixo do custo de catalogo, e o valor digitado e gravado em `item_venda.custo_produto`
-- [ ] **PDV-15**: Vendedor pode cadastrar cliente novo por modal, sem sair da tela do PDV, e o cliente ja fica selecionado na venda
+- [x] **PDV-15**: Vendedor pode cadastrar cliente novo por modal, sem sair da tela do PDV, e o cliente ja fica selecionado na venda
 - [x] **PDV-16**: Vendedor pode cadastrar fornecedor novo no fluxo de produto rapido do PDV, e o fornecedor ja fica selecionado
 
 ### Experiência de Uso (UXP)
@@ -182,7 +182,7 @@ demandas do cliente.
 | DAT-02 | Phase 6 — Integridade de dados | Complete |
 | DAT-03 | Phase 6 — Integridade de dados | Pending |
 | PDV-14 | Phase 7 — PDV sem friccao | Complete |
-| PDV-15 | Phase 7 — PDV sem friccao | Pending |
+| PDV-15 | Phase 7 — PDV sem friccao | Complete |
 | PDV-16 | Phase 7 — PDV sem friccao | Complete |
 | UXP-01 | Phase 8 — Estoque e identidade visual | Pending |
 | UXP-02 | Phase 8 — Estoque e identidade visual | Pending |

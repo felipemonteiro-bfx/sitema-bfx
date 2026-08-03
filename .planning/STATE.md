@@ -5,8 +5,8 @@ milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
 status: verifying
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-08-03T18:36:51.000Z"
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-08-03T18:36:57.897Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
@@ -97,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase ?]: D-01/D-02/D-03 (PDV-14): piso de custo removido do servidor, regra de subtotal mantida, casos de teste invertidos (nao apagados), liberado para todos os vendedores
 - [Phase ?]: 07-03: rota POST /api/fornecedores reusa classificarNomeFornecedor da Fase 6 (criar/reativar/ignorar) implementada de uma vez na Task 1, sem reimplementar normalizacao/comparacao de nome
 - [Phase ?]: 07-03: modal CadastrarFornecedorRapidoDialog diferencia toast por reativado/jaExistia do corpo da resposta, nao pelo status HTTP
+- [Phase ?]: D-04/D-07: POST /api/clientes criada com modal de cadastro rapido no PDV, cliente ja fica selecionado na venda
+- [Phase ?]: D-05: aviso de nome parecido via GET /api/clientes/similar e deliberadamente nao bloqueante
 
 ### Roadmap Evolution
 
@@ -140,6 +142,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T18:33:40.251Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-08-03T18:36:57.890Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
