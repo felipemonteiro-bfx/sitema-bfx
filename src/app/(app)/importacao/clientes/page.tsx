@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { PageHeader } from "@/components/page-header";
 import ImportacaoClientesClient from "@/components/importacao-clientes-client";
-import { analisarImportacaoClientes } from "./actions";
+import { analisarImportacaoClientes, confirmarImportacaoClientes } from "./actions";
 
 export default async function Page() {
   const ok = await requireAdmin();
@@ -20,7 +20,11 @@ export default async function Page() {
         description="Escolha a empresa parceira e suba um CSV com nome (obrigatório), CPF, telefone, matrícula e e-mail (opcionais). A análise mostra o que vai acontecer antes de qualquer gravação — nada é gravado nesta etapa."
         breadcrumbs={[{ label: "Importação", href: "/importacao" }, { label: "Clientes" }]}
       />
-      <ImportacaoClientesClient empresas={empresas} analisarAction={analisarImportacaoClientes} />
+      <ImportacaoClientesClient
+        empresas={empresas}
+        analisarAction={analisarImportacaoClientes}
+        confirmarAction={confirmarImportacaoClientes}
+      />
     </div>
   );
 }
