@@ -4,16 +4,16 @@ milestone: v1.1
 milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
-status: planning
-stopped_at: Completado 05-04-PLAN.md (Tasks 1-2 executadas; Task 3 checkpoint humano pendente — ver runbook em 05-04-SUMMARY.md)
-last_updated: "2026-08-03T17:21:13.333Z"
+status: verifying
+stopped_at: Completado 06-01-PLAN.md (fornecedor soft-delete + RBAC + reativacao por nome)
+last_updated: "2026-08-03T18:07:58.356Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
-  total_phases: 1
+  total_phases: 3
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 7
+  completed_plans: 5
 ---
 
 # Project State
@@ -29,10 +29,10 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 
 Phase: 5 of 9 (Storage durável (MinIO no cluster)) — first phase of milestone v1.1
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [██████████] 100%
 |------|----------|-------|-------|
 | Phase 05 P02 | 20min | 3 tasks | 6 files |
 | Phase 5 P4 | 20min | 2 tasks | 4 files |
+| Phase 06 P01 | 5min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,7 @@ Recent decisions affecting current work:
 - [Phase 04-melhorias-infra]: session-secret test mocks next/headers to keep unit tests in pure Node.js without cookie dependency
 - [Phase ?]: Plano 05-02: imagem MinIO mantida em latest (mesma tag do docker-compose.yml); strategy Recreate obrigatoria com PVC ReadWriteOnce; console 9001 nunca exposto por Ingress (T-05-06)
 - [Phase ?]: 05-04: guarda de producao replicada na rota de imagem de produto (mesmo padrao do plano 05-01); cron cleanup-uploads travado por teste sem mudanca de logica (D-05); Task 3 (checkpoint no cluster) documentada como runbook pendente, nao executada pelo agente
+- [Phase ?]: 06-01: bulkDeleteFornecedores e addFornecedor exportados de page.tsx para serem testaveis; auditoria create/restore adicionada so na Task 3 (unica mudanca de producao dela)
 
 ### Roadmap Evolution
 
@@ -130,6 +132,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T17:21:08.766Z
-Stopped at: Completado 05-04-PLAN.md (Tasks 1-2 executadas; Task 3 checkpoint humano pendente — ver runbook em 05-04-SUMMARY.md)
+Last session: 2026-08-03T18:07:58.345Z
+Stopped at: Completado 06-01-PLAN.md (fornecedor soft-delete + RBAC + reativacao por nome)
 Resume file: None

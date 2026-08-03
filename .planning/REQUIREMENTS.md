@@ -51,7 +51,7 @@ A hipotese original (reconstruir via `audit_logs`) esta descartada por evidencia
       ignorados/erros antes de escrever) e commit idempotente por nome. Entregue como capacidade —
       a carga dos dados reais depende do arquivo que o cliente ainda deve fornecer.
 
-- [ ] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
+- [x] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
 - [ ] **DAT-03**: Exportacao rapida exibe um botao por empresa parceira vinda do banco, sem lista hardcoded
 
 ### PDV — Fricção Zero (PDV)
@@ -179,7 +179,7 @@ demandas do cliente.
 | STO-05 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
 | STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | DAT-01 | Phase 6 — Integridade de dados | Pending |
-| DAT-02 | Phase 6 — Integridade de dados | Pending |
+| DAT-02 | Phase 6 — Integridade de dados | Complete |
 | DAT-03 | Phase 6 — Integridade de dados | Pending |
 | PDV-14 | Phase 7 — PDV sem friccao | Pending |
 | PDV-15 | Phase 7 — PDV sem friccao | Pending |
