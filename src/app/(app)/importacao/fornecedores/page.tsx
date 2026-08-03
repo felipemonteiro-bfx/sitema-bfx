@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/guards";
 import { PageHeader } from "@/components/page-header";
 import ImportacaoFornecedoresClient from "@/components/importacao-fornecedores-client";
-import { analisarImportacaoFornecedores } from "./actions";
+import { analisarImportacaoFornecedores, confirmarImportacaoFornecedores } from "./actions";
 
 export default async function Page() {
   const ok = await requireAdmin();
@@ -14,7 +14,10 @@ export default async function Page() {
         description="Suba um CSV com nome (obrigatório) e telefone (opcional). A análise mostra o que vai acontecer antes de qualquer gravação."
         breadcrumbs={[{ label: "Importação", href: "/importacao" }, { label: "Fornecedores" }]}
       />
-      <ImportacaoFornecedoresClient analisarAction={analisarImportacaoFornecedores} />
+      <ImportacaoFornecedoresClient
+        analisarAction={analisarImportacaoFornecedores}
+        confirmarAction={confirmarImportacaoFornecedores}
+      />
     </div>
   );
 }

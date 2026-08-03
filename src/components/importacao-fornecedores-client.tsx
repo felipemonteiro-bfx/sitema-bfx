@@ -13,19 +13,38 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import type { PlanoImportacao } from "@/lib/fornecedor-import";
+import type { ResultadoCommit } from "@/app/(app)/importacao/fornecedores/actions";
 
 interface ImportacaoFornecedoresClientProps {
+  /** Recebe `analisarImportacaoFornecedores` (dry-run, so leitura). */
   analisarAction: (texto: string) => Promise<PlanoImportacao>;
+  /** Recebe `confirmarImportacaoFornecedores` (aplica a transacao). */
+  confirmarAction: (texto: string) => Promise<ResultadoCommit>;
 }
 
 export default function ImportacaoFornecedoresClient({
   analisarAction,
+  confirmarAction,
 }: ImportacaoFornecedoresClientProps) {
   const [fileName, setFileName] = useState<string | null>(null);
+  const [texto, setTexto] = useState<string | null>(null);
   const [plano, setPlano] = useState<PlanoImportacao | null>(null);
+  const [resultado, setResultado] = useState<ResultadoCommit | null>(null);
   const [analisando, setAnalisando] = useState(false);
+  const [confirmando, setConfirmando] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,11 +53,13 @@ export default function ImportacaoFornecedoresClient({
 
     setFileName(file.name);
     setPlano(null);
+    setResultado(null);
     setAnalisando(true);
     try {
       const conteudo = await file.text();
-      const resultado = await analisarAction(conteudo);
-      setPlano(resultado);
+      setTexto(conteudo);
+      const resultadoAnalise = await analisarAction(conteudo);
+      setPlano(resultadoAnalise);
     } catch {
       toast.error("Erro ao analisar o arquivo CSV.");
     } finally {
@@ -46,7 +67,50 @@ export default function ImportacaoFornecedoresClient({
     }
   };
 
+  const podeConfirmar =
+    plano != null && plano.resumo.criar + plano.resumo.reativar > 0 && texto != null;
+
+  const handleConfirmar = async () => {
+    if (!texto) return;
+    setConfirmando(true);
+    try {
+      const resultadoCommit = await confirmarAction(texto);
+      setResultado(resultadoCommit);
+      setPlano(null);
+      toast.success(
+        `Importação concluída: ${resultadoCommit.criados} criados, ${resultadoCommit.reativados} reativados, ${resultadoCommit.ignorados} ignorados.`
+      );
+    } catch {
+      toast.error("Erro ao confirmar a importação.");
+    } finally {
+      setConfirmando(false);
+      setConfirmOpen(false);
+    }
+  };
+
   return (
+    <>
+    <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            Confirmar importação de {plano ? plano.resumo.criar + plano.resumo.reativar : 0}{" "}
+            fornecedores?
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {plano?.resumo.criar ?? 0} serão criados e {plano?.resumo.reativar ?? 0} reativados.
+            Fornecedores já cadastrados serão ignorados — rodar este arquivo novamente não duplica
+            nada.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={confirmando}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmar} disabled={confirmando}>
+            {confirmando ? "Importando..." : "Confirmar"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     <div className="space-y-6">
       <Card>
         <CardHeader>
@@ -85,8 +149,23 @@ export default function ImportacaoFornecedoresClient({
 
       {plano && (
         <Card className="border-blue-200 bg-blue-50/10">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-primary">2. Análise — nada foi gravado ainda</CardTitle>
+            <Button
+              type="button"
+              disabled={!podeConfirmar || confirmando}
+              onClick={() => setConfirmOpen(true)}
+              className="bg-primary hover:bg-primary/90"
+              leftIcon={
+                confirmando ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" />
+                )
+              }
+            >
+              Confirmar importação
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -121,7 +200,24 @@ export default function ImportacaoFornecedoresClient({
           </CardContent>
         </Card>
       )}
+
+      {resultado && (
+        <Card className="border-green-200 bg-green-50/10">
+          <CardHeader>
+            <CardTitle className="text-green-700">Importação concluída</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Contador label="Criados" valor={resultado.criados} />
+              <Contador label="Reativados" valor={resultado.reativados} />
+              <Contador label="Ignorados" valor={resultado.ignorados} />
+              <Contador label="Com erro" valor={resultado.erros.length} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
+    </>
   );
 }
 
