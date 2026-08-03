@@ -1,16 +1,18 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.2
-milestone_name: Consistencia Visual e UX
+milestone_name: Consistência Visual e UX
+current_phase_name: defining requirements
 status: planning
-last_updated: "2026-08-03T21:37:07.579Z"
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-08-03T22:09:38.690Z"
 last_activity: 2026-08-03
+last_activity_desc: Milestone v1.2 started
 progress:
-  total_phases: 0
+  total_phases: 1
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 4
+  completed_plans: 1
 ---
 
 # Project State
@@ -20,14 +22,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-03)
 
 **Core value:** O PDV deve ser rápido, completo e sem fricção — uma venda com múltiplos produtos e parcelamento deve poder ser registrada em segundos.
-**Current focus:** Phase 5 — Storage durável (MinIO no cluster)
+**Current focus:** Phase 10 — Fundação visual (detector de cor crua construído, regra de lint pendente em 10-02)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-08-03 — Milestone v1.2 started
+Phase: 10-fundacao-visual
+Plan: 01 of 4 complete
+Status: In progress
+Last activity: 2026-08-03 — 10-01-PLAN.md executed (detector de cor crua)
 
 ## Performance Metrics
 
@@ -68,6 +70,7 @@ Last activity: 2026-08-03 — Milestone v1.2 started
 | Phase 09 P01 | 15min | 3 tasks | 8 files |
 | Phase 09 P02 | 8min | 3 tasks | 7 files |
 | Phase 09 P03 | 12min | 1 tasks | 3 files |
+| Phase 10-fundacao-visual P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -108,6 +111,7 @@ Recent decisions affecting current work:
 - [Phase ?]: INT-02: classificarProntidaoUber ficou pronta na Task 1 (mesmo arquivo do contrato de interface), um commit antes do previsto pelo plano — sem impacto de correcao
 - [Phase ?]: 09-02: importador CSV de clientes com idempotencia por CPF/nome (D-04), reserva de nomes contra @unique de Cliente.nome, vinculo obrigatorio a empresa parceira (D-05)
 - [Phase ?]: INT-01 (cotacao Uber): runbook completo em deploy/bfx/README.md + trava de CI contra deriva de env; criacao das credenciais no SSM fica como acao humana pendente do Andre (D-01)
+- [Phase ?]: 10-01: baseline real de cor crua e 299/22 (313/23 antes da excecao), nao 250/18 como constava na medicao inicial do milestone — grep inicial so olhava bg-/text-/border- e perdia 13 prefixos + arquivos .ts
 
 ### Roadmap Evolution
 
@@ -151,10 +155,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T19:40:05.881Z
-Stopped at: Completed 09-03-PLAN.md
+Last session: 2026-08-03T22:09:38.683Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Continue Phase 10 (Fundação visual) with plan 10-02 (regra de ESLint que consome RAW_COLOR_PATTERN_SOURCE)
