@@ -15,6 +15,7 @@ import { LinkCatalogoButton } from "@/components/link-catalogo-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { createAuditLog } from "@/lib/audit";
+import { requireAdminOrThrow } from "@/lib/guards";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string };
 
@@ -202,11 +203,17 @@ async function updateFornecedor(formData: FormData) {
   redirect("/cadastros?tab=fornecedores");
 }
 
-async function bulkDeleteFornecedores(ids: number[]) {
+export async function bulkDeleteFornecedores(ids: number[]) {
   "use server";
+  // D-04: buraco de RBAC encontrado nesta fase — qualquer usuario autenticado
+  // conseguia apagar o cadastro inteiro de fornecedores. Guarda de admin antes
+  // de qualquer efeito, inclusive antes do early-return de lista vazia.
+  await requireAdminOrThrow();
   if (!ids.length) return;
-  const fornecedores = await prisma.fornecedor.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
-  await prisma.fornecedor.deleteMany({ where: { id: { in: ids } } });
+  const fornecedores = await prisma.fornecedor.findMany({ where: { id: { in: ids }, deletedAt: null }, select: { id: true, nome: true } });
+  // D-02: exclusao passa a ser logica — preserva a linha e o fornecedor_id
+  // historico dos produtos em vez de apagar de vez.
+  await prisma.fornecedor.updateMany({ where: { id: { in: ids }, deletedAt: null }, data: { deletedAt: new Date() } });
   for (const f of fornecedores) {
     await createAuditLog("fornecedor:delete", { fornecedorId: f.id, nome: f.nome });
   }
@@ -307,8 +314,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     where: { id: editProdutoId },
     select: { id: true, nome: true, custoPadrao: true, marca: true, categoria: true, ncm: true, imagem: true, valorVenda: true, qtdEstoque: true, fornecedorId: true, dataCompra: true, fornecedor: { select: { id: true, nome: true } } },
   }) : null;
-  const editFornecedorData = editFornecedorId ? await prisma.fornecedor.findUnique({
-    where: { id: editFornecedorId },
+  // findFirst (nao findUnique): o where combina `id` com `deletedAt: null`, e
+  // `deletedAt` nao e coluna unica.
+  const editFornecedorData = editFornecedorId ? await prisma.fornecedor.findFirst({
+    where: { id: editFornecedorId, deletedAt: null },
     select: { id: true, nome: true, telefone: true },
   }) : null;
   const editEmpresaData = editEmpresaId ? await prisma.empresaParceira.findUnique({
@@ -404,8 +413,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const fornecedores = await prisma.fornecedor.findMany({
     where: sp.q_fornecedores ? {
+      deletedAt: null,
       nome: { contains: sp.q_fornecedores, mode: 'insensitive' }
-    } : {},
+    } : { deletedAt: null },
     orderBy: { nome: "asc" }
   });
 
