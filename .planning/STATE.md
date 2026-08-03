@@ -5,7 +5,7 @@ milestone_name: Consistência Visual e UX
 current_phase: 10
 status: executing
 stopped_at: Completed 10-04-PLAN.md
-last_updated: "2026-08-03T22:26:55.517Z"
+last_updated: "2026-08-03T22:27:01.921Z"
 last_activity: 2026-08-03
 last_activity_desc: 10-01-PLAN.md executed (detector de cor crua)
 progress:
@@ -121,6 +121,9 @@ Recent decisions affecting current work:
 - [Phase ?]: De-para: purple/indigo/violet/cyan em bfx-intelligence-panel viram info/info-bg (destaque de recurso/IA); purple em antecipacao-client vira status-partial (4o estado sem token existente)
 - [Phase ?]: Gradiente rosa->violeta do botao "gradient" e do icone da sidebar propoe par novo gradient-cta-from/gradient-cta-to (decorativo, sem token semantico existente)
 - [Phase ?]: Verificador de contraste (token-contrast.mjs) reprova 11 de 34 pares no globals.css atual, incluindo ring/background no tema claro (2.48 < 3.0) e border/background e border/card nos dois temas -- lista de trabalho do plano 04
+- [Phase ?]: Correcao de --success-foreground/--info-foreground/--accent-foreground trocando texto para escuro em vez de escurecer o token de estado
+- [Phase ?]: Ring do tema claro escurecido para cinza puro em vez de reaproveitar o accent verde
+- [Phase ?]: Border/input escurecidos nos dois temas para alcancar 3:1 minimo
 
 ### Roadmap Evolution
 

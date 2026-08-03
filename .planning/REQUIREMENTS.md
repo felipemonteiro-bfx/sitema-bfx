@@ -35,11 +35,11 @@ continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita d
 ### Fundacao (UI)
 
 - [x] **UI-01**: Nenhuma cor Tailwind crua (`bg-*-500`, `text-*-600`) em `src/` — toda cor vem de token semantico
-- [ ] **UI-02**: Toda tela renderiza corretamente em tema claro e escuro, sem texto ilegivel nem area sem contraste
+- [x] **UI-02**: Toda tela renderiza corretamente em tema claro e escuro, sem texto ilegivel nem area sem contraste
 - [x] **UI-03**: Existe uma regra de lint que barra cor crua, impedindo regressao
-- [ ] **UI-04**: Todo botao apenas-icone tem `aria-label` descritivo
+- [x] **UI-04**: Todo botao apenas-icone tem `aria-label` descritivo
 - [x] **UI-05**: Texto de corpo com contraste minimo 4.5:1 (WCAG AA) nos dois temas
-- [ ] **UI-06**: Elementos interativos tem estado de foco visivel para navegacao por teclado
+- [x] **UI-06**: Elementos interativos tem estado de foco visivel para navegacao por teclado
 
 ### Telas de Operacao (OPE)
 
@@ -103,7 +103,7 @@ continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita d
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UI-01..UI-06 | Phase 10 — Fundacao visual | Pending |
+| UI-01..UI-06 | Phase 10 — Fundacao visual | Complete |
 | OPE-01..OPE-04 | Phase 11 — Telas de operacao | Pending |
 | FIN-01..FIN-04 | Phase 12 — Telas financeiras | Pending |
 | DIA-01..DIA-02 | Phase 13 — Telas de dados e IA | Pending |
