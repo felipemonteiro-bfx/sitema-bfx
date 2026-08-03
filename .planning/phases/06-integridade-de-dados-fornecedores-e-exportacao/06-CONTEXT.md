@@ -58,6 +58,20 @@ Os fornecedores **nunca existiram neste banco** — ficaram no sistema legado (t
   filtro das linhas 26-28, que exclui de `empresaOptions` os nomes que coincidem com fornecedores
   — sem isso o cliente passa a ver botões estranhos na tela.
 
+  **Efeito visível, verificado no banco de produção em 2026-08-03.** As empresas parceiras
+  cadastradas são exatamente estas 6:
+
+  `AMAZON FIVE`, `CLIENTE PF BFX SHOP`, `EQUILIBRIUM`, `MIRAX SEGURANÇA`, `SEM EMPRESA`, `SOFT LIVE`
+
+  Portanto, depois desta fase: o botão **`Gimam` desaparece** (não existe como `EmpresaParceira`)
+  e passam a aparecer botões para `CLIENTE PF BFX SHOP`, `EQUILIBRIUM`, `MIRAX SEGURANÇA`,
+  `SEM EMPRESA` e `SOFT LIVE`. Isso é o comportamento pedido pelo cliente ("aparecer botão de
+  todas as empresas e não apenas 2"), não uma regressão — mas o sumiço do `Gimam` será percebido
+  como bug se ninguém for avisado. Duas ações ficam para o checkpoint humano: (a) se `Gimam` é uma
+  empresa real, cadastrá-la em `/cadastros` → Empresas; (b) decidir se as pseudo-empresas
+  `SEM EMPRESA` e `CLIENTE PF BFX SHOP` devem virar botão de exportação — o default desta fase é
+  exibi-las, por ser a leitura literal do pedido.
+
 ### Migration — restrição de execução
 
 O executor **não** roda `prisma migrate dev` nem `prisma db push` (ambos escrevem no banco).

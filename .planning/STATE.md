@@ -5,15 +5,15 @@ milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
 status: verifying
-stopped_at: Completado 06-01-PLAN.md (fornecedor soft-delete + RBAC + reativacao por nome)
-last_updated: "2026-08-03T18:07:58.356Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-08-03T18:21:49.319Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 7
-  completed_plans: 5
+  completed_phases: 2
+  total_plans: 9
+  completed_plans: 7
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: 4 of 4
 Status: Phase complete — ready for verification
 Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [███████░░░] 71%
+Progress: [████████░░] 78%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [███████░░░] 71%
 | Phase 05 P02 | 20min | 3 tasks | 6 files |
 | Phase 5 P4 | 20min | 2 tasks | 4 files |
 | Phase 06 P01 | 5min | 3 tasks | 7 files |
+| Phase 06 P02 | 12min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,7 @@ Recent decisions affecting current work:
 - [Phase ?]: Plano 05-02: imagem MinIO mantida em latest (mesma tag do docker-compose.yml); strategy Recreate obrigatoria com PVC ReadWriteOnce; console 9001 nunca exposto por Ingress (T-05-06)
 - [Phase ?]: 05-04: guarda de producao replicada na rota de imagem de produto (mesmo padrao do plano 05-01); cron cleanup-uploads travado por teste sem mudanca de logica (D-05); Task 3 (checkpoint no cluster) documentada como runbook pendente, nao executada pelo agente
 - [Phase ?]: 06-01: bulkDeleteFornecedores e addFornecedor exportados de page.tsx para serem testaveis; auditoria create/restore adicionada so na Task 3 (unica mudanca de producao dela)
+- [Phase ?]: 06-02: importador CSV de fornecedores dry-run + commit idempotente, com dedupe interno ao arquivo e reconstrucao de 2 commits GREEN apos bundling acidental por execucao paralela na mesma working tree
 
 ### Roadmap Evolution
 
@@ -132,6 +134,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T18:07:58.345Z
-Stopped at: Completado 06-01-PLAN.md (fornecedor soft-delete + RBAC + reativacao por nome)
+Last session: 2026-08-03T18:21:49.312Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
