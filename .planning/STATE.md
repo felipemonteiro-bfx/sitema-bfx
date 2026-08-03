@@ -5,15 +5,15 @@ milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
 status: verifying
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-08-03T19:01:40.782Z"
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-08-03T19:02:26.500Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 13
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: 4 of 4
 Status: Phase complete — ready for verification
 Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [█████████░] 92%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Progress: [█████████░] 92%
 | Phase 07 P02 | 6min | 3 tasks | 6 files |
 | Phase 08 P01 | 20min | 3 tasks | 4 files |
 | Phase 08 P02 | 12min | 2 tasks | 3 files |
+| Phase 08 P03 | 3min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,9 @@ Recent decisions affecting current work:
 - [Phase ?]: D-05: aviso de nome parecido via GET /api/clientes/similar e deliberadamente nao bloqueante
 - [Phase ?]: D-03 (08-01): venda rapida perde alertas de estoque e teto de quantidade; decremento de estoque e aba Estoque do /financeiro nao sao tocados
 - [Phase ?]: UXP-03: metricas de estoque extraidas para modulo puro sem alterar formulas (D-04), travadas por suite de nao-regressao
+- [Phase ?]: D-01 aplicada: tokens de fundo do tema claro zerados para croma 0 (UXP-05), travados por gate de CI
+- [Phase ?]: D-02 registrada: paleta oficial da BFX vira UXP-06 bloqueada em REQUIREMENTS.md, aguardando hex do cliente
+- [Phase ?]: UXP-04 tratado como resolvido no discuss (2026-08-03); evidencia versionada em 08-EVIDENCE-UXP-04.md sem reconsultar o cluster
 
 ### Roadmap Evolution
 
@@ -146,6 +150,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T19:01:40.774Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-08-03T19:02:26.494Z
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None

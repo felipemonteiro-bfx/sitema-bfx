@@ -76,8 +76,8 @@ precisa ser determinada antes de mexer em token.
 - [x] **UXP-01**: Venda rapida nao exibe badge nem alerta de estoque baixo ou sem estoque
 - [x] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
 - [x] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
-- [ ] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
-- [ ] **UXP-05**: Paleta reflete as cores oficiais da BFX
+- [x] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
+- [x] **UXP-05**: Paleta reflete as cores oficiais da BFX
 - [ ] **UXP-06**: Paleta completa da marca BFX aplicada aos tokens semanticos (bloqueado: os hex oficiais — primary, accent, fundo — nao foram fornecidos pelo cliente; sem eles qualquer escolha seria chute, D-02)
 
 ### Integrações e Carga de Dados (INT)
@@ -188,8 +188,8 @@ demandas do cliente.
 | UXP-01 | Phase 8 — Estoque e identidade visual | Complete |
 | UXP-02 | Phase 8 — Estoque e identidade visual | Complete |
 | UXP-03 | Phase 8 — Estoque e identidade visual | Complete |
-| UXP-04 | Phase 8 — Estoque e identidade visual | Pending |
-| UXP-05 | Phase 8 — Estoque e identidade visual | Pending |
+| UXP-04 | Phase 8 — Estoque e identidade visual | Complete |
+| UXP-05 | Phase 8 — Estoque e identidade visual | Complete |
 | UXP-06 | Backlog | Blocked (hex oficiais da BFX pendentes do cliente, D-02) |
 | INT-01 | Phase 9 — Integracoes e carga de dados | Pending |
 | INT-02 | Phase 9 — Integracoes e carga de dados | Pending |
