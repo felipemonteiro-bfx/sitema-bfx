@@ -127,7 +127,7 @@ Fases executam em ordem: 5 → 6 → 7 → 8 → 9 (Fase 9 tem um item interno �
 | 2. Descontos e Parcelamento | — | Complete (parcelas; desconto por item movido ao Backlog como PDV-05/06) | 2026-08-03 |
 | 3. Busca Rápida de Cliente | — | Complete (v1.0, verificado no código) | 2026-08-03 |
 | 4. Infra e Qualidade | 4/4 | Complete | 2026-03-30 |
-| 5. Storage durável (MinIO no cluster) | 4/4 | In Progress|  |
+| 5. Storage durável (MinIO no cluster) | 4/4 | Código completo — CI verde (PR #36). Aguarda ação humana no cluster (SSM + ArgoCD) para STO-01/02/05 | - |
 | 6. Integridade de dados: fornecedores e exportação | 0/? | Not started | - |
 | 7. PDV sem fricção | 0/? | Not started | - |
 | 8. Estoque e identidade visual | 0/? | Not started | - |
