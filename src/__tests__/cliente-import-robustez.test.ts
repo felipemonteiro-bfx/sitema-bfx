@@ -37,7 +37,12 @@ describe("parseCsvClientes — robustez (Task 3)", () => {
   });
 
   it("Teste 7: virgula sem cabecalho, BOM no inicio e aspas com separador interno", () => {
-    const semCabecalho = parseCsvClientes("Acme Pessoa,123\nBeta Pessoa,456\n");
+    // CPFs precisam ser validos: o parser recusa `123` com motivo `cpf_invalido`, e o
+    // objetivo deste caso e a virgula como separador, nao a validacao de CPF.
+    const semCabecalho = parseCsvClientes(
+      "Acme Pessoa,12345678909\nBeta Pessoa,98765432100\n"
+    );
+    expect(semCabecalho.erros).toEqual([]);
     expect(semCabecalho.linhas).toHaveLength(2);
     expect(semCabecalho.linhas[0].nome).toBe("ACME PESSOA");
 

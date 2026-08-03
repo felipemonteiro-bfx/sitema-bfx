@@ -28,7 +28,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   guardsMock.requireAdminOrThrow.mockResolvedValue({ id: 1, username: "admin", role: "admin" });
   dbMock.empresaParceira.findUnique.mockResolvedValue(EMPRESA);
-  dbMock.cliente.createMany.mockResolvedValue({ count: 2 });
+  // O Prisma devolve a contagem do que realmente foi inserido. Fixar `count` faz o
+  // teste medir o mock em vez do plano — o Teste 5 depende de a segunda passada criar
+  // apenas 1 registro, o que um valor fixo de 2 esconderia.
+  dbMock.cliente.createMany.mockImplementation(
+    async ({ data }: { data: unknown[] }) => ({ count: data.length })
+  );
   dbMock.cliente.update.mockResolvedValue({ id: 100 });
 });
 

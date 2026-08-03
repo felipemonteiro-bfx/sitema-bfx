@@ -41,9 +41,14 @@ const proprioTeste = readFileSync(TEST_PATH, "utf8");
  * pelo menos duas aspas apos o nome da chave (formato inesperado).
  */
 function valorAposChave(linha: string, chave: string): string | null {
-  const partes = linha.split(chave).slice(1).join(chave).split('"');
-  // partes[0] = resto entre a chave e a proxima aspas (ex.: `: `)
-  // partes[1] = valor entre a 1a e 2a aspas apos a chave
+  const resto = linha.split(chave).slice(1).join(chave);
+  // No runbook a chave aparece em JSON: `"UBER_DIRECT_TOKEN": "<token-da-uber>"`.
+  // A primeira aspas do resto FECHA a chave — ela nao abre o valor. Sem descarta-la,
+  // o valor extraido vira `: ` e qualquer linha do JSON e acusada de vazar credencial.
+  const semAspasDeFechamento = resto.startsWith('"') ? resto.slice(1) : resto;
+  const partes = semAspasDeFechamento.split('"');
+  // partes[0] = separador entre a chave e o valor (ex.: `: `)
+  // partes[1] = valor entre a 1a e 2a aspas do valor
   if (partes.length < 2) return null;
   return partes[1] ?? null;
 }
