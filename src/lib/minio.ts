@@ -12,6 +12,7 @@ import {
   DeleteObjectsCommand,
   type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
+import { storageConfigurado } from "@/lib/storage-policy";
 
 const bucket = process.env.MINIO_BUCKET ?? "produtos";
 const publicUrl = process.env.MINIO_PUBLIC_URL ?? "http://localhost:9000";
@@ -74,7 +75,7 @@ export async function uploadToMinIO(
 }
 
 export function isMinIOConfigured(): boolean {
-  return !!(process.env.MINIO_ENDPOINT && process.env.MINIO_ACCESS_KEY && process.env.MINIO_SECRET_KEY);
+  return storageConfigurado(process.env);
 }
 
 /**
