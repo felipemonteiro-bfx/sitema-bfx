@@ -64,6 +64,9 @@ export function classificarNomeFornecedor(
   return { acao: "reativar", id: encontrado.id, nomeNormalizado, motivo: "existe_soft_deletado" };
 }
 
+/** Teto de linhas aceitas por arquivo (T-06-07: DoS via CSV gigante). */
+export const LIMITE_LINHAS_IMPORT = 5000;
+
 export type LinhaCsvFornecedor = {
   linha: number;
   nome: string;
@@ -82,30 +85,66 @@ export type ResultadoParse = {
 };
 
 /**
- * Faz o parse de um CSV de fornecedores (colunas nome;telefone, com ou sem
- * cabecalho). Nunca lanca excecao: linha problematica vira erro reportado com
- * o numero da linha, as demais continuam sendo processadas (D-01).
+ * Divide uma linha de CSV pelo separador, respeitando celulas entre aspas
+ * (a aspas e removida e o separador dentro dela e preservado como texto).
+ * Nao usa o metodo de execucao de regex bloqueado pelo hook — so `.split()`
+ * caractere a caractere.
+ */
+function dividirLinhaCsv(linha: string, separador: string): string[] {
+  const celulas: string[] = [];
+  let atual = "";
+  let dentroDeAspas = false;
+
+  for (const caractere of linha.split("")) {
+    if (caractere === '"') {
+      dentroDeAspas = !dentroDeAspas;
+      continue;
+    }
+    if (caractere === separador && !dentroDeAspas) {
+      celulas.push(atual);
+      atual = "";
+      continue;
+    }
+    atual += caractere;
+  }
+  celulas.push(atual);
+
+  return celulas;
+}
+
+/**
+ * Faz o parse de um CSV de fornecedores (colunas nome;telefone ou nome,
+ * telefone, com ou sem cabecalho, com ou sem aspas). Nunca lanca excecao:
+ * linha problematica vira erro reportado com o numero da linha, as demais
+ * continuam sendo processadas (D-01). Arquivos acima de
+ * `LIMITE_LINHAS_IMPORT` sao rejeitados por inteiro antes de qualquer
+ * processamento (T-06-07).
  *
- * Caminho feliz desta task (06-02 Task 1): remove BOM, quebra linhas por
- * `\r?\n`, detecta separador olhando a primeira linha nao vazia, pula
- * cabecalho quando a primeira celula normalizada for "NOME", mapeia coluna 0
- * para nome (normalizado) e coluna 1 para telefone (trim, null quando vazio).
- * A robustez adicional (aspas, dedupe, limite de linhas) e endurecida na
- * Task 3, sem mudar este contrato.
+ * Regras: remove BOM do inicio, quebra linhas por `\r?\n`, detecta separador
+ * olhando a primeira linha nao vazia (`;` se presente, senao `,`), pula
+ * cabecalho quando a primeira celula normalizada for "NOME", descarta em
+ * silencio linhas em branco ou so com separadores, e mapeia coluna 0 para
+ * nome (normalizado) e coluna 1 para telefone (trim, null quando vazio).
  */
 export function parseCsvFornecedores(texto: string): ResultadoParse {
-  const linhas: LinhaCsvFornecedor[] = [];
-  const erros: ErroImportacao[] = [];
-
   const semBom = texto.charCodeAt(0) === 0xfeff ? texto.slice(1) : texto;
   const brutas = semBom.split(/\r?\n/);
+
+  if (brutas.length > LIMITE_LINHAS_IMPORT) {
+    return {
+      linhas: [],
+      erros: [{ linha: 0, motivo: "limite_excedido", conteudo: "" }],
+    };
+  }
+
+  const linhas: LinhaCsvFornecedor[] = [];
+  const erros: ErroImportacao[] = [];
 
   const primeiraNaoVazia = brutas.find((linhaBruta) => linhaBruta.trim().length > 0) ?? "";
   const separador = primeiraNaoVazia.includes(";") ? ";" : ",";
 
   let indiceInicial = 0;
-  const primeiraCelula = (brutas[0] ?? "")
-    .split(separador)[0]
+  const primeiraCelula = dividirLinhaCsv(brutas[0] ?? "", separador)[0]
     ?.trim()
     .toLocaleUpperCase("pt-BR");
   if (primeiraCelula === "NOME") {
@@ -114,7 +153,7 @@ export function parseCsvFornecedores(texto: string): ResultadoParse {
 
   for (let i = indiceInicial; i < brutas.length; i++) {
     const bruta = brutas[i];
-    const celulasBrutas = bruta.split(separador);
+    const celulasBrutas = dividirLinhaCsv(bruta, separador);
     const linhaEmBranco = celulasBrutas.every((celula) => celula.trim().length === 0);
     if (linhaEmBranco) continue;
 
@@ -155,6 +194,12 @@ export type PlanoImportacao = {
  * a classificarNomeFornecedor (mesma regra usada em addFornecedor, plano
  * 06-01) e distribui em criar/reativar/ignorar/erros. resumo.total sempre
  * soma os 4 baldes, para a tela nunca esconder uma linha do usuario.
+ *
+ * Dedupe dentro do arquivo: nomes ja decididos como criar/reativar nesta
+ * mesma chamada sao lembrados em `nomesVistosNestaImportacao`; uma segunda
+ * ocorrencia do mesmo nome normalizado cai em ignorar com
+ * `motivo: "duplicado_no_arquivo"`, para nao tentar criar o mesmo fornecedor
+ * duas vezes e estourar o `@unique` de nome no commit.
  */
 export function planejarImportacaoFornecedores(
   linhas: LinhaCsvFornecedor[],
@@ -164,6 +209,7 @@ export function planejarImportacaoFornecedores(
   const reativar: ItemPlano[] = [];
   const ignorar: ItemPlano[] = [];
   const erros: ErroImportacao[] = [];
+  const nomesVistosNestaImportacao = new Set<string>();
 
   for (const linha of linhas) {
     const classificacao = classificarNomeFornecedor(linha.nome, existentes);
@@ -172,6 +218,18 @@ export function planejarImportacaoFornecedores(
       erros.push({ linha: linha.linha, motivo: classificacao.motivo, conteudo: linha.nome });
       continue;
     }
+
+    if (nomesVistosNestaImportacao.has(classificacao.nomeNormalizado)) {
+      ignorar.push({
+        linha: linha.linha,
+        nome: classificacao.nomeNormalizado,
+        telefone: linha.telefone,
+        id: classificacao.id,
+        motivo: "duplicado_no_arquivo",
+      });
+      continue;
+    }
+    nomesVistosNestaImportacao.add(classificacao.nomeNormalizado);
 
     const item: ItemPlano = {
       linha: linha.linha,
