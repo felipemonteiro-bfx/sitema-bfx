@@ -1,214 +1,274 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-08-03
 
 ## Test Framework
 
 **Runner:**
-- Playwright (`@playwright/test`)
-- Single test file found: `tests/venda-rapida-dropdown.spec.ts`
-- No unit/integration test framework detected (Jest, Vitest not installed)
+- vitest 4.1.2
+- Config: `vitest.config.ts`
+- Environment: Node.js
+- Globals enabled (describe, it, expect available without imports)
 
 **Assertion Library:**
-- Playwright assertions (`expect()` from `@playwright/test`)
+- Vitest built-in `expect()` from `vitest` package
 
 **Run Commands:**
-- No test scripts defined in `package.json`
-- Tests are E2E only, run manually via `npx playwright test`
+```bash
+npm test                # Run all tests once
+npm run test:watch      # Watch mode with auto-rerun
+```
+
+**Test Discovery:**
+- Pattern: `src/__tests__/**/*.test.ts`
+- Config in `vitest.config.ts`: `include: ["src/__tests__/**/*.test.ts"]`
 
 ## Test File Organization
 
 **Location:**
-- E2E tests: `tests/` directory at project root
-- Pattern: `*.spec.ts` for Playwright tests
+- Tests co-located in `src/__tests__/` directory
+- Each test file named `[module-name].test.ts`
+- Example: `src/__tests__/venda-item-validation.test.ts`
+
+**Current Test Files:**
+- `src/__tests__/env-validation.test.ts` — Environment validation
+- `src/__tests__/asaas.test.ts` — Asaas configuration
+- `src/__tests__/session-secret.test.ts` — Session secret handling
+- `src/__tests__/venda-item-validation.test.ts` — Business rule validation (REFERENCE PATTERN)
+- `src/__tests__/guards.test.ts` — Authorization guards with mocking
+- `src/__tests__/comissoes-utils.test.ts` — Commission filtering/scoping
+- `src/__tests__/vendedor-scope.test.ts` — Vendor scope logic
+- `src/__tests__/recibo-url.test.ts` — Receipt URL generation
+- `src/__tests__/credit.test.ts` — Credit checking with mocking
 
 **Naming:**
-- Playwright spec pattern: `tests/[feature]-[aspect].spec.ts`
-- Example: `tests/venda-rapida-dropdown.spec.ts`
-
-**Structure:**
-```
-tests/
-├── venda-rapida-dropdown.spec.ts  # Z-index/dropdown tests
-└── screenshots/                    # Generated during test runs
-```
+- Test files: `[name].test.ts` (not `.spec.ts`)
+- Test suites: describe blocks named descriptively
 
 ## Test Structure
 
-**Suite Organization:**
-```typescript
-// tests/venda-rapida-dropdown.spec.ts (full file shown below)
-import { test, expect } from '@playwright/test';
+**Suite Organization (Reference Pattern):**
 
-test.describe('Terminal de Vendas - Dropdown Z-Index', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3008/venda-rapida');
-    await page.waitForLoadState('networkidle');
+```typescript
+// From src/__tests__/venda-item-validation.test.ts
+
+import { describe, it, expect } from "vitest";
+import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
+
+// Optional factory helper for creating test data
+function item(overrides: Partial<Parameters<typeof validarItensContraCatalogo>[0][number]> = {}) {
+  return {
+    produtoNome: "Fone Bluetooth X",
+    custoProduto: 100,
+    valorVenda: 200,
+    quantidade: 1,
+    subtotal: 200,
+    ...overrides,
+  };
+}
+
+describe("validarItensContraCatalogo", () => {
+  // Each test case in its own it() block
+  it("aceita item consistente sem correspondencia no catalogo (produto avulso)", () => {
+    const erro = validarItensContraCatalogo([item()], []);
+    expect(erro).toBeNull();
   });
 
-  test('Cliente dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
-    const clienteInput = page.locator('input[placeholder*="nome ou CPF"]');
-    await clienteInput.fill('Maria');
-    await page.waitForTimeout(500); // Aguardar debounce
-    const dropdown = page.locator('div.absolute.z-\\[9999\\]').first();
-    await expect(dropdown).toBeVisible();
+  it("rejeita quando subtotal nao bate com valorVenda x quantidade", () => {
+    const erro = validarItensContraCatalogo(
+      [item({ quantidade: 5, valorVenda: 1000, subtotal: 1 })],
+      []
+    );
+    expect(erro).not.toBeNull();
+    expect(erro).toMatch(/subtotal/i);
   });
 });
 ```
 
 **Patterns:**
 
-1. **Setup Pattern:**
-   - `test.beforeEach()` for common setup (navigation, waitForLoadState)
-   - Waits for `networkidle` before running tests
+1. **Setup with Factories:**
+   - Create helper functions to generate test objects with defaults
+   - Use spread operator `...overrides` to customize per test
+   - Example: `item({ quantidade: 5, valorVenda: 1000, subtotal: 1 })`
 
-2. **Interaction Pattern:**
-   - `page.locator()` for element selection (CSS selectors, placeholders)
-   - `.fill()` for input
-   - `.scrollIntoViewIfNeeded()` for scrolling to element
-   - `.evaluate()` for executing JavaScript in browser context
+2. **Describe/It Organization:**
+   - One `describe()` per function or module
+   - One `it()` per test case
+   - Test names should describe the scenario (in Portuguese, matching codebase style)
 
-3. **Assertion Pattern:**
-   - `expect(element).toBeVisible()` for visibility checks
-   - `expect(parseInt(zIndex)).toBeGreaterThan(1000)` for computed values
-   - Screenshots for debugging: `page.screenshot({ path: 'tests/screenshots/...' })`
+3. **Mocking Setup Pattern (with beforeEach/afterEach):**
+   ```typescript
+   import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-4. **Debugging/Verification Pattern:**
-   - `console.log()` for test output
-   - Browser API access: `window.getComputedStyle(el).zIndex`
-   - Screenshot generation for visual verification
+   vi.mock("@/lib/session", () => ({
+     getSession: vi.fn(),
+   }));
+
+   import { requireAdmin } from "@/lib/guards";
+   import { getSession } from "@/lib/session";
+
+   const mockGetSession = vi.mocked(getSession);
+
+   describe("requireAdmin", () => {
+     beforeEach(() => {
+       mockGetSession.mockReset(); // Clear mock history
+     });
+
+     it("retorna true para admin", async () => {
+       mockGetSession.mockResolvedValue({ id: 1, username: "admin", role: "admin" });
+       expect(await requireAdmin()).toBe(true);
+     });
+   });
+   ```
 
 ## Mocking
 
-**Framework:** None detected; tests are fully integrated E2E tests
+**Framework:** Vitest's `vi` object (from `vitest` package)
 
-**Patterns:**
-- No mocking service - tests hit real application instance
-- API endpoints tested via real HTTP requests to `http://localhost:3008`
+**Mocking Pattern:**
+
+1. **Module mocking (at top of file, before imports):**
+   ```typescript
+   vi.mock("@/lib/db", () => ({
+     prisma: {
+       cliente: { findUnique: vi.fn() },
+       venda: { findMany: vi.fn() },
+     },
+   }));
+
+   // Now import the mocked module
+   import { checkCredito } from "@/lib/credit";
+   import { prisma } from "@/lib/db";
+   ```
+
+2. **Creating mocked references:**
+   ```typescript
+   const mockFindUniqueCliente = vi.mocked(prisma.cliente.findUnique);
+   const mockFindManyVenda = vi.mocked(prisma.venda.findMany);
+   ```
+
+3. **Setting up mock returns:**
+   ```typescript
+   mockFindUniqueCliente.mockResolvedValue({ id: 1, renda: 1000 } as never);
+   mockFindManyVenda.mockResolvedValue([]);
+   ```
+
+4. **Resetting mocks between tests:**
+   ```typescript
+   beforeEach(() => {
+     mockFindUniqueCliente.mockReset();
+     mockFindManyVenda.mockReset();
+   });
+   ```
+
+**Example from `src/__tests__/credit.test.ts`:**
+```typescript
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    cliente: { findUnique: vi.fn() },
+    venda: { findMany: vi.fn() },
+  },
+}));
+
+import { checkCredito } from "@/lib/credit";
+import { prisma } from "@/lib/db";
+
+const mockFindUniqueCliente = vi.mocked(prisma.cliente.findUnique);
+const mockFindManyVenda = vi.mocked(prisma.venda.findMany);
+
+describe("checkCredito", () => {
+  beforeEach(() => {
+    mockFindUniqueCliente.mockReset();
+    mockFindManyVenda.mockReset();
+  });
+
+  it("libera (ok=true) quando cliente nao tem renda cadastrada", async () => {
+    mockFindUniqueCliente.mockResolvedValue({ id: 1, renda: null } as never);
+    const result = await checkCredito(1, 500);
+    expect(result.ok).toBe(true);
+  });
+});
+```
 
 **What to Mock:**
-- External services (Asaas, WhatsApp, Evolution) - not tested in current suite
-- Database - not tested in current suite (would need separate unit test setup)
+- External service clients (Prisma, API calls, file storage)
+- Database queries (Prisma method calls)
+- Environment-dependent code (getSession, auth guards)
 
 **What NOT to Mock:**
-- UI rendering (Playwright tests real DOM)
-- DOM interactions
-- Navigation and routing
-- Local application state
+- Pure utility functions (formatBRL, maskCpf)
+- Validation logic (validarItensContraCatalogo)
+- Business calculations
+- Internal module dependencies (use real implementations unless testing in isolation)
 
 ## Fixtures and Factories
 
-**Test Data:**
-- Not found in codebase
-- E2E tests use real data from running application
+**Test Data Patterns:**
 
-**Location:**
-- Fixtures would go in `tests/fixtures/` if created
-- Factory functions would go in `tests/factories/` if created
+1. **Factory Functions (Preferred):**
+   ```typescript
+   function item(overrides: Partial<ItemVendaParaValidar> = {}) {
+     return {
+       produtoNome: "Fone Bluetooth X",
+       custoProduto: 100,
+       valorVenda: 200,
+       quantidade: 1,
+       subtotal: 200,
+       ...overrides,
+     };
+   }
 
-**Current approach:**
-- Tests work with existing database data
-- Search by real user input ("Maria" for cliente, "Shampoo" for produto)
-- No setup/teardown of test-specific data detected
+   // Use in tests:
+   const erro = validarItensContraCatalogo([item({ custoProduto: 50 })], []);
+   ```
+
+2. **Inline Test Data:**
+   ```typescript
+   const params = new URLSearchParams({ vendedor: "Qualquer Um" });
+   const where = buildComissoesWhere(params, { role: "admin", nomeExibicao: "Admin", username: "admin" });
+   ```
+
+3. **Location:**
+   - Define factories inside test file, near the top, after imports
+   - Keep factory functions simple and focused on single entity type
 
 ## Coverage
 
-**Requirements:** No coverage configuration detected
+**Requirements:** Not enforced; no coverage threshold configured
 
 **View Coverage:**
-- No coverage tool configured
-- Would require adding Jest/Vitest and coverage collection
+- Not configured in current setup
+- To add: `npm test -- --coverage`
 
 ## Test Types
 
 **Unit Tests:**
-- Not present in codebase
-- Would test: validation schemas (Zod), utility functions (`formatBRL`, `maskCpf`), calculations
+- Testing pure functions with known inputs/outputs
+- Example: `venda-item-validation.test.ts` — tests `validarItensContraCatalogo()` function
+- Location: `src/__tests__/`
 
 **Integration Tests:**
-- Not present in codebase
-- Would test: Server Actions with database, API routes with auth, form submission workflows
+- Testing functions that interact with external services (mocked)
+- Example: `credit.test.ts` — tests `checkCredito()` with mocked Prisma
+- Location: `src/__tests__/`
 
 **E2E Tests:**
-- Framework: Playwright
-- File: `tests/venda-rapida-dropdown.spec.ts`
-- Scope: Browser-level UI interactions
-- Focus: Z-index stacking (dropdowns appearing above cards)
+- NOT currently implemented
+- Would test full user flows in browser
 
-**Existing E2E Test Details:**
+**Async Testing Pattern:**
 ```typescript
-// tests/venda-rapida-dropdown.spec.ts (lines 1-79)
-import { test, expect } from '@playwright/test';
+// Simple async function
+it("retorna true para admin", async () => {
+  mockGetSession.mockResolvedValue({ id: 1, username: "admin", role: "admin" });
+  expect(await requireAdmin()).toBe(true);
+});
 
-test.describe('Terminal de Vendas - Dropdown Z-Index', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3008/venda-rapida');
-    await page.waitForLoadState('networkidle');
-  });
-
-  test('Cliente dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
-    // 1. Fill cliente input to trigger dropdown
-    const clienteInput = page.locator('input[placeholder*="nome ou CPF"]');
-    await clienteInput.fill('Maria');
-    await page.waitForTimeout(500); // Debounce wait
-
-    // 2. Verify dropdown is visible
-    const dropdown = page.locator('div.absolute.z-\\[9999\\]').first();
-    await expect(dropdown).toBeVisible();
-
-    // 3. Check computed z-index value
-    const zIndex = await dropdown.evaluate((el) => {
-      return window.getComputedStyle(el).zIndex;
-    });
-    console.log('Cliente dropdown z-index:', zIndex);
-    expect(parseInt(zIndex)).toBeGreaterThan(1000);
-
-    // 4. Take screenshot for debugging
-    await page.screenshot({
-      path: 'tests/screenshots/cliente-dropdown.png',
-      fullPage: true
-    });
-  });
-
-  test('Produto dropdown deve aparecer acima de todos os elementos', async ({ page }) => {
-    const produtoInput = page.locator('input[placeholder*="produto por nome"]');
-    await produtoInput.scrollIntoViewIfNeeded();
-    await produtoInput.fill('Shampoo');
-    await page.waitForTimeout(500);
-
-    const dropdown = page.locator('div.absolute.z-\\[9999\\]').nth(1);
-    await expect(dropdown).toBeVisible();
-
-    const zIndex = await dropdown.evaluate((el) => {
-      return window.getComputedStyle(el).zIndex;
-    });
-    console.log('Produto dropdown z-index:', zIndex);
-
-    await page.screenshot({
-      path: 'tests/screenshots/produto-dropdown.png',
-      fullPage: true
-    });
-  });
-
-  test('Verificar stack context dos cards', async ({ page }) => {
-    const cards = page.locator('div[class*="Card"]');
-    const count = await cards.count();
-
-    console.log(`Total de cards encontrados: ${count}`);
-
-    for (let i = 0; i < Math.min(count, 5); i++) {
-      const card = cards.nth(i);
-      const zIndex = await card.evaluate((el) => {
-        return window.getComputedStyle(el).zIndex;
-      });
-      console.log(`Card ${i} z-index:`, zIndex);
-    }
-
-    await page.screenshot({
-      path: 'tests/screenshots/cards-stack.png',
-      fullPage: true
-    });
-  });
+// Promise rejection testing
+it("lanca erro para vendedor", async () => {
+  mockGetSession.mockResolvedValue({ id: 2, username: "user", role: "vendedor" });
+  await expect(requireAdminOrThrow()).rejects.toThrow("Acesso negado");
 });
 ```
 
@@ -216,232 +276,133 @@ test.describe('Terminal de Vendas - Dropdown Z-Index', () => {
 
 **Async Testing:**
 ```typescript
-// Playwright tests are async by default
-test('test name', async ({ page }) => {
-  await page.goto('...');
-  await page.fill('...', 'value');
-  await expect(element).toBeVisible();
+// Testing async functions
+it("retorna config com sandbox como default", async () => {
+  const result = getAsaasConfig({ asaasApiKey: "test-key-123", asaasEnv: null });
+  expect(result).not.toBeNull();
+  expect(result!.apiKey).toBe("test-key-123");
 });
 
-// Wait patterns
-await page.waitForLoadState('networkidle'); // Network idle
-await page.waitForTimeout(500);              // Fixed delay (for debounce)
-await element.scrollIntoViewIfNeeded();      // Scroll before interaction
+// Testing promise rejection
+it("lanca erro quando DATABASE_URL ausente", async () => {
+  delete (process.env as MutableEnv).DATABASE_URL;
+  (process.env as MutableEnv).SKIP_ENV_VALIDATION = "false";
+  await expect(import("@/env")).rejects.toThrow("Env vars invalidas");
+});
 ```
 
-**Browser Evaluation:**
+**Error Testing:**
 ```typescript
-// Execute JavaScript in browser context
-const zIndex = await dropdown.evaluate((el) => {
-  return window.getComputedStyle(el).zIndex;
+// Testing error conditions
+it("rejeita quando subtotal nao bate", () => {
+  const erro = validarItensContraCatalogo(
+    [item({ quantidade: 5, valorVenda: 1000, subtotal: 1 })],
+    []
+  );
+  expect(erro).not.toBeNull();
+  expect(erro).toMatch(/subtotal/i);
 });
 
-// Count elements
-const count = await cards.count();
-
-// Iterate over matching elements
-for (let i = 0; i < count; i++) {
-  const card = cards.nth(i);
-  // Test each card
-}
+// Testing rejection with specific message
+it("lanca erro para vendedor", async () => {
+  mockGetSession.mockResolvedValue({ id: 2, username: "user", role: "vendedor" });
+  await expect(requireAdminOrThrow()).rejects.toThrow("Acesso negado");
+});
 ```
 
-**Screenshot/Debug Pattern:**
+**Module Isolation (vi.resetModules):**
 ```typescript
-await page.screenshot({
-  path: 'tests/screenshots/feature-name.png',
-  fullPage: true
+// For testing module-level side effects
+beforeEach(() => {
+  vi.resetModules(); // Clear require cache for fresh import
+});
+
+it("validateEnv() aceita env com DATABASE_URL", async () => {
+  (process.env as MutableEnv).DATABASE_URL = "postgresql://localhost/test";
+  const { validateEnv } = await import("@/env");
+  const result = validateEnv();
+  expect(result.DATABASE_URL).toBe("postgresql://localhost/test");
 });
 ```
 
 ## Coverage Gaps
 
-**Untested Areas:**
+**Currently NOT Tested:**
 
-**Server Actions:**
-- Files: `src/app/*/actions.ts` (criarVenda, criarVendaV2, updateVenda, etc.)
-- What's not tested: Validation logic, error handling, database transactions, Asaas/WhatsApp integrations
-- Risk: Schema changes, business logic bugs, integration failures go undetected
-- Priority: HIGH - Most critical business logic
+**Server Actions (HIGH PRIORITY):**
+- Files: `src/app/*/actions.ts` (criarVenda, criarVendaV2, updateVenda, deleteVenda, etc.)
+- What's not tested: Full action flow, error handling, database transactions, side effects
+- Risk: Business logic bugs, integration failures go undetected
+- Reference for testing: Would follow pattern in `venda-item-validation.test.ts` with mocked Prisma
 
-**API Routes:**
+**API Routes (HIGH PRIORITY):**
 - Files: `src/app/api/**/route.ts`
-- What's not tested: Authentication guards, response formats, error responses, WebHook handling
+- What's not tested: Auth checks, response formatting, error responses
 - Risk: API contract violations, security bypasses
-- Priority: HIGH
 
-**Utility Functions:**
-- Files: `src/lib/utils.ts`, `src/lib/validations/*`
-- What's not tested: Mask functions (maskCpf, maskTel), validation schemas, date calculations
-- Risk: Data formatting errors, validation bypasses
-- Priority: MEDIUM
-
-**Component Integration:**
+**Components (MEDIUM PRIORITY):**
 - Files: `src/components/*-client.tsx`, `src/components/*-form.tsx`
-- What's not tested: Form submissions, error display, toast notifications, loading states
-- Risk: UI flows broken, error messages not shown to users
-- Priority: MEDIUM
+- What's not tested: User interactions, form submissions, state management
+- Risk: UI flows broken at runtime
 
-**Database Queries:**
-- Pattern: Prisma queries in Server Actions and lib files
-- What's not tested: Transaction rollbacks, constraint violations, query performance
-- Risk: Silent data corruption, slow operations not detected
-- Priority: MEDIUM
-
-**Validation Schemas:**
+**Validation Schemas (MEDIUM PRIORITY):**
 - Files: `src/lib/validations/*.ts` (venda.ts, cliente.ts, produto.ts)
-- What's not tested: Zod schema validation, edge cases (negative numbers, invalid dates)
-- Risk: Invalid data accepted, type errors at runtime
-- Priority: MEDIUM
+- What's not tested: Edge cases, type inference
+- Risk: Invalid data accepted
 
-**Authentication/Authorization:**
-- Pattern: `requireAdmin()` guard in API routes
-- What's not tested: Session handling, role-based access, token validation
-- Risk: Unauthorized access possible
-- Priority: HIGH
+**External Integrations (HIGH PRIORITY):**
+- Asaas (boletos): Can test config with mocked HTTP
+- WhatsApp (Evolution): Can test API call building with mocks
+- MinIO (file upload): Can test client initialization
 
-**External Integrations:**
-- Asaas (boletos): NOT TESTED - real API calls only, no mock
-- WhatsApp (Evolution): NOT TESTED - real API calls only, no mock
-- MinIO (file upload): NOT TESTED
-- Risk: Integration failures discovered in production only
-- Priority: HIGH
+## Test Conventions (from CLAUDE.md Workflow)
 
-## Test Patterns to Follow When Adding Tests
+**When writing tests for a feature or bug fix:**
 
-**Unit Tests for Utilities:**
+1. **Spec phase (before test):** Document expected behavior, edge cases, error conditions
+2. **TDD phase:** Write the failing test first using vitest
+3. **Implementation phase:** Write minimal code to make test pass
+4. **Review phase:** Dispatch subagent review (Agent tool) before commit
+
+**Test File Template:**
 ```typescript
-// Example structure for src/lib/utils.ts tests
-import { formatBRL, maskCpf } from '@/lib/utils';
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-describe('formatBRL', () => {
-  it('should format number as BRL currency', () => {
-    expect(formatBRL(1234.56)).toBe('R$ 1.234,56');
+// Step 1: Mock external dependencies if needed
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    // mocked methods
+  },
+}));
+
+// Step 2: Import the code to test
+import { functionToTest } from "@/lib/module";
+import { prisma } from "@/lib/db";
+
+// Step 3: Set up mocks
+const mockMethod = vi.mocked(prisma.table.method);
+
+// Step 4: Define test suite
+describe("functionToTest", () => {
+  // Step 5: Reset mocks before each test
+  beforeEach(() => {
+    mockMethod.mockReset();
   });
 
-  it('should handle null/undefined', () => {
-    expect(formatBRL(null)).toBe('R$ 0,00');
-    expect(formatBRL(undefined)).toBe('R$ 0,00');
-  });
-});
-
-describe('maskCpf', () => {
-  it('should format 11-digit string as CPF', () => {
-    expect(maskCpf('12345678901')).toBe('123.456.789-01');
+  // Step 6: Write test cases
+  it("should do something when condition X", () => {
+    mockMethod.mockResolvedValue(testData);
+    const result = functionToTest(input);
+    expect(result).toBe(expected);
   });
 
-  it('should return original value if wrong length', () => {
-    expect(maskCpf('123')).toBe('123');
-  });
-});
-```
-
-**Schema Validation Tests:**
-```typescript
-// Example for src/lib/validations/venda.ts tests
-import { vendaV2Schema } from '@/lib/validations/venda';
-
-describe('vendaV2Schema', () => {
-  it('should validate correct venda data', () => {
-    const data = {
-      data: '2026-03-30',
-      vendedor: 'João',
-      clienteId: 1,
-      frete: 10,
-      envio: 5,
-      parcelas: 3,
-      temNota: false,
-      taxaNota: 5.97,
-      produtos: [{ produtoNome: 'Item', custoProduto: 10, valorVenda: 20, quantidade: 1, subtotal: 20 }],
-    };
-    const result = vendaV2Schema.safeParse(data);
-    expect(result.success).toBe(true);
-  });
-
-  it('should reject missing required fields', () => {
-    const data = { vendedor: 'João' };
-    const result = vendaV2Schema.safeParse(data);
-    expect(result.success).toBe(false);
-  });
-});
-```
-
-**Server Action Tests:**
-```typescript
-// Example structure (would require Node test runner or Jest setup)
-import { criarVendaV2 } from '@/app/(app)/venda-rapida/actions';
-
-describe('criarVendaV2', () => {
-  it('should create venda with valid data', async () => {
-    const formData = new FormData();
-    formData.set('data', '2026-03-30');
-    // ... set other fields
-
-    const result = await criarVendaV2(formData);
-    expect(result.success).toBe(true);
-    expect(result.data?.vendaId).toBeGreaterThan(0);
-  });
-
-  it('should return error for invalid data', async () => {
-    const formData = new FormData();
-    // Missing required fields
-
-    const result = await criarVendaV2(formData);
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
-  });
-
-  it('should handle database errors gracefully', async () => {
-    // Mock Prisma to throw error
-    const formData = new FormData();
-    // ... set fields
-
-    const result = await criarVendaV2(formData);
-    expect(result.success).toBe(false);
-  });
-});
-```
-
-**E2E Test Pattern for New Features:**
-```typescript
-// Example for new feature test
-import { test, expect } from '@playwright/test';
-
-test.describe('Nova Feature', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3008/nova-feature');
-    await page.waitForLoadState('networkidle');
-  });
-
-  test('should display form elements', async ({ page }) => {
-    const form = page.locator('form');
-    await expect(form).toBeVisible();
-
-    const input = page.locator('input[name="fieldName"]');
-    await expect(input).toBeVisible();
-  });
-
-  test('should submit form and show success', async ({ page }) => {
-    const input = page.locator('input[name="fieldName"]');
-    await input.fill('test value');
-
-    const submitBtn = page.locator('button[type="submit"]');
-    await submitBtn.click();
-
-    const success = page.locator('text=Success');
-    await expect(success).toBeVisible();
-  });
-
-  test('should show error for invalid input', async ({ page }) => {
-    const submitBtn = page.locator('button[type="submit"]');
-    await submitBtn.click();
-
-    const error = page.locator('text=Error');
-    await expect(error).toBeVisible();
+  it("should handle error when Y", () => {
+    mockMethod.mockRejectedValue(new Error("DB error"));
+    expect(() => functionToTest(input)).toThrow();
   });
 });
 ```
 
 ---
 
-*Testing analysis: 2026-03-30*
+*Testing analysis: 2026-08-03*

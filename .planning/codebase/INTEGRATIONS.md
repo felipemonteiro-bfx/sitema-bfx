@@ -1,113 +1,94 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-08-03
 
 ## APIs & External Services
 
-**AI/LLM Providers:**
-- Google Generative AI (Gemini) - Primary AI provider for sales intelligence
-  - SDK/Client: `@ai-sdk/google` 3.0.20 + `@google/generative-ai` 0.21.0
-  - Auth: `GOOGLE_GENERATIVE_AI_API_KEY` (env var)
-  - Model: `gemini-2.5-flash` (via `ai` SDK)
-  - Fallback: OpenAI if Gemini rate limit reached
+**Delivery/Logistics:**
+- Uber Direct - Shipping quote API
+  - SDK/Client: Direct fetch (no SDK)
+  - Configuration: `UBER_DIRECT_CUSTOMER_ID`, `UBER_DIRECT_TOKEN`, `UBER_PICKUP_ADDRESS_JSON`
+  - Implementation: `src/lib/uber.ts` with type-safe request/response
+  - Endpoints: `src/app/api/frete/uber/*` (quote and status)
 
-- OpenAI (GPT-4o-mini) - Secondary AI provider
-  - SDK/Client: `@ai-sdk/openai` 3.0.25 + `openai` 6.22.0
-  - Auth: `OPENAI_API_KEY` (env var, `sk-...` format)
-  - Model: `gpt-4o-mini` (default), supports custom models via config
+**Payment Processing:**
+- Asaas - Invoice/boleto generation and payment tracking
+  - SDK/Client: Direct fetch (no SDK)
+  - Configuration: `ASAAS_API_KEY`, `ASAAS_ENV` (sandbox/production)
+  - Implementation: `src/lib/asaas.ts` with customer and payment types
+  - UI: `src/app/(app)/boletos/page.tsx` for boleto management
 
-- LiteLLM - Proxy/gateway for local or third-party LLM models
-  - SDK/Client: `@ai-sdk/openai` with custom `baseURL`
-  - Auth: `LITELLM_URL`, `LITELLM_KEY` (env vars or DB config)
-  - Model: `LITELLM_MODEL` (env var, default: `gpt-4o`)
-  - Features: Extended thinking support via `LITELLM_ENABLE_THINKING`
-  - Implementation: `src/lib/ai.ts` → `runAiWithActions()`
+**WhatsApp/Messaging:**
+- Evolution API - WhatsApp integration
+  - Image/SDK: `atendai/evolution-api:latest` (Docker image)
+  - Configuration: `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE`
+  - Implementation: `src/lib/evolution.ts`, `src/lib/whatsapp.ts`
+  - Deployment: Kubernetes deployment + service + persistent volume in `deploy/bfx/evolution-api.yaml`
+  - Database: Separate PostgreSQL schema (evolution) via `DATABASE_CONNECTION_URI`
+  - Webhooks: `src/app/api/webhooks/evolution/route.ts` for incoming WhatsApp messages
+  - Endpoints: `src/app/api/whatsapp/*` for instance management and diagnostics
 
-**Payment Gateway (Boleto):**
-- Asaas - Billing and boleto generation
-  - SDK/Client: Custom wrapper in `src/lib/asaas.ts` (fetch-based)
-  - Auth: `ASAAS_API_KEY` (env var)
-  - Endpoints: `/v3/customers`, `/v3/payments`, `/v3/payments?billingType=BOLETO`
-  - Environment: `ASAAS_ENV` (sandbox or production, default: sandbox)
-  - Base URLs:
-    - Sandbox: `https://api-sandbox.asaas.com`
-    - Production: `https://api.asaas.com`
-  - Features: Customer creation, boleto creation, payment listing
-  - DB Storage: `asaasCustomerId` stored on `Cliente` model
+**AI/Language Models:**
+- Google Generative AI (Gemini) - Default AI provider
+  - SDK/Client: `@ai-sdk/google`, `@google/generative-ai`, `@google/genai`
+  - Configuration: `GOOGLE_GENERATIVE_AI_API_KEY`
+  - Implementation: `src/lib/ai.ts` with model selection (gemini-2.5-flash)
 
-**WhatsApp Integration:**
-- Evolution API - WhatsApp message delivery
-  - SDK/Client: Custom wrapper in `src/lib/whatsapp.ts` (fetch-based)
-  - Auth: `EVOLUTION_API_KEY` (env var or DB config)
-  - Endpoints: `/message/sendText/{instance}`, `/message/sendMedia/{instance}`
-  - Base URL: `EVOLUTION_API_URL` (env var or DB config, default instance: `bfx`)
-  - Features:
-    - Text message delivery: `enviarWhatsAppTexto()`
-    - File/media delivery: `enviarWhatsAppArquivo()` (documents, PDFs)
-    - Automatic message triggers:
-      - `whatsappAutoRecibo` - Send receipt after sale
-      - `whatsappAutoBoleto` - Send boleto link
-      - `whatsappAutoLembrete` - Send payment reminder
-      - `whatsappAutoReativacao` - Send reactivation message
-      - `whatsappAutoAniversario` - Birthday greetings
-      - `whatsappAutoInadimplencia` - Overdue payment notices
-      - `whatsappAutoNPS` - NPS surveys
-      - `whatsappAutoBoasVindas` - Welcome messages
-      - `whatsappAutoAgradecimento` - Thank you messages
-      - `whatsappDiasInativo` - Days threshold for reactivation (default: 60)
-  - Docker Support: `docker-compose.evolution.yml` for local Evolution API server
+- OpenAI (GPT) - Alternative AI provider
+  - SDK/Client: `@ai-sdk/openai`, `openai`
+  - Configuration: `OPENAI_API_KEY`
+  - Implementation: `src/lib/ai.ts` (model: gpt-4o-mini)
 
-**Delivery Quotes:**
-- Uber Direct API - Freight quote calculation
-  - SDK/Client: Custom wrapper in `src/lib/uber.ts` (fetch-based)
-  - Auth: Bearer token via `UBER_DIRECT_TOKEN` (env var)
-  - Endpoint: `https://api.uber.com/v1/customers/{customerId}/delivery_quotes`
-  - Required Env Vars:
-    - `UBER_DIRECT_CUSTOMER_ID` - Uber customer account ID
-    - `UBER_DIRECT_TOKEN` - API authorization token
-    - `UBER_PICKUP_ADDRESS_JSON` - Pickup location (JSON: street_address, city, state, zip_code, country)
-  - Features: Delivery quote with fee (centavos), ETA (minutes), dropoff time
+- LiteLLM - Multi-provider AI proxy
+  - SDK/Client: Custom HTTP client (CreateOpenAI with custom baseURL)
+  - Configuration: `LITELLM_URL`, `LITELLM_KEY`, `LITELLM_MODEL`, `LITELLM_ENABLE_THINKING`
+  - Implementation: `src/lib/ai.ts` with provider options for extended thinking
+  - Used by: BFX Intelligence chat component (`src/components/intelligence-chat-client.tsx`)
+
+**Email/SMTP:**
+- Custom SMTP Client (no external mail service)
+  - Implementation: `src/lib/email.ts` with native Node.js net/tls modules
+  - Configuration: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+  - Supports: STARTTLS (port 587) and TLS (port 465)
+  - Auth: PLAIN or LOGIN mechanism with base64 encoding
+  - No nodemailer dependency (custom implementation)
 
 ## Data Storage
 
 **Databases:**
-- PostgreSQL 16 (Alpine)
-  - Provider: `postgresql` in Prisma datasource
-  - Connection: `DATABASE_URL` env var (format: `postgresql://user:pass@host:5432/db?schema=public`)
-  - Client: `@prisma/client` 6.5.0
-  - ORM: Prisma 6.5.0
-  - Location: Docker service `db` or Kubernetes StatefulSet `bfx-db`
-  - Storage: PVC `bfx-db` (10Gi, `microk8s-hostpath`)
-  - Persistence: Protected against ArgoCD deletion via `argocd.argoproj.io/sync-options: Delete=false`
+- PostgreSQL 16 (primary application database)
+  - Deployment: Kubernetes StatefulSet `bfx-db` in `deploy/bfx/postgres.yaml`
+  - Connection: `DATABASE_URL` (postgresql://postgres:postgres@bfx-db:5432/bfx)
+  - ORM: Prisma 6.5.0 (`prisma/schema.prisma`)
+  - Storage: 10Gi persistent volume via microk8s-hostpath storageClass
+
+- PostgreSQL (Evolution API schema)
+  - Schema: Separate `evolution` database on same PostgreSQL instance
+  - Connection: `DATABASE_CONNECTION_URI` in evolution-api ConfigMap
+  - Storage: Part of same 10Gi persistent volume
 
 **File Storage:**
-- MinIO (S3-compatible)
-  - Purpose: Product images and uploads
-  - Connection: Configured via `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
-  - Bucket: `MINIO_BUCKET` (default: `produtos`)
-  - Public URL: `MINIO_PUBLIC_URL` (e.g., `http://localhost:9000`)
-  - Client: `@aws-sdk/client-s3` 3.998.0 (AWS SDK used for S3-compatible APIs)
-  - Implementation: `src/lib/minio.ts`
-  - Features:
-    - Auto-creates bucket if missing
-    - Public read policy applied to bucket
-    - Returns public URL: `{MINIO_PUBLIC_URL}/bucket/filename`
-  - Docker: Service `minio` (image: `minio/minio:latest`)
-  - Fallback: If MinIO not configured, uploads saved to `public/uploads/produtos`
+- MinIO/S3 (object storage for product images)
+  - SDK/Client: `@aws-sdk/client-s3`
+  - Configuration: `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`, `MINIO_PUBLIC_URL`
+  - Implementation: `src/lib/minio.ts` with bucket creation and public policy
+  - Usage: `src/app/api/produtos/upload/route.ts` (preferred) with local filesystem fallback
+  - **Gap Alert:** No MinIO/S3 manifest in `deploy/bfx/kustomization.yaml` and no MINIO_* env vars in K8s secrets — MinIO not currently deployed in production Kubernetes
+
+- Local filesystem (fallback for object storage + logo uploads)
+  - Location: `public/uploads/` and `public/uploads/produtos/`
+  - Usage: Product images fallback in `src/app/api/produtos/upload/route.ts`; logo uploads in `src/app/api/upload-logo/route.ts`
+  - **Gap Alert:** Logo upload has no S3 fallback, always writes to pod filesystem — data loss on pod restart
 
 **Caching:**
-- Not detected
+- None detected (no Redis or memcached)
 
 ## Authentication & Identity
 
-**Session Management:**
-- JWT-based sessions
-  - Secret: `SESSION_SECRET` env var (minimum 32 characters, required in production)
-  - Implementation: `jose` 6.1.3 (JWT encoding/decoding)
-  - Use case: User authentication and session persistence
-
 **Auth Provider:**
-- Custom/Built-in (no external OAuth provider detected)
+- Custom session-based authentication
+  - Secret: `SESSION_SECRET` (used by Next.js)
+  - Implementation: Next.js built-in authentication via middleware and route handlers
 
 ## Monitoring & Observability
 
@@ -115,91 +96,103 @@
 - Not detected
 
 **Logs:**
-- Console logging via `console.error()` and `console.log()`
-- Evolution API errors logged in `src/lib/whatsapp.ts`
-- Asaas API errors logged in `src/lib/asaas.ts`
-- Uber Direct API errors logged in `src/lib/uber.ts`
-
-**Telemetry:**
-- Next.js telemetry disabled: `NEXT_TELEMETRY_DISABLED=1` in all deployment configurations
+- Console logging (`console.error`, `console.log`)
+- No centralized logging service configured
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Kubernetes clusters (on-premise: microk8s or similar)
-- Container images: Docker (built and pushed to ECR)
-- GitOps: ArgoCD for continuous deployment
+- Kubernetes cluster (AWS EKS implied)
+- Namespace: `bfx` (created by `deploy/bfx/namespace.yaml`)
+- Replicas: 1 (single instance in `deploy/bfx/app.yaml`)
+- Image repository: ECR sa-east-1 (`730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop`)
+
+**Orchestration:**
+- ArgoCD (managed via `.argocd-source-sistema-bfx.yaml`)
+- Kustomize (manifests in `deploy/bfx/kustomization.yaml`)
+- Resources: 1 Deployment, 1 Service, 1 StatefulSet (postgres), 1 ConfigMap (evolution), 1 PersistentVolumeClaim (evolution)
 
 **CI Pipeline:**
-- GitHub Actions (implied by branch structure and automated commits)
-- Pre-commit hooks: Security checks (blocks `RegExp exec` patterns)
-- Automatic deployment to ECR on commit
+- Not detected in codebase (build/push likely external via CI/CD platform)
+- ECR credentials renewal: CronJob `ecr-creds-renew` in `deploy/bfx/ecr-creds-renew.yaml`
 
-**Deployment Configuration:**
-- Dockerfile (multi-stage: deps → builder → runner)
-- Dockerfile.dev (development with hot-reload)
-- Kubernetes manifests: `deploy/bfx/`
-  - `kustomization.yaml` - Kustomize configuration
-  - `namespace.yaml` - Namespace isolation
-  - `app.yaml` - Main application Deployment
-  - `postgres.yaml` - PostgreSQL StatefulSet with PVC
-  - `evolution-api.yaml` - Evolution API Deployment
-  - `secrets.yaml` - Encrypted secrets (Sealed Secrets or ArgoCD format)
-  - `ingress.yaml` - HTTP/HTTPS routing
-  - `serviceaccount.yaml` - RBAC configuration
-
-**Recommended Deployment:**
-- Docker build: `yarn build` (outputs standalone Next.js app)
-- Container push to ECR: `{account}.dkr.ecr.{region}.amazonaws.com/sistema-bfx:{hash}`
-- ArgoCD Application: Syncs Kubernetes manifests from git repo
+**Deployment Strategy:**
+- Rolling update (maxSurplus: 1, maxUnavailable: 0)
+- Init containers: Wait for PostgreSQL readiness
+- Health checks: readinessProbe (httpGet /, 5s period) and livenessProbe (httpGet /, 10s period)
 
 ## Environment Configuration
 
-**Required env vars (for basic operation):**
+**Required env vars:**
 - `DATABASE_URL` - PostgreSQL connection string
-- `SESSION_SECRET` - JWT session key (min. 32 chars)
+- `SESSION_SECRET` - Session encryption key (min 32 chars in production)
 
-**Recommended env vars (for production):**
-- `NEXT_PUBLIC_APP_URL` - Public application URL (used in links, redirects)
-- `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`, `MINIO_PUBLIC_URL` - MinIO configuration
-- `ASAAS_API_KEY`, `ASAAS_ENV` - Asaas payment gateway
-- `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE` - WhatsApp (Evolution API)
-- `GOOGLE_GENERATIVE_AI_API_KEY` or `OPENAI_API_KEY` - AI provider
-- `LITELLM_URL`, `LITELLM_KEY`, `LITELLM_MODEL` - LiteLLM proxy
-- `CRON_SECRET` - Authorizes `/api/cron/cleanup-uploads` (Vercel Cron)
-- `UBER_DIRECT_CUSTOMER_ID`, `UBER_DIRECT_TOKEN`, `UBER_PICKUP_ADDRESS_JSON` - Uber Direct
+**Critical optional vars:**
+- `NEXT_PUBLIC_APP_URL` / `APP_URL` / `BASE_URL` - Application URL for redirects
+- `CRON_SECRET` - Bearer token for scheduled tasks (`/api/cron/*` endpoints)
+
+**Integration env vars:**
+- MinIO: `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`, `MINIO_PUBLIC_URL`
+- Asaas: `ASAAS_API_KEY`, `ASAAS_ENV`
+- Evolution: `EVOLUTION_API_URL`, `EVOLUTION_API_KEY`, `EVOLUTION_INSTANCE`
+- Uber: `UBER_DIRECT_CUSTOMER_ID`, `UBER_DIRECT_TOKEN`, `UBER_PICKUP_ADDRESS_JSON`
+- AI: `GOOGLE_GENERATIVE_AI_API_KEY`, `OPENAI_API_KEY`, `LITELLM_URL`, `LITELLM_KEY`, `LITELLM_MODEL`, `LITELLM_ENABLE_THINKING`
+- SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 
 **Secrets location:**
-- Local development: `.env` or `.env.local` (git-ignored)
-- CI/CD: GitHub Actions secrets
-- Kubernetes: `deploy/bfx/secrets.yaml` (encrypted)
-- Database config: `Config` table in PostgreSQL (for runtime overrides)
+- Kubernetes: `bfx-app-secrets` and `bfx-db-secrets` in `deploy/bfx/secrets.yaml` (plaintext YAML — requires encryption at rest in production)
+- Local dev: `.env` file (not committed)
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- Cron endpoint: `GET /api/cron/cleanup-uploads` (Vercel Cron, or manual trigger)
-  - Authorization: `CRON_SECRET` header
-  - Purpose: Periodic cleanup of orphaned uploaded files
+- Evolution API webhooks: `src/app/api/webhooks/evolution/route.ts`
+  - Receives incoming WhatsApp messages and delivery status updates
+  - Requires `EVOLUTION_API_KEY` authentication header
+  - Stores events in Evolution API's PostgreSQL schema
+
+- Scheduled cleanup job: `src/app/api/cron/cleanup-uploads/route.ts`
+  - Invoked by Kubernetes CronJob `bfx-cleanup-uploads` (Sundays 03:00 UTC)
+  - Runs `curl` with `CRON_SECRET` Bearer token authentication
+  - Deletes old files from `public/uploads/` filesystem
 
 **Outgoing:**
-- Asaas webhooks: Not configured (would require additional setup)
-- Evolution API webhooks: Not detected in current implementation
-- WhatsApp incoming messages: Not implemented (send-only model)
+- SMTP email via `src/lib/email.ts` (custom SMTP client, no external mail service)
+- Asaas API calls for boleto generation
+- Uber Direct API calls for delivery quotes
+- Evolution API calls for WhatsApp message sending
+- Google/OpenAI/LiteLLM API calls for AI operations
 
-## Optional Features (Not Currently Detected)
+## Storage & Persistence
 
-**Features that could be integrated:**
-- Database backups (no automated backup system detected)
-- Error tracking (Sentry, DataDog, etc.)
-- APM (Application Performance Monitoring)
-- Redis caching layer
-- Rate limiting/DDoS protection
-- Analytics (Mixpanel, Amplitude, etc.)
-- Email provider (SendGrid, Resend, etc.)
-- SMS provider (Twilio, etc.)
-- Document storage (AWS S3 only via MinIO)
+**Volumes:**
+- PostgreSQL data: 10Gi persistent volume (microk8s-hostpath)
+- Evolution API data: 2Gi persistent volume (microk8s-hostpath) in `deploy/bfx/evolution-api.yaml`
+- Pod filesystem uploads: Ephemeral (lost on pod restart) in `public/uploads/` and `public/uploads/produtos/`
+
+## Known Configuration Gaps
+
+1. **MinIO/S3 Production Gap:**
+   - No MinIO service deployed in `deploy/bfx/kustomization.yaml`
+   - No MINIO_* env vars in `deploy/bfx/secrets.yaml`
+   - Product uploads fallback to pod filesystem (addressed in code)
+   - Logo uploads have no S3 fallback — writes only to pod filesystem
+   - Recommendation: Add MinIO deployment or use AWS S3; implement S3 fallback for logo endpoint
+
+2. **File Cleanup Approach:**
+   - CronJob calls HTTP endpoint instead of kubectl commands
+   - Endpoint authentication via bearer token in env var (adequate but less secure than RBAC)
+
+3. **Email Infrastructure:**
+   - Custom SMTP client with native Node.js modules
+   - No templating library (Handlebars, EJS, etc.) detected
+   - Credentials stored in plaintext in secrets.yaml
+
+4. **Legacy k8s/ Directory:**
+   - `k8s/` directory contains legacy manifests and examples (deployment.yaml, secret.yaml.example, etc.)
+   - Production uses `deploy/bfx/` with ArgoCD and Kustomize
+   - `k8s/README.md` references manual kubectl workflow (superseded by ArgoCD)
 
 ---
 
-*Integration audit: 2026-03-30*
+*Integration audit: 2026-08-03*

@@ -1,399 +1,237 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-08-03
 
 ## Naming Patterns
 
 **Files:**
-- PascalCase for React components: `VendaRapidaFormClient.tsx`, `ParcelasVencimentoForm.tsx`
-- camelCase for utilities and lib files: `venda-utils.ts`, `action-response.ts`, `db.ts`
-- camelCase with hyphens for multi-word utilities: `use-query-param.tsx`, `venda-rapida-dropdown.spec.ts`
-- Suffix pattern: `*-client.tsx` for client-side components, `*-actions.ts` for Server Actions, `*-form.tsx` for form components
+- Utility modules: kebab-case (e.g., `action-response.ts`, `build-cadastros-url.ts`, `venda-item-validation.ts`)
+- Component files: kebab-case (e.g., `month-filter.tsx`, `empresas-tab-client.tsx`, `receipt-editor-client.tsx`)
+- Test files: co-located with source, named `[name].test.ts` (e.g., `venda-item-validation.test.ts`)
+- Server actions: in `actions.ts` files at route level (e.g., `src/app/(app)/venda-rapida/actions.ts`)
 
 **Functions:**
-- camelCase for all functions: `criarVenda()`, `criarVendaV2()`, `formatBRL()`, `maskCpf()`
-- Async functions clearly named with action verb: `createInstance()`, `getWhatsAppConfig()`, `getOrCreateCustomer()`
-- Helper functions with action prefix: `calcularPrimeiroVencimento()`, `sugerirNcm()`
+- Regular functions: camelCase (e.g., `checkCredito()`, `formatBRL()`, `buildComissoesWhere()`)
+- React components: PascalCase (e.g., `MonthFilter`, `EmpresasTabClient`, `MarkdownContent`)
+- Async functions: camelCase with no special suffix (e.g., `checkCredito()` for async queries)
+- Exported utility functions: camelCase (e.g., `maskCpf()`, `maskCnpj()`, `calcularPrimeiroVencimento()`)
 
 **Variables:**
-- camelCase for local variables and state: `selectedCliente`, `produtoQuery`, `limiteData`
-- UPPERCASE for constants and static data: `SYSTEM_PROMPT`, `TABLE_BLOCK_RE`, `toolSchema`
-- Prefix patterns for state: `is*` for booleans (`temNota`, `descontoEmFolha`), `*Data` for data containers
+- Local variables: camelCase (e.g., `clienteId`, `parcNova`, `formaPagamento`)
+- State variables (React): camelCase (e.g., `selectedIds`, `editingEmpresa`, `submittingAdd`)
+- Constants: UPPER_SNAKE_CASE (e.g., `TOLERANCIA_CENTAVOS`, `FORMA_PAGAMENTO`)
+- Query parameters: lowercase when extracted from search params (e.g., `mes`, `dataInicio`)
 
 **Types:**
-- PascalCase for interfaces and types: `Props`, `Parcela`, `ProdutoItem`, `ActionResponse<T>`
-- Generic type parameters: `<T>` for generic data, context-specific prefixes if needed
-- Exported type definitions always include explicit exports: `export type VendaV2FormData = z.infer<typeof vendaV2Schema>`
+- Type definitions: PascalCase (e.g., `ActionResponse<T>`, `ItemVendaParaValidar`, `CatalogoProduto`)
+- Type imports: use `import type` (e.g., `import type { ActionResponse } from "@/lib/action-response"`)
+- Generic type parameters: single capital letters (e.g., `<T>`)
+- Prisma type imports: `import type { Prisma } from "@/generated/prisma"`
 
 ## Code Style
 
 **Formatting:**
-- No Prettier config found; using ESLint with Next.js defaults
-- 2-space indentation (inferred from codebase)
-- Semicolons used consistently throughout
-- Template literals preferred over string concatenation
+- No dedicated Prettier config; relies on ESLint formatting rules
+- TypeScript strict mode enabled (`tsconfig.json`)
+- Target: ES2017 with JSX support
 
 **Linting:**
-- ESLint with `eslint-config-next` (flat config in `eslint.config.mjs`)
-- Rules overridden: `@typescript-eslint/no-explicit-any` disabled (allows `any` type)
-- Hook purity checks disabled: `react-hooks/purity`, `react-hooks/set-state-in-effect`
-- Ignored directories: `scripts/`, `streamlit/`, `src/generated/`, `prisma/*.js`
+- ESLint with Next.js core-web-vitals and TypeScript rules
+- Config: `eslint.config.mjs` (flat config format)
+- Disabled rules:
+  - `@typescript-eslint/no-explicit-any` — allows `any` type (project choice)
+  - `react-hooks/set-state-in-effect` — allows setState inside useEffect
+  - `react-hooks/purity` — relaxes strict purity checks
 
-**TypeScript:**
-- Strict mode enabled (`strict: true` in `tsconfig.json`)
-- Target: ES2017
-- Path alias `@/*` mapped to `./src/*` for clean imports
-- `noEmit: true` (type checking only, Next.js handles compilation)
-- `skipLibCheck: true` (skip type checking of dependencies)
+**Security Hook (from CLAUDE.md):**
+- Blocks edits matching `RegExp.exec()` pattern — use `.split()` + regex instead
+- Also blocks file writes containing `RegExp.exec()` pattern in content
 
 ## Import Organization
 
-**Order:**
-1. External library imports (`react`, `next/*`, `ai`, `zod`, etc.)
-2. Third-party UI components and utilities (`@radix-ui/*`, `lucide-react`, `sonner`)
-3. Internal lib imports (`@/lib/*`)
-4. Internal component imports (`@/components/*`)
-5. Type-only imports separated at the end
-
-**Pattern:**
-```typescript
-import { useState, useEffect } from 'react';
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { formatBRL, cn } from "@/lib/utils";
-import type { ActionResponse } from "@/lib/action-response";
-```
+**Order (within file):**
+1. External library imports (e.g., `import { useState } from "react"`)
+2. Next.js/internal framework imports (e.g., `import { revalidatePath } from "next/cache"`)
+3. Type imports from external/internal (e.g., `import type { Prisma } from "@/generated/prisma"`)
+4. Relative imports from `@/lib`, `@/components`, `@/hooks`, etc.
+5. Relative imports from same directory
 
 **Path Aliases:**
-- Always use `@/` for imports from `src/`
-- Never use relative paths (`../`, `./`) even when in adjacent directories
-- Grouped by category: `lib` (utilities), `components` (UI), `generated` (Prisma types)
+- `@/*` maps to `./src/*` (configured in `tsconfig.json` and `vitest.config.ts`)
+- Always use alias imports (e.g., `@/lib/venda-item-validation`, `@/components/month-filter`)
+
+**Example Import Pattern:**
+```typescript
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+import type { ActionResponse } from "@/lib/action-response";
+import type { Prisma } from "@/generated/prisma";
+
+import { cn } from "@/lib/utils";
+import { maskCpf } from "@/lib/utils";
+import { MonthFilter } from "@/components/month-filter";
+```
 
 ## Error Handling
 
-**Patterns:**
+**Server Actions Pattern:**
+- Use `ActionResponse<T>` type from `@/lib/action-response.ts`
+- Return `{ success: true, message?, data? }` or `{ success: false, error }`
+- Helper functions: `successResponse(message?, data?)` and `errorResponse(error)`
+- Example in `src/app/(app)/venda-rapida/actions.ts`
 
-**Server Actions (try/catch with ActionResponse):**
-```typescript
-// src/app/(app)/venda-rapida/actions.ts (lines 74-387)
-export async function criarVendaV2(formData: FormData): Promise<ActionResponse<{ vendaId: number }>> {
-  try {
-    // ... validation and processing
-    const parsed = vendaV2Schema.safeParse(raw);
-    if (!parsed.success) {
-      const firstError = parsed.error.flatten().fieldErrors;
-      const msg = Object.values(firstError).flat().find(Boolean) || parsed.error.message;
-      return errorResponse(String(msg || "Dados inválidos"));
-    }
-    // ... business logic
-    return successResponse(`Venda #${venda.id} criada com sucesso!`, { vendaId: venda.id });
-  } catch (error) {
-    console.error("Erro ao criar venda:", error);
-    const err = error as Error & { code?: string };
+**Business Logic Pattern:**
+- Validation functions return `string | null` (error message or null if valid)
+- Example: `validarItensContraCatalogo()` in `src/lib/venda-item-validation.ts`
+- **Reference pattern for server-side validation:** `src/lib/venda-item-validation.ts` + `src/__tests__/venda-item-validation.test.ts`
 
-    // Map known Prisma errors
-    if (err?.code === "P2003") {
-      return errorResponse("Cliente ou vendedor inválido...");
-    }
-    // Safe-to-show determination
-    const safeToShow = errMsg.includes("Foreign key") || process.env.NODE_ENV === "development";
-    return errorResponse(safeToShow ? `Erro: ${errMsg}` : "Erro ao processar...");
-  }
-}
-```
+**Database/Query Pattern:**
+- Async functions query Prisma directly
+- Return early with sensible defaults for missing data
+- Example: `checkCredito()` returns `{ ok, disp, tomado, teto }` with calculated defaults
 
-**Client Components (toast notifications):**
-```typescript
-// src/components/gerar-boleto-button.tsx (lines 26-44)
-try {
-  const result = await gerarBoletoAction(formData);
-  if (result.success) {
-    toast.success("Boleto gerado com sucesso!");
-    router.refresh();
-  } else {
-    toast.error(result.error || "Falha ao gerar boleto.");
-  }
-} catch (err) {
-  const msg = err instanceof Error ? err.message : "Erro inesperado...";
-  toast.error(msg);
-} finally {
-  setLoading(false);
-}
-```
-
-**API Routes (NextResponse with status codes):**
-```typescript
-// src/app/api/whatsapp/route.ts (lines 6-12)
-export async function GET() {
-  const ok = await requireAdmin();
-  if (!ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const result = await getInstanceState();
-  return NextResponse.json(result);
-}
-```
-
-**Error Response Types:**
-- Server Actions: `ActionResponse<T>` with `success`, `message`, `data`, `error` fields
-- API Routes: `NextResponse.json()` with `{ error: string }` on failure
-- Toast notifications: Use sonner toast API (`toast.success()`, `toast.error()`, `toast.warning()`)
-
-## TypeScript Usage
-
-**Strict Mode Enforcement:**
-- All variables typed (no implicit `any` unless explicitly disabled)
-- Interfaces defined for component props: `interface Props { vendaId: number; ... }`
-- Generic types used for reusable patterns: `ActionResponse<T>`, `Promise<ActionResponse<Data>>`
-
-**Type Definitions:**
-```typescript
-// Validation schemas with inference
-export const vendaV2Schema = z.object({ ... });
-export type VendaV2FormData = z.infer<typeof vendaV2Schema>;
-
-// Component props
-interface Props {
-  vendaId: number;
-  gerarBoletoAction: (formData: FormData) => Promise<GerarBoletoResult>;
-  className?: string;
-  children?: React.ReactNode;
-}
-
-// State types
-interface ProdutoItem {
-  produtoNome: string;
-  custoProduto: number;
-  valorVenda: number;
-  quantidade: number;
-  subtotal: number;
-}
-```
-
-**Type Guards:**
-```typescript
-// Discriminated unions in responses
-const err = error as Error & { code?: string };
-if (err?.code === "P2003") { ... }
-
-// Type narrowing with instanceof
-const msg = err instanceof Error ? err.message : String(err);
-```
-
-## Server Actions Patterns
-
-**Location:** `src/app/*/actions.ts` with `"use server"` directive at top
-
-**Structure:**
-1. Validation (Zod schema with `safeParse`)
-2. Database operations (Prisma transactions for complex operations)
-3. Side effects (revalidatePath, audit logs, external APIs)
-4. Return ActionResponse
-
-**Validation Pattern:**
-```typescript
-// src/lib/validations/venda.ts
-const parsed = vendaV2Schema.safeParse(raw);
-if (!parsed.success) {
-  const firstError = parsed.error.flatten().fieldErrors;
-  const msg = Object.values(firstError).flat().find(Boolean) || parsed.error.message;
-  return errorResponse(String(msg || "Dados inválidos"));
-}
-const { field1, field2 } = parsed.data; // Safe to use now
-```
-
-**Database Transactions:**
-```typescript
-// Wrap multiple operations in transaction for atomicity
-const venda = await prisma.$transaction(async (tx) => {
-  const vendaCriada = await tx.venda.create({ ... });
-  await tx.itemVenda.createMany({ ... });
-  await tx.parcelaVencimento.createMany({ ... });
-  await tx.produto.updateMany({ ... });
-  return vendaCriada;
-});
-```
-
-**Cache Invalidation:**
-```typescript
-revalidatePath("/venda-rapida");
-revalidatePath("/historico");
-revalidatePath("/dashboard");
-```
-
-## Prisma Usage Conventions
-
-**Client Initialization:**
-```typescript
-// src/lib/db.ts - Singleton pattern with hot reload prevention
-const globalForPrisma = global as unknown as { prisma: PrismaClient | undefined };
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ log: ["error"] });
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
-}
-```
-
-**Query Patterns:**
-- Select specific fields: `select: { id: true, nome: true, email: true }`
-- Filter with findUnique for single records: `findUnique({ where: { id } })`
-- Use findMany with where for lists: `findMany({ where: { clienteId } })`
-- Include relations when needed: `include: { vendas: true }`
-- Always handle null cases: `cliente ?? null`
-
-**Update Patterns:**
-```typescript
-// Increment/decrement operators
-await tx.produto.updateMany({
-  where: { nome: p.produtoNome },
-  data: { qtdEstoque: { decrement: p.quantidade } },
-});
-```
-
-## Component Patterns (shadcn/ui + Tailwind)
-
-**Component Files:**
-- Naming: `ComponentName.tsx` (PascalCase)
-- Client components: `"use client"` directive at top
-- Props interface: Always define `interface Props` for clarity
-- Exports: Named exports for most components, default for page components
-
-**Styling Pattern:**
-```typescript
-// src/components/theme-toggle.tsx
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-// Utility helper for dynamic classes
-className={cn(
-  buttonVariants({ variant: "outline", size: "sm" }),
-  className
-)}
-```
-
-**Tailwind Extensions:**
-- Colors use CSS variables: `bg-primary`, `text-muted-foreground`
-- Custom spacing: `space-y-form-gap`, `p-card-padding`
-- Z-index tailwind: `z-[9999]` for overlays/dropdowns
-- Responsive: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
-- Dark mode: Uses `dark:` prefix for dark theme styles
-
-**Form State Management:**
-```typescript
-// Local state with useState
-const [clienteQuery, setClienteQuery] = useState('');
-const [selectedCliente, setSelectedCliente] = useState<{id: number, nome: string} | null>(null);
-
-// Effects for side effects
-useEffect(() => {
-  if (selectedCliente) {
-    fetch(`/api/clientes/${selectedCliente.id}/limite`)
-      .then(res => res.json())
-      .then(data => setLimiteData(data));
-  }
-}, [selectedCliente]);
-
-// Debounced search
-const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-```
-
-**UI Component Usage:**
-- Card: `<Card variant="elevated">` with CardHeader, CardContent, CardTitle
-- Input: `<Input type="text" placeholder="..." />`
-- Button: `<Button variant="outline" size="sm">Click</Button>`
-- Select: Custom `FormSelect` component (see `src/components/form-select.tsx`)
-- Toast: `toast.success()`, `toast.error()`, `toast.warning()`
-- Icons: Lucide React (`import { User, Package, Calendar } from "lucide-react"`)
+**Async Error Handling:**
+- Use `try/catch` for server actions
+- Use `expect().rejects.toThrow()` in tests for error assertions
 
 ## Logging
 
-**Framework:** `console` API with structured messages
+**Framework:** Native `console` only (no external logging library detected)
 
 **Patterns:**
-- Error logging: `console.error("Context:", error)` - used in Server Actions and API routes
-- Debug info: `console.log(...)` - used during development, often commented out in production code
-- No centralized logging service detected; using direct console calls
-
-**Guidelines:**
-- Log errors with context before re-throwing or returning error response
-- Include relevant IDs and data for debugging: `console.error("Erro ao gerar boleto Asaas:", err)`
-- Never log sensitive data (passwords, tokens, full customer details)
+- Not standardized in codebase; `console` used ad-hoc
+- No centralized logger; direct console calls acceptable
 
 ## Comments
 
 **When to Comment:**
-- Schema documentation: Comments above Zod schemas explain purpose and business rules
-- Complex calculations: Business logic comments (e.g., "Regra dia 20")
-- TODO/FIXME marked for known issues (but ESLint ignores scripts/ and src/generated/)
+- Complex business logic (e.g., "Compra até dia 20 → dia 10 do próximo mês")
+- Security/validation rules (e.g., "evita venda registrada com subtotal dissociado")
+- Non-obvious calculations or side effects
+- Do NOT comment trivial code
 
 **JSDoc/TSDoc:**
-Used minimally, mainly for:
-- Server Action docstrings explaining parameters and return types
-- Function docstrings for complex utility functions (e.g., `calcularPrimeiroVencimento`)
-- Action function comments explaining old vs new format
-
-**Example:**
-```typescript
-/**
- * Calcula o primeiro vencimento do boleto/parcela:
- * - Compra até dia 20 → dia 10 do próximo mês
- * - Compra após dia 20 → dia 10 do mês subsequente (dois meses à frente)
- */
-export function calcularPrimeiroVencimento(dataCompra: Date): Date {
-  // ...
-}
-
-/**
- * Nova action com suporte a múltiplos produtos e parcelas com datas
- */
-export async function criarVendaV2(formData: FormData): Promise<ActionResponse<...>> {
-  // ...
-}
-```
+- Used for exported functions and public APIs
+- Format: `/** description */` for single-line, multi-line for complex
+- Example from `venda-item-validation.ts`:
+  ```typescript
+  /**
+   * Valida itens de uma venda antes de gravar no banco:
+   * 
+   * 1. subtotal deve ser exatamente valorVenda x quantidade...
+   * 2. Quando o nome do item bate com um produto do catálogo...
+   */
+  export function validarItensContraCatalogo(...): string | null { ... }
+  ```
 
 ## Function Design
 
-**Size:** Functions kept under 100 lines for readability; complex operations split into smaller helpers
+**Size:** Keep functions focused on single responsibility; ~30-50 lines typical for utility functions, ~50-100 for components
 
-**Parameters:**
-- Prefer objects over multiple parameters: `{ vendaId, gerarBoletoAction, className }`
-- Use destructuring in function signatures
-- FormData used for Server Actions: `async function criarVenda(formData: FormData)`
+**Parameters:** 
+- Destructure object parameters when 2+ arguments (e.g., `{ role, nomeExibicao }`)
+- Use optional parameters with defaults (e.g., `value?: number | null`)
+- Strongly typed via TypeScript interfaces/types
 
 **Return Values:**
-- Typed returns: `Promise<ActionResponse<T>>` for Server Actions
-- Nullable returns: `Cliente | null` when record may not exist
-- Never silently return undefined; always explicit
+- Explicit return types required (TypeScript strict mode)
+- Async functions always explicitly typed (e.g., `Promise<ActionResponse<T>>`)
+- Simple functions return values/objects; validation functions return `T | null`
 
 ## Module Design
 
 **Exports:**
-- Named exports for utilities: `export function formatBRL(...)`, `export function cn(...)`
-- Type exports: `export type ActionResponse<T> = { ... }`
-- Default exports used only for page components
-- Barrel files: `src/components/ui/` has index files for exporting shadcn components
+- Use named exports (e.g., `export function fn() {}`, `export type Type = {}`)
+- Default exports rare; prefer named exports
+- Re-export types from generated code (e.g., `import type { Prisma }`)
 
-**Structure:**
-```typescript
-// 1. Imports
-import { ... } from "@/lib/...";
+**Barrel Files:**
+- Not used in `src/lib/` or `src/components/` (each file standalone)
+- Each module explicitly imports what it needs
 
-// 2. Types/Interfaces
-interface Props { ... }
-type ApiResponse = { ... };
+## Client vs Server Code
 
-// 3. Exports
-export function myFunction() { ... }
-export const myConstant = "value";
+**Client Components:**
+- Mark with `'use client';` at top of file
+- Examples: `*-client.tsx`, `*-tab-client.tsx`, `receipt-editor-client.tsx`
+- Use React hooks, event handlers, state management
 
-// 4. Internal helpers (if any)
-function internalHelper() { ... }
-```
+**Server Components:**
+- Default for all `.tsx` unless marked `'use client'`
+- Can call server actions, access database directly via props
+- No hooks, event listeners only via server actions
 
-**Lib Organization:**
-- `validations/`: Zod schemas organized by domain (`venda.ts`, `cliente.ts`, `produto.ts`)
-- `lib/`: Utility functions grouped by concern (db, utils, masks, whatsapp, asaas, ai-actions)
-- `components/ui/`: shadcn components (auto-generated from shadcn CLI)
-- `components/`: Domain-specific components (venda-rapida-form, clientes-tab, etc.)
+**Server Actions:**
+- Mark with `"use server";` at top of file
+- Located in `actions.ts` at route level
+- Use `ActionResponse<T>` for return type
+- Call Prisma directly, perform validation, return typed response
+
+## Code Quality Patterns
+
+**Validation:**
+- Business rule validation: standalone functions returning `string | null` with error message
+- Reference pattern: `src/lib/venda-item-validation.ts` + `src/__tests__/venda-item-validation.test.ts`
+- Server-side validation mandatory for sensitive operations (security hook)
+
+**Dependency Injection:**
+- Minimal; configuration via function parameters or environment variables
+- Example: `checkCredito(clienteId, parcNova)` takes values directly, queries database
+
+**Nullish Coalescing:**
+- Use `??` for default values with nulls (e.g., `value ?? 0`)
+- Use `||` for falsy defaults (e.g., `str || ""`)
+
+## BFX Intelligence (AI) Conventions
+
+**Key Components:**
+- Chat client: `src/components/intelligence-chat-client.tsx`
+- AI logic and tools: `src/lib/ai.ts` → `runAiWithActions()`
+- Tool results formatting: `buildToolSummary()` returns markdown with tables
+- Table rendering: use `MarkdownContent` + `MarkdownTable` (native parser, no `remark-gfm`)
+- Table parsing: `split(TABLE_BLOCK_RE)` to separate text and table blocks
+
+**Supported AI Providers:**
+- Default: `gemini` (Google)
+- Alternatives: `openai`, `litellm`
+- SDK: `@ai-sdk/google`, `@ai-sdk/openai`, `ai` package
+
+**Table Structure (from buildToolSummary):**
+- Clientes: Nome | Telefone | E-mail
+- Produtos: Produto | Estoque | Preco
+- Vendas: Cliente | Data | Valor | Status
+- Despesas: Descricao | Data | Valor
+- Empresas: Nome | CNPJ
+- Usuarios: Nome | E-mail | Perfil
+
+## Workflow (from CLAUDE.md)
+
+**For non-trivial bug fixes or features, follow this order (NO SKIPPING):**
+
+1. **Spec** — Write what changes and why before touching code
+   - Current vs. expected behavior
+   - Affected files
+   - Scope decisions
+
+2. **TDD** — Write failing test BEFORE implementation
+   - Place test in `src/__tests__/[name].test.ts`
+   - Use vitest globals (`describe`, `it`, `expect`)
+   - Reference: `src/__tests__/venda-item-validation.test.ts`
+   - Run with `npm test` or `npm run test:watch`
+
+3. **Implementation** — Minimal code to make test pass
+   - Don't expand scope beyond spec
+   - Follow conventions above
+
+4. **Review** — Dispatch subagent review before commit
+   - Use Agent tool (not inline review)
+   - Apply confirmed findings
+   - Then commit and push
+
+**Skip only if user explicitly requests faster approach.**
 
 ---
 
-*Convention analysis: 2026-03-30*
+*Convention analysis: 2026-08-03*
