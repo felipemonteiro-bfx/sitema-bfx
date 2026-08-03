@@ -14,9 +14,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Node 20 e o suporte a essa sintaxe e instavel nessa faixa.
 const rawColorBaselinePath = path.join(__dirname, "design-system", "raw-color-baseline.json");
 const rawColorBaseline = JSON.parse(fs.readFileSync(rawColorBaselinePath, "utf8"));
-const legacyRawColorFiles = Object.keys(rawColorBaseline.files);
-const exceptionRawColorFiles = (rawColorBaseline.exceptions ?? []).map(
-  (exception) => exception.file
+/**
+ * Rotas dinamicas do Next.js tem colchetes no caminho (`app/assinatura/[token]/`),
+ * e em glob `[token]` e classe de caracteres — casaria "t", "o", "k"... e nunca o
+ * diretorio literal. Sem escapar, o arquivo escapa da lista de legados e cai na
+ * regra geral como `error`, quebrando o build por um caminho que o baseline ja
+ * conhecia. Escapa-se cada colchete com barra invertida, que e como o minimatch
+ * trata literal.
+ */
+const escaparGlob = (caminho) => caminho.split("[").join("\\[").split("]").join("\\]");
+
+const legacyRawColorFiles = Object.keys(rawColorBaseline.files).map(escaparGlob);
+const exceptionRawColorFiles = (rawColorBaseline.exceptions ?? []).map((exception) =>
+  escaparGlob(exception.file)
 );
 
 /**
