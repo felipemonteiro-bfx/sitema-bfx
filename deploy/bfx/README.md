@@ -148,3 +148,55 @@ kubectl apply -k deploy/bfx
 ```
 
 ou com ArgoCD/kustomize conforme sua pipeline.
+
+## Backup do banco — pendência aberta (2026-08-03)
+
+**O banco de produção do BFX não tem backup nenhum.** Constatado ao investigar a origem dos
+fornecedores perdidos:
+
+1. O CronJob `postgres-backup` (namespace `backup-system`, roda 2x/dia há 129 dias) tem uma lista
+   explícita de bancos no ConfigMap `postgres-backup-script`, e **`bfx` não está nela**.
+2. O `velero-daily-critical` não inclui o namespace `bfx`.
+3. O `velero-weekly-full` (que cobre todos os namespaces) ficou **7 semanas quebrado**: em
+   2026-06-15 alguém gravou `manual/ayru-ai-softlive-pre-retire-2026-06-15.dump` na raiz do bucket
+   `softlive-velero-backups`, e o Velero recusa um `BackupStorageLocation` com diretório de topo
+   desconhecido (`Backup store contains invalid top-level directories: [manual]`). Todo backup
+   desde 2026-06-14 falhou com `FailedValidation`.
+
+**Já corrigido:** o dump foi movido para `s3://softlive-db-dumps/manual/` (ETag conferido antes de
+remover o original) e o `BackupStorageLocation default` voltou para `Available`.
+
+**Falta aplicar** — bloqueado no dia por `database is locked` no dqlite do microk8s, que recusava
+escritas no control plane. Rodar quando o cluster aceitar escritas:
+
+```bash
+# 1. Incluir o BFX no backup diario de postgres.
+#    A linha segue o formato namespace:pod:secret-name:secret-key
+#    Para o BFX: bfx:bfx-db-0:bfx-db-secrets:POSTGRES_PASSWORD
+kubectl edit configmap postgres-backup-script -n backup-system
+#    ... e acrescentar na lista DATABASES:
+#      "bfx:bfx-db-0:bfx-db-secrets:POSTGRES_PASSWORD"
+
+# 2. Backup imediato do namespace, sem esperar o cron
+kubectl apply -f - <<'YAML'
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: bfx-manual-20260803
+  namespace: velero
+spec:
+  includedNamespaces: [bfx]
+  defaultVolumesToFsBackup: true
+  storageLocation: default
+  ttl: 720h0m0s
+YAML
+
+# 3. Conferir
+kubectl get backups.velero.io -n velero | grep bfx
+kubectl get backupstoragelocation -n velero   # deve estar Available
+```
+
+**Observação de saúde do cluster:** o dqlite do microk8s vinha recusando escritas
+(`rpc error: exec (try: 500): database is locked`) e o kubelet do node `soft-k8s` chegou a parar de
+reportar status por alguns minutos. Os pods de aplicação não foram afetados — apenas operações de
+control plane. Vale investigar a contenção do dqlite antes que ela cause algo pior.
