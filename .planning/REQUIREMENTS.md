@@ -73,8 +73,8 @@ Sobre o "amarelo": `globals.css` define `--background: oklch(0.985 0.01 90)` (qu
 nao ha amarelo dominante no codigo, mas os 3 screenshots do cliente sao amarelos. A origem
 precisa ser determinada antes de mexer em token.
 
-- [ ] **UXP-01**: Venda rapida nao exibe badge nem alerta de estoque baixo ou sem estoque
-- [ ] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
+- [x] **UXP-01**: Venda rapida nao exibe badge nem alerta de estoque baixo ou sem estoque
+- [x] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
 - [ ] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
 - [ ] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
 - [ ] **UXP-05**: Paleta reflete as cores oficiais da BFX
@@ -185,8 +185,8 @@ demandas do cliente.
 | PDV-14 | Phase 7 — PDV sem friccao | Complete |
 | PDV-15 | Phase 7 — PDV sem friccao | Complete |
 | PDV-16 | Phase 7 — PDV sem friccao | Complete |
-| UXP-01 | Phase 8 — Estoque e identidade visual | Pending |
-| UXP-02 | Phase 8 — Estoque e identidade visual | Pending |
+| UXP-01 | Phase 8 — Estoque e identidade visual | Complete |
+| UXP-02 | Phase 8 — Estoque e identidade visual | Complete |
 | UXP-03 | Phase 8 — Estoque e identidade visual | Pending |
 | UXP-04 | Phase 8 — Estoque e identidade visual | Pending |
 | UXP-05 | Phase 8 — Estoque e identidade visual | Pending |

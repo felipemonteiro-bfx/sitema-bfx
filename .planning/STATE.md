@@ -5,15 +5,15 @@ milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
 status: verifying
-stopped_at: Completed 07-02-PLAN.md
-last_updated: "2026-08-03T18:36:57.897Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-08-03T19:00:52.297Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
-  total_phases: 3
+  total_phases: 5
   completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 13
+  completed_plans: 11
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: 4 of 4
 Status: Phase complete — ready for verification
 Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [██████████] 100%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [██████████] 100%
 | Phase 07 P01 | 16min | 3 tasks | 5 files |
 | Phase 07 P03 | 3min | 3 tasks | 4 files |
 | Phase 07 P02 | 6min | 3 tasks | 6 files |
+| Phase 08 P01 | 20min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,7 @@ Recent decisions affecting current work:
 - [Phase ?]: 07-03: modal CadastrarFornecedorRapidoDialog diferencia toast por reativado/jaExistia do corpo da resposta, nao pelo status HTTP
 - [Phase ?]: D-04/D-07: POST /api/clientes criada com modal de cadastro rapido no PDV, cliente ja fica selecionado na venda
 - [Phase ?]: D-05: aviso de nome parecido via GET /api/clientes/similar e deliberadamente nao bloqueante
+- [Phase ?]: D-03 (08-01): venda rapida perde alertas de estoque e teto de quantidade; decremento de estoque e aba Estoque do /financeiro nao sao tocados
 
 ### Roadmap Evolution
 
@@ -142,6 +144,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T18:36:57.890Z
-Stopped at: Completed 07-02-PLAN.md
+Last session: 2026-08-03T19:00:52.289Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None
