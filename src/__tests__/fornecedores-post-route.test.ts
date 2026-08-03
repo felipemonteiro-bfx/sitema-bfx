@@ -141,3 +141,42 @@ describe("POST /api/fornecedores — reativacao de soft-deletado (D-06, PDV-16)"
     expect(dbMock.fornecedor.update.mock.calls[0][0].data.telefone).toBe("11988888888");
   });
 });
+
+describe("POST /api/fornecedores — trava de regressao (D-06, PDV-16)", () => {
+  it("Teste 9: sem sessao, nenhum metodo do Prisma de fornecedor e chamado (trava de RBAC)", async () => {
+    sessionMock.getSession.mockResolvedValue(null);
+
+    await POST(req({ nome: "ACME" }));
+
+    const metodosChamados = Object.entries(dbMock.fornecedor)
+      .filter(([, fn]) => (fn as ReturnType<typeof vi.fn>).mock.calls.length > 0)
+      .map(([nome]) => nome);
+    expect(metodosChamados).toEqual([]);
+  });
+
+  it("Teste 10: conflito de nome unico (P2002) no create vira 409 com mensagem legivel citando o nome", async () => {
+    const erro = Object.assign(new Error("Unique constraint failed on the fields: (`nome`)"), {
+      code: "P2002",
+    });
+    dbMock.fornecedor.create.mockRejectedValue(erro);
+
+    const res = await POST(req({ nome: "ACME" }));
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.error).toContain("ACME");
+    expect(body.error).not.toContain("P2002");
+    expect(body.error).not.toContain("Unique constraint failed");
+  });
+
+  it("Teste 11: erro inesperado sem code vira 500 generico, sem vazar o erro original no corpo", async () => {
+    dbMock.fornecedor.create.mockRejectedValue(new Error("connection reset by peer"));
+
+    const res = await POST(req({ nome: "ACME" }));
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body.error).toBeTruthy();
+    expect(body.error).not.toContain("connection reset by peer");
+  });
+});
