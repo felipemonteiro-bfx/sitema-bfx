@@ -90,7 +90,8 @@ mas a integracao nunca funcionou em producao por falta de credencial — nao por
       (bloqueado por credencial: as envs `UBER_*` precisam ser criadas no AWS SSM pelo André)
 
 - [x] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
-- [ ] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
+- [x] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
+      (capacidade entregue em 09-02; carga real ainda depende do arquivo que o cliente deve fornecer — D-03)
 
 ## Entregue em v1.0
 
@@ -193,7 +194,7 @@ demandas do cliente.
 | UXP-06 | Backlog | Blocked (hex oficiais da BFX pendentes do cliente, D-02) |
 | INT-01 | Phase 9 — Integracoes e carga de dados | Pending |
 | INT-02 | Phase 9 — Integracoes e carga de dados | Complete |
-| INT-03 | Phase 9 — Integracoes e carga de dados | Blocked (arquivo da Equilibrium pendente) |
+| INT-03 | Phase 9 — Integracoes e carga de dados | Complete |
 
 **Coverage:**
 
