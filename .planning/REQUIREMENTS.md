@@ -16,7 +16,8 @@ Contexto: o app roda em Kubernetes (`deploy/bfx/`, ArgoCD + Kustomize) sem volum
 caminho em `Config.logoPath`. Todo rollout recria o pod e apaga os uploads, deixando caminhos
 mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
 
-- [ ] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
+- [x] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod. **VALIDADO EM PRODUCAO via Playwright em 2026-08-03**: logo enviada, `kubectl rollout restart deploy/bfx-app` executado, pod recriado do zero e a
+      imagem seguiu carregando (`naturalWidth=200`, nao quebrada).
       Infraestrutura no ar e app configurado (ver STO-02). Falta a **prova empirica**: subir uma
       logo em `/configuracoes`, rodar `kubectl -n bfx rollout restart deploy/bfx-app` e confirmar
       que a imagem continua carregando. So marcar apos esse teste.
@@ -30,9 +31,12 @@ mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
       a rota publica `https://bfx.softlive.dev/produtos/` devolve 403 do proprio MinIO
       (listagem negada por policy, objetos liberados) — ou seja, o roteamento do Ingress funciona.
 
-- [ ] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod
+- [x] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod. **VALIDADO EM PRODUCAO via Playwright em 2026-08-03**: `POST /api/upload-logo` devolveu
+      `https://bfx.softlive.dev/produtos/logo/1785792534219-logo-uat-minio.png` (URL absoluta,
+      prefixo `logo/`), e o objeto serve 200 image/png 2730 bytes.
 - [x] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
-- [ ] **STO-05**: Logo aparece no preview de configuracoes, no recibo PDF e no catalogo
+- [x] **STO-05**: Logo aparece no preview de configuracoes, no recibo PDF e no catalogo. **VALIDADO EM PRODUCAO via Playwright em 2026-08-03**: os 3 pontos de render carregaram a
+      imagem apos o rollout e `GET /api/catalogo` gerou PDF 200 (40238 bytes).
 - [x] **STO-06**: Cron `cleanup-uploads` opera sobre o novo storage sem apagar objeto ainda referenciado no banco
 
 ### Integridade de Dados (DAT)
