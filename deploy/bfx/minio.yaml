@@ -44,7 +44,6 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: microk8s-hostpath
 ---
 apiVersion: apps/v1
 kind: Deployment
