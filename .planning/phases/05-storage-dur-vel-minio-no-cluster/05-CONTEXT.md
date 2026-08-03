@@ -28,23 +28,23 @@ de produto caem no mesmo disco efêmero.
 
 ### Decididas com o André (2026-08-03)
 
-1. **`Config.logoPath` guarda URL absoluta** do MinIO — é o que `uploadToMinIO()` já retorna
+1. **D-01 — `Config.logoPath` guarda URL absoluta** do MinIO — é o que `uploadToMinIO()` já retorna
    (`${MINIO_PUBLIC_URL}/${bucket}/${key}`). Manter compatibilidade retroativa: valores legados
    no formato `/uploads/...` continuam funcionando enquanto existirem.
 
-2. **Reusar o bucket existente com prefixo `logo/`** em vez de criar um segundo bucket. Evita
+2. **D-02 — Reusar o bucket existente com prefixo `logo/`** em vez de criar um segundo bucket. Evita
    duplicar bucket policy e `ensureBucket`. O bucket vem de `MINIO_BUCKET` (default `produtos`).
 
-3. **Leitores de logo passam a tratar os dois formatos.** Hoje `src/app/api/recibo/route.ts:295`
+3. **D-03 — Leitores de logo passam a tratar os dois formatos.** Hoje `src/app/api/recibo/route.ts:295`
    e `src/app/api/catalogo/route.ts:75` fazem `readFile(path.join(process.cwd(), "public", logoPath))`
    — isso quebra com URL absoluta. Passar a: se o path for absoluto (`http://` ou `https://`),
    buscar por `fetch` e usar os bytes; senão, manter o `readFile` atual.
 
-4. **Credenciais do MinIO via `ExternalSecret`** apontando para o AWS SSM, seguindo o padrão
+4. **D-04 — Credenciais do MinIO via `ExternalSecret`** apontando para o AWS SSM, seguindo o padrão
    estabelecido no commit `e94fe79` (que tirou `bfx-app-secrets` do git). O manifesto é escrito
    nesta fase; **criar os valores no SSM é ação do André**, fora do alcance do agente.
 
-5. **Cron `cleanup-uploads` continua varrendo apenas o filesystem legado** e não apaga nada no
+5. **D-05 — Cron `cleanup-uploads` continua varrendo apenas o filesystem legado** e não apaga nada no
    MinIO. Motivo: `cleanupMinIOPrefix()` traz aviso explícito de não usar em prefixos de assets
    vivos, e apagar por path antigo arriscaria remover a logo. STO-06 é satisfeito por não-remoção.
 
