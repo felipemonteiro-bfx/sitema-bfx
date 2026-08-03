@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { createAuditLog } from "@/lib/audit";
 import { requireAdminOrThrow } from "@/lib/guards";
+import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string };
 
@@ -173,16 +174,36 @@ async function bulkDeleteProdutos(ids: number[]) {
   revalidatePath("/cadastros");
 }
 
-async function addFornecedor(formData: FormData) {
+export async function addFornecedor(formData: FormData) {
   "use server";
-  const nome = normalizeUppercase(formData.get("nome"));
-  if (!nome) return;
-  await prisma.fornecedor.create({
-    data: {
-      nome,
-      telefone: normalizeUppercase(formData.get("telefone")),
-    },
+  const telefone = normalizeUppercase(formData.get("telefone"));
+  // D-03: nome ja existe soft-deletado reativa o registro (limpa deletedAt)
+  // em vez de tentar inserir e estourar o @unique de `nome`.
+  const candidatos = await prisma.fornecedor.findMany({
+    select: { id: true, nome: true, deletedAt: true },
   });
+  const classificacao = classificarNomeFornecedor(formData.get("nome"), candidatos);
+
+  if (classificacao.acao === "erro") return;
+
+  if (classificacao.acao === "criar") {
+    await prisma.fornecedor.create({
+      data: { nome: classificacao.nomeNormalizado, telefone },
+    });
+    revalidatePath("/cadastros");
+    return;
+  }
+
+  if (classificacao.acao === "reativar" && classificacao.id != null) {
+    await prisma.fornecedor.update({
+      where: { id: classificacao.id },
+      data: { deletedAt: null, telefone },
+    });
+    revalidatePath("/cadastros");
+    return;
+  }
+
+  // "ignorar": nao escreve nada, apenas revalida.
   revalidatePath("/cadastros");
 }
 
