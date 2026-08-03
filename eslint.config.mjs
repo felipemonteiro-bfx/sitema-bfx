@@ -1,6 +1,76 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { RAW_COLOR_PATTERN_SOURCE } from "./scripts/design-tokens/raw-color-scan.mjs";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Baseline versionado das ocorrencias de cor crua (D-05, plano 10-01). A
+// lista de arquivos legados/excecao e derivada dele, nunca digitada a mao —
+// lida com node:fs + JSON.parse, sem import attribute de JSON: o CI roda
+// Node 20 e o suporte a essa sintaxe e instavel nessa faixa.
+const rawColorBaselinePath = path.join(__dirname, "design-system", "raw-color-baseline.json");
+const rawColorBaseline = JSON.parse(fs.readFileSync(rawColorBaselinePath, "utf8"));
+const legacyRawColorFiles = Object.keys(rawColorBaseline.files);
+const exceptionRawColorFiles = (rawColorBaseline.exceptions ?? []).map(
+  (exception) => exception.file
+);
+
+/**
+ * Plugin inline (sem pacote instalado — flat config aceita objeto de plugin
+ * literal) com a regra que barra classe utilitaria Tailwind de cor crua
+ * (escala numerica) em favor de token semantico (D-04).
+ *
+ * Fonte unica do padrao: RAW_COLOR_PATTERN_SOURCE, importado de
+ * scripts/design-tokens/raw-color-scan.mjs — o mesmo modulo que alimenta a
+ * catraca de CI em node puro (Camada B do plano 10-02).
+ */
+const bfxPlugin = {
+  rules: {
+    "no-raw-color": {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "Bloqueia classe utilitaria Tailwind de cor crua (ex.: bg-red-500) — usar token semantico (ver design-system/DE-PARA-CORES.md).",
+        },
+        schema: [],
+      },
+      create(context) {
+        // Regex construida dentro de create(): nunca compartilhada em escopo
+        // entre arquivos ou execucoes de lint.
+        function reportRawColorOccurrences(node, text) {
+          const rawColorRegex = new RegExp(RAW_COLOR_PATTERN_SOURCE, "g");
+          const matches = text.match(rawColorRegex);
+          if (!matches) return;
+
+          const reportedClassNames = new Set();
+          for (const className of matches) {
+            if (reportedClassNames.has(className)) continue;
+            reportedClassNames.add(className);
+            context.report({
+              node,
+              message: `Cor crua "${className}" nao permitida em src/ — use um token semantico (ver design-system/DE-PARA-CORES.md).`,
+            });
+          }
+        }
+
+        return {
+          Literal(node) {
+            if (typeof node.value !== "string") return;
+            reportRawColorOccurrences(node, node.value);
+          },
+          TemplateElement(node) {
+            reportRawColorOccurrences(node, node.value.raw);
+          },
+        };
+      },
+    },
+  },
+};
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -11,6 +81,27 @@ const eslintConfig = defineConfig([
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/purity": "off",
     },
+  },
+  // D-04: a trava de cor crua. Bloco geral — barra ocorrencia nova em
+  // qualquer arquivo de src/.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { bfx: bfxPlugin },
+    rules: { "bfx/no-raw-color": "error" },
+  },
+  // Bloco legado — arquivos com divida pre-existente, listados em
+  // design-system/raw-color-baseline.json. Severidade rebaixada para nao
+  // travar o build nestes arquivos; a lista encolhe a cada tela migrada nas
+  // fases 11-14 (D-05), ate ficar vazia.
+  {
+    files: legacyRawColorFiles,
+    rules: { "bfx/no-raw-color": "warn" },
+  },
+  // Bloco de excecao — unico caso do projeto: documento HTML autonomo
+  // servido com Tailwind por CDN, fora do pipeline de tokens do app.
+  {
+    files: exceptionRawColorFiles,
+    rules: { "bfx/no-raw-color": "off" },
   },
   // Override default ignores of eslint-config-next.
   globalIgnores([
