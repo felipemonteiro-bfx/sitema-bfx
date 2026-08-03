@@ -86,6 +86,61 @@ kubectl annotate externalsecret bfx-minio-secrets -n bfx force-sync=$(date +%s) 
 competiria com o path do MinIO. O console de administração (porta 9001) fica de fora de propósito,
 alcançável só via `kubectl port-forward`.
 
+## Uber Direct (cotação de frete)
+
+### Estado atual
+
+O código de cotação já existe (`src/lib/uber.ts`, `src/app/api/frete/uber/quote` e
+`.../status/route.ts`) e o PDV (`venda-rapida-form-v2.tsx`) já o consome. A integração **nunca
+funcionou em produção** porque o Secret `bfx-app-secrets` no cluster não tem nenhuma chave
+`UBER_*` (17 chaves em uso, verificado em 2026-08-03). Sem credencial, a cotação **degrada com
+mensagem** — o campo "Frete (Cobrado)" continua editável a mão e a venda segue normalmente
+(comportamento entregue no plano `09-01`); não trava nada.
+
+### Chaves a acrescentar em `bfx-app-secrets`
+
+O JSON já existente em `/softlive/bfx/prod/secrets/bfx-app-secrets` (sa-east-1, SecureString)
+precisa ganhar três chaves novas — **acrescentar, nunca substituir** o parâmetro (ele já tem 17
+chaves em uso):
+
+```json
+{
+  "UBER_DIRECT_CUSTOMER_ID": "<customer-id-da-uber>",
+  "UBER_DIRECT_TOKEN": "<token-da-uber>",
+  "UBER_PICKUP_ADDRESS_JSON": "{\"street_address\":[\"<rua e numero da loja>\"],\"city\":\"<cidade>\",\"state\":\"<UF>\",\"zip_code\":\"<cep so digitos>\",\"country\":\"BR\"}"
+}
+```
+
+`UBER_PICKUP_ADDRESS_JSON` é o endereço de retirada (origem) da loja BFX, no formato de endereço
+da Uber Direct: `street_address` como array, `city`, `state`, `zip_code` e `country`.
+
+### Por que nenhum manifesto precisa mudar
+
+`externalsecret-app.yaml` usa `dataFrom.extract` sobre o parâmetro inteiro e `app.yaml` usa
+`envFrom.secretRef: bfx-app-secrets` — chave nova no JSON do SSM vira env nova no pod sem editar
+nenhum YAML. O ESO (External Secrets Operator) re-lê o parâmetro a cada 1h e o Reloader reinicia o
+Deployment sozinho quando o Secret muda. Para aplicar na hora, sem esperar a 1h:
+
+```bash
+kubectl annotate externalsecret bfx-app-secrets -n bfx force-sync=$(date +%s) --overwrite
+```
+
+### Como provar que funcionou (nesta ordem)
+
+1. `GET /api/frete/uber/status` sai de `{"enabled":false,"motivo":"sem_credencial"}` para
+   `{"enabled":true}`.
+2. No PDV, com um cliente que tenha endereço cadastrado, o botão "Uber" ao lado do campo "Frete
+   (Cobrado)" preenche o valor cotado.
+
+### Se der errado
+
+| `motivo` retornado por `/api/frete/uber/status` | Significado |
+|---|---|
+| `sem_credencial` | `UBER_DIRECT_CUSTOMER_ID` ou `UBER_DIRECT_TOKEN` ainda não chegaram no pod — conferir o Secret e o `force-sync` acima |
+| `sem_endereco_coleta` | `UBER_PICKUP_ADDRESS_JSON` está ausente |
+| `endereco_invalido` | `UBER_PICKUP_ADDRESS_JSON` está malformado (JSON inválido ou campo faltando) |
+| `erro_upstream` | credenciais e endereço OK, mas a própria API da Uber recusou a chamada — conferir o token/Customer ID no dashboard da Uber |
+
 ## Deploy
 
 ```bash
