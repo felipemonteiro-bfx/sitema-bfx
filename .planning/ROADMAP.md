@@ -34,7 +34,7 @@ nota na Fase 7).
 
 ### Phase 5: Storage durável (MinIO no cluster)
 **Goal**: Uploads (logo e imagens de produto) sobrevivem ao ciclo de vida dos pods no Kubernetes — persistidos em MinIO dentro do cluster, não mais no filesystem efêmero do pod.
-**Depends on**: Nada (primeira fase do milestone v1.1)
+**Depends on**: Nothing (primeira fase deste milestone)
 **Requirements**: STO-01, STO-02, STO-03, STO-04, STO-05, STO-06
 **Success Criteria** (o que deve ser VERDADE ao final):
   1. MinIO está provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`, com volume persistente para os objetos (STO-02)
@@ -57,7 +57,7 @@ nota na Fase 7).
 
 ### Phase 7: PDV sem fricção
 **Goal**: Vendedor completa uma venda do início ao fim sem sair da tela do PDV — custo editável sem bloqueio de servidor, cliente e fornecedor cadastráveis inline.
-**Depends on**: Fase 6 (fornecedores consistentes reduzem risco de duplicidade no cadastro rápido de PDV-16; sem acoplamento técnico obrigatório)
+**Depends on**: Fase 6 (fornecedores consistentes reduzem o risco de duplicidade no cadastro rápido; sem acoplamento técnico obrigatório)
 **Requirements**: PDV-14, PDV-15, PDV-16
 **Success Criteria** (o que deve ser VERDADE ao final):
   1. Vendedor pode lançar qualquer custo no item da venda rápida, inclusive abaixo do custo de catálogo, sem o servidor rejeitar a venda (PDV-14)
