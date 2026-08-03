@@ -45,6 +45,10 @@ describe("GET /api/cron/cleanup-uploads — trava de regressao STO-06/D-05", () 
 
   beforeEach(() => {
     vi.resetModules();
+    // resetModules sozinho nao zera o historico dos vi.fn(): os mocks sao criados uma unica
+    // vez na fabrica do vi.mock e sobrevivem entre os casos. Sem isto, um `toHaveBeenCalledTimes(1)`
+    // enxerga tambem as chamadas do teste anterior.
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
