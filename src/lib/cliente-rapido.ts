@@ -78,6 +78,12 @@ export function mensagemClienteDuplicado(nome: string): string {
   return `Ja existe um cliente cadastrado com o nome "${nome}". Verifique antes de cadastrar novamente.`;
 }
 
-// `deveConsultarSimilares` (D-05) entra na Task 3 deste plano, junto com o
-// aviso de nome parecido no modal — RED em src/__tests__/cliente-rapido.test.ts
-// antes da implementacao.
+/**
+ * Piso para disparar a consulta de nomes parecidos (D-05): `true` a partir de
+ * 3 caracteres uteis — o mesmo piso que `GET /api/clientes/similar` aplica
+ * antes de devolver lista vazia.
+ */
+export function deveConsultarSimilares(nome: unknown): boolean {
+  const normalizado = normalizarNomeCliente(nome);
+  return normalizado.length >= 3;
+}

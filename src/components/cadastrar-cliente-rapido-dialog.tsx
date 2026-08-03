@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { deveConsultarSimilares } from "@/lib/cliente-rapido";
 
 export interface ClienteRapidoCriado {
   id: number;
@@ -39,12 +40,35 @@ export function CadastrarClienteRapidoDialog({
   const [empresasParceiras, setEmpresasParceiras] = useState<{ id: number; nome: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [similares, setSimilares] = useState<{ id: number; nome: string }[]>([]);
+  const similaresTimer = useRef<NodeJS.Timeout | null>(null);
+
   // Sync nome when dialog opens
   useEffect(() => {
     if (open) {
       setNome(nomeInicial.toUpperCase());
     }
   }, [open, nomeInicial]);
+
+  // Aviso de nome parecido (D-05) — nunca bloqueia o cadastro, so avisa.
+  // Mesmo padrao de atraso do useEffect de NCM do cadastrar-produto-rapido-dialog.tsx.
+  useEffect(() => {
+    if (!open || !deveConsultarSimilares(nome)) {
+      setSimilares([]);
+      return;
+    }
+    if (similaresTimer.current) clearTimeout(similaresTimer.current);
+    similaresTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/clientes/similar?nome=${encodeURIComponent(nome)}`);
+        const data = await res.json();
+        setSimilares(Array.isArray(data.similares) ? data.similares : []);
+      } catch {
+        setSimilares([]);
+      }
+    }, 500);
+    return () => { if (similaresTimer.current) clearTimeout(similaresTimer.current); };
+  }, [nome, open]);
 
   // Carrega empresas parceiras uma vez quando o modal abre. Falha na
   // requisicao nao bloqueia o cadastro — a lista so fica vazia.
@@ -112,6 +136,21 @@ export function CadastrarClienteRapidoDialog({
               autoFocus
             />
           </div>
+
+          {/* Aviso de nome parecido (D-05) — informativo, nunca bloqueia o cadastro */}
+          {similares.length > 0 && (
+            <div className="rounded-lg border border-warning/40 bg-warning/10 p-2">
+              <div className="flex items-center gap-2 text-xs font-medium text-warning">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                Ja existe cliente com nome parecido — confira antes de cadastrar
+              </div>
+              <ul className="mt-1 list-disc space-y-0.5 pl-6 text-xs text-muted-foreground">
+                {similares.map((c) => (
+                  <li key={c.id}>{c.nome}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Telefone + CPF */}
           <div className="grid grid-cols-2 gap-3">
