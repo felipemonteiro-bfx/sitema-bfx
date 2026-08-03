@@ -40,7 +40,13 @@ cruas, só 13 têm variante `dark:`.
   2. Uma regra de lint falha o build quando alguém introduz `bg-*-500` / `text-*-600` em `src/` (UI-03)
   3. Todo botão apenas-ícone do projeto tem `aria-label` descritivo (UI-04)
   4. Os tokens necessários existem em `globals.css` para os dois temas, sem precisar de cor crua para nenhum estado (UI-01, UI-02)
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Detector de cor crua: módulo + CLI + baseline versionado (o medidor das fases 11-14)
+- [ ] 10-02-PLAN.md — A trava: regra ESLint inline, CI bloqueante em duas camadas, dívida de lint quitada
+- [ ] 10-03-PLAN.md — De-para cor crua → token semântico + verificador de contraste dos tokens
+- [ ] 10-04-PLAN.md — Tokens faltantes nos dois temas, foco visível e nome acessível nos botões apenas-ícone
 
 ### Phase 11: Telas de operação
 **Goal**: As telas de uso diário do vendedor — venda rápida, histórico, cadastros, importação — usam só tokens, funcionam nos dois temas e passam no checklist de acessibilidade.
