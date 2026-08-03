@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/db";
 import { formatBRL } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { readFile } from "fs/promises";
-import path from "path";
+import { embedLogoNoPdf } from "@/lib/logo-loader";
 
 function wrapText(text: string, font: any, size: number, maxWidth: number) {
   const words = text.split(/\s+/);
@@ -20,28 +19,6 @@ function wrapText(text: string, font: any, size: number, maxWidth: number) {
   }
   if (line) lines.push(line);
   return lines;
-}
-
-async function tryLoadImage(pdf: PDFDocument, filePathOrUrl: string) {
-  try {
-    let bytes: Buffer;
-    if (filePathOrUrl.startsWith("http://") || filePathOrUrl.startsWith("https://")) {
-      const res = await fetch(filePathOrUrl);
-      if (!res.ok) return null;
-      const ab = await res.arrayBuffer();
-      bytes = Buffer.from(ab);
-    } else {
-      const localPath = path.join(process.cwd(), "public", filePathOrUrl.replace(/^\//, ""));
-      bytes = await readFile(localPath);
-    }
-    const baseName = filePathOrUrl.startsWith("http") ? new URL(filePathOrUrl).pathname : filePathOrUrl;
-    const ext = path.extname(baseName).toLowerCase();
-    if (ext === ".png") return pdf.embedPng(bytes);
-    if (ext === ".jpg" || ext === ".jpeg") return pdf.embedJpg(bytes);
-  } catch {
-    return null;
-  }
-  return null;
 }
 
 export async function GET(req: Request) {
@@ -72,8 +49,7 @@ export async function GET(req: Request) {
   const logoDims = { width: 0, height: 0 };
 
   if (cfg?.logoPath) {
-    const logoFullPath = path.join(process.cwd(), "public", cfg.logoPath);
-    const embedded = await tryLoadImage(pdf, logoFullPath);
+    const embedded = await embedLogoNoPdf(pdf, cfg.logoPath);
     if (embedded) {
       logoImage = embedded;
       const desiredHeight = 36;
@@ -137,7 +113,10 @@ export async function GET(req: Request) {
     const imgPath = produto.imagem || null;
     let img = null;
     if (imgPath) {
-      img = await tryLoadImage(pdf, imgPath);
+      // Reusa o mesmo helper de embed da logo: e generico o bastante (path/URL
+      // -> bytes -> PDFImage) para servir tambem as imagens de produto, que
+      // convivem no mesmo formato (URL absoluta do MinIO ou caminho legado).
+      img = await embedLogoNoPdf(pdf, imgPath);
     }
 
     if (img) {

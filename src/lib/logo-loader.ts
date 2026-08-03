@@ -11,6 +11,7 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import { resolverOrigemLogo, extensaoLogo } from "@/lib/storage-policy";
+import type { PDFDocument, PDFImage } from "pdf-lib";
 
 export type LogoCarregado = { bytes: Buffer; ext: string };
 
@@ -32,6 +33,30 @@ export async function carregarLogo(
 
     const bytes = await readFile(path.join(process.cwd(), "public", origem.caminhoRelativo));
     return { bytes, ext };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Unico ponto de embed de imagem em PDF (Fase 5, plano 05-03 — STO-05).
+ * Carrega via `carregarLogo()` (que ja trata URL absoluta e caminho legado,
+ * D-01/D-03) e embute com `embedPng`/`embedJpg` conforme a extensao. So
+ * `.png`, `.jpg` e `.jpeg` sao suportados. Qualquer falha (carregamento,
+ * extensao desconhecida, ou o proprio embed lancando) devolve null — a logo
+ * (e, no catalogo, a imagem do produto) e sempre opcional para os chamadores.
+ */
+export async function embedLogoNoPdf(
+  pdf: PDFDocument,
+  logoPath: string | null | undefined
+): Promise<PDFImage | null> {
+  const carregado = await carregarLogo(logoPath);
+  if (!carregado) return null;
+
+  try {
+    if (carregado.ext === ".png") return await pdf.embedPng(carregado.bytes);
+    if (carregado.ext === ".jpg" || carregado.ext === ".jpeg") return await pdf.embedJpg(carregado.bytes);
+    return null;
   } catch {
     return null;
   }
