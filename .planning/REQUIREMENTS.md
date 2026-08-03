@@ -16,8 +16,11 @@ Contexto: o app roda em Kubernetes (`deploy/bfx/`, ArgoCD + Kustomize) sem volum
 caminho em `Config.logoPath`. Todo rollout recria o pod e apaga os uploads, deixando caminhos
 mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
 
-- [x] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
-- [x] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
+- [ ] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
+      (codigo pronto; **so vira verdade depois** de aplicar os manifestos no cluster — acao humana)
+- [ ] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
+      (manifestos escritos em `deploy/bfx/minio.yaml` e registrados no kustomization;
+      **nao aplicados** — verificado em 2026-08-03 que nao ha MinIO no namespace)
 - [ ] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod
 - [ ] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
 - [ ] **STO-05**: Logo aparece no preview de configuracoes, no recibo PDF e no catalogo
