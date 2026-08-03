@@ -65,6 +65,14 @@ export async function GET(req: Request) {
       }
     }
 
+    // D-05 (Fase 5, STO-06): este cron NAO ganha logica de remocao de asset no MinIO.
+    // O escopo da limpeza remota fica restrito ao prefixo de relatorios mensais
+    // (artefatos regeneraveis sob demanda) porque a funcao de housekeeping abaixo carrega
+    // aviso explicito de nao ser segura em prefixos de assets vivos (imagens de produto,
+    // logo) — varrer por caminho antigo arriscaria remover um asset ainda referenciado no
+    // banco. STO-06 e satisfeito por nao-remocao. Travado por
+    // src/__tests__/cleanup-uploads-cron.test.ts — nao estender esta chamada para cobrir
+    // assets sem reabrir essa discussao com o produto.
     // Housekeeping do MinIO: remove apenas artefatos de relatorio antigos (regeneraveis).
     let minioRemovidos = 0;
     if (isMinIOConfigured()) {
