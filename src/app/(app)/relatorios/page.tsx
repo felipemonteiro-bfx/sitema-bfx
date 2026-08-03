@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import { format } from "date-fns";
 import { ReportButtonsClient } from "@/components/report-buttons-client";
 import { cn } from "@/lib/utils";
+import { montarEmpresaOptions } from "@/lib/empresa-options";
 
 export default async function Page() {
   const ok = await requireAdmin();
@@ -18,20 +19,12 @@ export default async function Page() {
   const monthStartStr = format(monthStart, "yyyy-MM-dd");
   const [empresas, fornecedores] = await Promise.all([
     prisma.empresaParceira.findMany({ orderBy: { nome: "asc" } }),
-    prisma.fornecedor.findMany({ select: { nome: true } }),
+    prisma.fornecedor.findMany({ where: { deletedAt: null }, select: { nome: true } }),
   ]);
-  const nomesFornecedores = new Set(fornecedores.map((f) => f.nome.toLowerCase()));
-  const extraEmpresas = ["AMAZON FIVE", "Gimam"];
-  const empresaOptions = [
-    ...empresas
-      .map((e) => e.nome)
-      .filter((nome) => !nomesFornecedores.has(nome.toLowerCase())),
-    ...extraEmpresas.filter(
-      (name) =>
-        !empresas.some((e) => e.nome.toLowerCase() === name.toLowerCase()) &&
-        !nomesFornecedores.has(name.toLowerCase()),
-    ),
-  ];
+  // DAT-03/D-06: os botoes de Exportacao Rapida vem do banco, sem nenhuma
+  // lista de nomes fixa no codigo. montarEmpresaOptions preserva a regra que
+  // exclui empresas cujo nome coincida com o de um fornecedor.
+  const empresaOptions = montarEmpresaOptions(empresas, fornecedores);
 
   const formatDateBR = (value: string) =>
     new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(new Date(value + "T00:00:00"));
@@ -62,15 +55,22 @@ export default async function Page() {
             
             <div className="flex flex-wrap gap-2 border-t pt-4">
               <span className="w-full text-[10px] font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
-              {["AMAZON FIVE", "Gimam"].map((empresa) => (
-                <a 
-                  key={empresa} 
-                  href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}
-                  className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-destructive/30 text-destructive hover:bg-destructive/5")}
-                >
-                  PDF {empresa}
-                </a>
-              ))}
+              {empresaOptions.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma empresa parceira elegível encontrada. Cadastre uma em{" "}
+                  <a href="/cadastros?tab=empresas" className="underline">Cadastros → Empresas</a>.
+                </p>
+              ) : (
+                empresaOptions.map((empresa) => (
+                  <a
+                    key={empresa}
+                    href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-destructive/30 text-destructive hover:bg-destructive/5")}
+                  >
+                    PDF {empresa}
+                  </a>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
