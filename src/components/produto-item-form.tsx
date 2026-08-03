@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { X, Package, AlertTriangle, Plus } from "lucide-react";
+import { X, Package, Plus } from "lucide-react";
 import { formatBRL, cn } from "@/lib/utils";
 import { CurrencyInput } from "@/components/currency-input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -41,7 +41,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     custoPadrao?: number;
     qtdEstoque?: number | null;
   }[]>([]);
-  const [estoqueDisponivel, setEstoqueDisponivel] = useState<number | null>(null);
   const [cadastrarOpen, setCadastrarOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
@@ -83,7 +82,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     setProdutoQuery(p.nome);
     setProdutoSuggestions([]);
     setIsSearching(false);
-    setEstoqueDisponivel(p.qtdEstoque ?? null);
 
     const newItem: ProdutoItem = {
       ...item,
@@ -116,7 +114,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     const m = item.valorVenda > 0 ? ((item.valorVenda - item.custoProduto) / item.valorVenda) * 100 : 0;
     return { lucro: l, margem: m };
   }, [item.valorVenda, item.custoProduto, item.quantidade]);
-  const semEstoque = estoqueDisponivel !== null && estoqueDisponivel <= 0;
 
   return (
     <Card
@@ -163,38 +160,21 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Produto Nome */}
           <div className="space-y-2 relative lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <Label
-                htmlFor={`produto-nome-${index}`}
-                className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
-                  hasError ? "text-destructive" : "text-muted-foreground",
-                )}
-              >
-                Produto <span className="text-destructive">*</span> {hasError && "(obrigatório)"}
-              </Label>
-              {estoqueDisponivel !== null && (
-                <span
-                  className={cn(
-                    "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                    semEstoque
-                      ? "bg-destructive/10 text-destructive"
-                      : estoqueDisponivel <= 5
-                      ? "bg-warning/10 text-warning"
-                      : "bg-success/10 text-success"
-                  )}
-                >
-                  {semEstoque ? "Sem estoque" : `Estoque: ${estoqueDisponivel}`}
-                </span>
+            <Label
+              htmlFor={`produto-nome-${index}`}
+              className={cn(
+                "text-xs font-bold uppercase tracking-wider",
+                hasError ? "text-destructive" : "text-muted-foreground",
               )}
-            </div>
+            >
+              Produto <span className="text-destructive">*</span> {hasError && "(obrigatório)"}
+            </Label>
             <Input
               id={`produto-nome-${index}`}
               value={produtoQuery}
               onChange={(e) => {
                 const nome = e.target.value;
                 setProdutoQuery(nome);
-                setEstoqueDisponivel(null);
                 setIsSearching(true);
                 // Propaga o nome digitado para o item do pai — sem isso, um produto
                 // digitado mas nao selecionado no dropdown fica com produtoNome vazio
@@ -219,20 +199,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{p.nome}</span>
-                      {p.qtdEstoque !== undefined && p.qtdEstoque !== null && (
-                        <span
-                          className={cn(
-                            "text-[10px] font-bold px-1.5 py-0.5 rounded ml-2 shrink-0",
-                            p.qtdEstoque <= 0
-                              ? "bg-destructive/10 text-destructive"
-                              : p.qtdEstoque <= 5
-                              ? "bg-warning/10 text-warning"
-                              : "bg-success/10 text-success"
-                          )}
-                        >
-                          {p.qtdEstoque <= 0 ? "Sem estoque" : `${p.qtdEstoque} un`}
-                        </span>
-                      )}
                     </div>
                     {p.valorVenda && (
                       <div className="text-xs text-muted-foreground">
@@ -295,14 +261,11 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           {/* Quantidade */}
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Qtd {estoqueDisponivel !== null && estoqueDisponivel > 0 && (
-                <span className="text-muted-foreground font-normal">/ {estoqueDisponivel}</span>
-              )}
+              Qtd
             </Label>
             <Input
               type="number"
               min="1"
-              max={estoqueDisponivel !== null && estoqueDisponivel > 0 ? estoqueDisponivel : undefined}
               value={item.quantidade}
               onChange={(e) => handleChange("quantidade", Number(e.target.value))}
               required
@@ -326,12 +289,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 <div className="text-sm font-bold text-info">{margem.toFixed(1)}%</div>
               </div>
             </div>
-            {semEstoque && (
-              <div className="flex items-center gap-1.5 text-xs text-destructive">
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                Produto sem estoque disponível
-              </div>
-            )}
           </div>
         </div>
       </CardContent>
