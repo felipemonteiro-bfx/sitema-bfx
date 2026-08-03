@@ -2,17 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Consistência Visual e UX
-current_phase_name: defining requirements
-status: planning
-stopped_at: Completed 10-01-PLAN.md
-last_updated: "2026-08-03T22:09:38.690Z"
+current_phase: 10
+status: executing
+stopped_at: Completed 10-02-PLAN.md
+last_updated: "2026-08-03T22:11:57.770Z"
 last_activity: 2026-08-03
-last_activity_desc: Milestone v1.2 started
+last_activity_desc: 10-01-PLAN.md executed (detector de cor crua)
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 2
+current_phase_name: defining requirements
 ---
 
 # Project State
@@ -27,8 +28,8 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 10-fundacao-visual
-Plan: 01 of 4 complete
-Status: In progress
+Plan: 2 of 4 complete
+Status: Ready to execute
 Last activity: 2026-08-03 — 10-01-PLAN.md executed (detector de cor crua)
 
 ## Performance Metrics
@@ -71,6 +72,7 @@ Last activity: 2026-08-03 — 10-01-PLAN.md executed (detector de cor crua)
 | Phase 09 P02 | 8min | 3 tasks | 7 files |
 | Phase 09 P03 | 12min | 1 tasks | 3 files |
 | Phase 10-fundacao-visual P01 | 5min | 2 tasks | 3 files |
+| Phase 10 P02 | 15min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -112,6 +114,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 09-02: importador CSV de clientes com idempotencia por CPF/nome (D-04), reserva de nomes contra @unique de Cliente.nome, vinculo obrigatorio a empresa parceira (D-05)
 - [Phase ?]: INT-01 (cotacao Uber): runbook completo em deploy/bfx/README.md + trava de CI contra deriva de env; criacao das credenciais no SSM fica como acao humana pendente do Andre (D-01)
 - [Phase ?]: 10-01: baseline real de cor crua e 299/22 (313/23 antes da excecao), nao 250/18 como constava na medicao inicial do milestone — grep inicial so olhava bg-/text-/border- e perdia 13 prefixos + arquivos .ts
+- [Phase ?]: Regra de lint de cor crua entra como plugin ESLint inline (bfx/no-raw-color) em eslint.config.mjs, sem instalar pacote, com severidade error/warn/off derivada de design-system/raw-color-baseline.json
+- [Phase ?]: CI ganhou dois portoes independentes sem tolerancia a falha: step Lint (Camada A, nao verificavel nesta maquina) e step Cor crua (catraca) rodando npm run cores:check em node puro (Camada B, verificada de ponta a ponta)
 
 ### Roadmap Evolution
 
@@ -155,8 +159,8 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T22:09:38.683Z
-Stopped at: Completed 10-01-PLAN.md
+Last session: 2026-08-03T22:11:57.764Z
+Stopped at: Completed 10-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

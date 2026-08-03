@@ -43,12 +43,12 @@ cruas, só 13 têm variante `dark:`.
   3. Todo botão apenas-ícone do projeto tem `aria-label` descritivo (UI-04)
   4. Os tokens necessários existem em `globals.css` para os dois temas, sem precisar de cor crua para nenhum estado (UI-01, UI-02)
 
-**Plans**: 1/4 plans executed
+**Plans**: 2/4 plans executed
 
 Plans:
 
 - [x] 10-01-PLAN.md — Detector de cor crua: módulo + CLI + baseline versionado (o medidor das fases 11-14)
-- [ ] 10-02-PLAN.md — A trava: regra ESLint inline, CI bloqueante em duas camadas, dívida de lint quitada
+- [x] 10-02-PLAN.md — A trava: regra ESLint inline, CI bloqueante em duas camadas, dívida de lint quitada
 - [ ] 10-03-PLAN.md — De-para cor crua → token semântico + verificador de contraste dos tokens
 - [ ] 10-04-PLAN.md — Tokens faltantes nos dois temas, foco visível e nome acessível nos botões apenas-ícone
 
@@ -117,7 +117,7 @@ migrar tela sem o de-para e sem a trava de lint só adia o problema.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 10. Fundação visual | 1/4 | In Progress|  |
+| 10. Fundação visual | 2/4 | In Progress|  |
 | 11. Telas de operação | 0/? | Not started | - |
 | 12. Telas financeiras | 0/? | Not started | - |
 | 13. Telas de dados e IA | 0/? | Not started | - |

@@ -21,11 +21,14 @@ continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita d
 - **250 ocorrencias** de cor Tailwind crua (`bg-red-500`, `text-green-600`) em vez dos tokens
   semanticos — violando a propria convencao do projeto, registrada no CLAUDE.md
   ("Design System: usar tokens semanticos do globals.css — sem cores hardcoded").
+
 - Das 39 cores neutras cruas, apenas 13 tem variante `dark:` → **26 pontos que nao se adaptam
   ao tema escuro**. Isso e bug visual, nao preferencia estetica.
+
 - Apenas 2 de 5 botoes `size="icon"` tem `aria-label`.
 - O design system ja oferece os tokens necessarios (`success`, `warning`, `error`, `info`, cada
   um com variante `-bg` e `-foreground`) — a migracao e de uso, nao de infraestrutura.
+
 - Concentracao: `bfx-intelligence-panel.tsx` (100), `antecipacao-client.tsx` (48),
   `catalogo-publico-client.tsx` (24) somam 172 das 250 ocorrencias.
 
@@ -33,7 +36,7 @@ continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita d
 
 - [ ] **UI-01**: Nenhuma cor Tailwind crua (`bg-*-500`, `text-*-600`) em `src/` — toda cor vem de token semantico
 - [ ] **UI-02**: Toda tela renderiza corretamente em tema claro e escuro, sem texto ilegivel nem area sem contraste
-- [ ] **UI-03**: Existe uma regra de lint que barra cor crua, impedindo regressao
+- [x] **UI-03**: Existe uma regra de lint que barra cor crua, impedindo regressao
 - [ ] **UI-04**: Todo botao apenas-icone tem `aria-label` descritivo
 - [ ] **UI-05**: Texto de corpo com contraste minimo 4.5:1 (WCAG AA) nos dois temas
 - [ ] **UI-06**: Elementos interativos tem estado de foco visivel para navegacao por teclado
