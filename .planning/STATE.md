@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Demandas do Cliente BFX
 status: planning
-last_updated: "2026-08-03T14:32:45.362Z"
+last_updated: "2026-08-03T15:00:00.000Z"
 last_activity: 2026-08-03
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,17 +17,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-19)
+See: .planning/PROJECT.md (updated 2026-08-03)
 
 **Core value:** O PDV deve ser rápido, completo e sem fricção — uma venda com múltiplos produtos e parcelamento deve poder ser registrada em segundos.
-**Current focus:** Phase 1 — Multi-Produto
+**Current focus:** Phase 5 — Storage durável (MinIO no cluster)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-08-03 — Milestone v1.1 started
+Phase: 5 of 9 (Storage durável (MinIO no cluster)) — first phase of milestone v1.1
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-08-03 — ROADMAP.md criado para milestone v1.1 (Fases 5-9)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -41,7 +43,9 @@ Last activity: 2026-08-03 — Milestone v1.1 started
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| Phase 04-melhorias-infra P03 | 1 | 2 tasks | 3 files |
+| Phase 04-melhorias-infra P01 | 1m | 2 tasks | 5 files |
+| Phase 04-melhorias-infra P04 | 12 | 2 tasks | 8 files |
 
 **Recent Trend:**
 
@@ -49,9 +53,6 @@ Last activity: 2026-08-03 — Milestone v1.1 started
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 04-melhorias-infra P03 | 1 | 2 tasks | 3 files |
-| Phase 04-melhorias-infra P01 | 1m | 2 tasks | 5 files |
-| Phase 04-melhorias-infra P04 | 12 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -60,9 +61,11 @@ Last activity: 2026-08-03 — Milestone v1.1 started
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Pending: PDV multi-produto como lista de itens (UX mais natural)
-- Pending: Datas de parcelas manuais com sugestão automática (D+30, D+60...)
-- Pending: Desconto por item em % (flexibilidade para diferentes negócios)
+- [v1.1 kickoff]: Storage de uploads = MinIO no cluster (Deployment + PVC + Service, namespace `bfx`), não Amazon S3 — decisão do André, diverge da recomendação do Grok
+- [v1.1 kickoff]: Custo abaixo do `custoPadrao` liberado para TODOS os vendedores (não só admin) na venda rápida — reabre vetor de comissão/margem inflados fechado no commit `a63dc04`. Marcado "⚠️ Revisit" no PROJECT.md
+- [v1.1 kickoff]: Estoque — suprimir apenas alertas/badge e o cap de quantidade; manter decremento e aba Estoque do `/financeiro` (reversível)
+- [v1.1 kickoff]: Fases 1-3 do v1.0 (multi-produto, parcelas, busca de cliente) encerradas como entregues — verificação de código mostrou já em produção; replanejar seria retrabalho
+- [v1.1 kickoff]: Grok atua como revisor externo de plano (read-only); Claude implementa
 - [Phase quick-260323-kp0]: Gross margin only (CMV/receita), excludes taxaNota/custoEnvio; returns null when cost data unavailable
 - [Phase 04-melhorias-infra]: SESSION_SECRET requires 32+ chars only in production; bypasses with dev-secret default in dev
 - [Phase 04-melhorias-infra]: SKIP_ENV_VALIDATION env var bypasses zod schema for CI/Docker build scenarios
@@ -76,7 +79,8 @@ Recent decisions affecting current work:
 
 ### Roadmap Evolution
 
-- Phase 4 added: Melhorias de infraestrutura e qualidade do sistema (Asaas, IA, segurança, testes)
+- Milestone v1.1 iniciado: ROADMAP.md substituído com Fases 5-9 (Storage MinIO, Integridade de dados, PDV sem fricção, Estoque/identidade visual, Integrações e carga de dados) — v1.0 (Fases 1-4) arquivado como shipped
+- Phase 4 added (v1.0): Melhorias de infraestrutura e qualidade do sistema (Asaas, IA, segurança, testes)
 
 ### Pending Todos
 
@@ -84,8 +88,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- Verificar se `produto-item-form.tsx` e `parcelas-vencimento-form.tsx` são reutilizáveis ou precisam ser reescritos
-- Confirmar schema Prisma suporta `ItemVenda` e `ParcelaVencimento` com campos necessários
+- INT-03 (import de clientes da Equilibrium, Fase 9) está bloqueado por um arquivo que o cliente ainda não entregou (layout, regras de duplicata, vínculo com empresa parceira). Não bloqueia as demais fases.
+- Fase 7 (PDV-14) reabre o vetor de comissão/margem inflados fechado no commit `a63dc04` ao liberar custo abaixo de `custoPadrao` para todos os vendedores — decisão consciente do André, marcada "⚠️ Revisit" no PROJECT.md
+- Verificar se `produto-item-form.tsx` e `parcelas-vencimento-form.tsx` são reutilizáveis ou precisam ser reescritos (herdado do v1.0)
 
 ### Quick Tasks Completed
 
@@ -113,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T17:35:46.379Z
-Stopped at: Completed 04-melhorias-infra-04-PLAN.md
+Last session: 2026-08-03T15:00:00.000Z
+Stopped at: ROADMAP.md e STATE.md criados para milestone v1.1 (Fases 5-9); aguardando `/gsd-plan-phase 5`
 Resume file: None

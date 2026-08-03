@@ -146,31 +146,31 @@ demandas do cliente.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STO-01 | TBD | Pending |
-| STO-02 | TBD | Pending |
-| STO-03 | TBD | Pending |
-| STO-04 | TBD | Pending |
-| STO-05 | TBD | Pending |
-| STO-06 | TBD | Pending |
-| DAT-01 | TBD | Pending |
-| DAT-02 | TBD | Pending |
-| DAT-03 | TBD | Pending |
-| PDV-14 | TBD | Pending |
-| PDV-15 | TBD | Pending |
-| PDV-16 | TBD | Pending |
-| UXP-01 | TBD | Pending |
-| UXP-02 | TBD | Pending |
-| UXP-03 | TBD | Pending |
-| UXP-04 | TBD | Pending |
-| UXP-05 | TBD | Pending |
-| INT-01 | TBD | Pending |
-| INT-02 | TBD | Pending |
-| INT-03 | TBD | Pending |
+| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-03 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-05 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| DAT-01 | Phase 6 — Integridade de dados | Pending |
+| DAT-02 | Phase 6 — Integridade de dados | Pending |
+| DAT-03 | Phase 6 — Integridade de dados | Pending |
+| PDV-14 | Phase 7 — PDV sem friccao | Pending |
+| PDV-15 | Phase 7 — PDV sem friccao | Pending |
+| PDV-16 | Phase 7 — PDV sem friccao | Pending |
+| UXP-01 | Phase 8 — Estoque e identidade visual | Pending |
+| UXP-02 | Phase 8 — Estoque e identidade visual | Pending |
+| UXP-03 | Phase 8 — Estoque e identidade visual | Pending |
+| UXP-04 | Phase 8 — Estoque e identidade visual | Pending |
+| UXP-05 | Phase 8 — Estoque e identidade visual | Pending |
+| INT-01 | Phase 9 — Integracoes e carga de dados | Pending |
+| INT-02 | Phase 9 — Integracoes e carga de dados | Pending |
+| INT-03 | Phase 9 — Integracoes e carga de dados | Blocked (arquivo da Equilibrium pendente) |
 
 **Coverage:**
 - v1.1 requirements: 20 total
-- Mapped to phases: 0 (preenchido na criacao do roadmap)
-- Unmapped: 20
+- Mapped to phases: 20
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-02-19*
