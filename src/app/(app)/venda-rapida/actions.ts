@@ -194,15 +194,10 @@ export async function criarVendaV2(
     }
     const desconto = descontoManual + descontoPontos;
 
-    // Valida cada item contra o catálogo: subtotal precisa bater com valorVenda×quantidade,
-    // e o custo informado não pode ser menor que o custo cadastrado do produto (evita
-    // inflar lucro/comissão). O preço de venda fica livre — o vendedor pode dar desconto.
-    const nomesProdutos = [...new Set(produtosValidados.map((p) => p.produtoNome))];
-    const catalogo = await prisma.produto.findMany({
-      where: { nome: { in: nomesProdutos, mode: "insensitive" } },
-      select: { nome: true, custoPadrao: true },
-    });
-    const erroValidacao = validarItensContraCatalogo(produtosValidados, catalogo);
+    // Valida cada item: subtotal precisa bater com valorVenda×quantidade. O piso de
+    // custo contra o catálogo foi removido (PDV-14, D-01) — o custo digitado pelo
+    // vendedor é gravado sem consulta ao catálogo, para qualquer perfil.
+    const erroValidacao = validarItensContraCatalogo(produtosValidados);
     if (erroValidacao) {
       return errorResponse(erroValidacao);
     }
