@@ -1,220 +1,111 @@
 # Requirements: Sistema BFX
 
 **Defined:** 2026-02-19
-**Last milestone update:** 2026-08-03 (v1.1 — Demandas do Cliente BFX)
+**Last milestone update:** 2026-08-03 (v1.2 — Consistencia Visual e UX)
 **Core Value:** O PDV deve ser rapido, completo e sem friccao — uma venda com multiplos produtos e parcelamento deve poder ser registrada em segundos.
 
-## v1.1 Requirements — Demandas do Cliente
+## v1.2 Requirements — Consistencia Visual e UX
 
-Origem: documento "DEMANDAS PARA SISTEMA BFX.docx" (11 demandas + 3 screenshots), analisado
-pelo Grok como revisor externo. Ver `.planning/research/GROK-PLAN.md`.
+Auditoria tela a tela com a skill `ui-ux-pro-max` como criterio, validada em producao via
+Playwright. **24 telas** mapeadas (21 internas + 3 publicas).
 
-### Storage de Arquivos (STO)
+### Premissa de escopo — o que esta auditoria NAO e
 
-Contexto: o app roda em Kubernetes (`deploy/bfx/`, ArgoCD + Kustomize) sem volume nem PVC.
-`src/app/api/upload-logo/route.ts` grava em `public/uploads` no filesystem do pod e guarda o
-caminho em `Config.logoPath`. Todo rollout recria o pod e apaga os uploads, deixando caminhos
-mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
+Nao e um redesign. A skill `ui-ux-pro-max` sugeriu uma paleta propria (azul `#1E40AF` + ambar),
+que foi **descartada**: o BFX ja tem identidade (slate + verde) e a paleta oficial da marca
+continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita da skill e o
+**checklist de qualidade** — acessibilidade, contraste, alvos de toque, foco, consistencia.
 
-- [x] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod. **VALIDADO EM PRODUCAO via Playwright em 2026-08-03**: logo enviada, `kubectl rollout restart deploy/bfx-app` executado, pod recriado do zero e a
-      imagem seguiu carregando (`naturalWidth=200`, nao quebrada).
-      Infraestrutura no ar e app configurado (ver STO-02). Falta a **prova empirica**: subir uma
-      logo em `/configuracoes`, rodar `kubectl -n bfx rollout restart deploy/bfx-app` e confirmar
-      que a imagem continua carregando. So marcar apos esse teste.
+### Achados que motivaram o milestone (medidos em 2026-08-03)
 
-- [x] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
-      **VERIFICADO em producao em 2026-08-03**, apos o merge do PR #36: pod `bfx-minio` Running,
-      PVC `bfx-minio-data` Bound (10Gi, `microk8s-hostpath`), Service com 9000/9001,
-      ExternalSecret `bfx-minio-secrets` SecretSynced. O app enxerga as 5 envs `MINIO_*`
-      (parametros criados no AWS SSM: `bfx-minio-secrets` novo e `bfx-app-secrets` de 17 -> 22
-      chaves, as 17 originais intactas). `GET /minio/health/live` responde 200 de dentro do pod e
-      a rota publica `https://bfx.softlive.dev/produtos/` devolve 403 do proprio MinIO
-      (listagem negada por policy, objetos liberados) — ou seja, o roteamento do Ingress funciona.
+- **250 ocorrencias** de cor Tailwind crua (`bg-red-500`, `text-green-600`) em vez dos tokens
+  semanticos — violando a propria convencao do projeto, registrada no CLAUDE.md
+  ("Design System: usar tokens semanticos do globals.css — sem cores hardcoded").
+- Das 39 cores neutras cruas, apenas 13 tem variante `dark:` → **26 pontos que nao se adaptam
+  ao tema escuro**. Isso e bug visual, nao preferencia estetica.
+- Apenas 2 de 5 botoes `size="icon"` tem `aria-label`.
+- O design system ja oferece os tokens necessarios (`success`, `warning`, `error`, `info`, cada
+  um com variante `-bg` e `-foreground`) — a migracao e de uso, nao de infraestrutura.
+- Concentracao: `bfx-intelligence-panel.tsx` (100), `antecipacao-client.tsx` (48),
+  `catalogo-publico-client.tsx` (24) somam 172 das 250 ocorrencias.
 
-- [x] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod. **VALIDADO EM PRODUCAO via Playwright em 2026-08-03**: `POST /api/upload-logo` devolveu
-      `https://bfx.softlive.dev/produtos/logo/1785792534219-logo-uat-minio.png` (URL absoluta,
-      prefixo `logo/`), e o objeto serve 200 image/png 2730 bytes.
-- [x] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
-- [x] **STO-05**: Logo aparece no preview de configuracoes, no recibo PDF e no catalogo. **VALIDADO EM PRODUCAO via Playwright em 2026-08-03**: os 3 pontos de render carregaram a
-      imagem apos o rollout e `GET /api/catalogo` gerou PDF 200 (40238 bytes).
-- [x] **STO-06**: Cron `cleanup-uploads` opera sobre o novo storage sem apagar objeto ainda referenciado no banco
+### Fundacao (UI)
 
-### Integridade de Dados (DAT)
+- [ ] **UI-01**: Nenhuma cor Tailwind crua (`bg-*-500`, `text-*-600`) em `src/` — toda cor vem de token semantico
+- [ ] **UI-02**: Toda tela renderiza corretamente em tema claro e escuro, sem texto ilegivel nem area sem contraste
+- [ ] **UI-03**: Existe uma regra de lint que barra cor crua, impedindo regressao
+- [ ] **UI-04**: Todo botao apenas-icone tem `aria-label` descritivo
+- [ ] **UI-05**: Texto de corpo com contraste minimo 4.5:1 (WCAG AA) nos dois temas
+- [ ] **UI-06**: Elementos interativos tem estado de foco visivel para navegacao por teclado
 
-Contexto **revisado em 2026-08-03 contra o banco de producao** (consulta somente-leitura via
-`kubectl exec` no pod `bfx-db-0`):
+### Telas de Operacao (OPE)
 
-- `SELECT count(*) FROM fornecedores` → **0**. A demanda 9 e real.
-- `SELECT count(*) FROM audit_logs WHERE acao = 'fornecedor:delete'` → **0**. Nao ha nenhum
-  registro de exclusao. Na verdade **nenhuma acao de fornecedor jamais foi registrada** — o
-  `GROUP BY acao` so devolve venda/produto/cliente/despesa/LOGIN/EXCLUSAO.
+- [ ] **OPE-01**: `/venda-rapida` — consistencia visual, estados de erro e foco validados
+- [ ] **OPE-02**: `/historico` — idem, incluindo tabela e filtros
+- [ ] **OPE-03**: `/cadastros` (4 abas) — idem
+- [ ] **OPE-04**: `/importacao` e as 2 sub-telas — idem
 
-- `SELECT count(*), count(fornecedor_id) FROM produtos` → **197 produtos, 0 com fornecedor_id**.
-- Audit log comeca em 2026-01-31; so existe o banco `bfx` (sem banco legado); sem backup no pod;
-  sem seed nem CSV de fornecedores no repositorio.
+### Telas Financeiras (FIN)
 
-**Conclusao:** os fornecedores nao foram apagados pela tela de cadastros — nunca existiram neste
-banco. Provavelmente ficaram no sistema legado (tag `legacy-streamlit-final`) e a migracao para o
-Next.js nao os trouxe. **Nao ha fonte de dados recuperavel**; a lista precisa vir do cliente.
-A hipotese original (reconstruir via `audit_logs`) esta descartada por evidencia.
+- [ ] **FIN-01**: `/financeiro` (4 abas) — idem, com atencao a leitura de numeros
+- [ ] **FIN-02**: `/boletos` e `/prudent` — idem
+- [ ] **FIN-03**: `/relatorios` e `/relatorios/mensais` — idem
+- [ ] **FIN-04**: `/comissoes` — idem
 
-- [x] **DAT-01**: Existe um importador de fornecedores por CSV com dry-run (reporta criados/
-      ignorados/erros antes de escrever) e commit idempotente por nome. Entregue como capacidade —
-      a carga dos dados reais depende do arquivo que o cliente ainda deve fornecer.
+### Telas de Dados e IA (DIA)
 
-- [x] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
-- [x] **DAT-03**: Exportacao rapida exibe um botao por empresa parceira vinda do banco, sem lista hardcoded
+- [ ] **DIA-01**: `/inteligencia` — o arquivo com mais cor crua do projeto (100 ocorrencias)
+- [ ] **DIA-02**: `/crm` e as 3 sub-telas — idem
 
-### PDV — Fricção Zero (PDV)
+### Telas de Sistema e Publicas (SIS)
 
-Contexto: o campo de custo ja e editavel no UI (`produto-item-form.tsx:274`); o que bloqueia e a
-validacao de servidor `validarItensContraCatalogo` (`src/lib/venda-item-validation.ts:47-52`),
-que recusa custo menor que `custoPadrao`. Essa e a causa real da demanda 7.
+- [ ] **SIS-01**: `/dashboard` — idem
+- [ ] **SIS-02**: `/configuracoes` (5 abas) e `/perfil` — idem
+- [ ] **SIS-03**: `/gestao-rh` — idem
+- [ ] **SIS-04**: Telas publicas (`/login`, `/catalogo`, `/assinatura/[token]`) — idem
 
-- [x] **PDV-14**: Vendedor pode lancar qualquer custo na venda rapida, inclusive abaixo do custo de catalogo, e o valor digitado e gravado em `item_venda.custo_produto`
-- [x] **PDV-15**: Vendedor pode cadastrar cliente novo por modal, sem sair da tela do PDV, e o cliente ja fica selecionado na venda
-- [x] **PDV-16**: Vendedor pode cadastrar fornecedor novo no fluxo de produto rapido do PDV, e o fornecedor ja fica selecionado
+## Pendencias herdadas do v1.1 (bloqueadas em terceiros)
 
-### Experiência de Uso (UXP)
-
-Contexto: o codigo debita estoque na venda e alimenta a aba Estoque do `/financeiro` (capital
-imobilizado). A demanda 1 pede para nao ter controle de estoque, mas remover o decremento
-quebraria esses relatorios — dai a leitura literal: suprimir apenas os alertas.
-Sobre o "amarelo": `globals.css` define `--background: oklch(0.985 0.01 90)` (quase branco);
-nao ha amarelo dominante no codigo, mas os 3 screenshots do cliente sao amarelos. A origem
-precisa ser determinada antes de mexer em token.
-
-- [x] **UXP-01**: Venda rapida nao exibe badge nem alerta de estoque baixo ou sem estoque
-- [x] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
-- [x] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
-- [x] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
-- [x] **UXP-05**: Tokens de fundo do tema claro sem tom quente (croma zero) — leitura estreita
-      da demanda 6 ("trocar cor amarela por branco"). A paleta oficial completa da marca NAO
-      esta entregue: virou UXP-06, bloqueada pelos hex que o cliente nao forneceu.
-- [ ] **UXP-06**: Paleta completa da marca BFX aplicada aos tokens semanticos (bloqueado: os hex oficiais — primary, accent, fundo — nao foram fornecidos pelo cliente; sem eles qualquer escolha seria chute, D-02)
-
-### Integrações e Carga de Dados (INT)
-
-Contexto verificado em 2026-08-03: o Secret `bfx-app-secrets` no cluster tem 17 chaves e
-**nenhuma `UBER_*`**. O codigo de cotacao (`src/lib/uber.ts`, `src/app/api/frete/uber/*`) existe,
-mas a integracao nunca funcionou em producao por falta de credencial — nao por falta de codigo.
-
-- [ ] **INT-01**: Cotacao Uber funciona em producao e preenche o frete para endereco valido
-      (bloqueado por credencial: as envs `UBER_*` precisam ser criadas no AWS SSM pelo André)
-
-- [x] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
-- [x] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
-      (capacidade entregue em 09-02; carga real ainda depende do arquivo que o cliente deve fornecer — D-03)
-
-## Entregue em v1.0
-
-### PDV — Multi-Produto (Phase 1) — entregue
-
-Verificado no codigo em 2026-08-03: `VendaRapidaFormV2` e a pagina ativa do PDV.
-
-- [x] **PDV-01**: Vendedor pode adicionar multiplos produtos em uma unica venda (lista de itens)
-- [x] **PDV-02**: Cada item da lista exibe produto, quantidade e preco unitario
-- [x] **PDV-03**: Vendedor pode remover um item individual da lista sem cancelar a venda
-- [x] **PDV-04**: Total da venda e calculado automaticamente somando todos os itens
-
-### PDV — Parcelamento com Datas (Phase 2) — entregue
-
-- [x] **PDV-07**: Ao parcelar, o sistema exibe campos de data de vencimento por parcela
-- [x] **PDV-08**: Vendedor pode inserir a data de vencimento de cada parcela manualmente
-- [x] **PDV-09**: Sistema sugere datas automaticas (D+30, D+60...) como ponto de partida editavel
-- [x] **PDV-10**: Datas de vencimento sao salvas junto a venda no banco de dados
-
-### PDV — Busca Rapida de Cliente (Phase 3) — entregue
-
-- [x] **PDV-11**: Vendedor pode buscar cliente por nome ou CPF diretamente no PDV
-- [x] **PDV-12**: Autocomplete exibe lista de sugestoes enquanto digita (sem navegar para outra tela)
-- [x] **PDV-13**: Selecionar cliente no autocomplete preenche os dados da venda automaticamente
-
-### Infraestrutura e Qualidade (Phase 4) — entregue
-
-- [x] **INF-SEC-01**: SESSION_SECRET com fallback "dev-secret" nao funciona em producao (fail-fast com erro claro)
-- [x] **INF-SEC-02**: Rotas admin (/api/admin/*) exigem autenticacao antes de executar logica
-- [x] **INF-SEC-03**: requireAdmin lanca excecao (requireAdminOrThrow) em vez de retornar boolean ignoravel
-- [x] **INF-SEC-04**: recibo-url.ts protegido contra dev-secret em producao
-- [x] **INF-ASAAS-01**: Deteccao de cliente duplicado usa campo code do erro Asaas (nao apenas substring na description)
-- [x] **INF-ASAAS-02**: Parcelamento envia installmentValue calculado para Asaas v3
-- [x] **INF-IA-01**: Env vars obrigatorias validadas com zod no startup (fail-fast se ausentes)
-- [x] **INF-IA-02**: .env.example documenta todas as variaveis incluindo LiteLLM
-- [x] **INF-TEST-01**: vitest configurado com alias @ e script test no package.json
-- [x] **INF-TEST-02**: Testes unitarios cobrem logica critica (asaas config, session secret, recibo url, guards, env validation)
+- [ ] **UXP-06**: Paleta oficial da marca BFX aplicada aos tokens (bloqueado: hex nao fornecidos)
+- [ ] **INT-01**: Cotacao Uber ativa em producao (bloqueado: credenciais `UBER_*` no AWS SSM)
 
 ## Backlog
 
-### PDV — Desconto por Item
+### Bugs latentes identificados
 
-Remanescente do v1.0. Nao existe no codigo e ficou fora do ciclo v1.1 para nao competir com as
-demandas do cliente.
+- **BUG-01**: `src/app/(app)/venda-rapida/actions.ts` debita estoque com `updateMany({ where: { nome } })`, atingindo todos os produtos homonimos. Ha produtos com estoque negativo (-3, -2) e 115 itens zerados em producao — possivelmente relacionado.
+- **BUG-02**: Drift entre a tag de imagem em `deploy/bfx/app.yaml` e `newTag` em `kustomization.yaml`.
+- **PDV-05 / PDV-06**: Desconto % por item no PDV.
 
-- **PDV-05**: Vendedor pode aplicar desconto individual (%) em cada item da lista
-- **PDV-06**: Desconto geral da venda continua existindo e e aplicado sobre o subtotal
+### Infraestrutura
 
-### Bugs latentes identificados (nao agendados)
+- **INFRA-01**: `database is locked` intermitente no dqlite do microk8s. Diagnostico e comandos em `deploy/bfx/README.md`; correcao exige acesso ao host.
+- **INFRA-02**: `vke-router` do Tailscale offline quebra a resolucao DNS de `*.softlive.dev`.
+- **INFRA-03**: `rh-dev` e `site` falham no `pg_dumpall` do backup diario.
 
-- **BUG-01**: `src/app/(app)/venda-rapida/actions.ts:301` debita estoque com `updateMany({ where: { nome } })`, atingindo todos os produtos homonimos. Com unique em `(nome, fornecedor_id)`, o mesmo nome pode repetir entre fornecedores.
-- **BUG-02**: Drift entre a tag de imagem fixa em `deploy/bfx/app.yaml` e `newTag` em `deploy/bfx/kustomization.yaml` — risco de correcao existir no branch e nao chegar em producao.
+### Modulo de Compras / Relatorios Avancados
 
-### Modulo de Compras
-
-- **COMP-01**: Usuario pode registrar compra de fornecedor com produtos e valores
-- **COMP-02**: Compra atualiza estoque automaticamente ao ser confirmada
-- **COMP-03**: Historico de compras com filtros por fornecedor e periodo
-
-### Relatorios Avancados
-
-- **REL-01**: Relatorio de vendas por vendedor com totais e comissoes
-- **REL-02**: Relatorio de produtos mais vendidos por periodo
-- **REL-03**: Relatorio de margem de lucro por produto/categoria
+- **COMP-01..03**, **REL-01..03** — ver historico do v1.0.
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| SaaS multi-tenant | Sistema single-tenant por design — complexidade nao justificada agora |
-| App mobile nativo | Web responsivo suficiente para o perfil de uso atual |
-| Integracao fiscal (NF-e) | Alta complexidade regulatoria — fora do escopo atual |
-| Storage em Amazon S3 | Decisao do André em 2026-08-03: MinIO no cluster, por paridade com dev e sem dependencia de conta AWS |
-| Criar corrida Uber end-to-end (delivery, tracking, conciliacao) | Neste ciclo so a cotacao; o codigo de quote ja existe em `src/lib/uber.ts` |
-| Soft-delete em todos os cadastros | Neste ciclo apenas fornecedores — o cadastro que sofreu perda real |
-| Remover o decremento de estoque | Quebraria capital imobilizado e potencial de receita no `/financeiro`; a demanda e atendida suprimindo os alertas |
-| Re-hospedar midia historica ja perdida | Arquivos gravados no filesystem efemero antes do fix nao sao recuperaveis |
+| Redesign / troca de paleta | O sistema tem identidade propria; a paleta da marca depende dos hex oficiais (UXP-06) |
+| Trocar shadcn/ui por outra biblioteca | 34 componentes ja padronizados; custo sem beneficio |
+| Reescrever telas do zero | A auditoria corrige consistencia, nao refaz funcionalidade |
+| SaaS multi-tenant, app nativo, NF-e | Ver decisoes anteriores |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Pending (falta prova empirica de rollout) |
-| STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
-| STO-03 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
-| STO-05 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
-| DAT-01 | Phase 6 — Integridade de dados | Complete |
-| DAT-02 | Phase 6 — Integridade de dados | Complete |
-| DAT-03 | Phase 6 — Integridade de dados | Complete |
-| PDV-14 | Phase 7 — PDV sem friccao | Complete |
-| PDV-15 | Phase 7 — PDV sem friccao | Complete |
-| PDV-16 | Phase 7 — PDV sem friccao | Complete |
-| UXP-01 | Phase 8 — Estoque e identidade visual | Complete |
-| UXP-02 | Phase 8 — Estoque e identidade visual | Complete |
-| UXP-03 | Phase 8 — Estoque e identidade visual | Complete |
-| UXP-04 | Phase 8 — Estoque e identidade visual | Complete |
-| UXP-05 | Phase 8 — Estoque e identidade visual | Complete |
-| UXP-06 | Backlog | Blocked (hex oficiais da BFX pendentes do cliente, D-02) |
-| INT-01 | Phase 9 — Integracoes e carga de dados | Pending |
-| INT-02 | Phase 9 — Integracoes e carga de dados | Complete |
-| INT-03 | Phase 9 — Integracoes e carga de dados | Complete |
-
-**Coverage:**
-
-- v1.1 requirements: 20 total
-- Mapped to phases: 20
-- Unmapped: 0 ✓
+| UI-01..UI-06 | Phase 10 — Fundacao visual | Pending |
+| OPE-01..OPE-04 | Phase 11 — Telas de operacao | Pending |
+| FIN-01..FIN-04 | Phase 12 — Telas financeiras | Pending |
+| DIA-01..DIA-02 | Phase 13 — Telas de dados e IA | Pending |
+| SIS-01..SIS-04 | Phase 14 — Telas de sistema e publicas | Pending |
 
 ---
 *Requirements defined: 2026-02-19*
-*Last updated: 2026-08-03 after starting milestone v1.1*
+*Last updated: 2026-08-03 ao iniciar o milestone v1.2*

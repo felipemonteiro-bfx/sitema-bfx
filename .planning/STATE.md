@@ -1,19 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Demandas do Cliente BFX
-current_phase: 5
-current_phase_name: first phase of milestone v1.1
-status: verifying
-stopped_at: Completed 09-03-PLAN.md
-last_updated: "2026-08-03T19:40:05.889Z"
+milestone: v1.2
+milestone_name: Consistencia Visual e UX
+status: planning
+last_updated: "2026-08-03T21:37:07.579Z"
 last_activity: 2026-08-03
-last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 16
-  completed_plans: 16
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -27,12 +24,10 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 
 ## Current Position
 
-Phase: 5 of 9 (Storage durável (MinIO no cluster)) — first phase of milestone v1.1
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
-
-Progress: [██████████] 100%
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-08-03 — Milestone v1.2 started
 
 ## Performance Metrics
 
@@ -159,3 +154,7 @@ None yet.
 Last session: 2026-08-03T19:40:05.881Z
 Stopped at: Completed 09-03-PLAN.md
 Resume file: None
+
+## Operator Next Steps
+
+- Start the next milestone with /gsd-new-milestone
