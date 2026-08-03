@@ -25,12 +25,25 @@ mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
 
 ### Integridade de Dados (DAT)
 
-Contexto: `model Fornecedor` nao tem soft-delete e `src/app/(app)/cadastros/page.tsx:209` faz
-`deleteMany` direto. Todos os fornecedores sumiram em producao (demanda 9). Fator atenuante:
-`createAuditLog("fornecedor:delete", { fornecedorId, nome })` registrou os nomes em `audit_logs`,
-o que torna a lista reconstruivel.
+Contexto **revisado em 2026-08-03 contra o banco de producao** (consulta somente-leitura via
+`kubectl exec` no pod `bfx-db-0`):
 
-- [ ] **DAT-01**: Fornecedores apagados sao reconstruidos a partir de `audit_logs` (`acao = 'fornecedor:delete'`)
+- `SELECT count(*) FROM fornecedores` → **0**. A demanda 9 e real.
+- `SELECT count(*) FROM audit_logs WHERE acao = 'fornecedor:delete'` → **0**. Nao ha nenhum
+  registro de exclusao. Na verdade **nenhuma acao de fornecedor jamais foi registrada** — o
+  `GROUP BY acao` so devolve venda/produto/cliente/despesa/LOGIN/EXCLUSAO.
+- `SELECT count(*), count(fornecedor_id) FROM produtos` → **197 produtos, 0 com fornecedor_id**.
+- Audit log comeca em 2026-01-31; so existe o banco `bfx` (sem banco legado); sem backup no pod;
+  sem seed nem CSV de fornecedores no repositorio.
+
+**Conclusao:** os fornecedores nao foram apagados pela tela de cadastros — nunca existiram neste
+banco. Provavelmente ficaram no sistema legado (tag `legacy-streamlit-final`) e a migracao para o
+Next.js nao os trouxe. **Nao ha fonte de dados recuperavel**; a lista precisa vir do cliente.
+A hipotese original (reconstruir via `audit_logs`) esta descartada por evidencia.
+
+- [ ] **DAT-01**: Existe um importador de fornecedores por CSV com dry-run (reporta criados/
+      ignorados/erros antes de escrever) e commit idempotente por nome. Entregue como capacidade —
+      a carga dos dados reais depende do arquivo que o cliente ainda deve fornecer.
 - [ ] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
 - [ ] **DAT-03**: Exportacao rapida exibe um botao por empresa parceira vinda do banco, sem lista hardcoded
 
@@ -61,7 +74,12 @@ precisa ser determinada antes de mexer em token.
 
 ### Integrações e Carga de Dados (INT)
 
+Contexto verificado em 2026-08-03: o Secret `bfx-app-secrets` no cluster tem 17 chaves e
+**nenhuma `UBER_*`**. O codigo de cotacao (`src/lib/uber.ts`, `src/app/api/frete/uber/*`) existe,
+mas a integracao nunca funcionou em producao por falta de credencial — nao por falta de codigo.
+
 - [ ] **INT-01**: Cotacao Uber funciona em producao e preenche o frete para endereco valido
+      (bloqueado por credencial: as envs `UBER_*` precisam ser criadas no AWS SSM pelo André)
 - [ ] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
 - [ ] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
 
