@@ -47,7 +47,7 @@ banco. Provavelmente ficaram no sistema legado (tag `legacy-streamlit-final`) e 
 Next.js nao os trouxe. **Nao ha fonte de dados recuperavel**; a lista precisa vir do cliente.
 A hipotese original (reconstruir via `audit_logs`) esta descartada por evidencia.
 
-- [ ] **DAT-01**: Existe um importador de fornecedores por CSV com dry-run (reporta criados/
+- [x] **DAT-01**: Existe um importador de fornecedores por CSV com dry-run (reporta criados/
       ignorados/erros antes de escrever) e commit idempotente por nome. Entregue como capacidade —
       a carga dos dados reais depende do arquivo que o cliente ainda deve fornecer.
 
@@ -178,7 +178,7 @@ demandas do cliente.
 | STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-05 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
 | STO-06 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
-| DAT-01 | Phase 6 — Integridade de dados | Pending |
+| DAT-01 | Phase 6 — Integridade de dados | Complete |
 | DAT-02 | Phase 6 — Integridade de dados | Complete |
 | DAT-03 | Phase 6 — Integridade de dados | Pending |
 | PDV-14 | Phase 7 — PDV sem friccao | Pending |
