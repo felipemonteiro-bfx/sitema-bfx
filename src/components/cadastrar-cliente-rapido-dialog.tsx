@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FormSelect } from "@/components/form-select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,6 +33,10 @@ export function CadastrarClienteRapidoDialog({
   onCriado,
 }: Props) {
   const [nome, setNome] = useState(nomeInicial.toUpperCase());
+  const [telefone, setTelefone] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [empresaParceiraId, setEmpresaParceiraId] = useState("");
+  const [empresasParceiras, setEmpresasParceiras] = useState<{ id: number; nome: string }[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Sync nome when dialog opens
@@ -41,6 +46,21 @@ export function CadastrarClienteRapidoDialog({
     }
   }, [open, nomeInicial]);
 
+  // Carrega empresas parceiras uma vez quando o modal abre. Falha na
+  // requisicao nao bloqueia o cadastro — a lista so fica vazia.
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      try {
+        const res = await fetch("/api/empresas/autocomplete");
+        const data = await res.json().catch(() => ({}));
+        setEmpresasParceiras(Array.isArray(data.options) ? data.options : []);
+      } catch {
+        setEmpresasParceiras([]);
+      }
+    })();
+  }, [open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome.trim()) return;
@@ -49,7 +69,12 @@ export function CadastrarClienteRapidoDialog({
       const res = await fetch("/api/clientes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome }),
+        body: JSON.stringify({
+          nome,
+          telefone: telefone.trim() || null,
+          cpf: cpf.trim() || null,
+          empresaParceiraId: empresaParceiraId || null,
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -85,6 +110,44 @@ export function CadastrarClienteRapidoDialog({
               placeholder="Nome do cliente"
               required
               autoFocus
+            />
+          </div>
+
+          {/* Telefone + CPF */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Telefone
+              </Label>
+              <Input
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                placeholder="Ex: (11) 99999-0000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                CPF <span className="normal-case font-normal">(so p/ boleto)</span>
+              </Label>
+              <Input
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+
+          {/* Empresa parceira */}
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Empresa parceira
+            </Label>
+            <FormSelect
+              name="empresaParceiraId"
+              value={empresaParceiraId}
+              onValueChange={setEmpresaParceiraId}
+              placeholder="Selecionar..."
+              options={empresasParceiras.map((e) => ({ value: String(e.id), label: e.nome }))}
             />
           </div>
 

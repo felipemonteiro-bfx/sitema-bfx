@@ -34,11 +34,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: resultado.erro }, { status: 400 });
   }
 
-  const { nome, telefone, cpf } = resultado.dados;
+  const { nome, telefone, cpf, empresaParceiraId } = resultado.dados;
+
+  // T-07-07: nunca confiar em nome de empresa parceira vindo do cliente —
+  // resolve no servidor a partir do id. Id inexistente grava os dois campos
+  // como null em vez de falhar a criacao (D-04, Task 2).
+  let empresaParceiraIdResolvido: number | null = null;
+  let empresaNomeResolvido: string | null = null;
+  if (empresaParceiraId != null) {
+    const empresaParceira = await prisma.empresaParceira.findUnique({
+      where: { id: empresaParceiraId },
+      select: { id: true, nome: true },
+    });
+    if (empresaParceira) {
+      empresaParceiraIdResolvido = empresaParceira.id;
+      empresaNomeResolvido = empresaParceira.nome;
+    }
+  }
 
   try {
     const cliente = await prisma.cliente.create({
-      data: { nome, telefone, cpf },
+      data: {
+        nome,
+        telefone,
+        cpf,
+        empresaParceiraId: empresaParceiraIdResolvido,
+        empresa: empresaNomeResolvido,
+      },
       select: SELECT_CLIENTE_RAPIDO,
     });
 
