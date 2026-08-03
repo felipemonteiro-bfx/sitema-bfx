@@ -74,7 +74,18 @@ o importador", decidido com o André.
   3. Um fornecedor excluído por engano pode ser restaurado sem acesso direto ao banco de dados (DAT-02)
   4. A tela de Exportação Rápida (Relatórios) exibe um botão por empresa parceira vinda do banco, sem lista hardcoded (`extraEmpresas`) no código (DAT-03)
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+
+- [ ] 06-01-PLAN.md — Fatia vertical: soft-delete de fornecedor com `requireAdminOrThrow()` no bulk delete, migration SQL escrita à mão e reativação por nome normalizado (DAT-02)
+- [ ] 06-02-PLAN.md — Importador CSV em `/importacao/fornecedores`: dry-run que só reporta e commit idempotente por nome, com reativação de soft-deletados (DAT-01)
+- [ ] 06-03-PLAN.md — Leituras remanescentes de fornecedor (PDV, IA, busca fuzzy) filtram excluídos, e a Exportação Rápida sai do hardcode via módulo puro `empresa-options` (DAT-02, DAT-03)
+
+**Onda de execução**: 06-01 (wave 1) → 06-02 e 06-03 em paralelo (wave 2). O plano 06-03 termina com
+checkpoint humano bloqueante: os 4 critérios só viram verdade em produção depois do rollout, porque
+a coluna `deleted_at` é criada pelo `prisma migrate deploy` que o container roda no start
+(`Dockerfile:51`) — o executor não aplica migration nem toca no cluster.
 
 ### Phase 7: PDV sem fricção
 
@@ -136,7 +147,7 @@ Fases executam em ordem: 5 → 6 → 7 → 8 → 9 (Fase 9 tem um item interno �
 | 3. Busca Rápida de Cliente | — | Complete (v1.0, verificado no código) | 2026-08-03 |
 | 4. Infra e Qualidade | 4/4 | Complete | 2026-03-30 |
 | 5. Storage durável (MinIO no cluster) | 4/4 | Código completo — CI verde (PR #36). Aguarda ação humana no cluster (SSM + ArgoCD) para STO-01/02/05 | - |
-| 6. Integridade de dados: fornecedores e exportação | 0/? | Not started | - |
+| 6. Integridade de dados: fornecedores e exportação | 0/3 | Planned | - |
 | 7. PDV sem fricção | 0/? | Not started | - |
 | 8. Estoque e identidade visual | 0/? | Not started | - |
 | 9. Integrações e carga de dados | 0/? | Not started | - |
