@@ -113,7 +113,7 @@ Plans:
 
 ### Phase 8: Estoque e identidade visual
 
-**Goal**: Venda rápida deixa de exibir alertas de estoque baixo/sem estoque e limite de quantidade por estoque disponível, mantendo o decremento e a aba Estoque do `/financeiro` intactos; a paleta de cores do sistema reflete as cores oficiais da BFX.
+**Goal**: Venda rápida deixa de exibir alertas de estoque baixo/sem estoque e limite de quantidade por estoque disponível, mantendo o decremento e a aba Estoque do `/financeiro` intactos; o fundo do tema claro deixa de ter tom creme (croma zero nos tokens de fundo).
 **Depends on**: Fase 7
 **Requirements**: UXP-01, UXP-02, UXP-03, UXP-04, UXP-05
 **Success Criteria** (o que deve ser VERDADE ao final):
@@ -121,10 +121,17 @@ Plans:
   1. A venda rápida não exibe badge nem alerta de estoque baixo ou sem estoque para nenhum produto (UXP-01)
   2. A quantidade lançada na venda não é mais limitada pelo estoque disponível (UXP-02)
   3. A aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita exatamente como antes — nenhuma regressão nos relatórios financeiros (UXP-03)
-  4. A origem do "amarelo" relatado pelo cliente foi determinada com evidência (mesmo build, print sem filtro de tela/Night Shift) antes de qualquer mudança de token de cor (UXP-04)
-  5. A paleta de cores do sistema reflete as cores oficiais da BFX, aplicada via tokens semânticos do `globals.css` — sem cor hardcoded (UXP-05)
+  4. A origem do "amarelo" relatado pelo cliente está determinada com evidência versionada em `08-EVIDENCE-UXP-04.md` — mesmo build (`88268e9`), CSS servido define `#fdfaf3`/`#fffdf8`, amarelo forte dos prints é filtro de tela do cliente (UXP-04 — **resolvido no discuss, antes de qualquer mudança de token**)
+  5. Os tokens de fundo/superfície do tema claro (`--background`, `--card`, `--popover`, `--glass-bg`) têm croma 0 em `globals.css`, travado por gate de CI — sem cor hardcoded (UXP-05, na leitura decidida em D-01)
 
-**Plans**: TBD
+**Nota de escopo (D-02)**: a paleta completa da marca BFX (demanda 5 — primary/accent oficiais) está **fora desta fase e bloqueada** por falta dos hex oficiais, que o cliente não forneceu. Fica registrada como UXP-06 no `REQUIREMENTS.md`. O que a Fase 8 entrega de cor é a leitura literal da demanda 6: fundo neutro.
+
+**Plans**: 3 plans
+Plans:
+- [ ] 08-01-PLAN.md — Venda rápida sem alertas de estoque nem teto de quantidade (UXP-01, UXP-02)
+- [ ] 08-02-PLAN.md — Trava de não-regressão das métricas da aba Estoque (UXP-03)
+- [ ] 08-03-PLAN.md — Tokens de fundo com croma zero + evidência de UXP-04 (UXP-04, UXP-05)
+
 **UI hint**: yes
 
 ### Phase 9: Integrações e carga de dados
