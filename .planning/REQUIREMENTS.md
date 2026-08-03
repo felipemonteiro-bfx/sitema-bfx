@@ -75,7 +75,7 @@ precisa ser determinada antes de mexer em token.
 
 - [x] **UXP-01**: Venda rapida nao exibe badge nem alerta de estoque baixo ou sem estoque
 - [x] **UXP-02**: Quantidade na venda nao e limitada pelo estoque disponivel
-- [ ] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
+- [x] **UXP-03**: Aba Estoque do `/financeiro` continua calculando capital imobilizado e potencial de receita (regressao proibida)
 - [ ] **UXP-04**: Origem do "amarelo" relatado pelo cliente e determinada com evidencia (mesmo build, sem filtro de tela) antes de qualquer alteracao de token
 - [ ] **UXP-05**: Paleta reflete as cores oficiais da BFX
 - [ ] **UXP-06**: Paleta completa da marca BFX aplicada aos tokens semanticos (bloqueado: os hex oficiais — primary, accent, fundo — nao foram fornecidos pelo cliente; sem eles qualquer escolha seria chute, D-02)
@@ -187,7 +187,7 @@ demandas do cliente.
 | PDV-16 | Phase 7 — PDV sem friccao | Complete |
 | UXP-01 | Phase 8 — Estoque e identidade visual | Complete |
 | UXP-02 | Phase 8 — Estoque e identidade visual | Complete |
-| UXP-03 | Phase 8 — Estoque e identidade visual | Pending |
+| UXP-03 | Phase 8 — Estoque e identidade visual | Complete |
 | UXP-04 | Phase 8 — Estoque e identidade visual | Pending |
 | UXP-05 | Phase 8 — Estoque e identidade visual | Pending |
 | UXP-06 | Backlog | Blocked (hex oficiais da BFX pendentes do cliente, D-02) |

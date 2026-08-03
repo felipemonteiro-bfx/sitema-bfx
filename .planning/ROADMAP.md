@@ -126,11 +126,11 @@ Plans:
 
 **Nota de escopo (D-02)**: a paleta completa da marca BFX (demanda 5 — primary/accent oficiais) está **fora desta fase e bloqueada** por falta dos hex oficiais, que o cliente não forneceu. Fica registrada como UXP-06 no `REQUIREMENTS.md`. O que a Fase 8 entrega de cor é a leitura literal da demanda 6: fundo neutro.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 Plans:
 
 - [x] 08-01-PLAN.md — Venda rápida sem alertas de estoque nem teto de quantidade (UXP-01, UXP-02)
-- [ ] 08-02-PLAN.md — Trava de não-regressão das métricas da aba Estoque (UXP-03)
+- [x] 08-02-PLAN.md — Trava de não-regressão das métricas da aba Estoque (UXP-03)
 - [ ] 08-03-PLAN.md — Tokens de fundo com croma zero + evidência de UXP-04 (UXP-04, UXP-05)
 
 **UI hint**: yes
@@ -165,5 +165,5 @@ Fases executam em ordem: 5 → 6 → 7 → 8 → 9 (Fase 9 tem um item interno �
 | 5. Storage durável (MinIO no cluster) | 4/4 | Código completo — CI verde (PR #36). Aguarda ação humana no cluster (SSM + ArgoCD) para STO-01/02/05 | - |
 | 6. Integridade de dados: fornecedores e exportação | 3/3 | In Progress|  |
 | 7. PDV sem fricção | 3/3 | In Progress|  |
-| 8. Estoque e identidade visual | 1/3 | In Progress|  |
+| 8. Estoque e identidade visual | 2/3 | In Progress|  |
 | 9. Integrações e carga de dados | 0/? | Not started | - |
