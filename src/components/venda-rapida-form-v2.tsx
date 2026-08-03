@@ -37,6 +37,7 @@ import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { CurrencyInput } from "@/components/currency-input";
 import { Badge } from "@/components/ui/badge";
+import { CadastrarClienteRapidoDialog } from "@/components/cadastrar-cliente-rapido-dialog";
 import type { ActionResponse } from "@/lib/action-response";
 
 interface ProdutoItem {
@@ -164,6 +165,8 @@ export default function VendaRapidaFormV2({
       ultimaVenda?: { data: string; valor: number } | null;
     }[]
   >([]);
+  // Modal de cadastro rapido de cliente pelo PDV (D-04, D-07, PDV-15)
+  const [clienteDialogOpen, setClienteDialogOpen] = useState(false);
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
@@ -723,14 +726,24 @@ export default function VendaRapidaFormV2({
         </CardHeader>
         <CardContent className="overflow-visible">
           <div className="relative">
-            <Label
-              className={cn(
-                "text-xs font-bold uppercase tracking-wider",
-                validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
-              )}
-            >
-              Buscar Cliente <span className="text-destructive">*</span> {validationErrors.cliente && "(obrigatório)"}
-            </Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                Buscar Cliente <span className="text-destructive">*</span> {validationErrors.cliente && "(obrigatório)"}
+              </Label>
+              <button
+                type="button"
+                onClick={() => setClienteDialogOpen(true)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-info hover:underline"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Cadastrar cliente
+              </button>
+            </div>
             <Input
               value={clienteQuery}
               onChange={(e) => setClienteQuery(e.target.value)}
@@ -786,6 +799,26 @@ export default function VendaRapidaFormV2({
                 ))}
               </div>
             )}
+            <CadastrarClienteRapidoDialog
+              open={clienteDialogOpen}
+              onOpenChange={setClienteDialogOpen}
+              nomeInicial={clienteQuery}
+              onCriado={(cliente) => {
+                void setFormState({
+                  selectedCliente: {
+                    id: cliente.id,
+                    nome: cliente.nome,
+                    endereco: cliente.endereco,
+                    cep: cliente.cep,
+                    telefone: cliente.telefone,
+                    cpf: cliente.cpf,
+                    cnpj: cliente.cnpj,
+                  },
+                  clienteQuery: cliente.nome,
+                });
+                setClienteSuggestions([]);
+              }}
+            />
           </div>
         </CardContent>
       </Card>
