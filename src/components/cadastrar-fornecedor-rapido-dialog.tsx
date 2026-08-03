@@ -54,7 +54,13 @@ export function CadastrarFornecedorRapidoDialog({
         return;
       }
       const fornecedor: FornecedorCriado = await res.json();
-      toast.success(`Fornecedor "${fornecedor.nome}" cadastrado`);
+      if (fornecedor.reativado) {
+        toast.success(`Fornecedor "${fornecedor.nome}" reativado`);
+      } else if (fornecedor.jaExistia) {
+        toast.success(`Fornecedor "${fornecedor.nome}" ja cadastrado`);
+      } else {
+        toast.success(`Fornecedor "${fornecedor.nome}" cadastrado`);
+      }
       onCriado(fornecedor);
       onOpenChange(false);
     } catch {
