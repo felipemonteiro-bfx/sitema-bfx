@@ -101,4 +101,52 @@ describe("POST /api/clientes — cadastro rapido pelo PDV (D-04, D-07, PDV-15)",
       nome: "CARLA",
     });
   });
+
+  it("Teste 6: empresa parceira valida grava empresaParceiraId e o nome resolvido no servidor; telefone/cpf chegam com trim", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue({ id: 7, nome: "ACME LTDA" });
+    dbMock.cliente.create.mockResolvedValue({
+      id: 30,
+      nome: "PEDRO",
+      telefone: "11999990000",
+      cpf: "12345678900",
+      cnpj: null,
+      endereco: null,
+      cep: null,
+    });
+
+    await POST(
+      fakeRequest({
+        nome: "Pedro",
+        telefone: " 11999990000 ",
+        cpf: " 12345678900 ",
+        empresaParceiraId: 7,
+      })
+    );
+
+    const args = dbMock.cliente.create.mock.calls[0][0];
+    expect(args.data.empresaParceiraId).toBe(7);
+    expect(args.data.empresa).toBe("ACME LTDA");
+    expect(args.data.telefone).toBe("11999990000");
+    expect(args.data.cpf).toBe("12345678900");
+  });
+
+  it("Teste 7: empresaParceiraId que nao existe no banco grava empresaParceiraId e empresa como null, sem falhar a criacao", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue(null);
+    dbMock.cliente.create.mockResolvedValue({
+      id: 31,
+      nome: "LUCIA",
+      telefone: null,
+      cpf: null,
+      cnpj: null,
+      endereco: null,
+      cep: null,
+    });
+
+    const res = await POST(fakeRequest({ nome: "Lucia", empresaParceiraId: 999 }));
+
+    expect(res.status).toBe(201);
+    const args = dbMock.cliente.create.mock.calls[0][0];
+    expect(args.data.empresaParceiraId).toBeNull();
+    expect(args.data.empresa).toBeNull();
+  });
 });
