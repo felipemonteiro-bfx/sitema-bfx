@@ -101,13 +101,13 @@ a coluna `deleted_at` é criada pelo `prisma migrate deploy` que o container rod
 
 **Nota de risco**: PDV-14 remove o piso de servidor que hoje rejeita custo abaixo de `custoPadrao` — para todos os vendedores, não só admins. Essa validação foi introduzida no commit `a63dc04` justamente para fechar um vetor de comissão/margem inflados (vendedor baixa o custo lançado para inflar a margem/comissão calculada sobre a venda). Esta é uma decisão consciente do André (fricção do vendedor pesa mais que o risco); o Key Decisions do PROJECT.md marca o item como "⚠️ Revisit". Nenhuma mitigação adicional (auditoria de alterações de custo, alerta, etc.) está no escopo desta fase a menos que solicitada.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 Plans:
 
 - [x] 07-01-PLAN.md — Custo livre no PDV: sai só a regra de piso de `custoPadrao` do módulo puro, os dois chamadores (venda rápida e IA) acompanham, e uma trava de regressão documenta a decisão (PDV-14)
 - [ ] 07-02-PLAN.md — `POST /api/clientes` (rota nova) + modal de cadastro rápido no PDV com aviso não bloqueante de nome parecido, deixando o cliente já selecionado (PDV-15)
-- [ ] 07-03-PLAN.md — `POST /api/fornecedores` (rota nova) reusando a reativação de soft-delete da Fase 6 + modal dentro do cadastro rápido de produto, deixando o fornecedor já selecionado (PDV-16)
+- [x] 07-03-PLAN.md — `POST /api/fornecedores` (rota nova) reusando a reativação de soft-delete da Fase 6 + modal dentro do cadastro rápido de produto, deixando o fornecedor já selecionado (PDV-16)
 
 **Onda de execução**: os 3 planos são wave 1 — não há dependência entre eles nem sobreposição de arquivos, então executam em paralelo. Nenhum plano cria migration: a fase inteira não muda schema. Os critérios interativos (3 e 4) só viram verdade depois do rollout da imagem; ficam como `<human-check>` nos planos 07-02/07-03, não como checkpoint bloqueante — não há `node_modules` na máquina de execução para subir a aplicação.
 
@@ -156,6 +156,6 @@ Fases executam em ordem: 5 → 6 → 7 → 8 → 9 (Fase 9 tem um item interno �
 | 4. Infra e Qualidade | 4/4 | Complete | 2026-03-30 |
 | 5. Storage durável (MinIO no cluster) | 4/4 | Código completo — CI verde (PR #36). Aguarda ação humana no cluster (SSM + ArgoCD) para STO-01/02/05 | - |
 | 6. Integridade de dados: fornecedores e exportação | 3/3 | In Progress|  |
-| 7. PDV sem fricção | 1/3 | In Progress|  |
+| 7. PDV sem fricção | 2/3 | In Progress|  |
 | 8. Estoque e identidade visual | 0/? | Not started | - |
 | 9. Integrações e carga de dados | 0/? | Not started | - |

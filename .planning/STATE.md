@@ -5,15 +5,15 @@ milestone_name: Demandas do Cliente BFX
 current_phase: 5
 current_phase_name: first phase of milestone v1.1
 status: verifying
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-08-03T18:29:36.811Z"
+stopped_at: Completed 07-03-PLAN.md
+last_updated: "2026-08-03T18:33:47.532Z"
 last_activity: 2026-08-03
 last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -32,7 +32,7 @@ Plan: 4 of 4
 Status: Phase complete — ready for verification
 Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [████████░░] 80%
 | Phase 06 P01 | 5min | 3 tasks | 7 files |
 | Phase 06 P02 | 12min | 3 tasks | 7 files |
 | Phase 07 P01 | 16min | 3 tasks | 5 files |
+| Phase 07 P03 | 3min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 06-01: bulkDeleteFornecedores e addFornecedor exportados de page.tsx para serem testaveis; auditoria create/restore adicionada so na Task 3 (unica mudanca de producao dela)
 - [Phase ?]: 06-02: importador CSV de fornecedores dry-run + commit idempotente, com dedupe interno ao arquivo e reconstrucao de 2 commits GREEN apos bundling acidental por execucao paralela na mesma working tree
 - [Phase ?]: D-01/D-02/D-03 (PDV-14): piso de custo removido do servidor, regra de subtotal mantida, casos de teste invertidos (nao apagados), liberado para todos os vendedores
+- [Phase ?]: 07-03: rota POST /api/fornecedores reusa classificarNomeFornecedor da Fase 6 (criar/reativar/ignorar) implementada de uma vez na Task 1, sem reimplementar normalizacao/comparacao de nome
+- [Phase ?]: 07-03: modal CadastrarFornecedorRapidoDialog diferencia toast por reativado/jaExistia do corpo da resposta, nao pelo status HTTP
 
 ### Roadmap Evolution
 
@@ -136,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T18:29:36.803Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-08-03T18:33:40.251Z
+Stopped at: Completed 07-03-PLAN.md
 Resume file: None
