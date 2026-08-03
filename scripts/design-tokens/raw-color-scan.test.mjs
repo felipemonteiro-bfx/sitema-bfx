@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { execFileSync } from "node:child_process";
 import {
   RAW_COLOR_PREFIXES,
   RAW_COLOR_FAMILIES,
@@ -11,7 +12,12 @@ import {
   createRawColorRegex,
   scanText,
   scanPaths,
+  readBaseline,
+  writeBaseline,
+  compareToBaseline,
 } from "./raw-color-scan.mjs";
+
+const SCRIPT_PATH = path.join(path.dirname(new URL(import.meta.url).pathname), "raw-color-scan.mjs");
 
 // --- Task 1: scanText -------------------------------------------------
 
@@ -178,4 +184,142 @@ test("scanPaths is deterministic across repeated runs on the same tree", () => {
   const first = scanPaths([dir]);
   const second = scanPaths([dir]);
   assert.deepEqual(first, second);
+});
+
+// --- Task 2: writeBaseline / readBaseline -------------------------------
+
+test("writeBaseline writes files (minus exceptions), total and exceptions to disk", () => {
+  const dir = makeFixtureDir();
+  const baselinePath = path.join(dir, "baseline.json");
+  const scanResult = {
+    files: { "src/a.tsx": 3, "src/exempt.ts": 5, "src/b.tsx": 2 },
+    total: 10,
+  };
+  const exceptions = [{ file: "src/exempt.ts", reason: "CDN Tailwind autonomo" }];
+
+  const written = writeBaseline(baselinePath, scanResult, exceptions);
+
+  assert.equal(written.total, 5); // 3 + 2, exclui a excecao
+  assert.deepEqual(written.files, { "src/a.tsx": 3, "src/b.tsx": 2 });
+  assert.deepEqual(written.exceptions, exceptions);
+  assert.equal(typeof written.generatedAt, "string");
+  assert.equal(typeof written.command, "string");
+
+  const reloaded = readBaseline(baselinePath);
+  assert.deepEqual(reloaded, written);
+});
+
+// --- Task 2: compareToBaseline -------------------------------------------
+
+test("compareToBaseline: file with lower current count is an improvement, ok stays true", () => {
+  const baseline = { files: { "src/a.tsx": 5 }, exceptions: [] };
+  const atual = { files: { "src/a.tsx": 3 } };
+  const result = compareToBaseline(atual, baseline);
+  assert.equal(result.ok, true);
+  assert.equal(result.regressions.length, 0);
+  assert.equal(result.improvements.length, 1);
+  assert.equal(result.improvements[0].file, "src/a.tsx");
+});
+
+test("compareToBaseline: file with higher current count is a regression, ok becomes false", () => {
+  const baseline = { files: { "src/a.tsx": 5 }, exceptions: [] };
+  const atual = { files: { "src/a.tsx": 8 } };
+  const result = compareToBaseline(atual, baseline);
+  assert.equal(result.ok, false);
+  assert.equal(result.regressions.length, 1);
+  assert.equal(result.regressions[0].file, "src/a.tsx");
+});
+
+test("compareToBaseline: new file with raw color not in baseline is a regression", () => {
+  const baseline = { files: {}, exceptions: [] };
+  const atual = { files: { "src/new-file.tsx": 2 } };
+  const result = compareToBaseline(atual, baseline);
+  assert.equal(result.ok, false);
+  assert.equal(result.regressions.length, 1);
+  assert.equal(result.regressions[0].file, "src/new-file.tsx");
+});
+
+test("compareToBaseline: file listed in exceptions is ignored in both directions", () => {
+  const baseline = {
+    files: { "src/exempt.ts": 5 },
+    exceptions: [{ file: "src/exempt.ts", reason: "CDN" }],
+  };
+  const atual = { files: { "src/exempt.ts": 999 } };
+  const result = compareToBaseline(atual, baseline);
+  assert.equal(result.ok, true);
+  assert.equal(result.regressions.length, 0);
+  assert.equal(result.improvements.length, 0);
+});
+
+test("compareToBaseline: file that disappeared from current scan is not a regression", () => {
+  const baseline = { files: { "src/gone.tsx": 4 }, exceptions: [] };
+  const atual = { files: {} };
+  const result = compareToBaseline(atual, baseline);
+  assert.equal(result.ok, true);
+  assert.equal(result.regressions.length, 0);
+});
+
+test("compareToBaseline: fixture with a doctored baseline (count lowered by 1) reports ok:false and names the file", () => {
+  const dir = makeFixtureDir();
+  fs.writeFileSync(path.join(dir, "a.tsx"), `bg-red-500 bg-red-500 bg-red-500\n`); // 3 ocorrencias
+  const currentScan = scanPaths([dir]);
+  const aPath = path.join(dir, "a.tsx");
+
+  const doctoredBaseline = {
+    files: { [aPath]: currentScan.files[aPath] - 1 },
+    exceptions: [],
+  };
+
+  const result = compareToBaseline(currentScan, doctoredBaseline);
+  assert.equal(result.ok, false);
+  assert.equal(result.regressions.length, 1);
+  assert.equal(result.regressions[0].file, aPath);
+});
+
+// --- Task 2: CLI --baseline / --check / --baseline-file -------------------
+
+test("CLI --baseline writes the baseline JSON for a given root", () => {
+  const dir = makeFixtureDir();
+  fs.writeFileSync(path.join(dir, "a.tsx"), `bg-red-500 text-blue-600\n`);
+  const baselineFile = path.join(dir, "baseline.json");
+
+  const output = execFileSync(
+    process.execPath,
+    [SCRIPT_PATH, dir, "--baseline", `--baseline-file=${baselineFile}`],
+    { encoding: "utf8" }
+  );
+
+  assert.match(output, /TOTAL/);
+  const baseline = JSON.parse(fs.readFileSync(baselineFile, "utf8"));
+  assert.equal(baseline.total, 2);
+});
+
+test("CLI --check exits 0 when the current scan matches the baseline", () => {
+  const dir = makeFixtureDir();
+  fs.writeFileSync(path.join(dir, "a.tsx"), `bg-red-500\n`);
+  const baselineFile = path.join(dir, "baseline.json");
+
+  execFileSync(process.execPath, [SCRIPT_PATH, dir, "--baseline", `--baseline-file=${baselineFile}`]);
+
+  assert.doesNotThrow(() => {
+    execFileSync(process.execPath, [SCRIPT_PATH, dir, "--check", `--baseline-file=${baselineFile}`]);
+  });
+});
+
+test("CLI --check exits 1 when a file regresses past the baseline", () => {
+  const dir = makeFixtureDir();
+  const filePath = path.join(dir, "a.tsx");
+  fs.writeFileSync(filePath, `bg-red-500\n`);
+  const baselineFile = path.join(dir, "baseline.json");
+
+  execFileSync(process.execPath, [SCRIPT_PATH, dir, "--baseline", `--baseline-file=${baselineFile}`]);
+
+  // Regride: adiciona uma segunda classe crua sem tocar no baseline.
+  fs.writeFileSync(filePath, `bg-red-500 text-blue-600\n`);
+
+  assert.throws(() => {
+    execFileSync(process.execPath, [SCRIPT_PATH, dir, "--check", `--baseline-file=${baselineFile}`], {
+      stdio: "pipe",
+    });
+  });
 });
