@@ -77,3 +77,67 @@ describe("POST /api/fornecedores — cadastro rapido de fornecedor no PDV (D-06,
     });
   });
 });
+
+describe("POST /api/fornecedores — reativacao de soft-deletado (D-06, PDV-16)", () => {
+  it("Teste 5: existente soft-deletado com nome equivalente e reativado (update, sem create), 200 com reativado true", async () => {
+    dbMock.fornecedor.findMany.mockResolvedValue([
+      { id: 9, nome: "BETA COMERCIO", deletedAt: "2026-08-01T00:00:00.000Z" },
+    ]);
+    dbMock.fornecedor.update.mockResolvedValue({ id: 9, nome: "BETA COMERCIO" });
+
+    const res = await POST(req({ nome: "  beta   comercio " }));
+    const body = await res.json();
+
+    expect(dbMock.fornecedor.update).toHaveBeenCalledTimes(1);
+    expect(dbMock.fornecedor.update.mock.calls[0][0].where.id).toBe(9);
+    expect(dbMock.fornecedor.update.mock.calls[0][0].data.deletedAt).toBeNull();
+    expect(dbMock.fornecedor.create).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(body.id).toBe(9);
+    expect(body.reativado).toBe(true);
+  });
+
+  it("Teste 6: a reativacao grava createAuditLog com fornecedor:restore", async () => {
+    dbMock.fornecedor.findMany.mockResolvedValue([
+      { id: 9, nome: "BETA COMERCIO", deletedAt: "2026-08-01T00:00:00.000Z" },
+    ]);
+    dbMock.fornecedor.update.mockResolvedValue({ id: 9, nome: "BETA COMERCIO" });
+
+    await POST(req({ nome: "beta comercio" }));
+
+    expect(auditMock.createAuditLog).toHaveBeenCalledWith("fornecedor:restore", {
+      fornecedorId: 9,
+      nome: "BETA COMERCIO",
+    });
+  });
+
+  it("Teste 7: existente ativo com nome equivalente nao escreve nada, 200 com jaExistia true", async () => {
+    dbMock.fornecedor.findMany.mockResolvedValue([
+      { id: 7, nome: "ACME", deletedAt: null },
+    ]);
+
+    const res = await POST(req({ nome: "acme" }));
+    const body = await res.json();
+
+    expect(dbMock.fornecedor.create).not.toHaveBeenCalled();
+    expect(dbMock.fornecedor.update).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(body.id).toBe(7);
+    expect(body.jaExistia).toBe(true);
+  });
+
+  it("Teste 8: telefone informado chega ao banco com trim tanto na criacao quanto na reativacao", async () => {
+    dbMock.fornecedor.create.mockResolvedValue({ id: 1, nome: "ACME" });
+    await POST(req({ nome: "acme", telefone: "  11999999999  " }));
+    expect(dbMock.fornecedor.create.mock.calls[0][0].data.telefone).toBe("11999999999");
+
+    vi.clearAllMocks();
+    sessionMock.getSession.mockResolvedValue({ id: 1, username: "vendedor", role: "vendedor" });
+    dbMock.fornecedor.findMany.mockResolvedValue([
+      { id: 9, nome: "BETA COMERCIO", deletedAt: "2026-08-01T00:00:00.000Z" },
+    ]);
+    dbMock.fornecedor.update.mockResolvedValue({ id: 9, nome: "BETA COMERCIO" });
+    await POST(req({ nome: "beta comercio", telefone: "  11988888888  " }));
+    expect(dbMock.fornecedor.update.mock.calls[0][0].data.telefone).toBe("11988888888");
+  });
+});
