@@ -839,24 +839,15 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const valorParcelaIa = parcelas > 0 ? Math.trunc((total / parcelas) * 100) / 100 : 0;
 
         // Mesma validação de criarVendaV2: subtotal precisa bater com valorVenda×quantidade
-        // (aqui quantidade é sempre 1) e o custo informado não pode ser menor que o
-        // custo cadastrado do produto no catálogo (evita inflar lucro/comissão via chat).
-        const catalogoIa = parsedParams.produtoNome
-          ? await prisma.produto.findMany({
-              where: { nome: { equals: parsedParams.produtoNome, mode: "insensitive" } },
-              select: { nome: true, custoPadrao: true },
-            })
-          : [];
-        const erroValidacaoIa = validarItensContraCatalogo(
-          [{
-            produtoNome: parsedParams.produtoNome || "",
-            custoProduto,
-            valorVenda,
-            quantidade: 1,
-            subtotal: valorVenda,
-          }],
-          catalogoIa
-        );
+        // (aqui quantidade é sempre 1). O piso de custo contra o catálogo foi removido
+        // (PDV-14, D-01) — o custo informado pelo chat é gravado sem consulta ao catálogo.
+        const erroValidacaoIa = validarItensContraCatalogo([{
+          produtoNome: parsedParams.produtoNome || "",
+          custoProduto,
+          valorVenda,
+          quantidade: 1,
+          subtotal: valorVenda,
+        }]);
         if (erroValidacaoIa) { result = { erro: erroValidacaoIa }; break; }
 
         // Limite de crédito é sempre recalculado no servidor, igual ao fluxo manual.
