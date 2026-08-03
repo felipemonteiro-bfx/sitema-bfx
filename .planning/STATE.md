@@ -2,15 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Demandas do Cliente BFX
+current_phase: 5
+current_phase_name: first phase of milestone v1.1
 status: planning
-last_updated: "2026-08-03T15:00:00.000Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-08-03T15:32:00.641Z"
 last_activity: 2026-08-03
+last_activity_desc: "05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos"
 progress:
-  total_phases: 5
+  total_phases: 1
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 4
+  completed_plans: 2
 ---
 
 # Project State
@@ -25,11 +28,11 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 ## Current Position
 
 Phase: 5 of 9 (Storage durável (MinIO no cluster)) — first phase of milestone v1.1
-Plan: — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-08-03 — ROADMAP.md criado para milestone v1.1 (Fases 5-9)
+Plan: 2 of 4
+Status: Ready to execute
+Last activity: 2026-08-03 — 05-02: manifestos MinIO (Deployment/PVC/Service), ExternalSecret e runbook SSM concluídos
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -53,6 +56,11 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 05 P02 | 20min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -76,6 +84,7 @@ Recent decisions affecting current work:
 - [Phase 04-melhorias-infra]: installmentValue calculado automaticamente (totalValue/installmentCount) com suporte a valor explicito via ?? operator
 - [Phase 04-melhorias-infra]: env-validation tests use await import() rejects pattern because env.ts runs validateEnv() at module scope
 - [Phase 04-melhorias-infra]: session-secret test mocks next/headers to keep unit tests in pure Node.js without cookie dependency
+- [Phase ?]: Plano 05-02: imagem MinIO mantida em latest (mesma tag do docker-compose.yml); strategy Recreate obrigatoria com PVC ReadWriteOnce; console 9001 nunca exposto por Ingress (T-05-06)
 
 ### Roadmap Evolution
 
@@ -118,6 +127,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-08-03T15:00:00.000Z
-Stopped at: ROADMAP.md e STATE.md criados para milestone v1.1 (Fases 5-9); aguardando `/gsd-plan-phase 5`
+Last session: 2026-08-03T15:32:00.635Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None

@@ -16,8 +16,8 @@ Contexto: o app roda em Kubernetes (`deploy/bfx/`, ArgoCD + Kustomize) sem volum
 caminho em `Config.logoPath`. Todo rollout recria o pod e apaga os uploads, deixando caminhos
 mortos no banco — e essa e a causa real da demanda 4 ("logo nao carrega").
 
-- [ ] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
-- [ ] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
+- [x] **STO-01**: Uploads sobrevivem a rollout do ArgoCD e a recriacao de pod
+- [x] **STO-02**: MinIO provisionado no cluster (Deployment + PVC + Service) no namespace `bfx`
 - [ ] **STO-03**: Upload de logo grava no object storage, nao no filesystem do pod
 - [ ] **STO-04**: Em producao, upload sem storage configurado falha com erro explicito em vez de reportar sucesso em disco efemero
 - [ ] **STO-05**: Logo aparece no preview de configuracoes, no recibo PDF e no catalogo
@@ -32,6 +32,7 @@ Contexto **revisado em 2026-08-03 contra o banco de producao** (consulta somente
 - `SELECT count(*) FROM audit_logs WHERE acao = 'fornecedor:delete'` → **0**. Nao ha nenhum
   registro de exclusao. Na verdade **nenhuma acao de fornecedor jamais foi registrada** — o
   `GROUP BY acao` so devolve venda/produto/cliente/despesa/LOGIN/EXCLUSAO.
+
 - `SELECT count(*), count(fornecedor_id) FROM produtos` → **197 produtos, 0 com fornecedor_id**.
 - Audit log comeca em 2026-01-31; so existe o banco `bfx` (sem banco legado); sem backup no pod;
   sem seed nem CSV de fornecedores no repositorio.
@@ -44,6 +45,7 @@ A hipotese original (reconstruir via `audit_logs`) esta descartada por evidencia
 - [ ] **DAT-01**: Existe um importador de fornecedores por CSV com dry-run (reporta criados/
       ignorados/erros antes de escrever) e commit idempotente por nome. Entregue como capacidade —
       a carga dos dados reais depende do arquivo que o cliente ainda deve fornecer.
+
 - [ ] **DAT-02**: Exclusao de fornecedor deixa de ser destrutiva sem rede de protecao (soft-delete ou confirmacao reforcada + RBAC)
 - [ ] **DAT-03**: Exportacao rapida exibe um botao por empresa parceira vinda do banco, sem lista hardcoded
 
@@ -80,6 +82,7 @@ mas a integracao nunca funcionou em producao por falta de credencial — nao por
 
 - [ ] **INT-01**: Cotacao Uber funciona em producao e preenche o frete para endereco valido
       (bloqueado por credencial: as envs `UBER_*` precisam ser criadas no AWS SSM pelo André)
+
 - [ ] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
 - [ ] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
 
@@ -164,8 +167,8 @@ demandas do cliente.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
-| STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
+| STO-01 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
+| STO-02 | Phase 5 — Storage duravel (MinIO no cluster) | Complete |
 | STO-03 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
 | STO-04 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
 | STO-05 | Phase 5 — Storage duravel (MinIO no cluster) | Pending |
@@ -186,6 +189,7 @@ demandas do cliente.
 | INT-03 | Phase 9 — Integracoes e carga de dados | Blocked (arquivo da Equilibrium pendente) |
 
 **Coverage:**
+
 - v1.1 requirements: 20 total
 - Mapped to phases: 20
 - Unmapped: 0 ✓
