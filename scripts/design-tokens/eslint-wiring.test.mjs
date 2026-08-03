@@ -66,3 +66,31 @@ test("todo arquivo do baseline existe em disco", () => {
     assert.ok(fs.existsSync(fullPath), `arquivo do baseline nao existe em disco: ${relPath}`);
   }
 });
+
+// --- Task 2: divida de lint pre-existente (location.href) ----------------
+
+const LOCATION_ASSIGNMENT_SITES = [
+  "src/components/historico-antecipacoes.tsx",
+  "src/components/antecipacao-client.tsx",
+  "src/components/report-buttons-client.tsx",
+];
+
+test("historico-antecipacoes.tsx, antecipacao-client.tsx e report-buttons-client.tsx nao atribuem direto a location.href", () => {
+  for (const relPath of LOCATION_ASSIGNMENT_SITES) {
+    const fullPath = path.join(REPO_ROOT, relPath);
+    const text = fs.readFileSync(fullPath, "utf8");
+    const linhasComAtribuicaoDireta = text
+      .split("\n")
+      .filter((line) => line.includes("location.href") && line.includes("="));
+
+    assert.equal(
+      linhasComAtribuicaoDireta.length,
+      0,
+      `${relPath} ainda atribui direto a location.href: ${linhasComAtribuicaoDireta.join(" | ")}`
+    );
+    assert.ok(
+      text.includes("location.assign("),
+      `${relPath} deveria navegar via location.assign(...)`
+    );
+  }
+});

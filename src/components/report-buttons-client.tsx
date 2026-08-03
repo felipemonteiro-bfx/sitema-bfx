@@ -28,7 +28,7 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
 
   const handleDownload = (type: "csv" | "pdf") => {
     const endpoint = type === "csv" ? "/api/relatorios/vendas" : "/api/relatorios/vendas/pdf";
-    window.location.href = buildUrl(endpoint);
+    window.location.assign(buildUrl(endpoint));
   };
 
   return (

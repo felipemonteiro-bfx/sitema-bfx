@@ -165,7 +165,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
       const xlsxParams = new URLSearchParams({ ids: idsParam });
       if (periodoInicio) xlsxParams.set('mesInicio', periodoInicio);
       if (periodoFim) xlsxParams.set('mesFim', periodoFim);
-      window.location.href = `/api/relatorios/antecipacao?${xlsxParams.toString()}`;
+      window.location.assign(`/api/relatorios/antecipacao?${xlsxParams.toString()}`);
 
       // Pequeno delay para garantir que o download inicie
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -189,7 +189,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     const params = new URLSearchParams({ ids: selectedIds.join(',') });
     if (periodoInicio) params.set('mesInicio', periodoInicio);
     if (periodoFim) params.set('mesFim', periodoFim);
-    window.location.href = `/api/relatorios/antecipacao-xlsx?${params.toString()}`;
+    window.location.assign(`/api/relatorios/antecipacao-xlsx?${params.toString()}`);
   };
 
   const handleGerarRelatorioVisual = () => {

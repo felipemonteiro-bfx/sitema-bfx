@@ -24,7 +24,7 @@ export default function HistoricoAntecipacoes({ batches }: Props) {
 
   const handleExcel = (vendaIds: string) => {
     const ids = JSON.parse(vendaIds).join(',');
-    window.location.href = `/api/relatorios/antecipacao-xlsx?ids=${ids}`;
+    window.location.assign(`/api/relatorios/antecipacao-xlsx?ids=${ids}`);
   };
 
   const handleRelatorio = (vendaIds: string) => {
