@@ -179,61 +179,6 @@ export function scanPaths(roots) {
   return { files, total };
 }
 
-// --- Baseline ---------------------------------------------------------
-
-/**
- * Grava o baseline em disco. Arquivos declarados como excecao ficam de fora da
- * contagem e da lista `files` — eles nao entram no medidor de progresso, mas
- * seguem registrados em `exceptions` para que o motivo continue explicito.
- */
-export function writeBaseline(baselinePath, scanResult, exceptions = []) {
-  const isentos = new Set(exceptions.map((e) => e.file));
-  const files = {};
-  for (const [file, count] of Object.entries(scanResult.files ?? {})) {
-    if (isentos.has(file)) continue;
-    files[file] = count;
-  }
-
-  const baseline = {
-    generatedAt: new Date().toISOString(),
-    command: "node scripts/design-tokens/raw-color-scan.mjs src --write-baseline",
-    total: Object.values(files).reduce((soma, n) => soma + n, 0),
-    files,
-    exceptions,
-  };
-
-  fs.mkdirSync(path.dirname(baselinePath), { recursive: true });
-  fs.writeFileSync(baselinePath, `${JSON.stringify(baseline, null, 2)}\n`, "utf8");
-  return baseline;
-}
-
-export function readBaseline(baselinePath) {
-  return JSON.parse(fs.readFileSync(baselinePath, "utf8"));
-}
-
-/**
- * Compara a varredura atual com o baseline. O contrato e de catraca: contagem
- * pode cair (melhoria) mas nunca subir (regressao). Arquivo novo com cor crua e
- * regressao; arquivo que sumiu do scan nao e — pode ter sido migrado ou apagado.
- */
-export function compareToBaseline(atual, baseline) {
-  const isentos = new Set((baseline.exceptions ?? []).map((e) => e.file));
-  const arquivosAtuais = atual.files ?? {};
-  const arquivosBase = baseline.files ?? {};
-
-  const regressions = [];
-  const improvements = [];
-
-  for (const [file, count] of Object.entries(arquivosAtuais)) {
-    if (isentos.has(file)) continue;
-    const antes = arquivosBase[file] ?? 0;
-    if (count > antes) regressions.push({ file, antes, agora: count });
-    else if (count < antes) improvements.push({ file, antes, agora: count });
-  }
-
-  return { ok: regressions.length === 0, regressions, improvements };
-}
-
 // --- CLI --------------------------------------------------------------
 
 function printTable(result) {
