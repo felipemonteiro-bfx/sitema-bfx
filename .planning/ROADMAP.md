@@ -151,11 +151,11 @@ Plans:
 
 **Resolvido no planejamento (2026-08-03, D-03)**: a fase entrega o **importador** (capacidade), não os dados — mesma decisão já aplicada em DAT-01 na Fase 6. O arquivo real da Equilibrium é carregado quando chegar. Idempotência por CPF com fallback para nome normalizado (D-04); vínculo obrigatório com `EmpresaParceira` (D-05), sem o qual o relatório por empresa — o fluxo de desconto em folha — não enxerga o cliente. **INT-01 também é bloqueio externo, e por credencial, não por código**: o Secret `bfx-app-secrets` tem 17 chaves e nenhuma `UBER_*`; a fase entrega o runbook e a prontidão, e a criação dos valores no SSM é ação humana (D-01).
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 
 Plans:
 
-- [ ] 09-01-PLAN.md — INT-02 (o trabalho real de código): `getDeliveryQuote()` passa a devolver resultado discriminado (`ok` | `sem_credencial` | `sem_endereco_coleta` | `endereco_invalido` | `erro_upstream`), a rota de status diz o motivo e o PDV mostra mensagem clara sem nunca bloquear a venda (INT-02)
+- [x] 09-01-PLAN.md — INT-02 (o trabalho real de código): `getDeliveryQuote()` passa a devolver resultado discriminado (`ok` | `sem_credencial` | `sem_endereco_coleta` | `endereco_invalido` | `erro_upstream`), a rota de status diz o motivo e o PDV mostra mensagem clara sem nunca bloquear a venda (INT-02)
 - [ ] 09-02-PLAN.md — INT-03: importador de clientes em `/importacao/clientes` no padrão da Fase 6 — dry-run que só reporta e commit idempotente por CPF com fallback para nome, vinculado à empresa parceira e nascendo como novo lead (INT-03)
 - [ ] 09-03-PLAN.md — INT-01: runbook das credenciais Uber (SSM + ExternalSecret), bloco no `.env.example`, trava de CI contra deriva de nomes de env e checkpoint bloqueante com as ações humanas (INT-01)
 
@@ -176,4 +176,4 @@ Fases executam em ordem: 5 → 6 → 7 → 8 → 9 (Fase 9 tem um item interno �
 | 6. Integridade de dados: fornecedores e exportação | 3/3 | In Progress|  |
 | 7. PDV sem fricção | 3/3 | In Progress|  |
 | 8. Estoque e identidade visual | 3/3 | In Progress|  |
-| 9. Integrações e carga de dados | 0/3 | Planned (3 planos, waves 1→2→3) | - |
+| 9. Integrações e carga de dados | 1/3 | In Progress|  |

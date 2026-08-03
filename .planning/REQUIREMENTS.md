@@ -89,7 +89,7 @@ mas a integracao nunca funcionou em producao por falta de credencial — nao por
 - [ ] **INT-01**: Cotacao Uber funciona em producao e preenche o frete para endereco valido
       (bloqueado por credencial: as envs `UBER_*` precisam ser criadas no AWS SSM pelo André)
 
-- [ ] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
+- [x] **INT-02**: Sem credencial Uber, a UI degrada com mensagem clara em vez de falhar em silencio
 - [ ] **INT-03**: Import de clientes da Equilibrium roda em dry-run reportando creates/skips/erros, e o commit e idempotente
 
 ## Entregue em v1.0
@@ -192,7 +192,7 @@ demandas do cliente.
 | UXP-05 | Phase 8 — Estoque e identidade visual | Complete |
 | UXP-06 | Backlog | Blocked (hex oficiais da BFX pendentes do cliente, D-02) |
 | INT-01 | Phase 9 — Integracoes e carga de dados | Pending |
-| INT-02 | Phase 9 — Integracoes e carga de dados | Pending |
+| INT-02 | Phase 9 — Integracoes e carga de dados | Complete |
 | INT-03 | Phase 9 — Integracoes e carga de dados | Blocked (arquivo da Equilibrium pendente) |
 
 **Coverage:**
