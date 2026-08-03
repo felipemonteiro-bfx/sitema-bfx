@@ -29,6 +29,7 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
             className="h-7 w-7"
             disabled={page <= 1}
             onClick={() => onPageChange(1)}
+            aria-label="Primeira página"
           >
             <ChevronsLeft className="h-3.5 w-3.5" />
           </Button>
@@ -38,6 +39,7 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
             className="h-7 w-7"
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
+            aria-label="Página anterior"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -50,6 +52,7 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
             className="h-7 w-7"
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
+            aria-label="Próxima página"
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -59,6 +62,7 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
             className="h-7 w-7"
             disabled={page >= totalPages}
             onClick={() => onPageChange(totalPages)}
+            aria-label="Última página"
           >
             <ChevronsRight className="h-3.5 w-3.5" />
           </Button>
