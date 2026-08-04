@@ -15,6 +15,7 @@ import { LitellmModelSelect } from "@/components/litellm-model-select";
 import { cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
 import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/page-header";
 
 type Search = { tab?: string };
 
@@ -275,10 +276,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Personalize comunicados, recibos e integrações.</p>
-      </div>
+      <PageHeader
+        title="Configurações"
+        description="Personalize comunicados, recibos e integrações."
+      />
       <QueryTabs
         defaultTab={sp.tab || "mural"}
         tabs={[

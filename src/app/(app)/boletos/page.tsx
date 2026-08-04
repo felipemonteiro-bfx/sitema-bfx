@@ -20,6 +20,7 @@ import {
 import { buttonVariants } from "@/components/ui/button-variants";
 import { QueryTabs } from "@/components/query-tabs";
 import type { AsaasPaymentListItem } from "@/lib/asaas";
+import { PageHeader } from "@/components/page-header";
 
 type Search = { tab?: string; page?: string; q?: string };
 
@@ -142,10 +143,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
   if (!config) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Boletos</h1>
-          <p className="text-sm text-muted-foreground">Boletos emitidos pelo Asaas</p>
-        </div>
+        <PageHeader title="Boletos" description="Boletos emitidos pelo Asaas" />
         <Card className="border-warning/30 bg-warning/5">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <AlertTriangle className="h-12 w-12 text-warning mb-4" />
@@ -215,12 +213,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Boletos</h1>
-          <p className="text-sm text-muted-foreground">Boletos emitidos pelo Asaas</p>
-        </div>
-      </div>
+      <PageHeader title="Boletos" description="Boletos emitidos pelo Asaas" />
 
       {asaasApiError && (
         <Card className="border-warning/30 bg-warning/5">

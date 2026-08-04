@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { GestaoRhTabs } from "@/components/gestao-rh-tabs";
 import { DeleteUserButton } from "@/components/delete-user-button";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
 
 type Search = { user?: string; tab?: string };
 
@@ -76,12 +77,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Gestão de RH (Equipe)</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie metas, comissões e permissões do time em um só lugar.
-        </p>
-      </div>
+      <PageHeader
+        title="Gestão de RH (Equipe)"
+        description="Gerencie metas, comissões e permissões do time em um só lugar."
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>

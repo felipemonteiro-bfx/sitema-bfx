@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { revalidatePath } from "next/cache";
 import { formatBRL, cn } from "@/lib/utils";
 import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
 
 async function savePerfil(formData: FormData) {
   "use server";
@@ -43,12 +44,10 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Meu Perfil</h1>
-          <p className="text-sm text-muted-foreground">Atualize seus dados pessoais e acompanhe suas comissões.</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Meu Perfil"
+        description="Atualize seus dados pessoais e acompanhe suas comissões."
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Dados Pessoais */}

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
 import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
+import { PageHeader } from "@/components/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -221,12 +222,10 @@ export default async function Page() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-black tracking-tight text-foreground">Central de Antecipação Prudent</h1>
-        <p className="text-sm font-medium text-muted-foreground">
-          Selecione as vendas para realizar a antecipação de recebíveis com taxa inteligente.
-        </p>
-      </div>
+      <PageHeader
+        title="Central de Antecipação Prudent"
+        description="Selecione as vendas para realizar a antecipação de recebíveis com taxa inteligente."
+      />
       <Card variant="elevated" className="border-primary/20">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-xl">
