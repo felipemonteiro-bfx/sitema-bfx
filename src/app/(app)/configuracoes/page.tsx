@@ -167,6 +167,48 @@ async function saveWhatsApp(formData: FormData) {
   revalidatePath("/configuracoes");
 }
 
+async function saveUber(formData: FormData) {
+  "use server";
+  try {
+    const clientId = String(formData.get("uberClientId") || "").trim() || null;
+    // Campo sensível: só sobrescreve quando o admin digitar um novo valor (mesmo padrão
+    // do Asaas/Meta/LiteLLM) — senão salvar o formulário apagaria o client_secret e a
+    // cotação Uber pararia de funcionar até alguém redigitar.
+    const clientSecret = String(formData.get("uberClientSecret") || "").trim();
+    const customerId = String(formData.get("uberCustomerId") || "").trim() || null;
+    const organizationId = String(formData.get("uberOrganizationId") || "").trim() || null;
+    const enabled = formData.get("uberEnabled") === "on" ? 1 : 0;
+
+    const street = String(formData.get("uberPickupStreet") || "").trim();
+    const city = String(formData.get("uberPickupCity") || "").trim();
+    const state = String(formData.get("uberPickupState") || "").trim();
+    const zip = String(formData.get("uberPickupZip") || "").trim();
+    const country = String(formData.get("uberPickupCountry") || "").trim() || "BR";
+    const uberPickupAddress = street
+      ? JSON.stringify({ street_address: [street], city, state, zip_code: zip, country })
+      : null;
+
+    const cfg = await prisma.config.findFirst();
+    const data: Record<string, unknown> = {
+      uberClientId: clientId,
+      uberCustomerId: customerId,
+      uberOrganizationId: organizationId,
+      uberEnabled: enabled,
+      uberPickupAddress,
+      ...(clientSecret ? { uberClientSecret: clientSecret } : {}),
+    };
+    if (cfg) {
+      await prisma.config.update({ where: { id: cfg.id }, data });
+    } else {
+      await prisma.config.create({ data });
+    }
+    revalidatePath("/configuracoes");
+  } catch (err) {
+    console.error("[saveUber] Erro ao salvar configuracao Uber:", err);
+    redirect("/configuracoes?error=uber_save_failed");
+  }
+}
+
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
@@ -184,6 +226,37 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     cfg = await prisma.config.findFirst();
   } catch {
     // Tabela config pode ter colunas ausentes em produção
+  }
+
+  // Endereço de coleta salvo como JSON (mesmo formato de UBER_PICKUP_ADDRESS_JSON) — aqui
+  // vira 5 campos separados só para a UI ser preenchível sem exigir digitar JSON à mão.
+  let uberPickup: { street: string; city: string; state: string; zip: string; country: string } = {
+    street: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "BR",
+  };
+  try {
+    const raw = (cfg as Record<string, unknown> | null)?.uberPickupAddress as string | undefined;
+    if (raw) {
+      const parsed = JSON.parse(raw) as {
+        street_address?: string[];
+        city?: string;
+        state?: string;
+        zip_code?: string;
+        country?: string;
+      };
+      uberPickup = {
+        street: Array.isArray(parsed.street_address) ? parsed.street_address.join(", ") : "",
+        city: parsed.city ?? "",
+        state: parsed.state ?? "",
+        zip: parsed.zip_code ?? "",
+        country: parsed.country ?? "BR",
+      };
+    }
+  } catch {
+    // uberPickupAddress salvo anteriormente com JSON inválido — campos ficam vazios
   }
 
   return (
@@ -719,6 +792,131 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </CardContent>
               </Card>
               </div>
+            ),
+          },
+          {
+            value: "uber",
+            label: "Uber",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Integração Uber Direct (cotação de frete)</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Client ID e Client Secret vêm da <strong>Applications page</strong> do developer
+                    dashboard da Uber (developer.uber.com). O sistema troca essas duas chaves por um
+                    token de acesso sozinho (OAuth) e renova antes de vencer — diferente do token
+                    estático antigo, nada expira na sua mão.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveUber} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="uberEnabled"
+                        name="uberEnabled"
+                        defaultChecked={(cfg as Record<string, unknown>)?.uberEnabled === 1}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor="uberEnabled" className="text-sm font-medium">
+                        Integração ativada
+                      </label>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label htmlFor="uberClientId">Client ID</Label>
+                        <Input
+                          id="uberClientId"
+                          name="uberClientId"
+                          placeholder="Applications page do developer dashboard"
+                          defaultValue={(cfg as Record<string, unknown>)?.uberClientId as string || ""}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="uberClientSecret">Client Secret</Label>
+                        <Input
+                          id="uberClientSecret"
+                          name="uberClientSecret"
+                          type="password"
+                          placeholder={
+                            (cfg as Record<string, unknown>)?.uberClientSecret ? "•••••••• (salvo)" : "Client Secret"
+                          }
+                        />
+                        {Boolean((cfg as Record<string, unknown>)?.uberClientSecret) && (
+                          <div className="text-xs text-muted-foreground">Client Secret salvo.</div>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="uberCustomerId">Customer ID (Direct)</Label>
+                        <Input
+                          id="uberCustomerId"
+                          name="uberCustomerId"
+                          placeholder="Customer ID do Uber Direct"
+                          defaultValue={(cfg as Record<string, unknown>)?.uberCustomerId as string || ""}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="uberOrganizationId">Organization ID (opcional)</Label>
+                        <Input
+                          id="uberOrganizationId"
+                          name="uberOrganizationId"
+                          placeholder="Só necessário para Uber for Business (Receipts)"
+                          defaultValue={(cfg as Record<string, unknown>)?.uberOrganizationId as string || ""}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-medium">Endereço de coleta (loja)</p>
+                        <p className="text-xs text-muted-foreground">
+                          Origem usada na cotação — de onde o entregador retira o pedido.
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="uberPickupStreet">Endereço</Label>
+                        <Input
+                          id="uberPickupStreet"
+                          name="uberPickupStreet"
+                          placeholder="Rua Exemplo, 123"
+                          defaultValue={uberPickup.street}
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="uberPickupCity">Cidade</Label>
+                          <Input id="uberPickupCity" name="uberPickupCity" defaultValue={uberPickup.city} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="uberPickupState">Estado (UF)</Label>
+                          <Input
+                            id="uberPickupState"
+                            name="uberPickupState"
+                            maxLength={2}
+                            defaultValue={uberPickup.state}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="uberPickupZip">CEP</Label>
+                          <Input id="uberPickupZip" name="uberPickupZip" defaultValue={uberPickup.zip} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="uberPickupCountry">País</Label>
+                          <Input
+                            id="uberPickupCountry"
+                            name="uberPickupCountry"
+                            defaultValue={uberPickup.country}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                  </form>
+                </CardContent>
+              </Card>
             ),
           },
         ]}
