@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Textarea } from "@/components/ui/textarea";
+import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { cn } from "@/lib/utils";
@@ -51,30 +53,26 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <label htmlFor="empresaId" className="text-xs font-medium text-muted-foreground">
                 Empresa parceira
               </label>
-              <select
+              <FormSelect
                 id="empresaId"
                 name="empresaId"
-                required
-                className="block h-input w-full max-w-md rounded-md border-2 border-input bg-background px-3 text-sm"
-              >
-                <option value="">Selecione…</option>
-                {empresas.map((e) => (
-                  <option key={e.id} value={String(e.id)}>{e.nome}</option>
-                ))}
-              </select>
+                placeholder="Selecione…"
+                className="max-w-md"
+                options={empresas.map((e) => ({ value: String(e.id), label: e.nome }))}
+              />
             </div>
 
             <div className="space-y-1">
               <label htmlFor="lista" className="text-xs font-medium text-muted-foreground">
                 Uma pessoa por linha — <code>Nome; Matrícula; Telefone</code> (separador <code>;</code>, vírgula ou tab)
               </label>
-              <textarea
+              <Textarea
                 id="lista"
                 name="lista"
                 required
                 rows={12}
                 placeholder={"MARIA DA SILVA; 12345; 92984778250\nJOÃO SOUZA; 67890; 92991234567"}
-                className="block w-full rounded-md border-2 border-input bg-background p-3 font-mono text-sm"
+                className="font-mono text-sm"
               />
             </div>
 

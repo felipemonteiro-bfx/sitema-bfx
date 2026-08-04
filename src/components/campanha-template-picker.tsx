@@ -8,6 +8,9 @@
  * lista e preenche as variáveis.
  */
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/form-select";
 import type { TemplateAprovado } from "@/lib/meta-templates";
 
 type Props = {
@@ -60,14 +63,15 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
           Nenhum template aprovado na Meta. Aprove um template no WhatsApp Manager
           antes de criar campanhas.
         </p>
-        <button
+        <Button
           type="button"
+          variant="link"
           onClick={atualizar}
           disabled={atualizando}
-          className="mt-2 underline"
+          className="mt-2 h-auto p-0"
         >
           {atualizando ? "Atualizando..." : "Atualizar lista"}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -77,36 +81,32 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
       <div className="flex items-end gap-2">
         <label className="flex-1">
           <span className="mb-1 block text-sm font-medium">Template</span>
-          <select
+          <FormSelect
             name="templateNome"
             value={nome}
-            onChange={(e) => escolher(e.target.value)}
-            required
-            className="w-full rounded-md border px-3 py-2"
-          >
-            <option value="">Selecione um template aprovado</option>
-            {lista.map((t) => (
-              <option key={t.nome} value={t.nome}>
-                {t.nome} — {t.categoria}
-              </option>
-            ))}
-          </select>
+            onValueChange={escolher}
+            placeholder="Selecione um template aprovado"
+            options={lista.map((t) => ({
+              value: t.nome,
+              label: `${t.nome} — ${t.categoria}`,
+            }))}
+          />
         </label>
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={atualizar}
           disabled={atualizando}
-          className="rounded-md border px-3 py-2 text-sm"
         >
           {atualizando ? "..." : "Atualizar"}
-        </button>
+        </Button>
       </div>
 
       {selecionado && selecionado.variaveis > 0 && (
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">Variáveis</legend>
           {valores.map((v, i) => (
-            <input
+            <Input
               key={i}
               name="variaveis"
               value={v}
@@ -117,7 +117,6 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
               }}
               required
               placeholder={`{{${i + 1}}} — use {nome} ou {primeiroNome}`}
-              className="w-full rounded-md border px-3 py-2"
             />
           ))}
         </fieldset>

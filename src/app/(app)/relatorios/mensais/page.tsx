@@ -4,6 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { formatBRL, cn } from "@/lib/utils";
@@ -72,12 +81,12 @@ export default async function Page() {
               <label htmlFor="periodo" className="text-xs font-medium text-muted-foreground">
                 Período (mês)
               </label>
-              <input
+              <Input
                 id="periodo"
                 name="periodo"
                 type="month"
                 defaultValue={periodoDefault}
-                className="block h-input rounded-md border-2 border-input bg-background px-3 text-sm"
+                className="w-44"
               />
             </div>
             <Button type="submit">Gerar e enviar</Button>
@@ -108,26 +117,26 @@ export default async function Page() {
                 <CardContent>
                   {/* Desktop: tabela */}
                   <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left text-muted-foreground">
-                          <th className="py-2 pr-3 font-medium">Empresa</th>
-                          <th className="py-2 pr-3 font-medium">Status</th>
-                          <th className="py-2 pr-3 font-medium text-right">Vendas</th>
-                          <th className="py-2 pr-3 font-medium text-right">Valor</th>
-                          <th className="py-2 pr-3 font-medium">Enviado em</th>
-                          <th className="py-2 pr-3 font-medium">Ações</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Empresa</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Vendas</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead>Enviado em</TableHead>
+                          <TableHead>Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {itens.map((log) => (
-                          <tr key={log.id} className="border-b last:border-0">
-                            <td className="py-2 pr-3">{log.empresa?.nome ?? `#${log.empresaId}`}</td>
-                            <td className="py-2 pr-3">{statusBadge(log.status)}</td>
-                            <td className="py-2 pr-3 text-right">{log.totalVendas}</td>
-                            <td className="py-2 pr-3 text-right">{formatBRL(log.valorTotal)}</td>
-                            <td className="py-2 pr-3 text-muted-foreground">{formatDataHora(log.enviadoEm)}</td>
-                            <td className="py-2 pr-3">
+                          <TableRow key={log.id}>
+                            <TableCell>{log.empresa?.nome ?? `#${log.empresaId}`}</TableCell>
+                            <TableCell>{statusBadge(log.status)}</TableCell>
+                            <TableCell className="text-right">{log.totalVendas}</TableCell>
+                            <TableCell className="text-right">{formatBRL(log.valorTotal)}</TableCell>
+                            <TableCell className="text-muted-foreground">{formatDataHora(log.enviadoEm)}</TableCell>
+                            <TableCell>
                               <div className="flex flex-wrap items-center gap-2">
                                 <a
                                   href={`/api/relatorios/mensais/${log.id}/download?tipo=pdf`}
@@ -149,11 +158,11 @@ export default async function Page() {
                                   </Button>
                                 </form>
                               </div>
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
 
                   {/* Mobile: cards */}

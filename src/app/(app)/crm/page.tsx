@@ -4,6 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/form-select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { cn } from "@/lib/utils";
@@ -167,48 +177,70 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             {estagioFiltro && <input type="hidden" name="estagio" value={estagioFiltro} />}
             <div className="space-y-1">
               <label htmlFor="q" className="text-xs font-medium text-muted-foreground">Buscar por nome</label>
-              <input
+              <Input
                 id="q"
                 name="q"
                 defaultValue={sp.q ?? ""}
                 placeholder="Nome do cliente"
-                className="block h-input rounded-md border-2 border-input bg-background px-3 text-sm"
+                className="w-48"
               />
             </div>
             <div className="space-y-1">
               <label htmlFor="empresa" className="text-xs font-medium text-muted-foreground">Empresa</label>
-              <select id="empresa" name="empresa" defaultValue={sp.empresa ?? ""} className="block h-input rounded-md border-2 border-input bg-background px-3 text-sm">
-                <option value="">Todas</option>
-                {empresas.map((e) => (
-                  <option key={e.id} value={String(e.id)}>{e.nome}</option>
-                ))}
-              </select>
+              <FormSelect
+                id="empresa"
+                name="empresa"
+                defaultValue={sp.empresa ?? ""}
+                searchable={false}
+                className="w-40"
+                options={[
+                  { value: "", label: "Todas" },
+                  ...empresas.map((e) => ({ value: String(e.id), label: e.nome })),
+                ]}
+              />
             </div>
             <div className="space-y-1">
               <label htmlFor="tag" className="text-xs font-medium text-muted-foreground">Tag</label>
-              <select id="tag" name="tag" defaultValue={sp.tag ?? ""} className="block h-input rounded-md border-2 border-input bg-background px-3 text-sm">
-                <option value="">Todas</option>
-                {tags.map((t) => (
-                  <option key={t.id} value={String(t.id)}>{t.nome}</option>
-                ))}
-              </select>
+              <FormSelect
+                id="tag"
+                name="tag"
+                defaultValue={sp.tag ?? ""}
+                searchable={false}
+                className="w-40"
+                options={[
+                  { value: "", label: "Todas" },
+                  ...tags.map((t) => ({ value: String(t.id), label: t.nome })),
+                ]}
+              />
             </div>
             <div className="space-y-1">
               <label htmlFor="comprou" className="text-xs font-medium text-muted-foreground">Comprou?</label>
-              <select id="comprou" name="comprou" defaultValue={sp.comprou ?? ""} className="block h-input rounded-md border-2 border-input bg-background px-3 text-sm">
-                <option value="">Todos</option>
-                <option value="sim">Já comprou</option>
-                <option value="nao">Nunca comprou (lead)</option>
-              </select>
+              <FormSelect
+                id="comprou"
+                name="comprou"
+                defaultValue={sp.comprou ?? ""}
+                searchable={false}
+                className="w-44"
+                options={[
+                  { value: "", label: "Todos" },
+                  { value: "sim", label: "Já comprou" },
+                  { value: "nao", label: "Nunca comprou (lead)" },
+                ]}
+              />
             </div>
             <div className="space-y-1">
               <label htmlFor="nivel" className="text-xs font-medium text-muted-foreground">Nível</label>
-              <select id="nivel" name="nivel" defaultValue={sp.nivel ?? ""} className="block h-input rounded-md border-2 border-input bg-background px-3 text-sm">
-                <option value="">Todos</option>
-                {NIVEIS_FIDELIDADE.map((n) => (
-                  <option key={n} value={n}>{nivelLabel(n)}</option>
-                ))}
-              </select>
+              <FormSelect
+                id="nivel"
+                name="nivel"
+                defaultValue={sp.nivel ?? ""}
+                searchable={false}
+                className="w-36"
+                options={[
+                  { value: "", label: "Todos" },
+                  ...NIVEIS_FIDELIDADE.map((n) => ({ value: n, label: nivelLabel(n) })),
+                ]}
+              />
             </div>
             <Button type="submit">Filtrar</Button>
             <a href="/crm" className={cn(buttonVariants({ variant: "ghost" }))}>Limpar</a>
@@ -229,7 +261,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             ))}
           </div>
           <form action={criarTag} className="flex flex-wrap items-end gap-2">
-            <input name="nome" placeholder="Nova tag" className="h-input rounded-md border-2 border-input bg-background px-3 text-sm" />
+            <Input name="nome" placeholder="Nova tag" className="w-48" />
             <Button type="submit" variant="outline" size="sm">Criar tag</Button>
           </form>
         </CardContent>
@@ -245,69 +277,78 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="py-2 pr-3 font-medium">Nome</th>
-                    <th className="py-2 pr-3 font-medium">Empresa</th>
-                    <th className="py-2 pr-3 font-medium">Estágio</th>
-                    <th className="py-2 pr-3 font-medium">Nível</th>
-                    <th className="py-2 pr-3 font-medium">Tags</th>
-                    <th className="py-2 pr-3 font-medium">Compras</th>
-                    <th className="py-2 pr-3 font-medium">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Empresa</TableHead>
+                    <TableHead>Estágio</TableHead>
+                    <TableHead>Nível</TableHead>
+                    <TableHead>Tags</TableHead>
+                    <TableHead>Compras</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {clientes.map((c) => (
-                    <tr key={c.id} className="border-b last:border-0 align-top">
-                      <td className="py-2 pr-3">
+                    <TableRow key={c.id} className="align-top">
+                      <TableCell>
                         <div className="font-medium">{c.nome}</div>
                         {c.telefone && <div className="text-xs text-muted-foreground">{c.telefone}</div>}
-                      </td>
-                      <td className="py-2 pr-3">{c.empresaParceira?.nome ?? c.empresa ?? "—"}</td>
-                      <td className="py-2 pr-3">
+                      </TableCell>
+                      <TableCell>{c.empresaParceira?.nome ?? c.empresa ?? "—"}</TableCell>
+                      <TableCell>
                         <Badge variant={estagioBadgeVariant(c.estagioCrm)}>{estagioLabel(c.estagioCrm)}</Badge>
-                      </td>
-                      <td className="py-2 pr-3">
+                      </TableCell>
+                      <TableCell>
                         <span className="text-xs text-muted-foreground">
                           {nivelLabel(nivelFidelidade(c.pontos))} · {c.pontos ?? 0} pts
                         </span>
-                      </td>
-                      <td className="py-2 pr-3">
-                        <div className="flex flex-wrap gap-1">
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-1">
                           {c.tags.map((ct) => (
                             <Badge key={ct.tag.id} variant="secondary" size="sm">{ct.tag.nome}</Badge>
                           ))}
                           {tags.length > 0 && (
                             <form action={toggleTagCliente} className="inline-flex items-center gap-1">
                               <input type="hidden" name="clienteId" value={c.id} />
-                              <select name="tagId" defaultValue="" className="h-6 rounded border border-input bg-background px-1 text-[11px]">
-                                <option value="">+tag</option>
-                                {tags.map((t) => (
-                                  <option key={t.id} value={String(t.id)}>{t.nome}</option>
-                                ))}
-                              </select>
-                              <button type="submit" className="text-[11px] text-primary hover:underline">ok</button>
+                              <FormSelect
+                                name="tagId"
+                                defaultValue=""
+                                searchable={false}
+                                className="h-7 w-28 px-2 text-[11px]"
+                                placeholder="+tag"
+                                options={tags.map((t) => ({ value: String(t.id), label: t.nome }))}
+                              />
+                              <button
+                                type="submit"
+                                className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0 text-[11px]")}
+                              >
+                                ok
+                              </button>
                             </form>
                           )}
                         </div>
-                      </td>
-                      <td className="py-2 pr-3">{c._count.vendas}</td>
-                      <td className="py-2 pr-3">
+                      </TableCell>
+                      <TableCell>{c._count.vendas}</TableCell>
+                      <TableCell>
                         <form action={mudarEstagioCliente} className="flex items-center gap-1">
                           <input type="hidden" name="clienteId" value={c.id} />
-                          <select name="estagio" defaultValue={c.estagioCrm ?? "cliente"} className="h-7 rounded border border-input bg-background px-1 text-xs">
-                            {ESTAGIOS_ORDEM.map((e) => (
-                              <option key={e} value={e}>{estagioLabel(e)}</option>
-                            ))}
-                          </select>
+                          <FormSelect
+                            name="estagio"
+                            defaultValue={c.estagioCrm ?? "cliente"}
+                            searchable={false}
+                            className="h-7 w-36 px-2 text-xs"
+                            options={ESTAGIOS_ORDEM.map((e) => ({ value: e, label: estagioLabel(e) }))}
+                          />
                           <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>Salvar</button>
                         </form>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

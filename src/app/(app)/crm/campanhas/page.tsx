@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { cn } from "@/lib/utils";
@@ -48,9 +50,13 @@ function resumoFiltro(filtroJson: string): string {
   return partes.length ? partes.join(" · ") : "todos os clientes";
 }
 
-export default async function Page() {
+type Search = { erro?: string };
+
+export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
   if (!ok) return <div className="p-6 text-sm text-muted-foreground">Acesso restrito.</div>;
+
+  const sp = await searchParams;
 
   const [campanhas, empresas, tags, templates] = await Promise.all([
     prisma.campanha.findMany({ orderBy: { criadaEm: "desc" }, take: 100 }),
@@ -67,6 +73,12 @@ export default async function Page() {
         breadcrumbs={[{ label: "CRM", href: "/crm" }, { label: "Campanhas" }]}
       />
 
+      {sp.erro && (
+        <div className="rounded-lg border border-error/30 bg-error/10 p-3 text-sm text-error">
+          Preencha o nome da campanha e escolha um template antes de criar.
+        </div>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-primary text-base">Nova campanha</CardTitle>
@@ -76,54 +88,63 @@ export default async function Page() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
                 <label htmlFor="nome" className="text-xs font-medium text-muted-foreground">Nome da campanha</label>
-                <input id="nome" name="nome" required className="block h-input w-full rounded-md border-2 border-input bg-background px-3 text-sm" />
+                <Input id="nome" name="nome" required />
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
               <div className="space-y-1">
                 <label htmlFor="estagio" className="text-xs font-medium text-muted-foreground">Estágio</label>
-                <select id="estagio" name="estagio" className="block h-input w-full rounded-md border-2 border-input bg-background px-2 text-sm">
-                  <option value="">Todos</option>
-                  {ESTAGIOS_ORDEM.map((e) => (
-                    <option key={e} value={e}>{estagioLabel(e)}</option>
-                  ))}
-                </select>
+                <FormSelect
+                  id="estagio"
+                  name="estagio"
+                  searchable={false}
+                  placeholder="Todos"
+                  options={ESTAGIOS_ORDEM.map((e) => ({ value: e, label: estagioLabel(e) }))}
+                />
               </div>
               <div className="space-y-1">
                 <label htmlFor="empresa" className="text-xs font-medium text-muted-foreground">Empresa</label>
-                <select id="empresa" name="empresa" className="block h-input w-full rounded-md border-2 border-input bg-background px-2 text-sm">
-                  <option value="">Todas</option>
-                  {empresas.map((e) => (
-                    <option key={e.id} value={String(e.id)}>{e.nome}</option>
-                  ))}
-                </select>
+                <FormSelect
+                  id="empresa"
+                  name="empresa"
+                  searchable={false}
+                  placeholder="Todas"
+                  options={empresas.map((e) => ({ value: String(e.id), label: e.nome }))}
+                />
               </div>
               <div className="space-y-1">
                 <label htmlFor="tag" className="text-xs font-medium text-muted-foreground">Tag</label>
-                <select id="tag" name="tag" className="block h-input w-full rounded-md border-2 border-input bg-background px-2 text-sm">
-                  <option value="">Todas</option>
-                  {tags.map((t) => (
-                    <option key={t.id} value={String(t.id)}>{t.nome}</option>
-                  ))}
-                </select>
+                <FormSelect
+                  id="tag"
+                  name="tag"
+                  searchable={false}
+                  placeholder="Todas"
+                  options={tags.map((t) => ({ value: String(t.id), label: t.nome }))}
+                />
               </div>
               <div className="space-y-1">
                 <label htmlFor="comprou" className="text-xs font-medium text-muted-foreground">Comprou?</label>
-                <select id="comprou" name="comprou" className="block h-input w-full rounded-md border-2 border-input bg-background px-2 text-sm">
-                  <option value="">Todos</option>
-                  <option value="sim">Já comprou</option>
-                  <option value="nao">Nunca comprou (lead)</option>
-                </select>
+                <FormSelect
+                  id="comprou"
+                  name="comprou"
+                  searchable={false}
+                  placeholder="Todos"
+                  options={[
+                    { value: "sim", label: "Já comprou" },
+                    { value: "nao", label: "Nunca comprou (lead)" },
+                  ]}
+                />
               </div>
               <div className="space-y-1">
                 <label htmlFor="nivel" className="text-xs font-medium text-muted-foreground">Nível</label>
-                <select id="nivel" name="nivel" className="block h-input w-full rounded-md border-2 border-input bg-background px-2 text-sm">
-                  <option value="">Todos</option>
-                  {NIVEIS_FIDELIDADE.map((n) => (
-                    <option key={n} value={n}>{nivelLabel(n)}</option>
-                  ))}
-                </select>
+                <FormSelect
+                  id="nivel"
+                  name="nivel"
+                  searchable={false}
+                  placeholder="Todos"
+                  options={NIVEIS_FIDELIDADE.map((n) => ({ value: n, label: nivelLabel(n) }))}
+                />
               </div>
             </div>
 
@@ -144,11 +165,11 @@ export default async function Page() {
               <label htmlFor="agendadaPara" className="text-xs font-medium text-muted-foreground">
                 Agendar para (opcional) — se vazio, fica em rascunho
               </label>
-              <input
+              <Input
                 id="agendadaPara"
                 name="agendadaPara"
                 type="datetime-local"
-                className="block h-input w-full max-w-xs rounded-md border-2 border-input bg-background px-3 text-sm"
+                className="max-w-xs"
               />
             </div>
 

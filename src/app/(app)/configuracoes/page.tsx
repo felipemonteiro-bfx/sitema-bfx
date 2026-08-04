@@ -505,15 +505,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <div className="text-sm font-semibold text-info">Provider de envio</div>
                       <div className="space-y-1">
                         <Label htmlFor="whatsappProvider">Qual API usar</Label>
-                        <select
+                        <FormSelect
                           id="whatsappProvider"
                           name="whatsappProvider"
                           defaultValue={String((cfg as Record<string, unknown>)?.whatsappProvider ?? "evolution")}
-                          className="block h-input w-full max-w-xs rounded-md border-2 border-input bg-background px-3 text-sm"
-                        >
-                          <option value="evolution">Evolution API (não-oficial)</option>
-                          <option value="meta_cloud">Meta WhatsApp Cloud API (oficial)</option>
-                        </select>
+                          searchable={false}
+                          className="max-w-xs"
+                          options={[
+                            { value: "evolution", label: "Evolution API (não-oficial)" },
+                            { value: "meta_cloud", label: "Meta WhatsApp Cloud API (oficial)" },
+                          ]}
+                        />
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1">

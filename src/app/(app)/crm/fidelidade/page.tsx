@@ -1,7 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { formatBRL } from "@/lib/utils";
@@ -50,39 +59,39 @@ export default async function Page() {
               <EmptyState variant="clients" size="sm" title="Nenhum cliente com pontos" description="Os pontos são creditados automaticamente a cada venda." />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left text-muted-foreground">
-                      <th className="py-2 pr-3 font-medium">Cliente</th>
-                      <th className="py-2 pr-3 font-medium text-right">Pontos</th>
-                      <th className="py-2 pr-3 font-medium text-right">Vale</th>
-                      <th className="py-2 pr-3 font-medium">Resgatar</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead className="text-right">Pontos</TableHead>
+                      <TableHead className="text-right">Vale</TableHead>
+                      <TableHead>Resgatar</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {clientes.map((c) => (
-                      <tr key={c.id} className="border-b last:border-0">
-                        <td className="py-2 pr-3">{c.nome}</td>
-                        <td className="py-2 pr-3 text-right font-medium">{c.pontos ?? 0}</td>
-                        <td className="py-2 pr-3 text-right text-success">{formatBRL(valorEmReais(c.pontos ?? 0))}</td>
-                        <td className="py-2 pr-3">
+                      <TableRow key={c.id}>
+                        <TableCell>{c.nome}</TableCell>
+                        <TableCell className="text-right font-medium">{c.pontos ?? 0}</TableCell>
+                        <TableCell className="text-right text-success">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
+                        <TableCell>
                           <form action={resgatarPontosCliente} className="flex items-center gap-1">
                             <input type="hidden" name="clienteId" value={c.id} />
-                            <input
+                            <Input
                               type="number"
                               name="pontos"
                               min={1}
                               max={c.pontos ?? 0}
                               placeholder="pts"
-                              className="h-7 w-20 rounded border border-input bg-background px-2 text-xs"
+                              className="h-8 w-20 px-2 text-xs"
                             />
                             <Button type="submit" variant="outline" size="sm">Resgatar</Button>
                           </form>
-                        </td>
-                      </tr>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             )}
           </CardContent>
