@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -177,26 +178,32 @@ export default function ProdutosTabClient({
 
   return (
     <>
-      <div className="relative w-full max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Pesquisar produtos..."
-          value={table.search}
-          onChange={handleSearchChange}
-          className={cn("pl-9 h-9", table.search && "pr-8")}
-        />
-        {table.search && (
-          <button
-            type="button"
-            onClick={clearSearch}
-            aria-label="Limpar busca"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
+      <Card className="mt-4">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-primary">Produtos</CardTitle>
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Pesquisar produtos..."
+              value={table.search}
+              onChange={handleSearchChange}
+              className={cn("pl-9 h-9", table.search && "pr-8")}
+            />
+            {table.search && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={clearSearch}
+                aria-label="Limpar busca"
+                className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2 mt-2">
           <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
@@ -373,6 +380,8 @@ export default function ProdutosTabClient({
         totalItems={produtos.length}
         onPageChange={table.setPage}
       />
+        </CardContent>
+      </Card>
 
       <Dialog open={modalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">

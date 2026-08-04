@@ -270,7 +270,13 @@ export default function ProdutoFormClient({
                 <Camera className="h-10 w-10 text-muted-foreground" />
               )}
             </div>
-            <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={isUploading} />
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={isUploading}
+              className="h-auto min-h-10 w-full py-2 text-xs file:mr-2"
+            />
           </div>
         </div>
 

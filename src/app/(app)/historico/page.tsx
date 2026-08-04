@@ -223,7 +223,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
       <HistoricoBuscaFuzzy defaultValue={sp.q || ""} />
 
-      <Card>
+      <Card variant="elevated">
         <CardHeader>
           <CardTitle>Filtro avançado</CardTitle>
         </CardHeader>

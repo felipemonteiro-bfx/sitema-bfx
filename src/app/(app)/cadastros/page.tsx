@@ -516,24 +516,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     />
                   </CardContent>
                 </Card>
-                <Card className="mt-4">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-primary">Produtos</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ProdutosTabClient
-                      produtos={produtos}
-                      fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
-                      categoriasExistentes={categoriasExistentes}
-                      searchQuery={sp.q_produtos}
-                      initialProduto={editProdutoData}
-                      onCreateAction={addProduto}
-                      onUpdateAction={updateProduto}
-                      onDeleteAction={deleteProduto}
-                      onBulkDeleteAction={bulkDeleteProdutos}
-                    />
-                  </CardContent>
-                </Card>
+                <ProdutosTabClient
+                  produtos={produtos}
+                  fornecedores={fornecedores.map(f => ({ id: f.id, nome: f.nome }))}
+                  categoriasExistentes={categoriasExistentes}
+                  searchQuery={sp.q_produtos}
+                  initialProduto={editProdutoData}
+                  onCreateAction={addProduto}
+                  onUpdateAction={updateProduto}
+                  onDeleteAction={deleteProduto}
+                  onBulkDeleteAction={bulkDeleteProdutos}
+                />
               </>
             ),
           },

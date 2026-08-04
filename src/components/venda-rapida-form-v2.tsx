@@ -673,7 +673,7 @@ export default function VendaRapidaFormV2({
         )}
       >
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-primary" />
             Contexto da Venda
           </CardTitle>
@@ -728,7 +728,7 @@ export default function VendaRapidaFormV2({
         )}
       >
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <User className="h-4 w-4 text-info" />
             Cliente
           </CardTitle>
@@ -910,7 +910,7 @@ export default function VendaRapidaFormV2({
       {/* Seção 3: Produtos */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold flex items-center gap-2">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
             <ShoppingCart className="h-5 w-5 text-primary" />
             Produtos da Venda
           </h3>
@@ -943,7 +943,7 @@ export default function VendaRapidaFormV2({
       {/* Seção 4: Despesas Adicionais */}
       <Card variant="elevated" className="border-warning/20">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <Truck className="h-4 w-4 text-warning" />
             Despesas Adicionais
           </CardTitle>
@@ -995,14 +995,13 @@ export default function VendaRapidaFormV2({
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Resgatar pontos
               </Label>
-              <input
+              <Input
                 type="number"
                 min={0}
                 step={1}
                 value={pontosResgatar || ""}
                 onChange={(e) => setPontosResgatar(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
                 placeholder="0"
-                className="h-input w-full rounded-md border-2 border-input bg-background px-3 text-sm"
               />
               {pontosResgatar > 0 && (
                 <p className="text-[11px] text-success">
@@ -1064,7 +1063,7 @@ export default function VendaRapidaFormV2({
       {/* Seção 5: Parcelamento */}
       <Card variant="elevated" className="border-success/20">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-4 w-4 text-success" />
             Parcelamento
           </CardTitle>
@@ -1097,10 +1096,10 @@ export default function VendaRapidaFormV2({
       {/* Seção 7: Resumo Financeiro */}
       <Card
         variant="elevated"
-        className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent"
+        className="border-primary/30 bg-card-elevated bg-gradient-to-br from-primary/5 to-transparent"
       >
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
+          <CardTitle>Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
