@@ -5,6 +5,7 @@ import ImportacaoClient from "@/components/importacao-client";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export default async function Page() {
@@ -45,12 +46,14 @@ export default async function Page() {
 
       {/* Os importadores de fornecedores e clientes viviam sem nenhum link na UI —
           so eram alcancaveis digitando a URL. */}
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold text-foreground">Outras importações</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Cada uma analisa o arquivo e mostra o que seria criado antes de gravar qualquer coisa.
-        </p>
-        <div className="flex flex-wrap gap-3 mt-3">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Outras importações</CardTitle>
+          <CardDescription>
+            Cada uma analisa o arquivo e mostra o que seria criado antes de gravar qualquer coisa.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3">
           <Link
             href="/importacao/fornecedores"
             className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
@@ -63,8 +66,8 @@ export default async function Page() {
           >
             Importar clientes
           </Link>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

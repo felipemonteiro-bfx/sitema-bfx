@@ -163,7 +163,9 @@ export default async function Page() {
   }));
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
+    {/* O <main> do layout ja aplica px-4/lg:px-8 — repetir aqui dobrava o
+        recuo lateral so nesta tela. A largura de leitura (max-w-6xl) fica. */}
+    <div className="mx-auto w-full max-w-6xl space-y-6 pb-6">
       <Card className="h-full">
         <CardHeader className="space-y-1">
           <div className="flex flex-wrap items-center justify-between gap-3">

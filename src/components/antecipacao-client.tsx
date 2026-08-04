@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileSpreadsheet, ImageIcon, Loader2 } from "lucide-react";
@@ -392,7 +393,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         </TableBody>
       </Table>
 
-      <div className="mt-6 rounded-xl border-2 border-primary/20 bg-card shadow-lg overflow-hidden transition-all">
+      <Card className="mt-6 overflow-hidden border-2 border-primary/20 shadow-lg">
         {/* Linha 1: Total + Métricas */}
         <div className="p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           {/* Total selecionado */}
@@ -486,10 +487,10 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-info-bg text-[9px] font-bold text-info">i</span>
           Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
-      </div>
+      </Card>
 
       {Object.keys(vencimentosPorEmpresa).length > 0 && (
-        <div className="mt-6 rounded-xl border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated shadow-lg p-6">
+        <Card className="mt-6 border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">
               <svg className="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -517,7 +518,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               {formatBRL(Object.values(vencimentosPorEmpresa).reduce((sum, v) => sum + v, 0))}
             </span>
           </div>
-        </div>
+        </Card>
       )}
     </form>
   );
