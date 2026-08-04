@@ -142,8 +142,8 @@ export default function AssinaturaPage() {
           {/* Nota (Fase 14, D-06): a barra de assinatura fica sobre bg-white fixo porque a tinta
               da assinatura (abaixo, SignatureCanvas/penColor) é sempre preta — se o fundo virasse
               escuro no tema dark, o traço ficaria ilegível. Por isso as cores aqui usam valor
-              arbitrário (mesmo hex do Tailwind gray-*/red-*) em vez de token semântico, que
-              trocaria de valor no tema escuro. */}
+              arbitrário (o mesmo hex das escalas gray e red do Tailwind) em vez de token
+              semântico, que trocaria de valor no tema escuro. */}
           <div
             className={`w-full border-2 border-dashed rounded-lg flex items-center justify-center transition-colors min-h-[60px] ${
               signatureDataUrl
