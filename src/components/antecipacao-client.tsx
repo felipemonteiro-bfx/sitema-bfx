@@ -73,27 +73,27 @@ function calcularTaxaPercent(prazoMedio: number) {
 function StatusBadge({ status }: { status: Venda['status'] }) {
   if (status === 'antecipado') {
     return (
-      <Badge className="bg-green-600 text-white border-0 font-semibold text-xs">
+      <Badge className="bg-success text-success-foreground border-0 font-semibold text-xs">
         Antecipado
       </Badge>
     );
   }
   if (status === 'parcialmente_antecipado') {
     return (
-      <Badge className="bg-purple-600 text-white border-0 font-semibold text-xs">
+      <Badge className="bg-status-partial text-status-partial-foreground border-0 font-semibold text-xs">
         Parcial
       </Badge>
     );
   }
   if (status === 'em_andamento') {
     return (
-      <Badge className="bg-blue-600 text-white border-0 font-semibold text-xs">
+      <Badge className="bg-info text-info-foreground border-0 font-semibold text-xs">
         Em andamento
       </Badge>
     );
   }
   return (
-    <Badge className="bg-amber-500 text-white border-0 font-semibold text-xs">
+    <Badge className="bg-warning text-warning-foreground border-0 font-semibold text-xs">
       Pendente
     </Badge>
   );
@@ -321,13 +321,13 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                   key={v.id}
                   className={`transition-all duration-200 ${
                     isTotalmenteAntecipado
-                      ? 'bg-green-50 dark:bg-green-950/30 opacity-70 cursor-default'
+                      ? 'bg-success-bg opacity-70 cursor-default'
                       : v.status === 'parcialmente_antecipado'
-                      ? 'bg-purple-50 dark:bg-purple-950/30 cursor-pointer hover:bg-purple-100/70'
+                      ? 'bg-status-partial/10 cursor-pointer hover:bg-status-partial/15'
                       : v.status === 'em_andamento'
-                      ? 'bg-blue-50 dark:bg-blue-950/30 cursor-pointer hover:bg-blue-100/70'
+                      ? 'bg-info-bg cursor-pointer hover:bg-info/15'
                       : isSelected
-                      ? 'bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 cursor-pointer'
+                      ? 'bg-warning-bg border-l-4 border-warning cursor-pointer'
                       : 'cursor-pointer hover:bg-accent/50'
                   }`}
                   onClick={() => !isProcessing && toggleSelect(v.id, isTotalmenteAntecipado)}
@@ -410,26 +410,26 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
           {/* 3 métricas em grid compacto */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1">
-            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-blue-500 dark:text-blue-400">Prazo médio</div>
-              <div className="text-xl font-black text-blue-700 dark:text-blue-300 tabular-nums leading-tight">
+            <div className="rounded-lg bg-info-bg border border-info px-3 py-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-info">Prazo médio</div>
+              <div className="text-xl font-black text-info tabular-nums leading-tight">
                 {prazoMedio.toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
               </div>
-              <div className="text-[9px] text-blue-400/80 font-medium mt-0.5">D+1</div>
+              <div className="text-[9px] text-info/80 font-medium mt-0.5">D+1</div>
             </div>
-            <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400">Taxa total</div>
-              <div className="text-xl font-black text-amber-700 dark:text-amber-300 tabular-nums leading-tight">
+            <div className="rounded-lg bg-warning-bg border border-warning px-3 py-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-warning">Taxa total</div>
+              <div className="text-xl font-black text-warning tabular-nums leading-tight">
                 {taxaPercent.toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
               </div>
-              <div className="text-[9px] text-amber-400/80 font-medium mt-0.5">Smart</div>
+              <div className="text-[9px] text-warning/80 font-medium mt-0.5">Smart</div>
             </div>
-            <div className="rounded-lg bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/60 px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400">Líquido</div>
-              <div className="text-base sm:text-lg font-black text-green-700 dark:text-green-300 tabular-nums leading-tight truncate">
+            <div className="rounded-lg bg-success-bg border border-success px-3 py-2.5">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-success">Líquido</div>
+              <div className="text-base sm:text-lg font-black text-success tabular-nums leading-tight truncate">
                 {formatBRL(valorLiquido)}
               </div>
-              <div className="text-[9px] text-green-500/80 font-medium mt-0.5">estimado</div>
+              <div className="text-[9px] text-success/80 font-medium mt-0.5">estimado</div>
             </div>
           </div>
         </div>
@@ -467,7 +467,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           {/* CTA principal */}
           <Button
             disabled={selectedIds.length === 0 || isProcessing}
-            className="w-full sm:w-auto sm:ml-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-bold bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-md hover:shadow-green-500/30 transition-all gap-2 cursor-pointer"
+            className="w-full sm:w-auto sm:ml-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-bold bg-success hover:bg-success/90 active:bg-success/80 text-success-foreground shadow-md hover:shadow-success/30 transition-all gap-2 cursor-pointer"
           >
             {isProcessing ? (
               <>
@@ -482,7 +482,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
         {/* Rodapé informativo */}
         <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-2.5">
-          <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-primary/40 text-[9px] font-bold text-blue-600 dark:text-blue-400">i</span>
+          <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-info-bg text-[9px] font-bold text-info">i</span>
           Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
       </div>
