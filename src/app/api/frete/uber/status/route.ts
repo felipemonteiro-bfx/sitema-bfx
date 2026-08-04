@@ -20,7 +20,13 @@ export async function GET() {
   } catch (err) {
     console.error("[GET /api/frete/uber/status] Erro ao ler Config:", err);
   }
-  const config = resolveUberDirectConfigFromDb(dbConfig) ?? resolveUberDirectConfigFromEnv();
+  // Mesma regra de getUberDirectConfig(): uberEnabled=1 nunca cai pro env, mesmo com
+  // credenciais incompletas (achado #3 da revisão do Grok) — senão o status ficaria
+  // "pronto" via token estático enquanto a tela mostra a integração ligada com OAuth.
+  const config =
+    dbConfig && Number(dbConfig.uberEnabled) === 1
+      ? resolveUberDirectConfigFromDb(dbConfig)
+      : resolveUberDirectConfigFromEnv();
   const pickupAddressJson = resolveUberPickupAddressJson(dbConfig);
 
   // `classificarProntidaoUber` só olha presença/ausência de string, nunca o valor: em modo

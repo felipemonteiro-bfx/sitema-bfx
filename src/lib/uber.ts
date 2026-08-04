@@ -10,7 +10,7 @@
  * produção enquanto a migração para a tela não acontece.
  */
 import { prisma } from "@/lib/db";
-import { obterTokenUber } from "@/lib/uber-auth";
+import { obterTokenUber, limparEntradaCacheTokenUber } from "@/lib/uber-auth";
 import {
   interpretarRespostaUber,
   interpretarFalhaDeRede,
@@ -84,12 +84,20 @@ export function resolveUberPickupAddressJson(
 
 /** Config Uber Direct: Config do banco (se habilitada) com fallback para as envs legadas. */
 export async function getUberDirectConfig(): Promise<UberDirectConfig | null> {
+  let cfg: UberConfigDB | null;
   try {
-    const cfg = await prisma.config.findFirst();
-    const fromDb = resolveUberDirectConfigFromDb(cfg as UberConfigDB | null);
-    if (fromDb) return fromDb;
+    cfg = (await prisma.config.findFirst()) as UberConfigDB | null;
   } catch (err) {
+    // Erro ao ler Config (ex.: coluna ausente em produção antiga) — cai para o env, mesmo
+    // caminho de antes desta feature existir.
     console.error("[getUberDirectConfig] Erro ao ler Config:", err);
+    return resolveUberDirectConfigFromEnv();
+  }
+  if (cfg && Number(cfg.uberEnabled) === 1) {
+    // Habilitado explicitamente pela tela: NUNCA cai para o token estático do SSM, mesmo
+    // com credenciais incompletas. Cair em silêncio pro token antigo escondia exatamente
+    // o problema que esta feature existe pra resolver (achado #3 da revisão do Grok).
+    return resolveUberDirectConfigFromDb(cfg);
   }
   return resolveUberDirectConfigFromEnv();
 }
@@ -176,10 +184,8 @@ export async function getDeliveryQuote(
 
   const url = `${UBER_API_BASE}/customers/${config.customerId}/delivery_quotes`;
 
-  try {
-    const token = await resolveUberBearerToken(config);
-
-    const res = await fetch(url, {
+  const chamarUberComToken = async (token: string) =>
+    fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -188,7 +194,20 @@ export async function getDeliveryQuote(
       body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+  try {
+    const token = await resolveUberBearerToken(config);
+    let res = await chamarUberComToken(token);
+    let data = await res.json();
+
+    // Token OAuth rejeitado (revogado ou client_secret rotacionado depois de cacheado):
+    // limpa a entrada e tenta UMA vez com token novo, em vez de ficar quebrado em
+    // silêncio até o cache vencer sozinho — até ~30 dias (achado #1 da revisão de código).
+    if (!res.ok && res.status === 401 && config.source === "oauth") {
+      limparEntradaCacheTokenUber(config.clientId, "eats.deliveries");
+      const tokenNovo = await resolveUberBearerToken(config);
+      res = await chamarUberComToken(tokenNovo);
+      data = await res.json();
+    }
 
     if (!res.ok) {
       // Corpo cru da Uber so aparece aqui (servidor) — nunca na resposta ao navegador (T-09-01).

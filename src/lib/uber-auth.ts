@@ -63,29 +63,27 @@ export function chaveCacheTokenUber(clientId: string, scope: EscopoUber): string
 type TokenCacheEntry = { token: string; obtidoEmMs: number; expiresInSegundos: number };
 
 const cacheTokensUber = new Map<string, TokenCacheEntry>();
+// Requisicoes de refresh em voo, por chave — evita que N cotacoes simultaneas com cache
+// frio disparem N POSTs paralelos no endpoint de token da Uber (limite documentado de
+// 100 req/hora nesse endpoint; achado #2 da revisao de codigo).
+const refreshEmVooUber = new Map<string, Promise<string>>();
 
 /** Limpa o cache em memoria — usado nos testes para isolar casos. */
 export function limparCacheTokenUber(): void {
   cacheTokensUber.clear();
+  refreshEmVooUber.clear();
 }
 
 /**
- * Troca client_id/client_secret por um access_token, cacheando em memoria
- * ate perto do vencimento (`expires_in`, ~30 dias). Renova sozinho quando o
- * cache vence — nada expira na mao do usuario.
+ * Remove só a entrada de uma chave (client_id + escopo) — usado quando a Uber rejeita o
+ * token em uso (401/403) para forçar renovação na próxima chamada, em vez de esperar o
+ * cache vencer sozinho (achado #1 da revisão de código).
  */
-export async function obterTokenUber(
-  clientId: string,
-  clientSecret: string,
-  scope: EscopoUber
-): Promise<string> {
-  const chave = chaveCacheTokenUber(clientId, scope);
-  const emCache = cacheTokensUber.get(chave);
-  const agora = Date.now();
-  if (emCache && !cacheTokenExpirado(emCache.obtidoEmMs, emCache.expiresInSegundos, agora)) {
-    return emCache.token;
-  }
+export function limparEntradaCacheTokenUber(clientId: string, scope: EscopoUber): void {
+  cacheTokensUber.delete(chaveCacheTokenUber(clientId, scope));
+}
 
+async function buscarTokenUber(clientId: string, clientSecret: string, scope: EscopoUber): Promise<string> {
   const corpo = montarCorpoTokenUber(clientId, clientSecret, scope);
   const res = await fetch(UBER_TOKEN_URL, {
     method: "POST",
@@ -107,6 +105,39 @@ export async function obterTokenUber(
       ? dados.expires_in
       : EXPIRES_IN_PADRAO_SEGUNDOS;
 
-  cacheTokensUber.set(chave, { token: dados.access_token, obtidoEmMs: agora, expiresInSegundos });
+  cacheTokensUber.set(chaveCacheTokenUber(clientId, scope), {
+    token: dados.access_token,
+    obtidoEmMs: Date.now(),
+    expiresInSegundos,
+  });
   return dados.access_token;
+}
+
+/**
+ * Troca client_id/client_secret por um access_token, cacheando em memoria
+ * ate perto do vencimento (`expires_in`, ~30 dias). Renova sozinho quando o
+ * cache vence — nada expira na mao do usuario. Chamadas concorrentes com
+ * cache frio compartilham a mesma requisicao em voo em vez de disparar uma
+ * para cada.
+ */
+export async function obterTokenUber(
+  clientId: string,
+  clientSecret: string,
+  scope: EscopoUber
+): Promise<string> {
+  const chave = chaveCacheTokenUber(clientId, scope);
+  const emCache = cacheTokensUber.get(chave);
+  const agora = Date.now();
+  if (emCache && !cacheTokenExpirado(emCache.obtidoEmMs, emCache.expiresInSegundos, agora)) {
+    return emCache.token;
+  }
+
+  const jaEmVoo = refreshEmVooUber.get(chave);
+  if (jaEmVoo) return jaEmVoo;
+
+  const promessa = buscarTokenUber(clientId, clientSecret, scope).finally(() => {
+    refreshEmVooUber.delete(chave);
+  });
+  refreshEmVooUber.set(chave, promessa);
+  return promessa;
 }
