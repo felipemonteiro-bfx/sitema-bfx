@@ -61,6 +61,8 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-info-bg: var(--info-bg);
+  --color-status-partial: var(--status-partial);
+  --color-status-partial-foreground: var(--status-partial-foreground);
   --color-card-elevated: var(--card-elevated);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -114,6 +116,8 @@
   --info: oklch(0.57 0.18 240); /* blue */
   --info-foreground: oklch(0.145 0 0); /* texto escuro: 4.71:1 vs branco (4.03:1) — UI-05 */
   --info-bg: oklch(0.95 0.04 240); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
+  --status-partial: oklch(0.55 0.22 300); /* purple, 4o estado de antecipacao ("parcialmente_antecipado"), mesmo tom já usado no código (purple-600), formalizado como token (D-06) */
+  --status-partial-foreground: oklch(0.985 0 0); /* texto claro: 5.20:1 sobre status-partial — UI-05 */
 
   /* Destructive (mantido para compatibilidade, mesmo valor de --error) */
   --destructive: oklch(0.57 0.24 25); /* L ajustado de 0.60 p/ 4.69:1 (era 4.27) — UI-05 */
@@ -204,6 +208,9 @@
   --info: oklch(0.68 0.20 240); /* #60A5FA blue-400 */
   --info-foreground: oklch(0.10 0.02 250);
   --info-bg: oklch(0.25 0.10 240 / 20%);
+
+  --status-partial: oklch(0.72 0.20 300); /* purple-400 mais vibrante, dark mode */
+  --status-partial-foreground: oklch(0.10 0.02 250); /* texto escuro: 7.19:1 sobre status-partial dark — UI-05 */
 
   /* Destructive */
   --destructive: oklch(0.70 0.24 25);

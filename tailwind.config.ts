@@ -59,6 +59,12 @@ export default {
           foreground: "var(--info-foreground)",
           bg: "var(--info-bg)",
         },
+        status: {
+          partial: {
+            DEFAULT: "var(--status-partial)",
+            foreground: "var(--status-partial-foreground)",
+          },
+        },
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
