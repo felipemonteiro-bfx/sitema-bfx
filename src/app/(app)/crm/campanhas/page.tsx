@@ -175,7 +175,7 @@ export default async function Page() {
                   </div>
                   <div className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">{c.mensagem}</div>
                   {!c.templateNome && (
-                    <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                    <p className="mt-1 text-xs text-warning">
                       Campanha anterior à migração para a Cloud API — somente leitura. Recrie escolhendo um template.
                     </p>
                   )}

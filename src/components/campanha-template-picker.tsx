@@ -55,7 +55,7 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
 
   if (lista.length === 0) {
     return (
-      <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:border-amber-700 dark:bg-amber-950">
+      <div className="rounded-md border border-warning bg-warning-bg p-3 text-sm">
         <p>
           Nenhum template aprovado na Meta. Aprove um template no WhatsApp Manager
           antes de criar campanhas.
