@@ -13,7 +13,12 @@ import { PageHeader } from "@/components/page-header";
 
 async function savePerfil(formData: FormData) {
   "use server";
-  const id = Number(formData.get("id") || 0);
+  // O id vem da sessao, NUNCA do formulario. Antes vinha de um <input hidden>,
+  // e /perfil esta no menu do vendedor: bastava editar o campo no DevTools para
+  // reescrever o cadastro — inclusive a senha — de qualquer outro usuario, admin
+  // incluso. Server Action nao pode confiar em id enviado pelo cliente.
+  const sessao = await getSession();
+  const id = sessao?.id;
   if (!id) return;
   await prisma.usuario.update({
     where: { id },
@@ -57,7 +62,7 @@ export default async function Page() {
           </CardHeader>
           <CardContent>
             <form action={savePerfil} className="grid gap-3 md:grid-cols-2">
-              <input type="hidden" name="id" value={user.id} />
+              {/* Sem campo de id: savePerfil usa o id da sessao. */}
               <div className="space-y-1">
                 <Label htmlFor="perfil-nome">Nome</Label>
                 <Input id="perfil-nome" name="nome" defaultValue={user.nomeExibicao || ""} placeholder="Nome" />

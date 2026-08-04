@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda } from "@/lib/venda-utils";
-import { requireAdmin } from "@/lib/guards";
+import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
 import AntecipacaoClient from "@/components/antecipacao-client";
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 async function antecipar(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const ids = formData.getAll("id").map((v) => Number(v));
   const mesInicio = formData.get("mesInicio") as string | null; // MM/YYYY
   const mesFim = formData.get("mesFim") as string | null;

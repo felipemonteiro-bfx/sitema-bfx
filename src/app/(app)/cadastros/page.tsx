@@ -159,6 +159,9 @@ async function updateProduto(formData: FormData) {
 
 async function deleteProduto(formData: FormData) {
   "use server";
+  // Coerencia com bulkDeleteProdutos: sem esta guarda, a exigencia de admin no
+  // bulk seria contornavel apagando um produto de cada vez.
+  await requireAdminOrThrow();
   const id = Number(formData.get("id") || 0);
   if (!id) return;
   const produto = await prisma.produto.findUnique({ where: { id }, select: { nome: true } });
@@ -311,6 +314,7 @@ async function bulkDeleteEmpresas(ids: number[]) {
 
 async function vincularEmpresas(empresaId: number, vinculadaIds: number[]) {
   "use server";
+  await requireAdminOrThrow();
   if (!empresaId) return;
   try {
     // Remove all existing vinculos for this empresa

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/guards";
+import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ type Search = { user?: string; tab?: string };
 
 async function updateMeta(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const id = Number(formData.get("id") || 0);
   if (!id) return;
   await prisma.usuario.update({
@@ -34,6 +35,7 @@ async function updateMeta(formData: FormData) {
 
 async function addUser(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const nome = String(formData.get("nome") || "");
   const login = String(formData.get("login") || "");
   const senha = String(formData.get("senha") || "");
@@ -52,6 +54,7 @@ async function addUser(formData: FormData) {
 
 async function deleteUser(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const id = Number(formData.get("id") || 0);
   if (!id) return;
   await prisma.usuario.delete({ where: { id } });

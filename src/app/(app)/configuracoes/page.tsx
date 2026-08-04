@@ -21,6 +21,7 @@ type Search = { tab?: string };
 
 async function saveAviso(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const msg = String(formData.get("mensagem") || "");
   await prisma.aviso.updateMany({ data: { ativo: 0 } });
   await prisma.aviso.create({ data: { mensagem: msg, ativo: 1 } });
@@ -29,6 +30,7 @@ async function saveAviso(formData: FormData) {
 
 async function saveContrato(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const texto = String(formData.get("texto") || "");
   const cfg = await prisma.config.findFirst();
   if (cfg) {
@@ -41,6 +43,7 @@ async function saveContrato(formData: FormData) {
 
 async function saveReciboVenda(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const texto = String(formData.get("texto") || "");
   const cfg = await prisma.config.findFirst();
   if (cfg) {
@@ -53,6 +56,7 @@ async function saveReciboVenda(formData: FormData) {
 
 async function saveApiKey(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const gkey = String(formData.get("gkey") || "");
   const cfg = await prisma.config.findFirst();
   if (cfg) {
@@ -65,6 +69,7 @@ async function saveApiKey(formData: FormData) {
 
 async function saveAiProvider(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const aiProvider = String(formData.get("aiProvider") || "gemini");
   const litellmUrl = String(formData.get("litellmUrl") || "").trim() || null;
   // Campo password vem sempre vazio no reload: so sobrescreve a chave quando o
@@ -89,6 +94,7 @@ async function saveAiProvider(formData: FormData) {
 
 async function saveAsaas(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   try {
     const apiKey = String(formData.get("asaasApiKey") || "").trim() || null;
     const env = String(formData.get("asaasEnv") || "sandbox").trim();
@@ -110,6 +116,7 @@ async function saveAsaas(formData: FormData) {
 
 async function saveWhatsApp(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const url = String(formData.get("evolutionApiUrl") || "").trim();
   const key = String(formData.get("evolutionApiKey") || "").trim();
   const instance = String(formData.get("evolutionInstance") || "bfx").trim() || "bfx";

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { PageHeader } from "@/components/page-header";
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/guards";
+import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { calcularMetricasEstoque } from "@/lib/estoque-metrics";
@@ -24,6 +24,7 @@ type Search = { tab?: string; mes?: string; edit?: string };
 
 async function addDespesa(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const descricao = String(formData.get("descricao") || "");
   const valor = Number(formData.get("valor") || 0);
   const tipo = String(formData.get("tipo") || "Fixa");
@@ -45,6 +46,7 @@ async function addDespesa(formData: FormData) {
 
 async function updateDespesa(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const id = Number(formData.get("id") || 0);
   const descricao = String(formData.get("descricao") || "");
   const valor = Number(formData.get("valor") || 0);
@@ -68,6 +70,7 @@ async function updateDespesa(formData: FormData) {
 
 async function deleteDespesa(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const id = Number(formData.get("id") || 0);
   const mes = String(formData.get("mes") || "");
   if (!id) return;
