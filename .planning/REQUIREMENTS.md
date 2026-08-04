@@ -43,29 +43,29 @@ continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita d
 
 ### Telas de Operacao (OPE)
 
-- [ ] **OPE-01**: `/venda-rapida` — consistencia visual, estados de erro e foco validados
-- [ ] **OPE-02**: `/historico` — idem, incluindo tabela e filtros
-- [ ] **OPE-03**: `/cadastros` (4 abas) — idem
-- [ ] **OPE-04**: `/importacao` e as 2 sub-telas — idem
+- [x] **OPE-01**: `/venda-rapida` — consistencia visual, estados de erro e foco validados
+- [x] **OPE-02**: `/historico` — idem, incluindo tabela e filtros
+- [x] **OPE-03**: `/cadastros` (4 abas) — idem
+- [x] **OPE-04**: `/importacao` e as 2 sub-telas — idem
 
 ### Telas Financeiras (FIN)
 
-- [ ] **FIN-01**: `/financeiro` (4 abas) — idem, com atencao a leitura de numeros
-- [ ] **FIN-02**: `/boletos` e `/prudent` — idem
-- [ ] **FIN-03**: `/relatorios` e `/relatorios/mensais` — idem
-- [ ] **FIN-04**: `/comissoes` — idem
+- [x] **FIN-01**: `/financeiro` (4 abas) — idem, com atencao a leitura de numeros
+- [x] **FIN-02**: `/boletos` e `/prudent` — idem
+- [x] **FIN-03**: `/relatorios` e `/relatorios/mensais` — idem
+- [x] **FIN-04**: `/comissoes` — idem
 
 ### Telas de Dados e IA (DIA)
 
-- [ ] **DIA-01**: `/inteligencia` — o arquivo com mais cor crua do projeto (100 ocorrencias)
-- [ ] **DIA-02**: `/crm` e as 3 sub-telas — idem
+- [x] **DIA-01**: `/inteligencia` — o arquivo com mais cor crua do projeto (100 ocorrencias)
+- [x] **DIA-02**: `/crm` e as 3 sub-telas — idem
 
 ### Telas de Sistema e Publicas (SIS)
 
-- [ ] **SIS-01**: `/dashboard` — idem
-- [ ] **SIS-02**: `/configuracoes` (5 abas) e `/perfil` — idem
-- [ ] **SIS-03**: `/gestao-rh` — idem
-- [ ] **SIS-04**: Telas publicas (`/login`, `/catalogo`, `/assinatura/[token]`) — idem
+- [x] **SIS-01**: `/dashboard` — idem
+- [x] **SIS-02**: `/configuracoes` (5 abas) e `/perfil` — idem
+- [x] **SIS-03**: `/gestao-rh` — idem
+- [x] **SIS-04**: Telas publicas (`/login`, `/catalogo`, `/assinatura/[token]`) — idem
 
 ## Pendencias herdadas do v1.1 (bloqueadas em terceiros)
 
@@ -104,10 +104,10 @@ continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita d
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | UI-01..UI-06 | Phase 10 — Fundacao visual | Complete |
-| OPE-01..OPE-04 | Phase 11 — Telas de operacao | Pending |
-| FIN-01..FIN-04 | Phase 12 — Telas financeiras | Pending |
-| DIA-01..DIA-02 | Phase 13 — Telas de dados e IA | Pending |
-| SIS-01..SIS-04 | Phase 14 — Telas de sistema e publicas | Pending |
+| OPE-01..OPE-04 | Phase 11 — Telas de operacao | Complete |
+| FIN-01..FIN-04 | Phase 12 — Telas financeiras | Complete |
+| DIA-01..DIA-02 | Phase 13 — Telas de dados e IA | Complete |
+| SIS-01..SIS-04 | Phase 14 — Telas de sistema e publicas | Complete |
 
 ---
 *Requirements defined: 2026-02-19*
