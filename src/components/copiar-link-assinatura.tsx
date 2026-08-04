@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Check, Link2 } from 'lucide-react';
+import { Check, Link2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function CopiarLinkAssinatura({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
@@ -27,11 +28,13 @@ export function CopiarLinkAssinatura({ token }: { token: string }) {
   };
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="sm"
       onClick={handleCopy}
       title={copied ? 'Link copiado!' : 'Copiar link de assinatura'}
-      className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-warning bg-warning-bg text-warning hover:bg-warning-bg/70 transition-colors"
+      className="h-auto gap-1 rounded border-warning bg-warning-bg px-2 py-1 text-xs text-warning shadow-none hover:bg-warning-bg/70 hover:text-warning hover:shadow-none"
     >
       {copied ? (
         <>
@@ -44,6 +47,6 @@ export function CopiarLinkAssinatura({ token }: { token: string }) {
           Copiar Link
         </>
       )}
-    </button>
+    </Button>
   );
 }

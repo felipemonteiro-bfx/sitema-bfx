@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { FormSelect } from "@/components/form-select";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   defaultValue?: string;
@@ -81,15 +83,16 @@ export function LitellmModelSelect({
   }, [fetchModels, urlInputId, keyInputId]);
 
   const reloadButton = (
-    <button
+    <Button
       type="button"
+      variant="link"
       onClick={fetchModels}
       disabled={loading}
-      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50 cursor-pointer"
+      className="h-auto gap-1.5 p-0 text-xs text-muted-foreground no-underline hover:text-foreground hover:underline"
     >
       <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
       Recarregar lista
-    </button>
+    </Button>
   );
 
   if (loading && models.length === 0) {
@@ -105,12 +108,11 @@ export function LitellmModelSelect({
     // Fallback: input livre quando a listagem falhou, com o motivo visivel.
     return (
       <div className="space-y-1.5">
-        <input
+        <Input
           type="text"
           name={name}
           defaultValue={defaultValue}
           placeholder="gpt-4o, llama-3-8b, qwen..."
-          className="h-10 w-full rounded-lg border-2 border-input bg-background px-3 py-1 text-sm"
         />
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs text-destructive">

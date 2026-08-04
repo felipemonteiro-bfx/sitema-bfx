@@ -169,9 +169,9 @@ export default function FornecedoresTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <button type="button" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground">
+              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none">
                 <Trash2 className="h-3 w-3" />
-              </button>
+              </Button>
             )}
           </div>
         </CardHeader>

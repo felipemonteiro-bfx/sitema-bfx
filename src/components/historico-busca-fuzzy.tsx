@@ -3,6 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 
 interface Props {
@@ -55,14 +56,16 @@ export function HistoricoBuscaFuzzy({ defaultValue = "" }: Props) {
         aria-label="Busca fuzzy de vendas"
       />
       {value && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           onClick={handleClear}
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-sm text-muted-foreground hover:text-foreground"
+          className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
           aria-label="Limpar busca"
         >
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       )}
     </div>
   );

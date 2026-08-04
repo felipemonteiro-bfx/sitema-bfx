@@ -296,9 +296,16 @@ export default function ImportacaoClient() {
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
-                        <button onClick={() => removeRow(row.id)} className="text-error hover:text-destructive p-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Remover linha"
+                          onClick={() => removeRow(row.id)}
+                          className="h-6 w-6 text-error shadow-none hover:bg-transparent hover:text-destructive hover:shadow-none"
+                        >
                           <Trash2 className="h-3 w-3" />
-                        </button>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
