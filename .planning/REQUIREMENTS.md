@@ -67,6 +67,25 @@ continua bloqueada em UXP-06, aguardando os hex do cliente. O que se aproveita d
 - [x] **SIS-03**: `/gestao-rh` — idem
 - [x] **SIS-04**: Telas publicas (`/login`, `/catalogo`, `/assinatura/[token]`) — idem
 
+## v1.3 Requirements — Auditoria Visual Tela a Tela
+
+O dono relatou que **ainda existem inconsistencias visuais nos temas claro e escuro**, depois do
+v1.2. Isso e informacao nova e valida: o v1.2 mediu *cor crua -> token* e *contraste dos tokens*
+(34 pares em `globals.css`), mas **nunca inspecionou as telas renderizadas**. Token correto nao
+garante consistencia visual — dois cards podem usar tokens certos e ainda ter padding diferente,
+e um texto pode ter contraste ruim contra o fundo efetivo mesmo com token valido.
+
+**Metodo:** subagentes revisores dedicados, cada um com um grupo de telas, usando a skill
+`ui-ux-pro-max` como criterio e o Playwright para medir na tela real, nos dois temas. Diagnostico
+e correcao ficam separados: primeiro se levanta a evidencia medida, depois se corrige.
+
+- [ ] **VIS-01**: Cada uma das 24 telas foi inspecionada renderizada, nos temas claro e escuro
+- [ ] **VIS-02**: Nenhum texto com contraste abaixo de 4.5:1 contra o fundo efetivo, em nenhum tema
+- [ ] **VIS-03**: Elementos do mesmo tipo (card, titulo, botao primario, badge, tabela, estado vazio) tem estilo consistente entre telas
+- [ ] **VIS-04**: Todo elemento interativo tem foco visivel e alvo de toque >= 44x44px
+- [ ] **VIS-05**: Nenhuma tela tem scroll horizontal indevido
+- [ ] **VIS-06**: Os achados de gravidade alta e media estao corrigidos e reverificados na tela
+
 ## Pendencias herdadas do v1.1 (bloqueadas em terceiros)
 
 - [ ] **UXP-06**: Paleta oficial da marca BFX aplicada aos tokens (bloqueado: hex nao fornecidos)

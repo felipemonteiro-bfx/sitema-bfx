@@ -4,30 +4,36 @@
 
 - ✅ **v1.0 MVP** — Fases 1-4 (PDV multi-produto, parcelamento, busca de cliente, infra) — shipped 2026-08-03
 - ✅ **v1.1 Demandas do Cliente BFX** — Fases 5-9 (storage MinIO, integridade de dados, PDV sem fricção, estoque/tema, integrações) — shipped 2026-08-03, 19/21 requisitos (2 bloqueados em terceiros)
-- 🚧 **v1.2 Consistência Visual e UX** — Fases 10-14 (em andamento)
+- 🚧 **v1.3 Auditoria Visual Tela a Tela** — Fases 15-18 (em andamento)
+- ✅ **v1.2 Consistência Visual e UX** — Fases 10-14 — cor crua 313→0, trava de CI, contraste 34/34 — shipped 2026-08-04
 
 ## Overview
 
-Auditoria tela a tela das **24 telas** do sistema, usando o checklist da skill `ui-ux-pro-max`
-como critério e o Playwright para validar em produção. A ordem das fases é: primeiro a fundação
-(tokens + trava de lint), porque sem ela cada tela corrigida pode regredir na semana seguinte;
-depois as telas, agrupadas por densidade de problema e criticidade de uso.
+**v1.3 — Auditoria Visual Tela a Tela.** O dono relatou inconsistências visuais remanescentes nos
+dois temas. O v1.2 mediu *cor crua → token* e o contraste dos 34 pares de tokens, mas **nunca
+olhou as telas renderizadas** — token correto não garante consistência visual.
 
-**Não é redesign.** A paleta sugerida pela skill (azul `#1E40AF`) foi descartada — o sistema tem
-identidade própria e a paleta oficial da marca segue bloqueada em UXP-06. O que se aproveita é o
-checklist de qualidade: contraste, foco, alvos de toque, `aria-label`, consistência.
+O método muda: um orquestrador que só delega, e **subagentes revisores dedicados**, cada um com um
+grupo de telas, usando a skill `ui-ux-pro-max` como critério e o Playwright para medir na tela
+real. O navegador é recurso único (uma aba), então os revisores rodam em sequência.
 
-**O problema medido:** 250 usos de cor Tailwind crua onde deveria haver token semântico. Isso
-viola a convenção registrada no CLAUDE.md e, pior, quebra o tema escuro — das 39 cores neutras
-cruas, só 13 têm variante `dark:`.
+Diagnóstico e correção são separados: primeiro levanta-se evidência medida (contraste real contra
+o fundo efetivo, padding comparado entre telas, foco, alvo de toque), depois corrige-se.
 
 ## Phases
 
-- [ ] **Phase 10: Fundação visual** - Tokens cobrem todos os casos, lint impede regressão, acessibilidade de base
-- [ ] **Phase 11: Telas de operação** - Venda rápida, histórico, cadastros e importação consistentes
-- [ ] **Phase 12: Telas financeiras** - Financeiro, boletos, prudent, relatórios e comissões consistentes
-- [ ] **Phase 13: Telas de dados e IA** - Inteligência e CRM consistentes (maior concentração de cor crua)
-- [ ] **Phase 14: Telas de sistema e públicas** - Dashboard, configurações, RH, login, catálogo e assinatura
+- [ ] **Phase 15: Revisão das telas de operação** - Dashboard, venda rápida, histórico, cadastros, importação
+- [ ] **Phase 16: Revisão das telas financeiras** - Financeiro, boletos, prudent, relatórios, comissões
+- [ ] **Phase 17: Revisão das telas de dados e IA** - Inteligência e CRM
+- [ ] **Phase 18: Revisão das telas de sistema e públicas** - Configurações, perfil, RH, login, catálogo
+
+### Milestone anterior (v1.2, concluído)
+
+- [x] **Phase 10: Fundação visual** - Tokens cobrem todos os casos, lint impede regressão, acessibilidade de base
+- [x] **Phase 11: Telas de operação** - Venda rápida, histórico, cadastros e importação consistentes
+- [x] **Phase 12: Telas financeiras** - Financeiro, boletos, prudent, relatórios e comissões consistentes
+- [x] **Phase 13: Telas de dados e IA** - Inteligência e CRM consistentes (maior concentração de cor crua)
+- [x] **Phase 14: Telas de sistema e públicas** - Dashboard, configurações, RH, login, catálogo e assinatura
 
 ## Phase Details
 
@@ -117,8 +123,8 @@ migrar tela sem o de-para e sem a trava de lint só adia o problema.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 10. Fundação visual | 4/4 | In Progress|  |
-| 11. Telas de operação | 0/? | Not started | - |
-| 12. Telas financeiras | 0/? | Not started | - |
-| 13. Telas de dados e IA | 0/? | Not started | - |
-| 14. Telas de sistema e públicas | 0/? | Not started | - |
+| 10. Fundação visual | 4/4 | Complete | 2026-08-04 |
+| 11. Telas de operação | 1/1 | Complete | 2026-08-04 |
+| 12. Telas financeiras | 1/1 | Complete | 2026-08-04 |
+| 13. Telas de dados e IA | 1/1 | Complete | 2026-08-04 |
+| 14. Telas de sistema e públicas | 1/1 | Complete | 2026-08-04 |

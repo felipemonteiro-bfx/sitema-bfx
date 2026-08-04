@@ -1,5 +1,22 @@
 # Milestones
 
+## v1.2 v1.2 (Shipped: 2026-08-04)
+
+**Phases completed:** 5 phases, 4 plans, 10 tasks
+
+**Key accomplishments:**
+
+- Módulo Node puro (scanText/scanPaths) que conta classes Tailwind com escala numérica de cor em `src/`, mais uma catraca CLI (`--baseline`/`--check`) e o baseline versionado real do projeto: 299 ocorrências em 22 arquivos.
+- Regra ESLint inline `bfx/no-raw-color` (error/warn/off por baseline, sem pacote novo) + CI com dois portões independentes sem tolerância a falha: o step de ESLint e um step próprio em Node puro rodando o scanner do plano 01 — mais os 4 sites de `location.href =` convertidos para `location.assign(...)`.
+- Mapa de-para das 174 classes cruas do inventário para tokens semânticos, mais um verificador OKLCH de contraste WCAG que hoje reprova 11 pares no `globals.css` — a régua que o plano 04 precisa fazer passar.
+- Cinco tokens de fundo semântico (success/warning/error/info-bg, card-elevated) criados nos quatro pontos que faltavam, 11 pares de contraste corrigidos (foco, borda, texto sobre accent/success/error/info/destructive) sem alterar a identidade visual, gate de contraste bloqueante no CI, e os 4 últimos botões apenas-ícone do projeto com nome acessível.
+- As 38 ocorrências de cor Tailwind crua nos 6 arquivos designados (telas de importação de vendas/clientes/fornecedores, edição de venda e cadastro de produto) foram trocadas 1:1 pelos tokens semânticos do de-para — zero cor crua restante, sem nenhuma mudança de layout, texto ou comportamento.
+- As 49 ocorrências de cor crua de `antecipacao-client.tsx` (green/purple/blue/amber) foram substituídas por tokens semânticos (`success`/`status-partial`/`info`/`warning`), incluindo a criação do token novo `--status-partial` para o 4o estado do fluxo — zero ocorrências restantes, contraste 34/34 preservado.
+- As 130 ocorrências de cor Tailwind crua no painel de inteligência (`bfx-intelligence-panel.tsx`), no seletor de template de campanha e na página de campanhas do CRM foram substituídas por tokens semânticos — chat de IA e CRM zerados, chegando a zero cor crua nos três arquivos.
+- Os 12 arquivos designados (catálogo público, assinatura por token, login, loading, prévia de recibo, notificações, WhatsApp, layout raiz e o botão `gradient` do design system) migrados de classe Tailwind crua para token semântico, fechando a auditoria de cor crua do milestone v1.2 em zero ocorrências em todo `src/`.
+
+---
+
 ## v1.1 v1.1 (Shipped: 2026-08-03)
 
 **Phases completed:** 5 phases, 16 plans, 43 tasks
