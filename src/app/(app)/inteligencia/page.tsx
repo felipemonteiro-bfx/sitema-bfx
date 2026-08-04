@@ -162,9 +162,9 @@ export default async function Page() {
     links: m.links as any,
   }));
 
+  // O <main> do layout ja aplica px-4/lg:px-8 — repetir aqui dobrava o recuo
+  // lateral so nesta tela. A largura de leitura (max-w-6xl) fica.
   return (
-    {/* O <main> do layout ja aplica px-4/lg:px-8 — repetir aqui dobrava o
-        recuo lateral so nesta tela. A largura de leitura (max-w-6xl) fica. */}
     <div className="mx-auto w-full max-w-6xl space-y-6 pb-6">
       <Card className="h-full">
         <CardHeader className="space-y-1">
