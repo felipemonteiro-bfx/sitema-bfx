@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type Notificacao = {
   id: number;
@@ -93,30 +95,33 @@ export function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Button
           type="button"
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] hover:bg-sidebar-accent hover:text-[var(--sidebar-foreground)] transition-colors"
+          variant="ghost"
+          size="icon"
+          className="relative h-9 w-9 rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] shadow-none hover:bg-sidebar-accent hover:text-[var(--sidebar-foreground)] hover:shadow-none"
           aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-error text-[10px] font-bold text-white leading-none">
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-error text-[10px] font-bold text-error-foreground leading-none">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <span className="text-sm font-semibold text-foreground">Notificações</span>
           {unreadCount > 0 && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={markAllRead}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="h-auto shrink-0 p-0 text-xs font-normal text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
             >
               Marcar todas como lidas
-            </button>
+            </Button>
           )}
         </div>
         {notifications.length === 0 ? (
@@ -139,16 +144,20 @@ export function NotificationBell() {
                     </p>
                   </a>
                 ) : (
-                  <button
+                  <Button
                     type="button"
-                    className="w-full text-left"
+                    variant="ghost"
                     onClick={() => markOneRead(n.id)}
+                    className={cn(
+                      "h-auto w-full flex-col items-start justify-start gap-0 rounded-none p-0 text-left font-normal shadow-none",
+                      "hover:bg-transparent hover:shadow-none active:scale-100"
+                    )}
                   >
                     <p className="text-sm text-foreground">{n.mensagem}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {formatTimeAgo(n.criadoEm)}
                     </p>
-                  </button>
+                  </Button>
                 )}
               </li>
             ))}

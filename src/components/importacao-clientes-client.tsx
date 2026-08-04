@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { FormSelect } from "@/components/form-select";
 import {
   Table,
   TableBody,
@@ -130,25 +131,23 @@ export default function ImportacaoClientesClient({
             <label htmlFor="empresaParceiraId" className="text-xs font-medium text-muted-foreground">
               Empresa parceira
             </label>
-            <select
+            <FormSelect
               id="empresaParceiraId"
-              required
-              value={empresaParceiraId ?? ""}
-              onChange={(e) => {
-                setEmpresaParceiraId(e.target.value ? Number(e.target.value) : null);
+              name="empresaParceiraId"
+              value={empresaParceiraId != null ? String(empresaParceiraId) : ""}
+              onValueChange={(v) => {
+                setEmpresaParceiraId(v ? Number(v) : null);
                 setPlano(null);
                 setTexto(null);
                 setFileName(null);
               }}
-              className="block h-input w-full max-w-md rounded-md border-2 border-input bg-background px-3 text-sm"
-            >
-              <option value="">Selecione…</option>
-              {empresas.map((empresa) => (
-                <option key={empresa.id} value={String(empresa.id)}>
-                  {empresa.nome}
-                </option>
-              ))}
-            </select>
+              placeholder="Selecione…"
+              className="max-w-md"
+              options={empresas.map((empresa) => ({
+                value: String(empresa.id),
+                label: empresa.nome,
+              }))}
+            />
           </div>
 
           <div className="flex flex-wrap items-center gap-3">

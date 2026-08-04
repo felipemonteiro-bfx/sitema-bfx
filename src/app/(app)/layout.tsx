@@ -109,7 +109,12 @@ function SidebarContent({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-[var(--sidebar-muted)]">{userLabel}</span>
-            <Badge variant={role === "admin" ? "info" : "secondary"} size="sm">
+            {/* infoSolid (não "info" translúcido): este badge sempre renderiza sobre o
+                fundo escuro da sidebar (--sidebar), em ambos os temas do app. A variante
+                translúcida "info" ficava com contraste 4.39:1 (abaixo de 4.5:1) contra esse
+                fundo — a variante sólida garante >=4.71:1 (medido em token-contrast.mjs)
+                independente do que está atrás. */}
+            <Badge variant={role === "admin" ? "infoSolid" : "secondary"} size="sm">
               {role === "admin" ? "Admin" : "Vendedor"}
             </Badge>
           </div>
