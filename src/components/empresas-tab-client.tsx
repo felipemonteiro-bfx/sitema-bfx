@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { Pencil, Search, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
-import { alternarSelecaoDaPagina, estadoCheckboxDaPagina } from "@/lib/selecao-em-massa";
+import { alternarSelecaoDaPagina, contarSelecionadosForaDaPagina, estadoCheckboxDaPagina } from "@/lib/selecao-em-massa";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
 import {
@@ -116,20 +116,22 @@ export default function EmpresasTabClient({
     [table.paginatedData]
   );
   const estadoSelecaoCabecalho = estadoCheckboxDaPagina(selectedIds, idsVisiveis);
+  // A selecao sobrevive a troca de pagina e ao filtro; sem avisar, da para
+  // confirmar uma exclusao de registros que nao estao na tela.
+  const selecionadosForaDaPagina = contarSelecionadosForaDaPagina(selectedIds, idsVisiveis);
 
   const handleSelectAll = useCallback((checked: boolean | "indeterminate") => {
     setSelectedIds((prev) => alternarSelecaoDaPagina(prev, idsVisiveis, checked === true));
   }, [idsVisiveis]);
 
   const handleSelectOne = useCallback((id: number, checked: boolean | "indeterminate") => {
-    const next = new Set(selectedIds);
-    if (checked) {
-      next.add(id);
-    } else {
-      next.delete(id);
-    }
-    setSelectedIds(next);
-  }, [selectedIds]);
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
 
   const handleBulkDelete = useCallback(async () => {
     setBulkDeleting(true);
@@ -241,7 +243,14 @@ export default function EmpresasTabClient({
         <CardContent>
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
-              <span className="text-sm font-medium">{selectedIds.size} selecionado(s)</span>
+              <span className="text-sm font-medium">
+                {selectedIds.size} selecionado(s)
+                {selecionadosForaDaPagina > 0 && (
+                  <span className="ml-1 font-normal text-muted-foreground">
+                    ({selecionadosForaDaPagina} fora desta pagina)
+                  </span>
+                )}
+              </span>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" disabled={bulkDeleting}>
@@ -254,12 +263,17 @@ export default function EmpresasTabClient({
                     <AlertDialogTitle>Excluir {selectedIds.size} empresa(s)</AlertDialogTitle>
                     <AlertDialogDescription>
                       Tem certeza que deseja excluir {selectedIds.size} empresa(s)? Esta acao nao pode ser desfeita.
+                      {selecionadosForaDaPagina > 0 && (
+                        <strong className="block mt-2 font-medium text-foreground">
+                          {selecionadosForaDaPagina} deles nao estao nesta pagina.
+                        </strong>
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction
-                      className="bg-destructive text-white hover:bg-destructive/90"
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       disabled={bulkDeleting}
                       onClick={handleBulkDelete}
                     >

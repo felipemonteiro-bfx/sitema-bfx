@@ -15,6 +15,9 @@ export function alternarSelecaoDaPagina(
   idsVisiveis: readonly number[],
   marcar: boolean
 ): Set<number> {
+  // Sem nada visivel nao ha o que alternar; devolver a mesma referencia evita
+  // um re-render sem mudanca de conteudo.
+  if (idsVisiveis.length === 0) return selecionados as Set<number>;
   const proximo = new Set(selecionados);
   for (const id of idsVisiveis) {
     if (marcar) proximo.add(id);
@@ -39,4 +42,25 @@ export function estadoCheckboxDaPagina(
   }
   if (marcados === 0) return false;
   return marcados === idsVisiveis.length ? true : "indeterminate";
+}
+
+/**
+ * Quantos itens selecionados NAO estao na pagina visivel.
+ *
+ * A selecao sobrevive a troca de pagina e ao filtro de busca de proposito, mas
+ * isso cria um caminho para excluir o que nao se ve: marcar 15 na pagina 1, ir
+ * para a pagina 2 e clicar em excluir apaga 15 registros fora da tela. A UI usa
+ * este numero para dizer isso na barra e no dialogo de confirmacao, em vez de
+ * so mostrar o total.
+ */
+export function contarSelecionadosForaDaPagina(
+  selecionados: ReadonlySet<number>,
+  idsVisiveis: readonly number[]
+): number {
+  const visiveis = new Set(idsVisiveis);
+  let fora = 0;
+  for (const id of selecionados) {
+    if (!visiveis.has(id)) fora++;
+  }
+  return fora;
 }

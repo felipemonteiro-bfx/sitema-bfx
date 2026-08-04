@@ -93,6 +93,11 @@ async function updateCliente(formData: FormData) {
 
 async function bulkDeleteClientes(ids: number[]) {
   "use server";
+  // Mesmo buraco de RBAC ja fechado em bulkDeleteFornecedores: /cadastros esta
+  // no menu do vendedor, entao ele recebe o Action ID no bundle e podia chamar
+  // esta action direto. Guarda antes de qualquer efeito, inclusive antes do
+  // early-return de lista vazia.
+  await requireAdminOrThrow();
   if (!ids.length) return;
   const clientes = await prisma.cliente.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
   await prisma.cliente.deleteMany({ where: { id: { in: ids } } });
@@ -165,6 +170,7 @@ async function deleteProduto(formData: FormData) {
 
 async function bulkDeleteProdutos(ids: number[]) {
   "use server";
+  await requireAdminOrThrow();
   if (!ids.length) return;
   const produtos = await prisma.produto.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
   await prisma.produto.deleteMany({ where: { id: { in: ids } } });
@@ -293,6 +299,7 @@ async function updateEmpresa(formData: FormData) {
 
 async function bulkDeleteEmpresas(ids: number[]) {
   "use server";
+  await requireAdminOrThrow();
   if (!ids.length) return;
   const empresas = await prisma.empresaParceira.findMany({ where: { id: { in: ids } }, select: { id: true, nome: true } });
   await prisma.empresaParceira.deleteMany({ where: { id: { in: ids } } });

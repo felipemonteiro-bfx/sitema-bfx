@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   alternarSelecaoDaPagina,
+  contarSelecionadosForaDaPagina,
   estadoCheckboxDaPagina,
 } from "@/lib/selecao-em-massa";
 
@@ -40,6 +41,32 @@ describe("alternarSelecaoDaPagina", () => {
     const selecionados = new Set([90, 91]);
     const resultado = alternarSelecaoDaPagina(selecionados, [], true);
     expect([...resultado].sort((a, b) => a - b)).toEqual([90, 91]);
+  });
+
+  it("com pagina vazia devolve a MESMA referencia, sem render a toa", () => {
+    const selecionados = new Set([90, 91]);
+    expect(alternarSelecaoDaPagina(selecionados, [], true)).toBe(selecionados);
+  });
+});
+
+// A selecao sobrevive a troca de pagina e ao filtro de busca — de proposito,
+// mas isso abre um caminho para excluir o que nao se ve. A UI precisa do numero
+// para avisar.
+describe("contarSelecionadosForaDaPagina", () => {
+  it("conta zero quando tudo que esta selecionado esta visivel", () => {
+    expect(contarSelecionadosForaDaPagina(new Set([1, 2]), [1, 2, 3])).toBe(0);
+  });
+
+  it("conta os selecionados em outra pagina", () => {
+    expect(contarSelecionadosForaDaPagina(new Set([1, 90, 91]), [1, 2, 3])).toBe(2);
+  });
+
+  it("conta tudo quando a busca escondeu os selecionados", () => {
+    expect(contarSelecionadosForaDaPagina(new Set([1, 2, 3]), [])).toBe(3);
+  });
+
+  it("conta zero com selecao vazia", () => {
+    expect(contarSelecionadosForaDaPagina(new Set(), [1, 2, 3])).toBe(0);
   });
 });
 
