@@ -22,6 +22,7 @@ import { formatBRL, cn } from "@/lib/utils";
 import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
+import { alternarSelecaoDaPagina, estadoCheckboxDaPagina } from "@/lib/selecao-em-massa";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
 import {
@@ -134,15 +135,13 @@ export default function ProdutosTabClient({
     });
   };
 
-  const allSelected = produtos.length > 0 && selectedIds.size === produtos.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < produtos.length;
+  // O cabecalho vale para a pagina visivel (sortedProdutos), nao para o
+  // dataset inteiro.
+  const idsVisiveis = useMemo(() => sortedProdutos.map((p) => p.id), [sortedProdutos]);
+  const estadoSelecaoCabecalho = estadoCheckboxDaPagina(selectedIds, idsVisiveis);
 
   const handleSelectAll = (checked: boolean | "indeterminate") => {
-    if (checked) {
-      setSelectedIds(new Set(produtos.map((p) => p.id)));
-    } else {
-      setSelectedIds(new Set());
-    }
+    setSelectedIds((prev) => alternarSelecaoDaPagina(prev, idsVisiveis, checked === true));
   };
 
   const handleSelectOne = (id: number, checked: boolean | "indeterminate") => {
@@ -246,7 +245,7 @@ export default function ProdutosTabClient({
             <TableHead className="w-11">
               <Checkbox
                 aria-label="Selecionar todos"
-                checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                checked={estadoSelecaoCabecalho}
                 onCheckedChange={handleSelectAll}
               />
             </TableHead>

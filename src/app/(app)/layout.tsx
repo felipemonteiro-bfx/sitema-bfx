@@ -65,7 +65,10 @@ export default async function AppLayout({
                 <span className="text-sm font-medium text-foreground truncate max-w-[120px] sm:max-w-[160px]">
                   {session.nomeExibicao || session.username}
                 </span>
-                <Badge variant={session.role === "admin" ? "info" : "secondary"} size="sm">
+                {/* infoSolid, nao info: no mobile este e' o unico badge "Admin"
+                    visivel (o da sidebar fica oculto) e o info translucido
+                    media 3.63:1 no tema claro, abaixo dos 4.5:1 com 10px. */}
+                <Badge variant={session.role === "admin" ? "infoSolid" : "secondary"} size="sm">
                   {session.role === "admin" ? "Admin" : "Vendedor"}
                 </Badge>
               </div>

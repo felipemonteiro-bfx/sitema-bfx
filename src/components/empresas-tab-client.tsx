@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, startTransition, useCallback } from "react";
+import { useState, startTransition, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Pencil, Search, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
+import { alternarSelecaoDaPagina, estadoCheckboxDaPagina } from "@/lib/selecao-em-massa";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
 import {
@@ -109,16 +110,16 @@ export default function EmpresasTabClient({
     defaultSort: "nome" as keyof EmpresaListItem,
   });
 
-  const allSelected = empresas.length > 0 && selectedIds.size === empresas.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < empresas.length;
+  // O cabecalho vale para a pagina visivel, nao para o dataset inteiro.
+  const idsVisiveis = useMemo(
+    () => (table.paginatedData as unknown as EmpresaListItem[]).map((e) => e.id),
+    [table.paginatedData]
+  );
+  const estadoSelecaoCabecalho = estadoCheckboxDaPagina(selectedIds, idsVisiveis);
 
   const handleSelectAll = useCallback((checked: boolean | "indeterminate") => {
-    if (checked) {
-      setSelectedIds(new Set(empresas.map((e) => e.id)));
-    } else {
-      setSelectedIds(new Set());
-    }
-  }, [empresas]);
+    setSelectedIds((prev) => alternarSelecaoDaPagina(prev, idsVisiveis, checked === true));
+  }, [idsVisiveis]);
 
   const handleSelectOne = useCallback((id: number, checked: boolean | "indeterminate") => {
     const next = new Set(selectedIds);
@@ -279,7 +280,7 @@ export default function EmpresasTabClient({
                 <TableHead className="w-11">
                   <Checkbox
                     aria-label="Selecionar todos"
-                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    checked={estadoSelecaoCabecalho}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>

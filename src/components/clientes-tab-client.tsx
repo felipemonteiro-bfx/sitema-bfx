@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, startTransition, useCallback, useRef } from "react";
+import { useState, startTransition, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { formatBRL, cn } from "@/lib/utils";
 import { AlertTriangle, Pencil, Search, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
+import { alternarSelecaoDaPagina, estadoCheckboxDaPagina } from "@/lib/selecao-em-massa";
 import { TablePagination } from "@/components/table-pagination";
 import { SortableHeader } from "@/components/sortable-header";
 import {
@@ -151,16 +152,17 @@ export default function ClientesTabClient({
     defaultSort: "nome" as keyof ClienteListItem,
   });
 
-  const allSelected = clientes.length > 0 && selectedIds.size === clientes.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < clientes.length;
+  // O cabecalho vale para a pagina visivel, nao para o dataset inteiro: com 15
+  // linhas na tela, marcar "todos" chegava a selecionar os 834 do banco.
+  const idsVisiveis = useMemo(
+    () => (table.paginatedData as unknown as ClienteListItem[]).map((c) => c.id),
+    [table.paginatedData]
+  );
+  const estadoSelecaoCabecalho = estadoCheckboxDaPagina(selectedIds, idsVisiveis);
 
   const handleSelectAll = useCallback((checked: boolean | "indeterminate") => {
-    if (checked) {
-      setSelectedIds(new Set(clientes.map((c) => c.id)));
-    } else {
-      setSelectedIds(new Set());
-    }
-  }, [clientes]);
+    setSelectedIds((prev) => alternarSelecaoDaPagina(prev, idsVisiveis, checked === true));
+  }, [idsVisiveis]);
 
   const handleSelectOne = useCallback((id: number, checked: boolean | "indeterminate") => {
     const next = new Set(selectedIds);
@@ -340,7 +342,7 @@ export default function ClientesTabClient({
                 <TableHead className="w-11">
                   <Checkbox
                     aria-label="Selecionar todos"
-                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    checked={estadoSelecaoCabecalho}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>

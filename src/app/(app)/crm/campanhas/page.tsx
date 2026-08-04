@@ -100,7 +100,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   name="estagio"
                   searchable={false}
                   placeholder="Todos"
-                  options={ESTAGIOS_ORDEM.map((e) => ({ value: e, label: estagioLabel(e) }))}
+                  options={[
+                    { value: "", label: "Todos" },
+                    ...ESTAGIOS_ORDEM.map((e) => ({ value: e, label: estagioLabel(e) })),
+                  ]}
                 />
               </div>
               <div className="space-y-1">
@@ -110,7 +113,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   name="empresa"
                   searchable={false}
                   placeholder="Todas"
-                  options={empresas.map((e) => ({ value: String(e.id), label: e.nome }))}
+                  options={[
+                    { value: "", label: "Todas" },
+                    ...empresas.map((e) => ({ value: String(e.id), label: e.nome })),
+                  ]}
                 />
               </div>
               <div className="space-y-1">
@@ -120,7 +126,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   name="tag"
                   searchable={false}
                   placeholder="Todas"
-                  options={tags.map((t) => ({ value: String(t.id), label: t.nome }))}
+                  options={[
+                    { value: "", label: "Todas" },
+                    ...tags.map((t) => ({ value: String(t.id), label: t.nome })),
+                  ]}
                 />
               </div>
               <div className="space-y-1">
@@ -131,6 +140,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   searchable={false}
                   placeholder="Todos"
                   options={[
+                    { value: "", label: "Todos" },
                     { value: "sim", label: "Já comprou" },
                     { value: "nao", label: "Nunca comprou (lead)" },
                   ]}
@@ -143,7 +153,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   name="nivel"
                   searchable={false}
                   placeholder="Todos"
-                  options={NIVEIS_FIDELIDADE.map((n) => ({ value: n, label: nivelLabel(n) }))}
+                  options={[
+                    { value: "", label: "Todos" },
+                    ...NIVEIS_FIDELIDADE.map((n) => ({ value: n, label: nivelLabel(n) })),
+                  ]}
                 />
               </div>
             </div>
