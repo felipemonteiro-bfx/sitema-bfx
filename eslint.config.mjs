@@ -103,16 +103,18 @@ const eslintConfig = defineConfig([
   // design-system/raw-color-baseline.json. Severidade rebaixada para nao
   // travar o build nestes arquivos; a lista encolhe a cada tela migrada nas
   // fases 11-14 (D-05), ate ficar vazia.
-  {
-    files: legacyRawColorFiles,
-    rules: { "bfx/no-raw-color": "warn" },
-  },
+  // `files: []` e rejeitado pelo ESLint ("Expected value to be a non-empty
+  // array"), e a lista de legados chega a zero justamente quando a migracao
+  // termina — o sucesso da fase 14 quebraria o config. Espalha-se o bloco
+  // condicionalmente para que ele simplesmente deixe de existir.
+  ...(legacyRawColorFiles.length > 0
+    ? [{ files: legacyRawColorFiles, rules: { "bfx/no-raw-color": "warn" } }]
+    : []),
   // Bloco de excecao — unico caso do projeto: documento HTML autonomo
   // servido com Tailwind por CDN, fora do pipeline de tokens do app.
-  {
-    files: exceptionRawColorFiles,
-    rules: { "bfx/no-raw-color": "off" },
-  },
+  ...(exceptionRawColorFiles.length > 0
+    ? [{ files: exceptionRawColorFiles, rules: { "bfx/no-raw-color": "off" } }]
+    : []),
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
