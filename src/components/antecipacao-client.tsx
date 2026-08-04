@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -250,24 +251,24 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">De mês/ano</label>
-          <input
+          <Input
             type="text"
             value={periodoInicio}
             onChange={(e) => setPeriodoInicio(e.target.value)}
             placeholder="03/2025"
             maxLength={7}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm w-28 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-28"
           />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Até mês/ano</label>
-          <input
+          <Input
             type="text"
             value={periodoFim}
             onChange={(e) => setPeriodoFim(e.target.value)}
             placeholder="04/2025"
             maxLength={7}
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm w-28 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-28"
           />
         </div>
         {(filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "") && (
@@ -277,7 +278,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               type="button"
               variant="ghost"
               size="sm"
-              className="h-9 text-muted-foreground hover:text-foreground"
+              className="h-10 text-muted-foreground hover:text-foreground"
               onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); }}
             >
               Limpar filtros

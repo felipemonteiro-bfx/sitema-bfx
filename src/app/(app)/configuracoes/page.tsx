@@ -693,14 +693,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
+                          <Input
                             type="number"
+                            inputSize="sm"
                             id="whatsappDiasInativo"
                             name="whatsappDiasInativo"
                             min={30}
                             max={365}
                             defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappDiasInativo) || 60)}
-                            className="h-8 w-16 rounded border border-border px-2 text-sm"
+                            className="w-16"
                           />
                           <label htmlFor="whatsappDiasInativo" className="text-sm">
                             dias sem compra para reativação
@@ -770,14 +771,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </label>
                       </div>
                       <div className="flex items-center gap-2 pl-6">
-                        <input
+                        <Input
                           type="number"
+                          inputSize="sm"
                           id="whatsappTakeoverMinutos"
                           name="whatsappTakeoverMinutos"
                           min={5}
                           max={480}
                           defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappTakeoverMinutos) || 60)}
-                          className="h-8 w-16 rounded border border-border px-2 text-sm"
+                          className="w-16"
                         />
                         <label htmlFor="whatsappTakeoverMinutos" className="text-sm">
                           minutos de pausa após atendente assumir (padrão: 60)
