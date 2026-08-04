@@ -74,7 +74,7 @@ export default function AssinaturaPage() {
 
   if (loading) {
     return (
-      <div className="h-[100dvh] flex items-center justify-center bg-gray-100 p-4">
+      <div className="h-[100dvh] flex items-center justify-center bg-muted p-4">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
           <p className="text-muted-foreground text-sm">Carregando documento...</p>
@@ -85,7 +85,7 @@ export default function AssinaturaPage() {
 
   if (isSigned) {
     return (
-      <div className="h-[100dvh] flex items-center justify-center bg-gray-100 p-4">
+      <div className="h-[100dvh] flex items-center justify-center bg-muted p-4">
         <Card className="max-w-sm w-full text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
             <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
@@ -101,10 +101,10 @@ export default function AssinaturaPage() {
 
   if ((error && !venda) || !venda) {
     return (
-      <div className="h-[100dvh] flex items-center justify-center bg-gray-100 p-4">
+      <div className="h-[100dvh] flex items-center justify-center bg-muted p-4">
         <Card className="max-w-sm w-full text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
-            <AlertCircle className="h-16 w-16 text-amber-500 mx-auto" />
+            <AlertCircle className="h-16 w-16 text-warning mx-auto" />
             <div>
               <h2 className="text-xl font-bold">Não foi possível carregar</h2>
               <p className="text-sm text-muted-foreground mt-2">{error || 'Venda não encontrada.'}</p>
@@ -116,7 +116,7 @@ export default function AssinaturaPage() {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden bg-gray-200">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-muted">
       {/* PDF iframe — ocupa todo espaço restante */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <iframe
@@ -139,10 +139,15 @@ export default function AssinaturaPage() {
           disabled={submitting}
           className="w-full mb-2 touch-manipulation"
         >
+          {/* Nota (Fase 14, D-06): a barra de assinatura fica sobre bg-white fixo porque a tinta
+              da assinatura (abaixo, SignatureCanvas/penColor) é sempre preta — se o fundo virasse
+              escuro no tema dark, o traço ficaria ilegível. Por isso as cores aqui usam valor
+              arbitrário (mesmo hex do Tailwind gray-*/red-*) em vez de token semântico, que
+              trocaria de valor no tema escuro. */}
           <div
             className={`w-full border-2 border-dashed rounded-lg flex items-center justify-center transition-colors min-h-[60px] ${
               signatureDataUrl
-                ? 'border-gray-300 bg-white'
+                ? 'border-[#d1d5db] bg-white'
                 : 'border-primary/50 bg-primary/5 active:bg-primary/10'
             }`}
           >
@@ -156,14 +161,14 @@ export default function AssinaturaPage() {
               </div>
             )}
           </div>
-          <div className="w-full border-t border-gray-700 mt-1" />
-          <p className="text-xs text-gray-500 mt-0.5 text-center">
+          <div className="w-full border-t border-[#374151] mt-1" />
+          <p className="text-xs text-[#6b7280] mt-0.5 text-center">
             {venda.cliente?.nome || 'Assinatura do Cliente'}
           </p>
         </button>
 
         {error && (
-          <div className="flex items-center gap-2 mb-2 text-xs text-red-600">
+          <div className="flex items-center gap-2 mb-2 text-xs text-[#dc2626]">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
             <span>{error}</span>
           </div>
@@ -205,7 +210,7 @@ export default function AssinaturaPage() {
             <button
               type="button"
               onClick={handleModalCancel}
-              className="p-2 -mr-1 rounded-full hover:bg-gray-100 active:bg-gray-200 touch-manipulation"
+              className="p-2 -mr-1 rounded-full hover:bg-[#f3f4f6] active:bg-[#e5e7eb] touch-manipulation"
             >
               <X className="h-5 w-5" />
             </button>

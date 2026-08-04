@@ -27,13 +27,20 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
 
   // A very simplified representation of the PDF layout
   // This would need to be expanded and styled to closely match the PDF
+  //
+  // Nota (Fase 14, D-06): esta prévia representa uma folha impressa/PDF — deve
+  // permanecer clara independente do tema do app (igual ao comportamento atual,
+  // sem nenhuma variante dark:). Por isso as cores usam valor arbitrário
+  // (mesmo hex do Tailwind gray-*) em vez de token semântico: o token
+  // "foreground"/"muted-foreground" troca de valor no tema escuro, o que
+  // deixaria o texto ilegível sobre este fundo branco fixo.
   return (
-    <div className="font-sans text-gray-800 p-4 bg-white shadow-md rounded-md">
+    <div className="font-sans text-[#1f2937] p-4 bg-white shadow-md rounded-md">
       {/* Header */}
       <div className="flex justify-between items-center border-b pb-4 mb-4">
         <div>
           <h1 className="text-xl font-bold">BFX Manager</h1>
-          <p className="text-sm text-gray-600">Recibo de Venda (Prévia)</p>
+          <p className="text-sm text-[#4b5563]">Recibo de Venda (Prévia)</p>
         </div>
         {logoPath && (
           <div className="relative w-20 h-20">
@@ -59,19 +66,19 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
 
       {/* Terms and Conditions */}
       <div className="mb-12">
-        <h2 className="text-lg font-semibold mb-2 border-b border-gray-100 pb-1">Termos e Condições</h2>
-        <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap italic">{filledTemplate}</p>
+        <h2 className="text-lg font-semibold mb-2 border-b border-[#f3f4f6] pb-1">Termos e Condições</h2>
+        <p className="text-sm text-[#4b5563] leading-relaxed whitespace-pre-wrap italic">{filledTemplate}</p>
       </div>
 
       {/* Signature Section */}
       <div className="mt-16 flex flex-col items-center">
-        <div className="w-64 border-t border-gray-400 mb-2"></div>
-        <p className="text-sm font-semibold text-gray-900">Assinatura: {dummyData.CLIENTE}</p>
-        <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Aceite Digital / Presencial</p>
+        <div className="w-64 border-t border-[#9ca3af] mb-2"></div>
+        <p className="text-sm font-semibold text-[#111827]">Assinatura: {dummyData.CLIENTE}</p>
+        <p className="text-[10px] text-[#9ca3af] uppercase tracking-widest mt-1">Aceite Digital / Presencial</p>
       </div>
 
-      <div className="mt-8 text-center border-t border-gray-50 pt-4">
-        <p className="text-[10px] text-gray-400">Este é um documento oficial gerado pelo BFX Manager.</p>
+      <div className="mt-8 text-center border-t border-[#f9fafb] pt-4">
+        <p className="text-[10px] text-[#9ca3af]">Este é um documento oficial gerado pelo BFX Manager.</p>
       </div>
     </div>
   );

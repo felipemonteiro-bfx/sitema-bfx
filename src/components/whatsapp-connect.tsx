@@ -111,7 +111,7 @@ export function WhatsAppConnect() {
           </>
         ) : (
           <>
-            <span className="flex h-2.5 w-2.5 rounded-full bg-gray-400" />
+            <span className="flex h-2.5 w-2.5 rounded-full bg-muted-foreground" />
             <span className="text-sm font-medium text-muted-foreground">Desconectado</span>
             <WifiOff className="h-4 w-4 text-muted-foreground" />
           </>

@@ -51,7 +51,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-6 py-10">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-100 via-slate-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background to-muted" />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-2xl">BFX Manager</CardTitle>

@@ -41,7 +41,7 @@ export function ReceiptEditorClient({
           </form>
         </div>
       </div>
-      <div className="lg:w-1/2 p-4 border rounded-md bg-gray-50">
+      <div className="lg:w-1/2 p-4 border rounded-md bg-muted">
         <h3 className="text-lg font-semibold mb-3">{previewLabel}</h3>
         <ReceiptPreview template={texto} logoPath={logoPath} />
       </div>

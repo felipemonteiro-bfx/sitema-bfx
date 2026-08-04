@@ -33,8 +33,8 @@ export default async function CatalogoPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-6 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-4">
             {cfg?.logoPath ? (
@@ -49,15 +49,15 @@ export default async function CatalogoPage() {
                 />
               </div>
             ) : (
-              <h1 className="text-2xl font-black tracking-tight text-blue-900 dark:text-blue-400">
+              <h1 className="text-2xl font-black tracking-tight text-info">
                 BFX
               </h1>
             )}
             <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+              <h1 className="text-xl font-bold text-foreground">
                 Catálogo de Produtos
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Atualizado em tempo real
               </p>
             </div>
@@ -69,8 +69,8 @@ export default async function CatalogoPage() {
         <CatalogoPublicoClient produtos={produtos} />
       </main>
 
-      <footer className="border-t border-slate-200 py-6 dark:border-slate-800">
-        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+      <footer className="border-t border-border py-6">
+        <p className="text-center text-sm text-muted-foreground">
           Gerado por BFX Manager · Catálogo automático
         </p>
       </footer>

@@ -64,6 +64,8 @@
   --color-status-partial: var(--status-partial);
   --color-status-partial-foreground: var(--status-partial-foreground);
   --color-card-elevated: var(--card-elevated);
+  --color-gradient-cta-from: var(--gradient-cta-from);
+  --color-gradient-cta-to: var(--gradient-cta-to);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -118,6 +120,12 @@
   --info-bg: oklch(0.95 0.04 240); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
   --status-partial: oklch(0.55 0.22 300); /* purple, 4o estado de antecipacao ("parcialmente_antecipado"), mesmo tom já usado no código (purple-600), formalizado como token (D-06) */
   --status-partial-foreground: oklch(0.985 0 0); /* texto claro: 5.20:1 sobre status-partial — UI-05 */
+
+  /* Gradiente decorativo - variant "gradient" do botão (button-variants.ts) e ícone da sidebar
+     (layout.tsx). Puramente decorativo, sem estado/superfície: por isso não muda entre temas
+     (mesmo comportamento anterior, quando a classe crua era idêntica em claro/escuro) — D-06 */
+  --gradient-cta-from: oklch(0.645 0.246 16.439); /* mesmo tom de rose-500 */
+  --gradient-cta-to: oklch(0.541 0.281 293.009); /* mesmo tom de violet-600 */
 
   /* Destructive (mantido para compatibilidade, mesmo valor de --error) */
   --destructive: oklch(0.57 0.24 25); /* L ajustado de 0.60 p/ 4.69:1 (era 4.27) — UI-05 */

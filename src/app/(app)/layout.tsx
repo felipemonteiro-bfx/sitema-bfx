@@ -98,7 +98,7 @@ function SidebarContent({
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sidebar-primary)] to-rose-500 shadow-md">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sidebar-primary)] to-gradient-cta-to shadow-md">
               <LayoutDashboard className="h-4 w-4 text-white" />
             </div>
             <div>

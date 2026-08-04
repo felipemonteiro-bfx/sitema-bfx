@@ -65,6 +65,12 @@ export default {
             foreground: "var(--status-partial-foreground)",
           },
         },
+        gradient: {
+          cta: {
+            from: "var(--gradient-cta-from)",
+            to: "var(--gradient-cta-to)",
+          },
+        },
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",

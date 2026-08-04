@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-6 py-10">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-100 via-slate-50 to-white" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background to-muted" />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <Skeleton className="mx-auto h-6 w-40" />
