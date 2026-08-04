@@ -1,4 +1,4 @@
-// D-XX: `getUberDirectConfig()`/`getUberPickupAddressJson()` agora leem a tabela Config
+// Aba Uber em /configuracoes: `getUberDirectConfig()`/`getUberPickupAddressJson()` agora leem a tabela Config
 // (aba Uber em /configuracoes) antes de cair para as variaveis de ambiente legadas —
 // mesmo padrao ja usado em `src/lib/meta-templates.ts` (mock de `@/lib/db`).
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -45,6 +45,19 @@ describe("getUberDirectConfig", () => {
     process.env.UBER_DIRECT_TOKEN = "token-env";
     const cfg = await getUberDirectConfig();
     expect(cfg).toEqual({ source: "static_token", customerId: "cust-env", token: "token-env" });
+  });
+
+  it("uberEnabled=1 com credenciais incompletas devolve null — NAO cai pro env (achado #3 da revisao Grok)", async () => {
+    configMock.findFirst.mockResolvedValue({
+      uberEnabled: 1,
+      uberClientId: "cid",
+      uberClientSecret: "", // faltando
+      uberCustomerId: "cust",
+    });
+    process.env.UBER_DIRECT_CUSTOMER_ID = "cust-env";
+    process.env.UBER_DIRECT_TOKEN = "token-env";
+    const cfg = await getUberDirectConfig();
+    expect(cfg).toBeNull();
   });
 
   it("cai para env quando prisma.config.findFirst falha (coluna ausente em producao antiga)", async () => {

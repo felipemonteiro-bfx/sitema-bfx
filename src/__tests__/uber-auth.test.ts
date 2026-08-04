@@ -1,4 +1,4 @@
-// D-XX (aba Uber em /configuracoes): a Uber nao tem refresh token — o token expira em
+// Aba Uber em /configuracoes: a Uber nao tem refresh token — o token expira em
 // ~30 dias e a integracao antiga guardava um token estatico (UBER_DIRECT_TOKEN), que
 // para de funcionar em silencio quando vence. Este arquivo trava o modulo OAuth
 // client_credentials que substitui isso: troca client_id/client_secret por um

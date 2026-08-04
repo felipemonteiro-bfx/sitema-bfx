@@ -1,4 +1,4 @@
-// D-XX (aba Uber em /configuracoes): trava a resolucao pura de qual credencial usar
+// Aba Uber em /configuracoes: trava a resolucao pura de qual credencial usar
 // para a cotacao Uber Direct — Config no banco (client_id/client_secret via OAuth,
 // nunca um token estatico) tem prioridade; variaveis de ambiente (customerId + token
 // estatico, o que ja esta hoje no AWS SSM) sao o fallback, para nao quebrar producao
