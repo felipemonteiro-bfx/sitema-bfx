@@ -283,10 +283,10 @@ export default function ProdutoFormClient({
                   value={nome}
                   onChange={(e) => setNome(normalizeProductName(e.target.value))}
                   placeholder="Ex: Teclado Mecânico RGB"
-                  className={cn("uppercase", isDuplicate ? "border-amber-500" : "")}
+                  className={cn("uppercase", isDuplicate ? "border-warning" : "")}
                 />
                 {isDuplicate && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-amber-600">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-warning">
                     <AlertCircle className="h-4 w-4" />
                     <span className="text-[10px] font-bold">Já existe!</span>
                   </div>
@@ -379,7 +379,7 @@ export default function ProdutoFormClient({
                         className="flex w-full items-start gap-2 rounded-md px-2 py-2 text-left text-xs transition-colors hover:bg-muted"
                         onClick={() => setNcm(item.codigo)}
                       >
-                        <span className="rounded bg-background px-2 py-1 font-semibold text-slate-900">
+                        <span className="rounded bg-background px-2 py-1 font-semibold text-foreground">
                           {item.codigo}
                         </span>
                         <span className="text-muted-foreground">{item.descricao}</span>

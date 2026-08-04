@@ -268,7 +268,7 @@ export function EditVendaFormClient({
                   />
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-2 py-1.5 rounded-md border border-amber-100 dark:border-amber-900/50">
+                <div className="flex items-center gap-2 text-xs text-warning bg-warning-bg px-2 py-1.5 rounded-md border border-warning">
                   <AlertCircle className="h-3 w-3" />
                   <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
                 </div>

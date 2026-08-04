@@ -194,14 +194,14 @@ export default function ImportacaoClient() {
             <span className="text-sm text-muted-foreground">
               {fileName ? fileName : "Nenhum arquivo escolhido"}
             </span>
-            {loading && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
+            {loading && <Loader2 className="h-5 w-5 animate-spin text-info" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">O sistema aceita ponto e vírgula (;) como separador padrão do Excel.</p>
         </CardContent>
       </Card>
 
       {data.length > 0 && (
-        <Card className="border-blue-200 bg-blue-50/10">
+        <Card className="border-info bg-info-bg">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-primary">2. Validar e Editar Dados</CardTitle>
@@ -213,7 +213,7 @@ export default function ImportacaoClient() {
                 variant="outline"
                 onClick={sugerirComIA}
                 disabled={suggesting || saving}
-                className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                className="border-warning text-warning hover:bg-warning-bg"
                 leftIcon={suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               >
                 Sugerir com IA
@@ -245,14 +245,14 @@ export default function ImportacaoClient() {
                         <DateInput
                           value={row.dataVenda}
                           onChange={(v) => updateCell(row.id, 'dataVenda', v)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1"
+                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <input 
                           value={row.vendedor} 
                           onChange={(e) => updateCell(row.id, 'vendedor', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1"
+                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -260,7 +260,7 @@ export default function ImportacaoClient() {
                           value={row.cliente} 
                           placeholder="OBRIGATÓRIO"
                           onChange={(e) => updateCell(row.id, 'cliente', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1 ${!row.cliente ? 'bg-red-50 text-destructive' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.cliente ? 'bg-error-bg text-destructive' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -268,7 +268,7 @@ export default function ImportacaoClient() {
                           value={row.produto} 
                           placeholder="OBRIGATÓRIO"
                           onChange={(e) => updateCell(row.id, 'produto', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-blue-500 rounded p-1 ${!row.produto ? 'bg-red-50 text-destructive' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.produto ? 'bg-error-bg text-destructive' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -276,7 +276,7 @@ export default function ImportacaoClient() {
                           type="number" 
                           value={row.valor} 
                           onChange={(e) => updateCell(row.id, 'valor', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-blue-500 rounded p-1 font-semibold"
+                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1 font-semibold"
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -284,7 +284,7 @@ export default function ImportacaoClient() {
                           type="number" 
                           value={row.parcelas} 
                           onChange={(e) => updateCell(row.id, 'parcelas', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-blue-500 rounded p-1"
+                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
@@ -296,7 +296,7 @@ export default function ImportacaoClient() {
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
-                        <button onClick={() => removeRow(row.id)} className="text-red-400 hover:text-destructive p-1">
+                        <button onClick={() => removeRow(row.id)} className="text-error hover:text-destructive p-1">
                           <Trash2 className="h-3 w-3" />
                         </button>
                       </TableCell>

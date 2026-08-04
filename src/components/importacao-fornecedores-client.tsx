@@ -138,7 +138,7 @@ export default function ImportacaoFornecedoresClient({
             <span className="text-sm text-muted-foreground">
               {fileName ?? "Nenhum arquivo escolhido"}
             </span>
-            {analisando && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
+            {analisando && <Loader2 className="h-5 w-5 animate-spin text-info" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
             Colunas: <strong>nome</strong> (obrigatório) e <strong>telefone</strong> (opcional).
@@ -148,7 +148,7 @@ export default function ImportacaoFornecedoresClient({
       </Card>
 
       {plano && (
-        <Card className="border-blue-200 bg-blue-50/10">
+        <Card className="border-info bg-info-bg">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-primary">2. Análise — nada foi gravado ainda</CardTitle>
             <Button
@@ -202,9 +202,9 @@ export default function ImportacaoFornecedoresClient({
       )}
 
       {resultado && (
-        <Card className="border-green-200 bg-green-50/10">
+        <Card className="border-success bg-success-bg">
           <CardHeader>
-            <CardTitle className="text-green-700">Importação concluída</CardTitle>
+            <CardTitle className="text-success">Importação concluída</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

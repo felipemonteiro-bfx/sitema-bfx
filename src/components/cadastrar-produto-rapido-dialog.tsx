@@ -274,7 +274,7 @@ export function CadastrarProdutoRapidoDialog({
                     className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted"
                     onClick={() => setNcm(item.codigo)}
                   >
-                    <span className="rounded bg-background px-2 py-0.5 font-semibold text-slate-900 dark:text-slate-100 shrink-0">
+                    <span className="rounded bg-background px-2 py-0.5 font-semibold text-foreground shrink-0">
                       {item.codigo}
                     </span>
                     <span className="text-muted-foreground">{item.descricao}</span>
