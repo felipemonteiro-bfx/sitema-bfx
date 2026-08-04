@@ -1,7 +1,16 @@
 /**
  * Integração com Uber Direct API para cotação de frete.
  * Documentação: https://developer.uber.com/docs/deliveries/direct
+ *
+ * Credenciais: prioridade para a Config no banco (aba "Uber" em
+ * /configuracoes, guarda client_id/client_secret e troca por access_token
+ * via OAuth em `src/lib/uber-auth.ts` — nunca expira na mão do usuário).
+ * Fallback para as variáveis de ambiente legadas (UBER_DIRECT_CUSTOMER_ID +
+ * UBER_DIRECT_TOKEN, token estático hoje no AWS SSM), para não quebrar
+ * produção enquanto a migração para a tela não acontece.
  */
+import { prisma } from "@/lib/db";
+import { obterTokenUber } from "@/lib/uber-auth";
 import {
   interpretarRespostaUber,
   interpretarFalhaDeRede,
@@ -10,16 +19,96 @@ import {
 
 const UBER_API_BASE = "https://api.uber.com/v1";
 
-export type UberDirectConfig = {
-  customerId: string;
-  token: string;
+export type UberDirectConfig =
+  | {
+      source: "oauth";
+      customerId: string;
+      clientId: string;
+      clientSecret: string;
+      /** Header x-uber-organizationuuid, usado pelas rotas de Receipts (Uber for Business) — não usado na cotação do Direct. */
+      organizationId?: string;
+    }
+  | { source: "static_token"; customerId: string; token: string };
+
+export type UberConfigDB = {
+  uberEnabled?: number | null;
+  uberClientId?: string | null;
+  uberClientSecret?: string | null;
+  uberCustomerId?: string | null;
+  uberOrganizationId?: string | null;
 };
 
-export function getUberDirectConfig(): UberDirectConfig | null {
+export type UberPickupConfigDB = { uberPickupAddress?: string | null };
+
+/**
+ * Resolve a config oauth a partir da Config do banco. Exige `uberEnabled === 1`
+ * (opt-in explícito pela tela — o default da coluna é 0/null, então uma linha
+ * de Config já existente antes desta feature nunca fica "ligada" sozinha) e
+ * os três campos (client_id, client_secret, customer_id) preenchidos.
+ */
+export function resolveUberDirectConfigFromDb(
+  cfg: UberConfigDB | null | undefined
+): UberDirectConfig | null {
+  if (!cfg || Number(cfg.uberEnabled) !== 1) return null;
+  const clientId = (cfg.uberClientId ?? "").trim();
+  const clientSecret = (cfg.uberClientSecret ?? "").trim();
+  const customerId = (cfg.uberCustomerId ?? "").trim();
+  if (!clientId || !clientSecret || !customerId) return null;
+  const organizationId = (cfg.uberOrganizationId ?? "").trim() || undefined;
+  return {
+    source: "oauth",
+    clientId,
+    clientSecret,
+    customerId,
+    ...(organizationId ? { organizationId } : {}),
+  };
+}
+
+/** Fallback legado: UBER_DIRECT_CUSTOMER_ID + UBER_DIRECT_TOKEN (token estático, hoje no SSM). */
+export function resolveUberDirectConfigFromEnv(): UberDirectConfig | null {
   const customerId = process.env.UBER_DIRECT_CUSTOMER_ID?.trim();
   const token = process.env.UBER_DIRECT_TOKEN?.trim();
   if (!customerId || !token) return null;
-  return { customerId, token };
+  return { source: "static_token", customerId, token };
+}
+
+/** Endereço de coleta salvo no banco, com fallback para UBER_PICKUP_ADDRESS_JSON. */
+export function resolveUberPickupAddressJson(
+  cfg: UberPickupConfigDB | null | undefined
+): string | null {
+  const fromDb = (cfg?.uberPickupAddress ?? "").trim();
+  if (fromDb) return fromDb;
+  const fromEnv = process.env.UBER_PICKUP_ADDRESS_JSON?.trim();
+  return fromEnv || null;
+}
+
+/** Config Uber Direct: Config do banco (se habilitada) com fallback para as envs legadas. */
+export async function getUberDirectConfig(): Promise<UberDirectConfig | null> {
+  try {
+    const cfg = await prisma.config.findFirst();
+    const fromDb = resolveUberDirectConfigFromDb(cfg as UberConfigDB | null);
+    if (fromDb) return fromDb;
+  } catch (err) {
+    console.error("[getUberDirectConfig] Erro ao ler Config:", err);
+  }
+  return resolveUberDirectConfigFromEnv();
+}
+
+/** Endereço de coleta: Config do banco com fallback para UBER_PICKUP_ADDRESS_JSON. */
+export async function getUberPickupAddressJson(): Promise<string | null> {
+  try {
+    const cfg = await prisma.config.findFirst();
+    return resolveUberPickupAddressJson(cfg as UberPickupConfigDB | null);
+  } catch (err) {
+    console.error("[getUberPickupAddressJson] Erro ao ler Config:", err);
+    return process.env.UBER_PICKUP_ADDRESS_JSON?.trim() || null;
+  }
+}
+
+/** Resolve o bearer a usar: token estático (legado) ou access_token OAuth (banco, sob demanda e cacheado). */
+async function resolveUberBearerToken(config: UberDirectConfig): Promise<string> {
+  if (config.source === "static_token") return config.token;
+  return obterTokenUber(config.clientId, config.clientSecret, "eats.deliveries");
 }
 
 export type UberAddress = {
@@ -88,11 +177,13 @@ export async function getDeliveryQuote(
   const url = `${UBER_API_BASE}/customers/${config.customerId}/delivery_quotes`;
 
   try {
+    const token = await resolveUberBearerToken(config);
+
     const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${config.token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(body),
     });
@@ -106,6 +197,9 @@ export async function getDeliveryQuote(
 
     return interpretarRespostaUber(res.status, data);
   } catch (err) {
+    // Cobre tanto falha de rede na cotacao quanto falha ao obter o access_token via OAuth
+    // (client_secret errado, 429 no endpoint de token, etc.) — mesmo formato de erro para
+    // quem chama, sem vazar detalhe da credencial (T-09-02).
     console.error("Uber Direct API error:", err);
     return interpretarFalhaDeRede();
   }

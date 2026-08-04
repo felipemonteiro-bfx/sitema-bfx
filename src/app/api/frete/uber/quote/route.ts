@@ -3,7 +3,7 @@ import { getUberDirectConfig, getDeliveryQuote, type UberAddress } from "@/lib/u
 import { statusHttpParaFalhaUber, mensagemFalhaUber } from "@/lib/uber-quote-result";
 
 export async function POST(req: NextRequest) {
-  const config = getUberDirectConfig();
+  const config = await getUberDirectConfig();
   if (!config) {
     const motivo = "sem_credencial" as const;
     const mensagem = mensagemFalhaUber(motivo);
