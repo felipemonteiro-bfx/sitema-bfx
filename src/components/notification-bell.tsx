@@ -149,7 +149,7 @@ export function NotificationBell() {
                     variant="ghost"
                     onClick={() => markOneRead(n.id)}
                     className={cn(
-                      "h-auto w-full flex-col items-start justify-start gap-0 rounded-none p-0 text-left font-normal shadow-none",
+                      "h-auto w-full flex-col items-start justify-start gap-0 whitespace-normal rounded-none p-0 text-left font-normal shadow-none",
                       "hover:bg-transparent hover:shadow-none active:scale-100"
                     )}
                   >
