@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/guards";
+import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -169,6 +169,25 @@ async function saveWhatsApp(formData: FormData) {
 
 async function saveUber(formData: FormData) {
   "use server";
+  // Escreve client_secret OAuth — superfície sensível nova; requireAdmin() na página só
+  // protege a renderização, não a server action em si (achado #4 da revisão do Grok).
+  await requireAdminOrThrow();
+
+  const street = String(formData.get("uberPickupStreet") || "").trim();
+  const city = String(formData.get("uberPickupCity") || "").trim();
+  const state = String(formData.get("uberPickupState") || "").trim();
+  const zip = String(formData.get("uberPickupZip") || "").trim();
+  const country = String(formData.get("uberPickupCountry") || "").trim() || "BR";
+  const enderecoPreenchido = Boolean(street || city || state || zip);
+  const enderecoCompleto = Boolean(street && city && state && zip);
+  // classificarProntidaoUber só exige street_address não-vazio para considerar o endereço
+  // "pronto" — um endereço com só a rua preenchida passaria essa checagem e pareceria
+  // pronto sem ser aceito pela Uber de verdade (achado #5 da revisão do Grok). Exige os 4
+  // campos ou nenhum, antes de tocar no banco.
+  if (enderecoPreenchido && !enderecoCompleto) {
+    redirect("/configuracoes?tab=uber&error=uber_pickup_incompleto");
+  }
+
   try {
     const clientId = String(formData.get("uberClientId") || "").trim() || null;
     // Campo sensível: só sobrescreve quando o admin digitar um novo valor (mesmo padrão
@@ -179,12 +198,7 @@ async function saveUber(formData: FormData) {
     const organizationId = String(formData.get("uberOrganizationId") || "").trim() || null;
     const enabled = formData.get("uberEnabled") === "on" ? 1 : 0;
 
-    const street = String(formData.get("uberPickupStreet") || "").trim();
-    const city = String(formData.get("uberPickupCity") || "").trim();
-    const state = String(formData.get("uberPickupState") || "").trim();
-    const zip = String(formData.get("uberPickupZip") || "").trim();
-    const country = String(formData.get("uberPickupCountry") || "").trim() || "BR";
-    const uberPickupAddress = street
+    const uberPickupAddress = enderecoCompleto
       ? JSON.stringify({ street_address: [street], city, state, zip_code: zip, country })
       : null;
 
