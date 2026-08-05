@@ -8,7 +8,11 @@ export function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 2) return digits ? `(${digits}` : "";
   if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  // Celular tem 11 digitos e agrupa 5+4; fixo tem 10 e agrupa 4+4. Cortar
+  // sempre no 7o tratava todo numero como celular, e um fixo virava 5+3:
+  // "92 9294-6066" era regravado como "(92) 92946-066" a cada save.
+  const corte = digits.length > 10 ? 7 : 6;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, corte)}-${digits.slice(corte)}`;
 }
 
 /** Formata CEP BR: XXXXX-XXX */
