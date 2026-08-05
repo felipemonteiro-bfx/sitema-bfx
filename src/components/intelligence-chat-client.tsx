@@ -35,7 +35,11 @@ function MarkdownTable({ block }: { block: string }) {
           {table.rows.map((row, ri) => (
             <tr key={ri} className={ri % 2 === 0 ? "bg-background" : "bg-muted/20"}>
               {row.map((cell, ci) => (
-                <td key={ci} className="px-3 py-1.5 text-muted-foreground border-t whitespace-nowrap">
+                // `text-muted-foreground` media 4.43:1 sobre a linha zebrada no
+                // tema claro, abaixo do minimo de 4.5. Celula de dado e conteudo
+                // primario: vai de `foreground`, e a distincao com o cabecalho
+                // continua sendo o `font-semibold` (achado 7).
+                <td key={ci} className="px-3 py-1.5 text-foreground border-t whitespace-nowrap">
                   {cell}
                 </td>
               ))}
@@ -73,8 +77,58 @@ const MD_COMPONENTS = {
   hr: () => <hr className="my-2 border-border" />,
 };
 
+const TOOL_CALL_ABRE = "<tool_call>";
+const TOOL_CALL_FECHA = "</tool_call>";
+const FUNCTION_ABRE = "<function";
+const FUNCTION_FECHA = "</function>";
+
+/**
+ * Remove um bloco `abre … fecha` inteiro, incluindo o conteudo. Bloco sem
+ * fechamento derruba o resto do texto de proposito: o que vem depois de uma
+ * abertura pendurada e continuacao do markup, nao resposta.
+ */
+function removerBloco(texto: string, abre: string, fecha: string): string {
+  return texto
+    .split(abre)
+    .map((parte, i) => {
+      if (i === 0) return parte;
+      const depois = parte.split(fecha);
+      return depois.length > 1 ? depois.slice(1).join(fecha) : "";
+    })
+    .join("");
+}
+
+/**
+ * Remove o markup interno de chamada de ferramenta que alguns provedores emitem
+ * no corpo do texto em vez do canal proprio — `<tool_call>…</tool_call>` e
+ * `<function=…>…</function>`. Isso vazava cru para o usuario (achado 8 da fase
+ * 17); o caso visto em producao foi `<tool_call> <function=resumo_financeiro>`.
+ *
+ * Filtro de RENDERIZACAO: o conteudo ja persistido em `ai_mensagens` nao e
+ * tocado. Texto de erro do provedor tambem nao — e diagnostico legitimo, ainda
+ * que feio.
+ *
+ * Nota de seguranca (CLAUDE.md): so `.split()`/`.join()`, nenhuma execucao de
+ * regex com estado.
+ */
+export function stripToolMarkup(text: string): string {
+  const semToolCall = removerBloco(text, TOOL_CALL_ABRE, TOOL_CALL_FECHA);
+  const semFunction = removerBloco(semToolCall, FUNCTION_ABRE, FUNCTION_FECHA);
+  // Fechamento orfao (abertura ja consumida em outro bloco) nao casa com
+  // `<function` e sobreviveria ao passo anterior.
+  return semFunction.split(FUNCTION_FECHA).join("").trim();
+}
+
 function MarkdownContent({ text }: { text: string }) {
-  const parts = splitTextAndTables(text);
+  const limpo = stripToolMarkup(text);
+  if (!limpo) {
+    return (
+      <p className="text-xs italic text-muted-foreground">
+        A resposta veio só com uma chamada interna de ferramenta, sem texto para exibir.
+      </p>
+    );
+  }
+  const parts = splitTextAndTables(limpo);
   return (
     <>
       {parts.map((part, i) =>
@@ -173,15 +227,19 @@ export function IntelligenceChatClient({
                 )}
                 <span>{new Date(m.at).toLocaleString("pt-BR")}</span>
               </div>
+              {/* max-w-full no mobile: com 92% sobravam 210px de leitura em
+                  390px, 54% da tela (achado 6). O limite de 75% volta no sm.
+                  Os rotulos saem de `muted-foreground` — mediam 3.65:1 sobre o
+                  tint da bolha do usuario e 4.45:1 na do assistente (achado 9). */}
               <div className="flex justify-end">
-                <div className="w-full max-w-[92%] rounded-2xl border bg-primary/10 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
-                  <div className="text-xs font-semibold text-muted-foreground">Você</div>
+                <div className="w-full max-w-full rounded-2xl border bg-primary/10 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
+                  <div className="text-xs font-semibold text-foreground">Você</div>
                   <div className="break-words">{m.prompt}</div>
                 </div>
               </div>
               <div className="flex justify-start">
-                <div className="w-full max-w-[92%] rounded-2xl border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
-                  <div className="text-xs font-semibold text-muted-foreground">Assistente</div>
+                <div className="w-full max-w-full rounded-2xl border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
+                  <div className="text-xs font-semibold text-foreground">Assistente</div>
                   <div className="space-y-1 break-words text-sm">
                     <MarkdownContent text={m.response} />
                   </div>

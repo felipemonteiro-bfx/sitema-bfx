@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { PageHeader } from "@/components/page-header";
 import { runAiWithActions } from "@/lib/ai";
 import { getSession } from "@/lib/session";
 import { revalidatePath } from "next/cache";
@@ -174,30 +175,32 @@ export default async function Page() {
 
   // O <main> do layout ja aplica px-4/lg:px-8 — repetir aqui dobrava o recuo
   // lateral so nesta tela. A largura de leitura (max-w-6xl) fica.
+  //
+  // O titulo era um `CardTitle` (div, 30px/600) e a pagina nao tinha heading
+  // nenhum: `main h1` vinha vazio, contra as outras 20 rotas com h1 24px/700 e
+  // breadcrumb. Passa a usar `PageHeader` como todo mundo (achado 4). O padding
+  // do card cai para `p-4` no mobile: em 390px sobravam 210px de leitura, 54%
+  // da tela (achado 6).
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 pb-6">
+      <PageHeader
+        title="BFX Intelligence (IA)"
+        description="Assistente virtual para estratégias, cobranças e dúvidas do time."
+        breadcrumbs={[{ label: "BFX Intelligence" }]}
+        actions={
+          <form action={clearAi}>
+            <button
+              type="submit"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full text-xs cursor-pointer")}
+            >
+              Limpar conversa
+            </button>
+          </form>
+        }
+      />
+
       <Card className="h-full">
-        <CardHeader className="space-y-1">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="space-y-1">
-              <CardTitle className="text-2xl font-semibold sm:text-3xl">
-                BFX Intelligence (IA)
-              </CardTitle>
-              <div className="text-sm text-muted-foreground sm:text-base text-balance">
-                Assistente virtual para estratégias, cobranças e dúvidas do time.
-              </div>
-            </div>
-            <form action={clearAi}>
-              <button
-                type="submit"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full text-xs cursor-pointer")}
-              >
-                Limpar conversa
-              </button>
-            </form>
-          </div>
-        </CardHeader>
-        <CardContent className="flex h-[60vh] min-h-[420px] flex-col gap-4 sm:h-[68vh] lg:h-[72vh]">
+        <CardContent className="flex h-[60vh] min-h-[420px] flex-col gap-4 p-4 sm:p-6 sm:h-[68vh] lg:h-[72vh]">
           <IntelligenceChatClient
             history={history}
             action={askAi}
