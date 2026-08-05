@@ -356,7 +356,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                         Nenhuma venda pendente de boleto.
                       </p>
                       <Link href="/historico?boleto=1" className={buttonVariants({ variant: "outline", size: "sm" })}>
-                        Ir para Histórico <ExternalLink className="h-4 w-4 ml-1" />
+                        Ir para Histórico <ExternalLink className="h-4 w-4 shrink-0" />
                       </Link>
                     </div>
                   ) : (

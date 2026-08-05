@@ -100,7 +100,7 @@ export function CadastrarFornecedorRapidoDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={loading || !nome.trim()}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               Cadastrar e selecionar
             </Button>
           </div>

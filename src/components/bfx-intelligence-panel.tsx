@@ -312,7 +312,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                               });
                             }}
                           >
-                            <Plus className="h-3 w-3 mr-1" />
+                            <Plus className="h-3 w-3" />
                             Adicionar
                           </Button>
                         </div>
@@ -456,7 +456,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           });
                         }}
                       >
-                        <Plus className="h-3 w-3 mr-1" />
+                        <Plus className="h-3 w-3" />
                         Adicionar Kit
                       </Button>
                     </div>

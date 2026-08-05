@@ -47,8 +47,23 @@ describe("D2 — classe de tamanho no proprio <svg> vence o padrao da base", () 
   it("o padrao size-4 da base passa a ser condicional", () => {
     expect(variants.includes("[&_svg]:size-4")).toBe(false);
     expect(
-      variants.includes("[&_svg:not([class*='size-']):not([class*='h-'])]:size-4")
+      variants.includes("[&_svg:not([class*='size-']):not([class*=' h-']):not([class^='h-'])]:size-4")
     ).toBe(true);
+  });
+
+  it("a guarda casa em borda de palavra — `lucide-trash-2` contem a substring `h-2`", () => {
+    // Sem a borda, `[class*='h-']` casaria com o NOME do icone que o lucide
+    // injeta (`class=\"lucide lucide-trash-2\"`), e um <Trash2 /> sem classe de
+    // tamanho pararia de herdar o padrao — cairia em `width=\"24\"`, 24px dentro
+    // de um botao, sem nada acusar. Vale tambem para `lucide-refresh-cw`.
+    expect(variants.includes("[class*='h-']")).toBe(false);
+    for (const nome of ["lucide lucide-trash-2", "lucide lucide-refresh-cw"]) {
+      expect(nome.includes("h-")).toBe(true); // a armadilha existe...
+      expect(nome.includes(" h-") || nome.startsWith("h-")).toBe(false); // ...e a borda a desarma
+    }
+    // e a classe de tamanho de verdade continua casando
+    const comTamanho = "lucide lucide-trash-2 h-4 w-4";
+    expect(comTamanho.includes(" h-") || comTamanho.startsWith("h-")).toBe(true);
   });
 
   it("mantem shrink-0 e pointer-events-none incondicionais — nao sao tamanho", () => {
@@ -93,6 +108,24 @@ describe("D4 — um unico gap entre icone e texto do botao", () => {
 
   it("o spinner de loading tambem nao soma margem", () => {
     expect(fonte.includes('<Loader2 className="mr-2')).toBe(false);
+  });
+
+  it("nao deixa margem somando ao gap-2 em icone que e filho direto do botao", () => {
+    // Enquanto children era embrulhado, icone e texto eram UM item flex e o
+    // `gap-2` nao se aplicava entre eles — o `mr-2` fazia o espaco sozinho.
+    // Sem o embrulho sao dois itens, e os dois somam: 16px onde a escala pede 8.
+    for (const arquivo of [
+      "src/components/cadastrar-cliente-rapido-dialog.tsx",
+      "src/components/cadastrar-fornecedor-rapido-dialog.tsx",
+      "src/components/cadastrar-produto-rapido-dialog.tsx",
+    ]) {
+      expect(ler(arquivo).includes('<Loader2 className="h-4 w-4 mr-2 animate-spin" />')).toBe(false);
+    }
+    expect(ler("src/app/(app)/boletos/page.tsx").includes('<ExternalLink className="h-4 w-4 ml-1" />')).toBe(false);
+  });
+
+  it("nao renderiza item flex vazio quando o IconButton esta em loading", () => {
+    expect(fonte.includes("{loading && !loadingText && children ? (")).toBe(true);
   });
 
   it("nao embrulha children num <span> — era a causa raiz da quebra de linha no botao", () => {

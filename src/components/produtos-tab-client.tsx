@@ -5,7 +5,6 @@ import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -218,7 +217,7 @@ export default function ProdutosTabClient({
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm" disabled={bulkDeleting}>
-                <Trash2 className="h-4 w-4 mr-1" />
+                <Trash2 className="h-4 w-4" />
                 Excluir selecionados
               </Button>
             </AlertDialogTrigger>
@@ -379,7 +378,8 @@ export default function ProdutosTabClient({
                     <Button
                       type="button"
                       variant="ghost"
-                      className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
+                      size="iconSm"
+                      className="text-muted-foreground hover:text-foreground"
                       title="Editar"
                       aria-label={`Editar ${p.nome}`}
                       onClick={() => handleOpenProduto(p.id)}

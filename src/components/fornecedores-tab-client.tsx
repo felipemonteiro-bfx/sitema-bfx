@@ -192,7 +192,7 @@ export default function FornecedoresTabClient({
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" disabled={bulkDeleting}>
-                    <Trash2 className="h-4 w-4 mr-1" />
+                    <Trash2 className="h-4 w-4" />
                     Excluir selecionados
                   </Button>
                 </AlertDialogTrigger>

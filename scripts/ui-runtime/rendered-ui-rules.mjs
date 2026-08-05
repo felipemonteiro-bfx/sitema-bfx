@@ -42,6 +42,11 @@ export const LIMITES = {
   toleranciaIconePx: 0.5,
   /** Idem para scrollWidth/clientWidth, que sao inteiros arredondados. */
   toleranciaOverflowPx: 1,
+  /**
+   * Tamanho que um `<svg>` sem classe de tamanho deve herdar quando esta
+   * dentro de um controle — e o `size-4` da base do `buttonVariants`.
+   */
+  padraoDeIconeEmBotaoPx: 16,
   /** Texto grande a partir daqui. */
   textoGrandePx: 24,
   /** Texto grande em negrito a partir daqui. */
@@ -324,7 +329,32 @@ export function analyzeSnapshot(snapshot, options = {}) {
     if (!(rw > 0) || !(rh > 0)) continue; // escondido (scale-0, display:none) — nao ha o que medir
 
     const declarado = parseDeclaredIconSize(icone.cls);
-    if (!declarado) continue;
+    if (!declarado) {
+      // Icone sem classe de tamanho DENTRO de um botao herda o padrao do
+      // `buttonVariants`. Conferir isso nao e zelo: a guarda `:not()` que
+      // devolve a palavra final a quem declara o tamanho pode, se mal escrita,
+      // casar com o NOME do icone (`lucide-trash-2` contem `h-2`) e derrubar a
+      // heranca — o icone cairia nos atributos intrinsecos, 24px, e nenhuma
+      // outra regra veria. Fora de botao nao ha padrao a esperar.
+      const padrao = Number(options.padraoDeIconeEmBotaoPx ?? LIMITES.padraoDeIconeEmBotaoPx);
+      // So dentro de `<button>`/`[role=button]`, que e onde o `buttonVariants`
+      // manda. Um `<a>` qualquer nao tem padrao herdado a esperar, e cobrar
+      // 16px dele seria acusar errado.
+      if (!icone.ownerEhBotao || !icone.ownerPath || !(padrao > 0)) continue;
+      if (Math.abs(rw - padrao) <= LIMITES.toleranciaIconePx && Math.abs(rh - padrao) <= LIMITES.toleranciaIconePx) {
+        continue;
+      }
+      achados.push({
+        rule: "ICON_SIZE",
+        ...ctx,
+        path: icone.path,
+        detail: `sem classe de tamanho dentro de um controle: deveria herdar o padrao de ${fmt(padrao)}px do buttonVariants`,
+        measured: `${fmt(rw)}x${fmt(rh)}`,
+        expected: `${fmt(padrao)}x${fmt(padrao)}`,
+        owner: icone.ownerPath,
+      });
+      continue;
+    }
     if (declarado.ambiguous) {
       if (naoVerificados) naoVerificados.push({ ...ctx, path: icone.path, motivo: "tamanho atras de prefixo responsivo/estado" });
       continue;

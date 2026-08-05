@@ -226,6 +226,28 @@ reprova, achado novo reprova. `--update-baseline` regrava.
 - `src/__tests__/gate-ui-runtime.test.ts`, `src/__tests__/icone-em-botao.test.ts`
 - `package.json` — `npm run ui:runtime` e `npm run ui:runtime:strict`
 
+## Revisão em subagente — o que voltou
+
+Duas passadas de revisão (a segunda depois que o D7 apareceu). Achados confirmados e corrigidos:
+
+| Achado | Gravidade | O que era |
+|---|---|---|
+| A guarda `h-` casava com o **nome do ícone** | alta | O lucide emite `class="lucide lucide-trash-2"`, e ali dentro há a substring `h-2`; `lucide-refresh-cw` traz `h-c`. Um `<Trash2 />` **sem** classe de tamanho deixaria de herdar o padrão e cairia em `width="24"` — 24px dentro de um botão. Nada no repo dispara hoje (as 16 ocorrências declaram `h-N w-N`), mas o próximo call site quebraria em silêncio. Corrigido casando só em **borda de palavra**: `:not([class*=' h-']):not([class^='h-'])`. |
+| `buttonVariants` aplicado duas vezes | média | `produtos-tab-client.tsx:379` era um `<Button>` com `buttonVariants(...)` dentro do `className`. O `twMerge` resolvia `h-10`→`h-8`, mas `iconSm` não declara padding, então o `px-4 py-2` da `size` default sobrevivia: content-box de **0px** para um ícone de 16px. Ironia útil — o `BUTTON_OVERFLOW` do gate novo teria acusado. Corrigido para a prop `size`. |
+| Margem voltou a somar ao `gap-2` | média | Efeito colateral do D7: enquanto `children` era embrulhado, ícone e texto eram **um** item flex e o `gap-2` não se aplicava entre eles — o `mr-2` fazia o espaço sozinho. Sem o embrulho são dois itens e os dois somam. Corrigido em 3 diálogos de cadastro rápido e em `/boletos`. |
+| `IconButton` em `loading` ganhava item flex vazio | baixa | O `<span>` de `opacity-0` era renderizado mesmo com `children === null`, e item flex vazio consome um `gap-2`: 8px fantasma deslocando o spinner. Corrigido com `&& children`. |
+| **Gate saía 0 sem ter medido nada** | **alta** | Falha de navegação era só impressa. Se o login falhasse, as 88 páginas caíam no `continue`, `achados` ficava vazio e o gate imprimia `OK`. Exatamente o "passar em silêncio" que o cabeçalho do arquivo diz nunca fazer. Agora reprova quando `paginasMedidas === 0` ou quando há qualquer falha de navegação, e o relatório abre com `paginas medidas: N de M`. |
+| `--update-baseline` podia apagar o baseline | média | Gravava só o que a execução corrente coletou: `--routes /crm --update-baseline` descartaria as outras 21 rotas, e um scan todo redirecionado para login gravaria `[]`. Agora **recusa** quando a varredura é incompleta e **une** ao baseline existente quando é parcial. |
+| Cor não parseável sumia sem rastro | baixa | Ao contrário do fundo irresolúvel, caía num `continue` mudo. Se `getComputedStyle().stroke` passasse a devolver `currentcolor` cru, **toda** a verificação de contraste de ícone desapareceria sem um aviso. Agora conta e reporta. |
+| `ResizeObserver` cego a mudança de conteúdo | baixa | Observava só a faixa, que é `max-w-full`: depois de saturada, um rótulo que cresce ("Gerar (10)") não muda a caixa e a pista da direita ficava desatualizada justamente quando passa a ser necessária. Agora observa também os gatilhos, e `children` está nas dependências. |
+| Fade das abas na cor errada | cosmética | `from-background` pintava a cor da **página** sobre uma faixa que é `bg-muted/60`. Trocado por `from-muted`. |
+| `--base` sem valor virava `"undefined/dashboard"` | baixa | `lerArgs` agora exige valor. |
+
+Consequência boa de corrigir a guarda de tamanho: a regra (c) do gate ganhou o caso que faltava —
+**ícone sem classe de tamanho dentro de `<button>` deve herdar 16px**. Sem isso o gate era cego
+exatamente para a regressão que a guarda mal escrita causaria. Verificado contra produção: 0 falsos
+positivos.
+
 ## Fora de escopo
 
 - Migrar o repo de `h-N w-N` para `size-N` em ícone (seria o alinhamento total com o shadcn atual;

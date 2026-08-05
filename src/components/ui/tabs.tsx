@@ -72,7 +72,7 @@ TabsContent.displayName = TabsPrimitive.Content.displayName
 const ScrollableTabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   const faixa = React.useRef<HTMLDivElement | null>(null)
   const [pistas, setPistas] = React.useState({ esquerda: false, direita: false })
 
@@ -90,12 +90,18 @@ const ScrollableTabsList = React.forwardRef<
     el.addEventListener("scroll", medir, { passive: true })
     const observador =
       typeof ResizeObserver === "undefined" ? null : new ResizeObserver(medir)
+    // Observar SO a faixa nao basta: ela e `max-w-full`, entao depois que o
+    // conteudo passa de 100% a caixa dela para de mudar e um rotulo que cresce
+    // ("Gerar (10)") nunca dispararia o observer — a pista da direita ficaria
+    // desatualizada justamente quando passa a ser necessaria. Por isso os
+    // gatilhos tambem sao observados, e `children` esta nas dependencias.
     observador?.observe(el)
+    for (const filho of Array.from(el.children)) observador?.observe(filho)
     return () => {
       el.removeEventListener("scroll", medir)
       observador?.disconnect()
     }
-  }, [medir])
+  }, [medir, children])
 
   const guardarRef = React.useCallback(
     (no: HTMLDivElement | null) => {
@@ -118,12 +124,14 @@ const ScrollableTabsList = React.forwardRef<
           className
         )}
         {...props}
-      />
+      >
+        {children}
+      </TabsList>
       <span
         aria-hidden
         className={cn(
           pista,
-          "left-0 justify-start rounded-l-xl bg-gradient-to-r from-background to-transparent pl-0.5",
+          "left-0 justify-start rounded-l-xl bg-gradient-to-r from-muted to-transparent pl-0.5",
           pistas.esquerda ? "opacity-100" : "opacity-0"
         )}
       >
@@ -133,7 +141,7 @@ const ScrollableTabsList = React.forwardRef<
         aria-hidden
         className={cn(
           pista,
-          "right-0 justify-end rounded-r-xl bg-gradient-to-l from-background to-transparent pr-0.5",
+          "right-0 justify-end rounded-r-xl bg-gradient-to-l from-muted to-transparent pr-0.5",
           pistas.direita ? "opacity-100" : "opacity-0"
         )}
       >

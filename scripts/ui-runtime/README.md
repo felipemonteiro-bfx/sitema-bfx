@@ -45,6 +45,11 @@ A matriz cheia são 88 páginas e leva de 10 a 15 minutos. Para iterar, filtre c
 | d | `DOC_OVERFLOW` | `document.scrollWidth <= document.clientWidth` | rolagem horizontal indevida da página |
 | e | `CONTENT_WRAP` | ícone e texto do mesmo controle ficam na **mesma linha** | conteúdo de botão quebrando em duas linhas |
 
+A regra (c) tem duas metades. Quando o `<svg>` **declara** tamanho, compara com o renderizado.
+Quando **não** declara e está dentro de um `<button>`, exige que ele tenha herdado os 16px do
+`buttonVariants` — é o que pega a regressão em que uma guarda `:not()` mal escrita derruba a herança
+(o lucide emite `class="lucide lucide-trash-2"`, e ali dentro há a substring `h-2`).
+
 **(a) é a que uma auditoria por token jamais faria.** `token-contrast.mjs` mede pares
 *declarados* (`--muted-foreground` contra `--background`, e assim por diante). Na tela, o par que
 importa costuma ser cruzado entre famílias — `--sidebar-foreground` renderizado sobre o
@@ -81,6 +86,11 @@ motivo e todos os caminhos tentados, e sai com **0**.
 
 - Nunca reprova o build por ausência de ferramenta.
 - Nunca passa em silêncio fingindo que verificou — o banner diz explicitamente que nada foi medido.
+
+O mesmo princípio vale **depois** de o navegador subir. Uma varredura em que o login falhou mede
+zero páginas e teria `achados.length === 0` — o formato exato de um PASS. Por isso o gate reprova
+quando não mediu nada, reprova quando alguma página não pôde ser medida, e abre o relatório com
+`paginas medidas: N de M`. Ausência de medição não é ausência de defeito.
 
 `--require-browser` inverte para `exit 1`, para um job de CI que garanta navegador.
 

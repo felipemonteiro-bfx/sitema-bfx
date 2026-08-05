@@ -77,7 +77,11 @@ function lerArgs(argv) {
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
-    const prox = () => argv[(i += 1)];
+    const prox = () => {
+      const valor = argv[(i += 1)];
+      if (valor === undefined) throw new Error(`${arg} exige um valor`);
+      return valor;
+    };
     if (arg === "--base") op.base = prox();
     else if (arg === "--user") op.usuario = prox();
     else if (arg === "--pass") op.senha = prox();
@@ -290,6 +294,10 @@ const COLETOR = () => {
   const botoes = [];
   const icones = [];
   const textos = [];
+  // Cor que o `canvas.fillStyle` recusou. Nunca descartar em silencio: se o
+  // navegador passasse a devolver `currentcolor` cru em `stroke`, TODA a
+  // verificacao de contraste de icone sumiria sem um aviso sequer.
+  const naoParseaveis = [];
   const vistos = new Set();
   const registrar = (colecao, chave, item) => {
     if (vistos.has(chave)) return;
@@ -317,18 +325,22 @@ const COLETOR = () => {
     if (!visivel(s, r)) continue;
     const cls = s.getAttribute("class") || "";
     const p = caminho(s);
+    const dono = s.closest("button, a, [role='button']");
     registrar(icones, "svg|" + p + "|" + cls + "|" + r.width.toFixed(2) + "|" + r.height.toFixed(2), {
       path: p,
       cls: cls.slice(0, 200),
       renderedWidth: +r.width.toFixed(2),
       renderedHeight: +r.height.toFixed(2),
-      ownerPath: s.closest("button, a, [role='button']") ? caminho(s.closest("button, a, [role='button']")) : null,
+      ownerPath: dono ? caminho(dono) : null,
+      ownerEhBotao: Boolean(dono && (dono.tagName === "BUTTON" || dono.getAttribute("role") === "button")),
     });
 
     const cs = getComputedStyle(s);
     const traco = cs.stroke && cs.stroke !== "none" ? cs.stroke : cs.fill && cs.fill !== "none" ? cs.fill : cs.color;
     const cor = paraRgba(traco);
-    if (cor && cor[3] > 0) {
+    if (!cor) {
+      naoParseaveis.push({ path: p, valor: String(traco).slice(0, 40), onde: "stroke/fill do <svg>" });
+    } else if (cor[3] > 0) {
       const fundo = cadeiaDeFundo(s.parentElement || s);
       registrar(textos, "ico|" + p + "|" + cor.join(",") + "|" + JSON.stringify(fundo[fundo.length - 1] || null), {
         path: p,
@@ -419,7 +431,11 @@ const COLETOR = () => {
     const cs = getComputedStyle(el);
     if (cs.color === "transparent" || cs.webkitTextFillColor === "transparent") continue; // texto em gradiente
     const cor = paraRgba(cs.color);
-    if (!cor || cor[3] === 0) continue;
+    if (!cor) {
+      naoParseaveis.push({ path: caminho(el), valor: String(cs.color).slice(0, 40), onde: "color do texto" });
+      continue;
+    }
+    if (cor[3] === 0) continue;
     const fundo = cadeiaDeFundo(el);
     const p = caminho(el);
     registrar(textos, "txt|" + p + "|" + cor.join(",") + "|" + cs.fontSize + "|" + JSON.stringify(fundo[fundo.length - 1] || null), {
@@ -444,6 +460,7 @@ const COLETOR = () => {
     icons: icones,
     texts: textos,
     wraps,
+    naoParseaveis,
   };
 };
 
@@ -459,8 +476,8 @@ function lerBaseline() {
   }
 }
 
-function gravarBaseline(achados) {
-  const conhecidos = [...new Set(achados.map(fingerprint))].sort();
+function gravarBaseline(achados, preservar = []) {
+  const conhecidos = [...new Set([...preservar, ...achados.map(fingerprint)])].sort();
   fs.writeFileSync(
     BASELINE,
     JSON.stringify(
@@ -538,6 +555,9 @@ async function principal() {
   const naoVerificados = [];
   const falhasDeNavegacao = [];
   const temasDivergentes = [];
+  const coresNaoParseaveis = [];
+  let paginasMedidas = 0;
+  const paginasEsperadas = op.rotas.length * op.viewports.length * op.temas.length;
 
   try {
     for (const nomeVp of op.viewports) {
@@ -591,6 +611,8 @@ async function principal() {
           const snapshot = { route: rota, viewport: nomeVp, theme: tema, ...bruto };
           const daPagina = analyzeSnapshot(snapshot, { naoVerificados });
           achados.push(...daPagina);
+          paginasMedidas += 1;
+          for (const c of bruto.naoParseaveis || []) coresNaoParseaveis.push({ rota, vp: nomeVp, tema, ...c });
           process.stderr.write(
             `  ${nomeVp}/${tema} ${rota}: ${daPagina.length} achados ` +
               `(${bruto.buttons.length} botoes, ${bruto.icons.length} icones, ${bruto.texts.length} textos, ${bruto.wraps.length} controles icone+texto)\n`
@@ -606,8 +628,26 @@ async function principal() {
   if (op.json) fs.writeFileSync(op.json, JSON.stringify(achados, null, 1) + "\n");
 
   if (op.atualizarBaseline) {
-    const n = gravarBaseline(achados);
-    console.log(`\nbaseline.json regravado com ${n} achados conhecidos.`);
+    // Duas formas de perder trabalho, as duas barradas aqui:
+    // 1) varredura parcial (`--routes /crm`) descartaria as digitais das outras
+    //    rotas. Por isso o padrao e UNIR, nao substituir.
+    // 2) varredura em que tudo redirecionou para login gravaria `[]` e o gate
+    //    passaria a aprovar tudo para sempre. Por isso recusa.
+    if (falhasDeNavegacao.length > 0 || paginasMedidas === 0) {
+      console.error(
+        `\nRECUSADO: ${falhasDeNavegacao.length} paginas com problema de navegacao e ` +
+          `${paginasMedidas} de ${paginasEsperadas} medidas. Regravar o baseline a partir de uma\n` +
+          "varredura incompleta congelaria como 'conhecido' aquilo que nem chegou a ser medido."
+      );
+      process.exit(2);
+      return;
+    }
+    const varreduraCompleta = paginasMedidas === paginasEsperadas;
+    const total = gravarBaseline(achados, varreduraCompleta ? [] : lerBaseline().conhecidos);
+    console.log(
+      `\nbaseline.json regravado com ${total} achados conhecidos` +
+        (varreduraCompleta ? " (varredura completa: substituiu)." : " (varredura parcial: uniu ao que ja havia).")
+    );
     return;
   }
 
@@ -616,6 +656,7 @@ async function principal() {
   const jaConhecidos = achados.length - novos.length;
 
   console.log("\n=============== GATE DE RUNTIME ================");
+  console.log(`paginas medidas: ${paginasMedidas} de ${paginasEsperadas}`);
   console.log(`achados totais: ${achados.length} (novos: ${novos.length}, no baseline: ${jaConhecidos})`);
   console.log(`nao verificados: ${naoVerificados.length} (fundo irresoluvel ou tamanho ambiguo — o gate se cala em vez de errar)`);
   if (temasDivergentes.length) {
@@ -629,8 +670,31 @@ async function principal() {
     console.log(`\npaginas com problema de navegacao: ${falhasDeNavegacao.length}`);
     for (const f of falhasDeNavegacao.slice(0, 20)) console.log("  - " + f);
   }
+  if (coresNaoParseaveis.length) {
+    console.log(`\ncores que o navegador nao soube converter: ${coresNaoParseaveis.length} (nao entraram em nenhuma conta)`);
+    for (const c of coresNaoParseaveis.slice(0, 5)) console.log(`  - ${c.rota} ${c.onde}: "${c.valor}"`);
+  }
   console.log(formatReport(novos));
   console.log("\n================================================");
+
+  // Uma varredura que nao mediu nada NAO e um PASS. Se o login falhar, todas as
+  // paginas caem no redirect para /login, `achados` fica vazio e sem esta trava
+  // o gate imprimiria "OK" — exatamente o passar-em-silencio que este arquivo
+  // diz nunca fazer.
+  if (paginasMedidas === 0) {
+    console.log(
+      "REPROVOU: nenhuma pagina foi medida. Confira credenciais (--user/--pass) e o alvo (--base).\n" +
+        "Isto nao e ausencia de defeito: e ausencia de medicao.\n"
+    );
+    process.exit(1);
+  }
+  if (falhasDeNavegacao.length > 0) {
+    console.log(
+      `REPROVOU: ${falhasDeNavegacao.length} de ${paginasEsperadas} paginas nao puderam ser medidas.\n` +
+        "O que sobrou pode estar limpo, mas a varredura esta incompleta — o verde seria mentira.\n"
+    );
+    process.exit(1);
+  }
 
   if (novos.length > 0) {
     console.log(

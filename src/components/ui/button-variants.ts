@@ -11,10 +11,19 @@ export const buttonVariants = cva(
   // idem. As guardas `:not()` devolvem a palavra final a quem declarou o
   // tamanho — e o padrao do shadcn/ui atual, com `h-` a mais porque o BFX
   // declara icone com `h-N w-N`, nao com `size-N`.
+  //
+  // As guardas casam so em BORDA DE PALAVRA (` h-` ou inicio do atributo), e
+  // isso nao e preciosismo: uma guarda de substring pura em h- casaria com o
+  // NOME do proprio icone. O lucide emite `class="lucide lucide-trash-2"`, e ali dentro ha a
+  // substring `h-2`; `lucide-refresh-cw` traz `h-c`. Um `<Trash2 />` sem classe
+  // de tamanho pararia de herdar o padrao e cairia nos atributos intrinsecos
+  // (`width="24"`), renderizando 24px dentro de um botao. Hoje todos os 16
+  // `<Trash2>` do repo declaram `h-N w-N` e nada quebraria — mas o proximo
+  // call site quebraria em silencio.
   // `shrink-0` e `pointer-events-none` continuam incondicionais: nao sao
   // tamanho, e e justamente a falta do `shrink-0` que achata icone em flex
   // apertado (medido: `h-3 w-3` renderizando 8.42px onde nao ha buttonVariants).
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-']):not([class*='h-'])]:size-4 [&_svg]:shrink-0 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-']):not([class*=' h-']):not([class^='h-'])]:size-4 [&_svg]:shrink-0 cursor-pointer",
   {
     variants: {
       variant: {

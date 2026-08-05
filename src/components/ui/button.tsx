@@ -77,7 +77,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {!loading && leftIcon && (
           <span className="inline-flex shrink-0 items-center justify-center">{leftIcon}</span>
         )}
-        {loading && !loadingText ? (
+        {loading && !loadingText && children ? (
+          // `&& children`: sem isso o <IconButton> em loading (children === null)
+          // ganharia um item flex vazio, e item flex vazio ainda consome um
+          // `gap-2` — 8px fantasma deslocando o spinner do centro.
           <span className="inline-flex items-center gap-2 opacity-0">{children}</span>
         ) : loading ? (
           loadingText
