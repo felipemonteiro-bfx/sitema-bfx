@@ -30,6 +30,19 @@ saturada), 700+ e as variantes com opacidade (`/20`, `/30`, `/40`, usadas em ove
 também caem na variante `-bg`, porque no CSS atual `--success-bg` etc. já carregam a opacidade
 embutida no valor OKLCH.
 
+> **Emenda da fase 16 — o destino depende do papel, não só do tom.** A coluna "Token" abaixo
+> nomeia a *família*; qual variante usar depende de onde a cor entra:
+>
+> | Papel | Variante | Por quê |
+> |---|---|---|
+> | fundo (`bg-*`), borda (`border-*`), preenchimento de ícone sólido | `success` / `warning` / `info` | é para isso que o L desses tokens foi calibrado, com `--*-foreground` escuro por cima |
+> | **texto e ícone colorido sobre superfície clara** | **`success-text` / `warning-text` / `info-text`** | os tokens base reprovam como texto no tema claro (2.97:1, 2.06:1 e 4.13:1 — mínimo 4.5) |
+> | fundo sutil / tint | `success-bg` / `warning-bg` / `info-bg` | opaco no claro; **preferir ao composto** `bg-info/20`, que escurece o próprio tom e derruba o texto para 4.02:1 |
+>
+> Ou seja: `text-green-600` migra para `text-success-text`, não para `text-success`.
+> `--error`/`--destructive` não têm variante `-text` — já passam como texto (4.82:1 no claro,
+> 5.67:1 no escuro), porque o L deles foi baixado de 0.60 para 0.57 numa correção anterior.
+
 ### green / emerald / lime (sucesso)
 
 | Classe crua | Token | Significado | Onde aparece |
