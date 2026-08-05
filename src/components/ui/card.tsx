@@ -150,11 +150,11 @@ const colorConfig: Record<
     value: "text-warning-text",
   },
   error: {
-    icon: "bg-error/10 text-error dark:bg-error/20",
+    icon: "bg-error-bg text-error-text dark:bg-error/20",
     border: "border-error/30 dark:border-error/40",
     bg: "bg-gradient-to-br from-error/5 to-transparent dark:from-error/10",
     glow: "",
-    value: "text-error",
+    value: "text-error-text",
   },
   info: {
     icon: "bg-info/10 text-info-text dark:bg-info/20",
@@ -167,7 +167,7 @@ const colorConfig: Record<
 
 const trendConfig: Record<TrendDirection, { icon: typeof TrendingUp; color: string }> = {
   up: { icon: TrendingUp, color: "text-success-text" },
-  down: { icon: TrendingDown, color: "text-error" },
+  down: { icon: TrendingDown, color: "text-error-text" },
   neutral: { icon: Minus, color: "text-muted-foreground" },
 }
 

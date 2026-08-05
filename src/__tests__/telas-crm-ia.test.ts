@@ -58,7 +58,13 @@ const TELAS_CRM = [
   "src/app/(app)/crm/campanhas/page.tsx",
   "src/app/(app)/crm/fidelidade/page.tsx",
   "src/app/(app)/crm/importar-leads/page.tsx",
+  // Primitivas compartilhadas: alcance maior que as 4 telas de /crm, e o
+  // `token-contrast.mjs` policia PARES de token, nunca USO — sem estas linhas
+  // elas ficariam verdes para sempre com o token de preenchimento como texto.
   "src/components/ui/badge.tsx",
+  "src/components/ui/card.tsx",
+  "src/components/ui/alert.tsx",
+  "src/components/empresas-tab-client.tsx",
 ];
 
 const TOKENS_SEMANTICOS = ["success", "warning", "info", "error"] as const;
@@ -179,6 +185,23 @@ describe("dado errado — o provedor da resposta e persistido, nao chutado", () 
     expect(escrita.split("})")[0].includes("provider")).toBe(true);
   });
 
+  /**
+   * O branch do Gemini cai silenciosamente no `gpt-4o-mini` da OpenAI quando o
+   * Gemini falha (`lib/ai.ts`). Persistir o provedor PEDIDO reintroduziria o
+   * rotulo mentiroso — agora com aparencia de verdade, gravado no banco. Tem de
+   * ser o EFETIVO, devolvido por `runAiWithActions`.
+   */
+  it("grava o provedor efetivo, nao o pedido", () => {
+    const chamada = pagina.split("addAssistantMessage({")[1]?.split("});")[0] ?? "";
+    expect(chamada.includes("provider: response.provider"), "provedor efetivo").toBe(true);
+
+    const ai = ler("src/lib/ai.ts");
+    expect(ai.includes("estadoProvedor.efetivo = \"openai\""), "fallback marca a OpenAI").toBe(true);
+    expect(ai.includes("provider: estadoProvedor.efetivo"), "resultado carrega o efetivo").toBe(
+      true,
+    );
+  });
+
   it("linha antiga sem provedor nao vira 'gemini' — a pilula some", () => {
     // O fallback aceito e null/undefined, nunca um nome de provedor inventado.
     expect(pagina.includes('provider ?? "gemini"')).toBe(false);
@@ -242,10 +265,19 @@ describe("achado 6 — /inteligencia em 390px", () => {
     expect(fonte.includes("p-4 sm:p-6")).toBe(true);
   });
 
-  it("a bolha ocupa a largura toda no mobile", () => {
+  /**
+   * A revisao mediu as duas bolhas contrastando entre si em 1.20:1
+   * (`bg-primary/10` vs `bg-muted/50`): o deslocamento lateral do `justify-*` e
+   * parte de como se ve quem falou, e em `max-w-full` ele vira no-op. Por isso
+   * 96% — recupera largura sem apagar a distincao — mais o canto assimetrico.
+   */
+  it("a bolha ganha largura no mobile sem zerar o deslocamento", () => {
     const fonte = ler("src/components/intelligence-chat-client.tsx");
-    expect(fonte.includes("max-w-[92%]")).toBe(false);
-    expect(fonte.includes("max-w-full")).toBe(true);
+    expect(fonte.includes("max-w-[92%]"), "largura antiga").toBe(false);
+    expect(fonte.includes("max-w-full"), "100% mata o justify-*").toBe(false);
+    expect(fonte.split("max-w-[96%]").length - 1, "as duas bolhas").toBe(2);
+    expect(fonte.includes("rounded-br-sm"), "canto da bolha do usuario").toBe(true);
+    expect(fonte.includes("rounded-bl-sm"), "canto da bolha do assistente").toBe(true);
   });
 });
 
@@ -259,10 +291,22 @@ describe("achado 7 — corpo da tabela markdown no tema claro", () => {
 });
 
 describe("achado 8 — markup interno vazando na tela", () => {
-  it("a renderizacao filtra <tool_call> e <function=...>", () => {
+  it("a renderizacao passa pelo filtro", () => {
     const fonte = ler("src/components/intelligence-chat-client.tsx");
-    expect(fonte.includes("stripToolMarkup")).toBe(true);
-    expect(fonte.includes("<tool_call>")).toBe(true);
+    expect(fonte.includes("stripToolMarkup(text)")).toBe(true);
+  });
+
+  /**
+   * O filtro vive em modulo puro, sem React nem `react-markdown`, para que o
+   * COMPORTAMENTO seja testavel — `strip-tool-markup.test.ts`. A primeira
+   * versao passava num gate por grep e mesmo assim apagava a tabela do
+   * `buildToolSummary`.
+   */
+  it("o filtro e um modulo puro e testavel, nao codigo solto no componente", () => {
+    const modulo = ler("src/lib/strip-tool-markup.ts");
+    expect(modulo.includes("export function stripToolMarkup")).toBe(true);
+    // Sem import nenhum: funcao pura roda em qualquer ambiente de teste.
+    expect(modulo.includes("import "), "o modulo nao importa nada").toBe(false);
   });
 });
 
@@ -276,8 +320,16 @@ describe("achado 9 — rotulos do chat no tema claro", () => {
     }
   });
 
-  it("a pilula do provedor sai do bg-muted", () => {
-    expect(fonte.includes("rounded-full bg-muted px-2")).toBe(false);
+  /**
+   * A revisao mediu que trocar o FUNDO para `bg-card` zerava o chip: dentro do
+   * `CardContent` o fundo ja e `--card`, entao `bg-card` sobre `bg-card` da
+   * 1.00:1 e o preenchimento some. O que corrige o contraste e o TEXTO —
+   * mesma correcao dos rotulos das bolhas.
+   */
+  it("a pilula mantem o preenchimento e corrige o texto", () => {
+    const pilula = fonte.split("{m.provider}")[0].split("<span").pop() ?? "";
+    expect(pilula.includes("bg-muted"), "preenchimento visivel").toBe(true);
+    expect(pilula.includes("text-foreground"), "texto legivel").toBe(true);
   });
 });
 

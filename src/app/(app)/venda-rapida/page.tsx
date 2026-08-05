@@ -51,7 +51,7 @@ export default async function Page() {
         <PageHeader
           title="Terminal de Vendas"
           description="PDV Inteligente BFX Intelligence"
-          breadcrumbs={[{ label: "Venda Rapida" }]}
+          breadcrumbs={[{ label: "Venda Rápida" }]}
         />
 
         {ultima && (

@@ -80,15 +80,48 @@ export const readOnlyActions = new Set(
   aiActions.filter((a) => a.readOnly === true).map((a) => a.name)
 );
 
+type AiProvider = "openai" | "gemini" | "litellm";
+
 type AiResult = { text: string; actions: unknown[]; links?: { label: string; url: string }[] };
 
+/** `provider` aqui e o EFETIVO — ver `runAiWithActions`. */
+type AiResultComProvedor = AiResult & { provider: AiProvider };
+
+/**
+ * O provedor pedido nem sempre e o que responde: o branch `gemini` cai
+ * silenciosamente no `gpt-4o-mini` da OpenAI quando o Gemini falha. Este objeto
+ * atravessa a execucao para que quem grava a mensagem saiba quem de fato
+ * gerou o texto — do contrario o rotulo volta a mentir, so que agora
+ * persistido no banco.
+ */
+type EstadoProvedor = { efetivo: AiProvider };
+
+/**
+ * Executa a IA e devolve o resultado junto com o provedor que REALMENTE
+ * respondeu. Use `result.provider` para rotular/persistir, nunca o argumento
+ * `provider` — eles divergem no fallback do Gemini.
+ */
 export async function runAiWithActions(
   prompt: string,
-  provider: "openai" | "gemini" | "litellm",
+  provider: AiProvider,
   ctx: ActionContext & {
     baseUrl?: string;
     history?: { role: "user" | "assistant"; content: string }[];
   }
+): Promise<AiResultComProvedor> {
+  const estadoProvedor: EstadoProvedor = { efetivo: provider };
+  const resultado = await executarAi(prompt, provider, ctx, estadoProvedor);
+  return { ...resultado, provider: estadoProvedor.efetivo };
+}
+
+async function executarAi(
+  prompt: string,
+  provider: AiProvider,
+  ctx: ActionContext & {
+    baseUrl?: string;
+    history?: { role: "user" | "assistant"; content: string }[];
+  },
+  estadoProvedor: EstadoProvedor
 ): Promise<AiResult> {
   const currency = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -370,6 +403,10 @@ export async function runAiWithActions(
       const openaiKeyFallback = cfg?.openaiKey || process.env.OPENAI_API_KEY || "";
       if (openaiKeyFallback) {
         const openai = createOpenAI({ apiKey: openaiKeyFallback });
+        // Quem responde daqui para a frente e a OpenAI, nao o Gemini. Sem esta
+        // linha a mensagem seria gravada como "gemini" e o rotulo mentiria —
+        // exatamente o defeito que a fase 17 existe para corrigir.
+        estadoProvedor.efetivo = "openai";
         try {
           const result = await generateText({
             model: openai("gpt-4o-mini"),
@@ -383,6 +420,10 @@ export async function runAiWithActions(
           });
           text = stripThinkTags(result.text ?? "");
         } catch {
+          // O fallback tambem falhou: nenhum modelo produziu texto, entao a
+          // atribuicao acima nao vale. Volta ao provedor pedido — a mensagem
+          // abaixo e do sistema, e fala do Gemini.
+          estadoProvedor.efetivo = provider;
           return {
             text:
               "O provedor Gemini atingiu o limite de uso. Tente novamente em alguns minutos ou altere para OpenAI.",

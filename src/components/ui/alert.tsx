@@ -13,13 +13,13 @@ const alertVariants = cva(
         destructive:
           "border-destructive/50 bg-destructive/5 text-destructive dark:border-destructive/50 dark:bg-destructive/10 [&>svg]:text-destructive",
         success:
-          "border-success/50 bg-success/5 text-success dark:border-success/50 dark:bg-success/10 [&>svg]:text-success",
+          "border-success/50 bg-success-bg text-success-text dark:border-success/50 dark:bg-success/10 [&>svg]:text-success-text",
         warning:
-          "border-warning/50 bg-warning/5 text-warning dark:border-warning/50 dark:bg-warning/10 [&>svg]:text-warning",
+          "border-warning/50 bg-warning-bg text-warning-text dark:border-warning/50 dark:bg-warning/10 [&>svg]:text-warning-text",
         error:
-          "border-error/50 bg-error/5 text-error dark:border-error/50 dark:bg-error/10 [&>svg]:text-error",
+          "border-error/50 bg-error-bg text-error-text dark:border-error/50 dark:bg-error/10 [&>svg]:text-error-text",
         info:
-          "border-info/50 bg-info/5 text-info dark:border-info/50 dark:bg-info/10 [&>svg]:text-info",
+          "border-info/50 bg-info-bg text-info-text dark:border-info/50 dark:bg-info/10 [&>svg]:text-info-text",
       },
       animated: {
         true: "animate-fade-in-up",

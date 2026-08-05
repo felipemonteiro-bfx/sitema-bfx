@@ -88,3 +88,28 @@ por isso o tint opaco `bg-*-bg` nos callouts.
 
 ## Ordem
 Spec → teste que falha (`src/__tests__/telas-crm-ia.test.ts`) → implementação → revisão em subagente.
+
+---
+
+## O que a revisão em subagentes mudou
+
+Dois revisores (corretude e UI/UX) leram o diff. O que eles acharam e foi aplicado:
+
+| Sev. | Achado | Correção |
+|---|---|---|
+| **Alta** | **O provedor gravado era o *pedido*, não o *efetivo*.** O branch `gemini` de `runAiWithActions` cai silenciosamente no `gpt-4o-mini` da OpenAI quando o Gemini falha (`lib/ai.ts`). Persistir o provedor de entrada reintroduzia o bug da fase — agora pior, porque **gravado no banco com aparência de verdade** | `runAiWithActions` passa a devolver o provedor efetivo (`AiResultComProvedor`); a página grava `response.provider`. Se o próprio fallback falhar, volta ao pedido — a mensagem é do sistema |
+| **Alta** | **O filtro apagava a tabela do `buildToolSummary`.** `lib/ai.ts` concatena o resumo das ferramentas *depois* do texto do modelo; como o filtro derrubava tudo após um `<tool_call>` sem fechamento, o usuário trocava a tabela financeira pelo aviso de "sem texto para exibir" | Abertura sem fechamento apaga **só a tag**, nunca o resto |
+| **Média** | `<function` casava por prefixo: `<functions>` e `<function_name>` truncavam a mensagem | A abertura passou a ser `<function=` |
+| **Média** | `</tool_call>` órfão continuava vazando | Entrou na limpeza de tags soltas |
+| **Média** | Nenhum teste exercitava `stripToolMarkup` — o gate era `grep` no fonte, e foi por isso que os três acima passaram | Filtro extraído para `src/lib/strip-tool-markup.ts` (puro, sem import) + `strip-tool-markup.test.ts` com 14 casos, metade deles "não pode apagar" |
+| **Média** | Mesma classe de defeito em primitivas compartilhadas, que o gate de token **nunca** pega (ele policia pares, não uso) | `card.tsx`, `alert.tsx` (as 4 variantes) e `empresas-tab-client.tsx` migrados; os quatro arquivos entraram na lista policiada do teste |
+| **Média** | `max-w-full` matava a distinção das bolhas: elas contrastam entre si em só **1.20:1**, então o deslocamento do `justify-*` era a pista de quem falou | `max-w-[96%]` + canto inferior assimétrico |
+| **Baixa** | Pílula em `bg-card` dentro de `CardContent` = **1.00:1**: o chip sumia | Mantém `bg-muted`, corrige o **texto** para `foreground` |
+| **Baixa** | Família do achado 10 incompleta | `venda-rapida` → "Venda Rápida"; `financeiro` → "Financeiro & DRE" |
+| **Baixa** | `provider` era `string` solto: lixo no banco iria à tela em `uppercase` | `normalizarProvider()` — valor inesperado vira desconhecido |
+
+**Aceito sem corrigir, com motivo:**
+- **Achado 1 precisa de re-medição em navegador.** A correção está certa na teoria (item de grid com `min-width:auto` era o único elo que não encolhia; o `.overflow-x-auto` é scroll container, cujo mínimo automático é zero), mas o revisor original mediu `min-width:0` no Card levando 552 → **472**, e 472 ainda é > 390. Nenhum dos dois revisores achou a origem do resíduo. Não dá para fechar sem navegador.
+- `bfx-intelligence-panel.tsx` tem 25+ usos do mesmo padrão — é outra tela, fora do escopo desta fase, e merece uma passada medida própria.
+- `hover:bg-error/20` do badge fica abaixo de 4.5 no claro. Não é regressão (com `text-error` era pior) e é herdado das variantes `success`/`warning`/`info` da fase 16 — a armadilha do `bg-*/20` vale para a família toda.
+- `getAiProvider()` roda uma vez a mais por renderização. Uma query, sem efeito visível.

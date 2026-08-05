@@ -119,9 +119,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PageHeader
-          title="Financeiro e DRE"
+          title="Financeiro & DRE"
           description="Visão consolidada de receitas, despesas e caixa."
-          breadcrumbs={[{ label: "Financeiro e DRE" }]}
+          breadcrumbs={[{ label: "Financeiro & DRE" }]}
         />
         <MonthFilter />
       </div>

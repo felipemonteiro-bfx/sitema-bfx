@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { IntelligenceChatComposer } from "@/components/intelligence-chat-composer";
+import { stripToolMarkup } from "@/lib/strip-tool-markup";
 
 function parseMarkdownTable(block: string): { headers: string[]; rows: string[][] } | null {
   const lines = block.trim().split("\n").filter((l) => l.trim());
@@ -76,48 +77,6 @@ const MD_COMPONENTS = {
   code: ({ children }: { children?: React.ReactNode }) => <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono">{children}</code>,
   hr: () => <hr className="my-2 border-border" />,
 };
-
-const TOOL_CALL_ABRE = "<tool_call>";
-const TOOL_CALL_FECHA = "</tool_call>";
-const FUNCTION_ABRE = "<function";
-const FUNCTION_FECHA = "</function>";
-
-/**
- * Remove um bloco `abre … fecha` inteiro, incluindo o conteudo. Bloco sem
- * fechamento derruba o resto do texto de proposito: o que vem depois de uma
- * abertura pendurada e continuacao do markup, nao resposta.
- */
-function removerBloco(texto: string, abre: string, fecha: string): string {
-  return texto
-    .split(abre)
-    .map((parte, i) => {
-      if (i === 0) return parte;
-      const depois = parte.split(fecha);
-      return depois.length > 1 ? depois.slice(1).join(fecha) : "";
-    })
-    .join("");
-}
-
-/**
- * Remove o markup interno de chamada de ferramenta que alguns provedores emitem
- * no corpo do texto em vez do canal proprio — `<tool_call>…</tool_call>` e
- * `<function=…>…</function>`. Isso vazava cru para o usuario (achado 8 da fase
- * 17); o caso visto em producao foi `<tool_call> <function=resumo_financeiro>`.
- *
- * Filtro de RENDERIZACAO: o conteudo ja persistido em `ai_mensagens` nao e
- * tocado. Texto de erro do provedor tambem nao — e diagnostico legitimo, ainda
- * que feio.
- *
- * Nota de seguranca (CLAUDE.md): so `.split()`/`.join()`, nenhuma execucao de
- * regex com estado.
- */
-export function stripToolMarkup(text: string): string {
-  const semToolCall = removerBloco(text, TOOL_CALL_ABRE, TOOL_CALL_FECHA);
-  const semFunction = removerBloco(semToolCall, FUNCTION_ABRE, FUNCTION_FECHA);
-  // Fechamento orfao (abertura ja consumida em outro bloco) nao casa com
-  // `<function` e sobreviveria ao passo anterior.
-  return semFunction.split(FUNCTION_FECHA).join("").trim();
-}
 
 function MarkdownContent({ text }: { text: string }) {
   const limpo = stripToolMarkup(text);
@@ -220,25 +179,35 @@ export function IntelligenceChatClient({
           optimisticHistory.map((m, i) => (
             <div key={`${m.at}-${i}`} className="space-y-3">
               <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
+                {/* A pilula so aparece quando o provedor e conhecido. Mantem o
+                    preenchimento `bg-muted` (sobre `--card` um `bg-card` daria
+                    1.00:1 e o chip sumiria); o que muda e o texto, que sai de
+                    `muted-foreground` (4.35:1) para `foreground` — mesma
+                    correcao dos rotulos das bolhas (achado 9). */}
                 {m.provider && (
-                  <span className="rounded-full border bg-card px-2 py-0.5 uppercase tracking-wide">
+                  <span className="rounded-full bg-muted px-2 py-0.5 uppercase tracking-wide text-foreground">
                     {m.provider}
                   </span>
                 )}
                 <span>{new Date(m.at).toLocaleString("pt-BR")}</span>
               </div>
-              {/* max-w-full no mobile: com 92% sobravam 210px de leitura em
-                  390px, 54% da tela (achado 6). O limite de 75% volta no sm.
+              {/* Largura no mobile: com 92% sobravam 210px de leitura em 390px,
+                  54% da tela (achado 6). Vai a 96% — nao a 100%: as duas bolhas
+                  contrastam entre si em so 1.20:1 (`bg-primary/10` vs
+                  `bg-muted/50`), entao o deslocamento lateral do `justify-*` e
+                  parte de como se ve quem falou. Em 100% ele vira no-op e sobra
+                  so o rotulo. O canto inferior assimetrico reforca a origem sem
+                  custar largura. O limite de 75% volta no sm.
                   Os rotulos saem de `muted-foreground` — mediam 3.65:1 sobre o
                   tint da bolha do usuario e 4.45:1 na do assistente (achado 9). */}
               <div className="flex justify-end">
-                <div className="w-full max-w-full rounded-2xl border bg-primary/10 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
+                <div className="w-full max-w-[96%] rounded-2xl rounded-br-sm border bg-primary/10 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
                   <div className="text-xs font-semibold text-foreground">Você</div>
                   <div className="break-words">{m.prompt}</div>
                 </div>
               </div>
               <div className="flex justify-start">
-                <div className="w-full max-w-full rounded-2xl border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
+                <div className="w-full max-w-[96%] rounded-2xl rounded-bl-sm border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
                   <div className="text-xs font-semibold text-foreground">Assistente</div>
                   <div className="space-y-1 break-words text-sm">
                     <MarkdownContent text={m.response} />

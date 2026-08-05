@@ -20,6 +20,15 @@ async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
   return "gemini";
 }
 
+/**
+ * So deixa passar provedor conhecido. A coluna e um TEXT livre e o rotulo vai
+ * para a tela em `uppercase`: valor inesperado vira desconhecido (pilula some),
+ * que e o mesmo tratamento das linhas anteriores a coluna.
+ */
+function normalizarProvider(valor: string | null | undefined): string | null {
+  return valor === "gemini" || valor === "openai" || valor === "litellm" ? valor : null;
+}
+
 function buildContextSummary(content: string): string {
   // Remove markdown tables (they bloat context and are display-only)
   // Split on table blocks (3+ consecutive pipe-starting lines) and keep non-table parts
@@ -80,7 +89,10 @@ async function askAi(formData: FormData) {
     promptOriginal: prompt,
     status: "done",
     links: response.links,
-    provider,
+    // `response.provider`, nao a variavel `provider`: o branch do Gemini cai
+    // silenciosamente no gpt-4o-mini da OpenAI quando o Gemini falha, e gravar
+    // o provedor PEDIDO reintroduziria o rotulo mentiroso — so que persistido.
+    provider: response.provider,
   });
   revalidatePath("/inteligencia");
 }
@@ -166,7 +178,7 @@ export default async function Page() {
     response: m.content,
     // Linhas anteriores a coluna `provider` ficam nulas. Nulo e "desconhecido"
     // e a pilula some — nao vira um nome de provedor inventado.
-    provider: m.provider ?? null,
+    provider: normalizarProvider(m.provider),
     at: m.criadoEm.toISOString(),
     actions: m.actions as any,
     status: m.status as "pending" | "done",
