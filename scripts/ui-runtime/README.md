@@ -96,6 +96,12 @@ achado da lista não. A digital é `regra | rota | viewport | tema | caminho` �
 propósito: se o número entrasse, variação de sub-pixel viraria "achado novo", o gate soaria alarme
 falso e em pouco tempo ninguém mais olharia para ele.
 
+**O baseline nasce vazio de propósito.** A primeira varredura de produção (build `82dcc8b`) rodou
+contra um deploy 15 commits atrás do branch: o `--sidebar` renderizado ali ainda era escuro no tema
+claro, e o botão "Sair" ainda usava `--destructive` em vez de `--error-text`. Semear o baseline com
+aquilo seria congelar defeitos que este branch já corrigiu. **A primeira gravação autoritativa tem
+que acontecer depois do deploy deste branch.**
+
 Regravar só depois de ler o que vai entrar:
 
 ```bash
@@ -129,6 +135,10 @@ compilador nunca leu, e por quatro fases pareceu cobertura).
 - **Não é teste visual de regressão.** Não compara com imagem de referência; não vê cor errada que
   passe no contraste, alinhamento feio, ou espaçamento inconsistente.
 - **Contraste é WCAG 2.x.** Não usa APCA.
+
+O que ele **verifica sobre si mesmo**: cada página devolve o `class` da raiz, e o relatório avisa
+quando o tema aplicado não é o pedido. Sem isso, se o `localStorage.theme` deixasse de funcionar,
+metade da matriz viraria cópia da outra metade e o gate diria que varreu dois temas.
 
 ## Relação com `scripts/design-tokens/`
 

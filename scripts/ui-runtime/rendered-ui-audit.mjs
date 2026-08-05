@@ -434,6 +434,11 @@ const COLETOR = () => {
   }
 
   return {
+    // Devolvido para o CLI conferir que o tema pedido REALMENTE foi aplicado.
+    // Sem isso, se o `localStorage.theme` deixasse de funcionar, metade da
+    // matriz viraria copia da outra metade e o gate passaria dizendo que
+    // varreu dois temas.
+    classeDaRaiz: document.documentElement.className,
     doc: { scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth },
     buttons: botoes,
     icons: icones,
@@ -532,6 +537,7 @@ async function principal() {
   const achados = [];
   const naoVerificados = [];
   const falhasDeNavegacao = [];
+  const temasDivergentes = [];
 
   try {
     for (const nomeVp of op.viewports) {
@@ -578,6 +584,10 @@ async function principal() {
             continue;
           }
 
+          const classe = String(bruto.classeDaRaiz || "");
+          const temaAplicado = classe.split(/\s+/).includes("dark") ? "dark" : "light";
+          if (temaAplicado !== tema) temasDivergentes.push(`${rota} [${nomeVp}] pedido ${tema}, aplicado ${temaAplicado} (class="${classe}")`);
+
           const snapshot = { route: rota, viewport: nomeVp, theme: tema, ...bruto };
           const daPagina = analyzeSnapshot(snapshot, { naoVerificados });
           achados.push(...daPagina);
@@ -608,6 +618,13 @@ async function principal() {
   console.log("\n=============== GATE DE RUNTIME ================");
   console.log(`achados totais: ${achados.length} (novos: ${novos.length}, no baseline: ${jaConhecidos})`);
   console.log(`nao verificados: ${naoVerificados.length} (fundo irresoluvel ou tamanho ambiguo — o gate se cala em vez de errar)`);
+  if (temasDivergentes.length) {
+    console.log(
+      `\nATENCAO: ${temasDivergentes.length} paginas nao aplicaram o tema pedido — ` +
+        "esses resultados nao representam o tema que consta no relatorio."
+    );
+    for (const t of temasDivergentes.slice(0, 10)) console.log("  - " + t);
+  }
   if (falhasDeNavegacao.length) {
     console.log(`\npaginas com problema de navegacao: ${falhasDeNavegacao.length}`);
     for (const f of falhasDeNavegacao.slice(0, 20)) console.log("  - " + f);
