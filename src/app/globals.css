@@ -52,15 +52,18 @@
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-bg: var(--success-bg);
+  --color-success-text: var(--success-text);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-warning-bg: var(--warning-bg);
+  --color-warning-text: var(--warning-text);
   --color-error: var(--error);
   --color-error-foreground: var(--error-foreground);
   --color-error-bg: var(--error-bg);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
   --color-info-bg: var(--info-bg);
+  --color-info-text: var(--info-text);
   --color-status-partial: var(--status-partial);
   --color-status-partial-foreground: var(--status-partial-foreground);
   --color-card-elevated: var(--card-elevated);
@@ -105,7 +108,13 @@
   --accent-foreground: oklch(0.145 0 0); /* texto escuro: 6.56:1 vs branco (2.89:1) — UI-05 */
   --accent-hover: oklch(0.55 0.18 145); /* green-600 */
 
-  /* Semantic Colors */
+  /* Semantic Colors
+     ATENCAO ao papel de cada token: `--success`/`--warning`/`--info` sao cor de
+     PREENCHIMENTO (`bg-*`), calibrados para o par com `--*-foreground` escuro
+     por cima. Como TEXTO sobre card branco eles reprovam (2.97:1, 2.06:1 e
+     4.13:1 — minimo 4.5). Baixar o L deles para consertar o texto quebraria o
+     preenchimento; por isso existe a familia `--*-text` logo abaixo (fase 16,
+     achados 1/2/4). Mesmo raciocinio ja aplicado a `--destructive` (linha ~131). */
   --success: oklch(0.65 0.18 145); /* green */
   --success-foreground: oklch(0.145 0 0); /* texto escuro: 6.56:1 vs branco (2.89:1) — UI-05 */
   --success-bg: oklch(0.96 0.05 145); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
@@ -118,6 +127,18 @@
   --info: oklch(0.57 0.18 240); /* blue */
   --info-foreground: oklch(0.145 0 0); /* texto escuro: 4.71:1 vs branco (4.03:1) — UI-05 */
   --info-bg: oklch(0.95 0.04 240); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
+
+  /* Semantic Colors — variante de TEXTO (`text-success-text` e afins).
+     Mesma matiz e mesmo croma do token de preenchimento, so o L baixa, ate
+     >=4.5:1 contra `--card`. Numeros medidos por token-contrast.mjs:
+       --success-text  5.18:1 vs card · 4.75:1 vs --success-bg · 4.68:1 sobre bg-success/10
+       --warning-text  5.23:1 vs card · 4.69:1 vs --warning-bg · 4.88:1 sobre bg-warning/10
+       --info-text     5.22:1 vs card · 4.59:1 vs --info-bg    · 4.59:1 sobre bg-info/10
+     Sobre um composto de 20% da propria matiz (`bg-info/20`) nenhum deles chega
+     a 4.5 — nesse caso use o tint opaco `--*-bg`, nao o composto. */
+  --success-text: oklch(0.51 0.18 145);
+  --warning-text: oklch(0.53 0.15 85);
+  --info-text: oklch(0.51 0.18 240);
   --status-partial: oklch(0.55 0.22 300); /* purple, 4o estado de antecipacao ("parcialmente_antecipado"), mesmo tom já usado no código (purple-600), formalizado como token (D-06) */
   --status-partial-foreground: oklch(0.985 0 0); /* texto claro: 5.20:1 sobre status-partial — UI-05 */
 
@@ -138,7 +159,11 @@
   --popover: oklch(0.995 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  /* L ajustado de 0.556 p/ 0.545: as abas inativas ficam sobre `bg-muted/60`
+     (rgb ~247), onde 0.556 dava 4.43:1 — abaixo do minimo de 4.5 (fase 16,
+     achado 12). Em 0.545: 4.62:1 sobre o tablist, 4.74:1 sobre `--background`
+     (era 4.54) e 4.87:1 sobre `--card` (era 4.66). — UI-05 */
+  --muted-foreground: oklch(0.545 0 0);
 
   /* Borders & Inputs */
   --border: oklch(0.62 0 0); /* L ajustado de 0.922 p/ 3:1 min. (era 1.21:1 fundo / 1.24:1 card) — UI-05 */
@@ -216,6 +241,14 @@
   --info: oklch(0.68 0.20 240); /* #60A5FA blue-400 */
   --info-foreground: oklch(0.10 0.02 250);
   --info-bg: oklch(0.25 0.10 240 / 20%);
+
+  /* Variante de TEXTO — no escuro o tom de preenchimento ja aprova como texto
+     (7.72:1, 10.12:1 e 6.99:1 contra `--card`), entao os valores se repetem.
+     Os tokens existem para a classe `text-*-text` resolver nos dois temas: se
+     faltassem aqui, a cor cairia para o valor do tema claro dentro do `.dark`. */
+  --success-text: oklch(0.70 0.20 145);
+  --warning-text: oklch(0.80 0.17 85);
+  --info-text: oklch(0.68 0.20 240);
 
   --status-partial: oklch(0.72 0.20 300); /* purple-400 mais vibrante, dark mode */
   --status-partial-foreground: oklch(0.10 0.02 250); /* texto escuro: 7.19:1 sobre status-partial dark — UI-05 */

@@ -291,6 +291,21 @@ export const TOKEN_PAIRS = [
   { foreground: "error-foreground", background: "error", min: TEXT_MIN, label: "texto em erro" },
   { foreground: "info-foreground", background: "info", min: TEXT_MIN, label: "texto em informacao" },
   { foreground: "destructive-foreground", background: "destructive", min: TEXT_MIN, label: "texto destrutivo" },
+  // Variantes de TEXTO dos tokens semanticos (fase 16, achados 1/2/4). Os
+  // tokens `--success`/`--warning`/`--info` sao cor de preenchimento e os
+  // pares acima medem o texto ESCURO sobre eles; estes medem o caminho
+  // inverso — o token colorido como texto sobre a superficie do card, que e
+  // como as telas financeiras o usam. Sem estes pares, `--*-text` nao e
+  // policiado e pode regredir em silencio.
+  { foreground: "success-text", background: "card", min: TEXT_MIN, label: "texto de sucesso em card" },
+  { foreground: "warning-text", background: "card", min: TEXT_MIN, label: "texto de alerta em card" },
+  { foreground: "info-text", background: "card", min: TEXT_MIN, label: "texto de informacao em card" },
+  // Os mesmos tokens sobre o tint opaco da propria matiz (pilulas e caixas de
+  // metrica). No tema escuro `--*-bg` tem alfa e o par sai como SKIP — nunca
+  // como PASS (T-10-08).
+  { foreground: "success-text", background: "success-bg", min: TEXT_MIN, label: "texto de sucesso em tint" },
+  { foreground: "warning-text", background: "warning-bg", min: TEXT_MIN, label: "texto de alerta em tint" },
+  { foreground: "info-text", background: "info-bg", min: TEXT_MIN, label: "texto de informacao em tint" },
   { foreground: "ring", background: "background", min: NON_TEXT_MIN, label: "indicador de foco (UI-06)" },
   { foreground: "border", background: "background", min: NON_TEXT_MIN, label: "borda sobre fundo" },
   { foreground: "border", background: "card", min: NON_TEXT_MIN, label: "borda sobre card" },

@@ -39,15 +39,20 @@ export default {
           DEFAULT: "var(--destructive)",
           foreground: "var(--destructive-foreground)",
         },
+        // `text`: variante de TEXTO do token (>=4.5:1 sobre --card). O DEFAULT
+        // e cor de preenchimento e reprova como texto no tema claro — ver o
+        // comentario em globals.css, secao "Semantic Colors".
         success: {
           DEFAULT: "var(--success)",
           foreground: "var(--success-foreground)",
           bg: "var(--success-bg)",
+          text: "var(--success-text)",
         },
         warning: {
           DEFAULT: "var(--warning)",
           foreground: "var(--warning-foreground)",
           bg: "var(--warning-bg)",
+          text: "var(--warning-text)",
         },
         error: {
           DEFAULT: "var(--error)",
@@ -58,6 +63,7 @@ export default {
           DEFAULT: "var(--info)",
           foreground: "var(--info-foreground)",
           bg: "var(--info-bg)",
+          text: "var(--info-text)",
         },
         status: {
           partial: {
