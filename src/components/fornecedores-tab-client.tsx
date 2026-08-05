@@ -266,7 +266,7 @@ export default function FornecedoresTabClient({
                       <button
                         type="button"
                         onClick={() => setEditingFornecedor(f)}
-                        className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                        className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
                         title="Editar"
                         aria-label={`Editar ${f.nome}`}
                       >

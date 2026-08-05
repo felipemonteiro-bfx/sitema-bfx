@@ -398,7 +398,7 @@ export default function ClientesTabClient({
                       <button
                         type="button"
                         onClick={() => openEditSheet(c)}
-                        className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                        className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
                         title="Editar"
                         aria-label={`Editar ${c.nome}`}
                       >

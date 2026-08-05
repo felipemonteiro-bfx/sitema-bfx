@@ -331,7 +331,8 @@ export default function ProdutosTabClient({
                         <Button
                           type="button"
                           variant="ghost"
-                          className="h-8 px-2 text-muted-foreground hover:text-destructive"
+                          size="iconSm"
+                          className="text-muted-foreground hover:text-destructive"
                           title="Excluir"
                           aria-label={`Excluir ${p.nome}`}
                         >
@@ -378,7 +379,7 @@ export default function ProdutosTabClient({
                     <Button
                       type="button"
                       variant="ghost"
-                      className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                      className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
                       title="Editar"
                       aria-label={`Editar ${p.nome}`}
                       onClick={() => handleOpenProduto(p.id)}

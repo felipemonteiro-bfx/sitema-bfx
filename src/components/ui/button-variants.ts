@@ -1,7 +1,20 @@
 import { cva } from "class-variance-authority"
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer",
+  // O padrao de tamanho de icone da base era incondicional e sobrescrevia TODA
+  // classe de tamanho posta no proprio icone: a variante arbitraria de <svg>
+  // vira o seletor `.btn svg`,
+  // especificidade (0,1,1), e `h-3.5 w-3.5` no <svg> tem (0,1,0) — perde. O
+  // tailwind-merge nao enxerga o conflito porque as classes estao em elementos
+  // diferentes. Medido em producao (82dcc8b): chevrons declarados `h-3.5 w-3.5`
+  // renderizando 16.0x16.0 e o sol/lua do ThemeToggle declarado `h-[1.2rem]`
+  // idem. As guardas `:not()` devolvem a palavra final a quem declarou o
+  // tamanho — e o padrao do shadcn/ui atual, com `h-` a mais porque o BFX
+  // declara icone com `h-N w-N`, nao com `size-N`.
+  // `shrink-0` e `pointer-events-none` continuam incondicionais: nao sao
+  // tamanho, e e justamente a falta do `shrink-0` que achata icone em flex
+  // apertado (medido: `h-3 w-3` renderizando 8.42px onde nao ha buttonVariants).
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-']):not([class*='h-'])]:size-4 [&_svg]:shrink-0 cursor-pointer",
   {
     variants: {
       variant: {
@@ -36,6 +49,13 @@ export const buttonVariants = cva(
         sm: "h-9 rounded-md px-3 text-xs",
         lg: "h-11 rounded-md px-8 text-base",
         icon: "h-10 w-10",
+        // Acao em linha de tabela. Existe para substituir o `h-8 px-2` que os
+        // call sites de /cadastros empilhavam sobre a size `default`: aquele
+        // `px-2` nao apagava o `py-2` da default, entao o content-box ficava em
+        // exatamente 16x16 para um icone de 16x16 — folga zero nos quatro
+        // lados, em 15 botoes. Sem padding, como a `icon`: 32x32 com o icone
+        // centrado e 8px de folga por lado.
+        iconSm: "h-8 w-8",
       },
     },
     defaultVariants: {

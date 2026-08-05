@@ -358,7 +358,7 @@ export default function EmpresasTabClient({
                           <button
                             type="button"
                             onClick={() => openVinculos(e)}
-                            className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground text-xs")}
+                            className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 py-0 text-muted-foreground hover:text-foreground text-xs")}
                             title="Gerenciar vinculos"
                           >
                             Vincular
@@ -367,7 +367,7 @@ export default function EmpresasTabClient({
                         <button
                           type="button"
                           onClick={() => setEditingEmpresa(e)}
-                          className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 text-muted-foreground hover:text-foreground")}
+                          className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
                           title="Editar"
                           aria-label={`Editar ${e.nome}`}
                         >
