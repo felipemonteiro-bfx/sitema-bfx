@@ -5,7 +5,7 @@ vi.mock("@/lib/session", () => ({
   getSession: vi.fn(),
 }));
 
-import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
+import { requireAdmin, requireAdminOrThrow, requireSessionOrThrow } from "@/lib/guards";
 import { getSession } from "@/lib/session";
 
 const mockGetSession = vi.mocked(getSession);
@@ -43,5 +43,24 @@ describe("requireAdminOrThrow", () => {
   it("lanca erro sem sessao", async () => {
     mockGetSession.mockResolvedValue(null);
     await expect(requireAdminOrThrow()).rejects.toThrow("Nao autenticado");
+  });
+});
+
+describe("requireSessionOrThrow", () => {
+  it("deixa passar o vendedor — e' o ponto de existir separado de requireAdminOrThrow", async () => {
+    mockGetSession.mockResolvedValue({ id: 2, username: "jakeline", role: "vendedor" });
+    const session = await requireSessionOrThrow();
+    expect(session.id).toBe(2);
+    expect(session.role).toBe("vendedor");
+  });
+
+  it("deixa passar o admin", async () => {
+    mockGetSession.mockResolvedValue({ id: 1, username: "admin", role: "admin" });
+    expect((await requireSessionOrThrow()).role).toBe("admin");
+  });
+
+  it("lanca erro sem sessao", async () => {
+    mockGetSession.mockResolvedValue(null);
+    await expect(requireSessionOrThrow()).rejects.toThrow("Nao autenticado");
   });
 });

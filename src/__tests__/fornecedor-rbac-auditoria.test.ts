@@ -23,6 +23,10 @@ const { bulkDeleteFornecedores, addFornecedor } = await import("@/app/(app)/cada
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // addFornecedor tambem passou a exigir admin (a regra e' que so cliente e
+  // produto ficam com o vendedor). Sem este padrao, os testes de auditoria
+  // dependeriam da implementacao deixada pelo teste anterior para passar.
+  guardsMock.requireAdminOrThrow.mockResolvedValue({ id: 1, username: "admin", role: "admin" });
 });
 
 function formDataCom(nome: string) {

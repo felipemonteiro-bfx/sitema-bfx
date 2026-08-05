@@ -15,7 +15,7 @@ import { LinkCatalogoButton } from "@/components/link-catalogo-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { createAuditLog } from "@/lib/audit";
-import { requireAdminOrThrow } from "@/lib/guards";
+import { requireAdminOrThrow, requireSessionOrThrow } from "@/lib/guards";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string };
@@ -24,8 +24,9 @@ function normalizeUppercase(value: FormDataEntryValue | null) {
   return String(value || "").trim().toLocaleUpperCase("pt-BR");
 }
 
-async function addCliente(formData: FormData) {
+export async function addCliente(formData: FormData) {
   "use server";
+  await requireSessionOrThrow();
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
   if (!nome) return;
@@ -56,8 +57,9 @@ async function addCliente(formData: FormData) {
   }
 }
 
-async function updateCliente(formData: FormData) {
+export async function updateCliente(formData: FormData) {
   "use server";
+  await requireSessionOrThrow();
   const id = Number(formData.get("id") || 0);
   const nome = normalizeUppercase(formData.get("nome"));
   const tipo = String(formData.get("tipo") || "PF");
@@ -107,8 +109,9 @@ async function bulkDeleteClientes(ids: number[]) {
   revalidatePath("/cadastros");
 }
 
-async function addProduto(formData: FormData) {
+export async function addProduto(formData: FormData) {
   "use server";
+  await requireSessionOrThrow();
   const nome = normalizeUppercase(formData.get("nome"));
   if (!nome) return;
   const dataCompraStr = String(formData.get("dataCompra") || "");
@@ -130,8 +133,9 @@ async function addProduto(formData: FormData) {
   revalidatePath("/cadastros");
 }
 
-async function updateProduto(formData: FormData) {
+export async function updateProduto(formData: FormData) {
   "use server";
+  await requireSessionOrThrow();
   const id = Number(formData.get("id") || 0);
   const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) {
@@ -185,6 +189,7 @@ async function bulkDeleteProdutos(ids: number[]) {
 
 export async function addFornecedor(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const telefone = normalizeUppercase(formData.get("telefone"));
   // D-03: nome ja existe soft-deletado reativa o registro (limpa deletedAt)
   // em vez de tentar inserir e estourar o @unique de `nome`.
@@ -224,8 +229,9 @@ export async function addFornecedor(formData: FormData) {
   revalidatePath("/cadastros");
 }
 
-async function updateFornecedor(formData: FormData) {
+export async function updateFornecedor(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const id = Number(formData.get("id") || 0);
   const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) return;
@@ -258,8 +264,9 @@ export async function bulkDeleteFornecedores(ids: number[]) {
   revalidatePath("/cadastros");
 }
 
-async function addEmpresa(formData: FormData) {
+export async function addEmpresa(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const nome = normalizeUppercase(formData.get("nome"));
   if (!nome) return;
   const cnpjRaw = String(formData.get("cnpj") || "").trim();
@@ -277,8 +284,9 @@ async function addEmpresa(formData: FormData) {
   revalidatePath("/cadastros");
 }
 
-async function updateEmpresa(formData: FormData) {
+export async function updateEmpresa(formData: FormData) {
   "use server";
+  await requireAdminOrThrow();
   const id = Number(formData.get("id") || 0);
   const nome = normalizeUppercase(formData.get("nome"));
   if (!id || !nome) return;
