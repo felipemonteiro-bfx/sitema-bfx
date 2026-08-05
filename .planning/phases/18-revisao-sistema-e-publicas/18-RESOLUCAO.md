@@ -9,9 +9,37 @@ Catracas — antes e depois idênticos em forma, mas o *depois* passou a medir u
 | | antes | depois |
 |---|---|---|
 | `contraste:check` (pares) | 46 PASS / 0 FAIL / 4 SKIP | 46 PASS / 0 FAIL / 4 SKIP |
-| cobertura do `@theme` | **não existia** | 16 de 16 utilitárias |
+| cobertura do `@theme` | **não existia** | 22 de 22 utilitárias |
 | `cores:check` | atual=0, baseline=0 | atual=0, baseline=0 |
-| testes de token (`node --test`) | 14 | 22 |
+| testes de token (`node --test`) | 14 | 25 |
+
+## Revisão em subagentes (etapa 4 do CLAUDE.md)
+
+Dois revisores. Veredito: **aprovado** e **aprovado com ressalvas**. Nenhuma regressão, nenhuma
+opacidade proibida, nenhuma troca fora de `className`, nenhum import órfão, nenhum erro de sintaxe
+(um deles achou o esbuild no cache do `npx` e fez parse dos 11 arquivos tocados — 11/11 OK, incluindo
+a validação empírica do comentário `//` do `/catalogo`).
+
+Duas ressalvas eram defeitos reais, confirmadas por medição própria e **corrigidas** em `c4914fb`:
+
+1. **A catraca nova tinha o mesmo furo que foi criada para pegar.** `checkThemeCoverage` só cobrava
+   `par.foreground`, deixando de fora os tokens que só aparecem do lado do FUNDO nos pares —
+   `destructive` (59 call sites de `text-destructive`) e `primary` (72). O critério passou a ser
+   "toda `text-X` cujo X é token de cor declarado". Cobertura 16 → 22. Junto: diretório de código
+   ausente virou erro (era skip silencioso com exit 0), e o `!` sufixo do Tailwind v4 passou a ser
+   tolerado.
+2. **Card "Resumo Financeiro" da venda rápida abaixo do mínimo.** Os 4 tiles ficam sobre três camadas
+   (`bg-card-elevated` + gradiente `from-primary/5` + tint do tile) e nem a variante `-text` fechava
+   no claro: 4.01 / 4.04 / 4.14. Com o tint opaco: 4.59 / 4.75 / 4.69.
+
+Também aplicada a etapa de TDD que faltava: `rotuloDoPerfil` foi extraída para `src/lib/rotulo-perfil.ts`
+(o componente é `"use client"` e o vitest roda em `environment: node`, onde nenhum teste importa
+`.tsx`) e ganhou `src/__tests__/rotulo-excluir-usuario.test.ts`.
+
+**Ressalva não acionável:** `public/sw.js:33` pula `/_next/`, então `/offline` nunca hidrata quando o
+usuário está de fato offline — o botão "Tentar novamente" não responde. É pré-existente (valia igual
+para o `<button>` cru anterior), não é regressão do achado 7, e mexer no service worker está fora
+deste escopo. Vale issue própria.
 
 ## Achados
 
