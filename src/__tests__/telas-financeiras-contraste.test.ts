@@ -115,6 +115,25 @@ describe("tokens de texto dedicados (achados 1, 2, 4)", () => {
     const fonte = ler("src/components/antecipacao-client.tsx");
     expect(fonte.includes("bg-info/20")).toBe(false);
   });
+
+  /**
+   * O modificador de opacidade anula o token: `text-info-text/80` vira
+   * `color-mix(... 80%, transparent)` e composita contra o fundo. Medido sobre
+   * o tint opaco: 4.59 -> 3.30 (info), 4.69 -> 3.27 (warning), 4.75 -> 3.40
+   * (success). `TOKEN_PAIRS` compara token com token e nao enxerga isso, entao
+   * o gate tem de ser aqui.
+   */
+  for (const arquivo of TELAS_FINANCEIRAS) {
+    it(`${arquivo} nao enfraquece o token de texto com modificador de opacidade`, () => {
+      const fonte = ler(arquivo);
+      for (const token of TOKENS_TEXTO) {
+        expect(
+          fonte.includes(`text-${token}-text/`),
+          `text-${token}-text/NN derruba o contraste abaixo de 4.5`,
+        ).toBe(false);
+      }
+    });
+  }
 });
 
 describe("achado 12 — abas inativas no tema claro", () => {

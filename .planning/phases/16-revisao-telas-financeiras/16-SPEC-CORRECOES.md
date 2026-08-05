@@ -40,6 +40,23 @@ Um token novo precisa existir em **quatro pontos**: `:root`, `.dark`,
 `@theme inline` e `tailwind.config.ts`. Faltando um, a classe não existe e
 falha em silêncio.
 
+> **Achado colateral da revisão: `tailwind.config.ts` está inerte.** O projeto
+> usa Tailwind v4 via `@tailwindcss/postcss`, e em v4 o config JS só é
+> carregado por uma diretiva `@config` no CSS — que **não existe** em
+> `src/app/globals.css` nem em nenhum outro CSS do repo. Quem gera as classes é
+> o `@theme inline`. Ou seja, dos "quatro pontos" só três são funcionais; o
+> quarto é convenção/documentação. Isso não quebra nada hoje, e a regra dos
+> quatro pontos foi seguida à risca, mas cria uma armadilha: quem um dia
+> adicionar um token **só** em `tailwind.config.ts` não terá classe nenhuma e
+> nenhum erro. Vale decidir depois entre adicionar `@config "../../tailwind.config.ts"`
+> ao CSS ou aposentar o arquivo.
+
+**Cuidado com o modificador de opacidade.** `text-info-text/80` vira
+`color-mix(…, 80%, transparent)` e composita contra o fundo, derrubando o
+contraste: medido sobre o tint opaco, 4.59 → 3.30 (info), 4.69 → 3.27
+(warning), 4.75 → 3.40 (success). `TOKEN_PAIRS` compara token com token e não
+enxerga isso — o gate está no vitest.
+
 Trocar **só os usos como texto** (`text-success` → `text-success-text` etc.).
 `bg-success`, `border-success`, `text-success-foreground` ficam intactos.
 
@@ -80,16 +97,25 @@ Correção: usar o tint opaco que o projeto já tem (`bg-info-bg`, 4.59:1).
 rotas revisadas, e da mesma família do achado 10 da fase 15 (ainda aberto). As
 opções medidas:
 
-- manter o tom e criar `--sidebar-primary-text` (L ≈ 0.78 → 5.8:1): quatro
-  pontos de declaração a mais **e** um par que o verificador não consegue
-  medir, porque o fundo é `bg-[var(--sidebar-primary)]/20`, um composto com
-  alfa (o script marca `SKIP`, nunca `PASS`). Mudança em chrome global sem
-  policiamento real;
 - copiar o padrão do badge numérico logo abaixo (`bg-[var(--sidebar-primary)]
   text-white`): **3.56:1** no claro — esse padrão também reprova, não serve de
   modelo;
 - trocar por `text-sidebar-foreground` (14.15:1): passa, mas apaga o acento
-  vermelho que identifica o item novo.
+  vermelho que identifica o item novo;
+- aplicar a mesma receita do achado 4 — tint **opaco** + token de texto:
+  funciona e mantém o acento (`--sidebar-primary-text` em L ≈ 0.78 dá 5.8:1),
+  mas exige **dois** tokens novos (o tint opaco e o texto), oito pontos de
+  declaração, em chrome que aparece em todas as rotas do app.
 
-Nenhuma é de baixo risco no sentido pedido. Fica para ser resolvido junto com o
-achado 10 da fase 15, com uma decisão única para o acento da sidebar.
+> **Correção de argumento (revisão).** A primeira versão desta seção alegava
+> que criar um token de texto para a sidebar daria "um par que o verificador
+> não consegue medir, por causa do alfa do fundo". O argumento é falso, e a
+> própria fase 16 prova: no achado 4 o composto com alfa foi trocado por tint
+> opaco justamente para tornar o par mensurável. Policiamento **não** é
+> obstáculo aqui.
+
+O que sustenta o adiamento é outra coisa: são dois tokens novos em chrome que
+aparece em toda rota do app, fora das 6 telas revisadas, e a decisão certa é
+uma só para o acento da sidebar inteira — junto com o achado 10 da fase 15,
+que é do mesmo par de cores. Corrigir só o badge "NOVO" agora deixaria o badge
+numérico logo abaixo (3.56:1) reprovando ao lado dele.

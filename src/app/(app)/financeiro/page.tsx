@@ -201,7 +201,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                  "Sem custos fixos"}
                               </span>
                               {dre.pontoEq > 0 && (
-                                <span className="text-xs text-muted-foreground">PE: {formatBRL(dre.pontoEq)}</span>
+                                <span className="text-xs tabular-nums text-muted-foreground">PE: {formatBRL(dre.pontoEq)}</span>
                               )}
                             </div>
                           </CardContent>

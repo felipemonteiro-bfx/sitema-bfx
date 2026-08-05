@@ -421,21 +421,21 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               <div className="text-xl font-black text-info-text tabular-nums leading-tight">
                 {prazoMedio.toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
               </div>
-              <div className="text-[9px] text-info-text/80 font-medium mt-0.5">D+1</div>
+              <div className="text-[9px] text-info-text font-medium mt-0.5">D+1</div>
             </div>
             <div className="rounded-lg bg-warning-bg border border-warning px-3 py-2.5">
               <div className="text-[10px] font-bold uppercase tracking-wider text-warning-text">Taxa total</div>
               <div className="text-xl font-black text-warning-text tabular-nums leading-tight">
                 {taxaPercent.toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
               </div>
-              <div className="text-[9px] text-warning-text/80 font-medium mt-0.5">Smart</div>
+              <div className="text-[9px] text-warning-text font-medium mt-0.5">Smart</div>
             </div>
             <div className="rounded-lg bg-success-bg border border-success px-3 py-2.5">
               <div className="text-[10px] font-bold uppercase tracking-wider text-success-text">Líquido</div>
               <div className="text-base sm:text-lg font-black text-success-text tabular-nums leading-tight truncate">
                 {formatBRL(valorLiquido)}
               </div>
-              <div className="text-[9px] text-success-text/80 font-medium mt-0.5">estimado</div>
+              <div className="text-[9px] text-success-text font-medium mt-0.5">estimado</div>
             </div>
           </div>
         </div>

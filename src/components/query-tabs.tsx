@@ -30,7 +30,13 @@ export function QueryTabs({
           estoura o container e quem rola e a PAGINA (scrollWidth 505 vs
           clientWidth 390), porque `overflow-x` fica `visible` ate o <main>
           (fase 16, achado 3). */}
-      <TabsList className="max-w-full justify-start overflow-x-auto">
+      {/* `h-auto min-h-10` no lugar do `h-10` fixo do TabsList: `overflow-x`
+          diferente de `visible` faz o `overflow-y` computar `auto`, e em
+          plataformas de barra de rolagem classica (Windows/Linux) a barra
+          horizontal comeria ~15px dos 40px de altura, cortando os gatilhos. Com
+          altura automatica a faixa cresce em vez de cortar; no macOS, onde a
+          barra e sobreposta, nada muda. */}
+      <TabsList className="h-auto min-h-10 max-w-full justify-start overflow-x-auto overflow-y-hidden">
         {tabs.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
             {t.label}

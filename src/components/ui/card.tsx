@@ -119,10 +119,11 @@ interface CardStatsProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 // `value` e a cor do numero do KPI. Precisa ser uma classe literal: antes era
-// montada como `text-${color}`, que o Tailwind nao consegue detectar ao varrer
-// o codigo — funcionava so por carona em outros arquivos que tinham a classe
-// escrita por extenso. Com a familia `-text` da fase 16 essa carona deixaria de
-// existir, e o KPI perderia a cor em silencio.
+// montada como `text-${color}`, que o Tailwind nao detecta ao varrer o codigo.
+// Funcionava so por carona — a classe era emitida porque OUTROS arquivos a
+// tinham escrita por extenso. Enquanto a carona durar nada quebra; no dia em
+// que o ultimo uso literal sair do codigo, o KPI perde a cor em silencio, sem
+// erro de build e sem teste vermelho. Classe literal aqui elimina a aposta.
 const colorConfig: Record<
   ColorVariant,
   { icon: string; border: string; bg: string; glow: string; value: string }
