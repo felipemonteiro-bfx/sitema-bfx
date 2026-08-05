@@ -32,9 +32,9 @@ export default async function Page() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Relatorios"
-        description="Exporte relatorios de vendas e financeiro."
-        breadcrumbs={[{ label: "Relatorios" }]}
+        title="Relatórios"
+        description="Exporte relatórios de vendas e financeiro."
+        breadcrumbs={[{ label: "Relatórios" }]}
       />
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -81,7 +81,7 @@ export default async function Page() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-1">
-              <Label>Inadimplencia</Label>
+              <Label>Inadimplência</Label>
               <div className="flex gap-2">
                 <a
                   href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=csv`}
