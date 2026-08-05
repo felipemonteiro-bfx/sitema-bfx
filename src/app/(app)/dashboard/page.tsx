@@ -235,7 +235,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         <Card animated className="border-info/20 bg-info/5">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Megaphone className="h-5 w-5 text-info" />
+              <Megaphone className="h-5 w-5 text-info-text" />
               Mural de Avisos
             </CardTitle>
           </CardHeader>
@@ -357,13 +357,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           >
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
-                                {index === 0 && <Trophy className="h-4 w-4 text-warning shrink-0" />}
+                                {index === 0 && <Trophy className="h-4 w-4 text-warning-text shrink-0" />}
                                 <span className="truncate max-w-[100px] sm:max-w-none">{r.vendedor}</span>
                               </div>
                             </TableCell>
                             <TableCell className="text-right tabular-nums max-sm:hidden">{r.vendas}</TableCell>
                             <TableCell className="text-right tabular-nums font-medium">{formatBRL(r.total)}</TableCell>
-                            <TableCell className="text-right tabular-nums text-success font-medium">{formatBRL(r.lucro)}</TableCell>
+                            <TableCell className="text-right tabular-nums text-success-text font-medium">{formatBRL(r.lucro)}</TableCell>
                             <TableCell className="text-right tabular-nums max-sm:hidden">{formatBRL(r.ticket)}</TableCell>
                             <TableCell className="text-right">
                               <Badge
@@ -386,7 +386,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <Card animated className="stagger-5">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <Trophy className="h-5 w-5 text-warning" />
+                    <Trophy className="h-5 w-5 text-warning-text" />
                     Hall da Fama
                   </CardTitle>
                 </CardHeader>
@@ -394,7 +394,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-info/10">
-                        <DollarSign className="h-5 w-5 text-info" />
+                        <DollarSign className="h-5 w-5 text-info-text" />
                       </div>
                       <div className="min-w-0">
                         <div className="text-xs text-muted-foreground uppercase tracking-wider">Maior Faturamento</div>
@@ -409,7 +409,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success/10">
-                        <TrendingUp className="h-5 w-5 text-success" />
+                        <TrendingUp className="h-5 w-5 text-success-text" />
                       </div>
                       <div className="min-w-0">
                         <div className="text-xs text-muted-foreground uppercase tracking-wider">Maior Lucro</div>
@@ -431,11 +431,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="flex items-center justify-between p-3 rounded-lg border border-info/20 bg-info/5 dark:bg-info/10 hover:bg-info/10 dark:hover:bg-info/15 transition-all group">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-info/10 dark:bg-info/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <DollarSign className="h-5 w-5 text-info" />
+                        <DollarSign className="h-5 w-5 text-info-text" />
                       </div>
                       <div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Receita</div>
-                        <div className="text-lg font-bold text-info">{formatBRL(totalReceita)}</div>
+                        <div className="text-lg font-bold text-info-text">{formatBRL(totalReceita)}</div>
                       </div>
                     </div>
                   </div>
@@ -443,11 +443,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="flex items-center justify-between p-3 rounded-lg border border-success/20 bg-success/5 dark:bg-success/10 hover:bg-success/10 dark:hover:bg-success/15 transition-all group">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-success/10 dark:bg-success/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <TrendingUp className="h-5 w-5 text-success" />
+                        <TrendingUp className="h-5 w-5 text-success-text" />
                       </div>
                       <div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Lucro</div>
-                        <div className="text-lg font-bold text-success">{formatBRL(lucro)}</div>
+                        <div className="text-lg font-bold text-success-text">{formatBRL(lucro)}</div>
                       </div>
                     </div>
                   </div>
@@ -455,11 +455,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="flex items-center justify-between p-3 rounded-lg border border-warning/20 bg-warning/5 dark:bg-warning/10 hover:bg-warning/10 dark:hover:bg-warning/15 transition-all group">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-warning/10 dark:bg-warning/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Percent className="h-5 w-5 text-warning" />
+                        <Percent className="h-5 w-5 text-warning-text" />
                       </div>
                       <div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Margem</div>
-                        <div className="text-lg font-bold text-warning">{margem.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-warning-text">{margem.toFixed(1)}%</div>
                       </div>
                     </div>
                   </div>

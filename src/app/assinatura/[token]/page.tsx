@@ -88,7 +88,7 @@ export default function AssinaturaPage() {
       <div className="h-[100dvh] flex items-center justify-center bg-muted p-4">
         <Card className="max-w-sm w-full text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
-            <CheckCircle2 className="h-16 w-16 text-success mx-auto" />
+            <CheckCircle2 className="h-16 w-16 text-success-text mx-auto" />
             <div>
               <h2 className="text-xl font-bold">Parabéns pela compra!</h2>
               <p className="text-sm text-muted-foreground mt-2">Contrato enviado para a BFX.</p>
@@ -104,7 +104,7 @@ export default function AssinaturaPage() {
       <div className="h-[100dvh] flex items-center justify-center bg-muted p-4">
         <Card className="max-w-sm w-full text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
-            <AlertCircle className="h-16 w-16 text-warning mx-auto" />
+            <AlertCircle className="h-16 w-16 text-warning-text mx-auto" />
             <div>
               <h2 className="text-xl font-bold">Não foi possível carregar</h2>
               <p className="text-sm text-muted-foreground mt-2">{error || 'Venda não encontrada.'}</p>

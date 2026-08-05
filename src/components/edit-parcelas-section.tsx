@@ -71,7 +71,7 @@ export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTota
         >
           <Calendar className="h-4 w-4" />
           Datas de Vencimento ({numeroParcelas}x · {formatBRL(totalParcelas)})
-          {diverge && <span className="text-warning text-xs">⚠️</span>}
+          {diverge && <span className="text-warning-text text-xs">⚠️</span>}
         </Button>
       </div>
 

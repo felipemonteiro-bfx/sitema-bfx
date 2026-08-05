@@ -140,7 +140,7 @@ export function CadastrarClienteRapidoDialog({
           {/* Aviso de nome parecido (D-05) — informativo, nunca bloqueia o cadastro */}
           {similares.length > 0 && (
             <div className="rounded-lg border border-warning/40 bg-warning/10 p-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-warning">
+              <div className="flex items-center gap-2 text-xs font-medium text-warning-text">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                 Ja existe cliente com nome parecido — confira antes de cadastrar
               </div>

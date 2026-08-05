@@ -34,7 +34,7 @@ export function CopiarLinkAssinatura({ token }: { token: string }) {
       size="sm"
       onClick={handleCopy}
       title={copied ? 'Link copiado!' : 'Copiar link de assinatura'}
-      className="h-auto gap-1 rounded border-warning bg-warning-bg px-2 py-1 text-xs text-warning shadow-none hover:bg-warning-bg/70 hover:text-warning hover:shadow-none"
+      className="h-auto gap-1 rounded border-warning bg-warning-bg px-2 py-1 text-xs text-warning-text shadow-none hover:bg-warning-bg/70 hover:text-warning-text hover:shadow-none"
     >
       {copied ? (
         <>

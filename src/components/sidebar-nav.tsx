@@ -139,7 +139,13 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
         </TooltipTrigger>
         <TooltipContent side="right" sideOffset={10} className="hidden lg:block">
           <p>{item.label}</p>
-          {item.isNew && <p className="text-xs text-success">Nova funcionalidade</p>}
+          {/* O `TooltipContent` desenha sobre `bg-primary`, que INVERTE entre os
+              temas (0.145 no claro, 0.985 no escuro). Nenhum token semantico
+              serve nos dois: `text-success` dava 6.54 no claro mas 2.37 no
+              escuro, e `text-success-text` daria 3.75 / 2.37. Quem fecha nos
+              dois lados e o par do proprio tooltip — `text-primary-foreground`,
+              18.93:1. O destaque fica no peso, nao na matiz. */}
+          {item.isNew && <p className="text-xs font-semibold text-primary-foreground">Nova funcionalidade</p>}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

@@ -37,7 +37,7 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
   return (
     <div className="flex flex-col items-center gap-1">
       {isAssinado ? (
-        <span className="text-xs text-success font-medium">Assinado</span>
+        <span className="text-xs text-success-text font-medium">Assinado</span>
       ) : (
         <>
           <div className="flex items-center gap-1">

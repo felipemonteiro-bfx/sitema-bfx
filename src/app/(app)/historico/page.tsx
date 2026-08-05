@@ -418,13 +418,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       {(() => {
                         const m = margemVenda(v);
                         if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
-                        return <span className={m > 0 ? "text-success" : m === 0 ? "text-warning" : "text-destructive"}>{m.toFixed(1)}%</span>;
+                        return <span className={m > 0 ? "text-success-text" : m === 0 ? "text-warning-text" : "text-destructive"}>{m.toFixed(1)}%</span>;
                       })()}
                     </TableCell>
                     <TableCell className="text-center">
                       {v.temNota ? (
                         <span title={`Taxa: ${v.taxaNota}%`} aria-label="Com nota" className="inline-flex justify-center">
-                          <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
+                          <CheckCircle2 className="h-4 w-4 text-success-text" aria-hidden="true" />
                         </span>
                       ) : (
                         <span className="text-muted-foreground opacity-30">—</span>
@@ -468,7 +468,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell className="text-center">
                       {v.assinatura?.assinaturaStatus === 'assinado' ? (
-                        <CheckCircle2 className="h-4 w-4 text-success mx-auto" />
+                        <CheckCircle2 className="h-4 w-4 text-success-text mx-auto" />
                       ) : v.assinaturaToken ? (
                         <span className="inline-block h-2 w-2 rounded-full bg-warning" title="Aguardando assinatura" />
                       ) : (

@@ -71,7 +71,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
               <div className={`h-2.5 w-2.5 rounded-full ${isNeg ? "bg-destructive" : "bg-success"}`} />
               <span className="text-xs text-muted-foreground">Lucro líquido</span>
             </div>
-            <span className={`text-xs font-bold tabular-nums ${isNeg ? "text-destructive" : "text-success"}`}>
+            <span className={`text-xs font-bold tabular-nums ${isNeg ? "text-destructive" : "text-success-text"}`}>
               {currency(lucro)}
             </span>
           </div>

@@ -66,7 +66,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
     <Card variant="elevated" className="border-info/20">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Calendar className="h-4 w-4 text-info" />
+          <Calendar className="h-4 w-4 text-info-text" />
           Datas de Vencimento das Parcelas
         </CardTitle>
       </CardHeader>
@@ -117,7 +117,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
             </span>
           </div>
           {Math.abs(parcelas.reduce((sum, p) => sum + p.valorParcela, 0) - valorTotal) > 0.01 && (
-            <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning">
+            <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
               ⚠️ Atenção: A soma das parcelas ({formatBRL(parcelas.reduce((sum, p) => sum + p.valorParcela, 0))})
               difere do valor total ({formatBRL(valorTotal)})
             </div>

@@ -245,7 +245,7 @@ export function EditVendaFormClient({
             <div className="flex flex-col gap-2">
               <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
               {editVenda.assinatura?.assinaturaStatus === "assinado" ? (
-                <div className="flex flex-wrap items-center gap-2 text-xs text-success bg-success/10 px-2 py-1.5 rounded-md border border-success/20">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-success-text bg-success/10 px-2 py-1.5 rounded-md border border-success/20">
                   <CheckCircle2 className="h-3 w-3 shrink-0" />
                   <span>Comprovante assinado.</span>
                   <a href={`/api/comprovante?vendaId=${editVenda.id}`} target="_blank" rel="noopener noreferrer" className="font-bold underline flex items-center gap-1 hover:underline">
@@ -268,7 +268,7 @@ export function EditVendaFormClient({
                   />
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs text-warning bg-warning-bg px-2 py-1.5 rounded-md border border-warning">
+                <div className="flex items-center gap-2 text-xs text-warning-text bg-warning-bg px-2 py-1.5 rounded-md border border-warning">
                   <AlertCircle className="h-3 w-3" />
                   <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
                 </div>

@@ -292,7 +292,7 @@ export default function ProdutoFormClient({
                   className={cn("uppercase", isDuplicate ? "border-warning" : "")}
                 />
                 {isDuplicate && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-warning">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-warning-text">
                     <AlertCircle className="h-4 w-4" />
                     <span className="text-[10px] font-bold">Já existe!</span>
                   </div>

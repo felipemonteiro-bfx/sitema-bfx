@@ -282,11 +282,11 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               </div>
               <div className="rounded-lg bg-success/5 px-3 py-2 text-center">
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro</div>
-                <div className="text-sm font-bold text-success">{formatBRL(lucro)}</div>
+                <div className="text-sm font-bold text-success-text">{formatBRL(lucro)}</div>
               </div>
               <div className="rounded-lg bg-info/5 px-3 py-2 text-center">
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
-                <div className="text-sm font-bold text-info">{margem.toFixed(1)}%</div>
+                <div className="text-sm font-bold text-info-text">{margem.toFixed(1)}%</div>
               </div>
             </div>
           </div>

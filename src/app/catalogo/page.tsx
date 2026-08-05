@@ -49,7 +49,7 @@ export default async function CatalogoPage() {
                 />
               </div>
             ) : (
-              <h1 className="text-2xl font-black tracking-tight text-info">
+              <h1 className="text-2xl font-black tracking-tight text-info-text">
                 BFX
               </h1>
             )}

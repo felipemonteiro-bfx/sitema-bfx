@@ -100,14 +100,14 @@ export function WhatsAppConnect() {
         {status.state === 'open' ? (
           <>
             <span className="flex h-2.5 w-2.5 rounded-full bg-success" />
-            <span className="text-sm font-medium text-success">Conectado</span>
-            <CheckCircle2 className="h-4 w-4 text-success" />
+            <span className="text-sm font-medium text-success-text">Conectado</span>
+            <CheckCircle2 className="h-4 w-4 text-success-text" />
           </>
         ) : status.state === 'connecting' ? (
           <>
             <span className="flex h-2.5 w-2.5 rounded-full bg-warning animate-pulse" />
-            <span className="text-sm font-medium text-warning">Aguardando QR Code</span>
-            <Wifi className="h-4 w-4 text-warning" />
+            <span className="text-sm font-medium text-warning-text">Aguardando QR Code</span>
+            <Wifi className="h-4 w-4 text-warning-text" />
           </>
         ) : (
           <>

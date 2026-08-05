@@ -98,7 +98,7 @@ export function AssinaturaFormClient({ token, clienteNome }: Props) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-success/30 bg-success/5 p-8 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
-          <CheckCircle2 className="h-10 w-10 text-success" />
+          <CheckCircle2 className="h-10 w-10 text-success-text" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-foreground">Documento assinado com sucesso!</h2>
@@ -152,7 +152,7 @@ export function AssinaturaFormClient({ token, clienteNome }: Props) {
         </div>
 
         {error && (
-          <p className="text-sm font-medium text-error">{error}</p>
+          <p className="text-sm font-medium text-error-text">{error}</p>
         )}
 
         <div className="flex gap-2">

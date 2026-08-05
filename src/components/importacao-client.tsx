@@ -194,7 +194,7 @@ export default function ImportacaoClient() {
             <span className="text-sm text-muted-foreground">
               {fileName ? fileName : "Nenhum arquivo escolhido"}
             </span>
-            {loading && <Loader2 className="h-5 w-5 animate-spin text-info" />}
+            {loading && <Loader2 className="h-5 w-5 animate-spin text-info-text" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">O sistema aceita ponto e vírgula (;) como separador padrão do Excel.</p>
         </CardContent>
@@ -213,7 +213,7 @@ export default function ImportacaoClient() {
                 variant="outline"
                 onClick={sugerirComIA}
                 disabled={suggesting || saving}
-                className="border-warning text-warning hover:bg-warning-bg"
+                className="border-warning text-warning-text hover:bg-warning-bg"
                 leftIcon={suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               >
                 Sugerir com IA
@@ -302,7 +302,7 @@ export default function ImportacaoClient() {
                           size="icon"
                           aria-label="Remover linha"
                           onClick={() => removeRow(row.id)}
-                          className="h-6 w-6 text-error shadow-none hover:bg-transparent hover:text-destructive hover:shadow-none"
+                          className="h-6 w-6 text-error-text shadow-none hover:bg-transparent hover:text-destructive hover:shadow-none"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

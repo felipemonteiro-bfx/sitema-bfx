@@ -56,7 +56,11 @@ export default async function Page() {
 
         {ultima && (
           <div className="flex items-center gap-3 bg-card p-2 rounded-2xl shadow-sm border border-border pr-4">
-            <div className="h-10 w-10 rounded-xl bg-success/20 flex items-center justify-center text-success">
+            {/* O composto de 20% da propria matiz escurece o fundo e trava o
+                texto: mesmo com `--success-text` daria 4.22:1. Sobre o tint
+                OPACO o mesmo token da 4.75:1. Regra do design system: acima de
+                /10, use `bg-*-bg`, nao o composto. */}
+            <div className="h-10 w-10 rounded-xl bg-success-bg flex items-center justify-center text-success-text">
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <div>

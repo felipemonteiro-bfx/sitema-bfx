@@ -510,7 +510,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <form action={saveWhatsApp} className="space-y-4">
                     {/* Provider oficial (Meta Cloud API) — sem risco de ban do numero */}
                     <div className="space-y-3 rounded-lg border border-info/30 bg-info/5 p-4">
-                      <div className="text-sm font-semibold text-info">Provider de envio</div>
+                      <div className="text-sm font-semibold text-info-text">Provider de envio</div>
                       <div className="space-y-1">
                         <Label htmlFor="whatsappProvider">Qual API usar</Label>
                         <FormSelect

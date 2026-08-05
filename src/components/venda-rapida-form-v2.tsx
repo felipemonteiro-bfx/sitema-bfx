@@ -729,7 +729,7 @@ export default function VendaRapidaFormV2({
       >
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <User className="h-4 w-4 text-info" />
+            <User className="h-4 w-4 text-info-text" />
             Cliente
           </CardTitle>
         </CardHeader>
@@ -747,7 +747,7 @@ export default function VendaRapidaFormV2({
               <button
                 type="button"
                 onClick={() => setClienteDialogOpen(true)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-info hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-medium text-info-text hover:underline"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Cadastrar cliente
@@ -789,7 +789,7 @@ export default function VendaRapidaFormV2({
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{c.nome}</div>
                       {c.renda && c.renda > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success font-medium">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success-text font-medium">
                           Renda: {formatBRL(c.renda)}
                         </span>
                       )}
@@ -879,7 +879,7 @@ export default function VendaRapidaFormV2({
                 <div
                   className={cn(
                     "text-sm font-bold",
-                    limiteData.margemDisponivel > 0 ? "text-success" : "text-destructive"
+                    limiteData.margemDisponivel > 0 ? "text-success-text" : "text-destructive"
                   )}
                 >
                   {formatBRL(limiteData.margemDisponivel)}
@@ -944,7 +944,7 @@ export default function VendaRapidaFormV2({
       <Card variant="elevated" className="border-warning/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <Truck className="h-4 w-4 text-warning" />
+            <Truck className="h-4 w-4 text-warning-text" />
             Despesas Adicionais
           </CardTitle>
         </CardHeader>
@@ -1004,7 +1004,7 @@ export default function VendaRapidaFormV2({
                 placeholder="0"
               />
               {pontosResgatar > 0 && (
-                <p className="text-[11px] text-success">
+                <p className="text-[11px] text-success-text">
                   Desconto por pontos: -{formatBRL(descontoPontos)} (limitado ao saldo do cliente)
                 </p>
               )}
@@ -1064,7 +1064,7 @@ export default function VendaRapidaFormV2({
       <Card variant="elevated" className="border-success/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-success" />
+            <CreditCard className="h-4 w-4 text-success-text" />
             Parcelamento
           </CardTitle>
         </CardHeader>
@@ -1117,7 +1117,7 @@ export default function VendaRapidaFormV2({
             </div>
             <div className="rounded-lg bg-info/5 px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
-              <div className="text-base font-bold text-info">{formatBRL(totalVenda / numParcelas)}</div>
+              <div className="text-base font-bold text-info-text">{formatBRL(totalVenda / numParcelas)}</div>
             </div>
           </div>
 
@@ -1134,15 +1134,15 @@ export default function VendaRapidaFormV2({
             </div>
             <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
-              <div className="text-base font-bold text-success">{formatBRL(lucroBruto)}</div>
+              <div className="text-base font-bold text-success-text">{formatBRL(lucroBruto)}</div>
             </div>
             <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
-              <div className="text-base font-bold text-success">{margemPct.toFixed(1)}%</div>
+              <div className="text-base font-bold text-success-text">{margemPct.toFixed(1)}%</div>
             </div>
             <div className="rounded-lg bg-warning/5 px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
-              <div className="text-base font-bold text-warning">{formatBRL(valorComissao)}</div>
+              <div className="text-base font-bold text-warning-text">{formatBRL(valorComissao)}</div>
             </div>
           </div>
 
