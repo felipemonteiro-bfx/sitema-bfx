@@ -150,7 +150,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <CardTitle className="text-sm font-medium text-muted-foreground">Receita Bruta</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className="text-2xl font-bold">{formatBRL(dre.receita)}</div>
+                            <div className="text-2xl font-bold tabular-nums">{formatBRL(dre.receita)}</div>
                             <div className="mt-1 text-xs text-muted-foreground">{dre.totalVendas ?? '—'} vendas no período</div>
                           </CardContent>
                         </Card>
@@ -161,7 +161,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <CardTitle className="text-sm font-medium text-muted-foreground">Custos do Período</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className="text-2xl font-bold text-destructive">{formatBRL(custoTotal)}</div>
+                            <div className="text-2xl font-bold tabular-nums text-destructive">{formatBRL(custoTotal)}</div>
                             <div className="mt-1 text-xs text-muted-foreground">
                               CMV + comissões + frete + despesas
                             </div>
@@ -177,7 +177,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className={cn("text-2xl font-bold", dre.lucro >= 0 ? "text-success-text" : "text-destructive")}>
+                            <div className={cn("text-2xl font-bold tabular-nums", dre.lucro >= 0 ? "text-success-text" : "text-destructive")}>
                               {formatBRL(dre.lucro)}
                             </div>
                             {/* Ponto de Equilíbrio indicator */}
@@ -220,22 +220,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                                 <div className="text-xs text-muted-foreground">CMV</div>
-                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.cmv)}</div>
+                                <div className="mt-0.5 text-base font-semibold tabular-nums text-destructive">{formatBRL(dre.detalhe.cmv)}</div>
                                 <div className="text-xs text-muted-foreground">Custo de mercadorias vendidas</div>
                               </div>
                               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                                 <div className="text-xs text-muted-foreground">Comissões</div>
-                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.comissoes)}</div>
+                                <div className="mt-0.5 text-base font-semibold tabular-nums text-destructive">{formatBRL(dre.detalhe.comissoes)}</div>
                                 <div className="text-xs text-muted-foreground">Equipe de vendas</div>
                               </div>
                               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                                 <div className="text-xs text-muted-foreground">Frete Real</div>
-                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.detalhe.freteReal)}</div>
+                                <div className="mt-0.5 text-base font-semibold tabular-nums text-destructive">{formatBRL(dre.detalhe.freteReal)}</div>
                                 <div className="text-xs text-muted-foreground">Custo logístico</div>
                               </div>
                               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                                 <div className="text-xs text-muted-foreground">Despesas Fixas</div>
-                                <div className="mt-0.5 text-base font-semibold text-destructive">{formatBRL(dre.fixas)}</div>
+                                <div className="mt-0.5 text-base font-semibold tabular-nums text-destructive">{formatBRL(dre.fixas)}</div>
                                 <div className="text-xs text-muted-foreground">Operação mensal</div>
                               </div>
                             </div>
@@ -247,7 +247,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <div className="rounded-lg border border-warning/20 bg-warning/5 dark:bg-warning/10 p-3 flex items-start gap-3">
                               <div className="flex-1">
                                 <div className="text-xs text-muted-foreground">Capital em Estoque</div>
-                                <div className="mt-0.5 text-base font-semibold text-warning-text">{formatBRL(estoqueImobilizado)}</div>
+                                <div className="mt-0.5 text-base font-semibold tabular-nums text-warning-text">{formatBRL(estoqueImobilizado)}</div>
                                 <div className="text-xs text-muted-foreground">Valor de custo da mercadoria parada em estoque</div>
                               </div>
                               <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning-text dark:bg-warning/20">
@@ -286,7 +286,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                       <div className="text-xs text-muted-foreground">Entrada média</div>
-                      <div className="mt-1 text-base font-semibold text-success-text">
+                      <div className="mt-1 text-base font-semibold tabular-nums text-success-text">
                         {formatBRL(
                           fluxo.length ? fluxo.reduce((acc, r) => acc + r.entradas, 0) / fluxo.length : 0
                         )}
@@ -294,7 +294,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                       <div className="text-xs text-muted-foreground">Saída média</div>
-                      <div className="mt-1 text-base font-semibold text-destructive">
+                      <div className="mt-1 text-base font-semibold tabular-nums text-destructive">
                         {formatBRL(
                           fluxo.length ? fluxo.reduce((acc, r) => acc + r.saidas, 0) / fluxo.length : 0
                         )}
@@ -302,7 +302,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                       <div className="text-xs text-muted-foreground">Saldo médio</div>
-                      <div className="mt-1 text-base font-semibold text-foreground">
+                      <div className="mt-1 text-base font-semibold tabular-nums text-foreground">
                         {formatBRL(
                           fluxo.length ? fluxo.reduce((acc, r) => acc + r.saldo, 0) / fluxo.length : 0
                         )}
@@ -512,19 +512,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Valor Imobilizado</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold text-warning-text">{formatBRL(estoqueImobilizado)}</CardContent>
+                    <CardContent className="text-2xl font-semibold tabular-nums text-warning-text">{formatBRL(estoqueImobilizado)}</CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Potencial de Receita</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold text-success-text">{formatBRL(estoquePotencialReceita)}</CardContent>
+                    <CardContent className="text-2xl font-semibold tabular-nums text-success-text">{formatBRL(estoquePotencialReceita)}</CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Margem Potencial</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold">{estoqueMargemPct.toFixed(1)}%</CardContent>
+                    <CardContent className="text-2xl font-semibold tabular-nums">{estoqueMargemPct.toFixed(1)}%</CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Itens Zerados</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold text-destructive">{estoqueItensZerados}</CardContent>
+                    <CardContent className="text-2xl font-semibold tabular-nums text-destructive">{estoqueItensZerados}</CardContent>
                   </Card>
                 </div>
                 <Card className="mt-4">

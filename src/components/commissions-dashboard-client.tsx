@@ -220,7 +220,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
                         <TableCell className="max-w-[150px] truncate">{d.produto}</TableCell>
                         <TableCell className="text-right tabular-nums">{formatBRL(d.valorVenda)}</TableCell>
                         <TableCell className="text-right tabular-nums">{formatBRL(d.lucroLiquido)}</TableCell>
-                        <TableCell className="text-right">{d.percentualComissao}%</TableCell>
+                        <TableCell className="text-right tabular-nums">{d.percentualComissao}%</TableCell>
                         <TableCell className="text-right font-semibold text-success-text tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
                       </TableRow>
                     ))

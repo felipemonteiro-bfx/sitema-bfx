@@ -112,7 +112,7 @@ export default async function Page() {
               <Card key={periodo}>
                 <CardHeader className="flex-row items-center justify-between gap-2">
                   <CardTitle className="text-primary">{periodoLabel(periodo)}</CardTitle>
-                  <span className="text-sm text-muted-foreground">{formatBRL(totalPeriodo)}</span>
+                  <span className="text-sm tabular-nums text-muted-foreground">{formatBRL(totalPeriodo)}</span>
                 </CardHeader>
                 <CardContent>
                   {/* Desktop: tabela */}
@@ -133,9 +133,9 @@ export default async function Page() {
                           <TableRow key={log.id}>
                             <TableCell>{log.empresa?.nome ?? `#${log.empresaId}`}</TableCell>
                             <TableCell>{statusBadge(log.status)}</TableCell>
-                            <TableCell className="text-right">{log.totalVendas}</TableCell>
-                            <TableCell className="text-right">{formatBRL(log.valorTotal)}</TableCell>
-                            <TableCell className="text-muted-foreground">{formatDataHora(log.enviadoEm)}</TableCell>
+                            <TableCell className="text-right tabular-nums">{log.totalVendas}</TableCell>
+                            <TableCell className="text-right tabular-nums">{formatBRL(log.valorTotal)}</TableCell>
+                            <TableCell className="tabular-nums text-muted-foreground">{formatDataHora(log.enviadoEm)}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap items-center gap-2">
                                 <a
@@ -173,7 +173,7 @@ export default async function Page() {
                           <span className="font-medium">{log.empresa?.nome ?? `#${log.empresaId}`}</span>
                           {statusBadge(log.status)}
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">
+                        <div className="mt-1 text-xs tabular-nums text-muted-foreground">
                           {log.totalVendas} vendas · {formatBRL(log.valorTotal)} · {formatDataHora(log.enviadoEm)}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
