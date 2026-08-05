@@ -20,6 +20,9 @@ async function savePerfil(formData: FormData) {
   const sessao = await getSession();
   const id = sessao?.id;
   if (!id) return;
+  // Senha so e' gravada se veio preenchida. Antes, salvar o formulario com o
+  // campo em branco zerava a senha e trancava o usuario para fora da conta.
+  const senha = String(formData.get("senha") || "").trim();
   await prisma.usuario.update({
     where: { id },
     data: {
@@ -27,7 +30,7 @@ async function savePerfil(formData: FormData) {
       email: String(formData.get("email") || ""),
       telefone: String(formData.get("telefone") || ""),
       endereco: String(formData.get("endereco") || ""),
-      password: String(formData.get("senha") || ""),
+      ...(senha ? { password: senha } : {}),
     },
   });
   revalidatePath("/perfil");
@@ -81,7 +84,15 @@ export default async function Page() {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="perfil-senha">Senha</Label>
-                <Input id="perfil-senha" name="senha" defaultValue={user.password} placeholder="Senha" type="password" />
+                {/* Sem defaultValue: a senha era servida em texto claro no HTML
+                    de toda visita ao perfil. Em branco mantem a atual. */}
+                <Input
+                  id="perfil-senha"
+                  name="senha"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="Deixe em branco para manter a atual"
+                />
               </div>
               <button className={cn(buttonVariants(), "md:col-span-2 bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
             </form>
