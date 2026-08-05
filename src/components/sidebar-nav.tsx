@@ -100,13 +100,20 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
       
       {/* Tint OPACO (`--sidebar-primary-bg`) no lugar do composto
           `--sidebar-primary/20`: o composto escurece o proprio tom e nao e
-          mensuravel. E `bg-white/5` no estado inativo era literalmente
-          invisivel sobre fundo claro — virou `--sidebar-accent`. */}
+          mensuravel pela catraca.
+
+          O estado inativo fica SEM fundo. Era `bg-white/5`, que no escuro ja
+          era praticamente invisivel e no claro seria invisivel de vez; pintar
+          de `--sidebar-accent` resolveria o claro mas deixaria o escuro
+          visivelmente mais carregado do que e hoje. Sem fundo, o icone inativo
+          cai direto sobre `--sidebar` (par ja policiado, 6.20:1 claro / 5.90:1
+          escuro), o escuro fica pixel-a-pixel como era, e o chip colorido passa
+          a significar so uma coisa: hover ou ativo. */}
       <span className={cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
         active
           ? "bg-[var(--sidebar-primary-bg)]"
-          : "bg-[var(--sidebar-accent)] group-hover:bg-[var(--sidebar-primary-bg)] group-hover:scale-105"
+          : "group-hover:bg-[var(--sidebar-primary-bg)] group-hover:scale-105"
       )}>
         {Icon && (
           <Icon className={cn(

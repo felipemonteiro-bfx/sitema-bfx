@@ -36,10 +36,23 @@ export function LogoutButton() {
         variant="outline"
         onClick={() => setOpen(true)}
         type="button"
-        className="w-full justify-between rounded-lg border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10"
+        /* Este botao so existe DENTRO da sidebar (layout.tsx e o unico call
+           site), e a sidebar passou a acompanhar o tema. `--destructive` foi
+           calibrado para 4.69:1 sobre `--background` (0.985); a sidebar clara
+           e 0.965, mais escura, e ali ele caia para 4.44:1 puro, 4.07:1 sobre
+           o tint `/5` e 3.73:1 no hover `/10` — abaixo do minimo, no proprio
+           componente que motivou a mudanca.
+
+           A correcao usa a variante de TEXTO (`--error-text`, que existe desde
+           a fase 17 exatamente para isso) e troca os tints compostos pelo
+           opaco `--error-bg`: 5.17:1 sobre a sidebar e 4.66:1 sobre o tint no
+           claro; 5.66:1 e 5.65:1 no escuro. A borda passa a `border-border`,
+           a mesma do ThemeToggle ao lado (3.30:1 claro / 3.46:1 escuro) — o
+           `border-destructive/30` dava 1.72:1 e nao delimitava o controle. */
+        className="w-full justify-between rounded-lg border-border bg-transparent px-3 py-2 text-error-text transition-colors hover:border-error hover:bg-error-bg hover:text-error-text"
       >
         <span className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-error-bg text-error-text">
             <LogOut className="h-4 w-4" />
           </span>
           Sair
@@ -49,7 +62,11 @@ export function LogoutButton() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader className="gap-2">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            {/* Mesmo par do botao, pelo mesmo motivo — aqui o fundo e o
+                `--popover`, nao a sidebar: `text-destructive` sobre
+                `bg-destructive/10` da 4.04:1 no claro, o caso exato que fez
+                `--error-text` existir. Com o tint opaco: 4.66:1 / 5.24:1. */}
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-error-bg text-error-text">
               <ShieldAlert className="h-6 w-6" />
             </div>
             <DialogTitle className="text-center">Confirmar saída</DialogTitle>

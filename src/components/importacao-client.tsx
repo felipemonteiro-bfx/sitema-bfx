@@ -299,6 +299,7 @@ export default function ImportacaoClient() {
                           checked={row.antecipada}
                           onCheckedChange={(checked) => updateCell(row.id, 'antecipada', checked === true)}
                           aria-label="Parcela antecipada"
+                          className="h-3 w-3"
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">

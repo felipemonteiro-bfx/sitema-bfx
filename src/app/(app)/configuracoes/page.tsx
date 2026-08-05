@@ -15,7 +15,7 @@ import { LitellmModelSelect } from "@/components/litellm-model-select";
 import { cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
 import { Label } from "@/components/ui/label";
-import { FormCheckbox } from "@/components/form-checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { checkboxComoNumero } from "@/lib/form-values";
 import { PageHeader } from "@/components/page-header";
 
@@ -584,7 +584,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <FormCheckbox
+                        <Checkbox
                           id="whatsappFallbackEvolution"
                           name="whatsappFallbackEvolution"
                           defaultChecked={(cfg as Record<string, unknown>)?.whatsappFallbackEvolution !== 0}
@@ -633,7 +633,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <FormCheckbox
+                      <Checkbox
                         id="whatsappAutoEnabled"
                         name="whatsappAutoEnabled"
                         defaultChecked={cfg?.whatsappAutoEnabled !== 0}
@@ -648,7 +648,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </p>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoRecibo"
                             name="whatsappAutoRecibo"
                             defaultChecked={cfg?.whatsappAutoRecibo !== 0}
@@ -658,7 +658,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoBoleto"
                             name="whatsappAutoBoleto"
                             defaultChecked={cfg?.whatsappAutoBoleto !== 0}
@@ -668,7 +668,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoLembrete"
                             name="whatsappAutoLembrete"
                             defaultChecked={cfg?.whatsappAutoLembrete !== 0}
@@ -678,7 +678,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoInadimplencia"
                             name="whatsappAutoInadimplencia"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoInadimplencia === 1}
@@ -688,7 +688,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoReativacao"
                             name="whatsappAutoReativacao"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoReativacao === 1}
@@ -713,7 +713,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoAniversario"
                             name="whatsappAutoAniversario"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAniversario === 1}
@@ -723,7 +723,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoBoasVindas"
                             name="whatsappAutoBoasVindas"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoBoasVindas === 1}
@@ -733,7 +733,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoAgradecimento"
                             name="whatsappAutoAgradecimento"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAgradecimento === 1}
@@ -743,7 +743,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <FormCheckbox
+                          <Checkbox
                             id="whatsappAutoNPS"
                             name="whatsappAutoNPS"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoNPS === 1}
@@ -756,7 +756,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="space-y-1 rounded-lg border border-border bg-muted/30 p-3">
                       <div className="flex items-center gap-2">
-                        <FormCheckbox
+                        <Checkbox
                           id="whatsappPreAtendimento"
                           name="whatsappPreAtendimento"
                           defaultChecked={(cfg as Record<string, unknown>)?.whatsappPreAtendimento === 1}
@@ -824,7 +824,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveUber} className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <FormCheckbox
+                      <Checkbox
                         id="uberEnabled"
                         name="uberEnabled"
                         defaultChecked={(cfg as Record<string, unknown>)?.uberEnabled === 1}

@@ -455,6 +455,7 @@ export default function EmpresasTabClient({
                     <Checkbox
                       checked={vinculacaoIds.has(e.id)}
                       onCheckedChange={() => toggleVinculo(e.id)}
+                      aria-label={`Vincular ${e.nome}`}
                     />
                     {e.nome}
                   </label>

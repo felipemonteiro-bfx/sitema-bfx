@@ -2,6 +2,7 @@
 
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db";
+import { checkboxLigado } from "@/lib/form-values";
 import { revalidatePath } from "next/cache";
 import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
@@ -42,7 +43,7 @@ export async function criarVenda(formData: FormData) {
   const frete = Number(formData.get("frete") || 0);
   const envio = Number(formData.get("envio") || 0);
   const parcelas = Number(formData.get("parcelas") || 1);
-  const temNota = formData.get("temNota") === "true";
+  const temNota = checkboxLigado(formData.get("temNota"));
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
   
   const subtotal = valor * quantidade;
@@ -158,14 +159,14 @@ export async function criarVendaV2(
       frete: Number(formData.get("frete") || 0),
       envio: Number(formData.get("envio") || 0),
       parcelas: Number(formData.get("parcelas") || 1),
-      temNota: formData.get("temNota") === "true",
+      temNota: checkboxLigado(formData.get("temNota")),
       taxaNota: Number(formData.get("taxaNota") || 5.97),
       produtos,
       parcelasVencimento: parcelasVencimento.length > 0 ? parcelasVencimento : undefined,
       desconto: Number(formData.get("desconto") || 0),
       pontosResgatar: Number(formData.get("pontosResgatar") || 0),
-      descontoEmFolha: formData.get("descontoEmFolha") === "true",
-      boleto: formData.get("boleto") === "true",
+      descontoEmFolha: checkboxLigado(formData.get("descontoEmFolha")),
+      boleto: checkboxLigado(formData.get("boleto")),
       formaPagamento: isFormaPagamento(formaPagamentoRaw) ? formaPagamentoRaw : undefined,
     };
 

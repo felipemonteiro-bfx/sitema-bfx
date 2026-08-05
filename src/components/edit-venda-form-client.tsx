@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { FormCheckbox } from "@/components/form-checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
@@ -278,7 +278,7 @@ export function EditVendaFormClient({
           </div>
 
           <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
-            <FormCheckbox
+            <Checkbox
               name="temNota"
               id="edit-temNota"
               defaultChecked={editVenda.temNota}
@@ -288,7 +288,7 @@ export function EditVendaFormClient({
             </label>
           </div>
           <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
-            <FormCheckbox
+            <Checkbox
               name="descontoEmFolha"
               id="edit-descontoEmFolha"
               defaultChecked={editVenda.descontoEmFolha ?? false}
@@ -298,7 +298,7 @@ export function EditVendaFormClient({
             </label>
           </div>
           <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
-            <FormCheckbox
+            <Checkbox
               name="boleto"
               id="edit-boleto"
               defaultChecked={editVenda.boleto ?? false}

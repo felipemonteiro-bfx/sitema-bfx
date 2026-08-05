@@ -423,6 +423,17 @@ export const TOKEN_PAIRS = [
   { foreground: "sidebar-primary-foreground", background: "sidebar-primary", min: TEXT_MIN, label: "badge de contagem — texto no preenchimento" },
   { foreground: "sidebar-primary", background: "sidebar-accent", min: NON_TEXT_MIN, label: "indicador do item ativo" },
   { foreground: "sidebar-ring", background: "sidebar", min: NON_TEXT_MIN, label: "anel de foco na sidebar (UI-06)" },
+  // A sidebar hospeda componentes que ela NAO desenha e que resolvem tokens
+  // GLOBAIS — foi exatamente isso que quebrou no tema claro. Enquanto a
+  // sidebar era escura ninguem media esses tokens contra ela; agora que a
+  // superficie muda, os dois que aparecem ali entram na catraca.
+  //
+  // `--error-text` e o texto do botao "Sair" (LogoutButton). Antes ele usava
+  // `--destructive`, calibrado para 4.69:1 sobre `--background` (0.985) — e a
+  // sidebar clara e 0.965, onde ele caia para 4.44:1 puro e 4.07:1 sobre o
+  // tint. `--border` e a borda do painel e do ThemeToggle.
+  { foreground: "error-text", background: "sidebar", min: TEXT_MIN, label: "texto do botao Sair na sidebar" },
+  { foreground: "border", background: "sidebar", min: NON_TEXT_MIN, label: "borda de controle na sidebar" },
   // O icone do logo sobre o gradiente decorativo da marca. O gradiente e
   // identico nos dois temas; o extremo claro (rose) e o pior caso e vale como
   // grafico (>=3), o extremo escuro (violet) suporta texto.

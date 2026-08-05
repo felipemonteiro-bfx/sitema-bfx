@@ -66,10 +66,26 @@ const cssCodigo = semComentarios(css);
 
 type Linha = { par: string; tema: string; razao: number; minimo: number; resultado: string };
 
-const saida = execFileSync("node", ["scripts/design-tokens/token-contrast.mjs"], {
-  cwd: raiz,
-  encoding: "utf8",
-});
+/**
+ * A catraca sai com codigo 1 quando algum par reprova, e `execFileSync` lanca
+ * nesse caso. Sem o try/catch a excecao subiria na CARGA do modulo e o arquivo
+ * inteiro morreria com um erro opaco, em vez de reprovar o teste que aponta o
+ * par culpado. `error.stdout` traz a tabela completa mesmo no caminho de erro.
+ */
+function rodarCatraca(): string {
+  try {
+    return execFileSync("node", ["scripts/design-tokens/token-contrast.mjs"], {
+      cwd: raiz,
+      encoding: "utf8",
+    });
+  } catch (erro) {
+    const saidaDoErro = (erro as { stdout?: string }).stdout;
+    if (typeof saidaDoErro === "string" && saidaDoErro.length > 0) return saidaDoErro;
+    throw erro;
+  }
+}
+
+const saida = rodarCatraca();
 
 const linhas: Linha[] = saida
   .split("\n")
@@ -190,6 +206,28 @@ describe("contraste de cada elemento da sidebar, nos dois temas", () => {
     }
   );
 
+  it.each(["light", "dark"] as const)(
+    "texto do botao Sair, sobre a sidebar (%s) >= 4.5:1",
+    (tema) => {
+      // O LogoutButton usa tokens GLOBAIS dentro da sidebar. Enquanto ela era
+      // escura ninguem media `--destructive` contra ela; com a sidebar clara
+      // (0.965, mais escura que `--background` 0.985, para o qual o token foi
+      // calibrado) ele caia para 4.44:1 puro e 4.07:1 sobre o tint.
+      const m = medida("error-text/sidebar", tema);
+      expect(m.resultado).toBe("PASS");
+      expect(m.razao).toBeGreaterThanOrEqual(4.5);
+    }
+  );
+
+  it.each(["light", "dark"] as const)(
+    "borda de controle na sidebar (%s) >= 3:1",
+    (tema) => {
+      const m = medida("border/sidebar", tema);
+      expect(m.resultado).toBe("PASS");
+      expect(m.razao).toBeGreaterThanOrEqual(3);
+    }
+  );
+
   it("a catraca inteira continua verde", () => {
     expect(saida.includes(", 0 reprovaram")).toBe(true);
   });
@@ -209,6 +247,19 @@ describe("os tokens novos existem nos tres pontos", () => {
     // Sem a chave no @theme o Tailwind v4 nao gera a utilitaria e a cor cai
     // silenciosamente para a herdada do pai (achado 1 da fase 18).
     expect(cssCodigo.includes(`--color-${nome}: var(--${nome});`)).toBe(true);
+  });
+
+  it("o gradiente da marca nao pode divergir entre :root e .dark", () => {
+    // Os tres tokens do gradiente sao repetidos no `.dark` com os MESMOS
+    // valores, so para a catraca medir o par nos dois temas em vez de dar
+    // SKIP. O risco dessa duplicacao e a deriva: quem mudar o valor em
+    // `:root` e esquecer o `.dark` fica com dois gradientes diferentes e a
+    // catraca continua verde nos dois lados.
+    for (const nome of ["gradient-cta-from", "gradient-cta-to", "gradient-cta-foreground"]) {
+      expect(lightnessDoToken(":root", nome), `--${nome} divergiu entre os temas`).toBe(
+        lightnessDoToken(".dark", nome)
+      );
+    }
   });
 
   it("os pares novos estao declarados em TOKEN_PAIRS", () => {
@@ -271,6 +322,24 @@ describe("os consumidores acompanham os tokens", () => {
     // dentro de uma superficie clara.
     expect(appLayoutCodigo.includes("sidebar-dark")).toBe(false);
     expect(cssCodigo.includes(".sidebar-dark")).toBe(false);
+  });
+
+  it("o botao Sair usa a variante de TEXTO e o tint opaco", () => {
+    const logout = semComentarios(ler("src/components/LogoutButton.tsx"));
+    // `text-destructive` e o token de PREENCHIMENTO usado como texto — 4.44:1
+    // sobre a sidebar clara, e 4.07:1 sobre o proprio tint `/5`.
+    expect(logout.includes("text-destructive")).toBe(false);
+    expect(logout.includes("bg-destructive/")).toBe(false);
+    expect(logout.includes("border-destructive/")).toBe(false);
+    expect(logout.includes("text-error-text")).toBe(true);
+    expect(logout.includes("bg-error-bg")).toBe(true);
+  });
+
+  it("o painel da sidebar tem a mesma borda do <main> ao lado", () => {
+    // Os dois ficam lado a lado sobre `--background`: com bordas de pesos
+    // diferentes a sidebar clara praticamente perde o contorno (1.79:1)
+    // enquanto o vizinho mantem o dele (3.49:1).
+    expect(appLayoutCodigo.includes("border border-border bg-[var(--sidebar)]")).toBe(true);
   });
 
   it("o logo usa o gradiente da marca e o token de icone", () => {

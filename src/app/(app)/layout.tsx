@@ -56,7 +56,14 @@ export default async function AppLayout({
               fixo pintaria a barra de rolagem e os controles nativos de escuro
               dentro de uma superficie clara. Herdar do documento ja da o certo
               nos dois temas. */}
-          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-sidebar-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl transition-all duration-300">
+          {/* `border-border`, a MESMA do <main> ao lado, e nao
+              `border-sidebar-border`. Os dois paineis ficam lado a lado sobre
+              `--background`: com a sidebar clara (0.965) contra a pagina
+              (0.985), `--sidebar-border` dava 1.79:1 e o painel praticamente
+              perdia o contorno enquanto o vizinho mantinha o dele a 3.49:1.
+              `--sidebar-border` continua sendo o separador INTERNO, onde uma
+              linha discreta e o que se quer. */}
+          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl transition-all duration-300">
             <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
           </div>
         </aside>

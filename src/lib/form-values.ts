@@ -1,29 +1,36 @@
 /**
- * Leitura de campos de formulario que nao tem representacao nativa.
+ * Leitura de campos booleanos vindos de `FormData`.
  *
- * O `<Checkbox>` do Radix e um `<button role="checkbox">` — ele NAO participa
- * de `FormData`. Um `<input type="checkbox" name="x">` nativo envia `"on"`
- * quando marcado e simplesmente NAO APARECE no `FormData` quando desmarcado, e
- * e por isso que `formData.get("x") === "on"` funcionava.
+ * Contexto que custou uma volta inteira: o `<Checkbox>` do Radix **participa**
+ * de formulario nativo. O `Root` renderiza, alem do `<button role="checkbox">`,
+ * um `CheckboxBubbleInput` — um `<input type="checkbox" aria-hidden name value
+ * form required disabled>` de verdade — sempre que estiver dentro de um
+ * `<form>` (`isFormControl`), e o `value` tem default `"on"`. Ou seja,
+ * `<Checkbox name="x" defaultChecked={...} />` envia exatamente o que o input
+ * nativo enviava: `"on"` marcado, **nada** desmarcado.
+ * (Verificado no fonte de `@radix-ui/react-checkbox@1.3.3`, a versao travada no
+ * lockfile; e ja havia prova viva em `edit-venda-historico-form.tsx`, que usa
+ * `<Checkbox name="temNota">` em producao desde antes.)
  *
- * Trocar o nativo pelo componente sem repor um campo que envie valor faz o
- * campo sumir do `FormData` para sempre: `=== "on"` vira `false`, a
- * configuracao passa a gravar 0 e nada acusa — sem erro, sem toast, so o dado
- * errado. O `<FormCheckbox>` repoe o campo (um `<input type="hidden">`, mesma
- * solucao do `<FormSelect>`) e este modulo centraliza a leitura.
+ * Entao por que este modulo existe? Porque a leitura estava espalhada em duas
+ * convencoes diferentes para os MESMOS campos:
  *
- * Existe separado do componente de proposito: o vitest roda em
- * `environment: node` e so inclui `src/__tests__/**\/*.test.ts`, entao
- * componente React nao e testavel. A regra que importa — como ausencia, `"on"`
- * e variantes viram booleano — mora aqui, onde da para testar.
+ *   `=== "on"`    /configuracoes e /historico (checkbox de formulario)
+ *   `=== "true"`  /venda-rapida — o FormData e montado a mao com `String(bool)`
+ *
+ * `temNota`, `descontoEmFolha` e `boleto` sao lidos pelos DOIS caminhos. Quem
+ * mover um checkbox de uma tela para a outra recebe `"on"` onde o leitor
+ * compara com `"true"` — e grava `false` em silencio, sem erro e sem toast.
+ * Centralizar aqui faz as duas convencoes convergirem.
+ *
+ * Mora em `lib/` e nao no componente porque o vitest roda em
+ * `environment: node` e so inclui `src/__tests__/**\/*.test.ts`: componente
+ * React nao e testavel, logica pura e.
  */
 
 /**
- * Valor emitido pelo campo oculto do `<FormCheckbox>` quando marcado.
- *
- * Deliberadamente `"on"`, o mesmo do checkbox nativo: assim um Server Action
- * que ainda nao tenha migrado para `checkboxLigado()` continua lendo certo, e
- * a migracao nao precisa ser atomica entre JSX e action.
+ * Valor que um checkbox marcado envia — `"on"`, o default do `value` tanto do
+ * `<input type="checkbox">` nativo quanto do `<Checkbox>` do Radix.
  */
 export const VALOR_CHECKBOX_LIGADO = "on";
 
@@ -36,9 +43,10 @@ const LIGADO = new Set(["on", "true", "1", "yes", "checked"]);
  * `File` nunca conta como ligado: sem este cuidado, um `Boolean(valor)` daria
  * `true` para qualquer upload que caisse no mesmo `name`.
  *
- * Ausente (`null`/`undefined`) e vazio contam como DESLIGADO — respectivamente
- * o checkbox nativo desmarcado (que nao envia nada) e o campo oculto
- * desmarcado (que envia `""`).
+ * Ausente (`null`) e vazio contam como DESLIGADO: o primeiro e o checkbox
+ * desmarcado (que nao envia nada), o segundo cobre quem monta o `FormData` a
+ * mao. `"false"`/`"0"`/`"off"` idem — a venda rapida envia `String(boolean)`, e
+ * sem esse cuidado `"false"` (string nao-vazia) seria truthy.
  */
 export function checkboxLigado(valor: FormDataEntryValue | null | undefined): boolean {
   if (typeof valor !== "string") return false;
