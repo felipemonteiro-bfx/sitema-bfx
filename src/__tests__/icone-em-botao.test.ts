@@ -1,0 +1,187 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
+/**
+ * Os cinco defeitos de icone em botao medidos em producao no build 82dcc8b
+ * (21 rotas x {1440, 390} x {claro, escuro}). Ver
+ * `.planning/quick/260805-icone-em-botao-e-gate-de-runtime/SPEC.md`.
+ *
+ * Este arquivo trava o CODIGO-FONTE. A medida em PIXEL de cada um destes cinco
+ * e responsabilidade de `npm run ui:runtime` (gate de runtime), que precisa de
+ * navegador e por isso nao roda aqui — o vitest do projeto e `environment:
+ * "node"`. Os dois se complementam: este garante que a correcao nao volte
+ * atras no fonte; aquele garante que o fonte de fato chega na tela.
+ *
+ * Nota de seguranca (CLAUDE.md): sem execucao de regex com estado — so
+ * `.includes()`, `.split()` e `.indexOf()`.
+ */
+
+const raiz = process.cwd();
+const ler = (rel: string) => readFileSync(join(raiz, rel), "utf8");
+
+describe("D1 — badge do sino nao vaza do botao", () => {
+  const fonte = ler("src/components/notification-bell.tsx");
+
+  it("nao usa mais deslocamento negativo, que era o que punha o badge fora da caixa", () => {
+    expect(fonte.includes("-top-1")).toBe(false);
+    expect(fonte.includes("-right-1")).toBe(false);
+  });
+
+  it("ancora o badge dentro do botao", () => {
+    expect(fonte.includes("absolute right-0.5 top-0.5")).toBe(true);
+  });
+
+  it("separa o badge do glifo do sino com anel na cor da superficie", () => {
+    expect(fonte.includes("ring-2 ring-sidebar")).toBe(true);
+  });
+
+  it("nao intercepta clique do gatilho do popover", () => {
+    expect(fonte.includes("pointer-events-none")).toBe(true);
+  });
+});
+
+describe("D2 — classe de tamanho no proprio <svg> vence o padrao da base", () => {
+  const variants = ler("src/components/ui/button-variants.ts");
+
+  it("o padrao size-4 da base passa a ser condicional", () => {
+    expect(variants.includes("[&_svg]:size-4")).toBe(false);
+    expect(
+      variants.includes("[&_svg:not([class*='size-']):not([class*='h-'])]:size-4")
+    ).toBe(true);
+  });
+
+  it("mantem shrink-0 e pointer-events-none incondicionais — nao sao tamanho", () => {
+    expect(variants.includes("[&_svg]:shrink-0")).toBe(true);
+    expect(variants.includes("[&_svg]:pointer-events-none")).toBe(true);
+  });
+
+  it("expoe uma size real de 32px para acao em tabela, em vez de remendo por call site", () => {
+    expect(variants.includes('iconSm: "h-8 w-8"')).toBe(true);
+  });
+
+  it("os botoes de acao de /cadastros usam a size nova, sem o py-2 herdado da default", () => {
+    const telas = [
+      "src/components/produtos-tab-client.tsx",
+      "src/components/empresas-tab-client.tsx",
+      "src/components/clientes-tab-client.tsx",
+      "src/components/fornecedores-tab-client.tsx",
+    ];
+    for (const tela of telas) {
+      const fonte = ler(tela);
+      expect(fonte.includes("h-8 px-2 text-muted-foreground")).toBe(false);
+      expect(fonte.includes('size: "iconSm"') || fonte.includes('size="iconSm"')).toBe(true);
+    }
+  });
+});
+
+describe("D3 — icone do link 'Ver boleto' nao e comprimido pelo flex", () => {
+  it("o <a> de /boletos nao usa buttonVariants, entao o shrink-0 tem de ser explicito", () => {
+    const fonte = ler("src/app/(app)/boletos/page.tsx");
+    expect(fonte.includes('<ExternalLink className="h-3 w-3" />')).toBe(false);
+    expect(fonte.includes('<ExternalLink className="h-3 w-3 shrink-0" />')).toBe(true);
+  });
+});
+
+describe("D4 — um unico gap entre icone e texto do botao", () => {
+  const fonte = ler("src/components/ui/button.tsx");
+
+  it("os wrappers de leftIcon/rightIcon nao somam margem ao gap-2 da base", () => {
+    expect(fonte.includes('className="mr-2 inline-flex')).toBe(false);
+    expect(fonte.includes('className="ml-2 inline-flex')).toBe(false);
+  });
+
+  it("o spinner de loading tambem nao soma margem", () => {
+    expect(fonte.includes('<Loader2 className="mr-2')).toBe(false);
+  });
+
+  it("nao renderiza o span de children vazio — item flex vazio ainda consome um gap", () => {
+    expect(fonte.includes("temConteudo")).toBe(true);
+  });
+});
+
+describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", () => {
+  /**
+   * Este e o sintoma que o dono do sistema enxerga: o conteudo do botao
+   * quebrando em duas linhas. Ele NAO aparece em `scrollWidth > clientWidth`,
+   * porque quebra de linha aumenta a ALTURA, nao a largura — e por isso passou
+   * batido pela varredura que achou o badge do sino.
+   *
+   * A causa e sempre a mesma: elemento com icone + texto que usa
+   * `inline-flex items-center gap-*` SEM `buttonVariants`, logo sem o
+   * `whitespace-nowrap` e sem o `[&_svg]:shrink-0` da base.
+   */
+  const casos: Array<[string, string]> = [
+    ["src/components/sortable-header.tsx", "cabecalho ordenavel (usado em 5 tabelas)"],
+    ["src/components/ui/table.tsx", "TableHead sortable"],
+    ["src/app/not-found.tsx", "links de acao do 404"],
+    ["src/app/(app)/boletos/page.tsx", "link 'Ver boleto'"],
+    ["src/components/venda-rapida-form-v2.tsx", "botao 'Cadastrar cliente'"],
+  ];
+
+  for (const [arquivo, descricao] of casos) {
+    it(`${descricao} nao deixa o texto quebrar ao lado do icone`, () => {
+      const fonte = ler(arquivo);
+      expect(fonte.includes("whitespace-nowrap")).toBe(true);
+    });
+  }
+
+  it("os icones desses controles nao podem ser comprimidos pelo flex", () => {
+    const sortable = ler("src/components/sortable-header.tsx");
+    expect(sortable.includes('<ChevronUp className="h-3.5 w-3.5 shrink-0" />')).toBe(true);
+    expect(sortable.includes('<ChevronDown className="h-3.5 w-3.5 shrink-0" />')).toBe(true);
+    expect(sortable.includes('<ArrowUpDown className="h-3 w-3 shrink-0 opacity-40" />')).toBe(true);
+
+    expect(ler("src/components/ui/table.tsx").includes('"h-3.5 w-3.5 shrink-0 transition-opacity"')).toBe(true);
+    expect(ler("src/app/not-found.tsx").includes('<Home className="h-4 w-4 shrink-0" />')).toBe(true);
+    expect(ler("src/app/not-found.tsx").includes('<LogIn className="h-4 w-4 shrink-0" />')).toBe(true);
+    expect(ler("src/components/venda-rapida-form-v2.tsx").includes('<Plus className="h-3.5 w-3.5 shrink-0" />')).toBe(true);
+  });
+
+  it("a pilula do ponto de equilibrio nao quebra e o ponto nao some", () => {
+    // Aqui o "icone" e um <span> redondo de 6px, nao um <svg> — e o unico dos
+    // casos que a regra (e) do gate NAO ve (ela exige um <svg>). Corrigido no
+    // fonte e travado aqui.
+    const fonte = ler("src/app/(app)/financeiro/page.tsx");
+    expect(fonte.includes("inline-flex items-center gap-1 whitespace-nowrap rounded-full")).toBe(true);
+    expect(fonte.includes('"h-1.5 w-1.5 shrink-0 rounded-full"')).toBe(true);
+  });
+
+  it("o unico whitespace-normal do projeto continua sendo o item do sino, que e flex-col de proposito", () => {
+    const comWhitespaceNormal = [
+      "src/components/notification-bell.tsx",
+      "src/components/ui/button.tsx",
+      "src/components/ui/tabs.tsx",
+      "src/components/sortable-header.tsx",
+    ].filter((f) => ler(f).includes("whitespace-normal"));
+    expect(comWhitespaceNormal).toEqual(["src/components/notification-bell.tsx"]);
+
+    const sino = ler("src/components/notification-bell.tsx");
+    const linha = sino.split("\n").find((l) => l.includes("whitespace-normal")) || "";
+    expect(linha.includes("flex-col")).toBe(true);
+  });
+});
+
+describe("D5 — abas roladas tem pista visual", () => {
+  it("o componente de abas oferece uma lista rolavel com affordance", () => {
+    const tabs = ler("src/components/ui/tabs.tsx");
+    expect(tabs.includes("ScrollableTabsList")).toBe(true);
+    // gradiente de borda + chevron, ambos inertes ao ponteiro
+    expect(tabs.includes("pointer-events-none")).toBe(true);
+    expect(tabs.includes("ChevronLeft")).toBe(true);
+    expect(tabs.includes("ChevronRight")).toBe(true);
+  });
+
+  it("as duas telas de abas usam o componente novo", () => {
+    for (const tela of ["src/components/query-tabs.tsx", "src/components/gestao-rh-tabs.tsx"]) {
+      expect(ler(tela).includes("ScrollableTabsList")).toBe(true);
+    }
+  });
+
+  it("preserva a contencao de rolagem da fase 16 — quem rola continua sendo o tablist", () => {
+    const tabs = ler("src/components/ui/tabs.tsx");
+    expect(tabs.includes("overflow-x-auto")).toBe(true);
+    expect(tabs.includes("max-w-full")).toBe(true);
+    expect(tabs.includes("h-auto min-h-10")).toBe(true);
+  });
+});
