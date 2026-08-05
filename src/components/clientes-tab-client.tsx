@@ -215,11 +215,12 @@ export default function ClientesTabClient({
                 />
                 {similares.length > 0 && (
                   <div role="alert" className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-xs text-warning-foreground dark:text-warning">
-                    {/* O rotulo ao lado usa `text-warning-foreground dark:text-warning`
-                        e ja fecha nos dois temas (18.16 / 8.67) — fica como esta.
-                        O icone, porem, forcava o token de preenchimento em ambos:
-                        1.92:1 no claro sobre `bg-warning/10`. Com a variante de
-                        texto vai a 4.88:1, e no escuro o valor e o mesmo de antes. */}
+                    {/* O rotulo ao lado ja fecha nos dois temas (18.16 no claro
+                        com o `-foreground` escuro, 8.67 no escuro com o token
+                        de preenchimento) — fica como esta. O icone, porem,
+                        forcava o preenchimento em AMBOS: 1.92:1 no claro sobre
+                        o tint. Com a variante de texto vai a 4.88:1, e no
+                        escuro o valor e o mesmo de antes. */}
                     <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-warning-text" />
                     <span>
                       <strong>Cliente(s) com nome similar:</strong>{" "}

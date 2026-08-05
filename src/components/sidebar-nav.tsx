@@ -141,10 +141,11 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
           <p>{item.label}</p>
           {/* O `TooltipContent` desenha sobre `bg-primary`, que INVERTE entre os
               temas (0.145 no claro, 0.985 no escuro). Nenhum token semantico
-              serve nos dois: `text-success` dava 6.54 no claro mas 2.37 no
-              escuro, e `text-success-text` daria 3.75 / 2.37. Quem fecha nos
-              dois lados e o par do proprio tooltip — `text-primary-foreground`,
-              18.93:1. O destaque fica no peso, nao na matiz. */}
+              serve nos dois: o token de preenchimento dava 6.54 no claro mas
+              2.37 no escuro, e a variante de texto daria 3.75 / 2.37. Quem
+              fecha nos dois lados e o par do proprio tooltip —
+              `text-primary-foreground`, 18.93:1. O destaque fica no peso da
+              fonte, nao na matiz. */}
           {item.isNew && <p className="text-xs font-semibold text-primary-foreground">Nova funcionalidade</p>}
         </TooltipContent>
       </Tooltip>

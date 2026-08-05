@@ -105,11 +105,12 @@ export const colors = {
 // TEXT COLORS - Para badges, indicadores, etc
 // ============================================================================
 
-// Estes sao os tokens de TEXTO (`--*-text`), nao os de preenchimento. Usar
-// `text-success` aqui reprovava no tema claro (2.97:1 sobre card; minimo 4.5)
-// porque `--success` e calibrado para receber `--success-foreground` por cima,
-// nao para ser lido como texto. Medido com a variante `-text`: 5.18 / 5.23 /
-// 5.60 / 5.22 sobre card. Ver globals.css, bloco "variante de TEXTO".
+// Estes sao os tokens de TEXTO (familia `--*-text`), nao os de preenchimento.
+// Prescrever aqui a classe do token de preenchimento reprovava no tema claro
+// (2.97:1 sobre card; minimo 4.5), porque `--success` e calibrado para receber
+// `--success-foreground` por cima, nao para ser lido como texto. Medido com a
+// variante de texto: 5.18 / 5.23 / 5.60 / 5.22 sobre card. Ver globals.css,
+// bloco "variante de TEXTO".
 export const textColors = {
   /** Texto de sucesso - valores positivos, lucro */
   success: 'text-success-text',
