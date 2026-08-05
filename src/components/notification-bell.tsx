@@ -103,8 +103,17 @@ export function NotificationBell() {
           aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         >
           <Bell className="h-4 w-4" />
+          {/* Ancorado DENTRO da caixa do botao. Com o deslocamento negativo que
+              havia aqui, o badge de 16x16 saia 3px para cima e 3px para a
+              direita de um botao de 36x36 — medido `clientWidth` 34 contra
+              `scrollWidth` 38, nas 21 rotas, nos dois temas, em 1440px e 390px.
+              O anel na cor da superficie e o que separa o badge do glifo do
+              sino: num botao de 36px com icone de 16px e contador de ate dois
+              caracteres a sobreposicao de canto e inevitavel (e e a convencao
+              de badge de notificacao) — o que resolve a leitura e o contorno,
+              nao empurrar o badge para fora. */}
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-error text-[10px] font-bold text-error-foreground leading-none">
+            <span className="pointer-events-none absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-error px-1 text-[9px] font-bold leading-none text-error-foreground ring-2 ring-sidebar">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
