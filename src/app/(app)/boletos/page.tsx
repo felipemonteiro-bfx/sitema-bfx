@@ -76,10 +76,10 @@ function BoletoTable({
                     href={p.bankSlipUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1 whitespace-nowrap"
                   >
                     {linkLabel}
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-3 w-3 shrink-0" />
                   </a>
                 )}
               </TableCell>

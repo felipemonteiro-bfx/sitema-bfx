@@ -747,9 +747,9 @@ export default function VendaRapidaFormV2({
               <button
                 type="button"
                 onClick={() => setClienteDialogOpen(true)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-info-text hover:underline"
+                className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-info-text hover:underline"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5 shrink-0" />
                 Cadastrar cliente
               </button>
             </div>

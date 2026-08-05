@@ -183,14 +183,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             {/* Ponto de Equilíbrio indicator */}
                             <div className="mt-2 flex items-center gap-1.5">
                               <span className={cn(
-                                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                                "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium",
                                 pontoEqStatus === 'green' ? "bg-success/10 text-success-text dark:bg-success/20" :
                                 pontoEqStatus === 'yellow' ? "bg-warning/10 text-warning-text dark:bg-warning/20" :
                                 pontoEqStatus === 'red' ? "bg-destructive/10 text-destructive dark:bg-destructive/20" :
                                 "bg-muted text-muted-foreground"
                               )}>
                                 <span className={cn(
-                                  "h-1.5 w-1.5 rounded-full",
+                                  "h-1.5 w-1.5 shrink-0 rounded-full",
                                   pontoEqStatus === 'green' ? "bg-success" :
                                   pontoEqStatus === 'yellow' ? "bg-warning" :
                                   pontoEqStatus === 'red' ? "bg-destructive" : "bg-muted-foreground"

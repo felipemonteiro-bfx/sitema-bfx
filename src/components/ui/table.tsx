@@ -144,10 +144,13 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
         {...props}
       >
         {sortable ? (
-          <div className="flex items-center gap-1.5">
+          // `whitespace-nowrap` + `shrink-0` pelo mesmo motivo de
+          // `sortable-header.tsx`: este <div> nao usa `buttonVariants`, entao o
+          // rotulo quebra em duas linhas e a seta e comprimida pelo flex.
+          <div className="flex items-center gap-1.5 whitespace-nowrap">
             {children}
             <SortIcon className={cn(
-              "h-3.5 w-3.5 transition-opacity",
+              "h-3.5 w-3.5 shrink-0 transition-opacity",
               sortDirection ? "opacity-100" : "opacity-40"
             )} />
           </div>
