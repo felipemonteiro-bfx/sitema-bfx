@@ -26,7 +26,7 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
         <Breadcrumb className="mb-2">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Inicio</BreadcrumbLink>
+              <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
             </BreadcrumbItem>
             {breadcrumbs.map((item, i) => (
               <span key={i} className="contents">

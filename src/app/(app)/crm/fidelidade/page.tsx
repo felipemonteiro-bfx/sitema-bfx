@@ -50,7 +50,11 @@ export default async function Page() {
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        {/* min-w-0: item de grid tem `min-width:auto`, entao o min-content de
+            473px da tabela empurrava a pagina inteira (scrollWidth 552 em
+            390px). Com min-w-0 a rolagem volta para o `.overflow-x-auto`
+            interno, que e onde ela pertence. */}
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="text-primary text-base">Saldo de pontos por cliente</CardTitle>
           </CardHeader>

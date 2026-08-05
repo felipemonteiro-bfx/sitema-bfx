@@ -317,7 +317,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 name="tagId"
                                 defaultValue=""
                                 searchable={false}
-                                className="h-7 w-28 px-2 text-[11px]"
+                                className="h-9 w-28 rounded-md px-2 text-[11px]"
                                 placeholder="+tag"
                                 options={tags.map((t) => ({ value: String(t.id), label: t.nome }))}
                               />
@@ -339,7 +339,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="estagio"
                             defaultValue={c.estagioCrm ?? "cliente"}
                             searchable={false}
-                            className="h-7 w-36 px-2 text-xs"
+                            className="h-9 w-36 rounded-md px-3 text-xs"
                             options={ESTAGIOS_ORDEM.map((e) => ({ value: e, label: estagioLabel(e) }))}
                           />
                           <button type="submit" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>Salvar</button>

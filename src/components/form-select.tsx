@@ -64,8 +64,13 @@ export function FormSelect({
     setQuery("");
   };
 
+  // O wrapper nao impoe mais altura minima propria: o gatilho ja e `h-10`,
+  // entao a altura minima era redundante no caso comum e nociva quando o call
+  // site reduz a altura (`h-7`/`h-9`) — o bloco continuava com 40px, o gatilho
+  // encostava no topo e a base ficava 10px acima da do botao irmao ao lado
+  // (achado 5 da fase 17).
   return (
-    <div className="min-h-10 overflow-hidden">
+    <div className="overflow-hidden">
       <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
