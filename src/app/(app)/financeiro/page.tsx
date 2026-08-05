@@ -322,8 +322,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableBody>
                       {fluxo.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground">
-                            Sem dados.
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                            Nenhum movimento de caixa no período.
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -460,8 +460,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <TableBody>
                         {despesas.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground">
-                              Sem dados.
+                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                              Nenhuma despesa lançada no período.
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -544,8 +544,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <TableBody>
                         {produtosOrdenados.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={6} className="text-center text-muted-foreground">
-                              Sem produtos cadastrados.
+                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                              Nenhum produto cadastrado.
                             </TableCell>
                           </TableRow>
                         ) : (
