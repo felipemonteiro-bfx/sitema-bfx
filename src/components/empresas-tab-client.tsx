@@ -445,12 +445,16 @@ export default function EmpresasTabClient({
               {empresas
                 .filter((e) => e.id !== vinculandoId)
                 .map((e) => (
+                  // Estado React enviado por fetch/JSON — nao passa por
+                  // FormData, entao aqui e o `<Checkbox>` direto: um campo
+                  // oculto seria um campo sem dono. Nao ha selecao em massa
+                  // neste bloco (cada vinculo e independente), logo nao existe
+                  // estado indeterminado a tratar — o `toggleVinculo` ignora o
+                  // valor recebido e alterna a partir do Set.
                   <label key={e.id} className="flex items-center gap-2 cursor-pointer text-sm rounded border px-3 py-2 hover:bg-muted">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={vinculacaoIds.has(e.id)}
-                      onChange={() => toggleVinculo(e.id)}
-                      className="h-4 w-4"
+                      onCheckedChange={() => toggleVinculo(e.id)}
                     />
                     {e.nome}
                   </label>

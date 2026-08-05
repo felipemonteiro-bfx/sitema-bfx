@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { FormCheckbox } from "@/components/form-checkbox";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
@@ -277,36 +278,30 @@ export function EditVendaFormClient({
           </div>
 
           <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
-            <input
-              type="checkbox"
+            <FormCheckbox
               name="temNota"
               id="edit-temNota"
               defaultChecked={editVenda.temNota}
-              className="h-4 w-4 rounded border-input"
             />
             <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Com Nota Fiscal
             </label>
           </div>
           <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
-            <input
-              type="checkbox"
+            <FormCheckbox
               name="descontoEmFolha"
               id="edit-descontoEmFolha"
               defaultChecked={editVenda.descontoEmFolha ?? false}
-              className="h-4 w-4 rounded border-input"
             />
             <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Desconto em folha
             </label>
           </div>
           <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
-            <input
-              type="checkbox"
+            <FormCheckbox
               name="boleto"
               id="edit-boleto"
               defaultChecked={editVenda.boleto ?? false}
-              className="h-4 w-4 rounded border-input"
             />
             <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer text-foreground">
               Boleto

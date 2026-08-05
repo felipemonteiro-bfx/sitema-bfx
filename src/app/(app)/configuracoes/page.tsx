@@ -15,6 +15,8 @@ import { LitellmModelSelect } from "@/components/litellm-model-select";
 import { cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
 import { Label } from "@/components/ui/label";
+import { FormCheckbox } from "@/components/form-checkbox";
+import { checkboxComoNumero } from "@/lib/form-values";
 import { PageHeader } from "@/components/page-header";
 
 type Search = { tab?: string };
@@ -120,17 +122,17 @@ async function saveWhatsApp(formData: FormData) {
   const url = String(formData.get("evolutionApiUrl") || "").trim();
   const key = String(formData.get("evolutionApiKey") || "").trim();
   const instance = String(formData.get("evolutionInstance") || "bfx").trim() || "bfx";
-  const enabled = formData.get("whatsappAutoEnabled") === "on" ? 1 : 0;
-  const autoRecibo = formData.get("whatsappAutoRecibo") === "on" ? 1 : 0;
-  const autoBoleto = formData.get("whatsappAutoBoleto") === "on" ? 1 : 0;
-  const autoLembrete = formData.get("whatsappAutoLembrete") === "on" ? 1 : 0;
-  const autoReativacao = formData.get("whatsappAutoReativacao") === "on" ? 1 : 0;
-  const autoAniversario = formData.get("whatsappAutoAniversario") === "on" ? 1 : 0;
-  const autoInadimplencia = formData.get("whatsappAutoInadimplencia") === "on" ? 1 : 0;
-  const autoNPS = formData.get("whatsappAutoNPS") === "on" ? 1 : 0;
-  const autoBoasVindas = formData.get("whatsappAutoBoasVindas") === "on" ? 1 : 0;
-  const autoAgradecimento = formData.get("whatsappAutoAgradecimento") === "on" ? 1 : 0;
-  const preAtendimento = formData.get("whatsappPreAtendimento") === "on" ? 1 : 0;
+  const enabled = checkboxComoNumero(formData.get("whatsappAutoEnabled"));
+  const autoRecibo = checkboxComoNumero(formData.get("whatsappAutoRecibo"));
+  const autoBoleto = checkboxComoNumero(formData.get("whatsappAutoBoleto"));
+  const autoLembrete = checkboxComoNumero(formData.get("whatsappAutoLembrete"));
+  const autoReativacao = checkboxComoNumero(formData.get("whatsappAutoReativacao"));
+  const autoAniversario = checkboxComoNumero(formData.get("whatsappAutoAniversario"));
+  const autoInadimplencia = checkboxComoNumero(formData.get("whatsappAutoInadimplencia"));
+  const autoNPS = checkboxComoNumero(formData.get("whatsappAutoNPS"));
+  const autoBoasVindas = checkboxComoNumero(formData.get("whatsappAutoBoasVindas"));
+  const autoAgradecimento = checkboxComoNumero(formData.get("whatsappAutoAgradecimento"));
+  const preAtendimento = checkboxComoNumero(formData.get("whatsappPreAtendimento"));
   const diasInativo = Math.max(30, Math.min(365, Number(formData.get("whatsappDiasInativo") || 60) || 60));
   const takeoverMinutos = Math.max(5, Math.min(480, Number(formData.get("whatsappTakeoverMinutos") || 60) || 60));
   // Provider oficial (Meta Cloud API) — token so e sobrescrito se informado (padrao Asaas).
@@ -140,7 +142,7 @@ async function saveWhatsApp(formData: FormData) {
   const metaBusinessId = String(formData.get("metaWhatsappBusinessId") || "").trim();
   const metaApiVersion = String(formData.get("metaWhatsappApiVersion") || "v21.0").trim() || "v21.0";
   const metaVerifyToken = String(formData.get("metaWebhookVerifyToken") || "").trim();
-  const fallbackEvolution = formData.get("whatsappFallbackEvolution") === "on" ? 1 : 0;
+  const fallbackEvolution = checkboxComoNumero(formData.get("whatsappFallbackEvolution"));
   const cfg = await prisma.config.findFirst();
   const data = {
     evolutionApiUrl: url || null,
@@ -204,7 +206,7 @@ async function saveUber(formData: FormData) {
     const clientSecret = String(formData.get("uberClientSecret") || "").trim();
     const customerId = String(formData.get("uberCustomerId") || "").trim() || null;
     const organizationId = String(formData.get("uberOrganizationId") || "").trim() || null;
-    const enabled = formData.get("uberEnabled") === "on" ? 1 : 0;
+    const enabled = checkboxComoNumero(formData.get("uberEnabled"));
 
     const uberPickupAddress = enderecoCompleto
       ? JSON.stringify({ street_address: [street], city, state, zip_code: zip, country })
@@ -582,12 +584,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
+                        <FormCheckbox
                           id="whatsappFallbackEvolution"
                           name="whatsappFallbackEvolution"
                           defaultChecked={(cfg as Record<string, unknown>)?.whatsappFallbackEvolution !== 0}
-                          className="h-4 w-4"
                         />
                         <label htmlFor="whatsappFallbackEvolution" className="text-sm">
                           Usar Evolution como fallback se o Meta falhar (durante a transição)
@@ -633,12 +633,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
+                      <FormCheckbox
                         id="whatsappAutoEnabled"
                         name="whatsappAutoEnabled"
                         defaultChecked={cfg?.whatsappAutoEnabled !== 0}
-                        className="rounded border-border"
                       />
                       <label htmlFor="whatsappAutoEnabled" className="text-sm font-medium">
                         Envios automáticos ativados (master)
@@ -650,60 +648,50 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </p>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoRecibo"
                             name="whatsappAutoRecibo"
                             defaultChecked={cfg?.whatsappAutoRecibo !== 0}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoRecibo" className="text-sm">
                             Recibo ou link de assinatura após venda
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoBoleto"
                             name="whatsappAutoBoleto"
                             defaultChecked={cfg?.whatsappAutoBoleto !== 0}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoBoleto" className="text-sm">
                             Link do boleto ao gerar (manual ou venda)
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoLembrete"
                             name="whatsappAutoLembrete"
                             defaultChecked={cfg?.whatsappAutoLembrete !== 0}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoLembrete" className="text-sm">
                             Lembrete de parcelas (boleto, 1–2 dias antes)
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoInadimplencia"
                             name="whatsappAutoInadimplencia"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoInadimplencia === 1}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoInadimplencia" className="text-sm">
                             Parcela vencida (lembrete inadimplência)
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoReativacao"
                             name="whatsappAutoReativacao"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoReativacao === 1}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoReativacao" className="text-sm">
                             Reativação clientes inativos
@@ -725,48 +713,40 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoAniversario"
                             name="whatsappAutoAniversario"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAniversario === 1}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoAniversario" className="text-sm">
                             Parabéns no aniversário
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoBoasVindas"
                             name="whatsappAutoBoasVindas"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoBoasVindas === 1}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoBoasVindas" className="text-sm">
                             Boas-vindas cliente novo
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoAgradecimento"
                             name="whatsappAutoAgradecimento"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAgradecimento === 1}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoAgradecimento" className="text-sm">
                             Agradecimento pós-venda (1 dia depois)
                           </label>
                         </div>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
+                          <FormCheckbox
                             id="whatsappAutoNPS"
                             name="whatsappAutoNPS"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoNPS === 1}
-                            className="rounded border-border"
                           />
                           <label htmlFor="whatsappAutoNPS" className="text-sm">
                             Pesquisa satisfação (7 dias após compra)
@@ -776,12 +756,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="space-y-1 rounded-lg border border-border bg-muted/30 p-3">
                       <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
+                        <FormCheckbox
                           id="whatsappPreAtendimento"
                           name="whatsappPreAtendimento"
                           defaultChecked={(cfg as Record<string, unknown>)?.whatsappPreAtendimento === 1}
-                          className="rounded border-border"
                         />
                         <label htmlFor="whatsappPreAtendimento" className="text-sm font-medium">
                           Pré-atendimento por IA
@@ -846,12 +824,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveUber} className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
+                      <FormCheckbox
                         id="uberEnabled"
                         name="uberEnabled"
                         defaultChecked={(cfg as Record<string, unknown>)?.uberEnabled === 1}
-                        className="rounded border-border"
                       />
                       <label htmlFor="uberEnabled" className="text-sm font-medium">
                         Integração ativada

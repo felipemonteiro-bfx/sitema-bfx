@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -288,11 +289,16 @@ export default function ImportacaoClient() {
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
-                        <input 
-                          type="checkbox" 
-                          checked={row.antecipada} 
-                          onChange={(e) => updateCell(row.id, 'antecipada', e.target.checked)}
-                          className="h-3 w-3 rounded"
+                        {/* Estado da linha da planilha, enviado por JSON — nao
+                            passa por FormData. Nao ha "selecionar todas" nesta
+                            tabela, entao nao existe estado indeterminado; ainda
+                            assim o `=== true` normaliza os tres estados do
+                            Radix, porque `"indeterminate"` e truthy e deixaria
+                            a linha marcada para sempre. */}
+                        <Checkbox
+                          checked={row.antecipada}
+                          onCheckedChange={(checked) => updateCell(row.id, 'antecipada', checked === true)}
+                          aria-label="Parcela antecipada"
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">

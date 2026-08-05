@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { checkboxLigado } from "@/lib/form-values";
 import { revalidatePath } from "next/cache";
 import { createAuditLog } from "@/lib/audit";
 import { sendVendaNotification } from "@/lib/email";
@@ -16,7 +17,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const data = String(formData.get("data") || "");
   const frete = Number(formData.get("frete") || 0);
   const envio = Number(formData.get("envio") || 0);
-  const temNota = formData.get("temNota") === "on";
+  const temNota = checkboxLigado(formData.get("temNota"));
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
   const desconto = Number(formData.get("desconto") || 0);
   // Forma de pagamento canonica. Quando o form nao envia (legacy), derivamos dos flags.
@@ -25,8 +26,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const formaPagamento: FormaPagamento = isFormaPagamento(formaPagamentoRaw)
     ? formaPagamentoRaw
     : formaFromLegacyFlags({
-        descontoEmFolha: formData.get("descontoEmFolha") === "on",
-        boleto: formData.get("boleto") === "on",
+        descontoEmFolha: checkboxLigado(formData.get("descontoEmFolha")),
+        boleto: checkboxLigado(formData.get("boleto")),
         parcelas: parcelasNum,
       });
   const { descontoEmFolha, boleto } = legacyFlagsFromForma(formaPagamento);
