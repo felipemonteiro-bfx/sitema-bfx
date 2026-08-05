@@ -143,7 +143,11 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
   if (!config) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Boletos" description="Boletos emitidos pelo Asaas" />
+        <PageHeader
+          title="Boletos"
+          description="Boletos emitidos pelo Asaas"
+          breadcrumbs={[{ label: "Boletos" }]}
+        />
         <Card className="border-warning/30 bg-warning/5">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <AlertTriangle className="h-12 w-12 text-warning-text mb-4" />
@@ -213,7 +217,11 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Boletos" description="Boletos emitidos pelo Asaas" />
+      <PageHeader
+        title="Boletos"
+        description="Boletos emitidos pelo Asaas"
+        breadcrumbs={[{ label: "Boletos" }]}
+      />
 
       {asaasApiError && (
         <Card className="border-warning/30 bg-warning/5">
@@ -247,11 +255,14 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             className="pl-8"
           />
         </div>
-        <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+        {/* Tamanho padrao, nao size:"sm": o Input ao lado tem 40px de altura,
+            raio 10 e fonte 14. O size sm da 36/8/12 e desalinhava a linha
+            inteira — as outras quatro rotas usam 40px (fase 16, achado 5). */}
+        <button type="submit" className={buttonVariants({ variant: "outline" })}>
           Buscar
         </button>
         {q && (
-          <Link href={`/boletos?tab=${currentTab}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+          <Link href={`/boletos?tab=${currentTab}`} className={buttonVariants({ variant: "ghost" })}>
             Limpar
           </Link>
         )}

@@ -226,8 +226,13 @@ export default async function Page() {
       <PageHeader
         title="Central de Antecipação Prudent"
         description="Selecione as vendas para realizar a antecipação de recebíveis com taxa inteligente."
+        breadcrumbs={[{ label: "Antecipação Prudent" }]}
       />
-      <Card variant="elevated" className="border-primary/20">
+      {/* Variante padrao, a mesma do card irmao logo abaixo (Historico de
+          Antecipacoes). Antes este era elevado: os dois divergiam em fundo e
+          blur nos dois temas, apesar de terem a mesma largura e o mesmo papel
+          (fase 16, achado 8). */}
+      <Card className="border-primary/20">
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-xl">
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
