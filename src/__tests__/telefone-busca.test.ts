@@ -1,16 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { variantesLocaisDeTelefone, somenteDigitos } from "@/lib/telefone-busca";
 
-// O pre-atendimento do WhatsApp recebe o numero em E.164 ("5592981066004") e
+// O pre-atendimento do WhatsApp recebe o numero em E.164 ("5511987654321") e
 // precisa achar o cliente. A busca antiga fazia `telefone contains <digitos>`
-// contra a coluna FORMATADA — e "(92) 98106-6004" nao contem "92981066004".
+// contra a coluna FORMATADA — e "(11) 98765-4321" nao contem "11987654321".
 // Achava so 32 dos 813 clientes: exatamente os que por acaso estavam gravados
 // em digitos puros. Agora a comparacao e' digito contra digito nos dois lados.
+//
+// Todos os numeros abaixo sao ficticios: telefone de cliente nao entra no repo.
 
 describe("somenteDigitos", () => {
   it("tira formatacao", () => {
-    expect(somenteDigitos("(92) 98106-6004")).toBe("92981066004");
-    expect(somenteDigitos("92 9294-6066")).toBe("9292946066");
+    expect(somenteDigitos("(11) 98765-4321")).toBe("11987654321");
+    expect(somenteDigitos("11 3265-4321")).toBe("1132654321");
   });
 
   it("aguenta vazio e nulo", () => {
@@ -22,36 +24,36 @@ describe("somenteDigitos", () => {
 
 describe("variantesLocaisDeTelefone", () => {
   it("tira o DDI 55 do numero que vem do WhatsApp", () => {
-    expect(variantesLocaisDeTelefone("5592981066004")).toContain("92981066004");
+    expect(variantesLocaisDeTelefone("5511987654321")).toContain("11987654321");
   });
 
   it("aceita o numero ja local", () => {
-    expect(variantesLocaisDeTelefone("92981066004")).toContain("92981066004");
+    expect(variantesLocaisDeTelefone("11987654321")).toContain("11987654321");
   });
 
   it("gera a variante sem o nono digito", () => {
-    // Cadastro antigo pode estar sem o 9: (92) 8106-6004
-    expect(variantesLocaisDeTelefone("5592981066004")).toContain("9281066004");
+    // Cadastro antigo pode estar sem o 9: (11) 8765-4321
+    expect(variantesLocaisDeTelefone("5511987654321")).toContain("1187654321");
   });
 
   it("gera a variante COM nono digito a partir de um numero de 10", () => {
-    expect(variantesLocaisDeTelefone("9281066004")).toContain("92981066004");
+    expect(variantesLocaisDeTelefone("1187654321")).toContain("11987654321");
   });
 
   it("acha o mesmo conjunto vindo formatado ou cru", () => {
-    const cru = variantesLocaisDeTelefone("5592981066004");
-    const formatado = variantesLocaisDeTelefone("+55 (92) 98106-6004");
+    const cru = variantesLocaisDeTelefone("5511987654321");
+    const formatado = variantesLocaisDeTelefone("+55 (11) 98765-4321");
     expect(new Set(formatado)).toEqual(new Set(cru));
   });
 
   it("nunca devolve variante com o 55 na frente — a coluna guarda o numero local", () => {
-    for (const v of variantesLocaisDeTelefone("5592981066004")) {
+    for (const v of variantesLocaisDeTelefone("5511987654321")) {
       expect(v.startsWith("55")).toBe(false);
     }
   });
 
   it("nao duplica", () => {
-    const v = variantesLocaisDeTelefone("5592981066004");
+    const v = variantesLocaisDeTelefone("5511987654321");
     expect(v.length).toBe(new Set(v).size);
   });
 
@@ -60,10 +62,9 @@ describe("variantesLocaisDeTelefone", () => {
     expect(variantesLocaisDeTelefone("")).toEqual([]);
   });
 
-  it("so aplica a regra do nono digito quando o 3o digito e 9", () => {
-    // 9281066004 tem 10 digitos e nao comeca com 9 apos o DDD; virar
-    // 92-9-81066004 e' a insercao correta. Mas 9281066004 -> remover o "8"
-    // nao pode acontecer.
-    expect(variantesLocaisDeTelefone("9281066004")).not.toContain("921066004");
+  it("num numero de 10 digitos, insere o nono — nunca remove um digito bom", () => {
+    // "1187654321" tem 10 digitos: a operacao certa e' INSERIR o 9 depois do
+    // DDD. Remover o 3o digito ("8") produziria um numero que nao existe.
+    expect(variantesLocaisDeTelefone("1187654321")).not.toContain("117654321");
   });
 });

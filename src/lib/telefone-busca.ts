@@ -1,10 +1,13 @@
 /**
  * Casamento de telefone entre o WhatsApp e o cadastro de clientes.
  *
- * O WhatsApp entrega E.164 sem "+" ("5592981066004"); a coluna `clientes.telefone`
- * guarda o numero local, formatado para leitura ("(92) 98106-6004"). Comparar as
+ * O WhatsApp entrega E.164 sem "+" ("5511987654321"); a coluna `clientes.telefone`
+ * guarda o numero local, formatado para leitura ("(11) 98765-4321"). Comparar as
  * duas strings direto nunca casa — por isso a comparacao aqui e' sempre
  * digito contra digito, dos dois lados.
+ *
+ * Os numeros citados nos comentarios e nos testes sao ficticios de proposito:
+ * telefone de cliente nao entra em codigo versionado.
  */
 
 /** Extrai apenas os digitos. Nulo, indefinido ou vazio viram "". */
@@ -16,8 +19,8 @@ export function somenteDigitos(valor: string | null | undefined): string {
 /**
  * Formas locais (sem DDI) sob as quais o numero pode estar cadastrado.
  *
- * Cobre a virada do nono digito: um cadastro antigo pode ter "(92) 8106-6004"
- * enquanto o WhatsApp manda "5592981066004", e vice-versa.
+ * Cobre a virada do nono digito: um cadastro antigo pode ter "(11) 8765-4321"
+ * enquanto o WhatsApp manda "5511987654321", e vice-versa.
  */
 export function variantesLocaisDeTelefone(entrada: string): string[] {
   const digitos = somenteDigitos(entrada);
