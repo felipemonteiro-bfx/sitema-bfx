@@ -325,6 +325,44 @@ O mesmo vale para os `StatusBadge` de `antecipacao-client.tsx`: o texto (`"Antec
 `"Parcial"`, `"Em andamento"`, `"Pendente"`) já cumpre o D-03 porque acompanha a cor — não
 remover o texto do badge ao migrar para token.
 
+## 4.1 Sidebar: a família que acompanha o tema (fase 19)
+
+Até a fase 18 a família `--sidebar-*` era escura nos **dois** temas por decisão explícita. O preço
+não aparecia na sidebar em si — aparecia no que ela **hospeda mas não desenha**: o `ThemeToggle`
+(`Button variant="outline"`, que resolve `--border`/`--background`/`--foreground` **globais**) e o
+`LogoutButton` (`--destructive` global). No tema claro esses tokens são claros e caíam sobre um
+painel escuro. Não era falha de renderização: era um painel escuro cercado de tokens claros.
+
+A lição para quem for criar a próxima superfície fixa: **uma superfície que não acompanha o tema
+só funciona se tudo dentro dela também não acompanhar** — e isso é impossível de garantir, porque
+qualquer componente compartilhado que entrar ali depois traz os tokens globais junto.
+
+Mesma separação de papéis das famílias semânticas (preenchimento ≠ texto):
+
+| Token | Papel | Claro | Escuro |
+|---|---|---|---|
+| `--sidebar` | fundo do painel | `oklch(0.965 0.006 260)` | `oklch(0.17 0.02 260)` |
+| `--sidebar-foreground` | texto principal | escuro | quase-branco |
+| `--sidebar-muted` | rótulo de item inativo e de grupo | `oklch(0.47 0.015 260)` | `oklch(0.65 0 0)` |
+| `--sidebar-accent` / `-accent-foreground` | fundo e texto do item ativo/hover | claro / escuro | escuro / claro |
+| `--sidebar-primary` | **texto e grafismo** da marca (ícone ativo, badge NOVO, barra do item ativo) | `oklch(0.50 0.22 25)` | `oklch(0.68 0.22 25)` |
+| `--sidebar-primary-foreground` | texto **sobre** o preenchimento da marca (badge de contagem) | quase-branco | **escuro** — inverte |
+| `--sidebar-primary-bg` | **tint opaco** da marca (chip do ícone, fundo do badge NOVO) | `oklch(0.94 0.045 25)` | `oklch(0.28 0.06 25)` |
+| `--gradient-cta-foreground` | ícone **sobre** o gradiente decorativo da marca (logo) | `oklch(0.995 0 0)` — igual nos dois temas | idem |
+
+Três armadilhas que essa fase pagou e que valem para qualquer superfície nova:
+
+- **`text-white` cru sobre preenchimento que muda de tema.** Dava 3.41:1 no claro e 3.15:1 no
+  escuro no badge de contagem. Preenchimento pede o par `-foreground`, e esse par pode precisar
+  **inverter** entre os temas (é o caso aqui, igual a `--destructive-foreground`).
+- **Tint composto (`bg-[var(--x)]/20`) não é mensurável.** A catraca lê variáveis, não call sites:
+  o composto passava despercebido. Virou `--sidebar-primary-bg`, opaco e policiado.
+- **Opacidade em texto (`text-[var(--x)]/80`).** O rótulo de grupo media 4.17:1 no escuro — a
+  catraca aprovava o token e a tela reprovava o pixel. Em 10px é onde menos dá para ceder.
+
+O `.sidebar-dark` (que fixava `color-scheme: dark` no painel) foi removido: com a sidebar clara ele
+pintaria a barra de rolagem e os controles nativos de escuro dentro de uma superfície clara.
+
 ## 5. Exceção declarada
 
 `src/app/api/relatorios/catalogo/route.ts` devolve um documento HTML autônomo que carrega
