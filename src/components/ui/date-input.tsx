@@ -5,6 +5,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { parseDataISO, dataExibidaDoInput, dataParaHidden } from "@/lib/data-input"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -28,16 +29,27 @@ export interface DateInputProps {
 const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
   ({ id, name, defaultValue, value, onChange, className, disabled, required, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
-    const [date, setDate] = React.useState<Date | undefined>(() => {
-      const initialValue = value || defaultValue
-      if (initialValue) {
-        return new Date(initialValue + "T00:00:00")
-      }
-      return undefined
-    })
+    const controlado = value !== undefined
+    const [interno, setInterno] = React.useState<Date | undefined>(() =>
+      parseDataISO(value || defaultValue)
+    )
+
+    // Quando o pai controla, a data vem sempre do `value` atual. Antes ela era
+    // congelada no inicializador do useState, entao um formulario que preenche
+    // o campo depois da montagem (produto-form-client faz isso num useEffect)
+    // continuava mostrando "Selecionar data" — e o hidden mandava "", apagando
+    // a data no banco ao salvar.
+    const date = dataExibidaDoInput({ controlado, value, interno })
+
+    // Nao controlado: se o defaultValue mudar (mesmo campo reaproveitado para
+    // outro registro, sem desmontar), o estado inicial ficaria do anterior.
+    React.useEffect(() => {
+      if (controlado) return
+      setInterno(parseDataISO(defaultValue))
+    }, [controlado, defaultValue])
 
     const handleSelect = (selectedDate: Date | undefined) => {
-      setDate(selectedDate)
+      if (!controlado) setInterno(selectedDate)
       setOpen(false)
       if (onChange && selectedDate) {
         onChange(format(selectedDate, "yyyy-MM-dd"))
@@ -48,7 +60,7 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       ? format(date, "dd/MM/yyyy", { locale: ptBR })
       : "Selecionar data"
 
-    const inputValue = date ? format(date, "yyyy-MM-dd") : ""
+    const inputValue = dataParaHidden(date)
 
     return (
       <Popover open={open} onOpenChange={setOpen}>

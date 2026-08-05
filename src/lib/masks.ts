@@ -38,3 +38,17 @@ export function parseCurrencyBR(value: string | number): number {
   const n = parseFloat(cleaned);
   return Number.isNaN(n) ? 0 : n;
 }
+
+/**
+ * Valor inicial de um campo de moeda, aceitando number (vindo do banco) ou
+ * string (digitada pelo usuario).
+ *
+ * NUNCA converta o number para string antes de parsear: parseCurrencyBR trata
+ * ponto como separador de MILHAR — correto para quem digita "1.828,81" em
+ * pt-BR, fatal para String(1828.81), que vira 182881. Foi exatamente assim que
+ * editar um cliente sem alterar nada multiplicou a renda por 100 em producao.
+ */
+export function valorInicialMoeda(entrada: number | string | null | undefined): number {
+  if (entrada === undefined || entrada === null || entrada === "") return 0;
+  return parseCurrencyBR(entrada);
+}

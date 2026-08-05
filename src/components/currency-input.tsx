@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Input } from "@/components/ui/input";
-import { formatCurrencyBR, parseCurrencyBR } from "@/lib/masks";
+import { formatCurrencyBR, parseCurrencyBR, valorInicialMoeda } from "@/lib/masks";
 
 export interface CurrencyInputProps extends Omit<React.ComponentProps<typeof Input>, "value" | "defaultValue" | "onChange" | "type"> {
   value?: number | string;
@@ -10,17 +10,18 @@ export interface CurrencyInputProps extends Omit<React.ComponentProps<typeof Inp
   onChange?: (value: number) => void;
 }
 
+
 const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
   ({ value: valueProp, defaultValue, onChange, name, ...props }, ref) => {
     const isControlled = valueProp !== undefined;
-    const initialNum = parseCurrencyBR(String(defaultValue ?? valueProp ?? ""));
+    const initialNum = valorInicialMoeda(defaultValue ?? valueProp);
     const [internalValue, setInternalValue] = React.useState(initialNum);
     // Durante edição, armazena o texto bruto digitado pelo usuário (evita cursor pulando)
     const [editingValue, setEditingValue] = React.useState<string | null>(null);
     const isEditing = editingValue !== null;
 
     const currentNum = isControlled
-      ? (typeof valueProp === "number" ? valueProp : parseCurrencyBR(String(valueProp ?? "")))
+      ? valorInicialMoeda(valueProp)
       : internalValue;
 
     const rawValue = currentNum;
