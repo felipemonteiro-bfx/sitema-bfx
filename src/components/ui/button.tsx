@@ -34,7 +34,10 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }, ref) => {
     const Comp = asChild ? Slot : "button"
     const isDisabled = disabled || loading
-    
+    const temConteudo =
+      (loading && Boolean(loadingText)) ||
+      (children !== null && children !== undefined && children !== false && children !== "")
+
     if (asChild) {
       return (
         <Comp
@@ -57,17 +60,22 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         {...props}
       >
-        {loading && (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        )}
+        {/* Sem `mr-2`/`ml-2`: a base do buttonVariants ja aplica `gap-2`, e os
+            dois somavam — medido 16.00px entre icone e texto onde a escala do
+            design system pede 8. E o `<span>` de children so e renderizado
+            quando ha o que renderizar: item flex vazio ainda consome um `gap-2`
+            e deixa um recuo fantasma no fim do botao. */}
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         {!loading && leftIcon && (
-          <span className="mr-2 inline-flex shrink-0 items-center justify-center">{leftIcon}</span>
+          <span className="inline-flex shrink-0 items-center justify-center">{leftIcon}</span>
         )}
-        <span className={cn(loading && !loadingText && "opacity-0")}>
-          {loading && loadingText ? loadingText : children}
-        </span>
+        {temConteudo && (
+          <span className={cn(loading && !loadingText && "opacity-0")}>
+            {loading && loadingText ? loadingText : children}
+          </span>
+        )}
         {!loading && rightIcon && (
-          <span className="ml-2 inline-flex shrink-0 items-center justify-center">{rightIcon}</span>
+          <span className="inline-flex shrink-0 items-center justify-center">{rightIcon}</span>
         )}
       </Comp>
     )
