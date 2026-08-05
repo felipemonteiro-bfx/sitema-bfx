@@ -39,3 +39,20 @@ export function variantesLocaisDeTelefone(entrada: string): string[] {
   }
   return [...new Set(variantes)];
 }
+
+/**
+ * So identifica o cliente quando o telefone aponta para UMA pessoa.
+ *
+ * Ha telefones compartilhados por varios cadastros — funcionarios da mesma
+ * empresa conveniada que informaram o contato do RH. Medido em 2026-08-05:
+ * 9 clientes em 4 numeros, um deles com 3 pessoas.
+ *
+ * Escolher um deles arbitrariamente (o velho `LIMIT 1`) faria a IA do
+ * pre-atendimento chamar quem escreveu pelo nome de outra pessoa e listar as
+ * compras dela — vazamento de historico entre clientes, justamente o que o
+ * prompt manda nao fazer. Na duvida, ninguem e' identificado: a conversa segue
+ * como visitante, que e' um caminho que o codigo ja trata.
+ */
+export function clienteIdentificavel(ids: readonly number[]): number | null {
+  return ids.length === 1 ? ids[0] : null;
+}

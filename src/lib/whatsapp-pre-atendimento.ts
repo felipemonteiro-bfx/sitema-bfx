@@ -6,33 +6,45 @@ import { prisma } from "@/lib/db";
 import { runAi } from "@/lib/ai";
 import { enviarWhatsApp } from "@/lib/whatsapp";
 import { formatBRL } from "@/lib/utils";
-import { variantesLocaisDeTelefone } from "@/lib/telefone-busca";
+import { variantesLocaisDeTelefone, clienteIdentificavel } from "@/lib/telefone-busca";
 
 const MAX_RESPONSE_CHARS = 1500;
 const CATALOG_LIMIT = 80;
 
 /**
- * Busca cliente pelo telefone, comparando digito contra digito.
+ * Busca o cliente pelo telefone — e devolve null quando ha duvida de quem e'.
  *
- * A versao anterior fazia `telefone contains <digitos>` contra a coluna, que
- * guarda o numero formatado: "(92) 98106-6004" nao contem "92981066004".
- * So encontrava os cadastros que por acaso estavam gravados sem formatacao —
- * 32 dos 813 clientes. Agora os dois lados sao reduzidos a digitos na propria
- * query, entao o formato da coluna deixa de importar.
+ * Duas correcoes, ambas de 2026-08-05:
+ *
+ * 1. A versao anterior fazia `telefone contains <digitos>` contra a coluna, que
+ *    guarda o numero formatado — "(11) 98765-4321" nao contem "11987654321".
+ *    So achava os cadastros gravados sem formatacao: 32 dos 813 clientes. Agora
+ *    os dois lados viram digitos dentro da query, e o formato deixa de importar.
+ *
+ * 2. Ha telefones compartilhados por mais de um cadastro (9 clientes em 4
+ *    numeros, um deles com 3 pessoas — funcionarios da mesma empresa que
+ *    informaram o contato do RH). Com `LIMIT 1` a IA chamaria quem escreveu
+ *    pelo nome de outra pessoa e listaria as compras dela. Na duvida ninguem e'
+ *    identificado e a conversa segue como visitante.
  */
 async function buscarClientePorTelefone(telefone: string) {
   const variantes = variantesLocaisDeTelefone(telefone);
   if (variantes.length === 0) return null;
 
+  // LIMIT 2, nao 1: e' preciso enxergar o segundo para saber que o telefone e'
+  // compartilhado. Com LIMIT 1 a ambiguidade fica invisivel e um dos clientes
+  // e' escolhido por acaso.
   const encontrados = await prisma.$queryRaw<{ id: number }[]>`
     SELECT id FROM clientes
     WHERE regexp_replace(COALESCE(telefone, ''), '[^0-9]', '', 'g') = ANY(${variantes}::text[])
-    LIMIT 1
+    ORDER BY id
+    LIMIT 2
   `;
-  if (encontrados.length === 0) return null;
+  const id = clienteIdentificavel(encontrados.map((c) => c.id));
+  if (id === null) return null;
 
   return prisma.cliente.findUnique({
-    where: { id: encontrados[0].id },
+    where: { id },
     include: {
       vendas: {
         orderBy: { id: "desc" },

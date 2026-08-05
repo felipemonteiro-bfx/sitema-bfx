@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { variantesLocaisDeTelefone, somenteDigitos } from "@/lib/telefone-busca";
+import {
+  variantesLocaisDeTelefone,
+  somenteDigitos,
+  clienteIdentificavel,
+} from "@/lib/telefone-busca";
 
 // O pre-atendimento do WhatsApp recebe o numero em E.164 ("5511987654321") e
 // precisa achar o cliente. A busca antiga fazia `telefone contains <digitos>`
@@ -66,5 +70,24 @@ describe("variantesLocaisDeTelefone", () => {
     // "1187654321" tem 10 digitos: a operacao certa e' INSERIR o 9 depois do
     // DDD. Remover o 3o digito ("8") produziria um numero que nao existe.
     expect(variantesLocaisDeTelefone("1187654321")).not.toContain("117654321");
+  });
+});
+
+// Telefone compartilhado e' real nesta base: 9 clientes em 4 numeros, um deles
+// com 3 pessoas — funcionarios da mesma empresa que informaram o contato do RH.
+describe("clienteIdentificavel", () => {
+  it("identifica quando o telefone aponta para uma pessoa so", () => {
+    expect(clienteIdentificavel([42])).toBe(42);
+  });
+
+  it("NAO identifica quando o telefone e compartilhado", () => {
+    // Escolher um arbitrariamente faria a IA chamar quem escreveu pelo nome de
+    // outra pessoa e listar as compras dela.
+    expect(clienteIdentificavel([629, 630, 631])).toBeNull();
+    expect(clienteIdentificavel([667, 805])).toBeNull();
+  });
+
+  it("nao identifica quando nao achou ninguem", () => {
+    expect(clienteIdentificavel([])).toBeNull();
   });
 });
