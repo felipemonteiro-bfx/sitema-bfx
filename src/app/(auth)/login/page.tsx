@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -54,7 +54,14 @@ export default function LoginPage() {
       <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background to-muted" />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-2xl">BFX Manager</CardTitle>
+          {/* `<h1>` de verdade: o titulo era um `CardTitle`, que renderiza
+              `<div>`, e a pagina ficava sem nenhum cabecalho de nivel 1 — o
+              leitor de tela nao tinha como anunciar do que se trata a tela.
+              As classes reproduzem exatamente o que o `CardTitle` aplicava
+              (`text-lg font-semibold leading-none tracking-tight` com o
+              `text-2xl` por cima), entao nada muda visualmente.
+              Fase 18, achado 9. */}
+          <h1 className="text-2xl font-semibold leading-none tracking-tight">BFX Manager</h1>
           <p className="text-sm text-muted-foreground">Acesso seguro ao painel</p>
         </CardHeader>
         <CardContent>

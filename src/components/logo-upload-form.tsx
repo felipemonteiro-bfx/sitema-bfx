@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { logoSrcParaBrowser } from "@/lib/storage-policy";
 
 export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }) {
@@ -84,7 +83,14 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
             <span className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
               Escolher arquivo
             </span>
-            <Input
+            {/* `<input>` cru de proposito — e a excecao ja documentada para
+                `type="file"`. Com `<Input>` o `sr-only` NAO escondia: a base do
+                componente traz `w-full h-10`, e o tailwind-merge nao trata
+                `sr-only` como conflitante com `w-*`/`h-*`, entao o `width:1px`
+                / `height:1px` perdia. O campo renderizava 1078x40px e era a
+                unica das 21 rotas com rolagem horizontal em 1440px
+                (scrollWidth 1471). Fase 18, achado 2. */}
+            <input
               id="logo-upload"
               type="file"
               accept="image/*"

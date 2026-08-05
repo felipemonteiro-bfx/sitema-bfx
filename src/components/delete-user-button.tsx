@@ -20,10 +20,21 @@ import { useRouter } from "next/navigation";
 interface Props {
   userId: number;
   userName: string;
+  /**
+   * Perfil do usuario alvo (`admin` | `vendedor`). O rotulo do botao dizia
+   * "Excluir Vendedor" para todo mundo, inclusive para o `Administrador` —
+   * string fixa, sem condicional (fase 18, "rotulo errado").
+   */
+  userRole?: string | null;
   deleteAction: (formData: FormData) => Promise<void>;
 }
 
-export function DeleteUserButton({ userId, userName, deleteAction }: Props) {
+/** "admin" -> "Administrador"; qualquer outro (ou ausente) -> "Vendedor". */
+function rotuloDoPerfil(role?: string | null): string {
+  return role === "admin" ? "Administrador" : "Vendedor";
+}
+
+export function DeleteUserButton({ userId, userName, userRole, deleteAction }: Props) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -45,14 +56,17 @@ export function DeleteUserButton({ userId, userName, deleteAction }: Props) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
+        {/* Sem `size="sm"`: na linha de Detalhes do /gestao-rh este botao fica
+            ao lado de "Salvar Alteracoes" (tamanho padrao) e ficava 4px mais
+            baixo, com raio e corpo de fonte menores — 36/r8/12px contra
+            40/r10/14px (fase 18, achado 6). */}
         <Button
           type="button"
           variant="destructive"
-          size="sm"
           disabled={loading}
           leftIcon={loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserMinus className="h-4 w-4" />}
         >
-          Excluir Vendedor
+          Excluir {rotuloDoPerfil(userRole)}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

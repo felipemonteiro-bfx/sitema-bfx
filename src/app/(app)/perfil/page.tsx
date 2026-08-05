@@ -55,6 +55,7 @@ export default async function Page() {
       <PageHeader
         title="Meu Perfil"
         description="Atualize seus dados pessoais e acompanhe suas comissões."
+        breadcrumbs={[{ label: "Meu Perfil" }]}
       />
 
       <div className="grid gap-6 md:grid-cols-3">

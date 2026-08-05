@@ -286,6 +286,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       <PageHeader
         title="Configurações"
         description="Personalize comunicados, recibos e integrações."
+        breadcrumbs={[{ label: "Configurações" }]}
       />
       <QueryTabs
         defaultTab={sp.tab || "mural"}
@@ -509,7 +510,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveWhatsApp} className="space-y-4">
                     {/* Provider oficial (Meta Cloud API) — sem risco de ban do numero */}
-                    <div className="space-y-3 rounded-lg border border-info/30 bg-info/5 p-4">
+                    {/* Sem o tint de fundo: os 8 `<Label>` deste painel sao
+                        `text-muted-foreground` a 12px, e sobre o composto de
+                        `info` o cinza caia para 4.36:1 (medido em runtime) —
+                        o mesmo cinza passa com folga sobre o card (4.87:1). O
+                        agrupamento continua legivel pela borda e pelo titulo
+                        "Provider de envio". Trocar a cor do `<Label>` resolveria
+                        so aqui e mudaria o formulario inteiro do sistema.
+                        Fase 18, achado 11. */}
+                    <div className="space-y-3 rounded-lg border border-info/30 p-4">
                       <div className="text-sm font-semibold text-info-text">Provider de envio</div>
                       <div className="space-y-1">
                         <Label htmlFor="whatsappProvider">Qual API usar</Label>

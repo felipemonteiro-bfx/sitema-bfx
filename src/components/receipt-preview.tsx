@@ -74,11 +74,15 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
       <div className="mt-16 flex flex-col items-center">
         <div className="w-64 border-t border-[#9ca3af] mb-2"></div>
         <p className="text-sm font-semibold text-[#111827]">Assinatura: {dummyData.CLIENTE}</p>
-        <p className="text-[10px] text-[#9ca3af] uppercase tracking-widest mt-1">Aceite Digital / Presencial</p>
+        {/* gray-400 (#9ca3af) sobre o branco do papel media 2.54:1 nos dois
+            temas; gray-500 (#6b7280) da 4.83:1 e mantem o tom discreto. O
+            branco fixo continua: o preview simula papel, nao superficie do app
+            (por isso os hex crus seguem aqui). Fase 18, achado 8. */}
+        <p className="text-[10px] text-[#6b7280] uppercase tracking-widest mt-1">Aceite Digital / Presencial</p>
       </div>
 
       <div className="mt-8 text-center border-t border-[#f9fafb] pt-4">
-        <p className="text-[10px] text-[#9ca3af]">Este é um documento oficial gerado pelo BFX Manager.</p>
+        <p className="text-[10px] text-[#6b7280]">Este é um documento oficial gerado pelo BFX Manager.</p>
       </div>
     </div>
   );

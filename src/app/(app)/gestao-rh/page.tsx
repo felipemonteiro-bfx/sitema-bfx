@@ -83,6 +83,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       <PageHeader
         title="Gestão de RH (Equipe)"
         description="Gerencie metas, comissões e permissões do time em um só lugar."
+        breadcrumbs={[{ label: "Gestão de RH" }]}
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -233,10 +234,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="md:col-span-6 flex items-center justify-between gap-3 border-t pt-4">
-                          <DeleteUserButton 
-                            userId={u.id} 
-                            userName={u.nomeExibicao || u.username} 
-                            deleteAction={deleteUser} 
+                          <DeleteUserButton
+                            userId={u.id}
+                            userName={u.nomeExibicao || u.username}
+                            userRole={u.role}
+                            deleteAction={deleteUser}
                           />
                           <button className={cn(buttonVariants(), "bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
                         </div>

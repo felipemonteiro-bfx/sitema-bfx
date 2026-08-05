@@ -1,23 +1,25 @@
 'use client';
 
+import { WifiOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 export default function OfflinePage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-        <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 5.636a9 9 0 010 12.728M15.536 8.464a5 5 0 010 7.072M6.343 6.343a9 9 0 000 12.728M9.172 9.172a5 5 0 000 7.072M12 12h.01" />
-        </svg>
+        {/* Era um `<svg>` inline; o resto do sistema desenha icone com lucide. */}
+        <WifiOff className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
       </div>
       <h1 className="text-2xl font-bold text-foreground">Sem conexão</h1>
       <p className="max-w-xs text-sm text-muted-foreground">
         Você está offline. Verifique sua conexão e tente novamente.
       </p>
-      <button
-        onClick={() => window.location.reload()}
-        className="mt-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-      >
+      {/* Era um `<button>` com estilo a mao: peso 600 contra os 500 do
+          `<Button>`, padding 20/10 contra 16/8, e sem `focus-visible`, `hover`
+          nem `active:scale`. Fase 18, achado 7. */}
+      <Button className="mt-2" onClick={() => window.location.reload()}>
         Tentar novamente
-      </button>
+      </Button>
     </div>
   );
 }
