@@ -6,60 +6,45 @@ import { prisma } from "@/lib/db";
 import { runAi } from "@/lib/ai";
 import { enviarWhatsApp } from "@/lib/whatsapp";
 import { formatBRL } from "@/lib/utils";
+import { variantesLocaisDeTelefone } from "@/lib/telefone-busca";
 
 const MAX_RESPONSE_CHARS = 1500;
 const CATALOG_LIMIT = 80;
 
-/** Normaliza telefone para comparação (remove formatação, garante 11 dígitos locais) */
-function normalizarParaBusca(tel: string): string[] {
-  const digits = tel.replace(/\D/g, "");
-  const variants: string[] = [digits];
-  // sem 55
-  if (digits.startsWith("55") && digits.length >= 12) {
-    variants.push(digits.slice(2)); // 92984520689
-  }
-  // com 55
-  if (!digits.startsWith("55") && digits.length >= 10) {
-    variants.push("55" + digits);
-  }
-  // sem nono dígito (92 9XXXX → 92 XXXX)
-  for (const v of [...variants]) {
-    const local = v.startsWith("55") ? v.slice(2) : v;
-    if (local.length === 11 && local[2] === "9") {
-      const sem9 = local.slice(0, 2) + local.slice(3);
-      variants.push(sem9);
-      variants.push("55" + sem9);
-    }
-    if (local.length === 10) {
-      variants.push(local.slice(0, 2) + "9" + local.slice(2));
-      variants.push("55" + local.slice(0, 2) + "9" + local.slice(2));
-    }
-  }
-  return [...new Set(variants)];
-}
-
-/** Busca cliente pelo telefone (tenta múltiplos formatos) */
+/**
+ * Busca cliente pelo telefone, comparando digito contra digito.
+ *
+ * A versao anterior fazia `telefone contains <digitos>` contra a coluna, que
+ * guarda o numero formatado: "(92) 98106-6004" nao contem "92981066004".
+ * So encontrava os cadastros que por acaso estavam gravados sem formatacao —
+ * 32 dos 813 clientes. Agora os dois lados sao reduzidos a digitos na propria
+ * query, entao o formato da coluna deixa de importar.
+ */
 async function buscarClientePorTelefone(telefone: string) {
-  const variants = normalizarParaBusca(telefone);
-  for (const v of variants) {
-    // busca parcial: o número do banco pode ter formatação diferente
-    const cliente = await prisma.cliente.findFirst({
-      where: { telefone: { contains: v.replace(/^55/, "") } },
-      include: {
-        vendas: {
-          orderBy: { id: "desc" },
-          take: 5,
-          include: {
-            itens: {
-              select: { produtoNome: true },
-            },
+  const variantes = variantesLocaisDeTelefone(telefone);
+  if (variantes.length === 0) return null;
+
+  const encontrados = await prisma.$queryRaw<{ id: number }[]>`
+    SELECT id FROM clientes
+    WHERE regexp_replace(COALESCE(telefone, ''), '[^0-9]', '', 'g') = ANY(${variantes}::text[])
+    LIMIT 1
+  `;
+  if (encontrados.length === 0) return null;
+
+  return prisma.cliente.findUnique({
+    where: { id: encontrados[0].id },
+    include: {
+      vendas: {
+        orderBy: { id: "desc" },
+        take: 5,
+        include: {
+          itens: {
+            select: { produtoNome: true },
           },
         },
       },
-    });
-    if (cliente) return cliente;
-  }
-  return null;
+    },
+  });
 }
 
 /** Monta contexto do cliente para a IA */
