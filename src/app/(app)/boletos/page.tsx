@@ -146,7 +146,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
         <PageHeader title="Boletos" description="Boletos emitidos pelo Asaas" />
         <Card className="border-warning/30 bg-warning/5">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertTriangle className="h-12 w-12 text-warning mb-4" />
+            <AlertTriangle className="h-12 w-12 text-warning-text mb-4" />
             <h3 className="text-lg font-semibold mb-2">Asaas não configurado</h3>
             <p className="text-sm text-muted-foreground max-w-md">
               Configure em Configurações → Asaas para visualizar os boletos.
@@ -218,7 +218,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
       {asaasApiError && (
         <Card className="border-warning/30 bg-warning/5">
           <CardContent className="flex items-center gap-3 py-4">
-            <AlertTriangle className="h-5 w-5 text-warning shrink-0" />
+            <AlertTriangle className="h-5 w-5 text-warning-text shrink-0" />
             <div>
               <p className="text-sm font-medium">Erro ao buscar boletos</p>
               <p className="text-xs text-muted-foreground mt-0.5">{asaasApiError}</p>
@@ -268,7 +268,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <Clock className="h-5 w-5 text-warning" />
+                    <Clock className="h-5 w-5 text-warning-text" />
                     A vencer
                     {q && <span className="text-xs text-muted-foreground font-normal">· filtro: &quot;{q}&quot;</span>}
                   </CardTitle>
@@ -310,7 +310,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <CheckCircle2 className="h-5 w-5 text-success" />
+                    <CheckCircle2 className="h-5 w-5 text-success-text" />
                     Pagos
                     {q && <span className="text-xs text-muted-foreground font-normal">· filtro: &quot;{q}&quot;</span>}
                   </CardTitle>

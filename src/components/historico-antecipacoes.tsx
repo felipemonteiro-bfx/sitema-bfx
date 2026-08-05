@@ -59,7 +59,7 @@ export default function HistoricoAntecipacoes({ batches }: Props) {
                   )}
                   <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
                     <span>{b.quantidadeVendas} {b.quantidadeVendas === 1 ? 'venda' : 'vendas'}</span>
-                    <span className="font-bold text-success text-sm">{formatBRL(b.valorTotal)}</span>
+                    <span className="font-bold text-success-text text-sm">{formatBRL(b.valorTotal)}</span>
                   </div>
                 </div>
                 <div className="flex gap-2 flex-wrap">

@@ -17,13 +17,13 @@ const badgeVariants = cva(
         outline: 
           "text-foreground border-border hover:bg-muted",
         success:
-          "border-success/30 bg-success/10 text-success dark:bg-success/20 dark:border-success/40 hover:bg-success/20 dark:hover:bg-success/30",
+          "border-success/30 bg-success/10 text-success-text dark:bg-success/20 dark:border-success/40 hover:bg-success/20 dark:hover:bg-success/30",
         warning:
-          "border-warning/30 bg-warning/10 text-warning dark:bg-warning/20 dark:border-warning/40 hover:bg-warning/20 dark:hover:bg-warning/30",
+          "border-warning/30 bg-warning/10 text-warning-text dark:bg-warning/20 dark:border-warning/40 hover:bg-warning/20 dark:hover:bg-warning/30",
         error:
           "border-error/30 bg-error/10 text-error dark:bg-error/20 dark:border-error/40 hover:bg-error/20 dark:hover:bg-error/30",
         info:
-          "border-info/30 bg-info/10 text-info dark:bg-info/20 dark:border-info/40 hover:bg-info/20 dark:hover:bg-info/30",
+          "border-info/30 bg-info/10 text-info-text dark:bg-info/20 dark:border-info/40 hover:bg-info/20 dark:hover:bg-info/30",
         successSolid:
           "border-transparent bg-success text-success-foreground shadow-sm hover:bg-success/90",
         warningSolid:

@@ -382,7 +382,11 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                   </TableCell>
                   <TableCell className="text-right tabular-nums font-bold text-foreground">{formatBRL(v.valorVenda || 0)}</TableCell>
                   <TableCell className="text-right tabular-nums">
-                    <span className="inline-flex items-center justify-center rounded-md bg-info/20 px-2 py-0.5 text-xs font-bold text-info">
+                    {/* Tint opaco (bg-info-bg), nao um composto com alfa da
+                        propria matiz: o composto de 20% escurece o proprio tom e
+                        trava o texto em 4.02:1 mesmo com --info-text. O tint
+                        opaco da 4.59:1 (fase 16, achado 4). */}
+                    <span className="inline-flex items-center justify-center rounded-md bg-info-bg px-2 py-0.5 text-xs font-bold text-info-text">
                       {v.parcelas}x
                     </span>
                   </TableCell>
@@ -413,25 +417,25 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           {/* 3 métricas em grid compacto */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1">
             <div className="rounded-lg bg-info-bg border border-info px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-info">Prazo médio</div>
-              <div className="text-xl font-black text-info tabular-nums leading-tight">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-info-text">Prazo médio</div>
+              <div className="text-xl font-black text-info-text tabular-nums leading-tight">
                 {prazoMedio.toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
               </div>
-              <div className="text-[9px] text-info/80 font-medium mt-0.5">D+1</div>
+              <div className="text-[9px] text-info-text/80 font-medium mt-0.5">D+1</div>
             </div>
             <div className="rounded-lg bg-warning-bg border border-warning px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-warning">Taxa total</div>
-              <div className="text-xl font-black text-warning tabular-nums leading-tight">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-warning-text">Taxa total</div>
+              <div className="text-xl font-black text-warning-text tabular-nums leading-tight">
                 {taxaPercent.toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
               </div>
-              <div className="text-[9px] text-warning/80 font-medium mt-0.5">Smart</div>
+              <div className="text-[9px] text-warning-text/80 font-medium mt-0.5">Smart</div>
             </div>
             <div className="rounded-lg bg-success-bg border border-success px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-success">Líquido</div>
-              <div className="text-base sm:text-lg font-black text-success tabular-nums leading-tight truncate">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-success-text">Líquido</div>
+              <div className="text-base sm:text-lg font-black text-success-text tabular-nums leading-tight truncate">
                 {formatBRL(valorLiquido)}
               </div>
-              <div className="text-[9px] text-success/80 font-medium mt-0.5">estimado</div>
+              <div className="text-[9px] text-success-text/80 font-medium mt-0.5">estimado</div>
             </div>
           </div>
         </div>
@@ -484,7 +488,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
         {/* Rodapé informativo */}
         <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-2.5">
-          <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-info-bg text-[9px] font-bold text-info">i</span>
+          <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-info-bg text-[9px] font-bold text-info-text">i</span>
           Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
       </Card>
@@ -493,7 +497,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         <Card className="mt-6 border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">
-              <svg className="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 text-warning-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
@@ -508,13 +512,13 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                   className="group relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-warning/50 hover:shadow-md"
                 >
                   <div className="text-xs font-medium text-muted-foreground truncate">{empresa}</div>
-                  <div className="text-lg font-bold text-warning tabular-nums">{formatBRL(valor)}</div>
+                  <div className="text-lg font-bold text-warning-text tabular-nums">{formatBRL(valor)}</div>
                 </div>
               ))}
           </div>
           <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">Total a vencer no mês</span>
-            <span className="text-xl font-bold text-warning tabular-nums">
+            <span className="text-xl font-bold text-warning-text tabular-nums">
               {formatBRL(Object.values(vencimentosPorEmpresa).reduce((sum, v) => sum + v, 0))}
             </span>
           </div>

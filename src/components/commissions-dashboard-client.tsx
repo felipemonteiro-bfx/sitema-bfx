@@ -120,7 +120,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Comissões</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success">{formatBRL(totalComissoes)}</div>
+            <div className="text-2xl font-bold text-success-text">{formatBRL(totalComissoes)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -221,7 +221,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
                         <TableCell className="text-right tabular-nums">{formatBRL(d.valorVenda)}</TableCell>
                         <TableCell className="text-right tabular-nums">{formatBRL(d.lucroLiquido)}</TableCell>
                         <TableCell className="text-right">{d.percentualComissao}%</TableCell>
-                        <TableCell className="text-right font-semibold text-success tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
+                        <TableCell className="text-right font-semibold text-success-text tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
                       </TableRow>
                     ))
                   )}

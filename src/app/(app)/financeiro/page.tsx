@@ -177,15 +177,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido</CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <div className={cn("text-2xl font-bold", dre.lucro >= 0 ? "text-success" : "text-destructive")}>
+                            <div className={cn("text-2xl font-bold", dre.lucro >= 0 ? "text-success-text" : "text-destructive")}>
                               {formatBRL(dre.lucro)}
                             </div>
                             {/* Ponto de Equilíbrio indicator */}
                             <div className="mt-2 flex items-center gap-1.5">
                               <span className={cn(
                                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                                pontoEqStatus === 'green' ? "bg-success/10 text-success dark:bg-success/20" :
-                                pontoEqStatus === 'yellow' ? "bg-warning/10 text-warning dark:bg-warning/20" :
+                                pontoEqStatus === 'green' ? "bg-success/10 text-success-text dark:bg-success/20" :
+                                pontoEqStatus === 'yellow' ? "bg-warning/10 text-warning-text dark:bg-warning/20" :
                                 pontoEqStatus === 'red' ? "bg-destructive/10 text-destructive dark:bg-destructive/20" :
                                 "bg-muted text-muted-foreground"
                               )}>
@@ -247,10 +247,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             <div className="rounded-lg border border-warning/20 bg-warning/5 dark:bg-warning/10 p-3 flex items-start gap-3">
                               <div className="flex-1">
                                 <div className="text-xs text-muted-foreground">Capital em Estoque</div>
-                                <div className="mt-0.5 text-base font-semibold text-warning">{formatBRL(estoqueImobilizado)}</div>
+                                <div className="mt-0.5 text-base font-semibold text-warning-text">{formatBRL(estoqueImobilizado)}</div>
                                 <div className="text-xs text-muted-foreground">Valor de custo da mercadoria parada em estoque</div>
                               </div>
-                              <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning dark:bg-warning/20">
+                              <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning-text dark:bg-warning/20">
                                 não deduzido do lucro
                               </span>
                             </div>
@@ -286,7 +286,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
                     <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                       <div className="text-xs text-muted-foreground">Entrada média</div>
-                      <div className="mt-1 text-base font-semibold text-success">
+                      <div className="mt-1 text-base font-semibold text-success-text">
                         {formatBRL(
                           fluxo.length ? fluxo.reduce((acc, r) => acc + r.entradas, 0) / fluxo.length : 0
                         )}
@@ -330,7 +330,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         fluxo.map((r) => (
                           <TableRow key={r.mes}>
                             <TableCell>{r.mes}</TableCell>
-                            <TableCell className="text-right tabular-nums text-success">
+                            <TableCell className="text-right tabular-nums text-success-text">
                               {formatBRL(r.entradas)}
                             </TableCell>
                             <TableCell className="text-right tabular-nums text-destructive">
@@ -512,11 +512,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Valor Imobilizado</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold text-warning">{formatBRL(estoqueImobilizado)}</CardContent>
+                    <CardContent className="text-2xl font-semibold text-warning-text">{formatBRL(estoqueImobilizado)}</CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Potencial de Receita</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold text-success">{formatBRL(estoquePotencialReceita)}</CardContent>
+                    <CardContent className="text-2xl font-semibold text-success-text">{formatBRL(estoquePotencialReceita)}</CardContent>
                   </Card>
                   <Card>
                     <CardHeader><CardTitle className="text-sm font-medium">Margem Potencial</CardTitle></CardHeader>
@@ -559,9 +559,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 <TableCell className="font-medium">{p.nome}</TableCell>
                                 <TableCell className="text-right tabular-nums">{p.qtdEstoque ?? 0}</TableCell>
                                 <TableCell className="text-right tabular-nums">{formatBRL(p.custoPadrao ?? 0)}</TableCell>
-                                <TableCell className="text-right tabular-nums font-semibold text-warning">{formatBRL(imob)}</TableCell>
+                                <TableCell className="text-right tabular-nums font-semibold text-warning-text">{formatBRL(imob)}</TableCell>
                                 <TableCell className="text-right tabular-nums">{formatBRL(p.valorVenda ?? 0)}</TableCell>
-                                <TableCell className={cn("text-right tabular-nums font-medium", margem >= 30 ? "text-success" : margem >= 15 ? "text-warning" : "text-destructive")}>
+                                <TableCell className={cn("text-right tabular-nums font-medium", margem >= 30 ? "text-success-text" : margem >= 15 ? "text-warning-text" : "text-destructive")}>
                                   {margem.toFixed(1)}%
                                 </TableCell>
                               </TableRow>

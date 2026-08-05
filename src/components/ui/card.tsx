@@ -118,41 +118,54 @@ interface CardStatsProps extends React.HTMLAttributes<HTMLDivElement> {
   animated?: boolean
 }
 
-const colorConfig: Record<ColorVariant, { icon: string; border: string; bg: string; glow: string }> = {
+// `value` e a cor do numero do KPI. Precisa ser uma classe literal: antes era
+// montada como `text-${color}`, que o Tailwind nao consegue detectar ao varrer
+// o codigo — funcionava so por carona em outros arquivos que tinham a classe
+// escrita por extenso. Com a familia `-text` da fase 16 essa carona deixaria de
+// existir, e o KPI perderia a cor em silencio.
+const colorConfig: Record<
+  ColorVariant,
+  { icon: string; border: string; bg: string; glow: string; value: string }
+> = {
   default: {
     icon: "bg-muted text-muted-foreground",
     border: "border-border",
     bg: "",
     glow: "",
+    value: "",
   },
   success: {
-    icon: "bg-success/10 text-success dark:bg-success/20",
+    icon: "bg-success/10 text-success-text dark:bg-success/20",
     border: "border-success/30 dark:border-success/40",
     bg: "bg-gradient-to-br from-success/5 to-transparent dark:from-success/10",
     glow: "dark:shadow-[var(--glow-primary)]",
+    value: "text-success-text",
   },
   warning: {
-    icon: "bg-warning/10 text-warning dark:bg-warning/20",
+    icon: "bg-warning/10 text-warning-text dark:bg-warning/20",
     border: "border-warning/30 dark:border-warning/40",
     bg: "bg-gradient-to-br from-warning/5 to-transparent dark:from-warning/10",
     glow: "",
+    value: "text-warning-text",
   },
   error: {
     icon: "bg-error/10 text-error dark:bg-error/20",
     border: "border-error/30 dark:border-error/40",
     bg: "bg-gradient-to-br from-error/5 to-transparent dark:from-error/10",
     glow: "",
+    value: "text-error",
   },
   info: {
-    icon: "bg-info/10 text-info dark:bg-info/20",
+    icon: "bg-info/10 text-info-text dark:bg-info/20",
     border: "border-info/30 dark:border-info/40",
     bg: "bg-gradient-to-br from-info/5 to-transparent dark:from-info/10",
     glow: "",
+    value: "text-info-text",
   },
 }
 
 const trendConfig: Record<TrendDirection, { icon: typeof TrendingUp; color: string }> = {
-  up: { icon: TrendingUp, color: "text-success" },
+  up: { icon: TrendingUp, color: "text-success-text" },
   down: { icon: TrendingDown, color: "text-error" },
   neutral: { icon: Minus, color: "text-muted-foreground" },
 }
@@ -229,7 +242,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
           
           <div className={cn(
             "text-lg font-bold tabular-nums sm:text-2xl",
-            color !== "default" && `text-${color}`
+            colorStyles.value
           )}>
             {value}
           </div>
