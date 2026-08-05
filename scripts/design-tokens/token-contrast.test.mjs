@@ -238,6 +238,41 @@ test("checkThemeCoverage: par usado como text-* COM chave no @theme aprova", () 
   assert.equal(rows[0].pass, true);
 });
 
+// A primeira versao de `checkThemeCoverage` so olhava `par.foreground`. Isso
+// deixava de fora justamente os tokens mais usados como texto que aparecem em
+// `TOKEN_PAIRS` apenas do lado do FUNDO: `destructive` (59 call sites de
+// `text-destructive`) e `primary` (72 de `text-primary`). Apagar
+// `--color-destructive` do `@theme` reproduziria o bug original inteiro e a
+// catraca continuaria verde. O criterio certo nao e "lado de texto dos pares",
+// e "toda `text-X` escrita no codigo cujo X e um token de cor declarado".
+test("checkThemeCoverage: exige a chave para QUALQUER text-<token declarado>, nao so o lado de texto dos pares", () => {
+  const rows = checkThemeCoverage({
+    themeKeys: new Set(["destructive-foreground"]),
+    usedAsText: new Set(["destructive"]),
+    declaredTokens: new Set(["destructive", "destructive-foreground"]),
+    pairs: [{ foreground: "destructive-foreground", background: "destructive", min: 4.5, label: "x" }],
+  });
+  const linha = rows.find((r) => r.foreground === "destructive");
+  assert.ok(linha, "text-destructive e usada no codigo e `destructive` e token declarado — tem que ser cobrada");
+  assert.equal(linha.pass, false, "sem --color-destructive no @theme a utilitaria nao existe");
+});
+
+test("checkThemeCoverage: text-<algo que nao e token de cor> nao e exigido (text-sm, text-xs)", () => {
+  const rows = checkThemeCoverage({
+    themeKeys: new Set([]),
+    usedAsText: new Set(["sm", "xs", "center"]),
+    declaredTokens: new Set(["primary", "foreground"]),
+    pairs: [],
+  });
+  assert.deepEqual(rows, [], "tamanho e alinhamento nao sao cor — nada a exigir");
+});
+
+test("collectTextColorClasses: tolera o important SUFIXO do Tailwind v4 (text-x!)", () => {
+  const usados = collectTextColorClasses(['className="text-destructive-foreground! text-info!"']);
+  assert.ok(usados.has("destructive-foreground"), "o `!` sufixo nao pode esconder o nome");
+  assert.ok(usados.has("info"));
+});
+
 test("checkThemeCoverage: par que o codigo nao usa como text-* nao e exigido (ring, border)", () => {
   const rows = checkThemeCoverage({
     themeKeys: new Set([]),
@@ -281,6 +316,7 @@ test("INTEGRACAO: todo par de TOKEN_PAIRS usado como text-* no src tem chave no 
   const rows = checkThemeCoverage({
     themeKeys: parseThemeColorKeys(css),
     usedAsText: collectTextColorClasses(arquivos),
+    declaredTokens: new Set(Object.keys(parseTokens(css).light)),
     pairs: TOKEN_PAIRS,
   });
 

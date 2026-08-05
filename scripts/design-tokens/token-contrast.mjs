@@ -321,7 +321,10 @@ export function collectTextColorClasses(textos) {
       // ultima variante: `dark:hover:text-info` -> `text-info`
       const partes = bruto.split(":");
       const base = partes[partes.length - 1];
-      const semBang = base.startsWith("!") ? base.slice(1) : base;
+      // `!` e prefixo no Tailwind v3 (`!text-x`) e sufixo no v4 (`text-x!`).
+      // Este projeto e v4; tolerar os dois custa duas linhas.
+      const semPrefixo = base.startsWith("!") ? base.slice(1) : base;
+      const semBang = semPrefixo.endsWith("!") ? semPrefixo.slice(0, -1) : semPrefixo;
       if (!semBang.startsWith("text-")) continue;
       const corpo = semBang.slice("text-".length);
       const nome = corpo.split("/")[0]; // descarta opacidade
@@ -333,28 +336,44 @@ export function collectTextColorClasses(textos) {
 }
 
 /**
- * Para cada par cujo lado de TEXTO aparece no codigo como `text-<nome>`,
- * exige a chave `--color-<nome>` no `@theme`. Sem ela a utilitaria nao existe
- * e o contraste medido no par e ficcao.
+ * Exige `--color-<nome>` no `@theme` para toda `text-<nome>` escrita no codigo
+ * cujo `<nome>` seja um token de cor declarado (`declaredTokens`, vindo de
+ * `:root`). Sem a chave a utilitaria nao existe e o contraste medido no par e
+ * ficcao.
  *
- * Pares cujo lado de texto nunca e escrito como `text-*` (`ring`, `border`)
- * saem da lista — nao ha utilitaria a exigir. Falta de chave e `pass: false`,
- * nunca `skipped` (mesma regra do T-10-08: nada de falso verde).
+ * O criterio e "token de cor declarado", nao "lado de texto de `TOKEN_PAIRS`":
+ * a primeira versao desta funcao so olhava `par.foreground` e por isso deixava
+ * escapar exatamente os dois tokens mais usados como texto que so aparecem do
+ * lado do FUNDO nos pares — `destructive` (59 call sites de `text-destructive`)
+ * e `primary` (72). Apagar `--color-destructive` do `@theme` reproduziria o bug
+ * original inteiro com a catraca verde.
+ *
+ * `text-sm`/`text-xs`/`text-center` nao casam com nenhum token declarado e
+ * ficam de fora sozinhos, sem lista de excecao para envelhecer mal. Falta de
+ * chave e `pass: false`, nunca `skipped` (regra T-10-08: nada de falso verde).
+ *
+ * `pairs` entra so para rotular a linha quando o nome participa de um par.
  */
-export function checkThemeCoverage({ themeKeys, usedAsText, pairs }) {
-  const rows = [];
-  const vistos = new Set();
-
+export function checkThemeCoverage({ themeKeys, usedAsText, declaredTokens, pairs = [] }) {
+  const rotulos = new Map();
   for (const par of pairs) {
-    const nome = par.foreground;
-    if (vistos.has(nome)) continue;
-    if (!usedAsText.has(nome)) continue;
-    vistos.add(nome);
+    if (!rotulos.has(par.foreground)) rotulos.set(par.foreground, par.label);
+  }
 
+  const alvos = new Set();
+  for (const nome of usedAsText) {
+    // Sem `declaredTokens` (chamadas antigas), cai no comportamento anterior:
+    // so os nomes que aparecem como lado de texto de algum par.
+    const ehTokenDeCor = declaredTokens ? declaredTokens.has(nome) : rotulos.has(nome);
+    if (ehTokenDeCor) alvos.add(nome);
+  }
+
+  const rows = [];
+  for (const nome of [...alvos].sort()) {
     const temChave = themeKeys.has(nome);
     rows.push({
       foreground: nome,
-      label: par.label,
+      label: rotulos.get(nome) ?? "uso direto como texto",
       utility: `text-${nome}`,
       pass: temChave,
       skipped: false,
@@ -437,7 +456,7 @@ function printTable(rows) {
 
 function parseArgs(argv) {
   let cssPath = DEFAULT_CSS_PATH;
-  let srcDir = "src";
+  let srcDir = DEFAULT_SRC_DIR;
   for (const arg of argv) {
     if (arg.startsWith("--css=")) {
       cssPath = arg.slice("--css=".length);
@@ -496,21 +515,29 @@ function runCli(argv) {
   );
 
   // Segundo degrau: o par pode estar perfeito e a cor nunca chegar a tela.
-  let coverageFailures = [];
-  if (fs.existsSync(srcDir)) {
-    const coverage = checkThemeCoverage({
-      themeKeys: parseThemeColorKeys(cssText),
-      usedAsText: collectTextColorClasses(readSourceFiles(srcDir)),
-      pairs: TOKEN_PAIRS,
-    });
-    printCoverageTable(coverage);
-    coverageFailures = coverage.filter((r) => !r.pass);
-    console.log(
-      `\nCobertura do @theme: ${coverage.length - coverageFailures.length} de ${coverage.length} utilitarias usadas no codigo tem chave declarada.`
+  //
+  // Se o diretorio de codigo nao existir, isto e ERRO, nao SKIP: pular em
+  // silencio devolveria exit 0 e a catraca viraria no-op sempre que rodasse
+  // fora da raiz do repo — o mesmo falso verde que ela existe para impedir
+  // (o lado do CSS ja estoura alto, via readFileSync).
+  if (!fs.existsSync(srcDir)) {
+    throw new Error(
+      `Diretorio de codigo '${srcDir}' nao encontrado — a cobertura do @theme nao pode ser verificada. ` +
+        "Rode a partir da raiz do repo ou passe --src=<caminho>."
     );
-  } else {
-    console.log(`\nCobertura do @theme: PULADA — diretorio '${srcDir}' nao encontrado.`);
   }
+
+  const coverage = checkThemeCoverage({
+    themeKeys: parseThemeColorKeys(cssText),
+    usedAsText: collectTextColorClasses(readSourceFiles(srcDir)),
+    declaredTokens: new Set(Object.keys(tokens.light ?? {})),
+    pairs: TOKEN_PAIRS,
+  });
+  printCoverageTable(coverage);
+  const coverageFailures = coverage.filter((r) => !r.pass);
+  console.log(
+    `\nCobertura do @theme: ${coverage.length - coverageFailures.length} de ${coverage.length} utilitarias usadas no codigo tem chave declarada.`
+  );
 
   return failures.length > 0 || coverageFailures.length > 0 ? 1 : 0;
 }

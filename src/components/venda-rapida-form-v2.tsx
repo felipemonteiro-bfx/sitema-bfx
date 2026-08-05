@@ -1102,6 +1102,13 @@ export default function VendaRapidaFormV2({
           <CardTitle>Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Os tiles coloridos usam o tint OPACO, nao `bg-<sem>/5`. Este Card
+              empilha tres camadas — `bg-card-elevated` (0.96, ja mais escuro
+              que o card normal) + o gradiente `from-primary/5` + o tint do
+              tile — e sobre essa pilha nem a variante `-text` fechava no tema
+              claro: 4.01 (info), 4.04 (success), 4.14 (warning). Com
+              `bg-<sem>-bg`: 4.59 / 4.75 / 4.69. Mesma decisao ja tomada no
+              icone de /venda-rapida. O escuro passava nos dois casos. */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
@@ -1115,7 +1122,7 @@ export default function VendaRapidaFormV2({
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Venda</div>
               <div className="text-lg font-black text-primary">{formatBRL(totalVenda)}</div>
             </div>
-            <div className="rounded-lg bg-info/5 px-3 py-2.5 text-center">
+            <div className="rounded-lg bg-info-bg px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
               <div className="text-base font-bold text-info-text">{formatBRL(totalVenda / numParcelas)}</div>
             </div>
@@ -1132,15 +1139,15 @@ export default function VendaRapidaFormV2({
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Custo Total</div>
               <div className="text-base font-bold text-foreground">{formatBRL(custoTotal)}</div>
             </div>
-            <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
+            <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
               <div className="text-base font-bold text-success-text">{formatBRL(lucroBruto)}</div>
             </div>
-            <div className="rounded-lg bg-success/5 px-3 py-2.5 text-center">
+            <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
               <div className="text-base font-bold text-success-text">{margemPct.toFixed(1)}%</div>
             </div>
-            <div className="rounded-lg bg-warning/5 px-3 py-2.5 text-center">
+            <div className="rounded-lg bg-warning-bg px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
               <div className="text-base font-bold text-warning-text">{formatBRL(valorComissao)}</div>
             </div>

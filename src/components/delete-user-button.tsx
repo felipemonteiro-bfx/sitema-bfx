@@ -16,6 +16,7 @@ import {
 import { UserMinus, Loader2 } from "lucide-react";
 import { useState, startTransition } from "react";
 import { useRouter } from "next/navigation";
+import { rotuloDoPerfil } from "@/lib/rotulo-perfil";
 
 interface Props {
   userId: number;
@@ -27,11 +28,6 @@ interface Props {
    */
   userRole?: string | null;
   deleteAction: (formData: FormData) => Promise<void>;
-}
-
-/** "admin" -> "Administrador"; qualquer outro (ou ausente) -> "Vendedor". */
-function rotuloDoPerfil(role?: string | null): string {
-  return role === "admin" ? "Administrador" : "Vendedor";
 }
 
 export function DeleteUserButton({ userId, userName, userRole, deleteAction }: Props) {
