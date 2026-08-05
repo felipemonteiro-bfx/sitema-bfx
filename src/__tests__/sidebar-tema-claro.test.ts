@@ -38,6 +38,30 @@ const sidebarNav = ler("src/components/sidebar-nav.tsx");
 const appLayout = ler("src/app/(app)/layout.tsx");
 const script = ler("scripts/design-tokens/token-contrast.mjs");
 
+/**
+ * Remove comentarios antes de procurar por classe crua. Sem isto, um
+ * comentario explicando *por que* `text-white` saiu faria o teste reprovar a
+ * propria correcao — e o incentivo viraria apagar a explicacao. Mesma
+ * precaucao do `stripComments` de `token-contrast.mjs`.
+ *
+ * O `//` so e cortado quando abre a linha (apos indentacao), para nao mutilar
+ * `https://` nem o `/` de uma expressao.
+ */
+function semComentarios(fonte: string): string {
+  const semBloco = fonte
+    .split("/*")
+    .map((parte, i) => (i === 0 ? parte : parte.split("*/").slice(1).join("*/")))
+    .join("");
+  return semBloco
+    .split("\n")
+    .filter((linha) => !linha.trim().startsWith("//"))
+    .join("\n");
+}
+
+const sidebarNavCodigo = semComentarios(sidebarNav);
+const appLayoutCodigo = semComentarios(appLayout);
+const cssCodigo = semComentarios(css);
+
 // --- leitura da catraca -------------------------------------------------
 
 type Linha = { par: string; tema: string; razao: number; minimo: number; resultado: string };
@@ -70,9 +94,15 @@ function medida(par: string, tema: "light" | "dark"): Linha {
   return achada;
 }
 
-/** Valor de L (lightness OKLCH, 0-1) do token dentro do bloco `seletor`. */
+/**
+ * Valor de L (lightness OKLCH, 0-1) do token dentro do bloco `seletor`.
+ * Le do CSS SEM comentarios: cada token da familia e precedido de um bloco de
+ * comentario explicando o papel dele, e esse bloco viaja junto na hora de
+ * fatiar por `;` — a declaracao passaria a "comecar" pelo comentario e o
+ * `startsWith` nunca casaria.
+ */
 function lightnessDoToken(seletor: string, token: string): number {
-  const blocos = css.split(`${seletor} {`);
+  const blocos = cssCodigo.split(`${seletor} {`);
   if (blocos.length < 2) throw new Error(`bloco ${seletor} nao encontrado`);
   const corpo = blocos[1].split("\n}")[0];
   const decls = corpo.split(";").map((d) => d.trim());
@@ -110,7 +140,7 @@ describe("a sidebar acompanha o tema", () => {
   });
 
   it("o comentario que declarava a sidebar 'sempre escura' saiu do CSS", () => {
-    expect(css.includes("sempre escura")).toBe(false);
+    expect(cssCodigo.includes("sempre escura")).toBe(false);
   });
 });
 
@@ -178,7 +208,7 @@ describe("os tokens novos existem nos tres pontos", () => {
   it.each(NOVOS)("--%s tem chave --color-* no bloco @theme", (nome) => {
     // Sem a chave no @theme o Tailwind v4 nao gera a utilitaria e a cor cai
     // silenciosamente para a herdada do pai (achado 1 da fase 18).
-    expect(css.includes(`--color-${nome}: var(--${nome});`)).toBe(true);
+    expect(cssCodigo.includes(`--color-${nome}: var(--${nome});`)).toBe(true);
   });
 
   it("os pares novos estao declarados em TOKEN_PAIRS", () => {
@@ -201,35 +231,35 @@ describe("os consumidores acompanham os tokens", () => {
     // `text-white` sobre um fundo que muda de tema e o erro classico: dava
     // 3.41:1 (claro) e 3.15:1 (escuro) sobre `--sidebar-primary`. E `bg-white/5`
     // no chip do icone e literalmente invisivel sobre fundo claro.
-    expect(sidebarNav.includes("text-white")).toBe(false);
-    expect(sidebarNav.includes("bg-white/")).toBe(false);
-    expect(appLayout.includes("text-white")).toBe(false);
+    expect(sidebarNavCodigo.includes("text-white")).toBe(false);
+    expect(sidebarNavCodigo.includes("bg-white/")).toBe(false);
+    expect(appLayoutCodigo.includes("text-white")).toBe(false);
   });
 
   it("o badge de contagem usa o par de tokens do preenchimento", () => {
     expect(
-      sidebarNav.includes("bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]")
+      sidebarNavCodigo.includes("bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]")
     ).toBe(true);
   });
 
   it("o chip do icone e o badge NOVO usam o tint OPACO, nao o composto /20", () => {
     // O composto da propria matiz escurece o tom e derruba o texto abaixo de
     // 4.5 mesmo com o token certo — e o composto nao e mensuravel pela catraca.
-    expect(sidebarNav.includes("var(--sidebar-primary)]/20")).toBe(false);
-    expect(sidebarNav.includes("var(--sidebar-primary)]/15")).toBe(false);
-    expect(sidebarNav.includes("bg-[var(--sidebar-primary-bg)]")).toBe(true);
+    expect(sidebarNavCodigo.includes("var(--sidebar-primary)]/20")).toBe(false);
+    expect(sidebarNavCodigo.includes("var(--sidebar-primary)]/15")).toBe(false);
+    expect(sidebarNavCodigo.includes("bg-[var(--sidebar-primary-bg)]")).toBe(true);
   });
 
   it("nenhum texto da sidebar renderiza com opacidade parcial", () => {
     // `text-[var(--sidebar-muted)]/80` media 4.17:1 no escuro: a catraca
     // aprovava o token e a tela reprovava o pixel.
-    expect(sidebarNav.includes("text-[var(--sidebar-muted)]/80")).toBe(false);
-    expect(sidebarNav.includes("var(--sidebar-accent)]/80")).toBe(false);
+    expect(sidebarNavCodigo.includes("text-[var(--sidebar-muted)]/80")).toBe(false);
+    expect(sidebarNavCodigo.includes("var(--sidebar-accent)]/80")).toBe(false);
   });
 
   it("o item ativo usa o par accent/accent-foreground", () => {
     expect(
-      sidebarNav.includes(
+      sidebarNavCodigo.includes(
         "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)]"
       )
     ).toBe(true);
@@ -239,15 +269,15 @@ describe("os consumidores acompanham os tokens", () => {
     // `.sidebar-dark` fixava `color-scheme: dark` no painel. Com a sidebar
     // clara isso pintaria a barra de rolagem e os controles nativos de escuro
     // dentro de uma superficie clara.
-    expect(appLayout.includes("sidebar-dark")).toBe(false);
-    expect(css.includes(".sidebar-dark")).toBe(false);
+    expect(appLayoutCodigo.includes("sidebar-dark")).toBe(false);
+    expect(cssCodigo.includes(".sidebar-dark")).toBe(false);
   });
 
   it("o logo usa o gradiente da marca e o token de icone", () => {
     // O gradiente da marca e decorativo e identico nos dois temas — desacoplar
     // do `--sidebar-primary` mantem o simbolo estavel enquanto a paleta da
     // sidebar inverte.
-    expect(appLayout.includes("from-gradient-cta-from to-gradient-cta-to")).toBe(true);
-    expect(appLayout.includes("text-gradient-cta-foreground")).toBe(true);
+    expect(appLayoutCodigo.includes("from-gradient-cta-from to-gradient-cta-to")).toBe(true);
+    expect(appLayoutCodigo.includes("text-gradient-cta-foreground")).toBe(true);
   });
 });

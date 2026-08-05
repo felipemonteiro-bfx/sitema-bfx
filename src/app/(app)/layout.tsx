@@ -51,7 +51,12 @@ export default async function AppLayout({
     <div className="min-h-screen bg-background">
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-3 py-5 lg:px-6">
         <aside className="hidden w-72 shrink-0 lg:flex animate-slide-in-left">
-          <div className="sidebar-dark sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-sidebar-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl transition-all duration-300">
+          {/* Sem `.sidebar-dark`: aquela classe fixava `color-scheme: dark` no
+              painel. Agora que a sidebar acompanha o tema, o `color-scheme`
+              fixo pintaria a barra de rolagem e os controles nativos de escuro
+              dentro de uma superficie clara. Herdar do documento ja da o certo
+              nos dois temas. */}
+          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-sidebar-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl transition-all duration-300">
             <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
           </div>
         </aside>
@@ -101,8 +106,16 @@ function SidebarContent({
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--sidebar-primary)] to-gradient-cta-to shadow-md">
-              <LayoutDashboard className="h-4 w-4 text-white" />
+            {/* O simbolo da marca e desacoplado da paleta da sidebar: o
+                gradiente `--gradient-cta-*` e decorativo e identico nos dois
+                temas, entao o chip continua igual enquanto a sidebar inverte.
+                Antes o inicio do gradiente era `--sidebar-primary`, que agora
+                escurece no tema claro (ele virou cor de TEXTO da marca) — o
+                logo teria mudado de cor de brinde. O icone usa o token do
+                gradiente, nao `text-white` cru: 3.69:1 no extremo rose e
+                5.80:1 no violet. */}
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-gradient-cta-from to-gradient-cta-to shadow-md">
+              <LayoutDashboard className="h-4 w-4 text-gradient-cta-foreground" />
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight text-[var(--sidebar-foreground)]">
@@ -112,11 +125,12 @@ function SidebarContent({
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-[var(--sidebar-muted)]">{userLabel}</span>
-            {/* infoSolid (não "info" translúcido): este badge sempre renderiza sobre o
-                fundo escuro da sidebar (--sidebar), em ambos os temas do app. A variante
-                translúcida "info" ficava com contraste 4.39:1 (abaixo de 4.5:1) contra esse
-                fundo — a variante sólida garante >=4.71:1 (medido em token-contrast.mjs)
-                independente do que está atrás. */}
+            {/* infoSolid (não "info" translúcido): a variante sólida traz o próprio
+                preenchimento (`bg-info` + `text-info-foreground`, 5.37:1), então não
+                depende do que está atrás. É justamente por isso que ela sobrevive à
+                sidebar passar a acompanhar o tema — a variante translúcida "info"
+                mede o contraste CONTRA o fundo (4.39:1 sobre a sidebar escura) e teria
+                de ser recalibrada de novo agora que esse fundo inverte. */}
             <Badge variant={role === "admin" ? "infoSolid" : "secondary"} size="sm">
               {role === "admin" ? "Admin" : "Vendedor"}
             </Badge>

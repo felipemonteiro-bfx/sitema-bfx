@@ -81,9 +81,12 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
         "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
         "transition-all duration-200 ease-out",
         "outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
+        // O hover usa o accent OPACO, nao `/80`: o composto muda de cor com o
+        // fundo por baixo e nao e mensuravel pela catraca — o par medido
+        // precisa ser o par renderizado.
         active
-          ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-foreground)] shadow-md"
-          : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-accent)]/80 hover:text-[var(--sidebar-foreground)]",
+          ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] shadow-md"
+          : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]",
         "animate-fade-in-up fill-both"
       )}
       style={{ animationDelay: `${index * 30}ms` }}
@@ -95,11 +98,15 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
         />
       )}
       
+      {/* Tint OPACO (`--sidebar-primary-bg`) no lugar do composto
+          `--sidebar-primary/20`: o composto escurece o proprio tom e nao e
+          mensuravel. E `bg-white/5` no estado inativo era literalmente
+          invisivel sobre fundo claro — virou `--sidebar-accent`. */}
       <span className={cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
         active
-          ? "bg-[var(--sidebar-primary)]/20"
-          : "bg-white/5 group-hover:bg-[var(--sidebar-primary)]/15 group-hover:scale-105"
+          ? "bg-[var(--sidebar-primary-bg)]"
+          : "bg-[var(--sidebar-accent)] group-hover:bg-[var(--sidebar-primary-bg)] group-hover:scale-105"
       )}>
         {Icon && (
           <Icon className={cn(
@@ -113,16 +120,19 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
       <span className="flex-1 truncate">{item.label}</span>
       
       {item.isNew && (
-        <span className="flex items-center gap-1 rounded-full bg-[var(--sidebar-primary)]/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-primary)] animate-pulse-soft">
+        <span className="flex items-center gap-1 rounded-full bg-[var(--sidebar-primary-bg)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-primary)] animate-pulse-soft">
           <Sparkles className="h-3 w-3" />
           Novo
         </span>
       )}
       
       {item.badge && !item.isNew && (
+        // `text-white` cru sobre um preenchimento que muda de tema dava
+        // 3.41:1 (claro) e 3.15:1 (escuro). O par de tokens fecha nos dois:
+        // 6.25:1 e 6.03:1 — `--sidebar-primary-foreground` INVERTE.
         <span className={cn(
           "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
-          "bg-[var(--sidebar-primary)] text-white",
+          "bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]",
           "animate-fade-in-scale"
         )}>
           {item.badge}
@@ -164,7 +174,10 @@ function SidebarNavGroup({ group, pathname, startIndex }: SidebarNavGroupProps) 
     <div className="space-y-1">
       {group.label && (
         <div className="px-3 py-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-muted)]/80">
+          {/* Sem `/80`: a opacidade parcial derrubava o rotulo de grupo para
+              4.17:1 no escuro — a catraca aprovava o token e a tela reprovava
+              o pixel. Em 10px isso e exatamente onde nao da para ceder. */}
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-muted)]">
             {group.label}
           </span>
         </div>

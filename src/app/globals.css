@@ -77,6 +77,7 @@
   --color-card-elevated: var(--card-elevated);
   --color-gradient-cta-from: var(--gradient-cta-from);
   --color-gradient-cta-to: var(--gradient-cta-to);
+  --color-gradient-cta-foreground: var(--gradient-cta-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -87,8 +88,10 @@
   --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary-bg: var(--sidebar-primary-bg);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
@@ -163,6 +166,11 @@
      (mesmo comportamento anterior, quando a classe crua era idêntica em claro/escuro) — D-06 */
   --gradient-cta-from: oklch(0.645 0.246 16.439); /* mesmo tom de rose-500 */
   --gradient-cta-to: oklch(0.541 0.281 293.009); /* mesmo tom de violet-600 */
+  /* Conteudo POR CIMA do gradiente (o icone do logo na sidebar). Como o
+     gradiente nao muda entre temas, este tambem nao muda — o que ele resolve e
+     o `text-white` cru que estava no call site, agora mensuravel: 3.69:1 no
+     extremo claro (rose, grafico >=3) e 5.80:1 no extremo escuro (violet). */
+  --gradient-cta-foreground: oklch(0.995 0 0);
 
   /* Destructive (mantido para compatibilidade, mesmo valor de --error) */
   --destructive: oklch(0.57 0.24 25); /* L ajustado de 0.60 p/ 4.69:1 (era 4.27) — UI-05 */
@@ -193,16 +201,34 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  /* Sidebar - sempre escura (inspirado no referencial) */
-  --sidebar: oklch(0.19 0.02 260); /* #2A2E3B equivalente */
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.65 0.20 25); /* vermelho/rosa accent */
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.25 0.02 260); /* hover/ativo */
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.30 0.02 260);
-  --sidebar-ring: oklch(0.65 0.20 25);
-  --sidebar-muted: oklch(0.60 0 0);
+  /* Sidebar — acompanha o tema (fase 19).
+     Ate aqui esta familia era escura nos DOIS temas por decisao explicita. O
+     preco so aparecia no tema claro: a sidebar HOSPEDA componentes que ela
+     nao desenha — o `ThemeToggle` (`variant outline`, que resolve `--border`/
+     `--background`/`--foreground` GLOBAIS) e o `LogoutButton` (`--destructive`
+     global). No claro esses tokens sao claros, e caiam sobre um painel escuro.
+     Nao era falha de renderizacao: era um painel escuro cercado de tokens
+     claros, o que o dono descreve como "buga e fica preta".
+
+     Trocar so `--sidebar` nao resolveria — todo o resto da familia estava
+     calibrado para fundo escuro. Cada token tem valor proprio por tema, e cada
+     par esta em `TOKEN_PAIRS` (token sem par nao e policiado).
+
+     ATENCAO ao papel de cada um, mesma separacao ja aplicada a `--success`
+     e afins: `--sidebar-primary` e cor de TEXTO/GRAFISMO (icone ativo, badge
+     NOVO, barra do item ativo) e por isso escurece no claro; quando ele serve
+     de PREENCHIMENTO (badge de contagem) quem vai por cima e
+     `--sidebar-primary-foreground`, que INVERTE entre os temas. */
+  --sidebar: oklch(0.965 0.006 260); /* degrau sutil abaixo de --card (1.08:1) */
+  --sidebar-foreground: oklch(0.205 0.015 260); /* 16.28:1 */
+  --sidebar-primary: oklch(0.50 0.22 25); /* vermelho/rosa accent — 5.77:1 como texto */
+  --sidebar-primary-foreground: oklch(0.995 0 0); /* 6.25:1 sobre --sidebar-primary */
+  --sidebar-primary-bg: oklch(0.94 0.045 25); /* tint OPACO da marca — 5.13:1 (D-06) */
+  --sidebar-accent: oklch(0.915 0.012 260); /* hover/ativo — 13.94:1 com accent-foreground */
+  --sidebar-accent-foreground: oklch(0.205 0.015 260);
+  --sidebar-border: oklch(0.80 0.015 260); /* separador decorativo, ver nota abaixo */
+  --sidebar-ring: oklch(0.50 0.22 25); /* 5.77:1 */
+  --sidebar-muted: oklch(0.47 0.015 260); /* rotulo inativo — 6.20:1 sidebar / 5.30:1 accent */
 
   /* Spacing Tokens */
   --space-1: 0.25rem;
@@ -298,11 +324,34 @@
   --chart-4: oklch(0.65 0.28 304); /* Pink vibrante */
   --chart-5: oklch(0.68 0.26 16); /* Orange vibrante */
 
-  /* Sidebar - escura, consistente com light mode */
+  /* Gradiente decorativo da marca — MESMOS valores de `:root`, repetidos de
+     proposito. Em runtime a cascata ja resolveria (`:root` e `.dark` sao o
+     mesmo elemento), mas `token-contrast.mjs` le os blocos separadamente: sem
+     estas tres linhas o par sai como SKIP no tema escuro em vez de PASS, e um
+     par que nao e medido nao e policiado. Mesmo motivo que fez `--*-text` ser
+     repetido no `.dark` na fase 16. */
+  --gradient-cta-from: oklch(0.645 0.246 16.439);
+  --gradient-cta-to: oklch(0.541 0.281 293.009);
+  --gradient-cta-foreground: oklch(0.995 0 0);
+
+  /* Sidebar — escura, como sempre foi. Fundo, texto, accent, borda, muted e
+     ring estao INALTERADOS: o tema escuro ja estava bom e nao era o problema.
+     Duas excecoes, ambas correcao de contraste que existia nos dois temas:
+
+     `--sidebar-primary-foreground` era `oklch(0.985)` (quase branco) sobre um
+     preenchimento `oklch(0.68)` — 3.15:1, abaixo do minimo. Era o
+     `text-white` cru do badge de contagem, so que como token. Aqui ele
+     INVERTE para texto escuro: 6.03:1. No claro segue quase-branco (6.25:1).
+
+     `--sidebar-primary-bg` e novo: o tint da marca era escrito no call site
+     como `bg-[var(--sidebar-primary)]/20`, um composto que a catraca nao
+     consegue medir. O valor abaixo reproduz o composto atual em cor OPACA
+     (rgb 66,28,25 vs 59,28,35 do composto), agora mensuravel: 4.53:1. */
   --sidebar: oklch(0.17 0.02 260);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.68 0.22 25); /* vermelho/rosa mais vibrante em dark */
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.145 0.02 260); /* texto ESCURO: 6.03:1 (era 3.15:1) */
+  --sidebar-primary-bg: oklch(0.28 0.06 25); /* tint OPACO — 4.53:1 */
   --sidebar-accent: oklch(0.28 0.02 260);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.32 0.02 260);
@@ -622,13 +671,11 @@
   box-shadow: 0 0 0 4px oklch(from var(--ring) l c h / 20%);
 }
 
-/* ========================================
-   SIDEBAR DARK (referência visual)
-   ======================================== */
-
-.sidebar-dark {
-  color-scheme: dark;
-}
+/* `.sidebar-dark` (que fixava `color-scheme: dark` no painel) foi removida na
+   fase 19: a sidebar passou a acompanhar o tema, e o `color-scheme` fixo
+   pintaria a barra de rolagem e os controles nativos de escuro dentro de uma
+   superficie clara. Sem a regra, o painel herda o `color-scheme` do documento
+   — que ja e o correto em cada tema. */
 
 /* ========================================
    GLASSMORPHISM UTILITIES

@@ -402,7 +402,32 @@ export const TOKEN_PAIRS = [
   { foreground: "popover-foreground", background: "popover", min: TEXT_MIN, label: "texto em popover" },
   { foreground: "muted-foreground", background: "background", min: TEXT_MIN, label: "texto secundario sobre fundo" },
   { foreground: "muted-foreground", background: "card", min: TEXT_MIN, label: "texto secundario em card" },
+  // --- Sidebar (fase 19) ------------------------------------------------
+  // Ate aqui a familia `--sidebar-*` tinha UM par medido, e a sidebar era
+  // escura nos dois temas — o que escondia o resto: o rotulo inativo, o item
+  // em hover, o icone da marca e os dois badges nunca foram medidos contra
+  // nada. Com a sidebar acompanhando o tema, cada um desses elementos passa
+  // por duas superficies diferentes (clara e escura) e todos entram aqui.
+  // Token sem par nao e policiado.
   { foreground: "sidebar-foreground", background: "sidebar", min: TEXT_MIN, label: "texto na sidebar" },
+  { foreground: "sidebar-muted", background: "sidebar", min: TEXT_MIN, label: "rotulo de item inativo e de grupo" },
+  { foreground: "sidebar-muted", background: "sidebar-accent", min: TEXT_MIN, label: "rotulo e icone do item em hover" },
+  { foreground: "sidebar-accent-foreground", background: "sidebar-accent", min: TEXT_MIN, label: "rotulo do item ativo" },
+  { foreground: "sidebar-accent-foreground", background: "sidebar-primary-bg", min: TEXT_MIN, label: "icone do item em hover, no chip da marca" },
+  // `--sidebar-primary` e cor de TEXTO/GRAFISMO da marca (icone do item ativo,
+  // badge NOVO). Como PREENCHIMENTO, quem vai por cima e
+  // `--sidebar-primary-foreground` — o par logo abaixo. Sao papeis distintos,
+  // como `--success` vs `--success-text`.
+  { foreground: "sidebar-primary", background: "sidebar", min: TEXT_MIN, label: "icone da marca sobre a sidebar" },
+  { foreground: "sidebar-primary", background: "sidebar-primary-bg", min: TEXT_MIN, label: "badge NOVO — texto no tint da marca" },
+  { foreground: "sidebar-primary-foreground", background: "sidebar-primary", min: TEXT_MIN, label: "badge de contagem — texto no preenchimento" },
+  { foreground: "sidebar-primary", background: "sidebar-accent", min: NON_TEXT_MIN, label: "indicador do item ativo" },
+  { foreground: "sidebar-ring", background: "sidebar", min: NON_TEXT_MIN, label: "anel de foco na sidebar (UI-06)" },
+  // O icone do logo sobre o gradiente decorativo da marca. O gradiente e
+  // identico nos dois temas; o extremo claro (rose) e o pior caso e vale como
+  // grafico (>=3), o extremo escuro (violet) suporta texto.
+  { foreground: "gradient-cta-foreground", background: "gradient-cta-from", min: NON_TEXT_MIN, label: "icone do logo — extremo claro do gradiente" },
+  { foreground: "gradient-cta-foreground", background: "gradient-cta-to", min: TEXT_MIN, label: "icone do logo — extremo escuro do gradiente" },
   { foreground: "primary-foreground", background: "primary", min: TEXT_MIN, label: "texto em botao primario" },
   { foreground: "secondary-foreground", background: "secondary", min: TEXT_MIN, label: "texto em botao secundario" },
   { foreground: "accent-foreground", background: "accent", min: TEXT_MIN, label: "texto em accent" },
