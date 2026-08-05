@@ -59,9 +59,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       if (!showStateIcon) return null
       switch (state) {
         case "error":
-          return <AlertCircle className="h-4 w-4 text-error" />
+          return <AlertCircle className="h-4 w-4 text-error-text" />
         case "success":
-          return <CheckCircle2 className="h-4 w-4 text-success" />
+          return <CheckCircle2 className="h-4 w-4 text-success-text" />
         default:
           return null
       }

@@ -167,11 +167,15 @@ interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
 
 const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
   ({ className, highlight, numeric, ...props }, ref) => {
+    // Celula destacada e TEXTO sobre a superficie da tabela (card), nao
+    // preenchimento: usa a variante `-text`. Com o token de preenchimento o
+    // tema claro media 2.97 / 2.06 / 4.04 / 4.13; com `-text`, 5.18 / 5.23 /
+    // 5.60 / 5.22. No escuro os valores sao iguais nos dois casos.
     const highlightClasses = {
-      success: "text-success font-medium",
-      warning: "text-warning font-medium",
-      error: "text-error font-medium",
-      info: "text-info font-medium",
+      success: "text-success-text font-medium",
+      warning: "text-warning-text font-medium",
+      error: "text-error-text font-medium",
+      info: "text-info-text font-medium",
     }
 
     return (

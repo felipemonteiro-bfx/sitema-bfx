@@ -10,8 +10,13 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-background text-foreground border-border",
+        // `--destructive` e `--error` tem exatamente o mesmo valor nos dois
+        // temas (globals.css documenta o alias), mas so o vermelho tem
+        // variante de TEXTO. Como texto sobre o proprio tint o token de
+        // preenchimento media 4.41:1 no claro; `--error-text` sobre o tint
+        // opaco da 4.66:1. Esta variante passa a espelhar `error`.
         destructive:
-          "border-destructive/50 bg-destructive/5 text-destructive dark:border-destructive/50 dark:bg-destructive/10 [&>svg]:text-destructive",
+          "border-error/50 bg-error-bg text-error-text dark:border-error/50 dark:bg-error/10 [&>svg]:text-error-text",
         success:
           "border-success/50 bg-success-bg text-success-text dark:border-success/50 dark:bg-success/10 [&>svg]:text-success-text",
         warning:
@@ -102,7 +107,13 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-sm [&_p]:leading-relaxed opacity-90", className)}
+    // Sem `opacity-90`: a opacidade compositava a cor do texto contra o tint
+    // do proprio alerta e anulava a migracao para os tokens `-text`. Medido
+    // sobre o tint opaco no tema claro: 4.75 -> 4.02 (success), 4.69 -> 3.90
+    // (warning), 4.59 -> 3.89 (info), 4.66 -> 4.34 (error) — e 5.67 -> 4.44 no
+    // escuro do error. E o mesmo defeito de `text-*-text/80`, so que aplicado
+    // ao container em vez da classe de cor.
+    className={cn("text-sm [&_p]:leading-relaxed", className)}
     {...props}
   />
 ))

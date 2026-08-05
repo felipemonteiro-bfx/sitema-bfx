@@ -105,18 +105,23 @@ export const colors = {
 // TEXT COLORS - Para badges, indicadores, etc
 // ============================================================================
 
+// Estes sao os tokens de TEXTO (`--*-text`), nao os de preenchimento. Usar
+// `text-success` aqui reprovava no tema claro (2.97:1 sobre card; minimo 4.5)
+// porque `--success` e calibrado para receber `--success-foreground` por cima,
+// nao para ser lido como texto. Medido com a variante `-text`: 5.18 / 5.23 /
+// 5.60 / 5.22 sobre card. Ver globals.css, bloco "variante de TEXTO".
 export const textColors = {
   /** Texto de sucesso - valores positivos, lucro */
-  success: 'text-success',
+  success: 'text-success-text',
 
   /** Texto de aviso */
-  warning: 'text-warning',
+  warning: 'text-warning-text',
 
   /** Texto de erro - valores negativos, custo */
-  error: 'text-error',
+  error: 'text-error-text',
 
   /** Texto de informação */
-  info: 'text-info',
+  info: 'text-info-text',
 
   /** Texto padrão */
   default: 'text-foreground',
@@ -132,18 +137,23 @@ export const textColors = {
 // BACKGROUND COLORS
 // ============================================================================
 
+// O par tint+texto so fecha com a variante `-text`. Medido sobre o composto
+// de 10% da propria matiz no tema claro: 4.68 (success), 4.88 (warning), 4.69
+// (error), 4.59 (info) — todos acima de 4.5. NAO subir para `/20`: ali o
+// mesmo texto cai para 4.22 / 4.54 / 3.90 / 4.02. Se precisar de tint mais
+// forte, use o opaco `bg-*-bg`, nunca o composto.
 export const backgrounds = {
   /** Background de sucesso (badges, alertas) */
-  success: 'bg-success/10 text-success',
+  success: 'bg-success/10 text-success-text',
 
   /** Background de aviso */
-  warning: 'bg-warning/10 text-warning',
+  warning: 'bg-warning/10 text-warning-text',
 
   /** Background de erro */
-  error: 'bg-error/10 text-error',
+  error: 'bg-error/10 text-error-text',
 
   /** Background de informação */
-  info: 'bg-info/10 text-info',
+  info: 'bg-info/10 text-info-text',
 
   /** Background muted (seções secundárias) */
   muted: 'bg-muted',

@@ -215,7 +215,7 @@ const FormSuccess = React.forwardRef<
     <p
       ref={ref}
       className={cn(
-        "flex items-center gap-1.5 text-xs font-medium text-success",
+        "flex items-center gap-1.5 text-xs font-medium text-success-text",
         "animate-fade-in-up",
         className
       )}
