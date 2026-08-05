@@ -1,0 +1,5 @@
+{
+  "_comentario": "Achados conhecidos do gate de runtime. Achado novo reprova; achado desta lista nao. Regrave com `npm run ui:runtime -- --update-baseline` SO depois de conferir o que entrou.",
+  "_atualizadoEm": "2026-08-05",
+  "conhecidos": []
+}
