@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollableTabsList, Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { parseAsString, useQueryState } from "nuqs";
 
 export type TabItem = {
@@ -30,13 +30,13 @@ export function GestaoRhTabs({
           `overflow-x` diferente de `visible` o `overflow-y` computa `auto`, e
           em barra de rolagem classica (Windows/Linux) a barra horizontal
           comeria ~15px dos 40px de altura e cortaria os gatilhos. */}
-      <TabsList className="h-auto min-h-10 max-w-full justify-start overflow-x-auto overflow-y-hidden">
+      <ScrollableTabsList>
         {tabs.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
             {t.label}
           </TabsTrigger>
         ))}
-      </TabsList>
+      </ScrollableTabsList>
       {tabs.map((t) => (
         <TabsContent key={t.value} value={t.value}>
           {t.content}

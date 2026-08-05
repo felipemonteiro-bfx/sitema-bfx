@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollableTabsList, Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import { parseAsString, useQueryState } from "nuqs";
 
 export type QueryTabItem = {
@@ -36,13 +36,13 @@ export function QueryTabs({
           horizontal comeria ~15px dos 40px de altura, cortando os gatilhos. Com
           altura automatica a faixa cresce em vez de cortar; no macOS, onde a
           barra e sobreposta, nada muda. */}
-      <TabsList className="h-auto min-h-10 max-w-full justify-start overflow-x-auto overflow-y-hidden">
+      <ScrollableTabsList>
         {tabs.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
             {t.label}
           </TabsTrigger>
         ))}
-      </TabsList>
+      </ScrollableTabsList>
       {tabs.map((t) => (
         <TabsContent key={t.value} value={t.value}>
           {t.content}
