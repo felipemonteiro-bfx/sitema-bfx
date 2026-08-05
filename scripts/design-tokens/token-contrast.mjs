@@ -300,12 +300,17 @@ export const TOKEN_PAIRS = [
   { foreground: "success-text", background: "card", min: TEXT_MIN, label: "texto de sucesso em card" },
   { foreground: "warning-text", background: "card", min: TEXT_MIN, label: "texto de alerta em card" },
   { foreground: "info-text", background: "card", min: TEXT_MIN, label: "texto de informacao em card" },
+  // `--error-text` entrou na fase 17 (achado 3). Diferente dos outros tres,
+  // `--error` ja aprovava como texto sobre card — o que reprovava era sobre o
+  // proprio tint (4.01:1), que e como os callouts de /crm o usam.
+  { foreground: "error-text", background: "card", min: TEXT_MIN, label: "texto de erro em card" },
   // Os mesmos tokens sobre o tint opaco da propria matiz (pilulas e caixas de
   // metrica). No tema escuro `--*-bg` tem alfa e o par sai como SKIP — nunca
   // como PASS (T-10-08).
   { foreground: "success-text", background: "success-bg", min: TEXT_MIN, label: "texto de sucesso em tint" },
   { foreground: "warning-text", background: "warning-bg", min: TEXT_MIN, label: "texto de alerta em tint" },
   { foreground: "info-text", background: "info-bg", min: TEXT_MIN, label: "texto de informacao em tint" },
+  { foreground: "error-text", background: "error-bg", min: TEXT_MIN, label: "texto de erro em tint" },
   { foreground: "ring", background: "background", min: NON_TEXT_MIN, label: "indicador de foco (UI-06)" },
   { foreground: "border", background: "background", min: NON_TEXT_MIN, label: "borda sobre fundo" },
   { foreground: "border", background: "card", min: NON_TEXT_MIN, label: "borda sobre card" },

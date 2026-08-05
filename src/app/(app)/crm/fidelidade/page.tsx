@@ -73,7 +73,7 @@ export default async function Page() {
                       <TableRow key={c.id}>
                         <TableCell>{c.nome}</TableCell>
                         <TableCell className="text-right font-medium">{c.pontos ?? 0}</TableCell>
-                        <TableCell className="text-right text-success">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
+                        <TableCell className="text-right text-success-text">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
                         <TableCell>
                           <form action={resgatarPontosCliente} className="flex items-center gap-1">
                             <input type="hidden" name="clienteId" value={c.id} />
@@ -114,7 +114,7 @@ export default async function Page() {
                         {t.descricao ?? t.tipo} · {formatDataHora(t.criadoEm)}
                       </div>
                     </div>
-                    <span className={t.pontos >= 0 ? "text-success font-medium" : "text-destructive font-medium"}>
+                    <span className={t.pontos >= 0 ? "text-success-text font-medium" : "text-destructive font-medium"}>
                       {t.pontos >= 0 ? "+" : ""}{t.pontos}
                     </span>
                   </li>

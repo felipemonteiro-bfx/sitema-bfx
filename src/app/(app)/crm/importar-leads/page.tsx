@@ -32,13 +32,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       />
 
       {sp.ok && (
-        <div className="rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-success">
+        <div className="rounded-lg border border-success/30 bg-success-bg p-3 text-sm text-success-text">
           Importação concluída: {sp.criados ?? 0} novo(s) lead(s), {sp.vinculados ?? 0} já existente(s)
           atualizado(s), {sp.ignorados ?? 0} linha(s) ignorada(s).
         </div>
       )}
       {sp.erro && (
-        <div className="rounded-lg border border-error/30 bg-error/10 p-3 text-sm text-error">
+        <div className="rounded-lg border border-error/30 bg-error-bg p-3 text-sm text-error-text">
           {sp.erro === "empresa" ? "Empresa não encontrada." : "Preencha a empresa e a lista."}
         </div>
       )}

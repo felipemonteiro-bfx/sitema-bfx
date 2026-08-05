@@ -58,6 +58,7 @@ export default {
           DEFAULT: "var(--error)",
           foreground: "var(--error-foreground)",
           bg: "var(--error-bg)",
+          text: "var(--error-text)",
         },
         info: {
           DEFAULT: "var(--info)",

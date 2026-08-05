@@ -74,7 +74,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       />
 
       {sp.erro && (
-        <div className="rounded-lg border border-error/30 bg-error/10 p-3 text-sm text-error">
+        <div className="rounded-lg border border-error/30 bg-error-bg p-3 text-sm text-error-text">
           Preencha o nome da campanha e escolha um template antes de criar.
         </div>
       )}
@@ -209,7 +209,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </div>
                   <div className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">{c.mensagem}</div>
                   {!c.templateNome && (
-                    <p className="mt-1 text-xs text-warning">
+                    <p className="mt-1 text-xs text-warning-text">
                       Campanha anterior à migração para a Cloud API — somente leitura. Recrie escolhendo um template.
                     </p>
                   )}

@@ -163,8 +163,8 @@ export default async function Page() {
   const history = dbRows.map((m) => ({
     prompt: m.promptOriginal ?? "",
     response: m.content,
-    // Linhas anteriores a coluna `provider` ficam nulas. Nulo e "desconhecido" e
-    // a pilula some — nao vira "gemini".
+    // Linhas anteriores a coluna `provider` ficam nulas. Nulo e "desconhecido"
+    // e a pilula some — nao vira um nome de provedor inventado.
     provider: m.provider ?? null,
     at: m.criadoEm.toISOString(),
     actions: m.actions as any,

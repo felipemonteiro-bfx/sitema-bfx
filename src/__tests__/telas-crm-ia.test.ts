@@ -166,7 +166,11 @@ describe("dado errado — o provedor da resposta e persistido, nao chutado", () 
   });
 
   it("a pagina nao rotula mais toda resposta como gemini", () => {
-    expect(pagina.includes('provider: "gemini"')).toBe(false);
+    // Olha o mapeamento do historico, nao o arquivo inteiro: a assinatura de
+    // `addAssistantMessage` cita "gemini" legitimamente, como membro da uniao
+    // de tipo do parametro.
+    const mapeamento = pagina.split("dbRows.map(")[1]?.split("}));")[0] ?? "";
+    expect(mapeamento.includes('"gemini"')).toBe(false);
     expect(cliente.includes('const provider = "gemini"')).toBe(false);
   });
 
