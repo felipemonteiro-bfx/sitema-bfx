@@ -93,7 +93,8 @@ function MarkdownContent({ text }: { text: string }) {
 type Message = {
   prompt: string;
   response: string;
-  provider: string;
+  /** Provedor que gerou a resposta. `null` = desconhecido (linha anterior a coluna). */
+  provider: string | null;
   at: string;
   actions?: { name: string; params: Record<string, unknown> }[];
   status?: "pending" | "done";
@@ -104,12 +105,15 @@ type IntelligenceChatClientProps = {
   history: Message[];
   action: (formData: FormData) => Promise<void> | void;
   formId?: string;
+  /** Provedor configurado agora — usado so no balao otimista da mensagem em voo. */
+  currentProvider: string;
 };
 
 export function IntelligenceChatClient({
   history,
   action,
   formId,
+  currentProvider,
 }: IntelligenceChatClientProps) {
   const router = useRouter();
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
@@ -119,7 +123,6 @@ export function IntelligenceChatClient({
 
   const handleSubmit = async (formData: FormData) => {
     const prompt = String(formData.get("prompt") || "").trim();
-    const provider = "gemini";
     const attachment = formData.get("attachment");
     const file =
       attachment &&
@@ -136,7 +139,7 @@ export function IntelligenceChatClient({
       addOptimistic({
         prompt: displayPrompt,
         response: "Enviando...",
-        provider,
+        provider: currentProvider,
         at: new Date().toISOString(),
       });
     }
@@ -163,9 +166,11 @@ export function IntelligenceChatClient({
           optimisticHistory.map((m, i) => (
             <div key={`${m.at}-${i}`} className="space-y-3">
               <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
-                <span className="rounded-full bg-muted px-2 py-0.5 uppercase tracking-wide">
-                  {m.provider}
-                </span>
+                {m.provider && (
+                  <span className="rounded-full border bg-card px-2 py-0.5 uppercase tracking-wide">
+                    {m.provider}
+                  </span>
+                )}
                 <span>{new Date(m.at).toLocaleString("pt-BR")}</span>
               </div>
               <div className="flex justify-end">

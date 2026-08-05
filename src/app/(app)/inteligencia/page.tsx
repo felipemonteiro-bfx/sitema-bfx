@@ -79,6 +79,7 @@ async function askAi(formData: FormData) {
     promptOriginal: prompt,
     status: "done",
     links: response.links,
+    provider,
   });
   revalidatePath("/inteligencia");
 }
@@ -100,6 +101,7 @@ async function addAssistantMessage(msg: {
   actions?: { name: string; params: Record<string, unknown> }[];
   status?: "pending" | "done";
   links?: { label: string; url: string }[];
+  provider: "gemini" | "openai" | "litellm";
 }) {
   await prisma.aiMensagem.create({
     data: {
@@ -113,6 +115,9 @@ async function addAssistantMessage(msg: {
       actions: msg.actions ? (msg.actions as any) : undefined,
       status: msg.status ?? "done",
       links: msg.links ? (msg.links as any) : undefined,
+      // Persistido junto com a resposta: `config.aiProvider` pode mudar depois,
+      // e o rotulo do historico tem de dizer com o que ESTA linha foi gerada.
+      provider: msg.provider,
     },
   });
 }
@@ -152,10 +157,15 @@ export default async function Page() {
   const formId = "intelligence-chat-form";
   const session = await getSession();
   const dbRows = session ? await getDisplayHistory(session.username) : [];
+  // Provedor configurado agora — vale para a mensagem que o usuario esta prestes
+  // a enviar (balao otimista), nao para o historico ja gravado.
+  const providerAtual = await getAiProvider();
   const history = dbRows.map((m) => ({
     prompt: m.promptOriginal ?? "",
     response: m.content,
-    provider: "gemini",
+    // Linhas anteriores a coluna `provider` ficam nulas. Nulo e "desconhecido" e
+    // a pilula some — nao vira "gemini".
+    provider: m.provider ?? null,
     at: m.criadoEm.toISOString(),
     actions: m.actions as any,
     status: m.status as "pending" | "done",
@@ -192,6 +202,7 @@ export default async function Page() {
             history={history}
             action={askAi}
             formId={formId}
+            currentProvider={providerAtual}
           />
         </CardContent>
       </Card>

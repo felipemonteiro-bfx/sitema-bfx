@@ -442,6 +442,12 @@ model AiMensagem {
   actions        Json?
   status         String   @default("done")
   links          Json?
+  // Provedor que gerou ESTA resposta (gemini | openai | litellm). Persistido no
+  // momento da escrita porque `config.aiProvider` muda com o tempo: ler o
+  // provedor atual na renderizacao rotularia o historico inteiro com a
+  // configuracao de hoje. Nulo nas linhas anteriores a esta coluna — e nulo
+  // significa "desconhecido", nunca "gemini" (a pilula some).
+  provider       String?
   usuario        String?  // DEPRECATED: manter para compatibilidade, usar usuarioId
   usuarioId      Int?     @map("usuario_id")
   criadoEm       DateTime @default(now()) @map("criado_em")
