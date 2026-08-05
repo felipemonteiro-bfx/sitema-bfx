@@ -49,6 +49,13 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-hover: var(--accent-hover);
   --color-destructive: var(--destructive);
+  /* Sem esta chave o Tailwind v4 nao gera `text-destructive-foreground`: a
+     classe existia em 10 call sites, nao casava com regra nenhuma e o texto
+     herdava `--foreground` (botao destrutivo a 4.04:1 claro / 3.23:1 escuro).
+     O par de tokens sempre esteve certo (4.69 / 6.09) — o que faltava era o
+     degrau da variavel ate a utilitaria. Policiado por `checkThemeCoverage`
+     em token-contrast.mjs (fase 18, achado 1). */
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-bg: var(--success-bg);

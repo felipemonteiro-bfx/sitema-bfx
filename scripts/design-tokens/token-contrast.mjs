@@ -267,6 +267,107 @@ export function checkPairs(tokens, pares) {
   return rows;
 }
 
+// --- Cobertura do @theme (fase 18, achado 1) --------------------------
+//
+// Medir o par de tokens NAO prova que a cor chega a tela. No Tailwind v4 a
+// utilitaria `text-X` so e gerada se `--color-X` estiver declarado no bloco
+// `@theme`. `--destructive-foreground` existia em `:root` e `.dark`, casava
+// 4.69/6.09 com `--destructive` e a catraca dava PASS — mas
+// `--color-destructive-foreground` nunca entrou no `@theme`, entao
+// `text-destructive-foreground` nao gerava regra nenhuma: o texto herdava
+// `--foreground` e o botao destrutivo media 4.04:1 no claro e 3.23:1 no
+// escuro, em 10 call sites.
+//
+// A diferenca e entre medir a fonte e medir o resultado. Estas funcoes
+// fecham o degrau que faltava: variavel CSS -> classe utilitaria.
+
+/**
+ * Extrai os nomes das chaves `--color-<nome>` declaradas em blocos `@theme`
+ * (com ou sem `inline`). Devolve um Set com o `<nome>` — sem o prefixo
+ * `--color-`, para casar direto com o lado de texto de `TOKEN_PAIRS`.
+ */
+export function parseThemeColorKeys(cssTexto) {
+  const clean = stripComments(cssTexto);
+  const blocos = extractTopLevelBlocks(clean);
+  const chaves = new Set();
+
+  for (const { selector, body } of blocos) {
+    if (!selector.startsWith("@theme")) continue;
+    for (const decl of body.split(";")) {
+      const trimmed = decl.trim();
+      if (!trimmed.startsWith("--color-")) continue;
+      const colonIdx = trimmed.indexOf(":");
+      if (colonIdx === -1) continue;
+      chaves.add(trimmed.slice("--color-".length, colonIdx).trim());
+    }
+  }
+
+  return chaves;
+}
+
+/**
+ * Varre textos de codigo e devolve o Set de `<nome>` usados como `text-<nome>`.
+ * Tolera variantes (`hover:`, `dark:`, `data-[...]:`), o prefixo `!` e o
+ * sufixo de opacidade (`/80`) — todos escondem o nome de um grep ingenuo.
+ *
+ * Sem `RegExp.exec` com estado (CLAUDE.md): tokeniza por `split`.
+ */
+export function collectTextColorClasses(textos) {
+  const usados = new Set();
+
+  for (const texto of textos) {
+    for (const bruto of texto.split(/[\s"'`{}()\[\],;=<>]+/)) {
+      if (!bruto) continue;
+      // ultima variante: `dark:hover:text-info` -> `text-info`
+      const partes = bruto.split(":");
+      const base = partes[partes.length - 1];
+      const semBang = base.startsWith("!") ? base.slice(1) : base;
+      if (!semBang.startsWith("text-")) continue;
+      const corpo = semBang.slice("text-".length);
+      const nome = corpo.split("/")[0]; // descarta opacidade
+      if (nome) usados.add(nome);
+    }
+  }
+
+  return usados;
+}
+
+/**
+ * Para cada par cujo lado de TEXTO aparece no codigo como `text-<nome>`,
+ * exige a chave `--color-<nome>` no `@theme`. Sem ela a utilitaria nao existe
+ * e o contraste medido no par e ficcao.
+ *
+ * Pares cujo lado de texto nunca e escrito como `text-*` (`ring`, `border`)
+ * saem da lista — nao ha utilitaria a exigir. Falta de chave e `pass: false`,
+ * nunca `skipped` (mesma regra do T-10-08: nada de falso verde).
+ */
+export function checkThemeCoverage({ themeKeys, usedAsText, pairs }) {
+  const rows = [];
+  const vistos = new Set();
+
+  for (const par of pairs) {
+    const nome = par.foreground;
+    if (vistos.has(nome)) continue;
+    if (!usedAsText.has(nome)) continue;
+    vistos.add(nome);
+
+    const temChave = themeKeys.has(nome);
+    rows.push({
+      foreground: nome,
+      label: par.label,
+      utility: `text-${nome}`,
+      pass: temChave,
+      skipped: false,
+      reason: temChave
+        ? null
+        : `\`text-${nome}\` e usada no codigo mas \`--color-${nome}\` nao esta no \`@theme\` — ` +
+          "o Tailwind nao gera a utilitaria e o texto herda a cor do pai",
+    });
+  }
+
+  return rows;
+}
+
 // --- Pares verificados --------------------------------------------------
 
 const TEXT_MIN = 4.5;
@@ -336,18 +437,50 @@ function printTable(rows) {
 
 function parseArgs(argv) {
   let cssPath = DEFAULT_CSS_PATH;
+  let srcDir = "src";
   for (const arg of argv) {
     if (arg.startsWith("--css=")) {
       cssPath = arg.slice("--css=".length);
+    } else if (arg.startsWith("--src=")) {
+      srcDir = arg.slice("--src=".length);
     } else if (arg.startsWith("--")) {
       throw new Error(`Flag desconhecida: ${arg}`);
     }
   }
-  return { cssPath };
+  return { cssPath, srcDir };
+}
+
+export const DEFAULT_SRC_DIR = "src";
+
+/** Le recursivamente os `.ts`/`.tsx` de `dir`. Devolve o conteudo de cada um. */
+function readSourceFiles(dir) {
+  const textos = [];
+  const walk = (atual) => {
+    for (const entrada of fs.readdirSync(atual, { withFileTypes: true })) {
+      const p = path.join(atual, entrada.name);
+      if (entrada.isDirectory()) {
+        if (entrada.name === "node_modules") continue;
+        walk(p);
+      } else if (p.endsWith(".ts") || p.endsWith(".tsx")) {
+        textos.push(fs.readFileSync(p, "utf8"));
+      }
+    }
+  };
+  walk(dir);
+  return textos;
+}
+
+function printCoverageTable(rows) {
+  console.log("\nutilitaria | chave exigida no @theme | resultado");
+  for (const row of rows) {
+    console.log(
+      [row.utility, `--color-${row.foreground}`, row.pass ? "PASS" : `FAIL — ${row.reason}`].join(" | ")
+    );
+  }
 }
 
 function runCli(argv) {
-  const { cssPath } = parseArgs(argv);
+  const { cssPath, srcDir } = parseArgs(argv);
   const cssText = fs.readFileSync(cssPath, "utf8");
   const tokens = parseTokens(cssText);
   const rows = checkPairs(tokens, TOKEN_PAIRS);
@@ -362,7 +495,24 @@ function runCli(argv) {
     `\nResumo: ${passed.length} passaram, ${failures.length} reprovaram, ${skipped.length} pulados (alfa/token ausente).`
   );
 
-  return failures.length > 0 ? 1 : 0;
+  // Segundo degrau: o par pode estar perfeito e a cor nunca chegar a tela.
+  let coverageFailures = [];
+  if (fs.existsSync(srcDir)) {
+    const coverage = checkThemeCoverage({
+      themeKeys: parseThemeColorKeys(cssText),
+      usedAsText: collectTextColorClasses(readSourceFiles(srcDir)),
+      pairs: TOKEN_PAIRS,
+    });
+    printCoverageTable(coverage);
+    coverageFailures = coverage.filter((r) => !r.pass);
+    console.log(
+      `\nCobertura do @theme: ${coverage.length - coverageFailures.length} de ${coverage.length} utilitarias usadas no codigo tem chave declarada.`
+    );
+  } else {
+    console.log(`\nCobertura do @theme: PULADA — diretorio '${srcDir}' nao encontrado.`);
+  }
+
+  return failures.length > 0 || coverageFailures.length > 0 ? 1 : 0;
 }
 
 const isMainModule =

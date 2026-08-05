@@ -14,6 +14,10 @@ import {
   contrastRatio,
   parseTokens,
   checkPairs,
+  parseThemeColorKeys,
+  collectTextColorClasses,
+  checkThemeCoverage,
+  TOKEN_PAIRS,
 } from "./token-contrast.mjs";
 
 // --- oklchToSrgb ------------------------------------------------------
@@ -151,4 +155,135 @@ test("checkPairs: ring/background no tema claro do globals.css atual aprova (UI-
   const rows = checkPairs(tokens, [{ foreground: "ring", background: "background", min: 3, label: "foco" }]);
   const lightRow = rows.find((r) => r.theme === "light");
   assert.equal(lightRow.pass, true, "ring/background no tema claro deveria aprovar (>=3:1) apos o plano 04");
+});
+
+// --- cobertura do @theme (fase 18, achado 1) --------------------------
+//
+// Medir o PAR DE TOKENS nao prova que a cor chega a tela. No Tailwind v4 a
+// utilitaria `text-X` so e gerada se `--color-X` estiver declarado no bloco
+// `@theme`. `--destructive-foreground` existia e casava 4.69/6.09 com
+// `--destructive` — mas `--color-destructive-foreground` nunca entrou no
+// `@theme`, entao `text-destructive-foreground` nao gerava regra nenhuma, o
+// texto herdava `--foreground` e o botao destrutivo media 3.23:1 no escuro.
+// A catraca dava PASS o tempo todo. Estes testes cobrem o degrau que faltava:
+// da variavel CSS ate a classe utilitaria.
+
+const FIXTURE_THEME_CSS = `
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --color-background: var(--background);
+  --color-destructive: var(--destructive);
+  --color-success-text: var(--success-text);
+}
+
+:root {
+  --destructive: oklch(0.57 0.24 25);
+  --destructive-foreground: oklch(0.985 0 0);
+}
+`;
+
+test("parseThemeColorKeys: le as chaves --color-* do bloco @theme", () => {
+  const keys = parseThemeColorKeys(FIXTURE_THEME_CSS);
+  assert.ok(keys.has("destructive"), "--color-destructive deveria ser reconhecida");
+  assert.ok(keys.has("success-text"), "--color-success-text deveria ser reconhecida");
+  assert.ok(keys.has("background"));
+});
+
+test("parseThemeColorKeys: ignora o que nao e --color-* e o que esta fora do @theme", () => {
+  const keys = parseThemeColorKeys(FIXTURE_THEME_CSS);
+  assert.equal(keys.has("radius-sm"), false, "--radius-sm nao e cor");
+  assert.equal(
+    keys.has("destructive-foreground"),
+    false,
+    "declarado em :root, mas ausente do @theme — nao gera utilitaria"
+  );
+});
+
+test("collectTextColorClasses: acha o nome usado em text-<nome>, com ou sem variante/opacidade", () => {
+  const usados = collectTextColorClasses([
+    'className="bg-destructive text-destructive-foreground hover:bg-destructive/90"',
+    "const x = `text-success-text/80 dark:text-info hover:text-warning`;",
+    'className="text-sm text-muted-foreground"',
+  ]);
+  assert.ok(usados.has("destructive-foreground"), "text-destructive-foreground");
+  assert.ok(usados.has("success-text"), "sufixo de opacidade nao pode esconder o nome");
+  assert.ok(usados.has("info"), "variante dark: nao pode esconder o nome");
+  assert.ok(usados.has("warning"), "variante hover: nao pode esconder o nome");
+  assert.ok(usados.has("muted-foreground"));
+  // O coletor e cru de proposito: devolve tudo que aparece como `text-*`,
+  // inclusive `text-sm`. Quem separa cor de tamanho e `checkThemeCoverage`,
+  // que so olha os nomes presentes em TOKEN_PAIRS. Manter o coletor burro
+  // evita uma lista de exclusao que envelheceria mal.
+  assert.ok(usados.has("sm"), "coletor nao filtra: quem filtra e checkThemeCoverage");
+});
+
+test("checkThemeCoverage: par usado como text-* sem chave no @theme REPROVA (nunca SKIP)", () => {
+  const rows = checkThemeCoverage({
+    themeKeys: new Set(["destructive"]),
+    usedAsText: new Set(["destructive-foreground"]),
+    pairs: [{ foreground: "destructive-foreground", background: "destructive", min: 4.5, label: "texto destrutivo" }],
+  });
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].pass, false, "sem a chave no @theme a utilitaria nao existe — tem que reprovar");
+  assert.notEqual(rows[0].skipped, true, "isso e uma reprovacao, nao um pulo");
+  assert.ok(rows[0].reason.includes("@theme"));
+});
+
+test("checkThemeCoverage: par usado como text-* COM chave no @theme aprova", () => {
+  const rows = checkThemeCoverage({
+    themeKeys: new Set(["error-foreground", "error"]),
+    usedAsText: new Set(["error-foreground"]),
+    pairs: [{ foreground: "error-foreground", background: "error", min: 4.5, label: "texto em erro" }],
+  });
+  assert.equal(rows[0].pass, true);
+});
+
+test("checkThemeCoverage: par que o codigo nao usa como text-* nao e exigido (ring, border)", () => {
+  const rows = checkThemeCoverage({
+    themeKeys: new Set([]),
+    usedAsText: new Set(["foreground"]),
+    pairs: [{ foreground: "ring", background: "background", min: 3, label: "foco" }],
+  });
+  assert.equal(rows.length, 0, "ring nunca e escrito como text-ring — nao ha utilitaria a exigir");
+});
+
+test("checkThemeCoverage: vale para TODOS os pares, nao so o destructive", () => {
+  const pairs = [
+    { foreground: "success-text", background: "card", min: 4.5, label: "sucesso" },
+    { foreground: "warning-text", background: "card", min: 4.5, label: "alerta" },
+  ];
+  const rows = checkThemeCoverage({
+    themeKeys: new Set(["success-text"]),
+    usedAsText: new Set(["success-text", "warning-text"]),
+    pairs,
+  });
+  assert.equal(rows.length, 2);
+  assert.equal(rows.find((r) => r.foreground === "success-text").pass, true);
+  assert.equal(rows.find((r) => r.foreground === "warning-text").pass, false);
+});
+
+test("INTEGRACAO: todo par de TOKEN_PAIRS usado como text-* no src tem chave no @theme real", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const root = new URL("../../", import.meta.url).pathname;
+  const css = fs.readFileSync(path.join(root, "src/app/globals.css"), "utf8");
+
+  const arquivos = [];
+  const walk = (dir) => {
+    for (const entrada of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, entrada.name);
+      if (entrada.isDirectory()) walk(p);
+      else if (p.endsWith(".ts") || p.endsWith(".tsx")) arquivos.push(fs.readFileSync(p, "utf8"));
+    }
+  };
+  walk(path.join(root, "src"));
+
+  const rows = checkThemeCoverage({
+    themeKeys: parseThemeColorKeys(css),
+    usedAsText: collectTextColorClasses(arquivos),
+    pairs: TOKEN_PAIRS,
+  });
+
+  const falhas = rows.filter((r) => !r.pass).map((r) => `text-${r.foreground}`);
+  assert.deepEqual(falhas, [], `utilitaria usada no codigo mas sem chave no @theme: ${falhas.join(", ")}`);
 });
