@@ -1,4 +1,4 @@
-# SPEC — Ícone em botão: 6 defeitos + gate de runtime
+# SPEC — Ícone em botão: 7 defeitos + gate de runtime
 
 Data: 2026-08-05 · Branch: `nextjs-migration` · Build medido em produção: `82dcc8b`
 
@@ -78,8 +78,8 @@ defeito que o usuário vê na tela.
   Afeta `/dashboard` "Filtrar", `/historico` "Filtros", `/venda-rapida` "Adicionar Produto", e mais
   12 call sites de `leftIcon`/`rightIcon`.
 - **Esperado**: 8.00px. Correção: remover `mr-2`/`ml-2` dos wrappers e do `<Loader2>`.
-- **Junto**: o `<span>` que embrulha `children` é renderizado sempre, mesmo com `children` vazio —
-  e um item flex vazio ainda consome um `gap-2`. Passa a só ser renderizado quando há conteúdo.
+- **Junto**: o `<span>` que embrulha `children` foi removido — ver D7, que é o defeito mais grave
+  desta lista e foi encontrado pelo gate, não pela revisão.
 
 ### D5 — Abas saem da tela em 390px sem pista visual
 
@@ -130,6 +130,33 @@ defeito que o usuário vê na tela.
   intencional e correta — item de lista `flex-col` de notificação, texto de várias linhas, sem
   `<svg>` dentro. A regra (e) a exclui por dois motivos independentes (direção de coluna e ausência
   de ícone), e o teste trava tanto a unicidade quanto o `flex-col`.
+
+### D7 — O `<span>` de `children` do `<Button>` partia a linha (causa raiz do D6 dentro de botão)
+
+`src/components/ui/button.tsx`
+
+Descoberto **pelo próprio gate**, ao investigar por que ele acusou 15.50px de desalinho vertical
+entre ícone e texto no "Copiar Link" de `/historico`. Sondagem dirigida em produção:
+
+```
+botão:  altura 44px   (duas linhas)
+<svg>:  top 890.5     centro 898.5
+texto:  top 905.5     "Copiar Link"
+```
+
+O ícone estava **acima** do texto, não ao lado.
+
+- **Causa**: o preflight do Tailwind declara `svg { display: block }`. O `<Button>` embrulhava
+  `children` num `<span>` sem display próprio (portanto `inline`). Um `<Button><Icone/>Texto</Button>`
+  virava então **um bloco dentro de uma caixa inline** — e bloco dentro de inline parte a linha. O
+  `whitespace-nowrap` da base não salvava, porque a quebra não era do texto: era estrutural.
+  Enquanto o ícone é filho direto do botão (`leftIcon`, ou `size="icon"`), ele é item flex e tudo
+  funciona; o embrulho era o que o tirava do contexto flex.
+- **Esperado**: ícone e texto na mesma linha, separados pelo `gap-2` da base.
+- **Correção**: `children` vai direto, sem `<span>` — é o que o shadcn/ui faz. O `<span>` só aparece
+  para esconder o rótulo durante `loading`, e ali é `inline-flex` pelo mesmo motivo.
+- **Alcance**: todo `<Button>` cujos filhos misturem ícone e texto sem usar `leftIcon`/`rightIcon`.
+  O gate mediu em produção: "Copiar Link" (10 ocorrências) e "Planilha" (4).
 
 ### Bônus — `/importacao` em 390px
 

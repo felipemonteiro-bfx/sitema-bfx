@@ -909,9 +909,13 @@ export default function VendaRapidaFormV2({
 
       {/* Seção 3: Produtos */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        {/* `flex-wrap` + `shrink-0`: em 390px o botao "Adicionar Produto" ao
+            lado espremia o titulo, que quebrava em duas linhas e ainda
+            comprimia o carrinho — medido `h-5 w-5` declarado, 17.69x20.00
+            renderizado. Com a linha podendo quebrar, o titulo fica inteiro. */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5 text-primary" />
+            <ShoppingCart className="h-5 w-5 shrink-0 text-primary" />
             Produtos da Venda
           </h3>
           <Button

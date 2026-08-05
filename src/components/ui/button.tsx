@@ -34,9 +34,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   }, ref) => {
     const Comp = asChild ? Slot : "button"
     const isDisabled = disabled || loading
-    const temConteudo =
-      (loading && Boolean(loadingText)) ||
-      (children !== null && children !== undefined && children !== false && children !== "")
 
     if (asChild) {
       return (
@@ -60,19 +57,32 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isDisabled}
         {...props}
       >
-        {/* Sem `mr-2`/`ml-2`: a base do buttonVariants ja aplica `gap-2`, e os
-            dois somavam — medido 16.00px entre icone e texto onde a escala do
-            design system pede 8. E o `<span>` de children so e renderizado
-            quando ha o que renderizar: item flex vazio ainda consome um `gap-2`
-            e deixa um recuo fantasma no fim do botao. */}
+        {/* `children` vai DIRETO, sem <span> de embrulho.
+            O embrulho era a causa raiz da quebra de linha dentro do botao: o
+            preflight do Tailwind declara `svg { display: block }`, entao um
+            <Button><Icone/>Texto</Button> tinha o icone virando um BLOCO dentro
+            de um <span> inline — e bloco dentro de inline parte a linha. Medido
+            em producao no "Copiar Link" de /historico: botao de 44px de altura,
+            <svg> em top 890.5 e o texto em top 905.5. Duas linhas. O
+            `whitespace-nowrap` da base nao salvava, porque a quebra nao era do
+            texto: era estrutural.
+            Sem o <span>, o <svg> volta a ser item flex do proprio botao, ao lado
+            do texto, e o `gap-2` da base os separa.
+            O <span> so aparece para esconder o rotulo durante o loading, e ai
+            precisa ser `inline-flex` pelo mesmo motivo.
+
+            Tambem nao ha mais `mr-2`/`ml-2` nos wrappers de icone: a base ja tem
+            `gap-2` e os dois somavam — medido 16.00px onde a escala pede 8. */}
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         {!loading && leftIcon && (
           <span className="inline-flex shrink-0 items-center justify-center">{leftIcon}</span>
         )}
-        {temConteudo && (
-          <span className={cn(loading && !loadingText && "opacity-0")}>
-            {loading && loadingText ? loadingText : children}
-          </span>
+        {loading && !loadingText ? (
+          <span className="inline-flex items-center gap-2 opacity-0">{children}</span>
+        ) : loading ? (
+          loadingText
+        ) : (
+          children
         )}
         {!loading && rightIcon && (
           <span className="inline-flex shrink-0 items-center justify-center">{rightIcon}</span>

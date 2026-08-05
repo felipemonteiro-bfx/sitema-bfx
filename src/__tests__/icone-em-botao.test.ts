@@ -95,8 +95,16 @@ describe("D4 — um unico gap entre icone e texto do botao", () => {
     expect(fonte.includes('<Loader2 className="mr-2')).toBe(false);
   });
 
-  it("nao renderiza o span de children vazio — item flex vazio ainda consome um gap", () => {
-    expect(fonte.includes("temConteudo")).toBe(true);
+  it("nao embrulha children num <span> — era a causa raiz da quebra de linha no botao", () => {
+    // O preflight do Tailwind declara `svg { display: block }`. Com o embrulho,
+    // um <Button><Icone/>Texto</Button> punha um BLOCO dentro de um <span>
+    // inline, e bloco dentro de inline parte a linha: medido no "Copiar Link"
+    // de /historico, botao de 44px com o <svg> em top 890.5 e o texto em 905.5.
+    // O `whitespace-nowrap` da base nao salvava — a quebra nao era do texto.
+    expect(fonte.includes('<span className={cn(loading && !loadingText && "opacity-0")}>')).toBe(false);
+    // o unico <span> que sobra e o de esconder o rotulo durante o loading,
+    // e ele e inline-flex pelo mesmo motivo
+    expect(fonte.includes('<span className="inline-flex items-center gap-2 opacity-0">{children}</span>')).toBe(true);
   });
 });
 

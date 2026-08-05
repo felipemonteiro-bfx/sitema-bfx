@@ -259,10 +259,17 @@ const COLETOR = () => {
     return partes.join(" > ");
   }
 
+  // `sr-only` do Tailwind e o padrao de leitor de tela: 1x1 recortado com
+  // `clip-path`. O texto existe no DOM, e invisivel na tela, e media 1.00:1 de
+  // contraste — 21 falsos positivos na primeira varredura de producao. Contraste
+  // de algo que ninguem ve nao e defeito. Qualquer dimensao de 1px ou menos
+  // reprova o teste de visibilidade, o que cobre `sr-only` e as variacoes dele.
   function visivel(el, r) {
-    if (r.width < 1 && r.height < 1) return false;
+    if (r.width <= 1 || r.height <= 1) return false;
     const cs = getComputedStyle(el);
-    return cs.display !== "none" && cs.visibility !== "hidden" && cs.opacity !== "0";
+    if (cs.display === "none" || cs.visibility === "hidden" || cs.opacity === "0") return false;
+    const recorte = cs.clipPath || "none";
+    return recorte === "none" || recorte === "auto";
   }
 
   function cadeiaDeFundo(el) {
