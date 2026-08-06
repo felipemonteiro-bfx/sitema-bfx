@@ -62,3 +62,8 @@ k8s/secret.yaml
 bfx_sistema.db
 *.tmp*
 whatsapp-qrcode.html
+
+# Projeto unificado em yarn (Dockerfile e CI usam yarn.lock).
+# package-lock.json aqui recria a divergencia que fazia o CI validar um
+# conjunto de dependencia e a producao rodar outro.
+package-lock.json

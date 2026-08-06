@@ -28,25 +28,34 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+          cache: "yarn"
 
+      # O Dockerfile que constroi a imagem de producao instala com
+      # `yarn install --frozen-lockfile` sobre o yarn.lock. Enquanto o CI usava
+      # `npm ci || npm install` sobre o package-lock.json, os dois validavam
+      # conjuntos DIFERENTES de dependencia — e o dependabot so atualiza o
+      # yarn.lock, entao a atualizacao chegava em producao sem passar pelo CI.
+      # Era exatamente o caso do PR do Prisma 7. Agora o CI instala igual a
+      # producao, com o mesmo lock.
       - name: Install dependencies
-        run: npm ci || npm install
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Cor crua (catraca)
-        run: npm run cores:check
+        run: yarn cores:check
 
       - name: Contraste de tokens
-        run: npm run contraste:check
+        run: yarn contraste:check
 
       - name: Generate Prisma Client
-        run: npx prisma generate
+        run: yarn prisma generate
 
       - name: Test
-        run: npx vitest run
+        run: yarn vitest run
 
       - name: Build
-        run: npm run build
+        run: yarn build
