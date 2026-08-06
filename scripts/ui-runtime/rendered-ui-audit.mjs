@@ -376,6 +376,20 @@ const COLETOR = () => {
   }
 
   const wraps = [];
+  // Conteudo posicionado fora do fluxo nao participa da linha do controle: um
+  // badge `absolute -top-1 -right-1` DEVE ficar deslocado do icone, e' o que ele
+  // e'. Sem esta guarda o sino de notificacoes acusava desalinho em todas as 88
+  // paginas — 84 dos 84 achados de CONTENT_WRAP eram esse mesmo falso positivo,
+  // e um gate que grita onde nao ha defeito para de ser lido.
+  const foraDoFluxo = (el, limite) => {
+    let atual = el;
+    while (atual && atual !== limite) {
+      const pos = getComputedStyle(atual).position;
+      if (pos === "absolute" || pos === "fixed") return true;
+      atual = atual.parentElement;
+    }
+    return false;
+  };
   for (const c of containers) {
     const cs = getComputedStyle(c);
     const textRects = [];
@@ -388,7 +402,7 @@ const COLETOR = () => {
       if (conteudo && pai) {
         const pcs = getComputedStyle(pai);
         const classePai = pai.getAttribute("class") || "";
-        if (pcs.display !== "none" && pcs.visibility !== "hidden" && !classePai.includes("sr-only")) {
+        if (pcs.display !== "none" && pcs.visibility !== "hidden" && !classePai.includes("sr-only") && !foraDoFluxo(pai, c)) {
           const faixa = document.createRange();
           faixa.selectNodeContents(no);
           for (const r of faixa.getClientRects()) {
@@ -406,6 +420,7 @@ const COLETOR = () => {
     for (const s of c.querySelectorAll("svg")) {
       const r = s.getBoundingClientRect();
       if (!visivel(s, r)) continue;
+      if (foraDoFluxo(s, c)) continue;
       iconCenters.push(+(r.top + r.height / 2).toFixed(2));
     }
     if (iconCenters.length === 0) continue;
