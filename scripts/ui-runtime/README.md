@@ -119,6 +119,24 @@ npm run ui:runtime -- --update-baseline
 git diff scripts/ui-runtime/baseline.json
 ```
 
+### Por que ele continua vazio
+
+A varredura contra o build `f754f76` deu **26 CONTRAST + 2 DOC_OVERFLOW**, 88 de 88 páginas.
+Quatro dos CONTRAST eram falso positivo do próprio gate (o `<svg>` do gráfico, ver a lista abaixo) e
+saíram pela regra. Os **24 restantes eram defeito de verdade e foram corrigidos no código** — nenhum
+foi para o baseline.
+
+Isso importa porque o alvo padrão do gate é **produção**, não o working tree. Enquanto o deploy não
+alcança o branch, uma nova varredura ainda acusa esses 24: eles descrevem o que está no ar, não o
+que está no repositório. **Não semeie o baseline com eles.** Congelar um defeito já corrigido no
+código é pior que não ter baseline nenhum — o dia em que ele regredir de verdade, o gate fica calado.
+
+Cada um dos 24 foi conferido antes de ser dado por fechado: nos que a correção troca só a cor do
+texto, recalculando contra o `fundo` que o navegador **mediu**; nos que ela troca o fundo, contra o
+token novo pelo conversor de `scripts/design-tokens/`; e os dois de rolagem, medindo no navegador
+com a correção aplicada à página de produção (393 → 390 nos dois temas, e as 22 rotas varridas em
+390px para garantir que o `shrink-0` novo não estoura em nenhuma outra).
+
 ## O que este gate NÃO cobre
 
 Ser explícito aqui é parte do contrato — um gate cujo alcance ninguém conhece vira falsa sensação de
