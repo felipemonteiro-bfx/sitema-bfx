@@ -74,6 +74,12 @@ rendered-ui-audit.mjs   →  navegador  →  snapshot serializável  →  render
 reproduzem número por número o que foi medido em produção. **O CI verifica a lógica do gate mesmo
 sem navegador.**
 
+Essa fronteira é literal, não retórica: o coletor entrega **evidência**, nunca veredito. Para a
+isenção de gráfico ele devolve o que cada descendente do `<svg>` *declara* (`fill`, `stroke`,
+`style`, se renderiza) e nada mais — quem decide o que aquilo significa é `ehGraficoComposto`, na
+camada pura, onde o `vitest` alcança. Um escalar já classificado ali dentro colocaria a regra no
+único lado que nenhum teste vê.
+
 A conversão de cor acontece dentro da página, com `canvas.fillStyle` + `getImageData`: é o motor do
 próprio Chromium resolvendo `lab()`, `oklch()` e `color(srgb …)`. Nenhuma conversão de espaço de cor
 é reimplementada aqui. A composição de alfa sobre a cadeia de ancestrais e a razão WCAG ficam na
@@ -156,17 +162,29 @@ compilador nunca leu, e por quatro fases pareceu cobertura).
   `nao verificados` no fim do relatório mostra quantos foram — leia-o.
 - **`opacity` de ancestral não é composta** no cálculo de contraste. Um texto dentro de um bloco
   `opacity-50` é medido pela cor dele, não pela cor final.
-- **Gráfico não é medido — nem o todo, nem as partes.** Um `<svg>` cujos descendentes têm pintura
-  própria (`fill`/`stroke` no próprio elemento) é um gráfico composto, não um glifo. O modelo da
-  regra (a) — *uma* cor de traço contra *um* fundo — só descreve ícone monocromático: no lucide a
-  raiz traz `stroke="currentColor"` e todo `<path>` herda dela. O `<svg class="recharts-surface">`
-  não declara `fill` nem `stroke`, então o que se mediria ali é o valor **inicial** de `fill` do SVG
-  (`black`) — uma cor que não pinta um pixel. Era daí que saíam 1.10:1 em `/dashboard` e
-  `/comissoes` no escuro. A WCAG 2.1 SC 1.4.11 pede 3:1 para *partes* de gráfico, cada uma contra a
-  cor adjacente **dela**; este gate não desce até a parte, então declara em `não verificados` — o
-  contador no fim do relatório mostra quantos foram. O critério é estrutural de propósito: isentar
-  por `aria-hidden` isentaria todo ícone do sistema (o lucide marca todos), e isentar por tamanho ou
-  por "tem texto do lado" apagaria o ícone de sidebar a 1.00:1 que motivou este gate.
+- **Gráfico não é medido — nem o todo, nem as partes.** Um `<svg>` com ao menos um descendente que
+  pinta a si mesmo é um gráfico composto, não um glifo. O modelo da regra (a) — *uma* cor de traço
+  contra *um* fundo — só descreve ícone monocromático: no lucide a raiz traz `stroke="currentColor"`
+  e todo `<path>` herda dela. O `<svg class="recharts-surface">` não declara `fill` nem `stroke`,
+  então o que se mediria ali é o valor **inicial** de `fill` do SVG (`black`) — uma cor que não
+  pinta um pixel. Era daí que saíam 1.10:1 em `/dashboard` e `/comissoes` no escuro. A WCAG 2.1
+  SC 1.4.11 pede 3:1 para *partes* de gráfico, cada uma contra a cor adjacente **dela**; este gate
+  não desce até a parte, então declara em `não verificados`, com o motivo discriminado no relatório.
+
+  O limiar é **um**, e não "muitos", porque o número que separa gráfico de glifo é **zero**: glifo
+  monocromático bem formado não tem nenhum descendente com cor própria. O rigor mora em *o que
+  conta* como cor própria — `currentColor`, `inherit`, `none` e `transparent` não contam (são
+  justamente a declaração de que se pinta com a cor herdada), `stroke-width`/`fill-opacity`/
+  `transition: fill` não contam, e nada dentro de `<defs>`/`<clipPath>`/`<mask>` conta, porque não
+  pinta pixel. Cada um desses seria uma isenção a mais, e isenção a mais é o único erro caro aqui.
+  Todos têm caso em `gate-ui-runtime.test.ts`.
+
+  Isentar por `aria-hidden` isentaria todo ícone do sistema (o lucide marca todos), e isentar por
+  tamanho ou por "tem texto do lado" apagaria o ícone de sidebar a 1.00:1 que motivou este gate.
+- **A evidência de pintura vem por atributo, não por folha de estilo.** Se um dia o Recharts pintar
+  eixo e barra por regra CSS em vez de atributo de apresentação, a lista chega vazia e o gráfico
+  volta a ser julgado — ou seja, os 1.10:1 **voltam a aparecer**. É a direção segura de falhar
+  (alarme visível, não silêncio), mas é uma dependência de terceiro que nenhum teste cobre.
 - **A regra (e) exige um `<svg>`.** Um "ícone" que na verdade é um `<span>` redondo (como o ponto da
   pílula de ponto de equilíbrio em `/financeiro`) não é visto.
 - **Tamanho de ícone atrás de prefixo responsivo/estado** (`sm:h-5`, `dark:size-6`) é marcado como

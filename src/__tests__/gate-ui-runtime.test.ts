@@ -480,7 +480,34 @@ describe("(a) grafico composto nao e icone — o <svg> raiz nao e a unidade que 
    *
    * Por isso isso vai para `naoVerificados`, nao para o vazio: o gate nunca
    * mente sobre o que deixou de medir (README, "Degradacao").
+   *
+   * TODO caso deste bloco passa `naoVerificados`, inclusive os que esperam
+   * ACHADO. Sem isso os testes confundiriam duas variaveis — "tem parte com
+   * pintura propria" e "o chamador passou a opcao" — e uma implementacao que
+   * isentasse TODO icone sempre que a opcao existisse passaria verde, enquanto
+   * na producao (que sempre passa) a regra (a) viraria letra morta.
    */
+  const parte = (over: Record<string, unknown> = {}) => ({
+    fill: null,
+    stroke: null,
+    style: "",
+    renderiza: true,
+    ...over,
+  });
+
+  const glifoInvisivel = {
+    // Mesmo 1.00:1 do par cruzado entre familias de token: `--sidebar-foreground`
+    // renderizado sobre o `--background` global. E o defeito que motivou o gate.
+    path: "button > svg.lucide.lucide-house",
+    kind: "icon",
+    sample: "",
+    fontSizePx: 16,
+    fontWeight: 400,
+    color: [250, 250, 250, 1] as Rgba,
+    bgChain: [[0, 0, 0, 0] as Rgba, [250, 250, 250, 1] as Rgba],
+    pinturaDosDescendentes: [] as unknown[],
+  };
+
   const graficoComposto = {
     path: "div.recharts-wrapper > svg.recharts-surface",
     kind: "icon",
@@ -489,85 +516,124 @@ describe("(a) grafico composto nao e icone — o <svg> raiz nao e a unidade que 
     fontWeight: 400,
     color: [0, 0, 0, 1] as Rgba,
     bgChain: [[9, 16, 24, 1] as Rgba],
-    partesComPinturaPropria: 37,
+    // `<line stroke="var(--border)">`, exatamente como o Recharts emite.
+    pinturaDosDescendentes: [parte({ stroke: "var(--border)" }), parte({ fill: "#22c55e" })],
   };
 
-  it("nao acusa o <svg> do grafico inteiro, e declara que nao verificou", () => {
+  /** Roda o snapshot sempre com `naoVerificados`, como a producao faz. */
+  function analisar(texts: unknown[], theme = "light") {
     const naoVerificados: { path: string; motivo: string }[] = [];
-    const achados = analyzeSnapshot(snapshotBase({ theme: "dark", texts: [graficoComposto] }), {
+    const achados = analyzeSnapshot(snapshotBase({ theme, texts }), { naoVerificados });
+    return {
+      contrastes: achados.filter((f: { rule: string }) => f.rule === "CONTRAST"),
       naoVerificados,
-    });
+    };
+  }
 
-    expect(achados.filter((f: { rule: string }) => f.rule === "CONTRAST")).toHaveLength(0);
-    expect(naoVerificados).toHaveLength(1);
-    expect(naoVerificados[0].path).toContain("recharts-surface");
-    expect(naoVerificados[0].motivo).toContain("partes");
+  it("nao acusa o <svg> do grafico inteiro, e declara que nao verificou", () => {
+    const r = analisar([graficoComposto], "dark");
+    expect(r.contrastes).toHaveLength(0);
+    expect(r.naoVerificados).toHaveLength(1);
+    expect(r.naoVerificados[0].path).toContain("recharts-surface");
+    expect(r.naoVerificados[0].motivo).toContain("grafico composto");
   });
 
   it("a isencao NAO engole o icone monocromatico invisivel — o defeito que o gate existe para pegar", () => {
-    // Mesmo 1.00:1 do par cruzado entre familias de token, agora com o campo
-    // presente e ZERADO: glifo lucide nenhum tem descendente com pintura
-    // propria (`<path>` sem `fill`/`stroke`, herdando `stroke="currentColor"`
-    // da raiz). Se a isencao fosse por `aria-hidden`, por tamanho ou por
-    // "tem texto do lado", este achado sumiria — e ele e a razao de ser da
-    // regra (a).
-    const achados = analyzeSnapshot(
-      snapshotBase({
-        texts: [
-          {
-            path: "button > svg.lucide.lucide-house",
-            kind: "icon",
-            sample: "",
-            fontSizePx: 16,
-            fontWeight: 400,
-            color: [250, 250, 250, 1],
-            bgChain: [
-              [0, 0, 0, 0],
-              [250, 250, 250, 1],
-            ],
-            partesComPinturaPropria: 0,
-          },
-        ],
-      })
-    );
-    const a = achados.filter((f: { rule: string }) => f.rule === "CONTRAST");
-    expect(a).toHaveLength(1);
-    expect(a[0].measured).toContain("1.00");
+    // Glifo lucide: nenhum descendente com pintura propria. Se a isencao fosse
+    // por `aria-hidden`, por tamanho, por "tem texto do lado" — ou por o
+    // chamador ter passado `naoVerificados` — este achado sumiria.
+    const r = analisar([glifoInvisivel]);
+    expect(r.contrastes).toHaveLength(1);
+    expect(r.contrastes[0].measured).toContain("1.00");
+    expect(r.naoVerificados).toHaveLength(0);
   });
 
-  it("snapshot sem o campo continua sendo julgado — a isencao nunca vale por omissao", () => {
-    // Compatibilidade: coletor antigo (ou qualquer caminho que nao preencha o
-    // campo) NAO ganha isencao de graca. Ausencia de dado nao e prova de
-    // ausencia de defeito.
-    const achados = analyzeSnapshot(
-      snapshotBase({
-        texts: [{ ...graficoComposto, partesComPinturaPropria: undefined }],
-      })
-    );
-    expect(achados.filter((f: { rule: string }) => f.rule === "CONTRAST")).toHaveLength(1);
+  it("UMA parte com pintura propria ja isenta — a fronteira do limiar", () => {
+    // O limiar e 1, nao 37. Um teste que so usasse 37 deixaria passar `>= 37`,
+    // `> 30` e `=== 37`, e 1 e justamente o numero que qualquer contagem a mais
+    // produz.
+    const r = analisar([
+      { ...glifoInvisivel, pinturaDosDescendentes: [parte({ fill: "#ff0000" })] },
+    ]);
+    expect(r.contrastes).toHaveLength(0);
+    expect(r.naoVerificados).toHaveLength(1);
+  });
+
+  it("`currentColor` no filho NAO e pintura propria — e o caso monocromatico", () => {
+    // Um filho que declara `fill="currentColor"` diz que pinta com a cor
+    // HERDADA. Conta-lo isentaria o glifo inteiro — o oposto do objetivo.
+    for (const valor of ["currentColor", "CURRENTCOLOR", "inherit", "none", "transparent"]) {
+      const r = analisar([
+        { ...glifoInvisivel, pinturaDosDescendentes: [parte({ fill: valor }), parte({ stroke: valor })] },
+      ]);
+      expect(r.contrastes, `fill/stroke="${valor}"`).toHaveLength(1);
+      expect(r.naoVerificados, `fill/stroke="${valor}"`).toHaveLength(0);
+    }
+  });
+
+  it("propriedade de estilo que so PARECE pintura nao isenta", () => {
+    // `stroke-width`, `stroke-dasharray`, `fill-opacity` e uma transicao contem
+    // "fill"/"stroke" e nao pintam nada. `fill:none` e declaracao explicita de
+    // NAO pintar e tem que cair do mesmo lado que o atributo `fill="none"`.
+    for (const estilo of [
+      "stroke-width:2",
+      "stroke-dasharray:3 3",
+      "fill-opacity:.5",
+      "transition: fill .2s",
+      "--icone-fill: red",
+      "fill:none",
+      "stroke: none",
+    ]) {
+      const r = analisar([
+        { ...glifoInvisivel, pinturaDosDescendentes: [parte({ style: estilo })] },
+      ]);
+      expect(r.contrastes, `style="${estilo}"`).toHaveLength(1);
+      expect(r.naoVerificados, `style="${estilo}"`).toHaveLength(0);
+    }
+  });
+
+  it("estilo inline que E pintura isenta", () => {
+    const r = analisar([
+      { ...glifoInvisivel, pinturaDosDescendentes: [parte({ style: "fill:#123456;stroke-width:2" })] },
+    ]);
+    expect(r.contrastes).toHaveLength(0);
+    expect(r.naoVerificados).toHaveLength(1);
+  });
+
+  it("pintura dentro de <defs>/<clipPath> nao isenta — nao pinta pixel nenhum", () => {
+    const r = analisar([
+      { ...glifoInvisivel, pinturaDosDescendentes: [parte({ fill: "#000", renderiza: false })] },
+    ]);
+    expect(r.contrastes).toHaveLength(1);
+    expect(r.naoVerificados).toHaveLength(0);
+  });
+
+  it("snapshot sem a evidencia continua sendo julgado — a isencao nunca vale por omissao", () => {
+    // Coletor antigo, ou qualquer caminho que nao preencha o campo, NAO ganha
+    // isencao de graca. Ausencia de dado nao e prova de ausencia de defeito.
+    const semCampo = { ...glifoInvisivel } as Record<string, unknown>;
+    delete semCampo.pinturaDosDescendentes;
+    const r = analisar([semCampo]);
+    expect(r.contrastes).toHaveLength(1);
+    expect(r.naoVerificados).toHaveLength(0);
   });
 
   it("a isencao vale so para grafico — texto com o mesmo campo continua medido", () => {
-    // Blindagem contra o campo virar chave-mestra: `partesComPinturaPropria` so
-    // faz sentido em `<svg>`. Se um dia ele aparecer num item de texto, o texto
-    // continua sendo medido pelos 4.5:1 dele.
-    const achados = analyzeSnapshot(
-      snapshotBase({
-        texts: [
-          {
-            path: "p",
-            kind: "text",
-            sample: "Total",
-            fontSizePx: 14,
-            fontWeight: 400,
-            color: [120, 120, 120, 1],
-            bgChain: [[255, 255, 255, 1]],
-            partesComPinturaPropria: 37,
-          },
-        ],
-      })
-    );
-    expect(achados.filter((f: { rule: string }) => f.rule === "CONTRAST")).toHaveLength(1);
+    // Blindagem contra o campo virar chave-mestra: ele so faz sentido em `<svg>`.
+    const r = analisar([
+      {
+        path: "p",
+        kind: "text",
+        sample: "Total",
+        fontSizePx: 14,
+        fontWeight: 400,
+        color: [120, 120, 120, 1] as Rgba,
+        bgChain: [[255, 255, 255, 1] as Rgba],
+        pinturaDosDescendentes: [parte({ fill: "#22c55e" })],
+      },
+    ]);
+    expect(r.contrastes).toHaveLength(1);
+    expect(r.naoVerificados).toHaveLength(0);
   });
 });
 

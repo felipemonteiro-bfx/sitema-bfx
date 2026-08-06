@@ -265,8 +265,49 @@ function contexto(snapshot) {
 }
 
 /**
- * Um `<svg>` cujos DESCENDENTES tem pintura propria e um GRAFICO COMPOSTO, nao
- * um glifo — e a regra (a) nao sabe julga-lo.
+ * Valores de `fill`/`stroke` que NAO sao pintura propria.
+ *
+ * `currentcolor` e o caso que mais importa e o menos obvio: um filho que declara
+ * `fill="currentColor"` esta dizendo que pinta com a cor HERDADA — exatamente o
+ * caso monocromatico que a regra (a) julga certo. Conta-lo como pintura propria
+ * isentaria o glifo inteiro, que e o oposto do que se quer.
+ */
+const PINTURA_INERTE = new Set(["", "none", "currentcolor", "inherit", "transparent", "unset", "initial"]);
+
+function pinturaInerte(valor) {
+  if (valor === null || valor === undefined) return true;
+  return PINTURA_INERTE.has(String(valor).trim().toLowerCase());
+}
+
+/**
+ * `true` quando ESTE descendente pinta a si mesmo com uma cor que nao veio da
+ * raiz. Le atributo de apresentacao e declaracao inline, e ignora quem nao
+ * renderiza.
+ *
+ * A analise das declaracoes inline e por `split(";")` + `split(":")`, nao por
+ * substring: `stroke-width`, `stroke-dasharray`, `fill-opacity` e
+ * `transition: fill .2s` contem "fill"/"stroke" e nao pintam nada. E
+ * `style="fill:none"` — declaracao explicita de NAO pintar — precisa cair no
+ * mesmo lado que o atributo `fill="none"`, que ja era tratado. Cada um desses
+ * seria uma isencao a mais, e isencao a mais e o unico erro caro aqui.
+ */
+export function pintaComCorPropria(parte) {
+  if (!parte || parte.renderiza === false) return false;
+  if (!pinturaInerte(parte.fill)) return true;
+  if (!pinturaInerte(parte.stroke)) return true;
+  for (const decl of String(parte.style || "").split(";")) {
+    const corte = decl.indexOf(":");
+    if (corte < 0) continue;
+    const prop = decl.slice(0, corte).trim().toLowerCase();
+    if (prop !== "fill" && prop !== "stroke") continue;
+    if (!pinturaInerte(decl.slice(corte + 1))) return true;
+  }
+  return false;
+}
+
+/**
+ * Um `<svg>` com ao menos um descendente que pinta a si mesmo e um GRAFICO
+ * COMPOSTO, nao um glifo — e a regra (a) nao sabe julga-lo.
  *
  * O modelo da regra (a) e "uma cor de traco contra um fundo". Isso so vale para
  * um icone monocromatico: no lucide a raiz traz `stroke="currentColor"` e todo
@@ -283,14 +324,26 @@ function contexto(snapshot) {
  * entender o conteudo" — a unidade e a PARTE, cada uma contra a cor adjacente
  * DELA. Julgar o container e categoria errada, nao rigor a mais.
  *
- * O criterio e estrutural de proposito. As alternativas testadas seriam buracos
- * largos: isentar por `aria-hidden` isentaria TODO icone do sistema (o lucide
- * marca todos), e isentar por tamanho ou por "tem texto do lado" apagaria o
- * icone de sidebar a 1.00:1 que motivou este gate. "Tem parte com pintura
- * propria" separa exatamente grafico de glifo, e nada mais.
+ * **Por que o limiar e UM e nao "muitos".** O numero que separa grafico de
+ * glifo nao e 37, e ZERO: um glifo monocromatico bem formado nao tem NENHUM
+ * descendente com cor propria — foi conferido em todos os `<svg>` inline deste
+ * repo e em todos os icones lucide das paginas varridas. Exigir 4 ou 10 partes
+ * seria escolher um numero sem lastro e abrir um buraco novo, o do grafico
+ * pequeno julgado como icone. O rigor mora em `pintaComCorPropria`, que decide
+ * o que conta — nao num piso arbitrario.
+ *
+ * O criterio e estrutural de proposito. As alternativas seriam buracos largos:
+ * isentar por `aria-hidden` isentaria TODO icone do sistema (o lucide marca
+ * todos), e isentar por tamanho ou por "tem texto do lado" apagaria o icone de
+ * sidebar a 1.00:1 que motivou este gate.
+ *
+ * Sem evidencia nenhuma no snapshot, NAO isenta: ausencia de dado nunca e
+ * prova de ausencia de defeito.
  */
-function ehGraficoComposto(item) {
-  return Number(item.partesComPinturaPropria) > 0;
+export function ehGraficoComposto(item) {
+  const partes = item && item.pinturaDosDescendentes;
+  if (!Array.isArray(partes)) return false;
+  return partes.some(pintaComCorPropria);
 }
 
 function minimoDeContraste(item) {
@@ -462,11 +515,12 @@ export function analyzeSnapshot(snapshot, options = {}) {
     const cor = normalizarCamada({ rgba: item.color });
     if (!cor) continue;
     if (item.kind === "icon" && ehGraficoComposto(item)) {
+      const partes = item.pinturaDosDescendentes.filter(pintaComCorPropria).length;
       if (naoVerificados) {
         naoVerificados.push({
           ...ctx,
           path: item.path,
-          motivo: `grafico composto: ${Number(item.partesComPinturaPropria)} partes com pintura propria`,
+          motivo: `grafico composto: ${partes}${item.pinturaTruncada ? "+" : ""} partes com pintura propria`,
         });
       }
       continue;

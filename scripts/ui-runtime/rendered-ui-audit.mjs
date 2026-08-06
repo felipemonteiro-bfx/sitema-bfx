@@ -338,24 +338,38 @@ const COLETOR = () => {
     const cs = getComputedStyle(s);
     const traco = cs.stroke && cs.stroke !== "none" ? cs.stroke : cs.fill && cs.fill !== "none" ? cs.fill : cs.color;
     const cor = paraRgba(traco);
-    // Quantos descendentes pintam a si mesmos. Num glifo lucide isto e ZERO —
-    // os `<path>` nao declaram nada e herdam o `stroke="currentColor"` da raiz,
-    // entao a cor da raiz e a cor na tela. Num `<svg class="recharts-surface">`
-    // sao dezenas (eixos, barras, rotulos), e a cor da raiz nao pinta nada.
-    // Quem decide o que fazer com o numero e a camada pura; aqui so se conta.
-    let partesComPinturaPropria = 0;
-    for (const d of s.querySelectorAll("*")) {
-      const df = d.getAttribute("fill");
-      const ds = d.getAttribute("stroke");
-      const estilo = d.getAttribute("style") || "";
-      if ((df && df !== "none") || (ds && ds !== "none") || estilo.includes("fill") || estilo.includes("stroke")) {
-        partesComPinturaPropria += 1;
-      }
-    }
     if (!cor) {
       naoParseaveis.push({ path: p, valor: String(traco).slice(0, 40), onde: "stroke/fill do <svg>" });
     } else if (cor[3] > 0) {
       const fundo = cadeiaDeFundo(s.parentElement || s);
+      // O que os DESCENDENTES declaram de pintura — evidencia crua, sem
+      // veredito. Num glifo lucide esta lista sai VAZIA: os `<path>` nao
+      // declaram nada e herdam o `stroke="currentColor"` da raiz, entao a cor
+      // da raiz e a cor na tela. Num `<svg class="recharts-surface">` ela vem
+      // cheia (eixos, barras, rotulos), e a cor da raiz nao pinta nada.
+      //
+      // Quem classifica e `ehGraficoComposto`, na camada pura — que roda no
+      // vitest sem navegador. Decidir aqui o que "conta como pintura propria"
+      // colocaria a regra no unico lado que nenhum teste alcanca, e e onde uma
+      // isencao larga demais passaria despercebida.
+      const pintura = [];
+      let truncada = false;
+      for (const desc of s.querySelectorAll("*")) {
+        if (pintura.length >= 32) { truncada = true; break; }
+        const dFill = desc.getAttribute("fill");
+        const dStroke = desc.getAttribute("stroke");
+        const dStyle = desc.getAttribute("style") || "";
+        if (dFill === null && dStroke === null && !dStyle.includes("fill") && !dStyle.includes("stroke")) continue;
+        pintura.push({
+          fill: dFill,
+          stroke: dStroke,
+          style: dStyle.slice(0, 120),
+          // `<defs>`, `<clipPath>`, `<mask>` e afins nao pintam pixel nenhum.
+          // Um `<clipPath><path fill="black">` dentro de um glifo monocromatico
+          // e invisivel na tela e nao pode isentar coisa alguma.
+          renderiza: !desc.closest("defs, clipPath, mask, symbol, marker, pattern"),
+        });
+      }
       registrar(textos, "ico|" + p + "|" + cor.join(",") + "|" + JSON.stringify(fundo[fundo.length - 1] || null), {
         path: p,
         kind: "icon",
@@ -364,7 +378,8 @@ const COLETOR = () => {
         fontWeight: 400,
         color: cor,
         bgChain: fundo,
-        partesComPinturaPropria,
+        pinturaDosDescendentes: pintura,
+        pinturaTruncada: truncada,
       });
     }
   }
@@ -655,7 +670,11 @@ async function principal() {
     await navegador.close();
   }
 
-  if (op.json) fs.writeFileSync(op.json, JSON.stringify(achados, null, 1) + "\n");
+  // `naoVerificados` entra junto: sem ele o arquivo diz o que o gate achou e
+  // omite o que ele deixou de olhar, que e metade da informacao.
+  if (op.json) {
+    fs.writeFileSync(op.json, JSON.stringify({ achados, naoVerificados }, null, 1) + "\n");
+  }
 
   if (op.atualizarBaseline) {
     // Duas formas de perder trabalho, as duas barradas aqui:
@@ -688,7 +707,19 @@ async function principal() {
   console.log("\n=============== GATE DE RUNTIME ================");
   console.log(`paginas medidas: ${paginasMedidas} de ${paginasEsperadas}`);
   console.log(`achados totais: ${achados.length} (novos: ${novos.length}, no baseline: ${jaConhecidos})`);
-  console.log(`nao verificados: ${naoVerificados.length} (fundo irresoluvel ou tamanho ambiguo — o gate se cala em vez de errar)`);
+  // Um inteiro sozinho nao diz o que deixou de ser medido, e o gate ganha
+  // motivos novos com o tempo (grafico composto entrou depois). Quebrar por
+  // motivo e o que torna "declarei que nao verifiquei" uma informacao acionavel
+  // em vez de um numero que ninguem sabe ler.
+  console.log(`nao verificados: ${naoVerificados.length} — o gate se cala em vez de errar`);
+  const porMotivo = new Map();
+  for (const nv of naoVerificados) {
+    const chave = String(nv.motivo || "sem motivo").split(":")[0].trim();
+    porMotivo.set(chave, (porMotivo.get(chave) || 0) + 1);
+  }
+  for (const [motivo, n] of [...porMotivo].sort((a, b) => b[1] - a[1])) {
+    console.log(`  - ${motivo}: ${n}`);
+  }
   if (temasDivergentes.length) {
     console.log(
       `\nATENCAO: ${temasDivergentes.length} paginas nao aplicaram o tema pedido — ` +
