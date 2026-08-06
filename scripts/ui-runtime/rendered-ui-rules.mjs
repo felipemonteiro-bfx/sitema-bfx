@@ -264,6 +264,35 @@ function contexto(snapshot) {
   };
 }
 
+/**
+ * Um `<svg>` cujos DESCENDENTES tem pintura propria e um GRAFICO COMPOSTO, nao
+ * um glifo — e a regra (a) nao sabe julga-lo.
+ *
+ * O modelo da regra (a) e "uma cor de traco contra um fundo". Isso so vale para
+ * um icone monocromatico: no lucide a raiz traz `stroke="currentColor"` e todo
+ * `<path>` de dentro herda dela, entao a cor da raiz E o que esta na tela.
+ *
+ * No `<svg class="recharts-surface">` nada disso vale. Ele nao declara `fill`
+ * nem `stroke`, entao a cor "medida" e o valor INICIAL de `fill` do SVG —
+ * `black` — que nao pinta um pixel sequer. Foi de onde saiu 1.10:1 em
+ * /dashboard e /comissoes no escuro: preto puro contra um fundo escuro, um
+ * numero real sobre uma cor que nao existe na tela. O que o grafico pinta esta
+ * em 37 descendentes com `fill`/`stroke` proprios (eixos, barras, rotulos).
+ *
+ * WCAG 2.1 SC 1.4.11 pede 3:1 para "partes de graficos necessarias para
+ * entender o conteudo" — a unidade e a PARTE, cada uma contra a cor adjacente
+ * DELA. Julgar o container e categoria errada, nao rigor a mais.
+ *
+ * O criterio e estrutural de proposito. As alternativas testadas seriam buracos
+ * largos: isentar por `aria-hidden` isentaria TODO icone do sistema (o lucide
+ * marca todos), e isentar por tamanho ou por "tem texto do lado" apagaria o
+ * icone de sidebar a 1.00:1 que motivou este gate. "Tem parte com pintura
+ * propria" separa exatamente grafico de glifo, e nada mais.
+ */
+function ehGraficoComposto(item) {
+  return Number(item.partesComPinturaPropria) > 0;
+}
+
 function minimoDeContraste(item) {
   if (item.kind === "icon") return LIMITES.iconeMinimo;
   const px = Number(item.fontSizePx) || 0;
@@ -432,6 +461,16 @@ export function analyzeSnapshot(snapshot, options = {}) {
   for (const item of snapshot.texts || []) {
     const cor = normalizarCamada({ rgba: item.color });
     if (!cor) continue;
+    if (item.kind === "icon" && ehGraficoComposto(item)) {
+      if (naoVerificados) {
+        naoVerificados.push({
+          ...ctx,
+          path: item.path,
+          motivo: `grafico composto: ${Number(item.partesComPinturaPropria)} partes com pintura propria`,
+        });
+      }
+      continue;
+    }
     const fundo = effectiveBackground(item.bgChain);
     if (!fundo.resolved) {
       if (naoVerificados) naoVerificados.push({ ...ctx, path: item.path, motivo: fundo.motivo });

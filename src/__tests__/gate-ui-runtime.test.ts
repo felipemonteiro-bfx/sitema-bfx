@@ -464,6 +464,113 @@ describe("(e) quebra de linha dentro de controle com icone + texto", () => {
   });
 });
 
+describe("(a) grafico composto nao e icone — o <svg> raiz nao e a unidade que a regra sabe julgar", () => {
+  /**
+   * Medido em producao (f754f76) em /dashboard e /comissoes, tema escuro:
+   * `svg.recharts-surface` acusava 1.10:1. A frente medida era [0,0,0] — preto
+   * puro. Ninguem pintou aquilo de preto: o `<svg>` raiz do Recharts NAO declara
+   * `fill` nem `stroke`, entao o coletor caiu no valor INICIAL de `fill` do
+   * SVG, que e `black`. Nao ha um pixel preto na tela.
+   *
+   * O que o grafico realmente pinta esta em 37 descendentes com pintura propria
+   * (`<line stroke="var(--border)">`, barras, `<text>`). WCAG 2.1 SC 1.4.11 fala
+   * em "partes de graficos necessarias para entender o conteudo" — a unidade e
+   * a PARTE, cada uma contra a cor adjacente DELA. O container nao tem "cor de
+   * traco contra o fundo"; a regra nao se aplica a ele.
+   *
+   * Por isso isso vai para `naoVerificados`, nao para o vazio: o gate nunca
+   * mente sobre o que deixou de medir (README, "Degradacao").
+   */
+  const graficoComposto = {
+    path: "div.recharts-wrapper > svg.recharts-surface",
+    kind: "icon",
+    sample: "",
+    fontSizePx: 16,
+    fontWeight: 400,
+    color: [0, 0, 0, 1] as Rgba,
+    bgChain: [[9, 16, 24, 1] as Rgba],
+    partesComPinturaPropria: 37,
+  };
+
+  it("nao acusa o <svg> do grafico inteiro, e declara que nao verificou", () => {
+    const naoVerificados: { path: string; motivo: string }[] = [];
+    const achados = analyzeSnapshot(snapshotBase({ theme: "dark", texts: [graficoComposto] }), {
+      naoVerificados,
+    });
+
+    expect(achados.filter((f: { rule: string }) => f.rule === "CONTRAST")).toHaveLength(0);
+    expect(naoVerificados).toHaveLength(1);
+    expect(naoVerificados[0].path).toContain("recharts-surface");
+    expect(naoVerificados[0].motivo).toContain("partes");
+  });
+
+  it("a isencao NAO engole o icone monocromatico invisivel — o defeito que o gate existe para pegar", () => {
+    // Mesmo 1.00:1 do par cruzado entre familias de token, agora com o campo
+    // presente e ZERADO: glifo lucide nenhum tem descendente com pintura
+    // propria (`<path>` sem `fill`/`stroke`, herdando `stroke="currentColor"`
+    // da raiz). Se a isencao fosse por `aria-hidden`, por tamanho ou por
+    // "tem texto do lado", este achado sumiria — e ele e a razao de ser da
+    // regra (a).
+    const achados = analyzeSnapshot(
+      snapshotBase({
+        texts: [
+          {
+            path: "button > svg.lucide.lucide-house",
+            kind: "icon",
+            sample: "",
+            fontSizePx: 16,
+            fontWeight: 400,
+            color: [250, 250, 250, 1],
+            bgChain: [
+              [0, 0, 0, 0],
+              [250, 250, 250, 1],
+            ],
+            partesComPinturaPropria: 0,
+          },
+        ],
+      })
+    );
+    const a = achados.filter((f: { rule: string }) => f.rule === "CONTRAST");
+    expect(a).toHaveLength(1);
+    expect(a[0].measured).toContain("1.00");
+  });
+
+  it("snapshot sem o campo continua sendo julgado — a isencao nunca vale por omissao", () => {
+    // Compatibilidade: coletor antigo (ou qualquer caminho que nao preencha o
+    // campo) NAO ganha isencao de graca. Ausencia de dado nao e prova de
+    // ausencia de defeito.
+    const achados = analyzeSnapshot(
+      snapshotBase({
+        texts: [{ ...graficoComposto, partesComPinturaPropria: undefined }],
+      })
+    );
+    expect(achados.filter((f: { rule: string }) => f.rule === "CONTRAST")).toHaveLength(1);
+  });
+
+  it("a isencao vale so para grafico — texto com o mesmo campo continua medido", () => {
+    // Blindagem contra o campo virar chave-mestra: `partesComPinturaPropria` so
+    // faz sentido em `<svg>`. Se um dia ele aparecer num item de texto, o texto
+    // continua sendo medido pelos 4.5:1 dele.
+    const achados = analyzeSnapshot(
+      snapshotBase({
+        texts: [
+          {
+            path: "p",
+            kind: "text",
+            sample: "Total",
+            fontSizePx: 14,
+            fontWeight: 400,
+            color: [120, 120, 120, 1],
+            bgChain: [[255, 255, 255, 1]],
+            partesComPinturaPropria: 37,
+          },
+        ],
+      })
+    );
+    expect(achados.filter((f: { rule: string }) => f.rule === "CONTRAST")).toHaveLength(1);
+  });
+});
+
 describe("baseline", () => {
   it("da a mesma impressao digital para o mesmo achado e digitais diferentes por rota", () => {
     const um = analyzeSnapshot(

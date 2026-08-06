@@ -138,6 +138,17 @@ compilador nunca leu, e por quatro fases pareceu cobertura).
   `nao verificados` no fim do relatório mostra quantos foram — leia-o.
 - **`opacity` de ancestral não é composta** no cálculo de contraste. Um texto dentro de um bloco
   `opacity-50` é medido pela cor dele, não pela cor final.
+- **Gráfico não é medido — nem o todo, nem as partes.** Um `<svg>` cujos descendentes têm pintura
+  própria (`fill`/`stroke` no próprio elemento) é um gráfico composto, não um glifo. O modelo da
+  regra (a) — *uma* cor de traço contra *um* fundo — só descreve ícone monocromático: no lucide a
+  raiz traz `stroke="currentColor"` e todo `<path>` herda dela. O `<svg class="recharts-surface">`
+  não declara `fill` nem `stroke`, então o que se mediria ali é o valor **inicial** de `fill` do SVG
+  (`black`) — uma cor que não pinta um pixel. Era daí que saíam 1.10:1 em `/dashboard` e
+  `/comissoes` no escuro. A WCAG 2.1 SC 1.4.11 pede 3:1 para *partes* de gráfico, cada uma contra a
+  cor adjacente **dela**; este gate não desce até a parte, então declara em `não verificados` — o
+  contador no fim do relatório mostra quantos foram. O critério é estrutural de propósito: isentar
+  por `aria-hidden` isentaria todo ícone do sistema (o lucide marca todos), e isentar por tamanho ou
+  por "tem texto do lado" apagaria o ícone de sidebar a 1.00:1 que motivou este gate.
 - **A regra (e) exige um `<svg>`.** Um "ícone" que na verdade é um `<span>` redondo (como o ponto da
   pílula de ponto de equilíbrio em `/financeiro`) não é visto.
 - **Tamanho de ícone atrás de prefixo responsivo/estado** (`sm:h-5`, `dark:size-6`) é marcado como

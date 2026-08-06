@@ -338,6 +338,20 @@ const COLETOR = () => {
     const cs = getComputedStyle(s);
     const traco = cs.stroke && cs.stroke !== "none" ? cs.stroke : cs.fill && cs.fill !== "none" ? cs.fill : cs.color;
     const cor = paraRgba(traco);
+    // Quantos descendentes pintam a si mesmos. Num glifo lucide isto e ZERO —
+    // os `<path>` nao declaram nada e herdam o `stroke="currentColor"` da raiz,
+    // entao a cor da raiz e a cor na tela. Num `<svg class="recharts-surface">`
+    // sao dezenas (eixos, barras, rotulos), e a cor da raiz nao pinta nada.
+    // Quem decide o que fazer com o numero e a camada pura; aqui so se conta.
+    let partesComPinturaPropria = 0;
+    for (const d of s.querySelectorAll("*")) {
+      const df = d.getAttribute("fill");
+      const ds = d.getAttribute("stroke");
+      const estilo = d.getAttribute("style") || "";
+      if ((df && df !== "none") || (ds && ds !== "none") || estilo.includes("fill") || estilo.includes("stroke")) {
+        partesComPinturaPropria += 1;
+      }
+    }
     if (!cor) {
       naoParseaveis.push({ path: p, valor: String(traco).slice(0, 40), onde: "stroke/fill do <svg>" });
     } else if (cor[3] > 0) {
@@ -350,6 +364,7 @@ const COLETOR = () => {
         fontWeight: 400,
         color: cor,
         bgChain: fundo,
+        partesComPinturaPropria,
       });
     }
   }
