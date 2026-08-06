@@ -145,7 +145,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                     variant="ghost"
                     size="icon"
                     onClick={() => onRemove(index)}
-                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="h-8 w-8 text-error-text hover:text-error-text hover:bg-destructive/10"
                     aria-label="Remover produto"
                   >
                     <X className="h-4 w-4" />
@@ -164,10 +164,10 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               htmlFor={`produto-nome-${index}`}
               className={cn(
                 "text-xs font-bold uppercase tracking-wider",
-                hasError ? "text-destructive" : "text-muted-foreground",
+                hasError ? "text-error-text" : "text-muted-foreground",
               )}
             >
-              Produto <span className="text-destructive">*</span> {hasError && "(obrigatório)"}
+              Produto <span className="text-error-text">*</span> {hasError && "(obrigatório)"}
             </Label>
             <Input
               id={`produto-nome-${index}`}

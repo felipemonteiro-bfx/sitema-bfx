@@ -83,7 +83,7 @@ describe("(1) composto da propria matiz -> tint opaco", () => {
   it("Badge usa o tint opaco no tema claro, nao bg-<sem>/10", () => {
     const fonte = ler("src/components/ui/badge.tsx");
     for (const sem of ["success", "warning", "error", "info"]) {
-      expect(fonte.includes(`bg-${sem}/10 `), `bg-${sem}/10 no Badge`).toBe(false);
+      expect(fonte.includes(`bg-${sem}/10`), `bg-${sem}/10 no Badge`).toBe(false);
       expect(fonte.includes(`bg-${sem}-bg`), `bg-${sem}-bg no Badge`).toBe(true);
     }
   });
@@ -100,8 +100,17 @@ describe("(1) composto da propria matiz -> tint opaco", () => {
 describe("(3) --destructive e preenchimento; como texto vermelho vale --error-text", () => {
   const ARQUIVOS = [
     "src/components/venda-rapida-form-v2.tsx",
+    // O item de produto vive DENTRO do card elevado de /venda-rapida e repete o
+    // mesmo asterisco: `--destructive` a 4.36:1 sobre `--card-elevated`. Ficou
+    // de fora da primeira correcao — meio arquivo deixa a armadilha montada.
+    "src/components/produto-item-form.tsx",
     "src/app/(app)/financeiro/page.tsx",
     "src/components/ui/form.tsx",
+    // 4.01:1: `--destructive` sobre o proprio tint `--error-bg`, nas celulas
+    // invalidas da planilha. E o caso que a SKILL do projeto documenta com
+    // esse numero exato. So nao apareceu na varredura porque depende de linha
+    // invalida — o gate mede o estado inicial.
+    "src/components/importacao-client.tsx",
   ];
 
   /**
@@ -128,7 +137,9 @@ describe("(3) --destructive e preenchimento; como texto vermelho vale --error-te
     // pagina e nenhum <Form> com campo obrigatorio estava montado. E o mesmo
     // marcador, o mesmo token e a mesma superficie das tres ocorrencias de
     // /venda-rapida que reprovaram a 4.36:1.
-    expect(ler("src/components/ui/form.tsx").includes('text-error-text text-xs" aria-hidden')).toBe(true);
+    const fonte = ler("src/components/ui/form.tsx");
+    expect(fonte.includes("text-error-text")).toBe(true);
+    expect(fonte.includes('aria-hidden="true">*</span>')).toBe(true);
   });
 });
 
@@ -141,7 +152,15 @@ describe("DOC_OVERFLOW: o cabecalho de pagina cabe em 390px", () => {
     // que ceder, e o excedente vira rolagem da PAGINA inteira.
     const fonte = ler("src/components/page-header.tsx");
     expect(fonte.includes("flex flex-wrap items-center justify-between gap-4")).toBe(true);
-    expect(fonte.includes('{actions && <div className="flex shrink-0 items-center gap-2">')).toBe(true);
+    // O grupo de acoes NAO leva `shrink-0`: medido nas 22 rotas em 390px ele
+    // dava exatamente os mesmos numeros, e desligava o `flex-wrap` interno que
+    // /crm usa nos tres botoes dele (item flex com `shrink:0` e `basis:auto`
+    // resolve para max-content). Zero beneficio, uma defesa a menos.
+    //
+    // A assercao mira a CLASSE, nao a palavra: o comentario do componente
+    // explica a decisao e cita "shrink-0" no texto.
+    expect(fonte.includes('className="flex items-center gap-2"')).toBe(true);
+    expect(fonte.includes("flex shrink-0 items-center")).toBe(false);
   });
 });
 
@@ -161,5 +180,10 @@ describe("icone do EmptyState: o sufixo de opacidade anula o token", () => {
     // a remocao da regra. Tirar um `/70` custa menos.
     const fonte = ler("src/components/ui/empty-state.tsx");
     expect(fonte.includes("text-muted-foreground/70")).toBe(false);
+    // Assercao positiva: so proibir o sufixo deixaria passar apagar a classe de
+    // cor inteira, ou troca-la por um token pior. Os dois pontos que usam o
+    // icone continuam pintando com o token cheio.
+    expect(fonte.split("text-muted-foreground animate-float").length - 1).toBe(1);
+    expect(fonte.includes('h-6 w-6 text-muted-foreground"')).toBe(true);
   });
 });

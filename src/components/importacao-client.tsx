@@ -261,7 +261,7 @@ export default function ImportacaoClient() {
                           value={row.cliente} 
                           placeholder="OBRIGATÓRIO"
                           onChange={(e) => updateCell(row.id, 'cliente', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.cliente ? 'bg-error-bg text-destructive' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.cliente ? 'bg-error-bg text-error-text' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -269,7 +269,7 @@ export default function ImportacaoClient() {
                           value={row.produto} 
                           placeholder="OBRIGATÓRIO"
                           onChange={(e) => updateCell(row.id, 'produto', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.produto ? 'bg-error-bg text-destructive' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.produto ? 'bg-error-bg text-error-text' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -309,7 +309,7 @@ export default function ImportacaoClient() {
                           size="icon"
                           aria-label="Remover linha"
                           onClick={() => removeRow(row.id)}
-                          className="h-6 w-6 text-error-text shadow-none hover:bg-transparent hover:text-destructive hover:shadow-none"
+                          className="h-6 w-6 text-error-text shadow-none hover:bg-transparent hover:text-error-text hover:shadow-none"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>

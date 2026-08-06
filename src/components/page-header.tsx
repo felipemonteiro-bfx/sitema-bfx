@@ -43,15 +43,23 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      {/* `flex-wrap`: em 390px o grupo de acoes nao tem para onde encolher e o
-          excedente vira rolagem horizontal da PAGINA inteira. /importacao era a
-          unica rota assim nos dois temas — documento de 393px numa janela de
+      {/* `flex-wrap`: em 390px o grupo de acoes nao tinha para onde ir e o
+          excedente virava rolagem horizontal da PAGINA inteira. /importacao era
+          a unica rota assim nos dois temas — documento de 393px numa janela de
           390 —, porque as acoes ali sao um bloco de 220px ("Total no Banco" +
           "Baixar Modelo") ao lado de um titulo de duas linhas. Podendo quebrar,
-          as acoes descem para a linha de baixo e nada estoura. O `shrink-0`
-          impede o caminho oposto: espremer os botoes ate o rotulo deles partir
-          em duas linhas (o mesmo par ja resolveu o cabecalho de Produtos em
-          /venda-rapida). */}
+          as acoes descem e nada estoura.
+
+          `shrink-0` nas acoes foi tentado junto e REMOVIDO: medido nas 22
+          rotas em 390px, dava exatamente os mesmos numeros (uma vez na propria
+          linha, as acoes tem a largura toda e nunca precisam encolher), mas um
+          item flex com `shrink:0` e `basis:auto` resolve para max-content — o
+          que desliga o `flex-wrap` INTERNO que /crm usa nos tres botoes dele.
+          Zero beneficio medido, uma defesa a menos.
+
+          Consequencia aceita: com `justify-between` e um item sozinho na linha
+          quebrada, as acoes ficam a ESQUERDA sob o titulo, nao a direita. Em
+          telas estreitas isso acompanha o alinhamento do proprio titulo. */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="page-title-gradient text-2xl font-bold tracking-tight">{title}</h1>
@@ -59,7 +67,7 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
           )}
         </div>
-        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+        {actions && <div className="flex items-center gap-2">{actions}</div>}
       </div>
     </div>
   );

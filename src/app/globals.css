@@ -149,9 +149,15 @@
      >=4.5:1 contra `--card`. Numeros medidos por token-contrast.mjs:
        --success-text  5.18:1 vs card · 4.75:1 vs --success-bg · 4.68:1 sobre bg-success/10
        --warning-text  5.23:1 vs card · 4.69:1 vs --warning-bg · 4.88:1 sobre bg-warning/10
-       --info-text     5.22:1 vs card · 4.59:1 vs --info-bg    · 4.59:1 sobre bg-info/10
+       --info-text     5.22:1 vs card · 4.71:1 vs --info-bg    · 4.59:1 sobre bg-info/10
+     (`--info-bg` subiu de L=0.95 para 0.96 para caber o rotulo secundario dos
+     tiles; o par com `--info-text` subiu junto, de 4.59 para 4.71.)
      Sobre um composto de 20% da propria matiz (`bg-info/20`) nenhum deles chega
      a 4.5 — nesse caso use o tint opaco `--*-bg`, nao o composto.
+
+     E o composto de 10% tambem nao e seguro: quanto ele escurece depende do que
+     estiver EMBAIXO. O Badge info aprovava sobre `--card` (4.59) e reprovava
+     sobre `bg-muted/30` (4.49). O tint opaco nao depende do fundo.
 
      `--error-text` entrou na fase 17 (achado 3). O caso do vermelho e diferente
      dos outros tres: `--error` ja aprova como texto sobre card (4.82:1), o que
