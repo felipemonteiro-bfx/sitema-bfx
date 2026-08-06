@@ -143,10 +143,20 @@ describe("achado 12 — abas inativas no tema claro", () => {
 });
 
 describe("achado 3 — rolagem horizontal em 390px", () => {
-  it("o tablist rola em si mesmo, nao a pagina", () => {
-    const fonte = ler("src/components/query-tabs.tsx");
+  // A contencao nasceu inline no query-tabs e depois foi extraida para o
+  // ScrollableTabsList (que acrescentou fade e chevron). Verificar so o arquivo
+  // que por acaso continha as classes quebra a cada refatoracao sem que nada
+  // tenha regredido — foi o que aconteceu. O teste agora afirma a CADEIA: quem
+  // contem de fato, e que o consumidor usa esse componente.
+  it("o ScrollableTabsList contem a rolagem em si mesmo", () => {
+    const fonte = ler("src/components/ui/tabs.tsx");
     expect(fonte.includes("overflow-x-auto")).toBe(true);
     expect(fonte.includes("max-w-full")).toBe(true);
+  });
+
+  it("o query-tabs usa o ScrollableTabsList, nao o TabsList cru", () => {
+    const fonte = ler("src/components/query-tabs.tsx");
+    expect(fonte.includes("<ScrollableTabsList>")).toBe(true);
   });
 });
 
