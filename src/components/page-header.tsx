@@ -43,14 +43,23 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
           </BreadcrumbList>
         </Breadcrumb>
       )}
-      <div className="flex items-center justify-between gap-4">
+      {/* `flex-wrap`: em 390px o grupo de acoes nao tem para onde encolher e o
+          excedente vira rolagem horizontal da PAGINA inteira. /importacao era a
+          unica rota assim nos dois temas — documento de 393px numa janela de
+          390 —, porque as acoes ali sao um bloco de 220px ("Total no Banco" +
+          "Baixar Modelo") ao lado de um titulo de duas linhas. Podendo quebrar,
+          as acoes descem para a linha de baixo e nada estoura. O `shrink-0`
+          impede o caminho oposto: espremer os botoes ate o rotulo deles partir
+          em duas linhas (o mesmo par ja resolveu o cabecalho de Produtos em
+          /venda-rapida). */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="page-title-gradient text-2xl font-bold tracking-tight">{title}</h1>
           {description && (
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
           )}
         </div>
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>
     </div>
   );

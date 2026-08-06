@@ -280,11 +280,17 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
                 <div className="text-sm font-bold text-foreground">{formatBRL(item.subtotal)}</div>
               </div>
-              <div className="rounded-lg bg-success/5 px-3 py-2 text-center">
+              {/* Tint OPACO (`bg-<sem>-bg`), nao o composto `bg-<sem>/5`: este
+                  Card fica dentro do card elevado de /venda-rapida, e o
+                  composto some 5% da matiz nessa superficie ja mais escura. Os
+                  quatro textos daqui reprovavam por isso — rotulo a 4.39 e 4.32,
+                  valor a 4.47 e 4.43. Mesma decisao dos tiles do "Resumo
+                  Financeiro", logo abaixo nesta mesma tela. */}
+              <div className="rounded-lg bg-success-bg px-3 py-2 text-center">
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro</div>
                 <div className="text-sm font-bold text-success-text">{formatBRL(lucro)}</div>
               </div>
-              <div className="rounded-lg bg-info/5 px-3 py-2 text-center">
+              <div className="rounded-lg bg-info-bg px-3 py-2 text-center">
                 <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
                 <div className="text-sm font-bold text-info-text">{margem.toFixed(1)}%</div>
               </div>

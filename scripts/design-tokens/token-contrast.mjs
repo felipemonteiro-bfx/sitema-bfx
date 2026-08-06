@@ -407,6 +407,23 @@ export const TOKEN_PAIRS = [
   // aqui. Mesmo padrao do --destructive-foreground: o defeito mora no par que
   // ninguem formou.
   { foreground: "muted-foreground", background: "card-elevated", min: TEXT_MIN, label: "texto secundario em card elevado" },
+  // Mesma historia, um degrau adiante. Os tiles de metrica das telas
+  // financeiras sao todos do mesmo desenho: rotulo `text-muted-foreground` de
+  // 10px em cima, valor `text-<sem>-text` embaixo, os dois sobre o tint opaco
+  // `bg-<sem>-bg`. O par do VALOR entrou na fase 16; o par do ROTULO nunca
+  // existiu — e era ele que reprovava. `--info-bg` dava 4.47:1 e derrubou
+  // "Valor Parcela" de /venda-rapida na varredura de runtime (f754f76).
+  //
+  // `error-bg` NAO entra: e o tint mais escuro da familia (4.23:1 com
+  // `--muted-foreground`) e so chegaria a 4.50 com L=0.975, onde o tile some
+  // contra o card (1.13:1). Nenhuma tela poe rotulo secundario sobre vermelho;
+  // todas usam `text-error-text`. Registrar um par que ninguem forma seria
+  // fabricar uma reprovacao. Se um dia alguem escrever
+  // `text-muted-foreground` sobre `bg-error-bg`, o texto certo ali e
+  // `--error-text`, nao um `--error-bg` clareado ate sumir.
+  { foreground: "muted-foreground", background: "success-bg", min: TEXT_MIN, label: "rotulo do tile no tint de sucesso" },
+  { foreground: "muted-foreground", background: "warning-bg", min: TEXT_MIN, label: "rotulo do tile no tint de alerta" },
+  { foreground: "muted-foreground", background: "info-bg", min: TEXT_MIN, label: "rotulo do tile no tint de informacao" },
   // --- Sidebar (fase 19) ------------------------------------------------
   // Ate aqui a familia `--sidebar-*` tinha UM par medido, e a sidebar era
   // escura nos dois temas — o que escondia o resto: o rotulo inativo, o item

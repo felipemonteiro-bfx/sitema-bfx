@@ -162,9 +162,14 @@ export function EmptyState({
         )}
       >
         <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/5 to-accent/5" />
+        {/* Sem sufixo de opacidade. O sufixo nao "suaviza o token", forma uma
+            cor que ninguem calibrou: com 70% o icone media 2.76:1 em
+            /crm/campanhas, contra o minimo de 3:1 de objeto grafico (SC
+            1.4.11). Com o token inteiro sao 4.91:1. Mesmo mecanismo que ja
+            derrubou `text-info-text` a 80% de 4.59 para 3.30. */}
         <Icon
           className={cn(
-            "relative text-muted-foreground/70 animate-float",
+            "relative text-muted-foreground animate-float",
             sizeStyles.icon
           )}
           strokeWidth={1.5}
@@ -267,7 +272,7 @@ export function EmptyStateCard({
       )}
     >
       <div className="mb-3 rounded-lg bg-muted/50 p-3">
-        <Icon className="h-6 w-6 text-muted-foreground/70" strokeWidth={1.5} />
+        <Icon className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
       </div>
       <h4 className="font-medium text-foreground mb-1">
         {title || config.title}

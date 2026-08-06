@@ -16,14 +16,21 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/80",
         outline: 
           "text-foreground border-border hover:bg-muted",
+        // Tint OPACO no tema claro (`bg-<sem>-bg`), nao o composto
+        // `bg-<sem>/10`. O composto da propria matiz escurece o tom, e o quanto
+        // ele escurece depende do que estiver EMBAIXO: sobre `--card` o badge
+        // info dava 4.59:1, mas sobre `bg-muted/30` (a linha do "Hall da Fama"
+        // do /dashboard) caia para 4.49:1 — reprovado, com o token certo por
+        // cima. O tint opaco nao depende do fundo: 4.71:1 em qualquer lugar.
+        // O escuro segue no composto, onde `--<sem>-bg` ja tem alfa.
         success:
-          "border-success/30 bg-success/10 text-success-text dark:bg-success/20 dark:border-success/40 hover:bg-success/20 dark:hover:bg-success/30",
+          "border-success/30 bg-success-bg text-success-text dark:bg-success/20 dark:border-success/40 hover:bg-success/20 dark:hover:bg-success/30",
         warning:
-          "border-warning/30 bg-warning/10 text-warning-text dark:bg-warning/20 dark:border-warning/40 hover:bg-warning/20 dark:hover:bg-warning/30",
+          "border-warning/30 bg-warning-bg text-warning-text dark:bg-warning/20 dark:border-warning/40 hover:bg-warning/20 dark:hover:bg-warning/30",
         error:
-          "border-error/30 bg-error/10 text-error-text dark:bg-error/20 dark:border-error/40 hover:bg-error/20 dark:hover:bg-error/30",
+          "border-error/30 bg-error-bg text-error-text dark:bg-error/20 dark:border-error/40 hover:bg-error/20 dark:hover:bg-error/30",
         info:
-          "border-info/30 bg-info/10 text-info-text dark:bg-info/20 dark:border-info/40 hover:bg-info/20 dark:hover:bg-info/30",
+          "border-info/30 bg-info-bg text-info-text dark:bg-info/20 dark:border-info/40 hover:bg-info/20 dark:hover:bg-info/30",
         successSolid:
           "border-transparent bg-success text-success-foreground shadow-sm hover:bg-success/90",
         warningSolid:

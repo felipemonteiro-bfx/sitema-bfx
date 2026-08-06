@@ -684,10 +684,10 @@ export default function VendaRapidaFormV2({
               <Label
                 className={cn(
                   "text-xs font-bold uppercase tracking-wider",
-                  validationErrors.data ? "text-destructive" : "text-muted-foreground",
+                  validationErrors.data ? "text-error-text" : "text-muted-foreground",
                 )}
               >
-                Data da Venda <span className="text-destructive">*</span> {validationErrors.data && "(obrigatório)"}
+                Data da Venda <span className="text-error-text">*</span> {validationErrors.data && "(obrigatório)"}
               </Label>
               <DateInput
                 value={dataVenda}
@@ -700,10 +700,10 @@ export default function VendaRapidaFormV2({
               <Label
                 className={cn(
                   "text-xs font-bold uppercase tracking-wider",
-                  validationErrors.vendedor ? "text-destructive" : "text-muted-foreground",
+                  validationErrors.vendedor ? "text-error-text" : "text-muted-foreground",
                 )}
               >
-                Vendedor Responsável <span className="text-destructive">*</span> {validationErrors.vendedor && "(obrigatório)"}
+                Vendedor Responsável <span className="text-error-text">*</span> {validationErrors.vendedor && "(obrigatório)"}
               </Label>
               <FormSelect
                 name="vendedor"
@@ -739,10 +739,10 @@ export default function VendaRapidaFormV2({
               <Label
                 className={cn(
                   "text-xs font-bold uppercase tracking-wider",
-                  validationErrors.cliente ? "text-destructive" : "text-muted-foreground",
+                  validationErrors.cliente ? "text-error-text" : "text-muted-foreground",
                 )}
               >
-                Buscar Cliente <span className="text-destructive">*</span> {validationErrors.cliente && "(obrigatório)"}
+                Buscar Cliente <span className="text-error-text">*</span> {validationErrors.cliente && "(obrigatório)"}
               </Label>
               <button
                 type="button"
@@ -879,7 +879,7 @@ export default function VendaRapidaFormV2({
                 <div
                   className={cn(
                     "text-sm font-bold",
-                    limiteData.margemDisponivel > 0 ? "text-success-text" : "text-destructive"
+                    limiteData.margemDisponivel > 0 ? "text-success-text" : "text-error-text"
                   )}
                 >
                   {formatBRL(limiteData.margemDisponivel)}
@@ -1133,7 +1133,7 @@ export default function VendaRapidaFormV2({
           </div>
 
           {desconto > 0 && (
-            <div className="text-sm text-destructive font-medium">Desconto: -{formatBRL(desconto)}</div>
+            <div className="text-sm text-error-text font-medium">Desconto: -{formatBRL(desconto)}</div>
           )}
 
           <Separator />

@@ -112,7 +112,7 @@ const FormLabel = React.forwardRef<
       ref={ref}
       className={cn(
         "flex items-center gap-1.5 text-sm font-medium transition-colors duration-200",
-        error && "text-destructive",
+        error && "text-error-text",
         className
       )}
       htmlFor={formItemId}
@@ -120,7 +120,7 @@ const FormLabel = React.forwardRef<
     >
       {children}
       {required && (
-        <span className="text-destructive text-xs" aria-hidden="true">*</span>
+        <span className="text-error-text text-xs" aria-hidden="true">*</span>
       )}
       {optional && (
         <span className="text-muted-foreground text-xs font-normal">(opcional)</span>
@@ -188,7 +188,7 @@ const FormMessage = React.forwardRef<
       ref={ref}
       id={formMessageId}
       className={cn(
-        "flex items-center gap-1.5 text-xs font-medium text-destructive",
+        "flex items-center gap-1.5 text-xs font-medium text-error-text",
         "animate-fade-in-up",
         className
       )}

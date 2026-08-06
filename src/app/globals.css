@@ -137,7 +137,12 @@
   --error-bg: oklch(0.95 0.05 25); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
   --info: oklch(0.57 0.18 240); /* blue */
   --info-foreground: oklch(0.145 0 0); /* texto escuro: 4.71:1 vs branco (4.03:1) — UI-05 */
-  --info-bg: oklch(0.95 0.04 240); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
+  /* L subiu de 0.95 para 0.96 — mesmo degrau de `--success-bg` e `--warning-bg`.
+     A 0.95 este era o unico tint da familia que nao suportava o rotulo
+     `text-muted-foreground` dos tiles de metrica: 4.47:1, e a varredura de
+     runtime pegou "Valor Parcela" de /venda-rapida assim. A 0.96 sao 4.59:1, e
+     o valor por cima (`--info-text`) sobe junto, de 4.59 para 4.71. */
+  --info-bg: oklch(0.96 0.04 240); /* fundo sutil, tom claro/opaco da mesma matiz (D-06) */
 
   /* Semantic Colors — variante de TEXTO (`text-success-text` e afins).
      Mesma matiz e mesmo croma do token de preenchimento, so o L baixa, ate
