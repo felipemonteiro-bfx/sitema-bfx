@@ -136,9 +136,12 @@ describe("tokens de texto dedicados (achados 1, 2, 4)", () => {
   }
 });
 
-describe("achado 12 — abas inativas no tema claro", () => {
-  it("--muted-foreground claro foi escurecido para 0.545", () => {
-    expect(corpoDoBloco(css, ":root").includes("--muted-foreground: oklch(0.545 0 0)")).toBe(true);
+describe("achado 12 — abas inativas, e os rotulos sobre card elevado", () => {
+  // 0.545 resolvia as abas (4.47 -> 4.62), mas o gate de runtime achou 22
+  // rotulos de /venda-rapida ainda a 4.40: eles ficam sobre --card-elevated,
+  // mais escuro que --card. 0.535 fecha os dois (4.60 sobre o elevado).
+  it("--muted-foreground claro esta em 0.535", () => {
+    expect(corpoDoBloco(css, ":root").includes("--muted-foreground: oklch(0.535 0 0)")).toBe(true);
   });
 });
 

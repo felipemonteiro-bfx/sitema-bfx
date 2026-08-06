@@ -402,6 +402,11 @@ export const TOKEN_PAIRS = [
   { foreground: "popover-foreground", background: "popover", min: TEXT_MIN, label: "texto em popover" },
   { foreground: "muted-foreground", background: "background", min: TEXT_MIN, label: "texto secundario sobre fundo" },
   { foreground: "muted-foreground", background: "card", min: TEXT_MIN, label: "texto secundario em card" },
+  // O gate de runtime pegou 22 rotulos de /venda-rapida a 4.40:1: eles vivem
+  // sobre --card-elevated, que e' mais escuro que --card, e esse par nao estava
+  // aqui. Mesmo padrao do --destructive-foreground: o defeito mora no par que
+  // ninguem formou.
+  { foreground: "muted-foreground", background: "card-elevated", min: TEXT_MIN, label: "texto secundario em card elevado" },
   // --- Sidebar (fase 19) ------------------------------------------------
   // Ate aqui a familia `--sidebar-*` tinha UM par medido, e a sidebar era
   // escura nos dois temas — o que escondia o resto: o rotulo inativo, o item

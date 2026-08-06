@@ -187,7 +187,7 @@
      (rgb ~247), onde 0.556 dava 4.43:1 — abaixo do minimo de 4.5 (fase 16,
      achado 12). Em 0.545: 4.62:1 sobre o tablist, 4.74:1 sobre `--background`
      (era 4.54) e 4.87:1 sobre `--card` (era 4.66). — UI-05 */
-  --muted-foreground: oklch(0.545 0 0);
+  --muted-foreground: oklch(0.535 0 0);
 
   /* Borders & Inputs */
   --border: oklch(0.62 0 0); /* L ajustado de 0.922 p/ 3:1 min. (era 1.21:1 fundo / 1.24:1 card) — UI-05 */
