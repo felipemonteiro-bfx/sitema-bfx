@@ -10,6 +10,22 @@ updates:
     labels: ["dependencies"]
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # Prisma 7 e' ESM-only: exige `"type": "module"` no package.json, o que
+      # converte o projeto inteiro — postcss.config.js, prisma/seed.js (que usa
+      # require), dois scripts e os hooks .js do tooling. Alem disso troca o
+      # generator (`prisma-client-js` -> `prisma-client`) e muda o caminho de
+      # import do client gerado. O PR #28 reprovava no `prisma generate` com
+      # ENOENT em runtime/library.d.ts, que e' esse pacote de mudancas.
+      #
+      # A migracao precisa de uma sessao propria, num ambiente onde de para
+      # rodar `prisma generate`, `vitest` e `build` — aqui `npm install` nao
+      # roda e o CI e' a unica rede. Ate la, minor e patch do 6.x continuam
+      # entrando normalmente; so a major fica de fora.
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
 
   # github-actions desabilitado: PRs falham no CI (v6 exige runners mais novos)
   # - package-ecosystem: "github-actions"
