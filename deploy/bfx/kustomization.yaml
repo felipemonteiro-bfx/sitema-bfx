@@ -19,4 +19,4 @@ resources:
 
 images:
 - name: 730335375436.dkr.ecr.sa-east-1.amazonaws.com/bfx/bfx-shop
-  newTag: 3cb65116c8813cfdf7aa0dac0865f3e35091c5a4
+  newTag: 1518844d641674384169d0c9900ba56b76636c9a
