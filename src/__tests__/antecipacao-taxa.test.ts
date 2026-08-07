@@ -102,13 +102,13 @@ describe("parsePeriodoMesAno", () => {
   it("monta o intervalo UTC do primeiro ao ultimo instante do periodo", () => {
     const periodo = parsePeriodoMesAno("03/2026", "04/2026");
     expect(periodo?.inicio.toISOString()).toBe("2026-03-01T00:00:00.000Z");
-    expect(periodo?.fim.toISOString()).toBe("2026-04-30T23:59:59.000Z");
+    expect(periodo?.fim.toISOString()).toBe("2026-04-30T23:59:59.999Z");
   });
 
   it("aceita mes unico", () => {
     const periodo = parsePeriodoMesAno("02/2026", "02/2026");
     expect(periodo?.inicio.toISOString()).toBe("2026-02-01T00:00:00.000Z");
-    expect(periodo?.fim.toISOString()).toBe("2026-02-28T23:59:59.000Z");
+    expect(periodo?.fim.toISOString()).toBe("2026-02-28T23:59:59.999Z");
   });
 
   it("mes 13 nao vira janeiro do ano seguinte — devolve null", () => {

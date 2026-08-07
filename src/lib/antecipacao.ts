@@ -64,7 +64,9 @@ export function parsePeriodoMesAno(
   if (!ini || !fim) return null;
 
   const inicio = new Date(Date.UTC(ini.ano, ini.mes - 1, 1));
-  const fimDate = new Date(Date.UTC(fim.ano, fim.mes, 0, 23, 59, 59));
+  // 23:59:59.999 — parar em .000 deixaria de fora uma parcela gravada no ultimo
+  // segundo do mes. Hoje nao existe dado assim, mas o limite nao custa nada.
+  const fimDate = new Date(Date.UTC(fim.ano, fim.mes, 0, 23, 59, 59, 999));
   if (fimDate < inicio) return null;
 
   return { inicio, fim: fimDate };
