@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda } from "@/lib/venda-utils";
-import { WHERE_VENDA_ANTECIPAVEL } from "@/lib/antecipacao";
+import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
@@ -18,17 +18,14 @@ async function antecipar(formData: FormData) {
   const mesFim = formData.get("mesFim") as string | null;
   if (!ids.length) return;
 
-  // Calcular range de datas para filtrar parcelas
-  let inicioDate: Date | null = null;
-  let fimDate: Date | null = null;
-  if (mesInicio && mesFim) {
-    const [mi, ai] = mesInicio.split("/").map(Number);
-    const [mf, af] = mesFim.split("/").map(Number);
-    if (mi && ai && mf && af) {
-      inicioDate = new Date(Date.UTC(ai, mi - 1, 1));
-      fimDate = new Date(Date.UTC(af, mf, 0, 23, 59, 59)); // ultimo dia do mes fim
-    }
-  }
+  // Range de datas para filtrar parcelas. O parse mora no lib porque a tela, esta
+  // action e os relatorios precisam concordar — antes cada um fazia o seu, e um
+  // mes invalido como "13/2025" virava janeiro de 2026 so aqui.
+  const periodo = parsePeriodoMesAno(mesInicio, mesFim);
+
+  // Periodo pedido mas ilegivel: abortar em vez de antecipar tudo. Sem esta guarda
+  // um "13/2025" digitado errado viraria um lote com todas as parcelas em aberto.
+  if ((mesInicio || mesFim) && !periodo) return;
 
   // Buscar parcelas das vendas selecionadas no período.
   // A action repete o filtro de forma de pagamento da fila: a tela ja so lista
@@ -38,8 +35,8 @@ async function antecipar(formData: FormData) {
       vendaId: { in: ids },
       venda: WHERE_VENDA_ANTECIPAVEL,
       antecipada: false,
-      ...(inicioDate && fimDate ? {
-        dataVencimento: { gte: inicioDate, lte: fimDate },
+      ...(periodo ? {
+        dataVencimento: { gte: periodo.inicio, lte: periodo.fim },
       } : {}),
     },
     include: { venda: { include: { itens: { select: { subtotal: true } } } } },
@@ -191,6 +188,9 @@ export default async function Page() {
     valorTotal: b.valorTotal,
     quantidadeVendas: b.quantidadeVendas,
     periodoDescricao: b.periodoDescricao,
+    // O historico precisa do periodo gravado para reemitir o relatorio do lote.
+    periodoInicio: b.periodoInicio,
+    periodoFim: b.periodoFim,
   }));
 
   const vendasFormatadas = todasVendas.map((v) => {

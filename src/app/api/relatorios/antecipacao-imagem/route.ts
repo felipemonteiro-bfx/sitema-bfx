@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
-import { valorTotalVenda } from "@/lib/venda-utils";
+import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 function formatBRL(value: number): string {
@@ -35,9 +35,18 @@ export async function GET(request: NextRequest) {
     return new Response("IDs invalidos", { status: 400 });
   }
 
+  const periodo = parsePeriodoMesAno(
+    searchParams.get("mesInicio"),
+    searchParams.get("mesFim")
+  );
+
+  // Reemissao pelo Historico de Antecipacoes: o lote ja gravado tem as parcelas
+  // marcadas como antecipadas, e sem isso o PDF sairia zerado.
+  const incluirAntecipadas = searchParams.get("incluirAntecipadas") === "1";
+
   try {
     const vendas = await prisma.venda.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, ...WHERE_VENDA_ANTECIPAVEL },
       include: {
         cliente: {
           select: {
@@ -49,8 +58,13 @@ export async function GET(request: NextRequest) {
             email: true,
           },
         },
-        itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
+        // O cliente sempre mandou mesInicio/mesFim e esta rota descartava, entao o
+        // PDF mostrava parcelas que nao estavam no lote.
         parcelasVencimento: {
+          where: {
+            ...(incluirAntecipadas ? {} : { antecipada: false }),
+            ...(periodo ? { dataVencimento: { gte: periodo.inicio, lte: periodo.fim } } : {}),
+          },
           select: {
             numeroParcela: true,
             dataVencimento: true,
@@ -62,17 +76,21 @@ export async function GET(request: NextRequest) {
     });
 
     // Agrupar por empresa
+    // `vendas` saiu do agrupamento junto com `valorTotalVenda`: o subtotal por
+    // empresa passou a somar as parcelas do lote, e nada mais lia a lista.
     const empresaMap: Record<string, {
-      vendas: typeof vendas;
       parcelas: { numeroParcela: number; dataVencimento: Date; valorParcela: number; vendaId: number }[];
     }> = {};
 
-    for (const venda of vendas) {
+    // Venda sem parcela no lote nao rende nenhuma linha: mante-la geraria um bloco
+    // de empresa com subtotal R$ 0,00 e nenhum item. O CSV e o XLSX ja a pulam.
+    const vendasComLote = vendas.filter((v) => v.parcelasVencimento.length > 0);
+
+    for (const venda of vendasComLote) {
       const empresaNome = venda.cliente?.empresa || "Sem empresa";
       if (!empresaMap[empresaNome]) {
-        empresaMap[empresaNome] = { vendas: [], parcelas: [] };
+        empresaMap[empresaNome] = { parcelas: [] };
       }
-      empresaMap[empresaNome].vendas.push(venda);
       for (const p of venda.parcelasVencimento) {
         empresaMap[empresaNome].parcelas.push({ ...p, vendaId: venda.id });
       }
@@ -139,8 +157,13 @@ export async function GET(request: NextRequest) {
     page.drawText(dataGeracao, {
       x: PAGE_WIDTH - MARGIN - dataGeracaoWidth, y: PAGE_HEIGHT - 35, size: 9, font, color: rgb(0.8, 0.85, 0.95),
     });
-    const totalVendas = vendas.reduce((sum, v) => sum + valorTotalVenda(v), 0);
-    page.drawText(`${ids.length} venda(s) selecionada(s)  |  Total Geral: ${formatBRL(totalVendas)}`, {
+    // Total do LOTE (parcelas nao antecipadas do periodo), nao das vendas inteiras:
+    // o PDF listava as parcelas do lote mas totalizava a venda cheia.
+    const totalVendas = vendasComLote.reduce(
+      (sum, v) => sum + v.parcelasVencimento.reduce((s, p) => s + p.valorParcela, 0),
+      0
+    );
+    page.drawText(`${vendasComLote.length} venda(s) selecionada(s)  |  Total Geral: ${formatBRL(totalVendas)}`, {
       x: MARGIN, y: PAGE_HEIGHT - 55, size: 9, font, color: rgb(0.75, 0.82, 0.95),
     });
 
@@ -151,7 +174,7 @@ export async function GET(request: NextRequest) {
 
     for (const [empresaNome, data] of Object.entries(empresaMap)) {
       const parceiro = empresaParceiraMap[empresaNome];
-      const totalEmpresa = data.vendas.reduce((sum, v) => sum + valorTotalVenda(v), 0);
+      const totalEmpresa = data.parcelas.reduce((sum, p) => sum + p.valorParcela, 0);
       totalGeral += totalEmpresa;
 
       // Agrupar parcelas por mes

@@ -12,6 +12,8 @@ interface Batch {
   valorTotal: number;
   quantidadeVendas: number;
   periodoDescricao: string | null;
+  periodoInicio: Date | string | null;
+  periodoFim: Date | string | null;
 }
 
 interface Props {
@@ -22,14 +24,37 @@ export default function HistoricoAntecipacoes({ batches }: Props) {
   const formatData = (d: Date | string) =>
     new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  const handleExcel = (vendaIds: string) => {
-    const ids = JSON.parse(vendaIds).join(',');
-    window.location.assign(`/api/relatorios/antecipacao-xlsx?ids=${ids}`);
+  /**
+   * Reemitir o relatorio de um lote JA gravado precisa do recorte oposto ao da fila:
+   * as parcelas do lote estao com `antecipada = true`. Sem `incluirAntecipadas` as
+   * rotas devolveriam planilha sem nenhuma aba e PDF zerado.
+   */
+  const paramsDoLote = (b: Batch) => {
+    const params = new URLSearchParams({
+      ids: JSON.parse(b.vendaIds).join(','),
+      incluirAntecipadas: '1',
+    });
+    const mesAno = (d: Date | string | null) => {
+      if (!d) return null;
+      const data = new Date(d);
+      if (Number.isNaN(data.getTime())) return null;
+      return `${String(data.getUTCMonth() + 1).padStart(2, '0')}/${data.getUTCFullYear()}`;
+    };
+    const inicio = mesAno(b.periodoInicio);
+    const fim = mesAno(b.periodoFim);
+    if (inicio && fim) {
+      params.set('mesInicio', inicio);
+      params.set('mesFim', fim);
+    }
+    return params.toString();
   };
 
-  const handleRelatorio = (vendaIds: string) => {
-    const ids = JSON.parse(vendaIds).join(',');
-    window.open(`/api/relatorios/antecipacao-imagem?ids=${ids}`, '_blank');
+  const handleExcel = (b: Batch) => {
+    window.location.assign(`/api/relatorios/antecipacao-xlsx?${paramsDoLote(b)}`);
+  };
+
+  const handleRelatorio = (b: Batch) => {
+    window.open(`/api/relatorios/antecipacao-imagem?${paramsDoLote(b)}`, '_blank');
   };
 
   return (
@@ -63,11 +88,11 @@ export default function HistoricoAntecipacoes({ batches }: Props) {
                   </div>
                 </div>
                 <div className="flex gap-2 flex-wrap">
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleExcel(b.vendaIds)}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleExcel(b)}>
                     <FileSpreadsheet className="h-3.5 w-3.5" />
                     Planilha
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleRelatorio(b.vendaIds)}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleRelatorio(b)}>
                     <ImageIcon className="h-3.5 w-3.5" />
                     Relatório Visual
                   </Button>

@@ -5,6 +5,7 @@ import {
   calcularPrazoMedioDias,
   calcularTaxaPercent,
   calcularAntecipacao,
+  parsePeriodoMesAno,
   titulosDeVenda,
   vendaEhAntecipavel,
   WHERE_VENDA_ANTECIPAVEL,
@@ -94,6 +95,44 @@ describe("calcularTaxaPercent", () => {
 
   it("aceita uma taxa mensal diferente da padrao", () => {
     expect(calcularTaxaPercent(15, 3)).toBeCloseTo(1.5, 10);
+  });
+});
+
+describe("parsePeriodoMesAno", () => {
+  it("monta o intervalo UTC do primeiro ao ultimo instante do periodo", () => {
+    const periodo = parsePeriodoMesAno("03/2026", "04/2026");
+    expect(periodo?.inicio.toISOString()).toBe("2026-03-01T00:00:00.000Z");
+    expect(periodo?.fim.toISOString()).toBe("2026-04-30T23:59:59.000Z");
+  });
+
+  it("aceita mes unico", () => {
+    const periodo = parsePeriodoMesAno("02/2026", "02/2026");
+    expect(periodo?.inicio.toISOString()).toBe("2026-02-01T00:00:00.000Z");
+    expect(periodo?.fim.toISOString()).toBe("2026-02-28T23:59:59.000Z");
+  });
+
+  it("mes 13 nao vira janeiro do ano seguinte — devolve null", () => {
+    expect(parsePeriodoMesAno("13/2025", "13/2025")).toBeNull();
+  });
+
+  it("rejeita intervalo invertido", () => {
+    expect(parsePeriodoMesAno("06/2026", "03/2026")).toBeNull();
+  });
+
+  it.each([
+    ["", ""],
+    ["03/2026", ""],
+    ["marco/2026", "04/2026"],
+    ["3-2026", "04/2026"],
+    ["00/2026", "04/2026"],
+    ["03/26", "04/2026"],
+  ])("rejeita entrada malformada (%s, %s)", (inicio, fim) => {
+    expect(parsePeriodoMesAno(inicio, fim)).toBeNull();
+  });
+
+  it("null e undefined nao explodem", () => {
+    expect(parsePeriodoMesAno(null, null)).toBeNull();
+    expect(parsePeriodoMesAno(undefined, "04/2026")).toBeNull();
   });
 });
 

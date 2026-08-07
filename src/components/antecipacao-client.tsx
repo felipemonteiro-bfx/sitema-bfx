@@ -11,7 +11,7 @@ import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileSpreadsheet, ImageIcon, Loader2 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
-import { TAXA_MENSAL_PADRAO, calcularAntecipacao, titulosDeVenda } from "@/lib/antecipacao";
+import { TAXA_MENSAL_PADRAO, calcularAntecipacao, parsePeriodoMesAno, titulosDeVenda } from "@/lib/antecipacao";
 
 interface ParcelaDetalhe {
   numeroParcela: number;
@@ -77,15 +77,6 @@ function StatusBadge({ status }: { status: Venda['status'] }) {
   );
 }
 
-function parseMesAno(str: string): { mes: number; ano: number } | null {
-  const parts = str.split('/');
-  if (parts.length !== 2) return null;
-  const mes = parseInt(parts[0], 10);
-  const ano = parseInt(parts[1], 10);
-  if (isNaN(mes) || isNaN(ano) || mes < 1 || mes > 12) return null;
-  return { mes, ano };
-}
-
 export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis }: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -94,19 +85,15 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const [periodoInicio, setPeriodoInicio] = useState<string>("");
   const [periodoFim, setPeriodoFim] = useState<string>("");
 
-  const periodoInicioP = parseMesAno(periodoInicio);
-  const periodoFimP = parseMesAno(periodoFim);
-
   // Range em UTC, identico ao que a server action `antecipar` usa para escolher as
   // parcelas. Antes o filtro da tela montava o range em horario local e podia
   // divergir da gravacao em parcelas de borda do mes.
-  const periodo =
-    periodoInicioP && periodoFimP
-      ? {
-          inicio: new Date(Date.UTC(periodoInicioP.ano, periodoInicioP.mes - 1, 1)),
-          fim: new Date(Date.UTC(periodoFimP.ano, periodoFimP.mes, 0, 23, 59, 59)),
-        }
-      : null;
+  const periodo = parsePeriodoMesAno(periodoInicio, periodoFim);
+
+  // Periodo digitado que o parser recusa (mes 13, intervalo invertido, formato
+  // errado). Sem sinalizar, o filtro seria silenciosamente ignorado e a tela
+  // mostraria tudo como se o usuario nao tivesse pedido recorte nenhum.
+  const periodoInvalido = Boolean((periodoInicio || periodoFim) && !periodo);
 
   // Filtrar vendas baseado nos filtros ativos
   const vendasFiltradas = vendasIniciais.filter((v) => {
@@ -116,7 +103,10 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     // Filtro de periodo: se periodo definido, venda precisa ter parcela no range
     let passaPeriodo = true;
     if (periodo && v.parcelas_detalhes && v.parcelas_detalhes.length > 0) {
+      // Parcela ja antecipada nao conta: senao a linha aparece como elegivel e o
+      // usuario so descobre que nao e ao clicar em Antecipar.
       passaPeriodo = v.parcelas_detalhes.some((p) => {
+        if (p.antecipada) return false;
         const d = new Date(p.dataVencimento);
         return d >= periodo.inicio && d <= periodo.fim;
       });
@@ -124,6 +114,26 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
     return passaEmpresa && passaStatus && passaPeriodo;
   });
+
+  const selectedVendas = vendasIniciais.filter(v => selectedIds.includes(v.id));
+
+  // Os titulos que a server action vai antecipar de fato: parcelas ainda nao
+  // antecipadas e dentro do periodo filtrado. O calculo antigo usava o valor cheio
+  // da venda e um prazo aproximado de 30 dias por parcela, entao divergia do lote.
+  const titulosSelecionados = selectedVendas.flatMap((v) => titulosDeVenda(v, periodo));
+  const {
+    prazoMedioDias: prazoMedio,
+    taxaPercent,
+    valorBruto: totalSelecionado,
+    valorTaxa,
+    valorLiquido,
+  } = calcularAntecipacao(titulosSelecionados);
+
+  // Selecao que os filtros atuais escondem: continua no lote e no card, mas some da
+  // tabela — sem este contador o total nao fecha com o que esta a vista.
+  const selecionadosOcultos = selectedIds.filter(
+    (id) => !vendasFiltradas.some((v) => v.id === id)
+  ).length;
 
   const toggleSelect = (id: number, isTotalmenteAntecipado: boolean) => {
     if (isTotalmenteAntecipado) return;
@@ -144,18 +154,50 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
   const handleAction = async (formData: FormData) => {
     if (selectedIds.length === 0) return;
+    if (periodoInvalido) {
+      toast.error("Período inválido. Use o formato MM/AAAA, com o mês inicial antes do final.");
+      return;
+    }
+    // A action nao encontra parcela elegivel e retorna em silencio: sem este aviso
+    // o usuario clica, nada acontece e a tela nao explica por que.
+    if (titulosSelecionados.length === 0) {
+      toast.error("Nenhuma parcela elegível na seleção — todas já foram antecipadas ou estão fora do período.");
+      return;
+    }
+    // Venda legada sem parcela cadastrada: a tela estima os titulos, mas a action
+    // so enxerga linhas reais e retornaria em silencio, limpando a selecao como se
+    // tivesse dado certo.
+    if (!selectedVendas.some((v) => v.parcelas_detalhes?.some((p) => !p.antecipada))) {
+      toast.error("As vendas selecionadas não têm parcelas cadastradas para antecipar.");
+      return;
+    }
 
     setIsProcessing(true);
     try {
-      // 1. Gerar e baixar o relatório para a financeira
+      // 1. Gerar e baixar o relatório para a financeira.
+      // O CSV agora so lista parcelas com `antecipada = false`, entao ele tem de
+      // ser lido ANTES da gravacao. O `setTimeout` de 1s que existia aqui nao era
+      // barreira nenhuma: se a requisicao chegasse depois do updateMany, a
+      // financeira recebia um arquivo vazio.
       const idsParam = selectedIds.join(',');
       const xlsxParams = new URLSearchParams({ ids: idsParam });
       if (periodoInicio) xlsxParams.set('mesInicio', periodoInicio);
       if (periodoFim) xlsxParams.set('mesFim', periodoFim);
-      window.location.assign(`/api/relatorios/antecipacao?${xlsxParams.toString()}`);
 
-      // Pequeno delay para garantir que o download inicie
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const resposta = await fetch(`/api/relatorios/antecipacao?${xlsxParams.toString()}`);
+      if (!resposta.ok) {
+        toast.error("Não foi possível gerar o relatório da financeira. A antecipação não foi executada.");
+        return;
+      }
+      const blob = await resposta.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `relatorio-financeira-${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
 
       // 2. Executar a antecipação no banco
       selectedIds.forEach(id => formData.append('id', id.toString()));
@@ -189,20 +231,6 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
   const selectableInFiltered = vendasFiltradas.filter(v => v.status !== 'antecipado');
   const allFilteredSelected = selectableInFiltered.length > 0 && selectableInFiltered.every(v => selectedIds.includes(v.id));
-
-  const selectedVendas = vendasIniciais.filter(v => selectedIds.includes(v.id));
-
-  // Os titulos que a server action vai antecipar de fato: parcelas ainda nao
-  // antecipadas e dentro do periodo filtrado. O calculo antigo usava o valor cheio
-  // da venda e um prazo aproximado de 30 dias por parcela, entao divergia do lote.
-  const titulosSelecionados = selectedVendas.flatMap((v) => titulosDeVenda(v, periodo));
-  const {
-    prazoMedioDias: prazoMedio,
-    taxaPercent,
-    valorBruto: totalSelecionado,
-    valorTaxa,
-    valorLiquido,
-  } = calcularAntecipacao(titulosSelecionados);
 
   const formatDateBR = (value: string | Date) => {
     const d = typeof value === 'string' ? new Date(value) : value;
@@ -404,6 +432,21 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                 <> · {titulosSelecionados.length} {titulosSelecionados.length === 1 ? 'parcela' : 'parcelas'}</>
               )}
             </div>
+            {periodoInvalido && (
+              <div className="text-xs font-semibold text-warning-text mt-1">
+                Período inválido — informe MM/AAAA, com o mês inicial antes do final.
+              </div>
+            )}
+            {!periodoInvalido && selectedIds.length > 0 && titulosSelecionados.length === 0 && (
+              <div className="text-xs font-semibold text-warning-text mt-1">
+                Nenhuma parcela elegível — já antecipadas ou fora do período.
+              </div>
+            )}
+            {selecionadosOcultos > 0 && (
+              <div className="text-xs text-muted-foreground mt-1">
+                {selecionadosOcultos} {selecionadosOcultos === 1 ? 'selecionada não aparece' : 'selecionadas não aparecem'} nos filtros atuais e {selecionadosOcultos === 1 ? 'continua' : 'continuam'} na seleção.
+              </div>
+            )}
           </div>
 
           {/* Separador vertical (só desktop) */}

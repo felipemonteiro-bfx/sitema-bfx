@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { valorTotalVenda } from "@/lib/venda-utils";
+import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 
 function formatDateBR(date: Date): string {
   const d = new Date(date);
@@ -86,23 +87,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "IDs inválidos" }, { status: 400 });
   }
 
-  // Filtro de período opcional (MM/YYYY)
-  const mesInicioStr = searchParams.get("mesInicio");
-  const mesFimStr = searchParams.get("mesFim");
-  let periodoInicio: Date | null = null;
-  let periodoFim: Date | null = null;
-  if (mesInicioStr && mesFimStr) {
-    const [mi, ai] = mesInicioStr.split("/").map(Number);
-    const [mf, af] = mesFimStr.split("/").map(Number);
-    if (mi && ai && mf && af) {
-      periodoInicio = new Date(Date.UTC(ai, mi - 1, 1));
-      periodoFim = new Date(Date.UTC(af, mf, 0, 23, 59, 59));
-    }
-  }
+  // Filtro de período opcional (MM/YYYY) — mesmo parse da tela e da server action.
+  const periodo = parsePeriodoMesAno(
+    searchParams.get("mesInicio"),
+    searchParams.get("mesFim")
+  );
+
+  // O Historico de Antecipacoes reemite o relatorio de um lote ja gravado, cujas
+  // parcelas estao com `antecipada = true`. Sem isso a planilha sairia sem abas.
+  const incluirAntecipadas = searchParams.get("incluirAntecipadas") === "1";
 
   try {
     const vendas = await prisma.venda.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, ...WHERE_VENDA_ANTECIPAVEL },
       include: {
         cliente: {
           select: {
@@ -118,6 +115,7 @@ export async function GET(request: NextRequest) {
             numeroParcela: true,
             dataVencimento: true,
             valorParcela: true,
+            antecipada: true,
           },
           orderBy: { numeroParcela: 'asc' },
         },
@@ -143,16 +141,18 @@ export async function GET(request: NextRequest) {
         }).join(', ');
       }
 
-      const totalVenda = valorTotalVenda(venda);
-
       if (venda.parcelasVencimento.length > 0) {
-        // Usar parcelas reais, filtrando pelo período se fornecido
-        const parcelasFiltradas = periodoInicio && periodoFim
-          ? venda.parcelasVencimento.filter((p) => {
-              const d = new Date(p.dataVencimento);
-              return d >= periodoInicio! && d <= periodoFim!;
-            })
-          : venda.parcelasVencimento;
+        // Usar parcelas reais, descartando as ja antecipadas — repeti-las faria a
+        // financeira receber duas vezes o mesmo titulo — e filtrando pelo período
+        // se fornecido. O denominador de "parcela X/Y" continua sendo o total da
+        // venda, nao o do lote.
+        const parcelasFiltradas = venda.parcelasVencimento
+          .filter((p) => incluirAntecipadas || !p.antecipada)
+          .filter((p) => {
+            if (!periodo) return true;
+            const d = new Date(p.dataVencimento);
+            return d >= periodo.inicio && d <= periodo.fim;
+          });
         const totalParcelas = venda.parcelasVencimento.length;
         for (const parcela of parcelasFiltradas) {
           const d = new Date(parcela.dataVencimento);
@@ -178,10 +178,13 @@ export async function GET(request: NextRequest) {
             dataDesconto,
           });
         }
-      } else {
-        // Sem parcelas cadastradas: estimar baseado em dataVenda + numero de parcelas
+      } else if (!periodo) {
+        // Sem parcelas cadastradas: estimar baseado em dataVenda + numero de parcelas.
+        // Com periodo ativo a estimativa fica de fora, como em `titulosDeVenda`: a
+        // server action so antecipa parcela real, entao a planilha listaria titulo
+        // que o lote nao contem.
         const numParcelas = venda.parcelas || 1;
-        const valorParcela = venda.valorParcela ?? (totalVenda / numParcelas);
+        const valorParcela = venda.valorParcela ?? (valorTotalVenda(venda) / numParcelas);
         const dataBase = new Date(venda.dataVenda);
 
         for (let i = 0; i < numParcelas; i++) {

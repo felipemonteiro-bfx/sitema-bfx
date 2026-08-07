@@ -177,6 +177,10 @@ model Venda {
   documentos         Documento[]
   assinatura         Assinatura?
 
+  // A fila da Central Prudent filtra por forma de pagamento a cada carga da tela.
+  // O indice existia no backfill de forma_pagamento e foi perdido na migration de
+  // reconciliacao de drift (20260720201100).
+  @@index([formaPagamento])
   @@map("vendas")
 }
 

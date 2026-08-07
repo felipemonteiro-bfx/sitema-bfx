@@ -31,6 +31,45 @@ const DIAS_NO_MES = 30;
 
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
 
+export interface PeriodoAntecipacao {
+  inicio: Date;
+  fim: Date;
+}
+
+/**
+ * Converte o par `MM/YYYY` da tela no intervalo UTC que delimita as parcelas.
+ *
+ * Fonte única para a tela, a server action e os três relatórios: cada um parseava
+ * por conta própria e divergia. A action e o XLSX só faziam `Number(...)`, então
+ * `13/2025` virava janeiro de 2026 e o lote gravava um período que ninguém pediu.
+ * Mês fora de 1..12, ano ausente ou intervalo invertido devolvem `null` — sem período.
+ */
+export function parsePeriodoMesAno(
+  mesInicio: string | null | undefined,
+  mesFim: string | null | undefined
+): PeriodoAntecipacao | null {
+  const parse = (valor: string | null | undefined) => {
+    if (!valor) return null;
+    const partes = valor.split("/");
+    if (partes.length !== 2) return null;
+    const mes = Number(partes[0]);
+    const ano = Number(partes[1]);
+    if (!Number.isInteger(mes) || !Number.isInteger(ano)) return null;
+    if (mes < 1 || mes > 12 || ano < 1000 || ano > 9999) return null;
+    return { mes, ano };
+  };
+
+  const ini = parse(mesInicio);
+  const fim = parse(mesFim);
+  if (!ini || !fim) return null;
+
+  const inicio = new Date(Date.UTC(ini.ano, ini.mes - 1, 1));
+  const fimDate = new Date(Date.UTC(fim.ano, fim.mes, 0, 23, 59, 59));
+  if (fimDate < inicio) return null;
+
+  return { inicio, fim: fimDate };
+}
+
 /** Título já reduzido ao que o cálculo precisa: quanto vale e em quantos dias vence. */
 export interface TituloComPrazo {
   valor: number;
