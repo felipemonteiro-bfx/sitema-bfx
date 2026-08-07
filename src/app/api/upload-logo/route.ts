@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/db";
+import { revalidarConfig } from "@/lib/revalidacao";
 import { uploadToMinIO, isMinIOConfigured } from "@/lib/minio";
 import { deveRecusarUpload, exigeStorageDuravel, montarChaveLogo } from "@/lib/storage-policy";
 
@@ -12,6 +13,8 @@ async function persistirLogoPath(logoPath: string) {
   } else {
     await prisma.config.create({ data: { logoPath } });
   }
+  // O logo aparece no dashboard, nos recibos e nos boletos.
+  revalidarConfig();
 }
 
 export async function POST(req: Request) {

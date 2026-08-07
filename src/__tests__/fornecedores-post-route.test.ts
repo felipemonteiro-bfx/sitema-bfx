@@ -16,6 +16,9 @@ const auditMock = { createAuditLog: vi.fn() };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/session", () => sessionMock);
 vi.mock("@/lib/audit", () => auditMock);
+// A rota passou a revalidar; sem este mock o teste importaria `next/cache`
+// de verdade, fora de contexto de request.
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { POST } = await import("@/app/api/fornecedores/route");
 

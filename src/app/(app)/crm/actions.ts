@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidarCliente } from "@/lib/revalidacao";
 import { prisma } from "@/lib/db";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { ESTAGIOS_ORDEM } from "@/lib/crm";
@@ -12,7 +12,7 @@ export async function mudarEstagioCliente(formData: FormData): Promise<void> {
   const estagio = String(formData.get("estagio") || "");
   if (!clienteId || !(ESTAGIOS_ORDEM as string[]).includes(estagio)) return;
   await prisma.cliente.update({ where: { id: clienteId }, data: { estagioCrm: estagio } });
-  revalidatePath("/crm");
+  revalidarCliente();
 }
 
 /** Cria uma tag (nome único, normalizado). */
@@ -26,7 +26,7 @@ export async function criarTag(formData: FormData): Promise<void> {
   } catch {
     // nome duplicado — ignora
   }
-  revalidatePath("/crm");
+  revalidarCliente();
 }
 
 /** Adiciona/remove uma tag de um cliente (toggle). */
@@ -44,5 +44,5 @@ export async function toggleTagCliente(formData: FormData): Promise<void> {
   } else {
     await prisma.clienteTag.create({ data: { clienteId, tagId } });
   }
-  revalidatePath("/crm");
+  revalidarCliente();
 }

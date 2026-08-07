@@ -3,7 +3,7 @@
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/db";
 import { checkboxLigado } from "@/lib/form-values";
-import { revalidatePath } from "next/cache";
+import { revalidarVenda } from "@/lib/revalidacao";
 import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
 import { vendaV2Schema } from "@/lib/validations/venda";
@@ -119,7 +119,7 @@ export async function criarVenda(formData: FormData) {
       }
     })();
   }
-  revalidatePath("/venda-rapida");
+  revalidarVenda();
 }
 
 /**
@@ -339,9 +339,7 @@ export async function criarVendaV2(
       return vendaCriada;
     });
 
-    revalidatePath("/venda-rapida");
-    revalidatePath("/historico");
-    revalidatePath("/dashboard");
+    revalidarVenda();
 
     await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
 
@@ -466,6 +464,9 @@ export async function criarVendaV2(
             },
           });
           boletoUrl = payment.bankSlipUrl || undefined;
+          // O boleto e gerado DEPOIS da revalidacao la de cima, entao sem esta
+          // segunda chamada /boletos e /historico nunca viam o boleto recem-criado.
+          revalidarVenda();
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         console.error("Erro ao gerar boleto Asaas:", err);

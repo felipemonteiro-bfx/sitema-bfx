@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
+import { revalidarVenda } from "@/lib/revalidacao";
 import {
   getAsaasConfig,
   getOrCreateCustomer,
@@ -102,8 +102,7 @@ export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoR
       });
     }
 
-    revalidatePath("/historico");
-    revalidatePath("/boletos");
+    revalidarVenda();
     return { success: true };
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);

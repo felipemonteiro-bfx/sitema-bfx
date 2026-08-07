@@ -9,6 +9,7 @@ import { FormSelect } from "@/components/form-select";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { deveConsultarSimilares } from "@/lib/cliente-rapido";
+import { useRouter } from "next/navigation";
 
 export interface ClienteRapidoCriado {
   id: number;
@@ -33,6 +34,7 @@ export function CadastrarClienteRapidoDialog({
   nomeInicial,
   onCriado,
 }: Props) {
+  const router = useRouter();
   const [nome, setNome] = useState(nomeInicial.toUpperCase());
   const [telefone, setTelefone] = useState("");
   const [cpf, setCpf] = useState("");
@@ -107,6 +109,8 @@ export function CadastrarClienteRapidoDialog({
       }
       const cliente = await res.json();
       toast.success(`Cliente "${cliente.nome}" cadastrado`);
+      // Sem isto a lista da tela de tras so mostra o registro novo apos reload.
+      router.refresh();
       onCriado(cliente);
       onOpenChange(false);
     } catch {

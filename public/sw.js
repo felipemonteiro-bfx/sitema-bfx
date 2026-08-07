@@ -32,6 +32,13 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/_next/')) return;
 
+  // Payload RSC do App Router: e o que a navegacao client-side, o prefetch de
+  // <Link> e o router.refresh() buscam. Sao GET de mesma origem para /dashboard,
+  // /historico etc., com mode 'cors' (nao 'navigate'), entao caiam no cache-first
+  // la embaixo e a tela continuava mostrando o dado velho depois de cada acao —
+  // so F5 (que e 'navigate') ou limpar o cache resolvia. Nunca cachear isto.
+  if (request.headers.get('RSC') === '1' || url.searchParams.has('_rsc')) return;
+
   // Navigation requests: network-first, fall back to cache or offline page
   if (request.mode === 'navigate') {
     event.respondWith(
@@ -48,7 +55,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first
+  // Static assets: cache-first — apenas o que e de fato estatico. Antes esta regra
+  // valia para todo GET restante, o que arrastava documento e dado dinamico para
+  // dentro do cache.
+  const ESTATICOS = ['image', 'style', 'script', 'font'];
+  if (!ESTATICOS.includes(request.destination)) return;
+
   event.respondWith(
     caches.match(request).then(
       (cached) =>

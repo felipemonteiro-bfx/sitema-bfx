@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { checkboxLigado } from "@/lib/form-values";
-import { revalidatePath } from "next/cache";
+import { revalidarVenda } from "@/lib/revalidacao";
 import { createAuditLog } from "@/lib/audit";
 import { sendVendaNotification } from "@/lib/email";
 import {
@@ -129,7 +129,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     }
 
     await createAuditLog("venda:update", { vendaId: id, subtotal, lucro });
-    revalidatePath("/historico");
+    revalidarVenda();
     return { success: true };
   } catch (err) {
     console.error("Erro ao atualizar venda:", err);
@@ -193,7 +193,7 @@ export async function deleteVenda(formData: FormData): Promise<void> {
 
     await prisma.venda.delete({ where: { id } });
     await createAuditLog("venda:delete", { vendaId: id });
-    revalidatePath("/historico");
+    revalidarVenda();
   } catch (err) {
     console.error("Erro ao excluir venda:", err);
     throw new Error("Erro ao excluir venda. Tente novamente.");

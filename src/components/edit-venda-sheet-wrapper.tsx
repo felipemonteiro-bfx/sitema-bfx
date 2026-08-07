@@ -32,6 +32,9 @@ export function EditVendaSheetWrapper({ editId, title, description, children }: 
     params.delete("edit");
     const q = params.toString();
     router.push(q ? `/historico?${q}` : "/historico");
+    // O push volta para a mesma rota e reaproveita o cache do router; sem o
+    // refresh a venda recem-editada aparece com os valores antigos.
+    router.refresh();
   };
 
   if (!editId) return null;

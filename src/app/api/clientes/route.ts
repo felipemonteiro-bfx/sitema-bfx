@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { createAuditLog } from "@/lib/audit";
 import { montarPayloadClienteRapido, mensagemClienteDuplicado } from "@/lib/cliente-rapido";
+import { revalidarCliente } from "@/lib/revalidacao";
 
 const SELECT_CLIENTE_RAPIDO = {
   id: true,
@@ -65,6 +66,10 @@ export async function POST(request: Request) {
     });
 
     await createAuditLog("cliente:create", { clienteId: cliente.id, nome: cliente.nome });
+    // Invalida o cache de servidor destas rotas. Diferente de server action,
+    // route handler nao devolve nada que invalide o Router Cache do cliente:
+    // quem atualiza a tela de quem chamou e o router.refresh() no componente.
+    revalidarCliente();
 
     return NextResponse.json(cliente, { status: 201 });
   } catch (err) {

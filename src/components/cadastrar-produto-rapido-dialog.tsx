@@ -11,6 +11,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { CadastrarFornecedorRapidoDialog } from "@/components/cadastrar-fornecedor-rapido-dialog";
 import { Loader2, Tag } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface Props {
   open: boolean;
@@ -35,6 +36,7 @@ export function CadastrarProdutoRapidoDialog({
   categoriasExistentes,
   onCriado,
 }: Props) {
+  const router = useRouter();
   const [nome, setNome] = useState(nomeInicial.toUpperCase());
   const [valorVenda, setValorVenda] = useState(0);
   const [custoPadrao, setCustoPadrao] = useState(0);
@@ -121,6 +123,8 @@ export function CadastrarProdutoRapidoDialog({
       }
       const produto = await res.json();
       toast.success(`Produto "${produto.nome}" cadastrado`);
+      // Sem isto a lista da tela de tras so mostra o registro novo apos reload.
+      router.refresh();
       onCriado(produto);
       onOpenChange(false);
     } catch {

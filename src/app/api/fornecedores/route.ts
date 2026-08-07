@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { createAuditLog } from "@/lib/audit";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
+import { revalidarFornecedor } from "@/lib/revalidacao";
 
 export async function POST(request: NextRequest) {
   // Sessao e checada ANTES de ler o corpo e antes de qualquer chamada ao
@@ -43,6 +44,8 @@ export async function POST(request: NextRequest) {
         fornecedorId: fornecedor.id,
         nome: fornecedor.nome,
       });
+      // Invalida o cache de servidor; o refresh da tela e do componente que chamou.
+      revalidarFornecedor();
       return NextResponse.json(
         { id: fornecedor.id, nome: fornecedor.nome, reativado: false, jaExistia: false },
         { status: 201 }
@@ -55,6 +58,7 @@ export async function POST(request: NextRequest) {
         data: { deletedAt: null, telefone },
         select: { id: true, nome: true },
       });
+      revalidarFornecedor();
       await createAuditLog("fornecedor:restore", {
         fornecedorId: fornecedor.id,
         nome: fornecedor.nome,

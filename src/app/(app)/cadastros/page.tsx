@@ -2,7 +2,12 @@ import { prisma } from "@/lib/db";
 import { fuzzyFindProdutos, unaccentFindClienteIds } from "@/lib/db-search";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
-import { revalidatePath } from "next/cache";
+import {
+  revalidarCliente,
+  revalidarProduto,
+  revalidarFornecedor,
+  revalidarEmpresa,
+} from "@/lib/revalidacao";
 import { redirect } from "next/navigation";
 import { Prisma } from "@/generated/prisma";
 import { QueryTabs } from "@/components/query-tabs";
@@ -50,7 +55,7 @@ export async function addCliente(formData: FormData) {
       },
     });
     await createAuditLog("cliente:create", { clienteId: cliente.id, nome });
-    revalidatePath("/cadastros");
+    revalidarCliente();
   } catch (e) {
     const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
     redirect(`/cadastros?tab=clientes&error=${isUniqueError ? "nome_duplicado" : "salvar_falhou"}`);
@@ -85,7 +90,7 @@ export async function updateCliente(formData: FormData) {
       },
     });
     await createAuditLog("cliente:update", { clienteId: id, nome });
-    revalidatePath("/cadastros");
+    revalidarCliente();
   } catch (e) {
     const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
     redirect(`/cadastros?tab=clientes&editCliente=${id}&error=${isUniqueError ? "nome_duplicado" : "salvar_falhou"}`);
@@ -106,7 +111,7 @@ async function bulkDeleteClientes(ids: number[]) {
   for (const c of clientes) {
     await createAuditLog("cliente:delete", { clienteId: c.id, nome: c.nome });
   }
-  revalidatePath("/cadastros");
+  revalidarCliente();
 }
 
 export async function addProduto(formData: FormData) {
@@ -130,7 +135,7 @@ export async function addProduto(formData: FormData) {
     },
   });
   await createAuditLog("produto:create", { produtoId: produto.id, nome });
-  revalidatePath("/cadastros");
+  revalidarProduto();
 }
 
 export async function updateProduto(formData: FormData) {
@@ -158,7 +163,7 @@ export async function updateProduto(formData: FormData) {
     },
   });
   await createAuditLog("produto:update", { produtoId: id, nome });
-  revalidatePath("/cadastros");
+  revalidarProduto();
 }
 
 async function deleteProduto(formData: FormData) {
@@ -172,7 +177,7 @@ async function deleteProduto(formData: FormData) {
   if (!produto) return;
   await prisma.produto.delete({ where: { id } });
   await createAuditLog("produto:delete", { produtoId: id, nome: produto.nome });
-  revalidatePath("/cadastros");
+  revalidarProduto();
 }
 
 async function bulkDeleteProdutos(ids: number[]) {
@@ -184,7 +189,7 @@ async function bulkDeleteProdutos(ids: number[]) {
   for (const p of produtos) {
     await createAuditLog("produto:delete", { produtoId: p.id, nome: p.nome });
   }
-  revalidatePath("/cadastros");
+  revalidarProduto();
 }
 
 export async function addFornecedor(formData: FormData) {
@@ -208,7 +213,7 @@ export async function addFornecedor(formData: FormData) {
       fornecedorId: fornecedor.id,
       nome: classificacao.nomeNormalizado,
     });
-    revalidatePath("/cadastros");
+    revalidarFornecedor();
     return;
   }
 
@@ -221,12 +226,12 @@ export async function addFornecedor(formData: FormData) {
       fornecedorId: classificacao.id,
       nome: classificacao.nomeNormalizado,
     });
-    revalidatePath("/cadastros");
+    revalidarFornecedor();
     return;
   }
 
   // "ignorar": nao escreve nada, apenas revalida.
-  revalidatePath("/cadastros");
+  revalidarFornecedor();
 }
 
 export async function updateFornecedor(formData: FormData) {
@@ -243,7 +248,7 @@ export async function updateFornecedor(formData: FormData) {
     },
   });
   await createAuditLog("fornecedor:update", { fornecedorId: id, nome });
-  revalidatePath("/cadastros");
+  revalidarFornecedor();
   redirect("/cadastros?tab=fornecedores");
 }
 
@@ -261,7 +266,7 @@ export async function bulkDeleteFornecedores(ids: number[]) {
   for (const f of fornecedores) {
     await createAuditLog("fornecedor:delete", { fornecedorId: f.id, nome: f.nome });
   }
-  revalidatePath("/cadastros");
+  revalidarFornecedor();
 }
 
 export async function addEmpresa(formData: FormData) {
@@ -281,7 +286,7 @@ export async function addEmpresa(formData: FormData) {
       emailsExtras: emailsExtrasRaw || null,
     },
   });
-  revalidatePath("/cadastros");
+  revalidarEmpresa();
 }
 
 export async function updateEmpresa(formData: FormData) {
@@ -304,7 +309,7 @@ export async function updateEmpresa(formData: FormData) {
     },
   });
   await createAuditLog("empresa:update", { empresaId: id, nome });
-  revalidatePath("/cadastros");
+  revalidarEmpresa();
   redirect("/cadastros?tab=empresas");
 }
 
@@ -317,7 +322,7 @@ async function bulkDeleteEmpresas(ids: number[]) {
   for (const e of empresas) {
     await createAuditLog("empresa:delete", { empresaId: e.id, nome: e.nome });
   }
-  revalidatePath("/cadastros");
+  revalidarEmpresa();
 }
 
 async function vincularEmpresas(empresaId: number, vinculadaIds: number[]) {
@@ -341,7 +346,7 @@ async function vincularEmpresas(empresaId: number, vinculadaIds: number[]) {
       await prisma.empresaVinculo.createMany({ data: uniquePairs, skipDuplicates: true });
     }
     await createAuditLog("empresa:vincular", { empresaId, vinculadaIds });
-    revalidatePath("/cadastros");
+    revalidarEmpresa();
   } catch (err) {
     console.error("[vincularEmpresas]", err);
   }

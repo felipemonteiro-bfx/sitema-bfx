@@ -5,8 +5,10 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { logoSrcParaBrowser } from "@/lib/storage-policy";
+import { useRouter } from "next/navigation";
 
 export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }) {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -41,7 +43,14 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
 
       if (response.ok) {
         toast.success("Logo enviada com sucesso!");
-        window.location.reload();
+        // Era window.location.reload(). O refresh so refaz os dados do servidor,
+        // entao a limpeza que o reload fazia de graca agora e explicita: sem ela o
+        // botao continua armado com o mesmo arquivo (reenvio duplicado no storage)
+        // e o preview local segue na frente da logo que o servidor devolveu.
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+        setFile(null);
+        router.refresh();
       } else {
         const errorData = await response.json();
         toast.error(`Falha ao enviar logo: ${errorData.error || response.statusText}`);

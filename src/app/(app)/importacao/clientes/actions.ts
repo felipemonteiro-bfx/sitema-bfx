@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidarCliente } from "@/lib/revalidacao";
 import { prisma } from "@/lib/db";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { createAuditLog } from "@/lib/audit";
@@ -153,8 +153,7 @@ export async function confirmarImportacaoClientes(
     ignorados: resultado.ignorados,
   });
 
-  revalidatePath("/crm");
-  revalidatePath("/cadastros");
+  revalidarCliente();
 
   return resultado;
 }

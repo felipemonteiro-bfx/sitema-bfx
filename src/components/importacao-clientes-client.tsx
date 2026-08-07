@@ -27,6 +27,7 @@ import {
 import { Loader2, CheckCircle2 } from "lucide-react";
 import type { PlanoImportacaoClientes } from "@/lib/cliente-import";
 import type { confirmarImportacaoClientes, ResultadoCommitClientes } from "@/app/(app)/importacao/clientes/actions";
+import { useRouter } from "next/navigation";
 
 type EmpresaParceiraOpcao = { id: number; nome: string };
 
@@ -43,6 +44,7 @@ export default function ImportacaoClientesClient({
   analisarAction,
   confirmarAction,
 }: ImportacaoClientesClientProps) {
+  const router = useRouter();
   const [empresaParceiraId, setEmpresaParceiraId] = useState<number | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [texto, setTexto] = useState<string | null>(null);
@@ -90,6 +92,8 @@ export default function ImportacaoClientesClient({
       toast.success(
         `Importação concluída: ${resultadoCommit.criados} criados, ${resultadoCommit.vinculados} vinculados, ${resultadoCommit.ignorados} ignorados.`
       );
+      // A importacao gravou clientes/fornecedores: sem refresh a lista fica velha.
+      router.refresh();
     } catch {
       toast.error("Erro ao confirmar a importação.");
     } finally {

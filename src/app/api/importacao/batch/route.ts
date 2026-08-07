@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { importacaoBatchSchema } from "@/lib/validations/importacao";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
+import { revalidarVenda, revalidarCliente } from "@/lib/revalidacao";
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,6 +71,11 @@ export async function POST(request: NextRequest) {
         });
       }
     });
+
+    // A importacao cria cliente e venda em lote. Invalida o cache de servidor das
+    // telas afetadas; o refresh da tela de importacao e do proprio componente.
+    revalidarVenda();
+    revalidarCliente();
 
     return NextResponse.json({ success: true });
   } catch (error) {

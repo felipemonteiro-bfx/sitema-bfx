@@ -3,7 +3,7 @@ import { valorTotalVenda } from "@/lib/venda-utils";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { revalidatePath } from "next/cache";
+import { revalidarVenda } from "@/lib/revalidacao";
 import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 import { PageHeader } from "@/components/page-header";
@@ -99,7 +99,7 @@ async function antecipar(formData: FormData) {
     });
   }
 
-  revalidatePath("/prudent");
+  revalidarVenda();
 }
 
 export default async function Page() {

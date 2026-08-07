@@ -26,6 +26,7 @@ import {
 import { Loader2, CheckCircle2 } from "lucide-react";
 import type { PlanoImportacao } from "@/lib/fornecedor-import";
 import type { ResultadoCommit } from "@/app/(app)/importacao/fornecedores/actions";
+import { useRouter } from "next/navigation";
 
 interface ImportacaoFornecedoresClientProps {
   /** Recebe `analisarImportacaoFornecedores` (dry-run, so leitura). */
@@ -38,6 +39,7 @@ export default function ImportacaoFornecedoresClient({
   analisarAction,
   confirmarAction,
 }: ImportacaoFornecedoresClientProps) {
+  const router = useRouter();
   const [fileName, setFileName] = useState<string | null>(null);
   const [texto, setTexto] = useState<string | null>(null);
   const [plano, setPlano] = useState<PlanoImportacao | null>(null);
@@ -80,6 +82,8 @@ export default function ImportacaoFornecedoresClient({
       toast.success(
         `Importação concluída: ${resultadoCommit.criados} criados, ${resultadoCommit.reativados} reativados, ${resultadoCommit.ignorados} ignorados.`
       );
+      // A importacao gravou clientes/fornecedores: sem refresh a lista fica velha.
+      router.refresh();
     } catch {
       toast.error("Erro ao confirmar a importação.");
     } finally {

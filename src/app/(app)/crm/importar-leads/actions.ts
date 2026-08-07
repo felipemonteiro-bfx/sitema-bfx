@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidarCliente } from "@/lib/revalidacao";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdminOrThrow } from "@/lib/guards";
@@ -88,6 +88,6 @@ export async function importarLeads(formData: FormData): Promise<void> {
     criados++;
   }
 
-  revalidatePath("/crm");
+  revalidarCliente();
   redirect(`/crm/importar-leads?ok=1&criados=${criados}&vinculados=${vinculados}&ignorados=${ignorados}`);
 }

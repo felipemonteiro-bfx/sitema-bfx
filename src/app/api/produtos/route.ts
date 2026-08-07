@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { revalidarProduto } from "@/lib/revalidacao";
 
 export async function POST(request: NextRequest) {
   let nome = "";
@@ -43,6 +44,10 @@ export async function POST(request: NextRequest) {
       },
       select: selectFields,
     });
+    // Invalida o cache de servidor destas rotas. Diferente de server action,
+    // route handler nao devolve nada que invalide o Router Cache do cliente:
+    // quem atualiza a tela de quem chamou e o router.refresh() no componente.
+    revalidarProduto();
     return NextResponse.json(produto);
   } catch (err) {
     const prismaErr = err as { code?: string };

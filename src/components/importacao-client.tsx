@@ -20,6 +20,7 @@ import {
 import { DateInput } from "@/components/ui/date-input";
 import { Loader2, CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import Papa from "papaparse";
+import { useRouter } from "next/navigation";
 
 interface RowData {
   id: string;
@@ -36,6 +37,7 @@ interface RowData {
 }
 
 export default function ImportacaoClient() {
+  const router = useRouter();
   const [data, setData] = useState<RowData[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -139,7 +141,9 @@ export default function ImportacaoClient() {
       if (res.ok) {
         toast.success("Importação concluída com sucesso!");
         setData([]);
-        window.location.reload();
+        // Era window.location.reload(). Com a revalidacao no route handler,
+        // o refresh basta e nao pisca a tela inteira.
+        router.refresh();
       } else {
         toast.error("Erro ao salvar dados no servidor.");
       }

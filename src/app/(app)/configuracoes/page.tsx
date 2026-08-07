@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { revalidatePath } from "next/cache";
+import { revalidarConfig } from "@/lib/revalidacao";
 import { redirect } from "next/navigation";
 import { QueryTabs } from "@/components/query-tabs";
 import { Separator } from "@/components/ui/separator";
@@ -27,7 +27,7 @@ async function saveAviso(formData: FormData) {
   const msg = String(formData.get("mensagem") || "");
   await prisma.aviso.updateMany({ data: { ativo: 0 } });
   await prisma.aviso.create({ data: { mensagem: msg, ativo: 1 } });
-  revalidatePath("/configuracoes");
+  revalidarConfig();
 }
 
 async function saveContrato(formData: FormData) {
@@ -40,7 +40,7 @@ async function saveContrato(formData: FormData) {
   } else {
     await prisma.config.create({ data: { modeloContrato: texto } });
   }
-  revalidatePath("/configuracoes");
+  revalidarConfig();
 }
 
 async function saveReciboVenda(formData: FormData) {
@@ -53,7 +53,7 @@ async function saveReciboVenda(formData: FormData) {
   } else {
     await prisma.config.create({ data: { modeloReciboVenda: texto } });
   }
-  revalidatePath("/configuracoes");
+  revalidarConfig();
 }
 
 async function saveApiKey(formData: FormData) {
@@ -66,7 +66,7 @@ async function saveApiKey(formData: FormData) {
   } else {
     await prisma.config.create({ data: { geminiKey: gkey } });
   }
-  revalidatePath("/configuracoes");
+  revalidarConfig();
 }
 
 async function saveAiProvider(formData: FormData) {
@@ -91,7 +91,7 @@ async function saveAiProvider(formData: FormData) {
   } else {
     await prisma.config.create({ data });
   }
-  revalidatePath("/configuracoes");
+  revalidarConfig();
 }
 
 async function saveAsaas(formData: FormData) {
@@ -109,7 +109,7 @@ async function saveAsaas(formData: FormData) {
     } else {
       await prisma.config.create({ data: { asaasEnv, ...(apiKey ? { asaasApiKey: apiKey } : {}) } });
     }
-    revalidatePath("/configuracoes");
+    revalidarConfig();
   } catch (err) {
     console.error("[saveAsaas] Erro ao salvar configuracao Asaas:", err);
     redirect("/configuracoes?error=asaas_save_failed");
@@ -174,7 +174,7 @@ async function saveWhatsApp(formData: FormData) {
   } else {
     await prisma.config.create({ data });
   }
-  revalidatePath("/configuracoes");
+  revalidarConfig();
 }
 
 async function saveUber(formData: FormData) {
@@ -226,7 +226,7 @@ async function saveUber(formData: FormData) {
     } else {
       await prisma.config.create({ data });
     }
-    revalidatePath("/configuracoes");
+    revalidarConfig();
   } catch (err) {
     console.error("[saveUber] Erro ao salvar configuracao Uber:", err);
     redirect("/configuracoes?error=uber_save_failed");

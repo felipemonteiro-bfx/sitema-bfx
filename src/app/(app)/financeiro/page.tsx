@@ -9,7 +9,7 @@ import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { calcularMetricasEstoque } from "@/lib/estoque-metrics";
-import { revalidatePath } from "next/cache";
+import { revalidarDespesa } from "@/lib/revalidacao";
 import { redirect } from "next/navigation";
 import { FormSelect } from "@/components/form-select";
 import { FluxoCharts } from "@/components/finance-charts";
@@ -40,7 +40,7 @@ async function addDespesa(formData: FormData) {
     },
   });
   await createAuditLog("despesa:create", { despesaId: despesa.id, descricao, valor, tipo });
-  revalidatePath("/financeiro");
+  revalidarDespesa();
   redirect(`/financeiro?tab=lanc${mes ? `&mes=${mes}` : ""}`);
 }
 
@@ -64,7 +64,7 @@ async function updateDespesa(formData: FormData) {
     },
   });
   await createAuditLog("despesa:update", { despesaId: id, descricao, valor, tipo });
-  revalidatePath("/financeiro");
+  revalidarDespesa();
   redirect(`/financeiro?tab=lanc${mes ? `&mes=${mes}` : ""}`);
 }
 
@@ -76,7 +76,7 @@ async function deleteDespesa(formData: FormData) {
   if (!id) return;
   await prisma.despesa.delete({ where: { id } });
   await createAuditLog("despesa:delete", { despesaId: id });
-  revalidatePath("/financeiro");
+  revalidarDespesa();
   redirect(`/financeiro?tab=lanc${mes ? `&mes=${mes}` : ""}`);
 }
 

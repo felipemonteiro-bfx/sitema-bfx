@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { revalidatePath } from "next/cache";
+import { revalidarUsuario } from "@/lib/revalidacao";
 import { FormSelect } from "@/components/form-select";
 import { Badge } from "@/components/ui/badge";
 import { GestaoRhTabs } from "@/components/gestao-rh-tabs";
@@ -30,7 +30,7 @@ async function updateMeta(formData: FormData) {
       comissaoPct: Number(formData.get("comissao") || 0),
     },
   });
-  revalidatePath("/gestao-rh");
+  revalidarUsuario();
 }
 
 async function addUser(formData: FormData) {
@@ -49,7 +49,7 @@ async function addUser(formData: FormData) {
       role,
     },
   });
-  revalidatePath("/gestao-rh");
+  revalidarUsuario();
 }
 
 async function deleteUser(formData: FormData) {
@@ -58,7 +58,7 @@ async function deleteUser(formData: FormData) {
   const id = Number(formData.get("id") || 0);
   if (!id) return;
   await prisma.usuario.delete({ where: { id } });
-  revalidatePath("/gestao-rh");
+  revalidarUsuario();
 }
 
 function formatMoney(v: number) {

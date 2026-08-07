@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidarCrm } from "@/lib/revalidacao";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { requireAdminOrThrow } from "@/lib/guards";
@@ -82,7 +82,7 @@ export async function criarCampanha(formData: FormData): Promise<void> {
       totalAlvo,
     },
   });
-  revalidatePath("/crm/campanhas");
+  revalidarCrm();
 }
 
 /** Dispara uma campanha (envia WhatsApp ao segmento). */
@@ -91,7 +91,7 @@ export async function dispararCampanha(formData: FormData): Promise<void> {
   const campanhaId = Number(formData.get("campanhaId") || 0);
   if (!campanhaId) return;
   await enviarCampanha(campanhaId);
-  revalidatePath("/crm/campanhas");
+  revalidarCrm();
 }
 
 /** Exclui uma campanha (e seus envios via cascade). */
@@ -100,5 +100,5 @@ export async function excluirCampanha(formData: FormData): Promise<void> {
   const campanhaId = Number(formData.get("campanhaId") || 0);
   if (!campanhaId) return;
   await prisma.campanha.delete({ where: { id: campanhaId } });
-  revalidatePath("/crm/campanhas");
+  revalidarCrm();
 }

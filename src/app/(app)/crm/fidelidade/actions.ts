@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidarCrm } from "@/lib/revalidacao";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { resgatarPontos } from "@/lib/fidelidade-service";
 
@@ -11,5 +11,5 @@ export async function resgatarPontosCliente(formData: FormData): Promise<void> {
   const pontos = Number(formData.get("pontos") || 0);
   if (!clienteId || !pontos) return;
   await resgatarPontos(clienteId, pontos, "Resgate manual (desconto)");
-  revalidatePath("/crm/fidelidade");
+  revalidarCrm();
 }

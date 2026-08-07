@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidarFornecedor } from "@/lib/revalidacao";
 import { prisma } from "@/lib/db";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { createAuditLog } from "@/lib/audit";
@@ -88,7 +88,7 @@ export async function confirmarImportacaoFornecedores(texto: string): Promise<Re
     ignorados: resultado.ignorados,
   });
 
-  revalidatePath("/cadastros");
+  revalidarFornecedor();
 
   return resultado;
 }

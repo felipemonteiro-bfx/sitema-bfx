@@ -1,4 +1,13 @@
 import { prisma } from "@/lib/db";
+import {
+  revalidarVenda,
+  revalidarCliente,
+  revalidarProduto,
+  revalidarDespesa,
+  revalidarUsuario,
+  revalidarEmpresa,
+  revalidarFornecedor,
+} from "@/lib/revalidacao";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import {
@@ -761,6 +770,31 @@ function sanitizeSql(raw: string) {
   return `${sql} LIMIT 200`;
 }
 
+/**
+ * Revalida as telas afetadas por uma acao de escrita da IA.
+ *
+ * Nenhuma das 12 escritas daqui revalidava nada, entao tudo que era feito pelo chat
+ * (ou pelo MCP, que entra por `src/lib/mcp.ts`) so aparecia depois de um reload.
+ * Acao de leitura nao consta no mapa e nao revalida nada.
+ */
+function revalidarAcaoAi(name: string) {
+  const porAcao: Record<string, () => void> = {
+    criar_venda: revalidarVenda,
+    atualizar_venda: revalidarVenda,
+    criar_cliente: revalidarCliente,
+    criar_produto: revalidarProduto,
+    atualizar_produto: revalidarProduto,
+    registrar_entrada_estoque: revalidarProduto,
+    criar_despesa: revalidarDespesa,
+    atualizar_despesa: revalidarDespesa,
+    criar_usuario: revalidarUsuario,
+    atualizar_usuario: revalidarUsuario,
+    criar_empresa: revalidarEmpresa,
+    criar_fornecedor: revalidarFornecedor,
+  };
+  porAcao[name]?.();
+}
+
 export async function executeAiAction(name: string, params: any, ctx: ActionContext) {
   const logAction = async (status: "success" | "error", details: unknown) => {
     await prisma.auditLog.create({
@@ -1479,6 +1513,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
     }
 
     await logAction("success", { params: parsedParams, result });
+    revalidarAcaoAi(name);
     return result;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);

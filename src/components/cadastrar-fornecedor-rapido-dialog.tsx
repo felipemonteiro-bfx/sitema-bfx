@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface FornecedorCriado {
   id: number;
@@ -28,6 +29,7 @@ export function CadastrarFornecedorRapidoDialog({
   nomeInicial,
   onCriado,
 }: Props) {
+  const router = useRouter();
   const [nome, setNome] = useState(nomeInicial.toUpperCase());
   const [loading, setLoading] = useState(false);
 
@@ -61,6 +63,8 @@ export function CadastrarFornecedorRapidoDialog({
       } else {
         toast.success(`Fornecedor "${fornecedor.nome}" cadastrado`);
       }
+      // Sem isto a lista da tela de tras so atualiza apos reload.
+      router.refresh();
       onCriado(fornecedor);
       onOpenChange(false);
     } catch {

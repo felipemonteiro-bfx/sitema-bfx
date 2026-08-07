@@ -28,6 +28,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
 import { valorEmReais } from "@/lib/fidelidade";
 import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
+import { useRouter } from "next/navigation";
 import { mensagemFalhaUber, type MotivoFalhaUber } from "@/lib/uber-quote-result";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -92,6 +93,7 @@ export default function VendaRapidaFormV2({
   categoriasExistentes,
   onSubmit,
 }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     data?: boolean;
@@ -598,6 +600,9 @@ export default function VendaRapidaFormV2({
         });
         setParcelasVencimento([]);
         setProdutoParaSugestoes(null);
+        // O estoque caiu com a venda: sem refresh a proxima venda na mesma tela
+        // ainda enxerga a quantidade antiga.
+        router.refresh();
         const boletoUrl = result.data?.boletoUrl;
         const assinaturaToken = result.data?.assinaturaToken;
         if (assinaturaToken) setSuccessAssinaturaToken(assinaturaToken);
