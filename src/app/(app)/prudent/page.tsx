@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda } from "@/lib/venda-utils";
+import { WHERE_VENDA_ANTECIPAVEL } from "@/lib/antecipacao";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidatePath } from "next/cache";
@@ -29,10 +30,13 @@ async function antecipar(formData: FormData) {
     }
   }
 
-  // Buscar parcelas das vendas selecionadas no período
+  // Buscar parcelas das vendas selecionadas no período.
+  // A action repete o filtro de forma de pagamento da fila: a tela ja so lista
+  // vendas em desconto em folha, mas o form e postavel com qualquer id.
   const parcelas = await prisma.parcelaVencimento.findMany({
     where: {
       vendaId: { in: ids },
+      venda: WHERE_VENDA_ANTECIPAVEL,
       antecipada: false,
       ...(inicioDate && fimDate ? {
         dataVencimento: { gte: inicioDate, lte: fimDate },
@@ -105,8 +109,11 @@ export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
 
-  // Buscar TODAS as vendas (antecipada 0, 1, 2)
+  // Só vendas em desconto em folha entram na fila: SE desconto em folha, ENTAO a
+  // venda e antecipada junto a Prudent. Os demais status de antecipacao (0,1,2,3)
+  // continuam todos visiveis — o filtro e por forma de pagamento, nao por status.
   const todasVendas = await prisma.venda.findMany({
+    where: WHERE_VENDA_ANTECIPAVEL,
     orderBy: { dataVenda: "desc" },
     include: {
       cliente: {
@@ -134,8 +141,11 @@ export default async function Page() {
   const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
   const fimMes = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
+  // Mesmo recorte da fila: o card "a vencer no mes por empresa" ficaria somando
+  // Pix e cartao numa tela que so lista desconto em folha.
   const parcelasDoMes = await prisma.parcelaVencimento.findMany({
     where: {
+      venda: WHERE_VENDA_ANTECIPAVEL,
       dataVencimento: {
         gte: inicioMes,
         lte: fimMes,

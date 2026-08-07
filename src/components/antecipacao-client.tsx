@@ -11,6 +11,7 @@ import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileSpreadsheet, ImageIcon, Loader2 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
+import { TAXA_MENSAL_PADRAO, calcularAntecipacao, titulosDeVenda } from "@/lib/antecipacao";
 
 interface ParcelaDetalhe {
   numeroParcela: number;
@@ -45,31 +46,6 @@ interface Props {
   onSubmit: (formData: FormData) => Promise<void>;
   vencimentosPorEmpresa: Record<string, number>;
   empresasDisponiveis: string[];
-}
-
-const TAXA_MENSAL = 3.99;
-
-function calcularPrazoMedioDias(vendas: Venda[]) {
-  const totalValor = vendas.reduce((sum, v) => sum + (v.valorVenda || 0), 0);
-  if (totalValor <= 0) return 0;
-
-  const weighted = vendas.reduce((sum, v) => {
-    const parcelas = v.parcelas || 1;
-    const valor = v.valorVenda || 0;
-    const mediaParcelas = (30 * (parcelas + 1)) / 2;
-    const prazoComD1 = mediaParcelas + 1;
-    return sum + valor * prazoComD1;
-  }, 0);
-
-  return weighted / totalValor;
-}
-
-function calcularTaxaPercent(prazoMedio: number) {
-  if (prazoMedio <= 0) return 0;
-  if (prazoMedio < 30) {
-    return prazoMedio * (TAXA_MENSAL / 30);
-  }
-  return (Math.pow(1 + TAXA_MENSAL / 100, prazoMedio / 30) - 1) * 100;
 }
 
 function StatusBadge({ status }: { status: Venda['status'] }) {
@@ -121,6 +97,17 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const periodoInicioP = parseMesAno(periodoInicio);
   const periodoFimP = parseMesAno(periodoFim);
 
+  // Range em UTC, identico ao que a server action `antecipar` usa para escolher as
+  // parcelas. Antes o filtro da tela montava o range em horario local e podia
+  // divergir da gravacao em parcelas de borda do mes.
+  const periodo =
+    periodoInicioP && periodoFimP
+      ? {
+          inicio: new Date(Date.UTC(periodoInicioP.ano, periodoInicioP.mes - 1, 1)),
+          fim: new Date(Date.UTC(periodoFimP.ano, periodoFimP.mes, 0, 23, 59, 59)),
+        }
+      : null;
+
   // Filtrar vendas baseado nos filtros ativos
   const vendasFiltradas = vendasIniciais.filter((v) => {
     const passaEmpresa = filtroEmpresa === "todas" || v.empresaConveniada === filtroEmpresa;
@@ -128,12 +115,10 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
     // Filtro de periodo: se periodo definido, venda precisa ter parcela no range
     let passaPeriodo = true;
-    if (periodoInicioP && periodoFimP && v.parcelas_detalhes && v.parcelas_detalhes.length > 0) {
-      const inicioRef = new Date(periodoInicioP.ano, periodoInicioP.mes - 1, 1);
-      const fimRef = new Date(periodoFimP.ano, periodoFimP.mes, 0); // ultimo dia do mes fim
+    if (periodo && v.parcelas_detalhes && v.parcelas_detalhes.length > 0) {
       passaPeriodo = v.parcelas_detalhes.some((p) => {
         const d = new Date(p.dataVencimento);
-        return d >= inicioRef && d <= fimRef;
+        return d >= periodo.inicio && d <= periodo.fim;
       });
     }
 
@@ -206,11 +191,18 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const allFilteredSelected = selectableInFiltered.length > 0 && selectableInFiltered.every(v => selectedIds.includes(v.id));
 
   const selectedVendas = vendasIniciais.filter(v => selectedIds.includes(v.id));
-  const totalSelecionado = selectedVendas.reduce((sum, v) => sum + (v.valorVenda || 0), 0);
-  const prazoMedio = calcularPrazoMedioDias(selectedVendas);
-  const taxaPercent = calcularTaxaPercent(prazoMedio);
-  const valorTaxa = totalSelecionado * (taxaPercent / 100);
-  const valorLiquido = totalSelecionado - valorTaxa;
+
+  // Os titulos que a server action vai antecipar de fato: parcelas ainda nao
+  // antecipadas e dentro do periodo filtrado. O calculo antigo usava o valor cheio
+  // da venda e um prazo aproximado de 30 dias por parcela, entao divergia do lote.
+  const titulosSelecionados = selectedVendas.flatMap((v) => titulosDeVenda(v, periodo));
+  const {
+    prazoMedioDias: prazoMedio,
+    taxaPercent,
+    valorBruto: totalSelecionado,
+    valorTaxa,
+    valorLiquido,
+  } = calcularAntecipacao(titulosSelecionados);
 
   const formatDateBR = (value: string | Date) => {
     const d = typeof value === 'string' ? new Date(value) : value;
@@ -402,12 +394,15 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         <div className="p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           {/* Total selecionado */}
           <div className="flex-shrink-0 min-w-[140px]">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Selecionado</div>
+            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total a Antecipar</div>
             <div className="text-3xl sm:text-4xl font-black text-foreground tabular-nums leading-none mt-0.5">
               {formatBRL(totalSelecionado)}
             </div>
             <div className="text-xs text-muted-foreground mt-1.5">
-              {selectedIds.length} {selectedIds.length === 1 ? 'item selecionado' : 'itens selecionados'}
+              {selectedIds.length} {selectedIds.length === 1 ? 'venda selecionada' : 'vendas selecionadas'}
+              {titulosSelecionados.length > 0 && (
+                <> · {titulosSelecionados.length} {titulosSelecionados.length === 1 ? 'parcela' : 'parcelas'}</>
+              )}
             </div>
           </div>
 
@@ -489,7 +484,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         {/* Rodapé informativo */}
         <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-2.5">
           <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-info-bg text-[9px] font-bold text-info-text">i</span>
-          Taxa Smart: {TAXA_MENSAL.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
+          Taxa Smart: {TAXA_MENSAL_PADRAO.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
       </Card>
 
