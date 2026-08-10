@@ -31,6 +31,7 @@ import {
   legacyFlagsFromForma,
   type FormaPagamento,
 } from "@/lib/forma-pagamento";
+import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
 
 export async function criarVenda(formData: FormData) {
   const data = String(formData.get("data") || "");
@@ -226,6 +227,43 @@ export async function criarVendaV2(
     const lucroLiquido = totalVenda - custoTotal;
     const valorParcela = parcelas > 0 ? Math.trunc((totalVenda / parcelas) * 100) / 100 : 0;
 
+    // Lista de parcelas que sera de fato gravada — a mesma fonte alimenta o
+    // calculo do custo de antecipacao logo abaixo E a criacao das linhas
+    // dentro da transacao. Duas fontes divergentes fariam o numero da venda
+    // discordar do que a tela da Prudent mostra para a mesma venda.
+    const parcelasParaGravar: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] =
+      parcelasValidadas && parcelasValidadas.length > 0
+        ? parcelasValidadas.map((p) => ({
+            numeroParcela: p.numeroParcela,
+            dataVencimento: new Date(p.dataVencimento),
+            valorParcela: p.valorParcela,
+          }))
+        : parcelas > 1
+          ? (() => {
+              // Gerar parcelas automaticamente: regra dia 20 -> dia 10.
+              const primeiroVenc = calcularPrimeiroVencimento(new Date(dataStr));
+              return Array.from({ length: parcelas }).map((_, i) => ({
+                numeroParcela: i + 1,
+                dataVencimento: new Date(primeiroVenc.getFullYear(), primeiroVenc.getMonth() + i, 10),
+                valorParcela,
+              }));
+            })()
+          : [];
+
+    // Custo de antecipacao Prudent (QK-LGJ-01): toda venda em desconto em
+    // folha vai ser antecipada na Prudent, entao o desagio ja e custo certo
+    // desta venda — nao hipotese. Gravado direto na venda (nunca como
+    // despesa avulsa: um lancamento de despesa dobraria a contagem no DRE,
+    // que ja soma `variaveis` vindo de despesas dentro de `custosVar`).
+    const taxaAntecipacao = custoAntecipacaoVenda({
+      formaPagamento,
+      dataVenda: dataStr,
+      valorVenda: totalVenda,
+      parcelas,
+      parcelas_detalhes: parcelasParaGravar.length > 0 ? parcelasParaGravar : undefined,
+    });
+    const lucroLiquidoFinal = lucroLiquidoComAntecipacao(lucroLiquido, taxaAntecipacao);
+
     // Limite de crédito é sempre recalculado no servidor — o valor de "excedeuLimite"
     // vindo do client é só um aviso de UX e nunca é usado para gravar no banco.
     const credito = await checkCredito(clienteId, valorParcela);
@@ -257,7 +295,8 @@ export async function criarVendaV2(
           custoEnvio: envio,
           parcelas,
           valorParcela,
-          lucroLiquido,
+          lucroLiquido: lucroLiquidoFinal,
+          taxaFinanceiraValor: taxaAntecipacao,
           antecipada: 0,
           excedeuLimite,
           temNota,
@@ -289,33 +328,18 @@ export async function criarVendaV2(
         })),
       });
 
-      // 3. Criar parcelas com datas (se informado)
-      if (parcelasValidadas && parcelasValidadas.length > 0) {
+      // 3. Criar parcelas com datas — a mesma lista `parcelasParaGravar` que
+      // ja alimentou o calculo do custo de antecipacao acima, para as duas
+      // fontes nunca divergirem.
+      if (parcelasParaGravar.length > 0) {
         await tx.parcelaVencimento.createMany({
-          data: parcelasValidadas.map((p) => ({
+          data: parcelasParaGravar.map((p) => ({
             vendaId: vendaCriada.id,
             numeroParcela: p.numeroParcela,
-            dataVencimento: new Date(p.dataVencimento),
+            dataVencimento: p.dataVencimento,
             valorParcela: p.valorParcela,
             paga: false,
           })),
-        });
-      } else if (parcelas > 1) {
-        // Gerar parcelas automaticamente: regra dia 20
-        const primeiroVenc = calcularPrimeiroVencimento(new Date(dataStr));
-        const parcelasAuto = Array.from({ length: parcelas }).map((_, i) => {
-          const dataVenc = new Date(primeiroVenc.getFullYear(), primeiroVenc.getMonth() + i, 10);
-          return {
-            vendaId: vendaCriada.id,
-            numeroParcela: i + 1,
-            dataVencimento: dataVenc,
-            valorParcela,
-            paga: false,
-          };
-        });
-
-        await tx.parcelaVencimento.createMany({
-          data: parcelasAuto,
         });
       }
 

@@ -217,7 +217,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           {/* Custos do período */}
                           <div>
                             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Custos do período</p>
-                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
                               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                                 <div className="text-xs text-muted-foreground">CMV</div>
                                 <div className="mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.detalhe.cmv)}</div>
@@ -232,6 +232,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 <div className="text-xs text-muted-foreground">Frete Real</div>
                                 <div className="mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.detalhe.freteReal)}</div>
                                 <div className="text-xs text-muted-foreground">Custo logístico</div>
+                              </div>
+                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                                <div className="text-xs text-muted-foreground">Taxa Prudent</div>
+                                <div className="mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.detalhe.taxaAntecipacao)}</div>
+                                <div className="text-xs text-muted-foreground">Antecipação do desconto em folha</div>
                               </div>
                               <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
                                 <div className="text-xs text-muted-foreground">Despesas Fixas</div>

@@ -7,6 +7,7 @@ export type MetricasPeriodo = {
   cmv: number;
   freteReal: number;
   comissoes: number;
+  taxaAntecipacao: number;
   custosVar: number;
   fixas: number;
   variaveis: number;
@@ -45,6 +46,14 @@ export async function calcularMetricasPeriodo(
   }, 0);
   const freteReal = vendas.reduce((s, v) => s + (v.custoEnvio || 0), 0);
 
+  // Custo de antecipacao Prudent (QK-LGJ-01): lido DIRETO da coluna gravada
+  // na venda, nunca recalculado a partir das parcelas. Motivo: a fila da
+  // Prudent (`src/app/(app)/prudent/page.tsx`) marca a parcela como
+  // `antecipada` quando o lote roda, e `titulosDeVenda` descarta parcela
+  // antecipada — se o DRE recalculasse aqui, o custo de uma venda ja
+  // antecipada cairia para zero justamente quando ele passou a ser real.
+  const taxaAntecipacao = vendas.reduce((s, v) => s + (v.taxaFinanceiraValor || 0), 0);
+
   const porVendedor: Record<string, { total: number; lucroLiquido: number; vendas: number }> = {};
   for (const v of vendas) {
     const key = v.vendedor || "Sem Vendedor";
@@ -60,7 +69,8 @@ export async function calcularMetricasPeriodo(
     const notaVenda = v.temNota
       ? (recVenda - (v.valorFrete ?? 0)) * ((v.taxaNota ?? 5.97) / 100)
       : 0;
-    porVendedor[key].lucroLiquido += recVenda - cmvVenda - freteVenda - notaVenda;
+    const taxaVenda = v.taxaFinanceiraValor || 0;
+    porVendedor[key].lucroLiquido += recVenda - cmvVenda - freteVenda - notaVenda - taxaVenda;
   }
 
   const usuarios = await prisma.usuario.findMany();
@@ -78,24 +88,25 @@ export async function calcularMetricasPeriodo(
     .filter((d) => d.tipo === "Variável")
     .reduce((s, d) => s + (d.valor || 0), 0);
 
-  const custosVar = cmv + comissoes + variaveis + freteReal;
+  const custosVar = cmv + comissoes + variaveis + freteReal + taxaAntecipacao;
   const margem = receita - custosVar;
   const lucro = margem - fixas;
   const margemPct = receita > 0 ? margem / receita : 0;
   const pontoEq = margemPct > 0 ? fixas / margemPct : 0;
 
   return {
-    receita:     Math.round(receita     * 100) / 100,
-    cmv:         Math.round(cmv         * 100) / 100,
-    freteReal:   Math.round(freteReal   * 100) / 100,
-    comissoes:   Math.round(comissoes   * 100) / 100,
-    custosVar:   Math.round(custosVar   * 100) / 100,
-    fixas:       Math.round(fixas       * 100) / 100,
-    variaveis:   Math.round(variaveis   * 100) / 100,
-    margem:      Math.round(margem      * 100) / 100,
-    lucro:       Math.round(lucro       * 100) / 100,
+    receita:         Math.round(receita         * 100) / 100,
+    cmv:             Math.round(cmv             * 100) / 100,
+    freteReal:       Math.round(freteReal       * 100) / 100,
+    comissoes:       Math.round(comissoes       * 100) / 100,
+    taxaAntecipacao: Math.round(taxaAntecipacao * 100) / 100,
+    custosVar:       Math.round(custosVar       * 100) / 100,
+    fixas:           Math.round(fixas           * 100) / 100,
+    variaveis:       Math.round(variaveis       * 100) / 100,
+    margem:          Math.round(margem          * 100) / 100,
+    lucro:           Math.round(lucro           * 100) / 100,
     margemPct,
-    pontoEq:     Math.round(pontoEq     * 100) / 100,
+    pontoEq:         Math.round(pontoEq         * 100) / 100,
     totalVendas: vendas.length,
     porVendedor,
   };
@@ -124,6 +135,7 @@ export async function calcularDre(mesAno: string) {
       comissoes: metrics.comissoes,
       variaveis: metrics.variaveis,
       freteReal: metrics.freteReal,
+      taxaAntecipacao: metrics.taxaAntecipacao,
     },
   };
 }
