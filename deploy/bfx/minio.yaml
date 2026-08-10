@@ -44,6 +44,12 @@ spec:
   resources:
     requests:
       storage: 10Gi
+  # O PVC ja existe no cluster com esta storage class, e spec de PVC e IMUTAVEL
+  # depois de criado (so resources.requests muda). Remover esta linha faz o
+  # ArgoCD tentar aplicar um spec diferente do existente, o sync falha inteiro e
+  # NENHUM deploy passa — foi o que aconteceu entre f42619e e este commit.
+  # Para trocar de storage class e preciso recriar o volume, com migracao de dados.
+  storageClassName: microk8s-hostpath
 ---
 apiVersion: apps/v1
 kind: Deployment
