@@ -4,6 +4,7 @@ import { valorTotalVenda, produtosTexto, quantidadeTotal } from "@/lib/venda-uti
 import { formaPagamentoLabel, formaFromLegacyFlags, type FormaPagamento } from "@/lib/forma-pagamento";
 import { getSession } from "@/lib/session";
 import { resolveVendedorScope } from "@/lib/vendedor-scope";
+import { resolverPeriodo } from "@/lib/periodo-data";
 
 function formatDateBR(date: Date): string {
   const d = new Date(date);
@@ -97,21 +98,12 @@ export async function GET(request: NextRequest) {
   const produto = searchParams.get("produto") || undefined;
   const formaPagamentoFilter = searchParams.get("formaPagamento") || undefined;
 
-  // Parse dates — local time boundaries matching historico page logic
-  function parseDateStart(dateStr: string): Date {
-    const parts = dateStr.split("-").map(Number);
-    return new Date(parts[0]!, (parts[1] ?? 1) - 1, parts[2] ?? 1, 0, 0, 0, 0);
-  }
-  function parseDateEnd(dateStr: string): Date {
-    const parts = dateStr.split("-").map(Number);
-    return new Date(parts[0]!, (parts[1] ?? 1) - 1, parts[2] ?? 1, 23, 59, 59, 999);
-  }
-
-  const start = parseDateStart(fromStr);
-  const end = parseDateEnd(toStr);
+  // Mesmo periodo em UTC da tela de historico: o parse local que existia aqui
+  // repetia o deslocamento de um dia, entao a planilha divergia da listagem.
+  const { inicio: start, fimExclusivo: end } = resolverPeriodo(fromStr, toStr);
 
   const where = {
-    dataVenda: { gte: start, lte: end },
+    dataVenda: { gte: start, lt: end },
     vendedor: vendedor && vendedor !== "all" ? vendedor : undefined,
     ...(produto && produto !== "all"
       ? {

@@ -27,6 +27,7 @@ import {
   formaFromLegacyFlags,
   formaPagamentoLabel,
 } from "@/lib/forma-pagamento";
+import { resolverPeriodo, paraInputDate, fimInclusivoParaInput } from "@/lib/periodo-data";
 
 const formatDateBR = (value: Date) =>
   new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
@@ -44,23 +45,14 @@ type Search = {
 };
 
 
-function parseDateStart(dateStr: string) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
-}
-
-function parseDateEnd(dateStr: string) {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1, 23, 59, 59, 999);
-}
-
 export const dynamic = "force-dynamic";
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
-  const today = new Date();
-  const start = sp.from ? parseDateStart(sp.from) : new Date(today.getFullYear(), today.getMonth(), 1, 0, 0, 0, 0);
-  const end = sp.to ? parseDateEnd(sp.to) : new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+  // Limites em UTC, mesmo contrato do /dashboard e do /financeiro. Em horario local
+  // a janela andava um dia (as vendas sao gravadas em meia-noite UTC) e o campo
+  // "Data final" avancava sozinho a cada clique em Filtrar.
+  const { inicio: start, fimExclusivo: end } = resolverPeriodo(sp.from, sp.to);
   const editId = sp.edit ? Number(sp.edit) : 0;
   const page = Number(sp.page || 1);
   const pageSize = 10;
@@ -84,20 +76,23 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const formaPagamento = sp.formaPagamento && sp.formaPagamento !== "all" ? sp.formaPagamento : undefined;
   const formaPagamentoWhere = formaPagamento ? { formaPagamento } : {};
 
-  const where = fuzzyVendaIds !== null
-    ? { id: { in: fuzzyVendaIds } }
-    : {
-        dataVenda: { gte: start, lte: end },
-        vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
-        ...(produtoFilter && {
-          OR: [
-            { produtoNome: produtoFilter },
-            { itens: { some: { produtoNome: produtoFilter } } },
-          ],
-        }),
-        clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
-        ...formaPagamentoWhere,
-      };
+  // A busca por texto RESTRINGE os demais filtros em vez de substituí-los. Antes ela
+  // trocava o `where` inteiro por `id: { in: ... }`, entao digitar algo na busca
+  // apagava silenciosamente o periodo, o vendedor, o cliente e a forma de pagamento —
+  // com os campos ainda preenchidos na tela, parecendo que o filtro de data quebrou.
+  const where = {
+    ...(fuzzyVendaIds !== null ? { id: { in: fuzzyVendaIds } } : {}),
+    dataVenda: { gte: start, lt: end },
+    vendedor: sp.vendedor && sp.vendedor !== "all" ? sp.vendedor : undefined,
+    ...(produtoFilter && {
+      OR: [
+        { produtoNome: produtoFilter },
+        { itens: { some: { produtoNome: produtoFilter } } },
+      ],
+    }),
+    clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
+    ...formaPagamentoWhere,
+  };
 
   const totalVendas = await prisma.venda.count({ where });
   const totalPages = Math.ceil(totalVendas / pageSize);
@@ -205,8 +200,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   };
 
   const xlsxParams = new URLSearchParams();
-  xlsxParams.set("from", start.toISOString().slice(0, 10));
-  xlsxParams.set("to", end.toISOString().slice(0, 10));
+  xlsxParams.set("from", paraInputDate(start));
+  xlsxParams.set("to", fimInclusivoParaInput(end));
   if (sp.vendedor && sp.vendedor !== "all") xlsxParams.set("vendedor", sp.vendedor);
   if (sp.cliente && sp.cliente !== "all") xlsxParams.set("cliente", sp.cliente);
   if (sp.produto && sp.produto !== "all") xlsxParams.set("produto", sp.produto);
@@ -231,12 +226,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           <form className="hidden md:grid gap-3 sm:grid-cols-2 lg:grid-cols-6 items-center">
             <DateInput
               name="from"
-              defaultValue={start.toISOString().slice(0, 10)}
+              defaultValue={paraInputDate(start)}
               aria-label="Data inicial"
             />
             <DateInput
               name="to"
-              defaultValue={end.toISOString().slice(0, 10)}
+              defaultValue={fimInclusivoParaInput(end)}
               aria-label="Data final"
             />
             <FormSelect
@@ -281,12 +276,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <form className="grid gap-4 grid-cols-1">
               <DateInput
                 name="from"
-                defaultValue={start.toISOString().slice(0, 10)}
+                defaultValue={paraInputDate(start)}
                 aria-label="Data inicial"
               />
               <DateInput
                 name="to"
-                defaultValue={end.toISOString().slice(0, 10)}
+                defaultValue={fimInclusivoParaInput(end)}
                 aria-label="Data final"
               />
               <FormSelect

@@ -1,18 +1,19 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 import { formaFromLegacyFlags, formaPagamentoLabel, type FormaPagamento } from "@/lib/forma-pagamento";
+import { resolverPeriodo } from "@/lib/periodo-data";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const empresa = searchParams.get("empresa");
-  const start = from ? new Date(from + "T00:00:00") : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const end = to ? new Date(to + "T23:59:59") : new Date();
+  // UTC, igual a tela: "T00:00:00" sem zona e interpretado em horario local.
+  const { inicio: start, fimExclusivo: end } = resolverPeriodo(from, to);
 
   const vendas = await prisma.venda.findMany({
     where: {
-      dataVenda: { gte: start, lte: end },
+      dataVenda: { gte: start, lt: end },
       cliente: empresa && empresa !== "all" ? {
         empresa: {
           equals: empresa,
