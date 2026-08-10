@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-08-04 — Milestone v1.3 started
+Last activity: 2026-08-10 — Completed quick task 260810-f21: custo real do Uber Direct como custo no financeiro
 
 ## Performance Metrics
 
@@ -161,6 +161,7 @@ None yet.
 | 17 | Mandar email para a empresa em que o cliente vinculado; relatório de vendas com matrícula/nome/produtos/vendedor/data/valor/parcelas; relatório semanal por empresa com cópia pro admin; ajustar serviço WhatsApp off; ajustar vínculos de empresas parceiras; informar nome similar em novo cliente; fuzzy search em vendas | 2026-04-02 | c035e1c | Verified | [260402-grr-mandar-email-para-a-empresa-em-que-o-cli](./quick/260402-grr-mandar-email-para-a-empresa-em-que-o-cli/) |
 | 18 | Se não tiver email configurado enviar notificação via WhatsApp (não impeditivo fallback email→WhatsApp). Fix /venda-rapida clicar na data quebra o sistema. | 2026-04-02 | 0e6582c | Verified | [260402-ix6-se-n-o-tiver-email-configurado-enviar-no](./quick/260402-ix6-se-n-o-tiver-email-configurado-enviar-no/) |
 | 19 | Planilha das vendas do mes de marco em excel | 2026-04-13 | 01ad52e | — | [260413-bug-quero-uma-planilha-das-vendas-do-mes-de-](./quick/260413-bug-quero-uma-planilha-das-vendas-do-mes-de-/) |
+| 260810-f21 | Capturar o custo real do Uber Direct por entrega e lancar como custo no financeiro | 2026-08-10 | 6911008 | Verified | [260810-f21-capturar-o-custo-real-do-uber-direct-por](./quick/260810-f21-capturar-o-custo-real-do-uber-direct-por/) |
 
 ## Session Continuity
 
