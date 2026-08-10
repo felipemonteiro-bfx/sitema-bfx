@@ -11,6 +11,7 @@ import {
   legacyFlagsFromForma,
   type FormaPagamento,
 } from "@/lib/forma-pagamento";
+import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
 
 export async function updateVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const id = Number(formData.get("id") || 0);
@@ -55,12 +56,56 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const total = subtotal + frete - desconto;
   const lucro = total - (totalCusto + envio + valorDescontoNota);
 
+  // Parse do campo de parcelas subido para ANTES do `prisma.venda.update`:
+  // alimenta tanto o calculo do custo de antecipacao logo abaixo quanto a
+  // reescrita da tabela `parcelas_vencimento` mais adiante. Parsear duas
+  // vezes abriria espaco para os dois lugares discordarem entre si.
+  type ParcelaForm = { numeroParcela: number; dataVencimento: string; valorParcela: number };
+  let parcelasForm: ParcelaForm[] = [];
+  const parcelasRaw = formData.get("parcelasVencimento");
+  if (parcelasRaw) {
+    try {
+      const parsed = JSON.parse(String(parcelasRaw));
+      if (Array.isArray(parsed)) parcelasForm = parsed;
+    } catch {
+      // Tabela parcelas_vencimento pode não existir em produção antiga
+    }
+  }
+
   try {
     const vendedorTexto = String(formData.get("vendedor") || "");
     const vendedorUser = vendedorTexto ? await prisma.usuario.findFirst({
       where: { OR: [{ username: { equals: vendedorTexto, mode: "insensitive" } }, { nomeExibicao: { equals: vendedorTexto, mode: "insensitive" } }] },
       select: { id: true },
     }) : null;
+
+    // Fonte das parcelas que define o custo de antecipacao: as do form quando
+    // vieram; senao as que ja existem no banco. Sem essa segunda leitura,
+    // editar so a data da venda (sem reenviar as parcelas) cairia no
+    // fallback de 30/60/90 e inventaria uma taxa diferente da que a tela da
+    // Prudent mostra para a mesma venda.
+    const parcelasParaCusto =
+      parcelasForm.length > 0
+        ? parcelasForm.map((p) => ({ dataVencimento: p.dataVencimento, valorParcela: p.valorParcela }))
+        : await prisma.parcelaVencimento.findMany({
+            where: { vendaId: id },
+            select: { dataVencimento: true, valorParcela: true },
+          });
+
+    // Custo de antecipacao Prudent (QK-LGJ-01): dado derivado da forma de
+    // pagamento, no mesmo espirito do comentario acima sobre
+    // `custoEnvioFonte` — tem de ser reescrito a cada save, senao fica
+    // congelado num estado que nao corresponde mais a venda (ex.: taxa velha
+    // sobrevivendo depois de trocar para Pix).
+    const taxaAntecipacao = custoAntecipacaoVenda({
+      formaPagamento,
+      dataVenda: new Date(data),
+      valorVenda: total,
+      parcelas: parcelasNum,
+      parcelas_detalhes: parcelasParaCusto.length > 0 ? parcelasParaCusto : undefined,
+    });
+    const lucroFinal = lucroLiquidoComAntecipacao(lucro, taxaAntecipacao);
+
     await prisma.venda.update({
       where: { id },
       data: {
@@ -80,7 +125,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         temNota,
         taxaNota,
         desconto,
-        lucroLiquido: lucro,
+        lucroLiquido: lucroFinal,
+        taxaFinanceiraValor: taxaAntecipacao,
         descontoEmFolha,
         boleto,
         formaPagamento,
@@ -101,38 +147,34 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       });
     }
 
-    const parcelasRaw = formData.get("parcelasVencimento");
-    if (parcelasRaw) {
+    if (parcelasForm.length > 0) {
       try {
-        const parcelasData = JSON.parse(String(parcelasRaw)) as { numeroParcela: number; dataVencimento: string; valorParcela: number }[];
-        if (Array.isArray(parcelasData) && parcelasData.length > 0) {
-          const existentes = await prisma.parcelaVencimento.findMany({
-            where: { vendaId: id },
-            select: { numeroParcela: true, paga: true, dataPagamento: true },
-          });
-          const pagasMap = new Map(existentes.map((p) => [p.numeroParcela, { paga: p.paga, dataPagamento: p.dataPagamento }]));
+        const existentes = await prisma.parcelaVencimento.findMany({
+          where: { vendaId: id },
+          select: { numeroParcela: true, paga: true, dataPagamento: true },
+        });
+        const pagasMap = new Map(existentes.map((p) => [p.numeroParcela, { paga: p.paga, dataPagamento: p.dataPagamento }]));
 
-          await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
-          await prisma.parcelaVencimento.createMany({
-            data: parcelasData.map((p) => {
-              const existente = pagasMap.get(p.numeroParcela);
-              return {
-                vendaId: id,
-                numeroParcela: p.numeroParcela,
-                dataVencimento: new Date(p.dataVencimento),
-                valorParcela: p.valorParcela,
-                paga: existente?.paga ?? false,
-                dataPagamento: existente?.dataPagamento ?? null,
-              };
-            }),
-          });
-        }
+        await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
+        await prisma.parcelaVencimento.createMany({
+          data: parcelasForm.map((p) => {
+            const existente = pagasMap.get(p.numeroParcela);
+            return {
+              vendaId: id,
+              numeroParcela: p.numeroParcela,
+              dataVencimento: new Date(p.dataVencimento),
+              valorParcela: p.valorParcela,
+              paga: existente?.paga ?? false,
+              dataPagamento: existente?.dataPagamento ?? null,
+            };
+          }),
+        });
       } catch {
         // Tabela parcelas_vencimento pode não existir em produção antiga
       }
     }
 
-    await createAuditLog("venda:update", { vendaId: id, subtotal, lucro });
+    await createAuditLog("venda:update", { vendaId: id, subtotal, lucro: lucroFinal });
     revalidarVenda();
     return { success: true };
   } catch (err) {
