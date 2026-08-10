@@ -82,6 +82,7 @@ const dbMock = {
   venda: {
     findUnique: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
 };
 
@@ -94,7 +95,8 @@ const CONFIG_ESTATICA = { source: "static_token" as const, customerId: "cust1", 
 
 beforeEach(() => {
   vi.clearAllMocks();
-  dbMock.venda.findUnique.mockResolvedValue({ id: 7, custoEnvio: 0, custoEnvioFonte: null });
+  dbMock.venda.findUnique.mockResolvedValue({ id: 7, status: "ativa", custoEnvio: 0, custoEnvioFonte: null });
+  dbMock.venda.updateMany.mockResolvedValue({ count: 1 });
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
     status: 200,
@@ -108,12 +110,12 @@ beforeEach(() => {
 
 describe("registrarCustoEntregaUber — rastreabilidade e trava de dupla contagem (T-F21-05)", () => {
   it("Teste 7: grava uberDeliveryId e custoEnvioFonte no mesmo update do custoEnvio", async () => {
-    dbMock.venda.update.mockResolvedValue({ id: 7 });
+    dbMock.venda.updateMany.mockResolvedValue({ count: 1 });
 
     await registrarCustoEntregaUber({ config: CONFIG_ESTATICA, vendaId: 7, deliveryId: "del_1" });
 
-    expect(dbMock.venda.update).toHaveBeenCalledTimes(1);
-    const chamada = dbMock.venda.update.mock.calls[0][0];
+    expect(dbMock.venda.updateMany).toHaveBeenCalledTimes(1);
+    const chamada = dbMock.venda.updateMany.mock.calls[0][0];
     expect(chamada.data.custoEnvio).toBe(24.9);
     expect(chamada.data.uberDeliveryId).toBe("del_1");
     expect(chamada.data.custoEnvioFonte).toBe("uber_final");
@@ -123,7 +125,7 @@ describe("registrarCustoEntregaUber — rastreabilidade e trava de dupla contage
     const erro = Object.assign(new Error("Unique constraint failed on the fields: (`uber_delivery_id`)"), {
       code: "P2002",
     });
-    dbMock.venda.update.mockRejectedValue(erro);
+    dbMock.venda.updateMany.mockRejectedValue(erro);
 
     const resultado = await registrarCustoEntregaUber({
       config: CONFIG_ESTATICA,
