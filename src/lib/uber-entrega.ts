@@ -1,0 +1,131 @@
+/**
+ * Cliente do Get Delivery Status da Uber Direct (custo REAL de uma entrega,
+ * nao a cotacao — `src/lib/uber.ts` so cota) e persistencia do custo na
+ * venda correspondente.
+ *
+ * QK-F21-01: o custo aterrissa em `Venda.custoEnvio`, NUNCA em `Despesa` —
+ * `src/lib/finance.ts:81` ja soma `freteReal` (de `custoEnvio`) junto de
+ * `variaveis` (de `Despesa`); gravar nos dois lugares contaria o mesmo
+ * frete duas vezes no DRE.
+ */
+import { prisma } from "@/lib/db";
+import { obterTokenUber, limparEntradaCacheTokenUber } from "@/lib/uber-auth";
+import type { UberDirectConfig } from "@/lib/uber";
+import { revalidarVenda } from "@/lib/revalidacao";
+import {
+  interpretarCustoEntregaUber,
+  deliveryIdValido,
+  statusHttpParaFalhaCustoUber,
+  mensagemFalhaCustoUber,
+  type ResultadoCustoEntregaUber,
+  type LinhaCustoUber,
+} from "@/lib/uber-custo-entrega";
+
+/**
+ * Endpoint do Get Delivery Status, isolado nesta unica constante para que um
+ * 404 em producao (endpoint errado) seja correcao de uma linha.
+ */
+export const URL_BASE_CUSTO_ENTREGA_UBER = "https://api.uber.com/v1/eats/deliveries/orders";
+
+/** Resolve o bearer a usar: token estatico (legado) ou access_token OAuth (mesmo padrao de src/lib/uber.ts). */
+async function resolveUberBearerToken(config: UberDirectConfig): Promise<string> {
+  if (config.source === "static_token") return config.token;
+  return obterTokenUber(config.clientId, config.clientSecret, "eats.deliveries");
+}
+
+/**
+ * Busca o custo real de uma entrega ja concluida ou em curso na Uber (Get
+ * Delivery Status). Valida o delivery id antes de montar a URL e usa
+ * `encodeURIComponent`. Em 401 com config oauth, limpa o cache do token e
+ * re-tenta UMA vez (mesmo padrao de `getDeliveryQuote`).
+ */
+export async function buscarCustoEntregaUber(
+  config: UberDirectConfig,
+  deliveryId: string
+): Promise<ResultadoCustoEntregaUber> {
+  if (!deliveryIdValido(deliveryId)) {
+    return { ok: false, motivo: "delivery_id_invalido", detalhe: "formato_invalido" };
+  }
+
+  const url = `${URL_BASE_CUSTO_ENTREGA_UBER}/${encodeURIComponent(deliveryId)}`;
+
+  const chamarUberComToken = async (token: string) =>
+    fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+  try {
+    const token = await resolveUberBearerToken(config);
+    let res = await chamarUberComToken(token);
+    let data = await res.json();
+
+    // Token OAuth rejeitado: limpa a entrada e tenta UMA vez com token novo, mesma
+    // razao e mesmo limite (100 req/h no endpoint de token) de getDeliveryQuote.
+    if (!res.ok && res.status === 401 && config.source === "oauth") {
+      limparEntradaCacheTokenUber(config.clientId, "eats.deliveries");
+      const tokenNovo = await resolveUberBearerToken(config);
+      res = await chamarUberComToken(tokenNovo);
+      data = await res.json();
+    }
+
+    if (!res.ok) {
+      // Corpo cru da Uber so aparece aqui (servidor) — nunca na resposta ao navegador (T-F21-07).
+      // Nunca logar `config` — client_secret/access_token nao podem cruzar para o log (T-F21-08).
+      console.error("Uber Direct delivery status error:", res.status, data);
+    }
+
+    return interpretarCustoEntregaUber(res.status, data);
+  } catch (err) {
+    console.error("Uber Direct delivery status API error:", err);
+    return { ok: false, motivo: "erro_upstream", detalhe: "falha_de_rede" };
+  }
+}
+
+export type ResultadoRegistrarCustoUber =
+  | {
+      gravado: true;
+      vendaId: number;
+      deliveryId: string;
+      custoEnvio: number;
+      moeda: string;
+      linhas: LinhaCustoUber[];
+    }
+  | { gravado: false; motivo: string; mensagem: string; httpStatus: number };
+
+/**
+ * Busca o custo real da entrega e, em sucesso, grava `custoEnvio` na venda e
+ * revalida as telas afetadas. NUNCA cria `Despesa` (QK-F21-01).
+ */
+export async function registrarCustoEntregaUber(params: {
+  config: UberDirectConfig;
+  vendaId: number;
+  deliveryId: string;
+}): Promise<ResultadoRegistrarCustoUber> {
+  const { config, vendaId, deliveryId } = params;
+  const resultado = await buscarCustoEntregaUber(config, deliveryId);
+
+  if (!resultado.ok) {
+    return {
+      gravado: false,
+      motivo: resultado.motivo,
+      mensagem: mensagemFalhaCustoUber(resultado.motivo),
+      httpStatus: statusHttpParaFalhaCustoUber(resultado.motivo),
+    };
+  }
+
+  await prisma.venda.update({
+    where: { id: vendaId },
+    data: { custoEnvio: resultado.total },
+  });
+  revalidarVenda();
+
+  return {
+    gravado: true,
+    vendaId,
+    deliveryId: resultado.deliveryId,
+    custoEnvio: resultado.total,
+    moeda: resultado.moeda,
+    linhas: resultado.linhas,
+  };
+}
