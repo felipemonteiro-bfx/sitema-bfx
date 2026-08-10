@@ -6,6 +6,7 @@ const dbMock = {
   venda: {
     findUnique: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
   despesa: {
     create: vi.fn(),
@@ -28,7 +29,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   sessionMock.getSession.mockResolvedValue({ id: 1, username: "admin", role: "admin" });
   uberMock.getUberDirectConfig.mockResolvedValue(CONFIG_ESTATICA);
-  dbMock.venda.findUnique.mockResolvedValue({ id: 7 });
+  dbMock.venda.findUnique.mockResolvedValue({ id: 7, status: "ativa", custoEnvio: 0, custoEnvioFonte: null });
+  dbMock.venda.updateMany.mockResolvedValue({ count: 1 });
   global.fetch = vi.fn();
 });
 
@@ -48,32 +50,72 @@ function mockFetchOnce(status: number, corpo: unknown) {
 }
 
 describe("POST /api/frete/uber/custo — RBAC (T-F21-01)", () => {
-  it("Teste 10: sem sessao admin -> 401 e prisma.venda.update NAO foi chamado", async () => {
+  it("Teste 10: sem sessao admin -> 401 e prisma.venda.updateMany NAO foi chamado", async () => {
     sessionMock.getSession.mockResolvedValue(null);
 
     const res = await POST(req({ vendaId: 7, deliveryId: "del_1" }));
 
     expect(res.status).toBe(401);
-    expect(dbMock.venda.update).not.toHaveBeenCalled();
+    expect(dbMock.venda.updateMany).not.toHaveBeenCalled();
   });
 });
 
 describe("POST /api/frete/uber/custo — caminho feliz", () => {
-  it("Teste 11: fetch com full_fee.total 2490 -> 200 e prisma.venda.update com custoEnvio 24.9", async () => {
+  it("Teste 11: fetch com full_fee.total 2490 -> 200 e prisma.venda.updateMany com custoEnvio 24.9", async () => {
     mockFetchOnce(200, {
       id: "del_1",
       status: "delivered",
       full_fee: { total: 2490, currency_code: "BRL", line_items: [] },
     });
-    dbMock.venda.update.mockResolvedValue({ id: 7, custoEnvio: 24.9 });
+    dbMock.venda.updateMany.mockResolvedValue({ count: 1 });
 
     const res = await POST(req({ vendaId: 7, deliveryId: "del_1" }));
 
     expect(res.status).toBe(200);
-    expect(dbMock.venda.update).toHaveBeenCalledTimes(1);
-    const chamada = dbMock.venda.update.mock.calls[0][0];
-    expect(chamada.where).toEqual({ id: 7 });
+    expect(dbMock.venda.updateMany).toHaveBeenCalledTimes(1);
+    const chamada = dbMock.venda.updateMany.mock.calls[0][0];
+    // O where carrega a fonte lida antes da decisao: e o guarda contra corrida.
+    expect(chamada.where).toEqual({ id: 7, custoEnvioFonte: null });
     expect(chamada.data.custoEnvio).toBe(24.9);
+  });
+
+
+  it("venda cancelada nao recebe custo — nao queima o delivery id, que e unico", async () => {
+    dbMock.venda.findUnique.mockResolvedValue({
+      id: 7, status: "cancelada", custoEnvio: 0, custoEnvioFonte: null,
+    });
+    mockFetchOnce(200, {
+      id: "del_1",
+      status: "delivered",
+      full_fee: { total: 2490, currency_code: "BRL", line_items: [] },
+    });
+
+    const res = await POST(req({ vendaId: 7, deliveryId: "del_1" }));
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ motivo: "venda_inativa" });
+    expect(dbMock.venda.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("corrida: se a fonte mudou entre a leitura e a gravacao, nao rebaixa o custo", async () => {
+    // updateMany casa 0 linhas porque outra requisicao ja gravou algo no meio.
+    dbMock.venda.updateMany.mockResolvedValue({ count: 0 });
+    mockFetchOnce(200, {
+      id: "del_1",
+      status: "delivered",
+      full_fee: { total: 2490, currency_code: "BRL", line_items: [] },
+    });
+
+    const res = await POST(req({ vendaId: 7, deliveryId: "del_1" }));
+
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ motivo: "conflito_concorrente" });
+  });
+
+  it.each([[[7]], [true], [{}], [null]])("vendaId %s e recusado sem coercao", async (valor) => {
+    const res = await POST(req({ vendaId: valor as unknown, deliveryId: "del_1" }));
+    expect(res.status).toBe(400);
+    expect(dbMock.venda.updateMany).not.toHaveBeenCalled();
   });
 
   it("Teste 12: apos gravar, revalidatePath foi chamado para /financeiro", async () => {
@@ -82,7 +124,7 @@ describe("POST /api/frete/uber/custo — caminho feliz", () => {
       status: "delivered",
       full_fee: { total: 2490, currency_code: "BRL", line_items: [] },
     });
-    dbMock.venda.update.mockResolvedValue({ id: 7, custoEnvio: 24.9 });
+    dbMock.venda.updateMany.mockResolvedValue({ count: 1 });
 
     await POST(req({ vendaId: 7, deliveryId: "del_1" }));
 
@@ -95,7 +137,7 @@ describe("POST /api/frete/uber/custo — caminho feliz", () => {
       status: "delivered",
       full_fee: { total: 2490, currency_code: "BRL", line_items: [] },
     });
-    dbMock.venda.update.mockResolvedValue({ id: 7, custoEnvio: 24.9 });
+    dbMock.venda.updateMany.mockResolvedValue({ count: 1 });
 
     await POST(req({ vendaId: 7, deliveryId: "del_1" }));
 
@@ -111,7 +153,7 @@ describe("POST /api/frete/uber/custo — falhas", () => {
     const body = await res.json();
 
     expect(res.status).toBe(503);
-    expect(dbMock.venda.update).not.toHaveBeenCalled();
+    expect(dbMock.venda.updateMany).not.toHaveBeenCalled();
     expect(body.mensagem ?? body.error).toMatch(/[a-zA-Z]/);
   });
 
@@ -121,7 +163,7 @@ describe("POST /api/frete/uber/custo — falhas", () => {
     const res = await POST(req({ vendaId: 7, deliveryId: "del_1" }));
 
     expect(res.status).toBe(502);
-    expect(dbMock.venda.update).not.toHaveBeenCalled();
+    expect(dbMock.venda.updateMany).not.toHaveBeenCalled();
   });
 
   it("Teste 16: corpo da resposta HTTP nunca contem a mensagem de erro crua devolvida pela Uber", async () => {

@@ -1030,6 +1030,9 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             valorVenda: parsedParams.valorVenda ?? undefined,
             valorFrete: parsedParams.valorFrete ?? undefined,
             custoEnvio: parsedParams.custoEnvio ?? undefined,
+            // Frete informado por fora da integracao: a procedencia volta a "manual",
+            // senao uma recaptura da Uber sobrescreveria este valor depois.
+            custoEnvioFonte: parsedParams.custoEnvio != null ? "manual" : undefined,
             parcelas: parsedParams.parcelas ?? undefined,
           },
         });

@@ -75,6 +75,18 @@ describe("interpretarCustoEntregaUber — falhas", () => {
     expect(r.motivo).toBe("moeda_inesperada");
   });
 
+  it("moeda ausente nao e assumida como BRL — sem o campo nao da pra afirmar que e real", () => {
+    const r = interpretarCustoEntregaUber(200, {
+      id: "del_1",
+      status: "delivered",
+      full_fee: { total: 2490, line_items: [] },
+    });
+
+    expect(r.ok).toBe(false);
+    if (r.ok) throw new Error("esperava ok:false");
+    expect(r.motivo).toBe("moeda_inesperada");
+  });
+
   it("Teste 6: 200 sem full_fee vira resposta_incompleta", () => {
     const r = interpretarCustoEntregaUber(200, { id: "del_1", status: "delivered" });
 

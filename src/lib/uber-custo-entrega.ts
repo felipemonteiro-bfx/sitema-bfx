@@ -122,8 +122,10 @@ export function interpretarCustoEntregaUber(httpStatus: number, corpo: unknown):
   if (!envelope) return falha("resposta_incompleta", "sem_full_fee");
 
   const fullFee = envelope.full_fee as FullFeeUber;
-  const moeda = typeof fullFee.currency_code === "string" && fullFee.currency_code ? fullFee.currency_code : "BRL";
-  if (moeda !== "BRL") return falha("moeda_inesperada", moeda);
+  // Moeda ausente NAO vira "BRL" por conveniencia: sem o campo nao ha como afirmar
+  // que o valor esta em reais, e assumir isso grava dolar numa coluna de reais.
+  const moeda = typeof fullFee.currency_code === "string" ? fullFee.currency_code.trim() : "";
+  if (moeda !== "BRL") return falha("moeda_inesperada", moeda || "ausente");
 
   const total = converterCentavosParaReais(fullFee.total);
   if (total === null) return falha("resposta_incompleta", "total_invalido");

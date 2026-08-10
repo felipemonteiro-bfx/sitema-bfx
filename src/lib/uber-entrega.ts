@@ -108,6 +108,12 @@ function mensagemMotivoGravacao(motivo: string): string {
       return "O custo desta entrega ja foi confirmado como definitivo. O valor provisorio recebido foi descartado.";
     case "entrega_ja_lancada":
       return "Este delivery id ja foi lancado como custo em outra venda.";
+    case "venda_nao_encontrada":
+      return "Venda nao encontrada.";
+    case "venda_inativa":
+      return "Esta venda esta cancelada ou estornada. O custo nao foi lancado.";
+    case "conflito_concorrente":
+      return "O custo desta venda mudou durante a operacao. Tente novamente.";
     default:
       return mensagemFalhaCustoUber(motivo as Parameters<typeof mensagemFalhaCustoUber>[0]);
   }
@@ -143,12 +149,32 @@ export async function registrarCustoEntregaUber(params: {
 
   const vendaAtual = await prisma.venda.findUnique({
     where: { id: vendaId },
-    select: { custoEnvio: true, custoEnvioFonte: true },
+    select: { custoEnvio: true, custoEnvioFonte: true, status: true },
   });
 
+  if (!vendaAtual) {
+    return {
+      gravado: false,
+      motivo: "venda_nao_encontrada",
+      mensagem: mensagemMotivoGravacao("venda_nao_encontrada"),
+      httpStatus: 404,
+    };
+  }
+
+  // Venda cancelada/estornada nao recebe custo: alem de sujar o resultado, gastaria
+  // o delivery id — que e unico — numa venda que nao vale mais.
+  if (vendaAtual.status !== "ativa") {
+    return {
+      gravado: false,
+      motivo: "venda_inativa",
+      mensagem: mensagemMotivoGravacao("venda_inativa"),
+      httpStatus: 409,
+    };
+  }
+
   const decisao = decidirGravacaoCustoEnvio({
-    custoEnvioAtual: vendaAtual?.custoEnvio,
-    fonteAtual: vendaAtual?.custoEnvioFonte,
+    custoEnvioAtual: vendaAtual.custoEnvio,
+    fonteAtual: vendaAtual.custoEnvioFonte,
     novoCusto: resultado.total,
     novoDefinitivo: resultado.definitivo,
   });
@@ -163,14 +189,28 @@ export async function registrarCustoEntregaUber(params: {
   }
 
   try {
-    await prisma.venda.update({
-      where: { id: vendaId },
+    // Update CONDICIONAL: so grava se a fonte continuar a que embasou a decisao.
+    // Entre o findUnique e este update outra requisicao pode ter gravado um custo
+    // definitivo, e um update incondicional o rebaixaria para provisorio.
+    const { count } = await prisma.venda.updateMany({
+      where: { id: vendaId, custoEnvioFonte: vendaAtual.custoEnvioFonte },
       data: {
         custoEnvio: resultado.total,
-        uberDeliveryId: resultado.deliveryId,
+        // O id vem do parametro ja validado, nao do corpo da resposta: e ele que
+        // identifica a entrega que o operador mandou lancar.
+        uberDeliveryId: deliveryId,
         custoEnvioFonte: decisao.fonteResultante,
       },
     });
+
+    if (count === 0) {
+      return {
+        gravado: false,
+        motivo: "conflito_concorrente",
+        mensagem: mensagemMotivoGravacao("conflito_concorrente"),
+        httpStatus: 409,
+      };
+    }
   } catch (err) {
     if (ehConflitoDeUnicidade(err)) {
       return {

@@ -72,6 +72,10 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,
         valorFrete: frete,
         custoEnvio: envio,
+        // Quem edita a venda esta digitando o frete a mao: a procedencia volta a ser
+        // "manual". Sem isto a fonte ficaria congelada em "uber_final" e uma recaptura
+        // posterior sobrescreveria a correcao humana achando que so reconcilia.
+        custoEnvioFonte: "manual",
         parcelas: parcelasNum,
         temNota,
         taxaNota,

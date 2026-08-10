@@ -27,6 +27,11 @@ export async function POST(req: Request) {
   }
 
   const { vendaId, deliveryId } = (body ?? {}) as { vendaId?: unknown; deliveryId?: unknown };
+  // `Number()` aceita coercoes indesejadas: Number([7]) === 7 e Number(true) === 1.
+  // Exigir number ou string numerica fecha a porta a array/boolean vindos do corpo.
+  if (typeof vendaId !== "number" && typeof vendaId !== "string") {
+    return NextResponse.json({ error: "vendaId invalido." }, { status: 400 });
+  }
   const vendaIdNum = Number(vendaId);
   if (!Number.isInteger(vendaIdNum) || vendaIdNum <= 0) {
     return NextResponse.json({ error: "vendaId invalido." }, { status: 400 });
@@ -43,23 +48,33 @@ export async function POST(req: Request) {
     );
   }
 
+  // A existencia e o status da venda sao reconferidos dentro de
+  // `registrarCustoEntregaUber`, junto da decisao de gravacao — aqui a checagem
+  // so evita gastar uma chamada a Uber para um id que nao existe.
   const venda = await prisma.venda.findUnique({ where: { id: vendaIdNum }, select: { id: true } });
   if (!venda) {
     return NextResponse.json({ error: "Venda nao encontrada." }, { status: 404 });
   }
 
-  const resultado = await registrarCustoEntregaUber({
-    config,
-    vendaId: vendaIdNum,
-    deliveryId: deliveryId.trim(),
-  });
+  try {
+    const resultado = await registrarCustoEntregaUber({
+      config,
+      vendaId: vendaIdNum,
+      deliveryId: deliveryId.trim(),
+    });
 
-  if (!resultado.gravado) {
-    return NextResponse.json(
-      { motivo: resultado.motivo, mensagem: resultado.mensagem },
-      { status: resultado.httpStatus }
-    );
+    if (!resultado.gravado) {
+      return NextResponse.json(
+        { motivo: resultado.motivo, mensagem: resultado.mensagem },
+        { status: resultado.httpStatus }
+      );
+    }
+
+    return NextResponse.json(resultado, { status: 200 });
+  } catch (err) {
+    // Erro inesperado do Prisma (P2025 etc.) nao pode escapar como 500 sem corpo,
+    // nem vazar detalhe interno para o navegador.
+    console.error("Erro ao registrar custo de entrega Uber:", err);
+    return NextResponse.json({ error: "Erro ao registrar o custo da entrega." }, { status: 500 });
   }
-
-  return NextResponse.json(resultado, { status: 200 });
 }
