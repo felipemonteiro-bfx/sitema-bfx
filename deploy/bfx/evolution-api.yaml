@@ -9,9 +9,6 @@ spec:
   resources:
     requests:
       storage: 2Gi
-  # Imutavel apos criado: remover esta linha faz o ArgoCD tentar aplicar um spec
-  # diferente do PVC existente, o sync falha e nenhum deploy passa.
-  storageClassName: microk8s-hostpath
 ---
 apiVersion: v1
 kind: ConfigMap
