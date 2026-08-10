@@ -15,6 +15,7 @@ import { revalidarVenda } from "@/lib/revalidacao";
 import {
   interpretarCustoEntregaUber,
   deliveryIdValido,
+  decidirGravacaoCustoEnvio,
   statusHttpParaFalhaCustoUber,
   mensagemFalhaCustoUber,
   type ResultadoCustoEntregaUber,
@@ -94,8 +95,34 @@ export type ResultadoRegistrarCustoUber =
   | { gravado: false; motivo: string; mensagem: string; httpStatus: number };
 
 /**
- * Busca o custo real da entrega e, em sucesso, grava `custoEnvio` na venda e
- * revalida as telas afetadas. NUNCA cria `Despesa` (QK-F21-01).
+ * Mensagens para os motivos de nao-gravacao que vem da decisao provisorio x
+ * definitivo e do conflito de unicidade — nao fazem parte do vocabulario
+ * fechado de `MotivoFalhaCustoUber` (esses vem de decidirGravacaoCustoEnvio /
+ * do banco, nao da interpretacao da resposta da Uber).
+ */
+function mensagemMotivoGravacao(motivo: string): string {
+  switch (motivo) {
+    case "custo_manual_preservado":
+      return "Esta venda ja tem um custo de frete digitado manualmente. Ele nao foi sobrescrito.";
+    case "custo_final_ja_gravado":
+      return "O custo desta entrega ja foi confirmado como definitivo. O valor provisorio recebido foi descartado.";
+    case "entrega_ja_lancada":
+      return "Este delivery id ja foi lancado como custo em outra venda.";
+    default:
+      return mensagemFalhaCustoUber(motivo as Parameters<typeof mensagemFalhaCustoUber>[0]);
+  }
+}
+
+function ehConflitoDeUnicidade(err: unknown): boolean {
+  return !!err && typeof err === "object" && (err as { code?: unknown }).code === "P2002";
+}
+
+/**
+ * Busca o custo real da entrega e, em sucesso, grava `custoEnvio` na venda
+ * (junto de `uberDeliveryId` e `custoEnvioFonte`) e revalida as telas
+ * afetadas. NUNCA cria `Despesa` (QK-F21-01). Um custo digitado a mao ou ja
+ * definitivo nunca e sobrescrito por um valor provisorio (T-F21-04); o
+ * mesmo delivery id nunca e lancado em duas vendas (T-F21-05).
  */
 export async function registrarCustoEntregaUber(params: {
   config: UberDirectConfig;
@@ -114,10 +141,48 @@ export async function registrarCustoEntregaUber(params: {
     };
   }
 
-  await prisma.venda.update({
+  const vendaAtual = await prisma.venda.findUnique({
     where: { id: vendaId },
-    data: { custoEnvio: resultado.total },
+    select: { custoEnvio: true, custoEnvioFonte: true },
   });
+
+  const decisao = decidirGravacaoCustoEnvio({
+    custoEnvioAtual: vendaAtual?.custoEnvio,
+    fonteAtual: vendaAtual?.custoEnvioFonte,
+    novoCusto: resultado.total,
+    novoDefinitivo: resultado.definitivo,
+  });
+
+  if (!decisao.gravar) {
+    return {
+      gravado: false,
+      motivo: decisao.motivo,
+      mensagem: mensagemMotivoGravacao(decisao.motivo),
+      httpStatus: decisao.httpStatus,
+    };
+  }
+
+  try {
+    await prisma.venda.update({
+      where: { id: vendaId },
+      data: {
+        custoEnvio: resultado.total,
+        uberDeliveryId: resultado.deliveryId,
+        custoEnvioFonte: decisao.fonteResultante,
+      },
+    });
+  } catch (err) {
+    if (ehConflitoDeUnicidade(err)) {
+      return {
+        gravado: false,
+        motivo: "entrega_ja_lancada",
+        mensagem: mensagemMotivoGravacao("entrega_ja_lancada"),
+        httpStatus: 409,
+      };
+    }
+    throw err;
+  }
+
   revalidarVenda();
 
   return {

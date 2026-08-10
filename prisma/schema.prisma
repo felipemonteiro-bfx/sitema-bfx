@@ -169,6 +169,14 @@ model Venda {
   boletoUrl          String?   @map("boleto_url")
   assinaturaToken    String?   @unique @map("assinatura_token")
 
+  // QK-F21-02: rastreabilidade do custo real capturado da Uber Direct (Get Delivery
+  // Status) e protecao contra sobrescrita. uberDeliveryId e @unique para que o mesmo
+  // frete nunca seja lancado como custo em duas vendas.
+  uberDeliveryId     String?   @unique @map("uber_delivery_id")
+  // Valores possiveis: "manual" | "uber_provisorio" | "uber_final". Nulo = nunca
+  // passou por esta integracao (custo digitado a mao ou venda anterior a ela).
+  custoEnvioFonte    String?   @map("custo_envio_fonte")
+
   // Relacionamentos
   cliente            Cliente?   @relation(fields: [clienteId], references: [id])
   vendedorUsuario    Usuario?   @relation("vendas_vendedor", fields: [vendedorId], references: [id])

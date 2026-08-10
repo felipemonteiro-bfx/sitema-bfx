@@ -34,6 +34,8 @@ export type ResultadoCustoEntregaUber =
       total: number;
       moeda: string;
       linhas: LinhaCustoUber[];
+      /** true so quando o status da entrega e final ("delivered") — antes disso o custo (ex.: BUSY_AREA_FEE) e provisorio. */
+      definitivo: boolean;
     }
   | { ok: false; motivo: MotivoFalhaCustoUber; detalhe: string };
 
@@ -141,15 +143,68 @@ export function interpretarCustoEntregaUber(httpStatus: number, corpo: unknown):
     });
   }
 
+  const status = typeof envelope.status === "string" ? envelope.status : "";
+
   return {
     ok: true,
     deliveryId: typeof envelope.id === "string" ? envelope.id : "",
-    status: typeof envelope.status === "string" ? envelope.status : "",
+    status,
     totalCentavos: Math.round(fullFee.total as number),
     total,
     moeda,
     linhas,
+    definitivo: custoEntregaDefinitivo(status),
   };
+}
+
+/** Status final de entrega concluida — o unico em que o custo deixa de ser provisorio. */
+const STATUS_ENTREGA_FINAL = "delivered";
+
+/**
+ * `true` so quando a entrega ja concluiu ("delivered"). Antes disso,
+ * BUSY_AREA_FEE e outras taxas dinamicas ainda podem mudar — o custo lido e
+ * provisorio e precisa ser reconciliado depois (T-F21-04).
+ */
+export function custoEntregaDefinitivo(status: unknown): boolean {
+  if (typeof status !== "string") return false;
+  return status.toLowerCase() === STATUS_ENTREGA_FINAL;
+}
+
+/**
+ * Decide se um novo custo de entrega pode ser gravado sobre o que ja existe
+ * na venda. Regra de ouro: valor que nao veio desta integracao (fonte nula
+ * com custo maior que zero) foi digitado a mao e nunca e sobrescrito
+ * (T-F21-04). Um custo ja definitivo ("uber_final") tambem nunca e rebaixado
+ * por um valor provisorio.
+ */
+export type DecisaoGravacaoCustoEnvio =
+  | { gravar: true; fonteResultante: "uber_provisorio" | "uber_final" }
+  | {
+      gravar: false;
+      motivo: "custo_manual_preservado" | "custo_final_ja_gravado";
+      httpStatus: number;
+    };
+
+export function decidirGravacaoCustoEnvio(params: {
+  custoEnvioAtual: unknown;
+  fonteAtual: unknown;
+  novoCusto: number;
+  novoDefinitivo: boolean;
+}): DecisaoGravacaoCustoEnvio {
+  const custoAtualNum = typeof params.custoEnvioAtual === "number" ? params.custoEnvioAtual : 0;
+  const fonte = typeof params.fonteAtual === "string" ? params.fonteAtual : null;
+
+  // Fonte nula com custo > 0: nunca passou por esta integracao — foi digitado a mao.
+  if (fonte === null && custoAtualNum > 0) {
+    return { gravar: false, motivo: "custo_manual_preservado", httpStatus: 409 };
+  }
+
+  // Ja definitivo: um valor provisorio novo nunca rebaixa o que ja foi reconciliado.
+  if (fonte === "uber_final" && !params.novoDefinitivo) {
+    return { gravar: false, motivo: "custo_final_ja_gravado", httpStatus: 409 };
+  }
+
+  return { gravar: true, fonteResultante: params.novoDefinitivo ? "uber_final" : "uber_provisorio" };
 }
 
 /** Status HTTP a devolver ao navegador para cada motivo de falha. */
