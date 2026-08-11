@@ -70,7 +70,9 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             id={id}
             disabled={disabled}
             className={cn(
-              "flex h-10 w-full items-center justify-between rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
+              // Sem sombra (D-03): botao tem border-2 propria e vive no mesmo
+              // plano do card/formulario — nao e um plano acima.
+              "flex h-10 w-full items-center justify-between rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
               !date && "text-muted-foreground",
               className
             )}

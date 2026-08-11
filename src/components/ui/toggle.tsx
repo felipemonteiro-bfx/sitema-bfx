@@ -12,8 +12,10 @@ const toggleVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
+        // Sem sombra (D-03): toggle tem border propria e vive no mesmo plano
+        // da toolbar/formulario — nao e um plano acima.
         outline:
-          "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         default: "h-9 px-2 min-w-9",

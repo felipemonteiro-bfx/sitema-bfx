@@ -8,12 +8,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
+        // Sem sombra (D-03): selo preenchido, dentro de tabela ou card — no
+        // mesmo plano do conteudo, nao um plano acima.
         default:
-          "border-transparent bg-primary text-primary-foreground shadow-sm hover:bg-primary/80 hover:shadow",
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/80",
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: 
           "text-foreground border-border hover:bg-muted",
         // Tint OPACO no tema claro (`bg-<sem>-bg`), nao o composto
@@ -32,13 +34,13 @@ const badgeVariants = cva(
         info:
           "border-info/30 bg-info-bg text-info-text dark:bg-info/20 dark:border-info/40 hover:bg-info/20 dark:hover:bg-info/30",
         successSolid:
-          "border-transparent bg-success text-success-foreground shadow-sm hover:bg-success/90",
+          "border-transparent bg-success text-success-foreground hover:bg-success/90",
         warningSolid:
-          "border-transparent bg-warning text-warning-foreground shadow-sm hover:bg-warning/90",
+          "border-transparent bg-warning text-warning-foreground hover:bg-warning/90",
         errorSolid:
-          "border-transparent bg-error text-error-foreground shadow-sm hover:bg-error/90",
+          "border-transparent bg-error text-error-foreground hover:bg-error/90",
         infoSolid:
-          "border-transparent bg-info text-info-foreground shadow-sm hover:bg-info/90",
+          "border-transparent bg-info text-info-foreground hover:bg-info/90",
         ghost:
           "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
       },
