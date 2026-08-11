@@ -24,6 +24,7 @@ import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagament
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
+import { hashSenha } from "@/lib/senha";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -1002,17 +1003,32 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           orderBy: { nomeExibicao: "asc" },
         });
         break;
-      case "criar_usuario":
+      case "criar_usuario": {
         requireAdmin(ctx);
-        result = await prisma.usuario.create({ data: parsedParams });
-        break;
-      case "atualizar_usuario":
-        requireAdmin(ctx);
-        result = await prisma.usuario.update({
-          where: { id: Number(parsedParams.id) },
-          data: parsedParams,
+        // parsedParams nao pode mais ir cru para `data` — a senha vinda do
+        // modelo tem que ser hasheada antes de gravar (D-04, D-06).
+        const { password: senhaCriarUsuario, ...restoCriarUsuario } = parsedParams;
+        result = await prisma.usuario.create({
+          data: { ...restoCriarUsuario, password: await hashSenha(String(senhaCriarUsuario)) },
         });
         break;
+      }
+      case "atualizar_usuario": {
+        requireAdmin(ctx);
+        const { password: senhaAtualizarUsuario, ...restoAtualizarUsuario } = parsedParams;
+        const dataAtualizarUsuario: Record<string, unknown> = { ...restoAtualizarUsuario };
+        // So grava a chave `password` quando veio preenchida — sem isso o
+        // `data` do update zeraria a senha de qualquer usuario editado sem
+        // trocar a senha.
+        if (senhaAtualizarUsuario) {
+          dataAtualizarUsuario.password = await hashSenha(String(senhaAtualizarUsuario));
+        }
+        result = await prisma.usuario.update({
+          where: { id: Number(parsedParams.id) },
+          data: dataAtualizarUsuario,
+        });
+        break;
+      }
       case "atualizar_venda": {
         requireAdmin(ctx);
         let vendedorIdUpdate: number | undefined;

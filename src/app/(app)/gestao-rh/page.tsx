@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
+import { hashSenha } from "@/lib/senha";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +34,7 @@ async function updateMeta(formData: FormData) {
   revalidarUsuario();
 }
 
-async function addUser(formData: FormData) {
+export async function addUser(formData: FormData) {
   "use server";
   await requireAdminOrThrow();
   const nome = String(formData.get("nome") || "");
@@ -45,7 +46,7 @@ async function addUser(formData: FormData) {
     data: {
       nomeExibicao: nome,
       username: login.toLowerCase(),
-      password: senha,
+      password: await hashSenha(senha),
       role,
     },
   });
