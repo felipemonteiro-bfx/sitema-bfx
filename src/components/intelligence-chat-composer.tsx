@@ -191,7 +191,7 @@ export function IntelligenceChatComposer({
                   <div>Peça resumos semanais de desempenho.</div>
                   <div>Solicite planos para bater metas mensais.</div>
                   <div>Compare vendedores e recomende ações.</div>
-                  <div className="rounded-md border bg-muted/30 p-2 text-[11px]">
+                  <div className="rounded-md border bg-muted/30 p-2 text-xs">
                     Dica: use perguntas com contexto e período para respostas mais precisas.
                   </div>
                 </div>
@@ -244,7 +244,7 @@ export function IntelligenceChatComposer({
         )}
       </div>
 
-      <div className="mt-1.5 text-[11px] text-muted-foreground">
+      <div className="mt-1.5 text-xs text-muted-foreground">
         {recording
           ? "Toque no quadrado vermelho para parar e transcrever, ou no X para cancelar."
           : transcribing
