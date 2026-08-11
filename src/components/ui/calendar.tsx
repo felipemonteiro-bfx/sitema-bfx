@@ -30,7 +30,7 @@ function Calendar({
         button_next: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground",
         month_grid: "col-span-3 w-full border-collapse",
         weekdays: "flex",
-        weekday: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] capitalize",
+        weekday: "text-muted-foreground rounded-md w-9 font-normal text-xs capitalize",
         week: "flex w-full mt-2",
         day: "h-9 w-9 text-center text-sm p-0 relative",
         day_button: cn(
