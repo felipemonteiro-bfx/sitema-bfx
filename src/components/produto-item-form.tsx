@@ -157,125 +157,193 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Produto Nome */}
-          <div className="space-y-2 relative lg:col-span-2">
-            <Label
-              htmlFor={`produto-nome-${index}`}
-              className={cn(
-                "text-xs font-bold uppercase tracking-wider",
-                hasError ? "text-error-text" : "text-muted-foreground",
-              )}
-            >
-              Produto <span className="text-error-text">*</span> {hasError && "(obrigatório)"}
-            </Label>
-            <Input
-              id={`produto-nome-${index}`}
-              value={produtoQuery}
-              onChange={(e) => {
-                const nome = e.target.value;
-                setProdutoQuery(nome);
-                setIsSearching(true);
-                // Propaga o nome digitado para o item do pai — sem isso, um produto
-                // digitado mas nao selecionado no dropdown fica com produtoNome vazio
-                // e e descartado no envio ("some e nao contabiliza").
-                onUpdate(index, { ...item, produtoNome: nome });
-              }}
-              placeholder="Digite o nome do produto"
-              required
-              aria-required="true"
-              className={hasError ? "border-destructive border-2" : ""}
-            />
-            {showDropdown && produtoSuggestions.length > 0 && (
-              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl dark:shadow-[var(--shadow-lg)] max-h-56 overflow-y-auto">
-                {produtoSuggestions.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    role="option"
-                    aria-selected={false}
-                    onClick={() => handleProdutoSelect(p)}
-                    className="w-full px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer text-sm"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{p.nome}</span>
-                    </div>
-                    {p.valorVenda && (
-                      <div className="text-xs text-muted-foreground">
-                        {formatBRL(p.valorVenda)}
-                      </div>
-                    )}
-                  </button>
-                ))}
-                {produtoSuggestions.length === 0 && (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    Nenhum produto encontrado
-                  </div>
+        {/* TRES ZONAS, nao um grid unico. Antes, campos de entrada e blocos de
+            resultado eram filhos do mesmo `md:grid-cols-2 lg:grid-cols-4` e
+            disputavam coluna entre si. Medido em navegador com as classes dos
+            dois layouts na caixa real da tela — `(app)/layout.tsx` com
+            `max-w-[1600px] gap-6 px-3 lg:px-6`, `aside w-72`, `main` com borda e
+            `px-4 lg:px-8`, mais o Card e o `CardContent p-4`:
+            — em 1440px o resultado ocupava 3 das 4 colunas, entao a regua
+              NASCIA 248px a direita do campo Produto e cobria 72% do card — uma
+              linha que comeca no meio do nada, ao lado do Qtd, em vez de separar
+              entrada de resultado. Em 1024px, 144px de deslocamento. E o Qtd
+              ficava orfao numa linha de quatro colunas.
+            — em 768px, o pior caso, o `lg:col-span-3` nao valia: os tres blocos
+              caiam em UMA coluna, a regua cobria 49% do card (332px de 676px) e
+              cada tile ficava com 102,7px — Subtotal e Lucro em 40px de altura,
+              DUAS linhas, com metade do card vazia ao lado.
+            A causa era conceitual: numero derivado nao e campo de formulario, e
+            estava competindo por coluna com o Custo e o Valor.
+            Hoje, medido no mesmo mockup: a regua cobre 100% do conteudo do card
+            em 390, 768, 1024 e 1440, e nenhum valor quebra em duas linhas. */}
+        <div className="space-y-3">
+          {/* Zonas 1 e 2 — identificacao e precificacao, na MESMA linha a partir
+              de `xl` (medido em 1280 e 1440: os quatro campos com o mesmo `top`).
+              `xl` e nao `lg`, e isto e medida, nao gosto: em 1024px o card tem
+              598px, e com a fusao valendo ali a coluna de moeda caia para
+              102,4px — 46,4px de area de texto depois do `border-2`, do `pl-10`
+              do prefixo "R$" e do `px-3`. "12.500,00" mede 67,2px: o campo
+              truncava o proprio valor, sem sinal visual nenhum, e num ponto em
+              que o layout antigo ainda cabia (76px). Com a fusao em `xl`, 1024px
+              da 124px de texto e 1280px da 97,6px. */}
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+            {/* Produto Nome */}
+            <div className="space-y-2 relative min-w-0 xl:basis-2/5">
+              <Label
+                htmlFor={`produto-nome-${index}`}
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  hasError ? "text-error-text" : "text-muted-foreground",
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setProdutoSuggestions([]);
-                    setIsSearching(false);
-                    setCadastrarOpen(true);
-                  }}
-                  className="w-full px-3 py-2 text-left hover:bg-primary/10 transition-colors cursor-pointer text-sm border-t border-border flex items-center gap-2 text-primary font-medium"
+              >
+                Produto <span className="text-error-text">*</span> {hasError && "(obrigatório)"}
+              </Label>
+              <Input
+                id={`produto-nome-${index}`}
+                value={produtoQuery}
+                onChange={(e) => {
+                  const nome = e.target.value;
+                  setProdutoQuery(nome);
+                  setIsSearching(true);
+                  // Propaga o nome digitado para o item do pai — sem isso, um produto
+                  // digitado mas nao selecionado no dropdown fica com produtoNome vazio
+                  // e e descartado no envio ("some e nao contabiliza").
+                  onUpdate(index, { ...item, produtoNome: nome });
+                }}
+                placeholder="Digite o nome do produto"
+                required
+                aria-required="true"
+                className={hasError ? "border-destructive border-2" : ""}
+              />
+              {showDropdown && produtoSuggestions.length > 0 && (
+                <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl dark:shadow-[var(--shadow-lg)] max-h-56 overflow-y-auto">
+                  {produtoSuggestions.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      role="option"
+                      aria-selected={false}
+                      onClick={() => handleProdutoSelect(p)}
+                      className="w-full px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer text-sm"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{p.nome}</span>
+                      </div>
+                      {p.valorVenda && (
+                        <div className="text-xs text-muted-foreground">
+                          {formatBRL(p.valorVenda)}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                  {produtoSuggestions.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      Nenhum produto encontrado
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProdutoSuggestions([]);
+                      setIsSearching(false);
+                      setCadastrarOpen(true);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-primary/10 transition-colors cursor-pointer text-sm border-t border-border flex items-center gap-2 text-primary font-medium"
+                  >
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    Cadastrar &ldquo;{produtoQuery}&rdquo;
+                  </button>
+                </div>
+              )}
+              <CadastrarProdutoRapidoDialog
+                open={cadastrarOpen}
+                onOpenChange={setCadastrarOpen}
+                nomeInicial={produtoQuery}
+                fornecedores={fornecedores}
+                categoriasExistentes={categoriasExistentes}
+                onCriado={(p) => handleProdutoSelect({ nome: p.nome, valorVenda: p.valorVenda, custoPadrao: p.custoPadrao, qtdEstoque: p.qtdEstoque })}
+              />
+            </div>
+
+            {/* Custo, Valor e Qtd sao a mesma natureza — numerico curto — e por
+                isso ficam na MESMA linha a partir de 640px. Abaixo disso, o par de
+                moeda divide a linha (~157px cada, folga para "R$ 12.500,00") e o
+                Qtd fica embaixo em largura cheia: e o campo que mais recebe toque,
+                e ganha o maior alvo em vez de sobrar meia celula vazia.
+                Os tres rotulos ganharam `htmlFor`: sem ele o clique no rotulo nao
+                move o foco e o campo nao tem nome para leitor de tela (os dois de
+                moeda nao tinham nem `aria-label`). O `aria-label` comeca pelo
+                texto visivel do rotulo — exigencia de rotulo-no-nome (WCAG
+                2.5.3) — e completa com o numero do item, que e o que distingue um
+                "Qtd" do "Qtd" do produto seguinte. */}
+            <div className="grid grid-cols-2 gap-3 min-w-0 sm:grid-cols-3 xl:basis-3/5">
+              <div className="space-y-2">
+                <Label
+                  htmlFor={`custo-produto-${index}`}
+                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                 >
-                  <Plus className="h-3.5 w-3.5 shrink-0" />
-                  Cadastrar &ldquo;{produtoQuery}&rdquo;
-                </button>
+                  Custo Unit.
+                </Label>
+                <CurrencyInput
+                  id={`custo-produto-${index}`}
+                  value={item.custoProduto}
+                  onChange={(v) => handleChange("custoProduto", v)}
+                  aria-label={`Custo unit. do produto ${index + 1}`}
+                />
               </div>
-            )}
-            <CadastrarProdutoRapidoDialog
-              open={cadastrarOpen}
-              onOpenChange={setCadastrarOpen}
-              nomeInicial={produtoQuery}
-              fornecedores={fornecedores}
-              categoriasExistentes={categoriasExistentes}
-              onCriado={(p) => handleProdutoSelect({ nome: p.nome, valorVenda: p.valorVenda, custoPadrao: p.custoPadrao, qtdEstoque: p.qtdEstoque })}
-            />
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor={`valor-venda-${index}`}
+                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                >
+                  Valor Unit.
+                </Label>
+                <CurrencyInput
+                  id={`valor-venda-${index}`}
+                  value={item.valorVenda}
+                  onChange={(v) => handleChange("valorVenda", v)}
+                  aria-label={`Valor unit. do produto ${index + 1}`}
+                />
+              </div>
+
+              <div className="col-span-2 space-y-2 sm:col-span-1">
+                <Label
+                  htmlFor={`quantidade-${index}`}
+                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                >
+                  Qtd
+                </Label>
+                <Input
+                  id={`quantidade-${index}`}
+                  type="number"
+                  min="1"
+                  value={item.quantidade}
+                  onChange={(e) => handleChange("quantidade", Number(e.target.value))}
+                  required
+                  aria-label={`Qtd do produto ${index + 1}`}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Custo */}
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Custo Unit.
-            </Label>
-            <CurrencyInput
-              value={item.custoProduto}
-              onChange={(v) => handleChange("custoProduto", v)}
-            />
-          </div>
-
-          {/* Valor */}
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Valor Unit.
-            </Label>
-            <CurrencyInput
-              value={item.valorVenda}
-              onChange={(v) => handleChange("valorVenda", v)}
-            />
-          </div>
-
-          {/* Quantidade */}
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Qtd
-            </Label>
-            <Input
-              type="number"
-              min="1"
-              value={item.quantidade}
-              onChange={(e) => handleChange("quantidade", Number(e.target.value))}
-              required
-              aria-label={`Quantidade do produto ${index + 1}`}
-            />
-          </div>
-
-          {/* Resumo */}
-          <div className="lg:col-span-3 pt-3 border-t border-border space-y-2">
-            <div className="grid grid-cols-3 gap-3">
+          {/* Zona 3 — RESULTADO, em largura cheia do card: a regua atravessa o
+              card inteiro, que e o que ela precisa fazer para separar entrada de
+              resultado.
+              `grid-cols-1 sm:grid-cols-3` e a MESMA declaracao do "Limite e
+              Margem" 250px acima nesta tela, e e ela que mata o truncamento: o
+              antigo `grid-cols-3` valia em TODA largura, entao em 390px cada
+              bloco ficava com ~107px e o valor quebrava em duas linhas. Empilhado
+              em coluna unica o bloco tem os ~322px do card inteiro, folga de
+              sobra para um valor de ~90px.
+              Nao vira linha rotulo/valor abaixo de sm: nenhum bloco de metrica do
+              BFX troca de eixo por breakpoint — nem "Limite e Margem" e "Resumo
+              Financeiro" nesta tela, nem o DRE, o historico ou o CardStats do
+              dashboard. Trocar o eixo aqui criaria a TERCEIRA lingua para numero
+              derivado na mesma tela — o defeito que esta correcao existe para
+              tirar. */}
+          <div className="pt-3 border-t border-border">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {/* Tint OPACO como os dois vizinhos. Este era o unico dos tres que
                   ainda usava composto (`bg-muted/30`) — a correcao que criou o
                   `-bg` opaco passou por Lucro e Margem e esqueceu o Subtotal,
@@ -285,7 +353,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   de acessibilidade. */}
               <div className="rounded-lg bg-muted px-3 py-2 text-center">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
-                <div className="text-sm font-bold text-foreground">{formatBRL(item.subtotal)}</div>
+                <div className="text-sm font-bold tabular-nums text-foreground">{formatBRL(item.subtotal)}</div>
               </div>
               {/* Tint OPACO (`bg-<sem>-bg`), nao o composto `bg-<sem>/5`: este
                   Card fica dentro do card elevado de /venda-rapida, e o
@@ -295,7 +363,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   Financeiro", logo abaixo nesta mesma tela. */}
               <div className="rounded-lg bg-success-bg px-3 py-2 text-center">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro</div>
-                <div className="text-sm font-bold text-success-text">{formatBRL(lucro)}</div>
+                <div className="text-sm font-bold tabular-nums text-success-text">{formatBRL(lucro)}</div>
               </div>
               {/* Margem por FAIXA, como no Dashboard e no Historico
                   (`>= 20` bom, `>= 10` atencao, abaixo disso ruim). Aqui ela era
@@ -311,7 +379,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
                 <div
                   className={cn(
-                    "text-sm font-bold",
+                    "text-sm font-bold tabular-nums",
                     margem >= 20 ? "text-success-text" : margem >= 10 ? "text-warning-text" : "text-error-text"
                   )}
                 >

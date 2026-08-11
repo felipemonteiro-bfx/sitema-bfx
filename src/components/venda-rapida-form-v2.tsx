@@ -740,8 +740,16 @@ export default function VendaRapidaFormV2({
         </CardHeader>
         <CardContent className="overflow-visible">
           <div className="relative">
-            <div className="flex items-center justify-between gap-2">
+            {/* `mb-2`: esta linha e o <Input> abaixo sao irmaos diretos, e sem
+                isto o campo de cliente era o UNICO da tela colado no rotulo —
+                todos os outros vivem dentro de um `space-y-2`. */}
+            <div className="mb-2 flex items-center justify-between gap-2">
+              {/* `htmlFor`: o campo mais importante da tela era o que nao tinha
+                  nome acessivel — rotulo sem `for`, <Input> sem `id` nem
+                  `aria-label`. O clique no rotulo tambem nao levava o foco pro
+                  campo. Mesma correcao feita nos tres campos do item de produto. */}
               <Label
+                htmlFor="cliente-query"
                 className={cn(
                   "text-xs font-bold uppercase tracking-wider",
                   validationErrors.cliente ? "text-error-text" : "text-muted-foreground",
@@ -749,16 +757,24 @@ export default function VendaRapidaFormV2({
               >
                 Buscar Cliente <span className="text-error-text">*</span> {validationErrors.cliente && "(obrigatório)"}
               </Label>
-              <button
+              {/* <Button>, nao <button> com estilo a mao: era o unico botao cru
+                  do projeto e nao herdava padding, raio, hover de superficie nem
+                  o anel de foco. A dois cliques daqui, "Adicionar Produto" faz a
+                  mesma coisa (adicionar um registro) com `outline`+`sm`+icone —
+                  duas linguagens para a mesma acao na mesma tela. */}
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setClienteDialogOpen(true)}
-                className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium text-info-text hover:underline"
+                leftIcon={<Plus className="h-4 w-4" />}
+                className="shrink-0"
               >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
                 Cadastrar cliente
-              </button>
+              </Button>
             </div>
             <Input
+              id="cliente-query"
               value={clienteQuery}
               onChange={(e) => setClienteQuery(e.target.value)}
               placeholder="Digite o nome do cliente"
@@ -873,17 +889,17 @@ export default function VendaRapidaFormV2({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Limite</div>
-                <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.margemTotal)}</div>
+                <div className="text-sm font-bold tabular-nums text-foreground">{formatBRL(limiteData.margemTotal)}</div>
               </div>
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Comprometido</div>
-                <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.comprometimentoAtual)}</div>
+                <div className="text-sm font-bold tabular-nums text-foreground">{formatBRL(limiteData.comprometimentoAtual)}</div>
               </div>
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Disponível</div>
                 <div
                   className={cn(
-                    "text-sm font-bold",
+                    "text-sm font-bold tabular-nums",
                     limiteData.margemDisponivel > 0 ? "text-success-text" : "text-error-text"
                   )}
                 >
@@ -1121,19 +1137,19 @@ export default function VendaRapidaFormV2({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
-              <div className="text-base font-bold text-foreground">{formatBRL(subtotalProdutos)}</div>
+              <div className="text-base font-bold tabular-nums text-foreground">{formatBRL(subtotalProdutos)}</div>
             </div>
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Frete</div>
-              <div className="text-base font-bold text-foreground">{formatBRL(numFrete)}</div>
+              <div className="text-base font-bold tabular-nums text-foreground">{formatBRL(numFrete)}</div>
             </div>
             <div className="rounded-lg bg-primary/5 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Total Venda</div>
-              <div className="text-lg font-bold text-primary">{formatBRL(totalVenda)}</div>
+              <div className="text-lg font-bold tabular-nums text-primary">{formatBRL(totalVenda)}</div>
             </div>
             <div className="rounded-lg bg-info-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
-              <div className="text-base font-bold text-info-text">{formatBRL(totalVenda / numParcelas)}</div>
+              <div className="text-base font-bold tabular-nums text-info-text">{formatBRL(totalVenda / numParcelas)}</div>
             </div>
           </div>
 
@@ -1146,19 +1162,19 @@ export default function VendaRapidaFormV2({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Custo Total</div>
-              <div className="text-base font-bold text-foreground">{formatBRL(custoTotal)}</div>
+              <div className="text-base font-bold tabular-nums text-foreground">{formatBRL(custoTotal)}</div>
             </div>
             <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
-              <div className="text-base font-bold text-success-text">{formatBRL(lucroBruto)}</div>
+              <div className="text-base font-bold tabular-nums text-success-text">{formatBRL(lucroBruto)}</div>
             </div>
             <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
-              <div className="text-base font-bold text-success-text">{margemPct.toFixed(1)}%</div>
+              <div className="text-base font-bold tabular-nums text-success-text">{margemPct.toFixed(1)}%</div>
             </div>
             <div className="rounded-lg bg-warning-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
-              <div className="text-base font-bold text-warning-text">{formatBRL(valorComissao)}</div>
+              <div className="text-base font-bold tabular-nums text-warning-text">{formatBRL(valorComissao)}</div>
             </div>
           </div>
 
