@@ -8,6 +8,8 @@ import {
   linhaCsv,
   celulaPdf,
   filtrarColunasPorPerfil,
+  calcularLayoutPdf,
+  truncarParaLargura,
   type VendaRelatorio,
 } from "@/lib/relatorio-vendas-colunas";
 
@@ -118,5 +120,53 @@ describe("catalogo COLUNAS_VENDAS", () => {
     const comAdmin = filtrarColunasPorPerfil(COLUNAS_VENDAS, true);
     expect(semAdmin.some((c) => COLUNAS_SENSIVEIS.includes(c.key))).toBe(false);
     expect(comAdmin.filter((c) => COLUNAS_SENSIVEIS.includes(c.key)).length).toBe(2);
+  });
+});
+
+describe("calcularLayoutPdf", () => {
+  it("8 faixas do padrao: primeira em x=40, x crescente, sem invasao, fim <= 802", () => {
+    const layout = calcularLayoutPdf(resolverColunas(null), 40, 762);
+    expect(layout.length).toBe(8);
+    expect(layout[0]!.x).toBe(40);
+    for (let i = 1; i < layout.length; i++) {
+      expect(layout[i]!.x).toBeGreaterThan(layout[i - 1]!.x);
+      expect(layout[i]!.x).toBeGreaterThanOrEqual(layout[i - 1]!.x + layout[i - 1]!.largura);
+    }
+    const ultima = layout[layout.length - 1]!;
+    expect(ultima.x + ultima.largura).toBeLessThanOrEqual(802);
+  });
+
+  it("larguras do padrao batem com as de hoje dentro de 2pt de tolerancia", () => {
+    const layout = calcularLayoutPdf(resolverColunas(null), 40, 762);
+    const esperadas = [55, 105, 160, 110, 85, 90, 40, 117];
+    layout.forEach((faixa, i) => {
+      expect(Math.abs(faixa.largura - esperadas[i]!)).toBeLessThanOrEqual(2);
+    });
+  });
+
+  it("uma coluna so ocupa a largura util inteira", () => {
+    const coluna = COLUNAS_VENDAS.find((c) => c.key === "nome")!;
+    const layout = calcularLayoutPdf([coluna], 40, 762);
+    expect(layout.length).toBe(1);
+    expect(layout[0]!.largura).toBeCloseTo(762, 5);
+  });
+
+  it("com as 13 colunas ainda cabe: soma <= 762, nenhuma largura negativa ou zero", () => {
+    const layout = calcularLayoutPdf(COLUNAS_VENDAS, 40, 762);
+    const soma = layout.reduce((s, f) => s + f.largura, 0);
+    expect(soma).toBeLessThanOrEqual(762 + 0.01);
+    layout.forEach((f) => expect(f.largura).toBeGreaterThan(0));
+  });
+});
+
+describe("truncarParaLargura", () => {
+  const medir5pt = (t: string) => t.length * 5;
+
+  it("corta para o maior prefixo que cabe", () => {
+    expect(truncarParaLargura("ABCDEFGHIJ", 20, medir5pt)).toBe("ABCD");
+  });
+
+  it("devolve o texto inteiro quando ja cabe", () => {
+    expect(truncarParaLargura("AB", 20, medir5pt)).toBe("AB");
   });
 });
