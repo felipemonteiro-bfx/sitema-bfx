@@ -93,26 +93,50 @@ número. O `font-black` não tem papel definido e deve ser reduzido a `bold`.
 
 `--radius: 0.625rem` (10px) é a base; os degraus derivam dela por `calc()`.
 
-| Elemento | Classe |
-|---|---|
-| Card, diálogo, bloco | `rounded-lg` (padrão — 112 usos, já é a norma de fato) |
-| Campo, botão, célula | `rounded-md` |
-| Selo, avatar, indicador | `rounded-full` |
+> **Correção de 2026-08-11.** A primeira versão desta página afirmava que `rounded-lg` era "a
+> norma de fato, 112 usos". Isso estava **errado**, e a auditoria pegou: aqueles 113 usos são
+> majoritariamente de *elementos internos* (ícone, chip, bloco dentro do card), não da superfície.
+> Medindo o que cada componente base define, as superfícies **discordam entre si**:
 
-**Divergência medida:** `rounded-xl` (36) e `rounded-2xl` (15) aparecem sem critério que os
-distinga do `lg`. Reservar o `xl` para superfícies grandes (o chip da marca na navegação) e
-eliminar o `2xl`.
+| Componente base | Raio hoje | |
+|---|---|---|
+| `card.tsx` | `rounded-2xl` (18px) | a superfície mais usada do sistema (53 call sites) |
+| `dialog.tsx`, `alert-dialog.tsx` | `rounded-lg` (10px) | |
+| `popover.tsx`, `dropdown-menu.tsx` | `rounded-md` (8px) | |
+| `sheet.tsx` | `rounded-sm` (6px) | |
+
+Card e Dialog são as duas superfícies conceitualmente mais próximas — um bloco de conteúdo e um
+bloco de conteúdo flutuante — e usam raios que diferem em 8px. **Isto é a divergência, não o
+`rounded-xl` dos call sites.**
+
+**Decisão pendente** (altera a aparência de todas as telas, então é do dono do produto):
+
+- **Alinhar tudo em 18px** (`rounded-2xl`): o Card, que é o que mais se vê, fica como está; sobem
+  Dialog, Popover e Sheet. Visual mais macio; nada muda nas 20 telas em repouso.
+- **Alinhar tudo em 10px** (`rounded-lg`, o valor de `--radius`): mais sóbrio e coerente com o
+  token base, mas **muda o canto de todo card do sistema** — é a mudança visualmente mais visível
+  de toda a identidade.
+
+Enquanto não houver decisão, o que vale é: **elemento interno** (ícone, chip, bloco) segue
+`rounded-lg`; **campo e botão** seguem `rounded-md`; **selo e avatar**, `rounded-full`. Os
+`rounded-xl`/`2xl` avulsos em call sites (51 usos) continuam sendo divergência a eliminar.
 
 ### Sombra
 
+> **Correção de 2026-08-11.** Esta página afirmava que repouso era `shadow-sm`. O `Card` variante
+> `default` nasce em **`shadow-md`** e sobe para `shadow-lg` no hover; a variante `elevated` nasce
+> em `shadow-lg`. Ou seja, o degrau de repouso real do sistema é `md`, e a distância entre
+> `default` e `elevated` é de um degrau só.
+
 Elevação é **um degrau por nível**, nunca dois na mesma superfície:
 
-- superfície em repouso: `shadow-sm`
-- superfície elevada (card de destaque, popover): `shadow-md`
-- flutuante (diálogo, menu): `shadow-lg`
+- superfície em repouso: `shadow-md` (o que o `Card` default faz hoje)
+- superfície elevada (card de destaque): `shadow-lg`
+- flutuante (diálogo, menu): `shadow-lg` + fundo escurecido
 
 No tema escuro, sombra sozinha não separa planos — use o token `var(--shadow-*)`, mais opaco,
-que é o que os componentes já fazem via `dark:shadow-[var(--shadow-md)]`.
+que é o que os componentes já fazem via `dark:shadow-[var(--shadow-md)]`. **Sombra crua sem par
+`dark:` é divergência**: no escuro ela praticamente desaparece.
 
 ---
 

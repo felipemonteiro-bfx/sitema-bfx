@@ -162,8 +162,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </CardHeader>
                           <CardContent>
                             <div className="text-2xl font-bold tabular-nums text-error-text">{formatBRL(custoTotal)}</div>
+                            {/* A taxa da Prudent faltava nesta lista desde que
+                                `finance.ts` passou a soma-la em `custosVar`: o
+                                total ja a incluia e a legenda nao, entao o numero
+                                nao batia com a decomposicao que o leitor somava
+                                de cabeca. */}
                             <div className="mt-1 text-xs text-muted-foreground">
-                              CMV + comissões + frete + despesas
+                              CMV + comissões + frete + taxa Prudent + despesas
                             </div>
                           </CardContent>
                         </Card>
