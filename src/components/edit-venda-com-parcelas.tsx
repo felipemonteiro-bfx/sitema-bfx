@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { EditVendaItens } from "@/components/edit-venda-itens-client";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
+import { FormSecaoTitulo } from "@/components/form-secao-titulo";
 import { Input } from "@/components/ui/input";
 
 interface ProdutoItem {
@@ -44,6 +45,8 @@ export function EditVendaComParcelas({
   return (
     <>
       <EditVendaItens initialItens={initialItens} onTotalChange={handleTotalChange} />
+
+      <FormSecaoTitulo>Pagamento e parcelas</FormSecaoTitulo>
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-muted-foreground">Parcelas</label>

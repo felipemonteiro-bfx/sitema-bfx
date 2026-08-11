@@ -107,7 +107,17 @@ export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTota
           Datas de Vencimento ({parcelas.length}x · {formatBRL(totalParcelas)})
           {diverge && <span className="text-warning-text text-xs">⚠️</span>}
         </Button>
+        <span className="text-xs text-muted-foreground">
+          Total das parcelas: {formatBRL(totalParcelas)}
+        </span>
       </div>
+
+      {diverge && (
+        <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
+          ⚠️ A soma das parcelas ({formatBRL(totalParcelas)}) difere do total da venda
+          ({formatBRL(valorTotal)}).
+        </div>
+      )}
 
       {minimoPorPagas !== null && (
         <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
