@@ -51,19 +51,27 @@ function formatarDataUtc(ano: number, mes: number, dia: number): string {
 }
 
 /**
- * Soma um mes a uma data YYYY-MM-DD preservando o dia do mes, sem transbordar para
- * o mes seguinte quando o dia nao existe la (31/01 + 1 mes -> ultimo dia de
- * fevereiro, nunca 03/03).
+ * Soma `meses` a uma data YYYY-MM-DD preservando o DIA DA ANCORA, sem transbordar
+ * para o mes seguinte quando esse dia nao existe no mes de destino.
+ *
+ * Somar de um em um a partir da parcela anterior fazia o dia encolher para sempre:
+ * 31/01 virava 28/02 e, dai em diante, toda parcela seguinte herdava o 28 — a lista
+ * saia 31, 28, 28, 28 em vez de 31, 28, 31, 30. Contando sempre a partir da ancora,
+ * o encolhimento vale so para o mes curto e o dia volta ao original depois.
  */
-function somarUmMes(dataVencimento: string): string {
-  const { ano, mes, dia } = parseDataPura(dataVencimento);
-  const ultimoDiaDoProximoMes = new Date(Date.UTC(ano, mes + 2, 0)).getUTCDate();
-  const novoDia = Math.min(dia, ultimoDiaDoProximoMes);
-  return formatarDataUtc(ano, mes + 1, novoDia);
+function somarMeses(dataAncora: string, meses: number): string {
+  const { ano, mes, dia } = parseDataPura(dataAncora);
+  const ultimoDiaDoMesAlvo = new Date(Date.UTC(ano, mes + meses + 1, 0)).getUTCDate();
+  return formatarDataUtc(ano, mes + meses, Math.min(dia, ultimoDiaDoMesAlvo));
 }
 
 function dataVendaParaDate(dataVenda?: string): Date {
-  if (!dataVenda) return new Date();
+  // Sem fallback para `new Date()`: o modulo se declara puro e em UTC, e o relogio
+  // local do servidor tornaria a saida nao-determinista justamente no caminho que
+  // GERA datas de vencimento do zero.
+  if (!dataVenda) {
+    throw new Error("ajustarParcelas: dataVenda e obrigatoria para gerar parcelas de uma lista vazia.");
+  }
   const { ano, mes, dia } = parseDataPura(dataVenda);
   return new Date(Date.UTC(ano, mes, dia));
 }
@@ -119,13 +127,17 @@ export function ajustarParcelas(input: {
     resultado = parcelas.slice(0, alvo);
   } else if (alvo > parcelas.length) {
     resultado = [...parcelas];
+    // Ancora fixa na ultima parcela que ja existia: cada nova conta N meses a
+    // partir dela, e nao um mes a partir da anterior recem-criada.
+    const ancora = parcelas[parcelas.length - 1].dataVencimento;
+    let passo = 1;
     while (resultado.length < alvo) {
-      const ultima = resultado[resultado.length - 1];
       resultado.push({
         numeroParcela: resultado.length + 1,
-        dataVencimento: somarUmMes(ultima.dataVencimento),
+        dataVencimento: somarMeses(ancora, passo),
         valorParcela: 0,
       });
+      passo += 1;
     }
   } else {
     resultado = [...parcelas];

@@ -86,6 +86,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       valorParcela: number;
     };
     let parcelasExistentes: ParcelaExistente[] = [];
+    // Ligado quando a venda vira pagamento unico sem payload de parcelas (CR-01).
+    let limparParcelasSemPayload = false;
     try {
       parcelasExistentes = await prisma.parcelaVencimento.findMany({
         where: { vendaId: id },
@@ -123,6 +125,33 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           error: "Numero de parcelas nao bate com a quantidade de datas de vencimento informadas.",
         };
       }
+    }
+
+    // CR-01: o payload ausente NAO significa "nada a fazer com as parcelas".
+    // Com o campo Parcelas em 1, EditParcelasSection desmonta inteiro
+    // (`if (numeroParcelas <= 1) return null`), o hidden `parcelasVencimento`
+    // some do formulario e as duas guardas acima ficam inalcancaveis — o
+    // cabecalho gravava `parcelas: 1` e as N linhas antigas continuavam la.
+    // Era o bug da venda 182 reproduzido por uso normal, sem erro na tela.
+    if (parcelasForm.length === 0 && parcelasExistentes.length > 0 && parcelasNum !== parcelasExistentes.length) {
+      const pagasExistentes = parcelasExistentes.filter((p) => p.paga);
+      if (pagasExistentes.length > 0) {
+        const numeros = pagasExistentes.map((p) => p.numeroParcela).join(", ");
+        return {
+          success: false,
+          error: `Nao e possivel mudar para ${parcelasNum} parcela(s): a(s) parcela(s) ${numeros} ja esta(o) paga(s).`,
+        };
+      }
+      if (parcelasNum > 1) {
+        // Sem as datas nao da para gerar as linhas aqui sem inventar vencimento.
+        return {
+          success: false,
+          error: "Abra \"Datas de Vencimento\" e confirme as datas antes de salvar.",
+        };
+      }
+      // parcelasNum === 1 e nenhuma paga: virar a venda para pagamento unico
+      // apaga as linhas, senao cabecalho e linhas divergem de novo.
+      limparParcelasSemPayload = true;
     }
 
     const vendedorTexto = String(formData.get("vendedor") || "");
@@ -214,6 +243,15 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
             };
           }),
         });
+      } catch {
+        // Tabela parcelas_vencimento pode não existir em produção antiga
+      }
+    } else if (limparParcelasSemPayload) {
+      // A venda virou pagamento unico (CR-01). Ja foi verificado acima que
+      // nenhuma linha esta paga, entao apagar aqui e' seguro e e' o que impede
+      // o cabecalho (`parcelas: 1`) de divergir das linhas antigas.
+      try {
+        await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
       } catch {
         // Tabela parcelas_vencimento pode não existir em produção antiga
       }

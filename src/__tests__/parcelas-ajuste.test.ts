@@ -190,3 +190,31 @@ describe("redistribuirValores", () => {
     expect(redistribuirValores([], 100)).toEqual([]);
   });
 });
+
+// Achados do review de codigo (WR-01 e WR-02), corrigidos depois da implementacao inicial.
+describe("ajustarParcelas — arrasto de fim de mes e determinismo", () => {
+  it("WR-01: crescer de 1 para 5 a partir de 31/01 nao encolhe o dia para sempre — fevereiro usa 28, mas marco volta a 31", () => {
+    const { parcelas } = ajustarParcelas({
+      parcelas: [parcela(1, "2026-01-31", 100)],
+      numeroParcelas: 5,
+      valorTotal: 500,
+      dataVenda: "2026-01-01",
+    });
+
+    // Antes da correcao saia 31, 28, 28, 28, 28: cada nova parcela contava um mes a
+    // partir da anterior ja encolhida, entao o 28 de fevereiro contaminava o resto.
+    expect(parcelas.map((p) => p.dataVencimento)).toEqual([
+      "2026-01-31",
+      "2026-02-28",
+      "2026-03-31",
+      "2026-04-30",
+      "2026-05-31",
+    ]);
+  });
+
+  it("WR-02: gerar parcelas de uma lista vazia sem dataVenda falha alto, em vez de cair no relogio do servidor", () => {
+    expect(() =>
+      ajustarParcelas({ parcelas: [], numeroParcelas: 3, valorTotal: 300 })
+    ).toThrow(/dataVenda/);
+  });
+});
