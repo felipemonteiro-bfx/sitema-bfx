@@ -1,6 +1,6 @@
 {
-  "total": 9,
-  "totalTamanho": 9,
+  "total": 7,
+  "totalTamanho": 7,
   "totalCorCss": 0,
   "porArquivo": {
     "src/components/enviar-email-empresa-button.tsx": {
@@ -13,10 +13,6 @@
     },
     "src/components/link-assinatura-button.tsx": {
       "tamanhoArbitrario": 1,
-      "corCssPuro": 0
-    },
-    "src/components/produtos-tab-client.tsx": {
-      "tamanhoArbitrario": 2,
       "corCssPuro": 0
     },
     "src/components/receipt-preview.tsx": {

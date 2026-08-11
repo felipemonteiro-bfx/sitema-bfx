@@ -301,7 +301,7 @@ export default function ProdutosTabClient({
                       />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-[10px] text-muted-foreground">
+                    <div className="w-10 h-10 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
                       Sem foto
                     </div>
                   )}
@@ -312,7 +312,7 @@ export default function ProdutosTabClient({
                 </TableCell>
                 <TableCell>
                   <div className="text-xs font-semibold">{p.marca}</div>
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {p.fornecedor?.nome || "Sem fornecedor"}
                   </div>
                 </TableCell>
