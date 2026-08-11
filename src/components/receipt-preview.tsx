@@ -33,9 +33,11 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
   // sem nenhuma variante dark:). Por isso as cores usam valor arbitrário
   // (mesmo hex do Tailwind gray-*) em vez de token semântico: o token
   // "foreground"/"muted-foreground" troca de valor no tema escuro, o que
-  // deixaria o texto ilegível sobre este fundo branco fixo.
+  // deixaria o texto ilegível sobre este fundo branco fixo. A sombra (D-03)
+  // nao tem o mesmo problema — o fundo branco e fixo, entao o par de tema
+  // escuro so deixa a elevacao mais forte, sem risco de contraste.
   return (
-    <div className="font-sans text-[#1f2937] p-4 bg-white shadow-md rounded-md">
+    <div className="font-sans text-[#1f2937] p-4 bg-white shadow-md dark:shadow-[var(--shadow-md)] rounded-md">
       {/* Header */}
       <div className="flex justify-between items-center border-b pb-4 mb-4">
         <div>

@@ -123,7 +123,7 @@ export function IntelligenceChatComposer({
     >
       <button ref={submitRef} type="submit" className="hidden" aria-hidden="true" />
 
-      <div className="flex items-center gap-2 rounded-2xl border border-border/60 bg-background/80 px-3 py-2 shadow-sm">
+      <div className="flex items-center gap-2 rounded-2xl border border-border/60 bg-background/80 px-3 py-2 shadow-sm dark:shadow-[var(--shadow-sm)]">
 
         {/* Estado: gravando */}
         {recording ? (
@@ -184,7 +184,7 @@ export function IntelligenceChatComposer({
               <div
                 id="guia-rapida"
                 role="tooltip"
-                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-72 -translate-x-1/2 rounded-md border bg-popover p-3 text-xs text-popover-foreground opacity-0 shadow-md transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none"
+                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-72 -translate-x-1/2 rounded-md border bg-popover p-3 text-xs text-popover-foreground opacity-0 shadow-md dark:shadow-[var(--shadow-md)] transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none"
               >
                 <div className="space-y-2 text-muted-foreground">
                   <div>Gere mensagens de cobrança com tom profissional.</div>

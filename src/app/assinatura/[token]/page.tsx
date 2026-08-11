@@ -135,7 +135,7 @@ export default function AssinaturaPage() {
 
       {/* Barra inferior — altura fixa, sempre visível */}
       <div
-        className="bg-white border-t shadow-2xl shrink-0 px-4 pt-3"
+        className="bg-white border-t shadow-2xl dark:shadow-[var(--shadow-lg)] shrink-0 px-4 pt-3"
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
       >
         {/* Área de assinatura */}

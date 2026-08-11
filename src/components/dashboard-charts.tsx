@@ -48,7 +48,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   const isNeg = lucro < 0;
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-xl animate-fade-in min-w-[210px]">
+    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-xl dark:shadow-[var(--shadow-lg)] animate-fade-in min-w-[210px]">
       <div className="text-sm font-semibold text-foreground mb-3">{label}</div>
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-6">
@@ -91,7 +91,7 @@ function TopTooltip({ active, payload }: { active?: boolean; payload?: { payload
   if (!active || !payload || payload.length === 0) return null;
   const item = payload[0]?.payload;
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg animate-fade-in">
+    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg dark:shadow-[var(--shadow-lg)] animate-fade-in">
       <div className="font-semibold text-foreground mb-1">{item.label}</div>
       <div className="flex items-center gap-2 text-muted-foreground">
         <Package className="h-3.5 w-3.5" />

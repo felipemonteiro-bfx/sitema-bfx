@@ -187,7 +187,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               className={hasError ? "border-destructive border-2" : ""}
             />
             {showDropdown && produtoSuggestions.length > 0 && (
-              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-56 overflow-y-auto">
+              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl dark:shadow-[var(--shadow-lg)] max-h-56 overflow-y-auto">
                 {produtoSuggestions.map((p) => (
                   <button
                     key={p.id}

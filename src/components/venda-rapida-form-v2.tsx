@@ -766,7 +766,7 @@ export default function VendaRapidaFormV2({
               className={cn("min-h-[44px] touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
             />
             {clienteSuggestions.length > 0 && (
-              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
+              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl dark:shadow-[var(--shadow-lg)] max-h-60 overflow-y-auto">
                 {clienteSuggestions.map((c) => (
                   <button
                     key={c.id}

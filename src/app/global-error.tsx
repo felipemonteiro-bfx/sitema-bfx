@@ -7,7 +7,7 @@ export default function GlobalError() {
     <html lang="pt-BR">
       <body className="bg-background text-foreground">
         <div className="flex min-h-screen items-center justify-center px-6 py-10">
-          <div className="w-full max-w-md space-y-4 rounded-2xl border bg-card/90 p-6 text-center shadow-sm">
+          <div className="w-full max-w-md space-y-4 rounded-2xl border bg-card/90 p-6 text-center shadow-sm dark:shadow-[var(--shadow-sm)]">
             <div className="text-lg font-semibold">Algo deu errado</div>
             <p className="text-sm text-muted-foreground">
               Ocorreu um erro ao carregar a aplica??o. Tente novamente.

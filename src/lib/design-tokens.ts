@@ -196,10 +196,10 @@ export const borders = {
 
 export const effects = {
   /** Sombra padrão de card */
-  cardShadow: 'shadow-sm',
+  cardShadow: 'shadow-sm dark:shadow-[var(--shadow-sm)]',
 
   /** Sombra elevada (modal, popover) */
-  elevatedShadow: 'shadow-lg',
+  elevatedShadow: 'shadow-lg dark:shadow-[var(--shadow-lg)]',
 
   /** Transição suave de cores */
   transition: 'transition-colors duration-200',

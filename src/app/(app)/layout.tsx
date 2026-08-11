@@ -63,7 +63,7 @@ export default async function AppLayout({
               perdia o contorno enquanto o vizinho mantinha o dele a 3.49:1.
               `--sidebar-border` continua sendo o separador INTERNO, onde uma
               linha discreta e o que se quer. */}
-          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl transition-all duration-300">
+          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl dark:shadow-[var(--shadow-lg)] transition-all duration-300">
             <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
           </div>
         </aside>
@@ -121,7 +121,9 @@ function SidebarContent({
                 logo teria mudado de cor de brinde. O icone usa o token do
                 gradiente, nao `text-white` cru: 5.05:1 no extremo claro e
                 8.65:1 no escuro do degrade (verde da marca). */}
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-gradient-cta-from to-gradient-cta-to shadow-md">
+            {/* Sem sombra (D-03): chip decorativo do logo, sem borda propria,
+                fica encaixado no cabecalho da sidebar — mesmo plano. */}
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-gradient-cta-from to-gradient-cta-to">
               <LayoutDashboard className="h-4 w-4 text-gradient-cta-foreground" />
             </div>
             <div>

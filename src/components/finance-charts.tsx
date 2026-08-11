@@ -29,7 +29,7 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload) return null;
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg animate-fade-in">
+    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg dark:shadow-[var(--shadow-lg)] animate-fade-in">
       <div className="text-sm font-semibold text-foreground mb-2">{label}</div>
       <div className="space-y-1.5">
         {payload.map((entry: any, index: number) => (

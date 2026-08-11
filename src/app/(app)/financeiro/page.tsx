@@ -290,7 +290,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4 shadow-sm">
+                  {/* Sem sombra (D-03): wrapper do grafico tem borda propria e
+                      ja vive dentro do Card (que tem a sua) — mesmo plano. */}
+                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
                     <FluxoCharts rows={fluxo} />
                   </div>
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
