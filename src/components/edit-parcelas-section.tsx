@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
+import { ajustarParcelas, redistribuirValores } from "@/lib/parcelas-ajuste";
 
 interface Parcela {
   numeroParcela: number;
@@ -24,28 +25,61 @@ interface Props {
   numeroParcelas: number;
   valorTotal: number;
   dataVenda: string; // YYYY-MM-DD
+  parcelasPagas?: number[]; // numeroParcela das linhas ja marcadas como pagas no banco
 }
 
-export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTotal, dataVenda }: Props) {
+export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTotal, dataVenda, parcelasPagas = [] }: Props) {
   const [parcelas, setParcelas] = useState<Parcela[]>(initialParcelas);
   const [open, setOpen] = useState(false);
+  const [minimoPorPagas, setMinimoPorPagas] = useState<number | null>(null);
   const prevTotal = useRef(valorTotal);
+  const prevNumeroParcelas = useRef(numeroParcelas);
+  const bootstrapped = useRef(false);
 
-  // Auto-redistribuir valores das parcelas quando o total muda
+  // Bootstrap de montagem: venda antiga sem linhas em parcelas_vencimento. Com
+  // disableAutoInit sempre ligado abaixo, a auto-init do form filho fica desligada —
+  // sem isto a venda ficaria sem nenhuma data.
+  useEffect(() => {
+    if (bootstrapped.current) return;
+    bootstrapped.current = true;
+    if (parcelas.length === 0 && numeroParcelas > 1) {
+      const { parcelas: novas, minimoPorPagas: minimo } = ajustarParcelas({
+        parcelas: [],
+        numeroParcelas,
+        valorTotal,
+        dataVenda,
+        parcelasPagas,
+      });
+      setParcelas(novas);
+      setMinimoPorPagas(minimo);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Correcao central do bug: reajustar a lista sempre que o campo Parcelas muda,
+  // preservando as datas ja combinadas com o cliente e nunca descartando uma parcela
+  // ja paga. Mesmo padrao do prevTotal abaixo.
+  useEffect(() => {
+    if (prevNumeroParcelas.current === numeroParcelas) return;
+    prevNumeroParcelas.current = numeroParcelas;
+    const { parcelas: ajustadas, minimoPorPagas: minimo } = ajustarParcelas({
+      parcelas,
+      numeroParcelas,
+      valorTotal,
+      dataVenda,
+      parcelasPagas,
+    });
+    setParcelas(ajustadas);
+    setMinimoPorPagas(minimo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numeroParcelas]);
+
+  // Auto-redistribuir valores das parcelas quando o total muda. A regra de
+  // arredondamento agora vive so em `redistribuirValores` (D-01).
   useEffect(() => {
     if (prevTotal.current === valorTotal) return;
     prevTotal.current = valorTotal;
-    setParcelas((prev) => {
-      if (prev.length === 0) return prev;
-      const n = prev.length;
-      const base = Math.trunc((valorTotal / n) * 100) / 100;
-      return prev.map((p, i) => ({
-        ...p,
-        valorParcela: i === n - 1
-          ? Math.round((valorTotal - base * (n - 1)) * 100) / 100
-          : base,
-      }));
-    });
+    setParcelas((prev) => redistribuirValores(prev, valorTotal));
   }, [valorTotal]);
 
   if (numeroParcelas <= 1) return null;
@@ -70,10 +104,17 @@ export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTota
           onClick={() => setOpen(true)}
         >
           <Calendar className="h-4 w-4" />
-          Datas de Vencimento ({numeroParcelas}x · {formatBRL(totalParcelas)})
+          Datas de Vencimento ({parcelas.length}x · {formatBRL(totalParcelas)})
           {diverge && <span className="text-warning-text text-xs">⚠️</span>}
         </Button>
       </div>
+
+      {minimoPorPagas !== null && (
+        <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
+          ⚠️ Esta venda ja tem parcelas pagas ate a {minimoPorPagas}ª — a lista nao pode
+          ficar menor que isso.
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -90,7 +131,7 @@ export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTota
             parcelas={parcelas}
             onChange={setParcelas}
             dataVenda={dataVenda}
-            disableAutoInit={initialParcelas.length > 0}
+            disableAutoInit
           />
 
           <DialogFooter>

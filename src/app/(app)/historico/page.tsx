@@ -175,11 +175,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   // Buscar parcelas existentes separadamente para compatibilidade com produção
   let editParcelasVenc: { numeroParcela: number; dataVencimento: string; valorParcela: number }[] = [];
+  // Parcelas ja marcadas como pagas: alimenta o aviso de protecao em EditParcelasSection
+  // (T-ddr-01) — o front nao pode deixar o usuario cortar uma parcela ja paga da lista.
+  let editParcelasPagas: number[] = [];
   if (editVenda && (editVenda.parcelas || 1) > 1) {
     try {
       const raw = await prisma.parcelaVencimento.findMany({
         where: { vendaId: editVenda.id },
-        select: { numeroParcela: true, dataVencimento: true, valorParcela: true },
+        select: { numeroParcela: true, dataVencimento: true, valorParcela: true, paga: true },
         orderBy: { numeroParcela: "asc" },
       });
       editParcelasVenc = raw.map((p) => ({
@@ -187,6 +190,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         dataVencimento: p.dataVencimento.toISOString().slice(0, 10),
         valorParcela: p.valorParcela,
       }));
+      editParcelasPagas = raw.filter((p) => p.paga).map((p) => p.numeroParcela);
     } catch {
       // Tabela parcelas_vencimento pode não existir em produção antiga
     }
@@ -587,6 +591,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           <EditVendaHistoricoForm
             editVenda={editVenda}
             editParcelasVenc={editParcelasVenc}
+            parcelasPagas={editParcelasPagas}
             vendedores={vendedores}
             updateAction={updateVenda}
             deleteAction={deleteVenda}

@@ -62,6 +62,7 @@ type EditVendaData = {
 type Props = {
   editVenda: EditVendaData;
   editParcelasVenc: Parcela[];
+  parcelasPagas?: number[];
   vendedores: { nomeExibicao: string | null; username: string }[];
   updateAction: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
   deleteAction: (formData: FormData) => Promise<void>;
@@ -72,6 +73,7 @@ type Props = {
 export function EditVendaHistoricoForm({
   editVenda,
   editParcelasVenc,
+  parcelasPagas,
   vendedores,
   updateAction,
   deleteAction,
@@ -142,6 +144,7 @@ export function EditVendaHistoricoForm({
         initialNumeroParcelas={editVenda.parcelas || 1}
         initialTotal={initialTotal}
         dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
+        parcelasPagas={parcelasPagas}
       />
       <div className="space-y-1">
         <Label htmlFor="edit-frete">Frete ao cliente</Label>

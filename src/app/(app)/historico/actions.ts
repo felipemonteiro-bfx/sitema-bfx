@@ -73,6 +73,58 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   }
 
   try {
+    // Leitura de parcelaVencimento HOISTED para antes do prisma.venda.update: alimenta
+    // a guarda de parcela paga logo abaixo, o calculo de custo de antecipacao mais
+    // adiante e e reaproveitada no bloco de regravacao no fim — uma unica leitura,
+    // nunca duas fontes que podem discordar entre si. Try/catch proprio: a tabela
+    // parcelas_vencimento pode nao existir em producao antiga.
+    type ParcelaExistente = {
+      numeroParcela: number;
+      paga: boolean;
+      dataPagamento: Date | null;
+      dataVencimento: Date;
+      valorParcela: number;
+    };
+    let parcelasExistentes: ParcelaExistente[] = [];
+    try {
+      parcelasExistentes = await prisma.parcelaVencimento.findMany({
+        where: { vendaId: id },
+        select: { numeroParcela: true, paga: true, dataPagamento: true, dataVencimento: true, valorParcela: true },
+      });
+    } catch {
+      // Tabela parcelas_vencimento pode não existir em produção antiga
+    }
+    const pagasMap = new Map(
+      parcelasExistentes.map((p) => [p.numeroParcela, { paga: p.paga, dataPagamento: p.dataPagamento }])
+    );
+
+    if (parcelasForm.length > 0) {
+      // T-ddr-01: nunca apagar em silencio uma parcela ja marcada como paga. O
+      // payload vem do cliente (hidden parcelasVencimento) — o servidor confia nele
+      // para apagar e recriar todas as linhas de parcelas_vencimento, entao a guarda
+      // precisa estar aqui, ANTES de qualquer escrita (cabecalho ainda intacto).
+      const numerosNoPayload = new Set(parcelasForm.map((p) => p.numeroParcela));
+      const pagasDescartadas = parcelasExistentes.filter((p) => p.paga && !numerosNoPayload.has(p.numeroParcela));
+      if (pagasDescartadas.length > 0) {
+        const numeros = pagasDescartadas.map((p) => p.numeroParcela).join(", ");
+        return {
+          success: false,
+          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ja esta(o) paga(s) e seria(m) apagada(s).`,
+        };
+      }
+
+      // T-ddr-02: cabecalho (parcelas) e linhas (parcelasVencimento) nunca podem
+      // divergir — foi exatamente esse estado que a venda 182 ficou em producao.
+      // updateVenda tem um unico consumidor de producao (EditVendaHistoricoForm via
+      // historico/page.tsx), confirmado por grep antes de aplicar esta recusa.
+      if (parcelasForm.length !== parcelasNum) {
+        return {
+          success: false,
+          error: "Numero de parcelas nao bate com a quantidade de datas de vencimento informadas.",
+        };
+      }
+    }
+
     const vendedorTexto = String(formData.get("vendedor") || "");
     const vendedorUser = vendedorTexto ? await prisma.usuario.findFirst({
       where: { OR: [{ username: { equals: vendedorTexto, mode: "insensitive" } }, { nomeExibicao: { equals: vendedorTexto, mode: "insensitive" } }] },
@@ -80,17 +132,14 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     }) : null;
 
     // Fonte das parcelas que define o custo de antecipacao: as do form quando
-    // vieram; senao as que ja existem no banco. Sem essa segunda leitura,
-    // editar so a data da venda (sem reenviar as parcelas) cairia no
-    // fallback de 30/60/90 e inventaria uma taxa diferente da que a tela da
-    // Prudent mostra para a mesma venda.
+    // vieram; senao as que ja existem no banco (mesma leitura hoisted acima). Sem
+    // esse fallback, editar so a data da venda (sem reenviar as parcelas) cairia no
+    // fallback de 30/60/90 e inventaria uma taxa diferente da que a tela da Prudent
+    // mostra para a mesma venda.
     const parcelasParaCusto =
       parcelasForm.length > 0
         ? parcelasForm.map((p) => ({ dataVencimento: p.dataVencimento, valorParcela: p.valorParcela }))
-        : await prisma.parcelaVencimento.findMany({
-            where: { vendaId: id },
-            select: { dataVencimento: true, valorParcela: true },
-          });
+        : parcelasExistentes.map((p) => ({ dataVencimento: p.dataVencimento, valorParcela: p.valorParcela }));
 
     // Custo de antecipacao Prudent (QK-LGJ-01): dado derivado da forma de
     // pagamento, no mesmo espirito do comentario acima sobre
@@ -149,12 +198,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
 
     if (parcelasForm.length > 0) {
       try {
-        const existentes = await prisma.parcelaVencimento.findMany({
-          where: { vendaId: id },
-          select: { numeroParcela: true, paga: true, dataPagamento: true },
-        });
-        const pagasMap = new Map(existentes.map((p) => [p.numeroParcela, { paga: p.paga, dataPagamento: p.dataPagamento }]));
-
+        // Reaproveita o `pagasMap` montado a partir da leitura hoisted no topo do
+        // try — nao reler aqui evita que as duas fontes discordem entre si.
         await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
         await prisma.parcelaVencimento.createMany({
           data: parcelasForm.map((p) => {

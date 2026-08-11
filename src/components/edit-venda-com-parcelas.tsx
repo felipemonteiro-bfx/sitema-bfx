@@ -25,6 +25,7 @@ interface Props {
   initialNumeroParcelas: number;
   initialTotal: number;
   dataVenda: string;
+  parcelasPagas?: number[];
 }
 
 export function EditVendaComParcelas({
@@ -33,6 +34,7 @@ export function EditVendaComParcelas({
   initialNumeroParcelas,
   initialTotal,
   dataVenda,
+  parcelasPagas,
 }: Props) {
   const [total, setTotal] = useState(initialTotal);
   const [numeroParcelas, setNumeroParcelas] = useState(initialNumeroParcelas);
@@ -59,6 +61,7 @@ export function EditVendaComParcelas({
         numeroParcelas={numeroParcelas}
         valorTotal={total}
         dataVenda={dataVenda}
+        parcelasPagas={parcelasPagas}
       />
     </>
   );
