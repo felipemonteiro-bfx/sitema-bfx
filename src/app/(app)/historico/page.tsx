@@ -533,13 +533,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </div>
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <div>
-                  <div className="text-[10px] uppercase text-muted-foreground">Valor</div>
+                  <div className="text-xs uppercase text-muted-foreground">Valor</div>
                   <div className="text-base font-semibold tabular-nums text-primary">
                     {formatBRL(totaisFiltro.valor)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase text-muted-foreground">Custo</div>
+                  <div className="text-xs uppercase text-muted-foreground">Custo</div>
                   <div className="text-base font-semibold tabular-nums">
                     {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
                   </div>

@@ -1,12 +1,8 @@
 {
-  "total": 17,
-  "totalTamanho": 17,
+  "total": 15,
+  "totalTamanho": 15,
   "totalCorCss": 0,
   "porArquivo": {
-    "src/app/(app)/historico/page.tsx": {
-      "tamanhoArbitrario": 2,
-      "corCssPuro": 0
-    },
     "src/components/cadastrar-produto-rapido-dialog.tsx": {
       "tamanhoArbitrario": 2,
       "corCssPuro": 0
