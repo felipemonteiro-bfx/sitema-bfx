@@ -192,7 +192,7 @@ export function CadastrarProdutoRapidoDialog({
                 <button
                   type="button"
                   onClick={() => setFornecedorDialogOpen(true)}
-                  className="text-[11px] font-medium text-primary hover:underline"
+                  className="text-xs font-medium text-primary hover:underline"
                 >
                   + Novo fornecedor
                 </button>
@@ -265,7 +265,7 @@ export function CadastrarProdutoRapidoDialog({
           {/* Sugestões de NCM */}
           {(ncmSuggestions.length > 0 || isSearchingNcm) && (
             <div className="rounded-lg border border-border/60 bg-muted/30 p-2">
-              <div className="flex items-center gap-2 text-[11px] uppercase text-muted-foreground mb-2">
+              <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground mb-2">
                 <Tag className="h-3.5 w-3.5" />
                 Sugestões de NCM pelo nome
                 {isSearchingNcm && <span className="ml-auto">Buscando...</span>}
