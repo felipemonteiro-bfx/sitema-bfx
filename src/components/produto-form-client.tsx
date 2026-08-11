@@ -294,7 +294,7 @@ export default function ProdutoFormClient({
                 {isDuplicate && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-warning-text">
                     <AlertCircle className="h-4 w-4" />
-                    <span className="text-[10px] font-bold">Já existe!</span>
+                    <span className="text-xs font-bold">Já existe!</span>
                   </div>
                 )}
               </div>
@@ -317,7 +317,7 @@ export default function ProdutoFormClient({
                   <option key={item} value={item} />
                 ))}
               </datalist>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground">
                 Sugere categorias já cadastradas, mas você pode digitar uma nova se precisar.
               </div>
             </div>
@@ -369,7 +369,7 @@ export default function ProdutoFormClient({
               <Label className="text-xs font-semibold text-muted-foreground">NCM</Label>
               <Input value={ncm} onChange={(e) => setNcm(normalizeCadastroText(e.target.value))} placeholder="8 dígitos" maxLength={8} className="uppercase" />
               <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 p-2">
-                <div className="flex items-center gap-2 text-[11px] uppercase text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground">
                   <Tag className="h-3.5 w-3.5" />
                   Possíveis NCMs pelo nome
                   {isSearchingNcm && <span className="ml-auto">Buscando...</span>}
