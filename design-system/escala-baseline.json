@@ -1,12 +1,8 @@
 {
-  "total": 3,
-  "totalTamanho": 3,
+  "total": 2,
+  "totalTamanho": 2,
   "totalCorCss": 0,
   "porArquivo": {
-    "src/components/link-assinatura-button.tsx": {
-      "tamanhoArbitrario": 1,
-      "corCssPuro": 0
-    },
     "src/components/ui/badge.tsx": {
       "tamanhoArbitrario": 1,
       "corCssPuro": 0
