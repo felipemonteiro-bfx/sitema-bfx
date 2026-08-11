@@ -777,27 +777,16 @@
    PAGE TITLE GRADIENT (referência)
    ======================================== */
 
-.page-title-gradient {
-  background: linear-gradient(135deg, oklch(0.55 0.22 25) 0%, oklch(0.55 0.18 300) 50%, oklch(0.55 0.18 240) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.dark .page-title-gradient {
-  background: linear-gradient(135deg, oklch(0.70 0.22 25) 0%, oklch(0.65 0.20 300) 50%, oklch(0.68 0.20 240) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Barra decorativa gradiente */
-.gradient-bar {
-  height: 4px;
-  width: 100%;
-  max-width: 200px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, oklch(0.65 0.22 25), oklch(0.70 0.15 85), oklch(0.65 0.18 240));
+/* Titulo de pagina — UM padrao visual para as 20 telas.
+   Era um degrade de tres cores no texto (vermelho 25 -> roxo 300 -> azul 240,
+   via background-clip), que brigava com os 28 titulos de Card em
+   `text-primary` solido: duas linguagens de titulo na mesma tela. Como e CSS
+   puro e nao classe Tailwind, a catraca de cor crua nunca o viu, e ele
+   sobreviveu a troca da paleta da marca.
+   Agora e o verde BFX solido, o mesmo dos titulos de Card. `color` herda o
+   token, entao acompanha os dois temas sozinho. */
+.page-title {
+  color: var(--primary);
 }
 
 /* ========================================

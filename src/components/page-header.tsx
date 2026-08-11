@@ -62,7 +62,7 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
           telas estreitas isso acompanha o alinhamento do proprio titulo. */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="page-title-gradient text-2xl font-bold tracking-tight">{title}</h1>
+          <h1 className="page-title text-2xl font-bold tracking-tight">{title}</h1>
           {description && (
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
           )}
