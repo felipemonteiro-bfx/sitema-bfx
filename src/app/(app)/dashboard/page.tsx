@@ -170,7 +170,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-4 overflow-x-hidden lg:space-y-6">
-      <Card variant="gradient" animated className="border-primary/20">
+      {/* `elevated` no lugar de `gradient`: o cabecalho do dashboard era o
+          unico card com fundo em degrade (`from-card to-muted/50`), o que
+          sujava a leitura ao lado dos cards lisos da mesma tela. A borda em
+          `--primary` continua marcando o bloco. */}
+      <Card variant="elevated" animated className="border-primary/20">
         <CardContent className="flex flex-col gap-4 pt-5 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pt-6">
           <div className="space-y-2">
             <PageHeader
