@@ -68,29 +68,34 @@ export function removerComentariosDeCodigo(texto) {
 
   for (const linha of texto.split("\n")) {
     let util = "";
-    let resto = linha;
+    let aspas = null; // ", ' ou ` — quando dentro de string, nada abre comentário
 
-    while (resto.length > 0) {
+    for (let i = 0; i < linha.length; i++) {
+      const c = linha[i];
+      const proximo = linha[i + 1];
+
       if (dentroDeBloco) {
-        const fim = resto.indexOf("*/");
-        if (fim === -1) { resto = ""; break; }
-        dentroDeBloco = false;
-        resto = resto.slice(fim + 2);
-      } else {
-        const bloco = resto.indexOf("/*");
-        const linhaUnica = resto.indexOf("//");
-        // `//` dentro de string (ex.: uma URL) não abre comentário; o caso é
-        // raro em className e o custo de um falso negativo aqui é menor que o
-        // de um falso positivo permanente.
-        if (bloco === -1 && linhaUnica === -1) { util += resto; break; }
-        if (linhaUnica !== -1 && (bloco === -1 || linhaUnica < bloco)) {
-          util += resto.slice(0, linhaUnica);
-          break;
-        }
-        util += resto.slice(0, bloco);
-        dentroDeBloco = true;
-        resto = resto.slice(bloco + 2);
+        if (c === "*" && proximo === "/") { dentroDeBloco = false; i++; }
+        continue;
       }
+
+      if (aspas) {
+        util += c;
+        if (c === "\\") { if (proximo !== undefined) { util += proximo; i++; } continue; }
+        if (c === aspas) aspas = null;
+        continue;
+      }
+
+      // `accept="image/*"` contem `/*` DENTRO de uma string. Sem rastrear as
+      // aspas, o parser abria comentario ali e engolia todo o codigo ate o
+      // proximo `*/` — falso NEGATIVO, que e pior que o falso positivo: a
+      // catraca fica verde escondendo violacao real. Achado pelo executor da
+      // onda 3/4 em logo-upload-form.tsx e produto-form-client.tsx.
+      if (c === '"' || c === "'" || c === "`") { aspas = c; util += c; continue; }
+      if (c === "/" && proximo === "*") { dentroDeBloco = true; i++; continue; }
+      if (c === "/" && proximo === "/") break; // resto da linha e comentario
+
+      util += c;
     }
     saida += util + "\n";
   }
