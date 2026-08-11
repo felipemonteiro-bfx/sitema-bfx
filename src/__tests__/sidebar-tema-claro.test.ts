@@ -151,7 +151,13 @@ describe("a sidebar acompanha o tema", () => {
     expect(lightnessDoToken(".dark", "sidebar-accent")).toBe(0.28);
     expect(lightnessDoToken(".dark", "sidebar-foreground")).toBe(0.985);
     expect(lightnessDoToken(".dark", "sidebar-muted")).toBe(0.65);
-    expect(lightnessDoToken(".dark", "sidebar-primary")).toBe(0.68);
+    // 0.76, nao mais 0.68: o accent deixou de ser o vermelho/rosa (hue 25) e
+    // passou a ser o verde da logo BFX (hue 142.6). Verde e mais claro que
+    // vermelho na mesma luminosidade percebida, entao o valor que entrega
+    // contraste equivalente sobre a sidebar escura subiu. O que este teste
+    // guarda — a sidebar do tema escuro continuar escura — segue valendo:
+    // fundo, accent, texto, muted e borda estao inalterados acima.
+    expect(lightnessDoToken(".dark", "sidebar-primary")).toBe(0.76);
     expect(lightnessDoToken(".dark", "sidebar-border")).toBe(0.32);
   });
 
