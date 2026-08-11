@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
-import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
-import { formaFromLegacyFlags, formaPagamentoLabel, type FormaPagamento } from "@/lib/forma-pagamento";
 import { resolverPeriodo } from "@/lib/periodo-data";
+import { getSession } from "@/lib/session";
+import { resolverColunas, filtrarColunasPorPerfil, cabecalhoCsv, linhaCsv } from "@/lib/relatorio-vendas-colunas";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -10,6 +10,9 @@ export async function GET(req: Request) {
   const empresa = searchParams.get("empresa");
   // UTC, igual a tela: "T00:00:00" sem zona e interpretado em horario local.
   const { inicio: start, fimExclusivo: end } = resolverPeriodo(from, to);
+
+  const session = await getSession();
+  const colunas = filtrarColunasPorPerfil(resolverColunas(searchParams.get("colunas")), session?.role === "admin");
 
   const vendas = await prisma.venda.findMany({
     where: {
@@ -23,28 +26,14 @@ export async function GET(req: Request) {
     },
     include: {
       cliente: {
-        select: { empresa: true, nome: true, matricula: true }
+        select: { empresa: true, nome: true, matricula: true, renda: true }
       },
-      itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
+      itens: { select: { subtotal: true, produtoNome: true, quantidade: true, custoProduto: true } },
     },
     orderBy: { dataVenda: "desc" },
   });
 
-  const header = "Matricula,Nome,Produtos,Vendedor,Data,Valor,Parcelas,Pagamento\n";
-  const lines = vendas.map((v) => {
-    const total = valorTotalVenda(v);
-    const matricula = v.cliente?.matricula || "";
-    const nome = v.cliente?.nome || "N/D";
-    const produtos = `"${produtosTexto(v).replace(/"/g, '""')}"`;
-    const vendedor = v.vendedor || "";
-    const data = v.dataVenda.toISOString().slice(0, 10);
-    const parcelas = v.parcelas || 1;
-    const forma = (v.formaPagamento as FormaPagamento | null) ??
-      formaFromLegacyFlags({ descontoEmFolha: v.descontoEmFolha, boleto: v.boleto, parcelas: v.parcelas });
-    const pagamento = `"${formaPagamentoLabel(forma)}"`;
-    return [matricula, nome, produtos, vendedor, data, total, parcelas, pagamento].join(",");
-  });
-  const csv = header + lines.join("\n");
+  const csv = cabecalhoCsv(colunas) + "\n" + vendas.map((v) => linhaCsv(colunas, v)).join("\n");
 
   return new Response(csv, {
     headers: {

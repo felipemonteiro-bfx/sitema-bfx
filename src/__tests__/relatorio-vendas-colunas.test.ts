@@ -18,7 +18,7 @@ function vendaBase(over: Partial<VendaRelatorio> = {}): VendaRelatorio {
     parcelas: 3,
     formaPagamento: "PIX",
     cliente: { empresa: "Empresa X", nome: "João", matricula: "123", renda: null },
-    itens: [{ produtoNome: "Fone", quantidade: 1, subtotal: 200, custoProduto: null }],
+    itens: [{ produtoNome: "Fone", quantidade: 1, subtotal: 200, custoProduto: 0 }],
     ...over,
   };
 }
@@ -70,7 +70,7 @@ describe("catalogo COLUNAS_VENDAS", () => {
       itens: [{ produtoNome: "Fone", quantidade: 1, subtotal: 200, custoProduto: 100 }],
     });
     const semCusto = vendaBase({
-      itens: [{ produtoNome: "Fone", quantidade: 1, subtotal: 200, custoProduto: null }],
+      itens: [{ produtoNome: "Fone", quantidade: 1, subtotal: 200, custoProduto: 0 }],
     });
     expect(coluna.valor(comCusto)).toBe(50);
     expect(coluna.valor(semCusto)).toBeNull();
@@ -87,7 +87,7 @@ describe("catalogo COLUNAS_VENDAS", () => {
   it("margemPct vira vazio no CSV e travessao no PDF quando null", () => {
     const colunas = [COLUNAS_VENDAS.find((c) => c.key === "margemPct")!];
     const semCusto = vendaBase({
-      itens: [{ produtoNome: "Fone", quantidade: 1, subtotal: 200, custoProduto: null }],
+      itens: [{ produtoNome: "Fone", quantidade: 1, subtotal: 200, custoProduto: 0 }],
     });
     expect(linhaCsv(colunas, semCusto)).toBe("");
     expect(celulaPdf(colunas[0]!, semCusto)).toBe("—");
