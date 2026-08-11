@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 export default function OfflinePage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
         {/* Era um `<svg>` inline; o resto do sistema desenha icone com lucide. */}
         <WifiOff className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
       </div>

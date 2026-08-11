@@ -96,8 +96,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 onClick={onClear}
                 className="text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 tabIndex={-1}
+                // Sem nome acessivel, o leitor de tela anunciava so "botao". Como
+                // este Input e usado em 35 arquivos, o defeito se multiplicava por
+                // todo formulario do sistema.
+                aria-label="Limpar campo"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
             {StateIcon}

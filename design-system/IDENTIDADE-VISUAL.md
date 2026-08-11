@@ -50,6 +50,15 @@ Preenchimento e texto **não** são intercambiáveis: `--success`, `--warning` e
 calibrados para fundo e reprovam como texto no tema claro (2.97:1, 2.06:1, 2.91:1). Para texto,
 use sempre a família `-text`.
 
+**Exceção medida e aprovada — aviso sobre tint de aviso.** O par
+`text-warning-foreground dark:text-warning` sobre `bg-warning/10` (claro) e `bg-warning/20`
+(escuro) **passa** e é o idioma correto para caixa de aviso: medido em 2026-08-11, dá
+**18,20:1** no tema claro e **6,93:1** no escuro. Aparece em `clientes-tab-client.tsx:217` e em
+três pontos de `venda-rapida-form-v2.tsx`. A auditoria levantou os três últimos como divergência
+por aplicar a regra genérica ("texto usa `-text`"); a medição mostrou que não é. Fica registrado
+aqui para não voltar como falso positivo: **cor de preenchimento como texto sobre o próprio tint
+é aceitável quando medida** — o que não vale é usá-la sobre o fundo da página.
+
 ---
 
 ## 3. Tipografia

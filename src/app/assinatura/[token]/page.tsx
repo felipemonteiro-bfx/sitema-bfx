@@ -77,6 +77,7 @@ export default function AssinaturaPage() {
       <div className="h-[100dvh] flex items-center justify-center bg-muted p-4">
         <div className="text-center space-y-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto" />
+          <h1 className="sr-only">Assinatura de autorização — BFX</h1>
           <p className="text-muted-foreground text-sm">Carregando documento...</p>
         </div>
       </div>
@@ -90,7 +91,7 @@ export default function AssinaturaPage() {
           <CardContent className="pt-10 pb-10 space-y-4">
             <CheckCircle2 className="h-16 w-16 text-success-text mx-auto" />
             <div>
-              <h2 className="text-xl font-bold">Parabéns pela compra!</h2>
+              <h1 className="text-xl font-bold">Parabéns pela compra!</h1>
               <p className="text-sm text-muted-foreground mt-2">Contrato enviado para a BFX.</p>
             </div>
           </CardContent>
@@ -106,7 +107,7 @@ export default function AssinaturaPage() {
           <CardContent className="pt-10 pb-10 space-y-4">
             <AlertCircle className="h-16 w-16 text-warning-text mx-auto" />
             <div>
-              <h2 className="text-xl font-bold">Não foi possível carregar</h2>
+              <h1 className="text-xl font-bold">Não foi possível carregar</h1>
               <p className="text-sm text-muted-foreground mt-2">{error || 'Venda não encontrada.'}</p>
             </div>
           </CardContent>
@@ -117,6 +118,11 @@ export default function AssinaturaPage() {
 
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden bg-muted">
+      {/* O <h1> e visualmente oculto: a tela e um visualizador de PDF em tela
+          cheia, sem espaco para cabecalho, mas o leitor de tela precisa anunciar
+          do que se trata antes do iframe. */}
+      <h1 className="sr-only">Assinatura de autorização — BFX</h1>
+
       {/* PDF iframe — ocupa todo espaço restante */}
       <div className="flex-1 min-h-0 overflow-hidden">
         <iframe
@@ -211,8 +217,9 @@ export default function AssinaturaPage() {
               type="button"
               onClick={handleModalCancel}
               className="p-2 -mr-1 rounded-full hover:bg-[#f3f4f6] active:bg-[#e5e7eb] touch-manipulation"
+              aria-label="Fechar e voltar ao documento"
             >
-              <X className="h-5 w-5" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
 
