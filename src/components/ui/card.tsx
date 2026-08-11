@@ -11,8 +11,8 @@ const cardVariants = cva(
       variant: {
         default: "border border-border bg-card shadow-md hover:shadow-lg dark:shadow-[var(--shadow-md)] dark:hover:shadow-[var(--shadow-lg)]",
         elevated: "border border-border bg-card-elevated shadow-lg hover:shadow-xl backdrop-blur-sm dark:shadow-[var(--shadow-lg)] dark:hover:shadow-[var(--shadow-xl)]",
-        outline: "border-2 border-border bg-background/50 hover:bg-card/50 hover:shadow-md",
-        ghost: "shadow-none hover:bg-card/50 hover:shadow-sm",
+        outline: "border-2 border-border bg-background/50 hover:bg-card/50 hover:shadow-md dark:hover:shadow-[var(--shadow-md)]",
+        ghost: "shadow-none hover:bg-card/50 hover:shadow-sm dark:hover:shadow-[var(--shadow-sm)]",
       },
       animated: {
         true: "animate-fade-in-up",

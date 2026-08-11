@@ -49,8 +49,8 @@ export const buttonVariants = cva(
         outline:
           "border-2 border-border bg-background hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-[0.98] transition-all",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md active:scale-[0.98]",
-        ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-sm active:scale-[0.98]",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md active:scale-[0.98] dark:shadow-[var(--shadow-sm)] dark:hover:shadow-[var(--shadow-md)]",
+        ghost: "hover:bg-accent hover:text-accent-foreground hover:shadow-sm dark:hover:shadow-[var(--shadow-sm)] active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
       },
       size: {
