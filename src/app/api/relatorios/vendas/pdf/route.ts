@@ -1,22 +1,17 @@
 import { prisma } from "@/lib/db";
-import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
-import { formatBRL, formatDateBR } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
+import { valorTotalVenda } from "@/lib/venda-utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { FORMA_PAGAMENTO, formaFromLegacyFlags, type FormaPagamento } from "@/lib/forma-pagamento";
-
-/** Label compacto da forma de pagamento para caber na coluna do PDF (max 7 chars). */
-function formaPagamentoLabelCurto(forma: FormaPagamento): string {
-  switch (forma) {
-    case FORMA_PAGAMENTO.DESCONTO_FOLHA: return "Folha";
-    case FORMA_PAGAMENTO.BOLETO: return "Boleto";
-    case FORMA_PAGAMENTO.PIX: return "Pix";
-    case FORMA_PAGAMENTO.DINHEIRO: return "Dinheiro";
-    case FORMA_PAGAMENTO.CARTAO_CREDITO: return "Credito";
-    case FORMA_PAGAMENTO.CARTAO_DEBITO: return "Debito";
-    case FORMA_PAGAMENTO.TRANSFERENCIA: return "Transf.";
-    default: return "Outro";
-  }
-}
+import { resolverPeriodo, fimInclusivoParaInput } from "@/lib/periodo-data";
+import { formatarDataPura } from "@/lib/data-pura";
+import { getSession } from "@/lib/session";
+import {
+  resolverColunas,
+  filtrarColunasPorPerfil,
+  calcularLayoutPdf,
+  truncarParaLargura,
+  celulaPdf,
+} from "@/lib/relatorio-vendas-colunas";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -24,15 +19,19 @@ export async function GET(req: Request) {
   const to = searchParams.get("to");
   const empresa = searchParams.get("empresa");
 
-  const start = from
-    ? new Date(from + "T00:00:00")
-    : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const end = to ? new Date(to + "T23:59:59") : new Date();
+  // Mesmo contrato de /lib/periodo-data usado no CSV: inicio inclusivo em UTC,
+  // fim EXCLUSIVO — corrige o bug de data um dia antes (mesma causa do commit
+  // d9064ee) que sobrevivia nesta rota via `new Date(to + "T23:59:59")` em
+  // horario local.
+  const { inicio: start, fimExclusivo: end } = resolverPeriodo(from, to);
+
+  const session = await getSession();
+  const colunas = filtrarColunasPorPerfil(resolverColunas(searchParams.get("colunas")), session?.role === "admin");
 
   try {
     const vendas = await prisma.venda.findMany({
       where: {
-        dataVenda: { gte: start, lte: end },
+        dataVenda: { gte: start, lt: end },
         cliente:
           empresa && empresa !== "all"
             ? {
@@ -41,8 +40,8 @@ export async function GET(req: Request) {
             : undefined,
       },
       include: {
-        cliente: { select: { nome: true, empresa: true, matricula: true } },
-        itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+        cliente: { select: { nome: true, empresa: true, matricula: true, renda: true } },
+        itens: { select: { produtoNome: true, quantidade: true, subtotal: true, custoProduto: true } },
       },
       orderBy: { dataVenda: "desc" },
     });
@@ -63,7 +62,10 @@ export async function GET(req: Request) {
       font: fontBold,
       color: rgb(1, 1, 1),
     });
-    page.drawText(`Período: ${formatDateBR(start)} até ${formatDateBR(end)}`, {
+    // fim exibido e o INCLUSIVO (um dia antes do limite exclusivo usado na query),
+    // formatado em UTC pelos dois lados para nao mostrar o dia anterior fora de Manaus.
+    const fimInclusivoStr = fimInclusivoParaInput(end);
+    page.drawText(`Período: ${formatarDataPura(start)} até ${formatarDataPura(fimInclusivoStr)}`, {
       x: 40,
       y: height - 65,
       size: 10,
@@ -80,14 +82,20 @@ export async function GET(req: Request) {
       });
     }
 
-    // Table Header — 8 columns: Mat. | Nome | Produtos | Vendedor | Data | Valor | Parc. | Pagto.
+    // Table — colunas e larguras calculadas a partir da selecao (D-04); sem
+    // posicao literal, porque com colunas selecionaveis nao existe posicao fixa que sirva.
+    const xInicio = 40;
+    const larguraUtil = width - 80;
+    const layout = calcularLayoutPdf(colunas, xInicio, larguraUtil);
+    const GUTTER = 4;
     const tableTop = height - 120;
-    const colX = [40, 95, 200, 360, 470, 555, 645, 685];
-    const headers = ["Mat.", "Nome", "Produtos", "Vendedor", "Data", "Valor", "Parc.", "Pagto."];
 
     page.drawRectangle({ x: 30, y: tableTop - 5, width: width - 60, height: 20, color: rgb(0.95, 0.95, 0.95) });
-    headers.forEach((h, i) => {
-      page.drawText(h, { x: colX[i], y: tableTop, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
+    layout.forEach((faixa) => {
+      const texto = truncarParaLargura(faixa.coluna.labelCurto, faixa.largura - GUTTER, (t) =>
+        fontBold.widthOfTextAtSize(t, 9)
+      );
+      page.drawText(texto, { x: faixa.x, y: tableTop, size: 9, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
     });
 
     let y = tableTop - 25;
@@ -99,27 +107,14 @@ export async function GET(req: Request) {
         y = height - 50;
       }
 
-      const valorTotal = valorTotalVenda(v);
-      totalValor += valorTotal;
+      totalValor += valorTotalVenda(v);
 
-      const matricula = v.cliente?.matricula?.substring(0, 9) || "—";
-      const nomeCliente = v.cliente?.nome?.substring(0, 18) || "N/D";
-      const produtos = produtosTexto(v).substring(0, 28) || "N/A";
-      const vendedor = (v.vendedor || "N/D").substring(0, 17);
-      const dataStr = formatDateBR(v.dataVenda);
-      const parcelas = String(v.parcelas || 1) + "x";
-      const formaPag = (v.formaPagamento as FormaPagamento | null) ??
-        formaFromLegacyFlags({ descontoEmFolha: v.descontoEmFolha, boleto: v.boleto, parcelas: v.parcelas });
-      const pagtoLabel = formaPagamentoLabelCurto(formaPag);
-
-      page.drawText(matricula, { x: colX[0], y, size: 8, font });
-      page.drawText(nomeCliente, { x: colX[1], y, size: 8, font });
-      page.drawText(produtos, { x: colX[2], y, size: 8, font });
-      page.drawText(vendedor, { x: colX[3], y, size: 8, font });
-      page.drawText(dataStr, { x: colX[4], y, size: 8, font });
-      page.drawText(formatBRL(valorTotal), { x: colX[5], y, size: 8, font });
-      page.drawText(parcelas, { x: colX[6], y, size: 8, font });
-      page.drawText(pagtoLabel, { x: colX[7], y, size: 8, font });
+      layout.forEach((faixa) => {
+        const texto = truncarParaLargura(celulaPdf(faixa.coluna, v), faixa.largura - GUTTER, (t) =>
+          font.widthOfTextAtSize(t, 8)
+        );
+        page.drawText(texto, { x: faixa.x, y, size: 8, font });
+      });
 
       y -= 18;
       page.drawLine({

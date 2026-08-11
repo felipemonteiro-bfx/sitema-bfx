@@ -322,6 +322,49 @@ export function linhaCsv(colunas: ColunaVenda[], venda: VendaRelatorio): string 
   return colunas.map((c) => escaparCsv(formatarValorCsv(c.tipo, c.valor(venda)))).join(",");
 }
 
+export interface FaixaPdf {
+  coluna: ColunaVenda;
+  x: number;
+  largura: number;
+}
+
+/**
+ * Calcula a posicao X e a largura de cada coluna a partir do `pesoPdf` das
+ * colunas selecionadas. Substitui o array de posicoes literais que a rota do
+ * PDF tinha antes — com colunas selecionaveis nao existe posicao fixa que sirva.
+ */
+export function calcularLayoutPdf(colunas: ColunaVenda[], xInicio: number, larguraUtil: number): FaixaPdf[] {
+  const somaPesos = colunas.reduce((s, c) => s + c.pesoPdf, 0);
+  let x = xInicio;
+  return colunas.map((coluna) => {
+    const largura = somaPesos > 0 ? (larguraUtil * coluna.pesoPdf) / somaPesos : 0;
+    const faixa: FaixaPdf = { coluna, x, largura };
+    x += largura;
+    return faixa;
+  });
+}
+
+/**
+ * Devolve o maior prefixo de `texto` cuja medida (via `medir`, injetada para
+ * nao depender do pdf-lib nos testes) cabe em `larguraMax`. Sem elipse, para
+ * nao arriscar caractere fora do WinAnsi da Helvetica.
+ */
+export function truncarParaLargura(texto: string, larguraMax: number, medir: (t: string) => number): string {
+  if (medir(texto) <= larguraMax) return texto;
+
+  let lo = 0;
+  let hi = texto.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (medir(texto.slice(0, mid)) <= larguraMax) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return texto.slice(0, lo);
+}
+
 /** Celula formatada para o PDF: usa `valorPdf` quando existir, senao `valor`. */
 export function celulaPdf(coluna: ColunaVenda, venda: VendaRelatorio): string {
   const bruto = coluna.valorPdf ? coluna.valorPdf(venda) : coluna.valor(venda);
