@@ -14,6 +14,7 @@
     "escala:scan": "node scripts/design-tokens/escala-scan.mjs src",
     "escala:check": "node scripts/design-tokens/escala-scan.mjs src --check",
     "escala:baseline": "node scripts/design-tokens/escala-scan.mjs src --baseline",
+    "jsx:check": "node scripts/design-tokens/jsx-sanidade.mjs src",
   "ui:runtime": "node scripts/ui-runtime/rendered-ui-audit.mjs",
   "ui:runtime:strict": "node scripts/ui-runtime/rendered-ui-audit.mjs --require-browser",
     "test": "vitest run --reporter=verbose",

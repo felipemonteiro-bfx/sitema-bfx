@@ -534,11 +534,11 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         </div>
       </Card>
 
+      {/* Degrau de repouso (D-03), colapsado de lg para md: card
+          secundaria (vencimentos por empresa) na mesma tela da card
+          principal acima — a escala e um degrau por nivel, nunca dois
+          "flutuantes" na mesma superficie. */}
       {Object.keys(vencimentosPorEmpresa).length > 0 && (
-        {/* Degrau de repouso (D-03), colapsado de lg para md: card
-            secundaria (vencimentos por empresa) na mesma tela da card
-            principal acima — a escala e um degrau por nivel, nunca dois
-            "flutuantes" na mesma superficie. */}
         <Card className="mt-6 border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated p-6 shadow-md dark:shadow-[var(--shadow-md)]">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">

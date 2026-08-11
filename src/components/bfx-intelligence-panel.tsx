@@ -192,9 +192,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
         </CardHeader>
 
         <CardContent className="pt-4 space-y-4">
+          {/* Sem sombra (D-03): bloco tem borda propria e vive dentro do
+              Card (que tem a sua) — mesmo plano. */}
           {perfil.ultimaVenda && (
-            {/* Sem sombra (D-03): bloco tem borda propria e vive dentro do
-                Card (que tem a sua) — mesmo plano. */}
             <div className="bg-white dark:bg-card rounded-xl p-4 border border-info">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-info-text mb-2">
                 <Clock className="h-3.5 w-3.5" />
