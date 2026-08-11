@@ -41,7 +41,7 @@ export function EnviarEmailEmpresaButton({ vendaId, onSend }: Props) {
       <Mail className="h-3.5 w-3.5" />
       {sending ? 'Enviando...' : result?.success ? 'Enviado!' : 'Empresa'}
       {result?.error && (
-        <span className="text-destructive text-[10px] ml-1">{result.error}</span>
+        <span className="text-destructive text-xs ml-1">{result.error}</span>
       )}
     </button>
   );
