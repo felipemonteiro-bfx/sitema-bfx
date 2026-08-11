@@ -54,10 +54,18 @@ export function VendorMultiSelect({
       <input type="hidden" name={name} value={value} />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
+          {/* `dark:bg-card` alinha este gatilho ao idioma de CAMPO do sistema.
+              Ele parece e se comporta como um select, mas e um `Button
+              variant="outline"`, que pinta `bg-background` sem variante escura.
+              No tema escuro isso o deixava em `--background` (0.10) ao lado dos
+              campos Inicio/Fim em `--card` (0.17) — a mesma linha de filtro com
+              dois fundos diferentes. No tema claro os dois tokens sao quase
+              iguais (0.985 vs 0.995), por isso a diferenca so aparecia no
+              escuro. `Input`, `DateInput` e `FormSelect` ja usam este par. */}
           <Button
             id={id}
             variant="outline"
-            className={["h-10 w-full justify-between", className].filter(Boolean).join(" ")}
+            className={["h-10 w-full justify-between dark:bg-card", className].filter(Boolean).join(" ")}
           >
             Vendedores
             <span className="ml-2 text-xs text-muted-foreground">
