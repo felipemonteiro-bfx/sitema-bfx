@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { IntelligenceChatComposer } from "@/components/intelligence-chat-composer";
 import { stripToolMarkup } from "@/lib/strip-tool-markup";
+import { colunasNumericas } from "@/lib/markdown-tabela";
+import { cn } from "@/lib/utils";
 
 function parseMarkdownTable(block: string): { headers: string[]; rows: string[][] } | null {
   const lines = block.trim().split("\n").filter((l) => l.trim());
@@ -20,13 +22,26 @@ function parseMarkdownTable(block: string): { headers: string[]; rows: string[][
 function MarkdownTable({ block }: { block: string }) {
   const table = parseMarkdownTable(block);
   if (!table) return <pre className="text-xs text-muted-foreground">{block}</pre>;
+
+  // A tabela chega como markdown, sem schema: a coluna numerica e descoberta
+  // pelo conteudo. Antes toda celula ia a esquerda, entao comparar "R$ 1.450,00"
+  // com "R$ 890,00" na vertical obrigava a ler digito a digito — o resto do
+  // sistema alinha numero a direita com `tabular-nums` (auditoria 2026-08-11).
+  const numericas = colunasNumericas(table.rows, table.headers.length);
+
   return (
     <div className="my-2 overflow-x-auto rounded-lg border">
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr className="border-b bg-muted/60">
             {table.headers.map((h, i) => (
-              <th key={i} className="px-3 py-1.5 text-left font-semibold text-foreground whitespace-nowrap">
+              <th
+                key={i}
+                className={cn(
+                  "px-3 py-1.5 font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap",
+                  numericas.has(i) ? "text-right" : "text-left"
+                )}
+              >
                 {h}
               </th>
             ))}
@@ -40,7 +55,13 @@ function MarkdownTable({ block }: { block: string }) {
                 // tema claro, abaixo do minimo de 4.5. Celula de dado e conteudo
                 // primario: vai de `foreground`, e a distincao com o cabecalho
                 // continua sendo o `font-semibold` (achado 7).
-                <td key={ci} className="px-3 py-1.5 text-foreground border-t whitespace-nowrap">
+                <td
+                  key={ci}
+                  className={cn(
+                    "px-3 py-1.5 text-foreground border-t whitespace-nowrap",
+                    numericas.has(ci) && "text-right tabular-nums font-medium"
+                  )}
+                >
                   {cell}
                 </td>
               ))}

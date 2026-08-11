@@ -120,7 +120,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Comissões</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success-text">{formatBRL(totalComissoes)}</div>
+            <div className="text-2xl font-bold text-success-text tabular-nums">{formatBRL(totalComissoes)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -128,7 +128,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Vendas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{details.length}</div>
+            <div className="text-2xl font-bold text-primary tabular-nums">{details.length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -136,7 +136,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             <CardTitle className="text-sm font-medium text-muted-foreground">Média por Vendedor</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatBRL(commissions.length > 0 ? totalComissoes / commissions.length : 0)}</div>
+            <div className="text-2xl font-bold tabular-nums">{formatBRL(commissions.length > 0 ? totalComissoes / commissions.length : 0)}</div>
           </CardContent>
         </Card>
       </div>
@@ -194,14 +194,14 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
               <Table>
                 <TableHeader className="bg-muted">
                   <TableRow>
-                    <TableHead className="text-primary font-semibold">Data</TableHead>
-                    <TableHead className="text-primary font-semibold">Vendedor</TableHead>
-                    <TableHead className="text-primary font-semibold">Cliente</TableHead>
-                    <TableHead className="text-primary font-semibold">Produto</TableHead>
-                    <TableHead className="text-right text-primary font-semibold">Venda</TableHead>
-                    <TableHead className="text-right text-primary font-semibold">Lucro</TableHead>
-                    <TableHead className="text-right text-primary font-semibold">Comissão (%)</TableHead>
-                    <TableHead className="text-right font-bold text-primary">Valor Comissão</TableHead>
+                    <TableHead className="font-semibold">Data</TableHead>
+                    <TableHead className="font-semibold">Vendedor</TableHead>
+                    <TableHead className="font-semibold">Cliente</TableHead>
+                    <TableHead className="font-semibold">Produto</TableHead>
+                    <TableHead className="text-right font-semibold">Venda</TableHead>
+                    <TableHead className="text-right font-semibold">Lucro</TableHead>
+                    <TableHead className="text-right font-semibold">Comissão (%)</TableHead>
+                    <TableHead className="text-right font-bold">Valor Comissão</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
