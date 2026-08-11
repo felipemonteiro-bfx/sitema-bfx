@@ -6,9 +6,16 @@ export const TAMANHO_MINIMO_SENHA = 8;
 
 export type ResultadoPolitica = { ok: true } | { ok: false; erro: string };
 
-/** Regra explicita de D-03: so tamanho minimo, sem biblioteca de politica de senha. */
+/**
+ * Regra explicita de D-03: so tamanho minimo, sem biblioteca de politica de senha.
+ *
+ * Mede a senha JA APARADA porque e' isso que `hashSenha` grava — validar o valor
+ * cru deixava "        a" (8 espacos + 1 letra) passar como 9 caracteres e virar
+ * um hash de 1 caractere.
+ */
 export function validarForcaMinima(nova: string): ResultadoPolitica {
-  if (!nova || nova.length < TAMANHO_MINIMO_SENHA) {
+  const efetiva = (nova ?? "").trim();
+  if (efetiva.length < TAMANHO_MINIMO_SENHA) {
     return {
       ok: false,
       erro: `A senha precisa ter pelo menos ${TAMANHO_MINIMO_SENHA} caracteres.`,
@@ -27,7 +34,9 @@ export function validarTrocaDeSenha(params: {
   const forca = validarForcaMinima(nova);
   if (!forca.ok) return forca;
 
-  if (nova !== confirmacao) {
+  // Comparadas aparadas pelo mesmo motivo: duas entradas que diferem so por
+  // espaco nas pontas produzem o mesmo hash, entao recusa-las seria mentir.
+  if ((nova ?? "").trim() !== (confirmacao ?? "").trim()) {
     return { ok: false, erro: "A confirmação não confere com a nova senha." };
   }
 

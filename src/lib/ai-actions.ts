@@ -25,6 +25,7 @@ import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
 import { hashSenha } from "@/lib/senha";
+import { validarForcaMinima } from "@/lib/senha-politica";
 
 export type ActionContext = {
   role: "admin" | "vendedor";
@@ -796,6 +797,40 @@ function revalidarAcaoAi(name: string) {
   porAcao[name]?.();
 }
 
+/**
+ * Chaves cujo valor nunca pode ir para o audit log nem voltar como resultado da
+ * tool. `criar_usuario`/`atualizar_usuario` hasheiam a senha antes de gravar,
+ * mas o `parsedParams` original continua com a senha em texto claro e o `result`
+ * do Prisma vem com o hash — os dois caiam inteiros no `detalhes` do AuditLog,
+ * que qualquer admin le pela tool `consultar_auditoria`. O `result` ainda e o
+ * valor devolvido ao provedor de LLM. Hashear e depois logar o texto claro ao
+ * lado anula a propria correcao.
+ */
+const CHAVES_SEGREDO = new Set(["password", "senha", "novaSenha", "senhaAtual", "token", "apiKey"]);
+
+/** Campos de Usuario que podem sair da tool: tudo menos `password`. */
+const SELECT_USUARIO_SEGURO = {
+  id: true,
+  username: true,
+  nomeExibicao: true,
+  role: true,
+  email: true,
+  telefone: true,
+  metaMensal: true,
+  comissaoPct: true,
+} as const;
+
+/** Redige segredos em profundidade, preservando a forma do objeto para o log. */
+function redigirSegredos(valor: unknown, profundidade = 0): unknown {
+  if (profundidade > 6 || valor === null || typeof valor !== "object") return valor;
+  if (Array.isArray(valor)) return valor.map((v) => redigirSegredos(v, profundidade + 1));
+  const saida: Record<string, unknown> = {};
+  for (const [chave, v] of Object.entries(valor as Record<string, unknown>)) {
+    saida[chave] = CHAVES_SEGREDO.has(chave) ? "[REDIGIDO]" : redigirSegredos(v, profundidade + 1);
+  }
+  return saida;
+}
+
 export async function executeAiAction(name: string, params: any, ctx: ActionContext) {
   const logAction = async (status: "success" | "error", details: unknown) => {
     await prisma.auditLog.create({
@@ -804,7 +839,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         usuario: ctx.username,
         usuarioId: ctx.userId,
         acao: `ai:${name}:${status}`,
-        detalhes: JSON.stringify(details ?? {}),
+        detalhes: JSON.stringify(redigirSegredos(details ?? {})),
       },
     });
   };
@@ -1001,6 +1036,9 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         result = await prisma.usuario.findMany({
           take: Math.min(Number(parsedParams?.limit || 50), 200),
           orderBy: { nomeExibicao: "asc" },
+          // Sem `select` a listagem devolvia a coluna `password` de todos os
+          // usuarios para o provedor de LLM e para o audit log.
+          select: SELECT_USUARIO_SEGURO,
         });
         break;
       case "criar_usuario": {
@@ -1008,8 +1046,16 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         // parsedParams nao pode mais ir cru para `data` — a senha vinda do
         // modelo tem que ser hasheada antes de gravar (D-04, D-06).
         const { password: senhaCriarUsuario, ...restoCriarUsuario } = parsedParams;
+        const senhaNovoUsuario = String(senhaCriarUsuario ?? "");
+        // Mesma politica das Server Actions: sem isto a IA seria o caminho
+        // mais facil para criar conta com senha de um caractere.
+        const forcaCriarUsuario = validarForcaMinima(senhaNovoUsuario);
+        if (!forcaCriarUsuario.ok) throw new Error(forcaCriarUsuario.erro);
         result = await prisma.usuario.create({
-          data: { ...restoCriarUsuario, password: await hashSenha(String(senhaCriarUsuario)) },
+          data: { ...restoCriarUsuario, password: await hashSenha(senhaNovoUsuario) },
+          // Sem `select` o hash volta no `result`, que vai para o audit log e
+          // e devolvido ao provedor de LLM como resultado da tool.
+          select: SELECT_USUARIO_SEGURO,
         });
         break;
       }
@@ -1021,11 +1067,15 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         // `data` do update zeraria a senha de qualquer usuario editado sem
         // trocar a senha.
         if (senhaAtualizarUsuario) {
-          dataAtualizarUsuario.password = await hashSenha(String(senhaAtualizarUsuario));
+          const senhaTrocada = String(senhaAtualizarUsuario);
+          const forcaAtualizarUsuario = validarForcaMinima(senhaTrocada);
+          if (!forcaAtualizarUsuario.ok) throw new Error(forcaAtualizarUsuario.erro);
+          dataAtualizarUsuario.password = await hashSenha(senhaTrocada);
         }
         result = await prisma.usuario.update({
           where: { id: Number(parsedParams.id) },
           data: dataAtualizarUsuario,
+          select: SELECT_USUARIO_SEGURO,
         });
         break;
       }

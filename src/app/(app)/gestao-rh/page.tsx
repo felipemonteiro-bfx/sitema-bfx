@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { hashSenha } from "@/lib/senha";
+import { validarForcaMinima } from "@/lib/senha-politica";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,10 @@ export async function addUser(formData: FormData) {
   const senha = String(formData.get("senha") || "");
   const role = String(formData.get("role") || "vendedor");
   if (!nome || !login || !senha) return;
+  // Mesma politica minima das outras entradas de senha do sistema — contratar
+  // pela Gestao RH nao pode ser a porta que aceita senha de um caractere.
+  const forca = validarForcaMinima(senha);
+  if (!forca.ok) return;
   await prisma.usuario.create({
     data: {
       nomeExibicao: nome,
