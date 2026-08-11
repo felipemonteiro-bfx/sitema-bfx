@@ -90,10 +90,23 @@ describe("(1) composto da propria matiz -> tint opaco", () => {
 
   it("os tiles de resumo do item de produto usam o tint opaco, nao bg-<sem>/5", () => {
     const fonte = ler("src/components/produto-item-form.tsx");
-    expect(fonte.includes("bg-success/5")).toBe(false);
-    expect(fonte.includes("bg-info/5")).toBe(false);
-    expect(fonte.includes("bg-success-bg")).toBe(true);
-    expect(fonte.includes("bg-info-bg")).toBe(true);
+
+    // A REGRA e "tint opaco, nunca composto". A versao anterior deste teste
+    // exigia `bg-info-bg` nominalmente, o que travava uma decisao de DESIGN
+    // (a Margem ser azul) dentro de um teste de CONTRASTE. Quando a Margem
+    // passou a usar faixa — verde/amarelo/vermelho conforme o valor, como no
+    // Dashboard e no Historico — o `bg-info-bg` sumiu do arquivo e o teste
+    // reprovou, mesmo com a regra intacta. Agora ele checa a regra: nenhum
+    // composto, e ao menos um tint opaco de fato aplicado.
+    for (const sem of ["success", "warning", "error", "info"]) {
+      expect(fonte.includes(`bg-${sem}/5`), `composto bg-${sem}/5 no item de produto`).toBe(false);
+      expect(fonte.includes(`bg-${sem}/10`), `composto bg-${sem}/10 no item de produto`).toBe(false);
+    }
+
+    const opacosUsados = ["success", "warning", "error", "info"].filter((sem) =>
+      fonte.includes(`bg-${sem}-bg`)
+    );
+    expect(opacosUsados.length, "nenhum tint opaco aplicado nos tiles").toBeGreaterThan(0);
   });
 });
 
