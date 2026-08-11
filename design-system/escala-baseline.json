@@ -1,12 +1,8 @@
 {
-  "total": 2,
-  "totalTamanho": 2,
+  "total": 1,
+  "totalTamanho": 1,
   "totalCorCss": 0,
   "porArquivo": {
-    "src/components/ui/badge.tsx": {
-      "tamanhoArbitrario": 1,
-      "corCssPuro": 0
-    },
     "src/components/ui/calendar.tsx": {
       "tamanhoArbitrario": 1,
       "corCssPuro": 0
