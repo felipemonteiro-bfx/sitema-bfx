@@ -1,12 +1,8 @@
 {
-  "total": 19,
-  "totalTamanho": 19,
+  "total": 17,
+  "totalTamanho": 17,
   "totalCorCss": 0,
   "porArquivo": {
-    "src/app/(app)/financeiro/page.tsx": {
-      "tamanhoArbitrario": 2,
-      "corCssPuro": 0
-    },
     "src/app/(app)/historico/page.tsx": {
       "tamanhoArbitrario": 2,
       "corCssPuro": 0

@@ -260,7 +260,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 <div className="mt-0.5 text-base font-semibold tabular-nums text-warning-text">{formatBRL(estoqueImobilizado)}</div>
                                 <div className="text-xs text-muted-foreground">Valor de custo da mercadoria parada em estoque</div>
                               </div>
-                              <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-medium text-warning-text dark:bg-warning/20">
+                              <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning-text dark:bg-warning/20">
                                 não deduzido do lucro
                               </span>
                             </div>
@@ -281,7 +281,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardHeader className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle>Fluxo de Caixa (6 meses)</CardTitle>
-                    <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground">
+                    <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
                       atualizado automaticamente
                     </span>
                   </div>
