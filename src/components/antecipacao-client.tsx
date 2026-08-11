@@ -421,7 +421,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         <div className="p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           {/* Total selecionado */}
           <div className="flex-shrink-0 min-w-[140px]">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total a Antecipar</div>
+            <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Total a Antecipar</div>
             <div className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums leading-none mt-0.5">
               {formatBRL(totalSelecionado)}
             </div>
@@ -454,21 +454,21 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           {/* 3 métricas em grid compacto */}
           <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1">
             <div className="rounded-lg bg-info-bg border border-info px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-info-text">Prazo médio</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-info-text">Prazo médio</div>
               <div className="text-xl font-bold text-info-text tabular-nums leading-tight">
                 {prazoMedio.toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
               </div>
               <div className="text-xs text-info-text font-medium mt-0.5">D+1</div>
             </div>
             <div className="rounded-lg bg-warning-bg border border-warning px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-warning-text">Taxa total</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-warning-text">Taxa total</div>
               <div className="text-xl font-bold text-warning-text tabular-nums leading-tight">
                 {taxaPercent.toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
               </div>
               <div className="text-xs text-warning-text font-medium mt-0.5">Smart</div>
             </div>
             <div className="rounded-lg bg-success-bg border border-success px-3 py-2.5">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-success-text">Líquido</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-success-text">Líquido</div>
               <div className="text-base sm:text-lg font-bold text-success-text tabular-nums leading-tight truncate">
                 {formatBRL(valorLiquido)}
               </div>
@@ -524,7 +524,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         </div>
 
         {/* Rodapé informativo */}
-        <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-[11px] text-muted-foreground border-t border-border/50 pt-2.5">
+        <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-xs text-muted-foreground border-t border-border/50 pt-2.5">
           <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-info-bg text-xs font-bold text-info-text">i</span>
           Taxa Smart: {TAXA_MENSAL_PADRAO.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
