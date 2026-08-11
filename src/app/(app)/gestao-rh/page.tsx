@@ -11,6 +11,7 @@ import { FormSelect } from "@/components/form-select";
 import { Badge } from "@/components/ui/badge";
 import { GestaoRhTabs } from "@/components/gestao-rh-tabs";
 import { DeleteUserButton } from "@/components/delete-user-button";
+import { ResetSenhaDialog } from "@/components/reset-senha-dialog";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 
@@ -235,12 +236,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="md:col-span-6 flex items-center justify-between gap-3 border-t pt-4">
-                          <DeleteUserButton
-                            userId={u.id}
-                            userName={u.nomeExibicao || u.username}
-                            userRole={u.role}
-                            deleteAction={deleteUser}
-                          />
+                          <div className="flex items-center gap-2">
+                            <DeleteUserButton
+                              userId={u.id}
+                              userName={u.nomeExibicao || u.username}
+                              userRole={u.role}
+                              deleteAction={deleteUser}
+                            />
+                            <ResetSenhaDialog userId={u.id} userName={u.nomeExibicao || u.username} />
+                          </div>
                           <button className={cn(buttonVariants(), "bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
                         </div>
                       </form>

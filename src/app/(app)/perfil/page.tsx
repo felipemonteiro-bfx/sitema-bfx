@@ -10,19 +10,22 @@ import { revalidatePath } from "next/cache";
 import { formatBRL, cn } from "@/lib/utils";
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
+import { PerfilSenhaForm } from "@/components/perfil-senha-form";
 
 async function savePerfil(formData: FormData) {
   "use server";
   // O id vem da sessao, NUNCA do formulario. Antes vinha de um <input hidden>,
   // e /perfil esta no menu do vendedor: bastava editar o campo no DevTools para
-  // reescrever o cadastro — inclusive a senha — de qualquer outro usuario, admin
-  // incluso. Server Action nao pode confiar em id enviado pelo cliente.
+  // reescrever o cadastro de qualquer outro usuario, admin incluso. Server
+  // Action nao pode confiar em id enviado pelo cliente.
+  //
+  // Este formulario so cuida de dados pessoais. A troca de senha vive em
+  // PerfilSenhaForm/trocarMinhaSenha, um formulario independente (D-03): um
+  // erro na troca de senha nao pode descartar a edicao destes campos, nem
+  // o contrario.
   const sessao = await getSession();
   const id = sessao?.id;
   if (!id) return;
-  // Senha so e' gravada se veio preenchida. Antes, salvar o formulario com o
-  // campo em branco zerava a senha e trancava o usuario para fora da conta.
-  const senha = String(formData.get("senha") || "").trim();
   await prisma.usuario.update({
     where: { id },
     data: {
@@ -30,7 +33,6 @@ async function savePerfil(formData: FormData) {
       email: String(formData.get("email") || ""),
       telefone: String(formData.get("telefone") || ""),
       endereco: String(formData.get("endereco") || ""),
-      ...(senha ? { password: senha } : {}),
     },
   });
   revalidatePath("/perfil");
@@ -83,20 +85,19 @@ export default async function Page() {
                 <Label htmlFor="perfil-endereco">Endereço</Label>
                 <Input id="perfil-endereco" name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="perfil-senha">Senha</Label>
-                {/* Sem defaultValue: a senha era servida em texto claro no HTML
-                    de toda visita ao perfil. Em branco mantem a atual. */}
-                <Input
-                  id="perfil-senha"
-                  name="senha"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Deixe em branco para manter a atual"
-                />
-              </div>
               <button className={cn(buttonVariants(), "md:col-span-2 bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Alterar senha — formulario independente do de dados pessoais
+            (D-03): erro em um nao descarta a edicao do outro. */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-primary">Alterar senha</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PerfilSenhaForm />
           </CardContent>
         </Card>
 
