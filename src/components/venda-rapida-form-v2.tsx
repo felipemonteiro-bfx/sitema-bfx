@@ -1129,7 +1129,7 @@ export default function VendaRapidaFormV2({
             </div>
             <div className="rounded-lg bg-primary/5 px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Venda</div>
-              <div className="text-lg font-black text-primary">{formatBRL(totalVenda)}</div>
+              <div className="text-lg font-bold text-primary">{formatBRL(totalVenda)}</div>
             </div>
             <div className="rounded-lg bg-info-bg px-3 py-2.5 text-center">
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Valor Parcela</div>

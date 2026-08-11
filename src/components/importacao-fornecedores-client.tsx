@@ -228,7 +228,7 @@ export default function ImportacaoFornecedoresClient({
 function Contador({ label, valor }: { label: string; valor: number }) {
   return (
     <div className="rounded-md border bg-muted/30 p-3 text-center">
-      <div className="text-2xl font-black">{valor}</div>
+      <div className="text-2xl font-bold">{valor}</div>
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
     </div>
   );

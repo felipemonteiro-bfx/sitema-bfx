@@ -209,7 +209,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-black text-info-text">
+                  <div className="text-lg font-bold text-info-text">
                     {formatBRL(perfil.ultimaVenda.valorTotal)}
                   </div>
                 </div>
@@ -221,19 +221,19 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
             <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
               <TrendingUp className="h-4 w-4 mx-auto text-info-text mb-1" />
               <div className="text-[10px] font-bold uppercase text-muted-foreground">Ticket Médio</div>
-              <div className="text-sm font-black text-foreground">{formatBRL(perfil.metricas.ticketMedio)}</div>
+              <div className="text-sm font-bold text-foreground">{formatBRL(perfil.metricas.ticketMedio)}</div>
             </div>
             <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
               <DollarSign className="h-4 w-4 mx-auto text-success-text mb-1" />
               <div className="text-[10px] font-bold uppercase text-muted-foreground">Renda</div>
-              <div className="text-sm font-black text-foreground">
+              <div className="text-sm font-bold text-foreground">
                 {perfil.cliente.renda ? formatBRL(perfil.cliente.renda) : "N/I"}
               </div>
             </div>
             <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
               <Target className="h-4 w-4 mx-auto text-info-text mb-1" />
               <div className="text-[10px] font-bold uppercase text-muted-foreground">Capacidade</div>
-              <div className="text-sm font-black text-foreground">{formatBRL(perfil.metricas.capacidadeCompra)}</div>
+              <div className="text-sm font-bold text-foreground">{formatBRL(perfil.metricas.capacidadeCompra)}</div>
             </div>
           </div>
 
@@ -283,7 +283,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <Badge className={cn("text-[9px] h-4 border-0", badgeColor)}>
+                            <Badge className={cn("text-xs h-5 border-0", badgeColor)}>
                               {sugestao.tipo === "recompra" && "Recompra"}
                               {sugestao.tipo === "upgrade" && "Upgrade"}
                               {sugestao.tipo === "complementar" && "Complementar"}
@@ -296,7 +296,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           <div className="text-[10px] text-muted-foreground">{sugestao.motivo}</div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-sm font-black text-info-text">
+                          <div className="text-sm font-bold text-info-text">
                             {formatBRL(sugestao.valorVenda)}
                           </div>
                           <Button
@@ -370,7 +370,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           </div>
                           <div className="flex items-center gap-2">
                             {item.diferenca && item.diferenca > 0 && (
-                              <Badge className="text-[9px] bg-info-bg text-info-text border-0">
+                              <Badge className="text-xs bg-info-bg text-info-text border-0">
                                 +{formatBRL(item.diferenca)}
                               </Badge>
                             )}
@@ -427,7 +427,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                         <ShoppingBag className="h-3 w-3" />
                         {sugestoesProduto.bundle.label}
                       </div>
-                      <Badge className="text-[9px] bg-warning text-warning-foreground border-0">
+                      <Badge className="text-xs bg-warning text-warning-foreground border-0">
                         Economize {formatBRL(sugestoesProduto.bundle.economiaBundle)}
                       </Badge>
                     </div>
@@ -440,7 +440,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                       ))}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-black text-warning-text">
+                      <span className="text-lg font-bold text-warning-text">
                         {formatBRL(sugestoesProduto.bundle.valorTotal)}
                       </span>
                       <Button

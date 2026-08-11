@@ -110,7 +110,7 @@ export function CatalogoPublicoClient({ produtos }: Props) {
                   {p.nome}
                 </h2>
                 <div className="mt-auto pt-4 border-t border-border">
-                  <span className="text-xl font-black text-primary dark:text-primary">
+                  <span className="text-xl font-bold text-primary dark:text-primary">
                     {formatBRL(p.valorVenda ?? 0)}
                   </span>
                 </div>

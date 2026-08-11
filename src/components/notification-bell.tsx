@@ -113,7 +113,11 @@ export function NotificationBell() {
               de badge de notificacao) — o que resolve a leitura e o contorno,
               nao empurrar o badge para fora. */}
           {unreadCount > 0 && (
-            <span className="pointer-events-none absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-error px-1 text-[9px] font-bold leading-none text-error-foreground ring-2 ring-sidebar">
+            {/* Era `h-3.5 min-w-3.5` com `text-[9px]` — 14px de circulo e uma
+                fonte abaixo do limite pratico de legibilidade. O circulo cresce
+                junto com a fonte (`h-4 min-w-4` + `text-xs`), senao o numero
+                nao caberia. Mesmo par usado no contador da navegacao lateral. */}
+            <span className="pointer-events-none absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 text-xs font-bold leading-none text-error-foreground ring-2 ring-sidebar">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}

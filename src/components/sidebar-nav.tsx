@@ -127,7 +127,7 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
       <span className="flex-1 truncate">{item.label}</span>
       
       {item.isNew && (
-        <span className="flex items-center gap-1 rounded-full bg-[var(--sidebar-primary-bg)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-primary)] animate-pulse-soft">
+        <span className="flex items-center gap-1 rounded-full bg-[var(--sidebar-primary-bg)] px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-[var(--sidebar-primary)] animate-pulse-soft">
           <Sparkles className="h-3 w-3" />
           Novo
         </span>
@@ -138,7 +138,7 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
         // 3.41:1 (claro) e 3.15:1 (escuro). O par de tokens fecha nos dois:
         // 6.25:1 e 6.03:1 — `--sidebar-primary-foreground` INVERTE.
         <span className={cn(
-          "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold",
+          "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold",
           "bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]",
           "animate-fade-in-scale"
         )}>
@@ -184,7 +184,7 @@ function SidebarNavGroup({ group, pathname, startIndex }: SidebarNavGroupProps) 
           {/* Sem `/80`: a opacidade parcial derrubava o rotulo de grupo para
               4.17:1 no escuro — a catraca aprovava o token e a tela reprovava
               o pixel. Em 10px isso e exatamente onde nao da para ceder. */}
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--sidebar-muted)]">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--sidebar-muted)]">
             {group.label}
           </span>
         </div>

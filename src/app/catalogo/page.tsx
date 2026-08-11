@@ -53,7 +53,7 @@ export default async function CatalogoPage() {
               // marca aparecia junto com o `<h1>` "Catalogo de Produtos" logo
               // abaixo, e a pagina ficava com dois cabecalhos de nivel 1. E o
               // substituto visual da logo, nao o titulo da pagina — vira `<span>`.
-              <span className="text-2xl font-black tracking-tight text-info-text">
+              <span className="text-2xl font-bold tracking-tight text-info-text">
                 BFX
               </span>
             )}

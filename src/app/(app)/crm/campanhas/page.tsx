@@ -1,14 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DeleteCampanhaButton } from "@/components/delete-campanha-button";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { cn } from "@/lib/utils";
 import { estagioLabel, ESTAGIOS_ORDEM } from "@/lib/crm";
 import { NIVEIS_FIDELIDADE, nivelLabel, NIVEL_PRATA_MIN, NIVEL_OURO_MIN } from "@/lib/fidelidade";
 import { parseFiltro } from "@/lib/campanha-service";
@@ -221,10 +220,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <Button type="submit" size="sm">Disparar agora</Button>
                     </form>
                   )}
-                  <form action={excluirCampanha}>
-                    <input type="hidden" name="campanhaId" value={c.id} />
-                    <button type="submit" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>Excluir</button>
-                  </form>
+                  <DeleteCampanhaButton
+                    campanhaId={c.id}
+                    campanhaNome={c.nome}
+                    deleteAction={excluirCampanha}
+                  />
                 </div>
               </CardContent>
             </Card>

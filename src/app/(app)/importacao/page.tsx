@@ -29,7 +29,7 @@ export default async function Page() {
           <>
             <div className="text-right shrink-0 whitespace-nowrap">
               <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wide leading-none">Total no Banco</Label>
-              <div className="text-xl font-black text-primary leading-tight">{count}</div>
+              <div className="text-xl font-bold text-primary leading-tight">{count}</div>
             </div>
             <a
               href={csvHref}
