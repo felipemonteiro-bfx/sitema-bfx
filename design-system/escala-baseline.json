@@ -1,0 +1,95 @@
+{
+  "total": 66,
+  "totalTamanho": 62,
+  "totalCorCss": 4,
+  "porArquivo": {
+    "src/app/(app)/crm/page.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/app/(app)/financeiro/page.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/app/(app)/historico/page.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/app/(app)/relatorios/page.tsx": {
+      "tamanhoArbitrario": 1,
+      "corCssPuro": 0
+    },
+    "src/app/(app)/venda-rapida/page.tsx": {
+      "tamanhoArbitrario": 3,
+      "corCssPuro": 0
+    },
+    "src/app/globals.css": {
+      "tamanhoArbitrario": 0,
+      "corCssPuro": 4
+    },
+    "src/components/antecipacao-client.tsx": {
+      "tamanhoArbitrario": 5,
+      "corCssPuro": 0
+    },
+    "src/components/bfx-intelligence-panel.tsx": {
+      "tamanhoArbitrario": 11,
+      "corCssPuro": 0
+    },
+    "src/components/cadastrar-produto-rapido-dialog.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/components/catalogo-publico-client.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/components/enviar-email-empresa-button.tsx": {
+      "tamanhoArbitrario": 1,
+      "corCssPuro": 0
+    },
+    "src/components/intelligence-chat-client.tsx": {
+      "tamanhoArbitrario": 1,
+      "corCssPuro": 0
+    },
+    "src/components/intelligence-chat-composer.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/components/link-assinatura-button.tsx": {
+      "tamanhoArbitrario": 1,
+      "corCssPuro": 0
+    },
+    "src/components/notification-bell.tsx": {
+      "tamanhoArbitrario": 1,
+      "corCssPuro": 0
+    },
+    "src/components/produto-form-client.tsx": {
+      "tamanhoArbitrario": 3,
+      "corCssPuro": 0
+    },
+    "src/components/produto-item-form.tsx": {
+      "tamanhoArbitrario": 3,
+      "corCssPuro": 0
+    },
+    "src/components/produtos-tab-client.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/components/receipt-preview.tsx": {
+      "tamanhoArbitrario": 2,
+      "corCssPuro": 0
+    },
+    "src/components/ui/badge.tsx": {
+      "tamanhoArbitrario": 1,
+      "corCssPuro": 0
+    },
+    "src/components/ui/calendar.tsx": {
+      "tamanhoArbitrario": 1,
+      "corCssPuro": 0
+    },
+    "src/components/venda-rapida-form-v2.tsx": {
+      "tamanhoArbitrario": 14,
+      "corCssPuro": 0
+    }
+  }
+}

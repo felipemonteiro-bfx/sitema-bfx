@@ -13,9 +13,6 @@ const cardVariants = cva(
         elevated: "border border-border bg-card-elevated shadow-lg hover:shadow-xl backdrop-blur-sm dark:shadow-[var(--shadow-lg)] dark:hover:shadow-[var(--shadow-xl)]",
         outline: "border-2 border-border bg-background/50 hover:bg-card/50 hover:shadow-md",
         ghost: "shadow-none hover:bg-card/50 hover:shadow-sm",
-        glass: "glass border border-white/20 dark:border-white/10 shadow-lg backdrop-blur-xl",
-        interactive: "border border-border bg-card shadow-md cursor-pointer hover:scale-[1.02] hover:shadow-xl hover:border-accent/50 active:scale-[0.98] dark:shadow-[var(--shadow-md)] dark:hover:shadow-[var(--glow-primary)]",
-        gradient: "border-0 bg-gradient-to-br from-card to-muted/50 shadow-lg dark:from-card dark:to-card-elevated",
       },
       animated: {
         true: "animate-fade-in-up",
@@ -272,66 +269,6 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
 )
 CardStats.displayName = "CardStats"
 
-interface CardGlassProps extends React.HTMLAttributes<HTMLDivElement> {
-  blur?: "sm" | "md" | "lg" | "xl"
-}
-
-const CardGlass = React.forwardRef<HTMLDivElement, CardGlassProps>(
-  ({ className, blur = "md", children, ...props }, ref) => {
-    const blurClasses = {
-      sm: "backdrop-blur-sm",
-      md: "backdrop-blur-md",
-      lg: "backdrop-blur-lg",
-      xl: "backdrop-blur-xl",
-    }
-
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          "rounded-2xl border border-white/20 dark:border-white/10",
-          "bg-white/60 dark:bg-black/40",
-          blurClasses[blur],
-          "shadow-lg dark:shadow-[var(--shadow-lg)]",
-          "transition-all duration-200",
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    )
-  }
-)
-CardGlass.displayName = "CardGlass"
-
-interface CardInteractiveProps extends CardProps {
-  onClick?: () => void
-  href?: string
-}
-
-const CardInteractive = React.forwardRef<HTMLDivElement, CardInteractiveProps>(
-  ({ className, onClick, href, children, ...props }, ref) => {
-    const content = (
-      <Card
-        ref={ref}
-        variant="interactive"
-        className={cn(className)}
-        onClick={onClick}
-        {...props}
-      >
-        {children}
-      </Card>
-    )
-
-    if (href) {
-      return <a href={href}>{content}</a>
-    }
-
-    return content
-  }
-)
-CardInteractive.displayName = "CardInteractive"
 
 export { 
   Card, 
@@ -341,7 +278,5 @@ export {
   CardDescription, 
   CardContent,
   CardStats,
-  CardGlass,
-  CardInteractive,
   cardVariants,
 }

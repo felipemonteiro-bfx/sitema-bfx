@@ -51,6 +51,14 @@ jobs:
       - name: Contraste de tokens
         run: yarn contraste:check
 
+      # Complementa a catraca de cor crua, que so enxerga classe Tailwind de COR.
+      # Barra tamanho de fonte arbitrario (`text-[10px]`) e cor literal escrita em
+      # CSS puro — foi por CSS puro que o degrade de tres cores dos titulos
+      # atravessou intacto a troca da paleta da marca, invisivel para as duas
+      # travas anteriores.
+      - name: Escala e cor em CSS (catraca)
+        run: yarn escala:check
+
       - name: Generate Prisma Client
         run: yarn prisma generate
 
