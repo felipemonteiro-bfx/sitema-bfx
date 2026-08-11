@@ -96,6 +96,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-brilho-topo-a: var(--brilho-topo-a);
+  --color-brilho-topo-b: var(--brilho-topo-b);
 }
 
 :root {
@@ -270,6 +272,11 @@
   --section-gap: var(--space-6);
   --card-padding: var(--space-6);
   --input-height: 2.5rem;
+
+  /* Brilho do fundo da pagina — os dois gradientes radiais do `body`. Tema
+     claro: amarelo/dourado sutil no topo esquerdo e azul sutil no topo direito. */
+  --brilho-topo-a: oklch(0.98 0.06 90 / 60%);
+  --brilho-topo-b: oklch(0.9 0.04 250 / 55%);
 }
 
 .dark {
@@ -385,6 +392,11 @@
   --sidebar-border: oklch(0.32 0.02 260);
   --sidebar-ring: oklch(0.68 0.22 25);
   --sidebar-muted: oklch(0.65 0 0);
+
+  /* Brilho do fundo da pagina — tema escuro: tons mais opacos e sutis que o
+     claro, mesma origem que o `.dark body` derivava antes de virar token. */
+  --brilho-topo-a: oklch(0.25 0.08 260 / 25%);
+  --brilho-topo-b: oklch(0.20 0.06 210 / 20%);
 }
 
 @layer base {
@@ -409,8 +421,8 @@
     @apply bg-background text-foreground;
     font-family: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
     background-image:
-      radial-gradient(1200px 600px at 10% -10%, oklch(0.98 0.06 90 / 60%), transparent),
-      radial-gradient(900px 500px at 90% -20%, oklch(0.9 0.04 250 / 55%), transparent);
+      radial-gradient(1200px 600px at 10% -10%, var(--brilho-topo-a), transparent),
+      radial-gradient(900px 500px at 90% -20%, var(--brilho-topo-b), transparent);
     background-attachment: fixed;
   }
 
@@ -420,13 +432,6 @@
   h4 {
     font-family: var(--font-space-grotesk), var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-}
-
-.dark body {
-  /* Gradientes mais sutis e profissionais para dark mode */
-  background-image:
-    radial-gradient(1200px 600px at 10% -10%, oklch(0.25 0.08 260 / 25%), transparent),
-    radial-gradient(900px 500px at 90% -20%, oklch(0.20 0.06 210 / 20%), transparent);
 }
 
 /* Dark Mode - Melhorias de UX/UI */
