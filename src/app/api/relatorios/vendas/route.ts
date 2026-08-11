@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { resolverPeriodo } from "@/lib/periodo-data";
 import { getSession } from "@/lib/session";
-import { resolverColunas, filtrarColunasPorPerfil, cabecalhoCsv, linhaCsv } from "@/lib/relatorio-vendas-colunas";
+import { resolverColunasParaExport, cabecalhoCsv, linhaCsv } from "@/lib/relatorio-vendas-colunas";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const { inicio: start, fimExclusivo: end } = resolverPeriodo(from, to);
 
   const session = await getSession();
-  const colunas = filtrarColunasPorPerfil(resolverColunas(searchParams.get("colunas")), session?.role === "admin");
+  const colunas = resolverColunasParaExport(searchParams.get("colunas"), session?.role === "admin");
 
   const vendas = await prisma.venda.findMany({
     where: {

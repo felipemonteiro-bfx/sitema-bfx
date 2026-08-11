@@ -286,6 +286,21 @@ export function filtrarColunasPorPerfil(colunas: ColunaVenda[], ehAdmin: boolean
   return colunas.filter((c) => !COLUNAS_SENSIVEIS.includes(c.key));
 }
 
+/**
+ * Resolve as colunas da query string e aplica o filtro de perfil numa unica
+ * chamada. Se a selecao ficar vazia depois do filtro — por exemplo um link
+ * com `?colunas=margemPct,margemConsignavel` acessado por quem nao e admin —
+ * cai no conjunto padrao em vez de devolver lista vazia: sem este fallback
+ * `cabecalhoCsv`/`linhaCsv` produzem um CSV so de linhas em branco, e
+ * `calcularLayoutPdf` produz uma tabela sem nenhuma coluna. O padrao nunca
+ * contem coluna sensivel, entao o segundo filtro e um no-op de seguranca.
+ */
+export function resolverColunasParaExport(param: string | null | undefined, ehAdmin: boolean): ColunaVenda[] {
+  const filtradas = filtrarColunasPorPerfil(resolverColunas(param), ehAdmin);
+  if (filtradas.length > 0) return filtradas;
+  return filtrarColunasPorPerfil(resolverColunas(null), ehAdmin);
+}
+
 /** Escapa uma celula em RFC 4180: aspas apenas quando necessario, dobrando as internas. */
 function escaparCsv(valor: string): string {
   if (valor.includes(",") || valor.includes('"') || valor.includes("\n") || valor.includes("\r")) {

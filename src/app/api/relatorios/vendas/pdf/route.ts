@@ -6,8 +6,7 @@ import { resolverPeriodo, fimInclusivoParaInput } from "@/lib/periodo-data";
 import { formatarDataPura } from "@/lib/data-pura";
 import { getSession } from "@/lib/session";
 import {
-  resolverColunas,
-  filtrarColunasPorPerfil,
+  resolverColunasParaExport,
   calcularLayoutPdf,
   truncarParaLargura,
   celulaPdf,
@@ -26,7 +25,7 @@ export async function GET(req: Request) {
   const { inicio: start, fimExclusivo: end } = resolverPeriodo(from, to);
 
   const session = await getSession();
-  const colunas = filtrarColunasPorPerfil(resolverColunas(searchParams.get("colunas")), session?.role === "admin");
+  const colunas = resolverColunasParaExport(searchParams.get("colunas"), session?.role === "admin");
 
   try {
     const vendas = await prisma.venda.findMany({
