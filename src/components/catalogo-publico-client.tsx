@@ -95,14 +95,14 @@ export function CatalogoPublicoClient({ produtos }: Props) {
               <div className="relative aspect-square bg-muted dark:bg-background">
                 <ProdutoImagem src={imgPath} alt={p.nome} />
                 {p.categoria && (
-                  <span className="absolute left-3 top-3 rounded-lg bg-primary/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground dark:bg-primary/80">
+                  <span className="absolute left-3 top-3 rounded-lg bg-primary/90 px-2 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground dark:bg-primary/80">
                     {p.categoria}
                   </span>
                 )}
               </div>
               <div className="flex flex-1 flex-col p-5">
                 {p.marca && (
-                  <span className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <span className="mb-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                     {p.marca}
                   </span>
                 )}

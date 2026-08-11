@@ -1,12 +1,8 @@
 {
-  "total": 13,
-  "totalTamanho": 13,
+  "total": 11,
+  "totalTamanho": 11,
   "totalCorCss": 0,
   "porArquivo": {
-    "src/components/catalogo-publico-client.tsx": {
-      "tamanhoArbitrario": 2,
-      "corCssPuro": 0
-    },
     "src/components/enviar-email-empresa-button.tsx": {
       "tamanhoArbitrario": 1,
       "corCssPuro": 0
