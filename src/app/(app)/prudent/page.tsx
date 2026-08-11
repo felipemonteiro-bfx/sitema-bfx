@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { valorTotalVenda } from "@/lib/venda-utils";
+import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
+import { agruparAntecipacoesSemLote, idsEmLotes } from "@/lib/antecipacoes-sem-lote";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -194,6 +195,40 @@ export default async function Page() {
     periodoFim: b.periodoFim,
   }));
 
+  // Antecipacoes que existem SEM lote. Medido em producao (2026-08-11):
+  // `antecipacao_batches` vazia e 26 vendas com `antecipada = 1`. Sem este
+  // bloco o card dizia "Nenhuma antecipacao realizada ainda" enquanto a tela
+  // listava vendas como "Antecipado".
+  const vendasAntecipadas = await prisma.venda.findMany({
+    where: { antecipada: 1 },
+    orderBy: { dataVenda: "desc" },
+    take: 200,
+    select: {
+      id: true,
+      dataVenda: true,
+      valorVenda: true,
+      quantidade: true,
+      valorFrete: true,
+      desconto: true,
+      parcelas: true,
+      cliente: { select: { nome: true, empresa: true } },
+      itens: { select: { subtotal: true, produtoNome: true, quantidade: true } },
+    },
+  });
+
+  const antecipacoesSemLote = agruparAntecipacoesSemLote(
+    vendasAntecipadas.map((v) => ({
+      id: v.id,
+      dataVenda: v.dataVenda,
+      clienteNome: v.cliente?.nome ?? null,
+      empresa: v.cliente?.empresa ?? null,
+      produtos: produtosTexto(v),
+      valorTotal: valorTotalVenda(v),
+      parcelas: v.parcelas || 1,
+    })),
+    idsEmLotes(batches)
+  );
+
   const vendasFormatadas = todasVendas.map((v) => {
     const antecipada = v.antecipada ?? 0;
     let status: "pendente" | "em_andamento" | "antecipado" | "parcialmente_antecipado";
@@ -263,7 +298,7 @@ export default async function Page() {
           />
         </CardContent>
       </Card>
-      <HistoricoAntecipacoes batches={batchesFormatados} />
+      <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} />
     </div>
   );
 }
