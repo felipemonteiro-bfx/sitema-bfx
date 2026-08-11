@@ -119,8 +119,8 @@ function SidebarContent({
                 Antes o inicio do gradiente era `--sidebar-primary`, que agora
                 escurece no tema claro (ele virou cor de TEXTO da marca) — o
                 logo teria mudado de cor de brinde. O icone usa o token do
-                gradiente, nao `text-white` cru: 3.69:1 no extremo rose e
-                5.80:1 no violet. */}
+                gradiente, nao `text-white` cru: 5.05:1 no extremo claro e
+                8.65:1 no escuro do degrade (verde da marca). */}
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-gradient-cta-from to-gradient-cta-to shadow-md">
               <LayoutDashboard className="h-4 w-4 text-gradient-cta-foreground" />
             </div>

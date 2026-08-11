@@ -31,8 +31,8 @@ export const buttonVariants = cva(
           "bg-primary text-primary-foreground shadow-md hover:bg-primary/90 hover:shadow-lg active:scale-[0.98] dark:shadow-[var(--shadow-sm)] dark:hover:shadow-[var(--shadow-md)]",
         gradient:
           // `text-gradient-cta-foreground` e nao `text-white`: e o mesmo gradiente da
-        // marca que o logo da sidebar usa, e agora tem par policiado (3.69:1 no
-        // extremo rose, 5.80:1 no violet). Cor crua assim nao era pega por
+        // marca que o logo da sidebar usa, e agora tem par policiado (5.05:1 no
+        // extremo claro, 8.65:1 no escuro). Cor crua assim nao era pega por
         // `raw-color-scan`: o padrao dele exige familia + escala numerica, e
         // `white` nao tem escala — passava batido pelas duas catracas.
         "bg-gradient-to-r from-gradient-cta-from to-gradient-cta-to text-gradient-cta-foreground shadow-md hover:shadow-lg active:scale-[0.98] dark:shadow-[var(--shadow-sm)]",

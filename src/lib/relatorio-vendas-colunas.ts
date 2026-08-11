@@ -350,12 +350,22 @@ export interface FaixaPdf {
  */
 export function calcularLayoutPdf(colunas: ColunaVenda[], xInicio: number, larguraUtil: number): FaixaPdf[] {
   const somaPesos = colunas.reduce((s, c) => s + c.pesoPdf, 0);
-  let x = xInicio;
-  return colunas.map((coluna) => {
-    const largura = somaPesos > 0 ? (larguraUtil * coluna.pesoPdf) / somaPesos : 0;
-    const faixa: FaixaPdf = { coluna, x, largura };
-    x += largura;
-    return faixa;
+  // Cada faixa e ancorada no PESO ACUMULADO, nao na soma das larguras ja
+  // emitidas: somar largura a largura acumulava erro de ponto flutuante e a
+  // ultima coluna terminava em 802.0000000000001 em vez de 802, invadindo a
+  // margem por um residuo binario (o CI pegou isso). A ultima faixa fecha
+  // exatamente em xInicio + larguraUtil, por construcao.
+  const limiteDireito = xInicio + larguraUtil;
+  let pesoAcumulado = 0;
+  return colunas.map((coluna, indice) => {
+    const inicio = somaPesos > 0 ? xInicio + (larguraUtil * pesoAcumulado) / somaPesos : xInicio;
+    pesoAcumulado += coluna.pesoPdf;
+    const ehUltima = indice === colunas.length - 1;
+    const fim =
+      ehUltima || somaPesos <= 0
+        ? limiteDireito
+        : xInicio + (larguraUtil * pesoAcumulado) / somaPesos;
+    return { coluna, x: inicio, largura: fim - inicio };
   });
 }
 

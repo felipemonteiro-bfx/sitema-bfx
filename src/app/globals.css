@@ -105,10 +105,16 @@
   --background: oklch(0.985 0 0);
   --foreground: oklch(0.145 0 0);
 
-  /* Primary - Dashboard/Admin Theme */
-  --primary: oklch(0.145 0.02 250); /* #0F172A slate-900 */
+  /* Primary — verde da marca BFX (o verde do "X" da logo, #048A05).
+     A logo medida da oklch(0.549 0.185 142.6). Esse valor exato reprova como
+     TEXTO sobre o fundo claro (4.41:1, abaixo de 4.5), e `text-primary` e usado
+     em titulo de Card por todo o sistema — entao a matiz e o croma da marca sao
+     preservados e so a luminosidade desce um passo, para 0.52. Diferenca
+     imperceptivel ao lado da logo, 4.86:1 como texto e 5.08:1 com branco por
+     cima em botao primario. */
+  --primary: oklch(0.52 0.177 142.6); /* #0F7F0E — verde BFX */
   --primary-foreground: oklch(0.985 0 0);
-  --primary-hover: oklch(0.185 0.02 250); /* slate-800 */
+  --primary-hover: oklch(0.46 0.156 142.6); /* verde BFX escurecido para hover */
 
   /* Secondary */
   --secondary: oklch(0.185 0.02 250); /* #1E293B slate-800 */
@@ -175,8 +181,12 @@
   /* Gradiente decorativo - variant "gradient" do botão (button-variants.ts) e ícone da sidebar
      (layout.tsx). Puramente decorativo, sem estado/superfície: por isso não muda entre temas
      (mesmo comportamento anterior, quando a classe crua era idêntica em claro/escuro) — D-06 */
-  --gradient-cta-from: oklch(0.645 0.246 16.439); /* mesmo tom de rose-500 */
-  --gradient-cta-to: oklch(0.541 0.281 293.009); /* mesmo tom de violet-600 */
+  /* Degrade da marca: era rosa -> violeta, que nao tinha relacao com a logo e
+     brigava com o verde primario. Agora e o proprio verde BFX indo para um
+     verde mais escuro e levemente azulado, com branco legivel nos dois
+     extremos (5.07:1 no claro do degrade, 8.65:1 no escuro). */
+  --gradient-cta-from: oklch(0.52 0.177 142.6); /* verde BFX */
+  --gradient-cta-to: oklch(0.40 0.13 155); /* verde escuro, leve giro para o azul */
   /* Conteudo POR CIMA do gradiente (o icone do logo na sidebar). Como o
      gradiente nao muda entre temas, este tambem nao muda — o que ele resolve e
      o `text-white` cru que estava no call site, agora mensuravel: 3.69:1 no
@@ -232,9 +242,12 @@
      `--sidebar-primary-foreground`, que INVERTE entre os temas. */
   --sidebar: oklch(0.965 0.006 260); /* degrau sutil abaixo de --card (1.08:1) */
   --sidebar-foreground: oklch(0.205 0.015 260); /* 16.28:1 */
-  --sidebar-primary: oklch(0.50 0.22 25); /* vermelho/rosa accent — 5.77:1 como texto */
-  --sidebar-primary-foreground: oklch(0.995 0 0); /* 6.25:1 sobre --sidebar-primary */
-  --sidebar-primary-bg: oklch(0.94 0.045 25); /* tint OPACO da marca — 5.13:1 (D-06) */
+  /* Accent da sidebar em verde BFX (era vermelho/rosa, hue 25 — sem relacao com
+     a logo e destoando do primario). Croma 0.17 e o teto do gamut sRGB nesta
+     luminosidade: acima disso o navegador corta e exibe outra cor. */
+  --sidebar-primary: oklch(0.50 0.17 142.6); /* verde BFX — 5.06:1 como texto na sidebar */
+  --sidebar-primary-foreground: oklch(0.995 0 0); /* 5.52:1 sobre --sidebar-primary */
+  --sidebar-primary-bg: oklch(0.94 0.05 142.6); /* tint OPACO da marca — 4.77:1 (D-06) */
   --sidebar-accent: oklch(0.915 0.012 260); /* hover/ativo — 13.94:1 com accent-foreground */
   --sidebar-accent-foreground: oklch(0.205 0.015 260);
   --sidebar-border: oklch(0.80 0.015 260); /* separador decorativo, ver nota abaixo */
@@ -264,10 +277,14 @@
   --background: oklch(0.10 0.02 250); /* Mais escuro para OLED puro */
   --foreground: oklch(0.985 0 0); /* #F8FAFC slate-50 */
 
-  /* Primary - Inverted for dark mode with better contrast */
-  --primary: oklch(0.985 0 0); /* slate-50 */
-  --primary-foreground: oklch(0.145 0.02 250); /* slate-900 */
-  --primary-hover: oklch(0.922 0 0); /* slate-100 */
+  /* Primary — mesmo verde da marca, clareado para o tema escuro. O verde da
+     logo (L=0.549) como texto sobre o fundo escuro daria 3.6:1 e reprovaria;
+     em L=0.76 a mesma matiz da 10.14:1 sobre o fundo e 9.41:1 sobre o card.
+     O croma cai para 0.16 porque acima disso o verde claro sai do gamut sRGB
+     e o navegador o corta, mudando a cor de fato exibida. */
+  --primary: oklch(0.76 0.16 142.6); /* #6FCA69 — verde BFX no escuro */
+  --primary-foreground: oklch(0.145 0.02 250); /* slate-900 — 9.4:1 sobre o verde */
+  --primary-hover: oklch(0.82 0.15 142.6); /* clareia no hover, padrao do tema escuro */
 
   /* Secondary - Ligeiramente mais claro para contraste */
   --secondary: oklch(0.22 0.02 250); /* slate-800 mais visível */
@@ -341,8 +358,8 @@
      estas tres linhas o par sai como SKIP no tema escuro em vez de PASS, e um
      par que nao e medido nao e policiado. Mesmo motivo que fez `--*-text` ser
      repetido no `.dark` na fase 16. */
-  --gradient-cta-from: oklch(0.645 0.246 16.439);
-  --gradient-cta-to: oklch(0.541 0.281 293.009);
+  --gradient-cta-from: oklch(0.52 0.177 142.6); /* verde BFX */
+  --gradient-cta-to: oklch(0.40 0.13 155);
   --gradient-cta-foreground: oklch(0.995 0 0);
 
   /* Sidebar — escura, como sempre foi. Fundo, texto, accent, borda, muted e
@@ -360,9 +377,9 @@
      (rgb 66,28,25 vs 59,28,35 do composto), agora mensuravel: 4.53:1. */
   --sidebar: oklch(0.17 0.02 260);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.68 0.22 25); /* vermelho/rosa mais vibrante em dark */
-  --sidebar-primary-foreground: oklch(0.145 0.02 260); /* texto ESCURO: 6.03:1 (era 3.15:1) */
-  --sidebar-primary-bg: oklch(0.28 0.06 25); /* tint OPACO — 4.53:1 */
+  --sidebar-primary: oklch(0.76 0.16 142.6); /* verde BFX no escuro — 9.42:1 na sidebar */
+  --sidebar-primary-foreground: oklch(0.145 0.02 260); /* texto ESCURO: 9.75:1 sobre o verde */
+  --sidebar-primary-bg: oklch(0.28 0.06 142.6); /* tint OPACO — 7.05:1 */
   --sidebar-accent: oklch(0.28 0.02 260);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.32 0.02 260);
