@@ -72,7 +72,7 @@ export function CatalogoPublicoClient({ produtos }: Props) {
           placeholder="Buscar produto, marca ou categoria..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-10 h-11 rounded-xl border-border bg-background shadow-sm"
+          className="pl-10 h-11 rounded-xl border-border bg-background"
           aria-label="Buscar produtos"
         />
       </div>
@@ -90,7 +90,7 @@ export function CatalogoPublicoClient({ produtos }: Props) {
             return (
             <article
               key={p.id}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm transition-all duration-300 hover:shadow-lg hover:border-info"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm dark:shadow-[var(--shadow-sm)] transition-all duration-300 hover:shadow-lg dark:hover:shadow-[var(--shadow-lg)] hover:border-info"
             >
               <div className="relative aspect-square bg-muted dark:bg-background">
                 <ProdutoImagem src={imgPath} alt={p.nome} />

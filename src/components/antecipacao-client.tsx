@@ -416,7 +416,11 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         </TableBody>
       </Table>
 
-      <Card className="mt-6 overflow-hidden border-2 border-primary/20 shadow-lg">
+      {/* Degrau de destaque (D-03): esta e a card principal da tela — total
+          selecionado + CTA de antecipar. A card de vencimentos abaixo (linha
+          ~534) e secundaria e fica no degrau de repouso, para nao ter dois
+          "flutuantes" na mesma superficie sem dialogo nem menu. */}
+      <Card className="mt-6 overflow-hidden border-2 border-primary/20 shadow-lg dark:shadow-[var(--shadow-lg)]">
         {/* Linha 1: Total + Métricas */}
         <div className="p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           {/* Total selecionado */}
@@ -510,7 +514,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           {/* CTA principal */}
           <Button
             disabled={selectedIds.length === 0 || isProcessing}
-            className="w-full sm:w-auto sm:ml-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-bold bg-success hover:bg-success/90 active:bg-success/80 text-success-foreground shadow-md hover:shadow-success/30 transition-all gap-2 cursor-pointer"
+            className="w-full sm:w-auto sm:ml-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-bold bg-success hover:bg-success/90 active:bg-success/80 text-success-foreground shadow-md dark:shadow-[var(--shadow-md)] hover:shadow-success/30 transition-all gap-2 cursor-pointer"
           >
             {isProcessing ? (
               <>
@@ -531,7 +535,11 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
       </Card>
 
       {Object.keys(vencimentosPorEmpresa).length > 0 && (
-        <Card className="mt-6 border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated p-6 shadow-lg">
+        {/* Degrau de repouso (D-03), colapsado de lg para md: card
+            secundaria (vencimentos por empresa) na mesma tela da card
+            principal acima — a escala e um degrau por nivel, nunca dois
+            "flutuantes" na mesma superficie. */}
+        <Card className="mt-6 border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated p-6 shadow-md dark:shadow-[var(--shadow-md)]">
           <div className="flex items-center gap-2 mb-4">
             <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">
               <svg className="h-5 w-5 text-warning-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -546,7 +554,9 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               .map(([empresa, valor]) => (
                 <div
                   key={empresa}
-                  className="group relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-warning/50 hover:shadow-md"
+                  // Sem sombra (D-03): chip tem borda propria e vive dentro
+                  // do Card — mesmo plano.
+                  className="group relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-warning/50"
                 >
                   <div className="text-xs font-medium text-muted-foreground truncate">{empresa}</div>
                   <div className="text-lg font-bold text-warning-text tabular-nums">{formatBRL(valor)}</div>

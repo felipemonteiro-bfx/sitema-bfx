@@ -193,7 +193,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
         <CardContent className="pt-4 space-y-4">
           {perfil.ultimaVenda && (
-            <div className="bg-white dark:bg-card rounded-xl p-4 border border-info shadow-sm">
+            {/* Sem sombra (D-03): bloco tem borda propria e vive dentro do
+                Card (que tem a sua) — mesmo plano. */}
+            <div className="bg-white dark:bg-card rounded-xl p-4 border border-info">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-info-text mb-2">
                 <Clock className="h-3.5 w-3.5" />
                 Última Compra
@@ -269,7 +271,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                     return (
                       <div
                         key={sugestao.id}
-                        className="flex items-center gap-3 p-3 bg-white dark:bg-card rounded-xl border border-info hover:shadow-md transition-all group cursor-pointer"
+                        // Sem sombra (D-03): linha da lista tem borda propria
+                        // e vive dentro do Card — mesmo plano.
+                        className="flex items-center gap-3 p-3 bg-white dark:bg-card rounded-xl border border-info transition-all group cursor-pointer"
                         onClick={() =>
                           onAddProduto({
                             id: sugestao.id,
@@ -353,7 +357,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                       {sugestoesProduto.upsell.slice(0, 2).map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-2.5 bg-white dark:bg-card rounded-lg border border-info hover:shadow-sm transition-all cursor-pointer group"
+                          // Sem sombra (D-03): item tem borda propria e vive
+                          // dentro do Card — mesmo plano.
+                          className="flex items-center justify-between p-2.5 bg-white dark:bg-card rounded-lg border border-info transition-all cursor-pointer group"
                           onClick={() =>
                             onAddProduto({
                               id: item.id,
@@ -394,7 +400,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                       {sugestoesProduto.crossSell.slice(0, 4).map((item) => (
                         <div
                           key={item.id}
-                          className="p-2.5 bg-white dark:bg-card rounded-lg border border-success hover:shadow-sm transition-all cursor-pointer group"
+                          // Sem sombra (D-03): item tem borda propria e vive
+                          // dentro do Card — mesmo plano.
+                          className="p-2.5 bg-white dark:bg-card rounded-lg border border-success transition-all cursor-pointer group"
                           onClick={() =>
                             onAddProduto({
                               id: item.id,

@@ -85,7 +85,7 @@ function NavItem({ item, isActive: active, index }: NavItemProps) {
         // fundo por baixo e nao e mensuravel pela catraca — o par medido
         // precisa ser o par renderizado.
         active
-          ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] shadow-md"
+          ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] shadow-md dark:shadow-[var(--shadow-md)]"
           : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]",
         "animate-fade-in-up fill-both"
       )}

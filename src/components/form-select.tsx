@@ -80,7 +80,9 @@ export function FormSelect({
             aria-expanded={open}
             id={id}
             className={cn(
-              "flex h-10 w-full items-center justify-between whitespace-nowrap rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm ring-offset-background transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
+              // Sem sombra (D-03): trigger tem border-2 propria e vive no
+              // mesmo plano do card/formulario — nao e um plano acima.
+              "flex h-10 w-full items-center justify-between whitespace-nowrap rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
               !value && "text-muted-foreground",
               className
             )}
@@ -89,7 +91,7 @@ export function FormSelect({
             <ChevronDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] rounded-xl border bg-popover p-2 shadow-md">
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] rounded-xl border bg-popover p-2">
           {searchable && (
             <div className="mb-2 flex items-center gap-2 border-b border-border/60 pb-2">
               <Search className="h-4 w-4 text-muted-foreground" />

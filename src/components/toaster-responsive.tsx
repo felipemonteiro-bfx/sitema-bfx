@@ -24,7 +24,7 @@ export function ToasterResponsive() {
       toastOptions={{
         duration: 4000,
         classNames: {
-          toast: "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg group-[.toaster]:rounded-xl",
+          toast: "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg dark:group-[.toaster]:shadow-[var(--shadow-lg)] group-[.toaster]:rounded-xl",
           title: "group-[.toast]:text-foreground group-[.toast]:font-semibold",
           description: "group-[.toast]:text-muted-foreground group-[.toast]:text-sm",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-lg group-[.toast]:font-medium",
