@@ -10,6 +10,7 @@ import {
   filtrarColunasPorPerfil,
   calcularLayoutPdf,
   truncarParaLargura,
+  resolverColunasParaExport,
   type VendaRelatorio,
 } from "@/lib/relatorio-vendas-colunas";
 
@@ -156,6 +157,23 @@ describe("calcularLayoutPdf", () => {
     const soma = layout.reduce((s, f) => s + f.largura, 0);
     expect(soma).toBeLessThanOrEqual(762 + 0.01);
     layout.forEach((f) => expect(f.largura).toBeGreaterThan(0));
+  });
+});
+
+describe("resolverColunasParaExport", () => {
+  it("nao-admin pedindo so colunas sensiveis cai no padrao, em vez de devolver relatorio vazio", () => {
+    const colunas = resolverColunasParaExport("margemPct,margemConsignavel", false);
+    expect(colunas.map((c) => c.key)).toEqual(COLUNAS_PADRAO);
+  });
+
+  it("admin pedindo so colunas sensiveis recebe exatamente essas colunas, sem cair no padrao", () => {
+    const colunas = resolverColunasParaExport("margemPct,margemConsignavel", true);
+    expect(colunas.map((c) => c.key)).toEqual(["margemPct", "margemConsignavel"]);
+  });
+
+  it("sem parametro colunas, nao-admin recebe o padrao normalmente", () => {
+    const colunas = resolverColunasParaExport(null, false);
+    expect(colunas.map((c) => c.key)).toEqual(COLUNAS_PADRAO);
   });
 });
 
