@@ -52,8 +52,53 @@ export function criarRegexTamanho(flags = "g") {
   return new RegExp(TAMANHO_ARBITRARIO_SOURCE, flags);
 }
 
+/**
+ * Remove comentário de código antes de contar.
+ *
+ * Sem isto, o comentário que DOCUMENTA a correção conta como se fosse a
+ * violação: `notification-bell.tsx` foi corrigido na onda 1 e o comentário que
+ * explica a troca cita `text-[9px]` na prosa — o contador daquele arquivo
+ * ficava travado em 1 para sempre, e a leitura natural seria "corrigir" código
+ * que já está certo. Mesmo cuidado que a varredura de CSS já tinha; faltava no
+ * lado do código.
+ */
+export function removerComentariosDeCodigo(texto) {
+  let saida = "";
+  let dentroDeBloco = false;
+
+  for (const linha of texto.split("\n")) {
+    let util = "";
+    let resto = linha;
+
+    while (resto.length > 0) {
+      if (dentroDeBloco) {
+        const fim = resto.indexOf("*/");
+        if (fim === -1) { resto = ""; break; }
+        dentroDeBloco = false;
+        resto = resto.slice(fim + 2);
+      } else {
+        const bloco = resto.indexOf("/*");
+        const linhaUnica = resto.indexOf("//");
+        // `//` dentro de string (ex.: uma URL) não abre comentário; o caso é
+        // raro em className e o custo de um falso negativo aqui é menor que o
+        // de um falso positivo permanente.
+        if (bloco === -1 && linhaUnica === -1) { util += resto; break; }
+        if (linhaUnica !== -1 && (bloco === -1 || linhaUnica < bloco)) {
+          util += resto.slice(0, linhaUnica);
+          break;
+        }
+        util += resto.slice(0, bloco);
+        dentroDeBloco = true;
+        resto = resto.slice(bloco + 2);
+      }
+    }
+    saida += util + "\n";
+  }
+  return saida;
+}
+
 export function acharTamanhosArbitrarios(texto) {
-  const partes = texto.split(criarRegexTamanho());
+  const partes = removerComentariosDeCodigo(texto).split(criarRegexTamanho());
   const achados = [];
   // split com 1 grupo de captura devolve [antes, grupo, entre, grupo, ...]
   for (let i = 1; i < partes.length; i += 2) achados.push(partes[i]);

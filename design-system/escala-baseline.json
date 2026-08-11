@@ -1,6 +1,6 @@
 {
-  "total": 66,
-  "totalTamanho": 62,
+  "total": 64,
+  "totalTamanho": 60,
   "totalCorCss": 4,
   "porArquivo": {
     "src/app/(app)/crm/page.tsx": {
@@ -59,12 +59,8 @@
       "tamanhoArbitrario": 1,
       "corCssPuro": 0
     },
-    "src/components/notification-bell.tsx": {
-      "tamanhoArbitrario": 1,
-      "corCssPuro": 0
-    },
     "src/components/produto-form-client.tsx": {
-      "tamanhoArbitrario": 3,
+      "tamanhoArbitrario": 2,
       "corCssPuro": 0
     },
     "src/components/produto-item-form.tsx": {
