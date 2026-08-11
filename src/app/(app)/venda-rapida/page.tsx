@@ -55,7 +55,7 @@ export default async function Page() {
         />
 
         {ultima && (
-          <div className="flex items-center gap-3 bg-card p-2 rounded-2xl shadow-sm border border-border pr-4">
+          <div className="flex items-center gap-3 bg-card p-2 rounded-2xl shadow-sm dark:shadow-[var(--shadow-sm)] border border-border pr-4">
             {/* O composto de 20% da propria matiz escurece o fundo e trava o
                 texto: mesmo com `--success-text` daria 4.22:1. Sobre o tint
                 OPACO o mesmo token da 4.75:1. Regra do design system: acima de
@@ -64,7 +64,7 @@ export default async function Page() {
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <div>
-              <div className="text-[10px] font-bold uppercase text-muted-foreground leading-none mb-1">Última Venda</div>
+              <div className="text-xs font-bold uppercase text-muted-foreground leading-none mb-1">Última Venda</div>
               <div className="text-sm font-bold text-foreground leading-none">{formatBRL(totalUltima)}</div>
             </div>
             <Separator orientation="vertical" className="h-8 mx-2" />
@@ -72,7 +72,7 @@ export default async function Page() {
               <ReciboDownloadLink
                 vendaId={ultima.id}
                 tipo={ultima.descontoEmFolha ? "autorizacao" : "venda"}
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-xs font-bold uppercase tracking-wider cursor-pointer")}
                 label={ultima.descontoEmFolha ? "Autorização" : "Recibo"}
               />
               {ultima.descontoEmFolha && ultima.assinaturaToken && (
@@ -91,7 +91,7 @@ export default async function Page() {
                 )}`}
                 target="_blank"
                 rel="noreferrer"
-                className={cn(buttonVariants({ variant: "success", size: "sm" }), "h-8 text-[10px] font-bold uppercase tracking-wider cursor-pointer")}
+                className={cn(buttonVariants({ variant: "success", size: "sm" }), "h-8 text-xs font-bold uppercase tracking-wider cursor-pointer")}
               >
                 WhatsApp
               </a>

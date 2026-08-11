@@ -1,6 +1,6 @@
 {
-  "total": 59,
-  "totalTamanho": 59,
+  "total": 56,
+  "totalTamanho": 56,
   "totalCorCss": 0,
   "porArquivo": {
     "src/app/(app)/crm/page.tsx": {
@@ -13,10 +13,6 @@
     },
     "src/app/(app)/historico/page.tsx": {
       "tamanhoArbitrario": 2,
-      "corCssPuro": 0
-    },
-    "src/app/(app)/venda-rapida/page.tsx": {
-      "tamanhoArbitrario": 3,
       "corCssPuro": 0
     },
     "src/components/antecipacao-client.tsx": {
