@@ -220,19 +220,19 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
               <TrendingUp className="h-4 w-4 mx-auto text-info-text mb-1" />
-              <div className="text-[10px] font-bold uppercase text-muted-foreground">Ticket Médio</div>
+              <div className="text-xs font-bold uppercase text-muted-foreground">Ticket Médio</div>
               <div className="text-sm font-bold text-foreground">{formatBRL(perfil.metricas.ticketMedio)}</div>
             </div>
             <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
               <DollarSign className="h-4 w-4 mx-auto text-success-text mb-1" />
-              <div className="text-[10px] font-bold uppercase text-muted-foreground">Renda</div>
+              <div className="text-xs font-bold uppercase text-muted-foreground">Renda</div>
               <div className="text-sm font-bold text-foreground">
                 {perfil.cliente.renda ? formatBRL(perfil.cliente.renda) : "N/I"}
               </div>
             </div>
             <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
               <Target className="h-4 w-4 mx-auto text-info-text mb-1" />
-              <div className="text-[10px] font-bold uppercase text-muted-foreground">Capacidade</div>
+              <div className="text-xs font-bold uppercase text-muted-foreground">Capacidade</div>
               <div className="text-sm font-bold text-foreground">{formatBRL(perfil.metricas.capacidadeCompra)}</div>
             </div>
           </div>
@@ -243,7 +243,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                 <Badge
                   key={cat}
                   variant="secondary"
-                  className="text-[10px] bg-info-bg text-info-text border-0"
+                  className="text-xs bg-info-bg text-info-text border-0"
                 >
                   {cat}
                 </Badge>
@@ -293,7 +293,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           <div className="text-sm font-semibold text-foreground truncate group-hover:text-info-text transition-colors">
                             {sugestao.nome}
                           </div>
-                          <div className="text-[10px] text-muted-foreground">{sugestao.motivo}</div>
+                          <div className="text-xs text-muted-foreground">{sugestao.motivo}</div>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <div className="text-sm font-bold text-info-text">
@@ -302,7 +302,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 px-2 text-[10px] text-info-text hover:bg-info-bg"
+                            className="h-6 px-2 text-xs text-info-text hover:bg-info-bg"
                             onClick={(e) => {
                               e.stopPropagation();
                               onAddProduto({
@@ -345,7 +345,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
               <div className="space-y-3">
                 {sugestoesProduto.upsell && sugestoesProduto.upsell.length > 0 && (
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-info-text mb-2 flex items-center gap-1">
+                    <div className="text-xs font-bold uppercase tracking-wider text-info-text mb-2 flex items-center gap-1">
                       <ArrowUpRight className="h-3 w-3" />
                       Upsell - Versão Superior
                     </div>
@@ -366,7 +366,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                             <div className="text-xs font-semibold text-foreground truncate group-hover:text-info-text">
                               {item.nome}
                             </div>
-                            <div className="text-[10px] text-muted-foreground">{item.label}</div>
+                            <div className="text-xs text-muted-foreground">{item.label}</div>
                           </div>
                           <div className="flex items-center gap-2">
                             {item.diferenca && item.diferenca > 0 && (
@@ -386,7 +386,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
                 {sugestoesProduto.crossSell && sugestoesProduto.crossSell.length > 0 && (
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-success-text mb-2 flex items-center gap-1">
+                    <div className="text-xs font-bold uppercase tracking-wider text-success-text mb-2 flex items-center gap-1">
                       <Plus className="h-3 w-3" />
                       Cross-sell - Complemente a Venda
                     </div>
@@ -407,7 +407,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                             {item.nome}
                           </div>
                           <div className="flex items-center justify-between mt-1">
-                            <span className="text-[10px] text-muted-foreground truncate flex-1">
+                            <span className="text-xs text-muted-foreground truncate flex-1">
                               {item.label}
                             </span>
                             <span className="text-xs font-bold text-success-text ml-2">
@@ -423,7 +423,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                 {sugestoesProduto.bundle && (
                   <div className="bg-warning-bg rounded-xl p-3 border border-warning">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-warning-text flex items-center gap-1">
+                      <div className="text-xs font-bold uppercase tracking-wider text-warning-text flex items-center gap-1">
                         <ShoppingBag className="h-3 w-3" />
                         {sugestoesProduto.bundle.label}
                       </div>

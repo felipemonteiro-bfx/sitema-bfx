@@ -1,6 +1,6 @@
 {
-  "total": 42,
-  "totalTamanho": 42,
+  "total": 31,
+  "totalTamanho": 31,
   "totalCorCss": 0,
   "porArquivo": {
     "src/app/(app)/crm/page.tsx": {
@@ -17,10 +17,6 @@
     },
     "src/components/antecipacao-client.tsx": {
       "tamanhoArbitrario": 5,
-      "corCssPuro": 0
-    },
-    "src/components/bfx-intelligence-panel.tsx": {
-      "tamanhoArbitrario": 11,
       "corCssPuro": 0
     },
     "src/components/cadastrar-produto-rapido-dialog.tsx": {
