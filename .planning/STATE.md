@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-08-03)
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-08-10 — Completed quick task 260810-f21: custo real do Uber Direct como custo no financeiro
+Last activity: 2026-08-11 — Completed quick tasks 260811-coa (colunas do relatorio), 260811-cym (senha + hash scrypt) e 260811-ddr (parcelas na edicao de venda)
 
 ## Performance Metrics
 
@@ -162,6 +162,9 @@ None yet.
 | 18 | Se não tiver email configurado enviar notificação via WhatsApp (não impeditivo fallback email→WhatsApp). Fix /venda-rapida clicar na data quebra o sistema. | 2026-04-02 | 0e6582c | Verified | [260402-ix6-se-n-o-tiver-email-configurado-enviar-no](./quick/260402-ix6-se-n-o-tiver-email-configurado-enviar-no/) |
 | 19 | Planilha das vendas do mes de marco em excel | 2026-04-13 | 01ad52e | — | [260413-bug-quero-uma-planilha-das-vendas-do-mes-de-](./quick/260413-bug-quero-uma-planilha-das-vendas-do-mes-de-/) |
 | 260810-f21 | Capturar o custo real do Uber Direct por entrega e lancar como custo no financeiro | 2026-08-10 | 6911008 | Verified | [260810-f21-capturar-o-custo-real-do-uber-direct-por](./quick/260810-f21-capturar-o-custo-real-do-uber-direct-por/) |
+| 260811-coa | Selecao de colunas nos relatorios de vendas (CSV e PDF) | 2026-08-11 | 5bdbf6f | Reviewed | [260811-coa-selecao-de-colunas-nos-relatorios-de-ven](./quick/260811-coa-selecao-de-colunas-nos-relatorios-de-ven/) |
+| 260811-cym | Redefinicao de senha (admin e proprio usuario) + hash scrypt com migracao transparente | 2026-08-11 | 6bb8487 | Reviewed | [260811-cym-redefinicao-de-senha-e-hash-de-senhas](./quick/260811-cym-redefinicao-de-senha-e-hash-de-senhas/) |
+| 260811-ddr | Parcelas na edicao de venda acompanham a quantidade + UX do formulario | 2026-08-11 | 6ead7cc | Reviewed | [260811-ddr-parcelas-na-edicao-de-venda-e-ux-do-form](./quick/260811-ddr-parcelas-na-edicao-de-venda-e-ux-do-form/) |
 
 ## Session Continuity
 
