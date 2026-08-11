@@ -317,13 +317,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 name="tagId"
                                 defaultValue=""
                                 searchable={false}
-                                className="h-9 w-28 rounded-md px-2 text-[11px]"
+                                className="h-9 w-28 rounded-md px-2 text-xs"
                                 placeholder="+tag"
                                 options={tags.map((t) => ({ value: String(t.id), label: t.nome }))}
                               />
                               <button
                                 type="submit"
-                                className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0 text-[11px]")}
+                                className={cn(buttonVariants({ variant: "link", size: "sm" }), "h-auto p-0 text-xs")}
                               >
                                 ok
                               </button>

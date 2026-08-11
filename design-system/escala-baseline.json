@@ -1,12 +1,8 @@
 {
-  "total": 21,
-  "totalTamanho": 21,
+  "total": 19,
+  "totalTamanho": 19,
   "totalCorCss": 0,
   "porArquivo": {
-    "src/app/(app)/crm/page.tsx": {
-      "tamanhoArbitrario": 2,
-      "corCssPuro": 0
-    },
     "src/app/(app)/financeiro/page.tsx": {
       "tamanhoArbitrario": 2,
       "corCssPuro": 0
