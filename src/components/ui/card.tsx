@@ -15,10 +15,7 @@ const cardVariants = cva(
         ghost: "shadow-none hover:bg-card/50 hover:shadow-sm",
         glass: "glass border border-white/20 dark:border-white/10 shadow-lg backdrop-blur-xl",
         interactive: "border border-border bg-card shadow-md cursor-pointer hover:scale-[1.02] hover:shadow-xl hover:border-accent/50 active:scale-[0.98] dark:shadow-[var(--shadow-md)] dark:hover:shadow-[var(--glow-primary)]",
-        // A variante `gradient` foi removida junto com a direcao "Sobrio": era
-        // o unico fundo em degrade que restava, ficou sem nenhum uso quando o
-        // cabecalho do dashboard passou a `elevated`, e mante-la disponivel so
-        // convidaria a reintroduzir o padrao que acabamos de tirar.
+        gradient: "border-0 bg-gradient-to-br from-card to-muted/50 shadow-lg dark:from-card dark:to-card-elevated",
       },
       animated: {
         true: "animate-fade-in-up",
@@ -138,41 +135,33 @@ const colorConfig: Record<
     glow: "",
     value: "",
   },
-  // Direcao "Sobrio" (escolhida pelo Andre em 2026-08-11): o KPI e uma
-  // superficie NEUTRA. Sai o fundo em degrade colorido e a borda tingida — com
-  // quatro cores lado a lado, cada card puxava atencao para si e nenhum vencia.
-  // A cor sobrevive onde carrega informacao: o tint do icone (identifica a
-  // metrica de relance) e a seta de tendencia (diz se subiu ou desceu). O
-  // numero passa a herdar --foreground, o texto de maior contraste da tela.
   success: {
     icon: "bg-success/10 text-success-text dark:bg-success/20",
-    border: "border-border",
-    bg: "",
-    glow: "",
-    value: "",
+    border: "border-success/30 dark:border-success/40",
+    bg: "bg-gradient-to-br from-success/5 to-transparent dark:from-success/10",
+    glow: "dark:shadow-[var(--glow-primary)]",
+    value: "text-success-text",
   },
   warning: {
     icon: "bg-warning/10 text-warning-text dark:bg-warning/20",
-    border: "border-border",
-    bg: "",
+    border: "border-warning/30 dark:border-warning/40",
+    bg: "bg-gradient-to-br from-warning/5 to-transparent dark:from-warning/10",
     glow: "",
-    value: "",
+    value: "text-warning-text",
   },
   error: {
     icon: "bg-error-bg text-error-text dark:bg-error/20",
-    border: "border-border",
-    bg: "",
+    border: "border-error/30 dark:border-error/40",
+    bg: "bg-gradient-to-br from-error/5 to-transparent dark:from-error/10",
     glow: "",
-    // Unica excecao ao numero neutro: prejuizo/inadimplencia e o caso em que a
-    // cor do proprio valor E a informacao, e nao enfeite.
     value: "text-error-text",
   },
   info: {
     icon: "bg-info/10 text-info-text dark:bg-info/20",
-    border: "border-border",
-    bg: "",
+    border: "border-info/30 dark:border-info/40",
+    bg: "bg-gradient-to-br from-info/5 to-transparent dark:from-info/10",
     glow: "",
-    value: "",
+    value: "text-info-text",
   },
 }
 
@@ -233,10 +222,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
         )}
         {...props}
       >
-        {/* Condicao pelo proprio `bg`, nao mais por `color !== "default"`: sem
-            degrade a camada ficava presente e transparente em todo KPI colorido,
-            um elemento absoluto que so cobria o card sem pintar nada. */}
-        {colorStyles.bg && (
+        {color !== "default" && (
           <div className={cn("absolute inset-0", colorStyles.bg)} />
         )}
         
