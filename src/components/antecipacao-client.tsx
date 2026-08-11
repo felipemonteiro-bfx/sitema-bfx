@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileSpreadsheet, ImageIcon, Loader2 } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import { TAXA_MENSAL_PADRAO, calcularAntecipacao, parsePeriodoMesAno, titulosDeVenda } from "@/lib/antecipacao";
+import { formatarDataPura } from "@/lib/data-pura";
 
 interface ParcelaDetalhe {
   numeroParcela: number;
@@ -232,10 +233,8 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const selectableInFiltered = vendasFiltradas.filter(v => v.status !== 'antecipado');
   const allFilteredSelected = selectableInFiltered.length > 0 && selectableInFiltered.every(v => selectedIds.includes(v.id));
 
-  const formatDateBR = (value: string | Date) => {
-    const d = typeof value === 'string' ? new Date(value) : value;
-    return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(d);
-  };
+  // Vencimento de parcela e data pura — ver src/lib/data-pura.ts
+  const formatDateBR = formatarDataPura;
 
   return (
     <form action={handleAction}>

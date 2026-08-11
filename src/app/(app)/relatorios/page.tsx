@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { ReportButtonsClient } from "@/components/report-buttons-client";
 import { cn } from "@/lib/utils";
 import { montarEmpresaOptions } from "@/lib/empresa-options";
+import { formatarDataPura } from "@/lib/data-pura";
 
 export default async function Page() {
   const ok = await requireAdmin();
@@ -26,8 +27,9 @@ export default async function Page() {
   // exclui empresas cujo nome coincida com o de um fornecedor.
   const empresaOptions = montarEmpresaOptions(empresas, fornecedores);
 
-  const formatDateBR = (value: string) =>
-    new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(new Date(value + "T00:00:00"));
+  // Era `new Date(value + "T00:00:00")` (parse LOCAL) formatado em Manaus — dois
+  // deslocamentos somados. Data pura se le e se exibe em UTC.
+  const formatDateBR = formatarDataPura;
 
   return (
     <div className="space-y-6">

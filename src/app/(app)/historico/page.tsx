@@ -28,9 +28,11 @@ import {
   formaPagamentoLabel,
 } from "@/lib/forma-pagamento";
 import { resolverPeriodo, paraInputDate, fimInclusivoParaInput } from "@/lib/periodo-data";
+import { formatarDataPura } from "@/lib/data-pura";
 
-const formatDateBR = (value: Date) =>
-  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
+// Data de venda e data pura (meia-noite UTC): formatar em Manaus mostrava o dia
+// anterior — 02/07 virava 01/07 — e fazia o filtro de periodo parecer quebrado.
+const formatDateBR = formatarDataPura;
 
 type Search = {
   from?: string;

@@ -2,15 +2,14 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { formatarDataPura } from "@/lib/data-pura";
 
 function formatBRL(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
 
-function formatDateBR(value: Date | string): string {
-  const d = typeof value === "string" ? new Date(value) : value;
-  return new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(d);
-}
+// Vencimento de parcela e data pura — ver src/lib/data-pura.ts
+const formatDateBR = formatarDataPura;
 
 function getMesAnoLabel(date: Date): string {
   const months = ["Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];

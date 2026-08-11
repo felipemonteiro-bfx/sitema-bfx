@@ -10,9 +10,10 @@ import { custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { FORMA_PAGAMENTO, formaFromLegacyFlags, formaPagamentoLabel } from "@/lib/forma-pagamento";
 import { useState, startTransition } from "react";
 import { useRouter } from "next/navigation";
+import { formatarDataPura } from "@/lib/data-pura";
 
-const formatDateBR = (value: Date) =>
-  new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(value);
+// Mesma data pura da tabela: ver src/lib/data-pura.ts
+const formatDateBR = formatarDataPura;
 
 type SearchParams = {
   from?: string;

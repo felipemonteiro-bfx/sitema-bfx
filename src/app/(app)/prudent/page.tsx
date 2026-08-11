@@ -7,6 +7,7 @@ import { revalidarVenda } from "@/lib/revalidacao";
 import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 import { PageHeader } from "@/components/page-header";
+import { formatarMesAnoPuro } from "@/lib/data-pura";
 
 export const dynamic = "force-dynamic";
 
@@ -52,8 +53,8 @@ async function antecipar(formData: FormData) {
   const periodoInicio = datas[0] || null;
   const periodoFim = datas[datas.length - 1] || null;
 
-  const formatMesAno = (d: Date) =>
-    d.toLocaleDateString("pt-BR", { month: "short", year: "numeric", timeZone: "America/Manaus" });
+  // Vencimento e data pura: em Manaus o dia 1 do mes virava o mes anterior no rotulo.
+  const formatMesAno = formatarMesAnoPuro;
 
   const periodoDescricao =
     periodoInicio && periodoFim
