@@ -199,7 +199,7 @@ export function IntelligenceChatClient({
         ) : (
           optimisticHistory.map((m, i) => (
             <div key={`${m.at}-${i}`} className="space-y-3">
-              <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-muted-foreground sm:text-xs">
+              <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
                 {/* A pilula so aparece quando o provedor e conhecido. Mantem o
                     preenchimento `bg-muted` (sobre `--card` um `bg-card` daria
                     1.00:1 e o chip sumiria); o que muda e o texto, que sai de

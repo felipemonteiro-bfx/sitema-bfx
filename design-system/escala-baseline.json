@@ -1,12 +1,8 @@
 {
-  "total": 4,
-  "totalTamanho": 4,
+  "total": 3,
+  "totalTamanho": 3,
   "totalCorCss": 0,
   "porArquivo": {
-    "src/components/intelligence-chat-client.tsx": {
-      "tamanhoArbitrario": 1,
-      "corCssPuro": 0
-    },
     "src/components/link-assinatura-button.tsx": {
       "tamanhoArbitrario": 1,
       "corCssPuro": 0
