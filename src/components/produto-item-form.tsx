@@ -276,7 +276,14 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           {/* Resumo */}
           <div className="lg:col-span-3 pt-3 border-t border-border space-y-2">
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg bg-muted/30 px-3 py-2 text-center">
+              {/* Tint OPACO como os dois vizinhos. Este era o unico dos tres que
+                  ainda usava composto (`bg-muted/30`) — a correcao que criou o
+                  `-bg` opaco passou por Lucro e Margem e esqueceu o Subtotal,
+                  entao os tres blocos de resultado tinham fundos de naturezas
+                  diferentes lado a lado. O contraste do composto passava (4,64
+                  claro / 7,74 escuro), entao isto e consistencia, nao correcao
+                  de acessibilidade. */}
+              <div className="rounded-lg bg-muted px-3 py-2 text-center">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
                 <div className="text-sm font-bold text-foreground">{formatBRL(item.subtotal)}</div>
               </div>
@@ -290,9 +297,26 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro</div>
                 <div className="text-sm font-bold text-success-text">{formatBRL(lucro)}</div>
               </div>
-              <div className="rounded-lg bg-info-bg px-3 py-2 text-center">
+              {/* Margem por FAIXA, como no Dashboard e no Historico
+                  (`>= 20` bom, `>= 10` atencao, abaixo disso ruim). Aqui ela era
+                  azul fixo: azul nao diz nada sobre a margem estar boa ou ruim, e
+                  a mesma metrica mudava de linguagem conforme a tela. Agora a cor
+                  carrega informacao, que e o criterio da identidade. */}
+              <div
+                className={cn(
+                  "rounded-lg px-3 py-2 text-center",
+                  margem >= 20 ? "bg-success-bg" : margem >= 10 ? "bg-warning-bg" : "bg-error-bg"
+                )}
+              >
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
-                <div className="text-sm font-bold text-info-text">{margem.toFixed(1)}%</div>
+                <div
+                  className={cn(
+                    "text-sm font-bold",
+                    margem >= 20 ? "text-success-text" : margem >= 10 ? "text-warning-text" : "text-error-text"
+                  )}
+                >
+                  {margem.toFixed(1)}%
+                </div>
               </div>
             </div>
           </div>
