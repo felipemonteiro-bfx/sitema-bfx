@@ -1,6 +1,6 @@
 {
-  "total": 56,
-  "totalTamanho": 56,
+  "total": 42,
+  "totalTamanho": 42,
   "totalCorCss": 0,
   "porArquivo": {
     "src/app/(app)/crm/page.tsx": {
@@ -69,10 +69,6 @@
     },
     "src/components/ui/calendar.tsx": {
       "tamanhoArbitrario": 1,
-      "corCssPuro": 0
-    },
-    "src/components/venda-rapida-form-v2.tsx": {
-      "tamanhoArbitrario": 14,
       "corCssPuro": 0
     }
   }

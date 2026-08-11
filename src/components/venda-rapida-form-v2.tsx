@@ -794,7 +794,7 @@ export default function VendaRapidaFormV2({
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{c.nome}</div>
                       {c.renda && c.renda > 0 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success-text font-medium">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success-text font-medium">
                           Renda: {formatBRL(c.renda)}
                         </span>
                       )}
@@ -804,7 +804,7 @@ export default function VendaRapidaFormV2({
                         {c.cpf || c.cnpj || "Sem documento"}
                       </span>
                       {c.ultimaVenda && (
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           Última: {formatBRL(c.ultimaVenda.valor)} em {c.ultimaVenda.data.split("-").reverse().join("/")}
                         </span>
                       )}
@@ -872,15 +872,15 @@ export default function VendaRapidaFormV2({
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div>
-                <div className="text-[10px] font-bold uppercase text-muted-foreground">Limite</div>
+                <div className="text-xs font-bold uppercase text-muted-foreground">Limite</div>
                 <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.margemTotal)}</div>
               </div>
               <div>
-                <div className="text-[10px] font-bold uppercase text-muted-foreground">Comprometido</div>
+                <div className="text-xs font-bold uppercase text-muted-foreground">Comprometido</div>
                 <div className="text-sm font-bold text-foreground">{formatBRL(limiteData.comprometimentoAtual)}</div>
               </div>
               <div>
-                <div className="text-[10px] font-bold uppercase text-muted-foreground">Disponível</div>
+                <div className="text-xs font-bold uppercase text-muted-foreground">Disponível</div>
                 <div
                   className={cn(
                     "text-sm font-bold",
@@ -1013,7 +1013,7 @@ export default function VendaRapidaFormV2({
                 placeholder="0"
               />
               {pontosResgatar > 0 && (
-                <p className="text-[11px] text-success-text">
+                <p className="text-xs text-success-text">
                   Desconto por pontos: -{formatBRL(descontoPontos)} (limitado ao saldo do cliente)
                 </p>
               )}
@@ -1120,19 +1120,19 @@ export default function VendaRapidaFormV2({
               icone de /venda-rapida. O escuro passava nos dois casos. */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
               <div className="text-base font-bold text-foreground">{formatBRL(subtotalProdutos)}</div>
             </div>
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Frete</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Frete</div>
               <div className="text-base font-bold text-foreground">{formatBRL(numFrete)}</div>
             </div>
             <div className="rounded-lg bg-primary/5 px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Venda</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Total Venda</div>
               <div className="text-lg font-bold text-primary">{formatBRL(totalVenda)}</div>
             </div>
             <div className="rounded-lg bg-info-bg px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
               <div className="text-base font-bold text-info-text">{formatBRL(totalVenda / numParcelas)}</div>
             </div>
           </div>
@@ -1145,19 +1145,19 @@ export default function VendaRapidaFormV2({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Custo Total</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Custo Total</div>
               <div className="text-base font-bold text-foreground">{formatBRL(custoTotal)}</div>
             </div>
             <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
               <div className="text-base font-bold text-success-text">{formatBRL(lucroBruto)}</div>
             </div>
             <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
               <div className="text-base font-bold text-success-text">{margemPct.toFixed(1)}%</div>
             </div>
             <div className="rounded-lg bg-warning-bg px-3 py-2.5 text-center">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
               <div className="text-base font-bold text-warning-text">{formatBRL(valorComissao)}</div>
             </div>
           </div>
