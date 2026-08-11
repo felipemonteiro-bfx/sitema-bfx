@@ -1,6 +1,6 @@
 {
-  "total": 24,
-  "totalTamanho": 24,
+  "total": 21,
+  "totalTamanho": 21,
   "totalCorCss": 0,
   "porArquivo": {
     "src/app/(app)/crm/page.tsx": {
@@ -37,10 +37,6 @@
     },
     "src/components/link-assinatura-button.tsx": {
       "tamanhoArbitrario": 1,
-      "corCssPuro": 0
-    },
-    "src/components/produto-item-form.tsx": {
-      "tamanhoArbitrario": 3,
       "corCssPuro": 0
     },
     "src/components/produtos-tab-client.tsx": {

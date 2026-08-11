@@ -277,7 +277,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
           <div className="lg:col-span-3 pt-3 border-t border-border space-y-2">
             <div className="grid grid-cols-3 gap-3">
               <div className="rounded-lg bg-muted/30 px-3 py-2 text-center">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Subtotal</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
                 <div className="text-sm font-bold text-foreground">{formatBRL(item.subtotal)}</div>
               </div>
               {/* Tint OPACO (`bg-<sem>-bg`), nao o composto `bg-<sem>/5`: este
@@ -287,11 +287,11 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   valor a 4.47 e 4.43. Mesma decisao dos tiles do "Resumo
                   Financeiro", logo abaixo nesta mesma tela. */}
               <div className="rounded-lg bg-success-bg px-3 py-2 text-center">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Lucro</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro</div>
                 <div className="text-sm font-bold text-success-text">{formatBRL(lucro)}</div>
               </div>
               <div className="rounded-lg bg-info-bg px-3 py-2 text-center">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Margem</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
                 <div className="text-sm font-bold text-info-text">{margem.toFixed(1)}%</div>
               </div>
             </div>
