@@ -56,7 +56,7 @@ export default async function Page() {
             </div>
             
             <div className="flex flex-wrap gap-2 border-t pt-4">
-              <span className="w-full text-[10px] font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
+              <span className="w-full text-xs font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
               {empresaOptions.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   Nenhuma empresa parceira elegível encontrada. Cadastre uma em{" "}
@@ -67,7 +67,7 @@ export default async function Page() {
                   <a
                     key={empresa}
                     href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-destructive/30 text-destructive hover:bg-destructive/5")}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
                   >
                     PDF {empresa}
                   </a>
