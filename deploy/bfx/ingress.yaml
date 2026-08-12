@@ -1,15 +1,32 @@
-# /produtos -> bfx-minio:9000 torna os objetos do bucket (imagens de produto e
-# logo, MINIO_PUBLIC_URL=https://bfx.softlive.dev + MINIO_BUCKET=produtos)
-# alcancaveis pelo navegador: uploadToMinIO devolve
-# ${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key} e o MinIO usa path-style, entao
-# https://bfx.softlive.dev/produtos/<key> chega no objeto sem reescrita.
+# Os objetos publicos do bucket sao servidos PELO APP, nao por um backend de
+# storage no Ingress.
 #
-# RESTRICAO: nao criar uma pagina Next em /produtos — hoje nao existe
-# (src/app/(app) nao tem essa rota; /api/produtos fica sob /api e nao colide)
-# e o Traefik resolve pelo prefixo mais longo, entao uma rota Next em
-# /produtos teria que competir com este path do MinIO.
+# Ate 2026-08-12 havia aqui um path `/produtos` -> `bfx-minio:9000`. Ele existia
+# porque `uploadToMinIO` devolve `${MINIO_PUBLIC_URL}/${MINIO_BUCKET}/${key}` =
+# `https://bfx.softlive.dev/produtos/<key>`, e o MinIO path-style entregava o
+# objeto sem reescrita nenhuma.
 #
-# O console de administracao do MinIO (porta 9001) fica de fora de proposito
+# POR QUE SAIU
+#
+# O `bfx-minio` esta em replicas=0 desde a consolidacao dos Garages e o app
+# passou a gravar em `garage.hiper:3900`. A regra ficou apontando para um
+# Service sem endpoint: 503 em toda imagem de produto. Nao doia ainda so porque
+# o bucket estava com zero objeto — o primeiro upload e que quebraria.
+#
+# POR QUE NAO BASTAVA REPONTAR PARA O GARAGE
+#
+# Exigiria leitura anonima no bucket, e `produtos` nao guarda so imagem: tem
+# tambem `recibos/assinado-<venda>-<ts>.pdf` e
+# `relatorios/mensal/<periodo>/<empresa>`, de chave adivinhavel. Abrir o bucket
+# publicaria recibo assinado e relatorio de vendas junto com as fotos.
+#
+# Sem este path, `/produtos/<key>` cai no catch-all `/` e quem responde e o
+# route handler `src/app/produtos/[...chave]/route.ts`, que le do Garage com a
+# credencial do app (`app-bfx`, RWO so em `produtos`) e libera por allowlist —
+# imagem na raiz e `logo/`, o resto 404. A restricao antiga ("nao criar pagina
+# Next em /produtos") caiu junto: agora e exatamente o app que deve atender ali.
+#
+# O console de administracao do MinIO (porta 9001) segue de fora de proposito
 # — ver T-05-06 no threat model do plano 05-02.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -24,13 +41,6 @@ spec:
     - host: bfx.softlive.dev
       http:
         paths:
-          - path: /produtos
-            pathType: Prefix
-            backend:
-              service:
-                name: bfx-minio
-                port:
-                  number: 9000
           - path: /
             pathType: Prefix
             backend:
