@@ -4,6 +4,7 @@
 
 import {
   S3Client,
+  GetObjectCommand,
   PutObjectCommand,
   CreateBucketCommand,
   HeadBucketCommand,
@@ -76,6 +77,47 @@ export async function uploadToMinIO(
 
 export function isMinIOConfigured(): boolean {
   return storageConfigurado(process.env);
+}
+
+export interface ObjetoLido {
+  corpo: ReadableStream<Uint8Array>;
+  contentType: string;
+  contentLength: number | null;
+  etag: string | null;
+  lastModified: Date | null;
+}
+
+/**
+ * Le um objeto do bucket para servir por HTTP.
+ *
+ * NAO valida se a chave pode ser publicada — quem chama decide, com
+ * `chavePublica()` de `@/lib/storage-policy`. Manter a decisao la mantem a
+ * regra num modulo puro e testavel.
+ *
+ * Devolve null quando o storage nao esta configurado ou a chave nao existe;
+ * qualquer outro erro sobe, para nao mascarar falha de credencial ou de rede
+ * como "arquivo ausente".
+ */
+export async function lerObjeto(chave: string): Promise<ObjetoLido | null> {
+  const client = getClient();
+  if (!client) return null;
+
+  try {
+    const r = await client.send(new GetObjectCommand({ Bucket: bucket, Key: chave }));
+    if (!r.Body) return null;
+    return {
+      corpo: (r.Body as { transformToWebStream: () => ReadableStream<Uint8Array> }).transformToWebStream(),
+      contentType: r.ContentType ?? "application/octet-stream",
+      contentLength: typeof r.ContentLength === "number" ? r.ContentLength : null,
+      etag: r.ETag ?? null,
+      lastModified: r.LastModified ?? null,
+    };
+  } catch (e) {
+    const nome = (e as { name?: string }).name;
+    const status = (e as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    if (nome === "NoSuchKey" || nome === "NotFound" || status === 404) return null;
+    throw e;
+  }
 }
 
 /**

@@ -31,6 +31,39 @@ export function montarChaveLogo(nomeArquivo: string, agoraMs: number): string {
   return `${LOGO_PREFIX}${agoraMs}-${sanitizarNomeArquivo(nomeArquivo)}`;
 }
 
+/**
+ * O bucket `produtos` NAO e so de imagem. Hoje ele recebe quatro coisas:
+ *
+ *   <ts>-<nome>                       imagem de produto  (URL guardada e exibida)
+ *   logo/<ts>-<nome>                  logo da empresa    (URL guardada e exibida)
+ *   recibos/assinado-<venda>-<ts>.pdf recibo assinado    (URL DESCARTADA)
+ *   relatorios/mensal/<per>/<id>.pdf  relatorio mensal   (URL DESCARTADA)
+ *
+ * Os dois ultimos sao copia redundante: o recibo autoritativo esta na tabela
+ * `Documento` e o relatorio e regenerado no download. Ninguem busca essas
+ * chaves por HTTP — e elas nao podem ser servidas ao publico, porque a chave e
+ * adivinhavel (id da venda, periodo + id da empresa).
+ *
+ * Por isso a regra e ALLOWLIST, nao blocklist: chave nova cai em negado por
+ * padrao. Acrescentar prefixo aqui e uma decisao consciente de publicar.
+ */
+export function chavePublica(chave: string): boolean {
+  if (!chave) return false;
+  // Path traversal e chave absoluta nunca passam, mesmo que o resto casasse.
+  if (chave.includes("..") || chave.startsWith("/")) return false;
+  // Segmento vazio ("a//b") vira caminho ambiguo no S3; recusa.
+  if (chave.includes("//")) return false;
+
+  const barras = chave.split("/").length - 1;
+  // Imagem de produto: chave na raiz do bucket, sem prefixo nenhum.
+  if (barras === 0) return true;
+  // Logo: exatamente um nivel sob `logo/`.
+  if (barras === 1 && chave.startsWith(LOGO_PREFIX)) {
+    return chave.length > LOGO_PREFIX.length;
+  }
+  return false;
+}
+
 export function ehUrlAbsoluta(logoPath: string): boolean {
   return logoPath.startsWith("http://") || logoPath.startsWith("https://");
 }
