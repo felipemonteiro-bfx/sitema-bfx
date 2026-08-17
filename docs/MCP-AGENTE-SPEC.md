@@ -121,6 +121,32 @@ afinidade de pod) para nada: a autenticação já viaja em toda requisição, no
 Bearer, e é ela que carrega o escopo. Sem sessão, qualquer réplica atende
 qualquer chamada.
 
+## O estado de identificação viaja no `initialize`
+
+Medido rodando de verdade, com o modelo real do proxy: instruído apenas pelo
+prompt, o modelo barato **pede CPF ao cliente antes de chamar qualquer
+ferramenta**. A mensagem de erro da ferramenta — que já explica que não existe
+consulta por documento — nunca chegava a ser lida, porque a ferramenta nunca
+era chamada. Reforçar o prompt não resolveu de forma confiável.
+
+O campo `instructions` do `initialize` é o mecanismo que a spec do MCP prevê
+para o servidor orientar o cliente sobre como usá-lo, e o cliente o coloca no
+prompt do modelo. É o único canal do servidor que chega ao modelo **antes** de
+ele decidir o que dizer. Então é ele que carrega o estado de identificação:
+
+- identificado → "O cliente desta conversa é *Fulano*, já identificado."
+- sem cadastro → "ATENÇÃO: ... ofereça encaminhar para um atendente."
+- ambíguo → "ATENÇÃO: ... um atendente vai confirmar a identidade."
+
+Custa uma resolução de identidade por sessão. Em troca, o modelo abre a
+conversa sabendo com quem fala, e o comportamento deixa de depender de ele
+escolher chamar a ferramenta primeiro.
+
+Pelo mesmo motivo, o erro de identificação devolve dois campos separados e
+rotulados — `para_o_cliente` e `instrucao_interna_nao_repetir`. Com os dois no
+mesmo texto, o modelo repapagueia a instrução interna para o cliente ("não
+preciso de CPF..."), que é ruído do sistema vazando para o WhatsApp.
+
 ## Escopo desta entrega
 
 **Dentro:** a rota MCP, a resolução de identidade, as quatro tools, os testes.

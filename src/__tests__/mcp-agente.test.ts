@@ -120,6 +120,23 @@ describe("protocolo MCP", () => {
     expect(body.result.capabilities.tools).toBeDefined();
   });
 
+  it("initialize diz ao modelo QUEM é o cliente, antes de ele falar", async () => {
+    const token = await assinar(TELEFONE_TOKEN);
+    const { body } = await rpc("initialize", {}, token);
+    expect(body.result.instructions).toContain(DONO.nome);
+    expect(body.result.instructions).toContain("Nunca peça CPF");
+  });
+
+  it("initialize avisa quando NÃO há cadastro, também antes de ele falar", async () => {
+    // Sem isso, o modelo barato pede CPF ao cliente antes de chamar qualquer
+    // ferramenta — e aí a mensagem de erro da ferramenta nunca é lida.
+    dbMock.$queryRaw.mockResolvedValue([]);
+    const token = await assinar("5511900000000");
+    const { body } = await rpc("initialize", {}, token);
+    expect(body.result.instructions).toContain("ATENÇÃO");
+    expect(body.result.instructions).toContain("atendente");
+  });
+
   it("notifications/initialized responde 202 sem corpo", async () => {
     const token = await assinar(TELEFONE_TOKEN);
     const { status, body } = await rpc(
@@ -250,6 +267,24 @@ describe("escopo por cliente — imposto no servidor", () => {
     );
     expect(JSON.stringify(body)).toContain("cliente_nao_identificado");
     expect(dbMock.parcelaVencimento.findMany).not.toHaveBeenCalled();
+  });
+
+  it("erro de identificação instrui o modelo a NÃO pedir documento", async () => {
+    // Observado rodando de verdade: sem essa instrução, o modelo pede CPF ao
+    // cliente — e nenhuma tool aceita CPF, por desenho. Ele prometeria algo
+    // que não pode cumprir. A mensagem de erro é o único canal que chega ao
+    // modelo naquele instante, então é nela que a orientação tem de estar.
+    dbMock.$queryRaw.mockResolvedValue([]);
+    const token = await assinar("5511900000000");
+    const { body } = await rpc(
+      "tools/call",
+      { name: "minhas_parcelas", arguments: {} },
+      token,
+    );
+    const texto = JSON.stringify(body);
+    expect(texto).toContain("instrucao_interna_nao_repetir");
+    expect(texto).toContain("para_o_cliente");
+    expect(texto).toContain("atendente");
   });
 
   it("telefone ambíguo falha fechado — nunca escolhe o primeiro", async () => {

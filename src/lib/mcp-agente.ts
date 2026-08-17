@@ -135,7 +135,7 @@ export interface Escopo {
 
 export type ResultadoEscopo =
   | { ok: true; escopo: Escopo }
-  | { ok: false; erro: string; mensagem: string };
+  | { ok: false; erro: string; paraOCliente: string; instrucao: string };
 
 interface LinhaCliente {
   id: number;
@@ -158,7 +158,11 @@ export async function resolverEscopo(
     return {
       ok: false,
       erro: "cliente_nao_identificado",
-      mensagem: "Não foi possível identificar o cadastro por este número.",
+      paraOCliente: "Não localizei um cadastro com este número.",
+      instrucao:
+        "Não existe consulta por CPF, matrícula ou qualquer outro documento — " +
+        "não peça nenhum. Diga ao cliente, com suas palavras, que não " +
+        "localizou o cadastro e ofereça encaminhar para um atendente.",
     };
   }
 
@@ -178,8 +182,10 @@ export async function resolverEscopo(
     return {
       ok: false,
       erro: "identificacao_ambigua",
-      mensagem:
-        "Não consegui confirmar seu cadastro com segurança. Um atendente vai assumir.",
+      paraOCliente: "Não consegui confirmar seu cadastro com segurança.",
+      instrucao:
+        "Não tente desempatar pedindo dado ao cliente: diga que um atendente " +
+        "vai assumir e encerre o assunto.",
     };
   }
 
@@ -191,7 +197,11 @@ export async function resolverEscopo(
     return {
       ok: false,
       erro: "cliente_nao_identificado",
-      mensagem: "Não localizei um cadastro com este número.",
+      paraOCliente: "Não localizei um cadastro com este número.",
+      instrucao:
+        "Não existe consulta por CPF, matrícula ou qualquer outro documento — " +
+        "não peça nenhum. Diga ao cliente, com suas palavras, que não " +
+        "localizou o cadastro e ofereça encaminhar para um atendente.",
     };
   }
   if (candidatos.length > 1) {
@@ -200,8 +210,12 @@ export async function resolverEscopo(
     return {
       ok: false,
       erro: "identificacao_ambigua",
-      mensagem:
-        "Este número aparece em mais de um cadastro. Um atendente precisa confirmar sua identidade.",
+      paraOCliente:
+        "Preciso confirmar sua identidade antes de mostrar esses dados.",
+      instrucao:
+        "Este número aparece em mais de um cadastro. Não tente desempatar " +
+        "pedindo dado ao cliente: diga que um atendente vai confirmar a " +
+        "identidade e encerre o assunto.",
     };
   }
   return { ok: true, escopo: { clienteId: candidatos[0].id, nome: candidatos[0].nome } };
@@ -445,4 +459,30 @@ export async function executarTool(
     default:
       throw new Error(`tool_desconhecida: ${nome}`);
   }
+}
+
+/**
+ * Texto do campo `instructions` do `initialize` — que a spec do MCP define
+ * como orientação do servidor para o cliente colocar no prompt do modelo.
+ *
+ * É o único canal que chega ao modelo ANTES de ele decidir o que dizer, e é
+ * por isso que ele existe aqui. Medido rodando de verdade: instruído apenas
+ * pelo prompt, o modelo barato pede CPF ao cliente antes de chamar qualquer
+ * ferramenta — então a mensagem de erro da ferramenta, que já explica que não
+ * existe consulta por documento, nunca chegava a ser lida. Resolvendo a
+ * identidade aqui, o modelo abre a conversa sabendo se há cadastro.
+ */
+export async function instrucoesDaSessao(
+  telefoneDoContato: string,
+): Promise<string> {
+  const base =
+    "As ferramentas deste servidor já sabem quem está falando: a identidade " +
+    "vem da credencial da conexão, não dos argumentos. Nunca peça CPF, " +
+    "número de cadastro, matrícula ou telefone — não existe consulta por " +
+    "eles.";
+  const r = await resolverEscopo(telefoneDoContato);
+  if (r.ok) {
+    return `${base} O cliente desta conversa é ${r.escopo.nome}, já identificado.`;
+  }
+  return `${base} ATENÇÃO: ${r.paraOCliente} ${r.instrucao}`;
 }

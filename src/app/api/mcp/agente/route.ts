@@ -5,6 +5,7 @@ import {
   TOOLS,
   executarTool,
   exigeCadastro,
+  instrucoesDaSessao,
   resolverEscopo,
   verificarToken,
   type Escopo,
@@ -81,6 +82,13 @@ export async function POST(req: Request) {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: SERVER_NAME, version: "1.0.0" },
+        // Campo previsto na spec do MCP para o servidor orientar o cliente
+        // sobre como usá-lo; o cliente o injeta no prompt do modelo. Aqui ele
+        // carrega o estado de identificação, que é a informação que o modelo
+        // precisa ter ANTES de decidir o que responder. Ver comentário em
+        // `instrucoesDaSessao`. Nenhum dado sensível vai nele além do nome do
+        // próprio cliente da conversa.
+        instructions: await instrucoesDaSessao(contato.telefone),
       });
 
     case "notifications/initialized":
@@ -104,7 +112,18 @@ export async function POST(req: Request) {
       if (exigeCadastro(nome)) {
         const r = await resolverEscopo(contato.telefone);
         if (!r.ok) {
-          return falhaDeTool(id, `${r.erro}: ${r.mensagem}`);
+          // Os dois campos são separados e rotulados de propósito. Observado
+          // rodando de verdade: com instrução e texto no mesmo campo, o modelo
+          // repapagueia a instrução para o cliente ("não preciso de CPF..."),
+          // que é ruído interno vazando para o WhatsApp.
+          return falhaDeTool(
+            id,
+            JSON.stringify({
+              erro: r.erro,
+              para_o_cliente: r.paraOCliente,
+              instrucao_interna_nao_repetir: r.instrucao,
+            }),
+          );
         }
         escopo = r.escopo;
       }
