@@ -19,6 +19,12 @@ const PUBLIC_API_PATHS = [
   "/api/webhooks",
   "/api/catalogo",
   "/api/health",
+  // MCP do agente de WhatsApp: autentica por token de maquina (Bearer HS256,
+  // segredo proprio) dentro da propria rota, nao por cookie de sessao de
+  // usuario interno. Ver src/app/api/mcp/agente/route.ts e
+  // docs/MCP-AGENTE-SPEC.md. Nao confundir com /api/mcp, que e o chat interno
+  // e continua exigindo cookie.
+  "/api/mcp/agente",
 ];
 
 function isPublicApiPath(pathname: string): boolean {

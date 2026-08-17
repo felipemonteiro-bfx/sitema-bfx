@@ -85,3 +85,29 @@ spec:
     - name: http
       port: 80
       targetPort: 3000
+---
+# Nome estavel para o servidor MCP do agente de WhatsApp
+# (docs/MCP-AGENTE-SPEC.md). Aponta para os mesmos pods do bfx-app porque e la
+# que moram o Prisma client e a credencial do bfx-db — um Deployment separado
+# duplicaria os dois sem isolar nada (mesmo banco, mesmo segredo).
+#
+# O Service existe mesmo assim para que a plataforma de WhatsApp aponte para
+# `mcp-bfx` e nao para `bfx-app`: no dia em que o servidor MCP virar pod
+# proprio, muda o selector aqui e nada muda do outro lado.
+#
+# URL para o gateway: http://mcp-bfx.bfx.svc.cluster.local/api/mcp/agente
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-bfx
+  labels:
+    app: bfx-app
+    component: mcp-agente
+spec:
+  type: ClusterIP
+  selector:
+    app: bfx-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000

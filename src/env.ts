@@ -17,6 +17,11 @@ const envSchema = z.object({
   // Opcionais — App
   NEXT_PUBLIC_APP_URL: z.string().optional(),
   CRON_SECRET: z.string().optional(),
+  // Segredo do MCP do agente de WhatsApp (docs/MCP-AGENTE-SPEC.md). Separado do
+  // SESSION_SECRET de proposito: aquele assina sessao de usuario interno,
+  // inclusive admin. Opcional porque o servidor MCP falha fechado sem ele — a
+  // rota devolve 401 e nao consulta nada.
+  MCP_AGENTE_SECRET: z.string().min(32, "MCP_AGENTE_SECRET precisa ter minimo 32 chars").optional(),
 
   // Opcionais — MinIO
   MINIO_ENDPOINT: z.string().optional(),
