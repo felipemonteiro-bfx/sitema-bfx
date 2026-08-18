@@ -3,16 +3,21 @@ import { prisma } from "@/lib/db";
 import { importacaoBatchSchema } from "@/lib/validations/importacao";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { revalidarVenda, revalidarCliente } from "@/lib/revalidacao";
+import { registrarRejeicaoVenda } from "@/lib/venda-observabilidade";
 
 export async function POST(request: NextRequest) {
   try {
     const raw = await request.json();
-    if (!Array.isArray(raw)) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    if (!Array.isArray(raw)) {
+      registrarRejeicaoVenda({ origem: "importacao", motivo: "Corpo da importação não é uma lista" });
+      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    }
 
     const parsed = importacaoBatchSchema.safeParse(raw);
     if (!parsed.success) {
       const first = parsed.error.issues[0];
       const msg = first?.path?.length ? `${first.path.join(".")}: ${first.message}` : first?.message ?? "Dados inválidos";
+      registrarRejeicaoVenda({ origem: "importacao", motivo: msg, itens: raw.length });
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 

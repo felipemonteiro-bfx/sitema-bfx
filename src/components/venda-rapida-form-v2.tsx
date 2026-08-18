@@ -9,6 +9,7 @@ import {
   type FormaPagamento,
 } from "@/lib/forma-pagamento";
 import { toast } from "sonner";
+import { lerListaDaResposta, MENSAGEM_SESSAO_EXPIRADA } from "@/lib/resposta-autenticada";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -56,6 +57,30 @@ interface Parcela {
   dataVencimento: string;
   valorParcela: number;
 }
+
+/** Item devolvido por GET /api/vendas/autocomplete/clientes. */
+type ClienteSugestao = {
+  id: number;
+  nome: string;
+  cpf?: string | null;
+  cnpj?: string | null;
+  renda?: number | null;
+  endereco?: string | null;
+  cep?: string | null;
+  telefone?: string | null;
+  ultimaVenda?: { data: string; valor: number } | null;
+};
+
+/** Item devolvido por GET /api/vendas/autocomplete/produtos. */
+type ProdutoAutocomplete = {
+  id: number;
+  nome: string;
+  /** `Float?` no schema — a rota faz `select`, entao chega `null` para produto sem preco. */
+  valorVenda: number | null;
+  custoPadrao?: number | null;
+  marca?: string | null;
+  qtdEstoque?: number | null;
+};
 
 type ClienteSelected = {
   id: number;
@@ -155,19 +180,7 @@ export default function VendaRapidaFormV2({
   const setFormaPagamento = (v: FormaPagamento | "") => void setFormState({ formaPagamento: v });
 
   // Cliente autocomplete suggestions (transient — não persiste)
-  const [clienteSuggestions, setClienteSuggestions] = useState<
-    {
-      id: number;
-      nome: string;
-      cpf?: string;
-      cnpj?: string;
-      renda?: number | null;
-      endereco?: string | null;
-      cep?: string | null;
-      telefone?: string | null;
-      ultimaVenda?: { data: string; valor: number } | null;
-    }[]
-  >([]);
+  const [clienteSuggestions, setClienteSuggestions] = useState<ClienteSugestao[]>([]);
   // Modal de cadastro rapido de cliente pelo PDV (D-04, D-07, PDV-15)
   const [clienteDialogOpen, setClienteDialogOpen] = useState(false);
 
@@ -207,6 +220,20 @@ export default function VendaRapidaFormV2({
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const submitLockRef = useRef(false);
+  // O JWT de sessao dura 7 dias e nao renova, e o middleware so cobre `/api/*`: quando ele
+  // expira a tela continua de pe e so as chamadas de API morrem com 401. Antes de 2026-08-18
+  // isso era invisivel — o corpo do erro entrava no lugar da lista e o vendedor simplesmente
+  // nao conseguia mais selecionar cliente. Agora ele e avisado, uma vez so (o autocomplete
+  // dispara a cada tecla; um toast por tecla seria pior que o silencio).
+  const sessaoExpiradaAvisadaRef = useRef(false);
+  const avisarSessaoExpirada = (mensagem?: string) => {
+    if (sessaoExpiradaAvisadaRef.current) return;
+    sessaoExpiradaAvisadaRef.current = true;
+    // Sem botao "Entrar": o rascunho da venda (cliente, produtos, parcelas) vive na query
+    // string via nuqs, e navegar para /login apagaria tudo — o login volta fixo para
+    // /dashboard, sem `next`. Abrir a aba de login e escolha do vendedor.
+    toast.error(mensagem ?? MENSAGEM_SESSAO_EXPIRADA, { duration: 10000 });
+  };
 
   // Limpar erro do campo ao editar
   const selectedClienteId = selectedCliente?.id ?? null;
@@ -251,8 +278,9 @@ export default function VendaRapidaFormV2({
         const res = await fetch(
           `/api/vendas/autocomplete/clientes?q=${encodeURIComponent(clienteQuery)}`,
         );
-        const data = await res.json();
-        setClienteSuggestions(data || []);
+        const leitura = await lerListaDaResposta<ClienteSugestao>(res);
+        setClienteSuggestions(leitura.lista);
+        if (leitura.sessaoExpirada) avisarSessaoExpirada(leitura.mensagem);
       } catch (error) {
         console.error("Erro ao buscar clientes:", error);
       }
@@ -285,7 +313,17 @@ export default function VendaRapidaFormV2({
   useEffect(() => {
     if (selectedCliente) {
       fetch(`/api/clientes/${selectedCliente.id}/limite`)
-        .then((res) => res.json())
+        .then(async (res) => {
+          // Endpoint autenticado: em 401 o corpo e `{error:...}`, que antes so virava
+          // `setLimiteData(null)` — o vendedor perdia o limite de credito da tela sem
+          // nenhuma explicacao. Nao passa por `lerListaDaResposta` porque devolve objeto.
+          if (res.status === 401) {
+            avisarSessaoExpirada();
+            return null;
+          }
+          if (!res.ok) return null;
+          return res.json();
+        })
         .then((data) => {
           if (data?.margemTotal !== undefined) setLimiteData(data);
           else setLimiteData(null);
@@ -431,16 +469,17 @@ export default function VendaRapidaFormV2({
     if (item.produtoNome && !produtoParaSugestoes) {
       // Busca o ID do produto pelo nome
       fetch(`/api/vendas/autocomplete/produtos?q=${encodeURIComponent(item.produtoNome)}`)
-        .then(res => res.json())
-        .then(data => {
-          const produtoEncontrado = data?.find((p: { nome: string }) => 
+        .then((res) => lerListaDaResposta<ProdutoAutocomplete>(res))
+        .then(leitura => {
+          if (leitura.sessaoExpirada) avisarSessaoExpirada(leitura.mensagem);
+          const produtoEncontrado = leitura.lista.find((p) => 
             p.nome.toLowerCase() === item.produtoNome.toLowerCase()
           );
           if (produtoEncontrado) {
             setProdutoParaSugestoes({
               id: produtoEncontrado.id,
               nome: produtoEncontrado.nome,
-              valorVenda: produtoEncontrado.valorVenda,
+              valorVenda: produtoEncontrado.valorVenda ?? undefined,
             });
           }
         })
@@ -452,9 +491,14 @@ export default function VendaRapidaFormV2({
   const addProdutoSugerido = (produto: { id: number; nome: string; valorVenda: number; custoProduto?: number }) => {
     // Busca o custo do produto se não foi fornecido
     fetch(`/api/vendas/autocomplete/produtos?q=${encodeURIComponent(produto.nome)}`)
-      .then(res => res.json())
-      .then(data => {
-        const produtoCompleto = data?.find((p: { id: number }) => p.id === produto.id);
+      .then((res) => lerListaDaResposta<ProdutoAutocomplete>(res))
+      .then(leitura => {
+        if (!leitura.ok) {
+          if (leitura.sessaoExpirada) avisarSessaoExpirada(leitura.mensagem);
+          else toast.error("Erro ao adicionar produto");
+          return;
+        }
+        const produtoCompleto = leitura.lista.find((p) => p.id === produto.id);
         const custoProduto = produto.custoProduto || produtoCompleto?.custoPadrao || 0;
 
         // Verifica se o primeiro item está vazio para preencher ou adicionar novo

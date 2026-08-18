@@ -23,6 +23,7 @@ import { sendVendaNotification } from "@/lib/email";
 import { creditarPontosVenda, resgatarPontos } from "@/lib/fidelidade-service";
 import { valorEmReais } from "@/lib/fidelidade";
 import { logError } from "@/lib/logger";
+import { registrarRejeicaoVenda } from "@/lib/venda-observabilidade";
 import { getSession } from "@/lib/session";
 import {
   FORMA_PAGAMENTO,
@@ -53,7 +54,16 @@ export async function criarVenda(formData: FormData) {
   const parcela = parcelas > 0 ? Math.trunc((total / parcelas) * 100) / 100 : 0;
   const lucro = total - ((custo * quantidade) + envio + valorDescontoNota);
 
-  if (!data || !vendedor || !clienteId) return;
+  if (!data || !vendedor || !clienteId) {
+    // Retorno mudo ate 2026-08-18: o form sumia com a venda e nao sobrava rastro nenhum.
+    registrarRejeicaoVenda({
+      origem: "venda-rapida-legada",
+      motivo: "Campos obrigatórios ausentes (data, vendedor ou cliente)",
+      ...(clienteId ? { clienteId } : {}),
+      ...(vendedor ? { vendedor } : {}),
+    });
+    return;
+  }
   const session = await getSession();
   const vendedorUsuario = await prisma.usuario.findFirst({
     where: { OR: [{ username: { equals: vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: vendedor, mode: "insensitive" } }] },
@@ -130,8 +140,18 @@ export async function criarVendaV2(
   formData: FormData
 ): Promise<ActionResponse<{ vendaId: number; boletoUrl?: string; assinaturaToken?: string }>> {
   try {
+    // Identificacao da tentativa, lida antes de qualquer validacao: as primeiras rejeicoes
+    // acontecem antes do parse, e sem isso a linha de log nao diz de quem era a venda.
+    // Fica DENTRO do try de proposito — nada aqui deve escapar da rede do catch.
+    const contextoRejeicao = {
+      origem: "venda-rapida" as const,
+      ...(Number(formData.get("clienteId") || 0) ? { clienteId: Number(formData.get("clienteId")) } : {}),
+      ...(formData.get("vendedor") ? { vendedor: String(formData.get("vendedor")) } : {}),
+    };
+
     const produtosJson = formData.get("produtos");
     if (!produtosJson) {
+      registrarRejeicaoVenda({ ...contextoRejeicao, motivo: "Nenhum produto informado" });
       return errorResponse("Nenhum produto informado");
     }
 
@@ -139,6 +159,7 @@ export async function criarVendaV2(
     try {
       produtos = JSON.parse(String(produtosJson));
     } catch {
+      registrarRejeicaoVenda({ ...contextoRejeicao, motivo: "Dados de produtos inválidos" });
       return errorResponse("Dados de produtos inválidos");
     }
 
@@ -148,6 +169,7 @@ export async function criarVendaV2(
       try {
         parcelasVencimento = JSON.parse(String(parcelasJson));
       } catch {
+        registrarRejeicaoVenda({ ...contextoRejeicao, motivo: "Dados de parcelas inválidos" });
         return errorResponse("Dados de parcelas inválidos");
       }
     }
@@ -175,6 +197,11 @@ export async function criarVendaV2(
     if (!parsed.success) {
       const firstError = parsed.error.flatten().fieldErrors;
       const msg = Object.values(firstError).flat().find(Boolean) || parsed.error.message;
+      registrarRejeicaoVenda({
+        ...contextoRejeicao,
+        motivo: String(msg || "Dados inválidos"),
+        itens: Array.isArray(produtos) ? produtos.length : 0,
+      });
       return errorResponse(String(msg || "Dados inválidos"));
     }
 
@@ -201,6 +228,13 @@ export async function criarVendaV2(
     // vendedor é gravado sem consulta ao catálogo, para qualquer perfil.
     const erroValidacao = validarItensContraCatalogo(produtosValidados);
     if (erroValidacao) {
+      registrarRejeicaoVenda({
+        ...contextoRejeicao,
+        motivo: erroValidacao,
+        vendedor,
+        clienteId,
+        itens: produtosValidados.length,
+      });
       return errorResponse(erroValidacao);
     }
 
