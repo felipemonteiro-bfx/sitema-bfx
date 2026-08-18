@@ -37,7 +37,14 @@ export interface ProdutoEncontrado {
   categoria: string | null;
   valorVenda: number | null;
   qtdEstoque: number | null;
-  /** Como o produto foi encontrado — só para log, nunca vai ao cliente. */
+  /**
+   * `significado` = veio por aproximação semântica, não por casar o texto.
+   *
+   * Isso CHEGA ao agente, de propósito. A precisão da busca por significado em
+   * nome curto de produto é limitada — medido, o segundo colocado costuma ser
+   * ruído plausível. Sem esse aviso o agente apresentaria uma aproximação como
+   * se fosse o produto pedido; com ele, diz que é o mais próximo que achou.
+   */
   via: "texto" | "significado";
 }
 
@@ -149,8 +156,29 @@ async function vetoresDoCatalogo(): Promise<CacheDeVetores> {
   return cache;
 }
 
-/** Abaixo disto o resultado é ruído: medido, pares sem relação ficam perto de 0,4. */
-const CORTE_SEMANTICO = 0.45;
+/**
+ * Piso absoluto: abaixo disto não há relação nenhuma.
+ *
+ * Serve só para o caso em que NADA no catálogo se parece com a pergunta —
+ * sem ele, a busca sempre devolveria os "menos ruins".
+ */
+const PISO_SEMANTICO = 0.4;
+
+/**
+ * Corte RELATIVO ao melhor resultado.
+ *
+ * Um corte absoluto não funciona, e isso foi medido: a distância entre o melhor
+ * relevante e o melhor irrelevante muda com a consulta —
+ *
+ *   "perfume feminino" .......... 0,655 relevante  vs  0,610 ruído
+ *   "algo pra fritar sem oleo" .. 0,480 relevante  vs  0,473 ruído
+ *
+ * Nenhum número fixo separa os dois casos: 0,5 mataria a fritadeira, 0,45
+ * deixaria passar um vestido numa busca por perfume. O que se mantém é a
+ * ordem — o relevante fica no topo. Por isso o corte é uma janela abaixo do
+ * primeiro colocado, e não um valor no vácuo.
+ */
+const JANELA_ABAIXO_DO_TOPO = 0.04;
 
 async function buscaSemantica(
   termo: string,
@@ -158,11 +186,14 @@ async function buscaSemantica(
 ): Promise<Array<{ produto: LinhaProduto; score: number }>> {
   const { produtos, vetores } = await vetoresDoCatalogo();
   const [consulta] = await embutir([normalizar(termo)]);
-  return produtos
+  const ordenados = produtos
     .map((produto, i) => ({ produto, score: cosseno(consulta, vetores[i]) }))
-    .filter((r) => r.score >= CORTE_SEMANTICO)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limite);
+    .filter((r) => r.score >= PISO_SEMANTICO)
+    .sort((a, b) => b.score - a.score);
+
+  if (ordenados.length === 0) return [];
+  const corte = ordenados[0].score - JANELA_ABAIXO_DO_TOPO;
+  return ordenados.filter((r) => r.score >= corte).slice(0, limite);
 }
 
 // ---------------------------------------------------------------------------

@@ -469,6 +469,10 @@ export async function executarTool(
           categoria: p.categoria,
           preco: p.valorVenda == null ? null : centavos(p.valorVenda),
           disponivel: (p.qtdEstoque ?? 0) > 0,
+          // `true` = achado por aproximação, não por casar o que foi pedido.
+          // O agente precisa saber para não apresentar como se fosse o item
+          // exato — ver comentário em ProdutoEncontrado.
+          aproximado: p.via === "significado",
         })),
       };
     }
