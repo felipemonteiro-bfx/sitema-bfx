@@ -48,6 +48,23 @@ export interface ProdutoEncontrado {
   via: "texto" | "significado";
 }
 
+/**
+ * O texto que representa o produto para a busca por significado.
+ *
+ * Nome + categoria + marca, e não só o nome. Medido: "catálogo de roupa" não
+ * achava nada, embora 25 produtos estejam na categoria VESTUARIO — a palavra
+ * "roupa" não aparece em nome nenhum, e o vetor do nome sozinho não carrega a
+ * categoria. Com a categoria junta, "roupa" alcança "vestuario", "calçado"
+ * alcança "CALÇADOS", e assim por diante.
+ */
+export function textoDoProduto(p: {
+  nome: string;
+  categoria?: string | null;
+  marca?: string | null;
+}): string {
+  return normalizar([p.nome, p.categoria, p.marca].filter(Boolean).join(" "));
+}
+
 export function normalizar(texto: string): string {
   return texto
     .normalize("NFD")
@@ -75,11 +92,16 @@ interface LinhaProduto {
  */
 async function buscaLexical(termo: string, limite: number): Promise<LinhaProduto[]> {
   const alvo = `%${termo}%`;
+  // Procura em nome, categoria e marca. Só o nome não basta: quem pergunta
+  // "tem eletrônico?" ou "vocês têm calçado?" está usando a categoria, que é
+  // um campo do cadastro e não aparece no nome do produto.
   return prisma.$queryRaw<LinhaProduto[]>`
     SELECT nome, marca, categoria,
            valor_venda AS "valorVenda", qtd_estoque AS "qtdEstoque"
       FROM produtos
      WHERE unaccent(lower(nome)) LIKE unaccent(lower(${alvo}))
+        OR unaccent(lower(coalesce(categoria, ''))) LIKE unaccent(lower(${alvo}))
+        OR unaccent(lower(coalesce(marca, ''))) LIKE unaccent(lower(${alvo}))
         OR similarity(unaccent(lower(nome)), unaccent(lower(${termo}))) > 0.28
      ORDER BY similarity(unaccent(lower(nome)), unaccent(lower(${termo}))) DESC,
               nome ASC
@@ -151,7 +173,7 @@ async function vetoresDoCatalogo(): Promise<CacheDeVetores> {
   const assinatura = `${produtos.length}:${produtos.map((p) => p.nome).join("|")}`;
   if (cache && cache.assinatura === assinatura) return cache;
 
-  const vetores = await embutir(produtos.map((p) => normalizar(p.nome)));
+  const vetores = await embutir(produtos.map(textoDoProduto));
   cache = { assinatura, produtos, vetores };
   return cache;
 }
