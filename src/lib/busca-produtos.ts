@@ -37,6 +37,7 @@ export interface ProdutoEncontrado {
   categoria: string | null;
   valorVenda: number | null;
   qtdEstoque: number | null;
+  imagem: string | null;
   /**
    * `significado` = veio por aproximação semântica, não por casar o texto.
    *
@@ -84,6 +85,7 @@ interface LinhaProduto {
   categoria: string | null;
   valorVenda: number | null;
   qtdEstoque: number | null;
+  imagem: string | null;
 }
 
 /**
@@ -96,7 +98,7 @@ async function buscaLexical(termo: string, limite: number): Promise<LinhaProduto
   // "tem eletrônico?" ou "vocês têm calçado?" está usando a categoria, que é
   // um campo do cadastro e não aparece no nome do produto.
   return prisma.$queryRaw<LinhaProduto[]>`
-    SELECT nome, marca, categoria,
+    SELECT nome, marca, categoria, imagem,
            valor_venda AS "valorVenda", qtd_estoque AS "qtdEstoque"
       FROM produtos
      WHERE unaccent(lower(nome)) LIKE unaccent(lower(${alvo}))
@@ -167,6 +169,7 @@ async function vetoresDoCatalogo(): Promise<CacheDeVetores> {
       categoria: true,
       valorVenda: true,
       qtdEstoque: true,
+      imagem: true,
     },
     orderBy: { nome: "asc" },
   });

@@ -452,6 +452,7 @@ export async function executarTool(
                 categoria: true,
                 valorVenda: true,
                 qtdEstoque: true,
+                imagem: true,
               },
               orderBy: { nome: "asc" },
               take: limite,
@@ -473,6 +474,12 @@ export async function executarTool(
           // O agente precisa saber para não apresentar como se fosse o item
           // exato — ver comentário em ProdutoEncontrado.
           aproximado: p.via === "significado",
+          // Só URL http(s) sai daqui: o campo do cadastro também guarda
+          // caminho local em alguns produtos, e isso não serve do outro lado.
+          foto:
+            typeof p.imagem === "string" && /^https?:\/\//i.test(p.imagem)
+              ? p.imagem
+              : null,
         })),
       };
     }
