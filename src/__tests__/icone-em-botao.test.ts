@@ -152,12 +152,18 @@ describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", ()
    * `inline-flex items-center gap-*` SEM `buttonVariants`, logo sem o
    * `whitespace-nowrap` e sem o `[&_svg]:shrink-0` da base.
    */
+  // `venda-rapida-form-v2.tsx` saiu desta lista em 2026-08-18. Ate 6e897e2 (11/08) o
+  // "Cadastrar cliente" era marcacao a mao e precisava do `whitespace-nowrap` literal;
+  // aquele commit o migrou para o `<Button>` padrao, que ja carrega a garantia na base
+  // (`src/components/ui/button-variants.ts:26` tem `whitespace-nowrap` e `[&_svg]:shrink-0`,
+  // e `button.tsx:78` embrulha o `leftIcon` em `shrink-0`). O gate seguiu cobrando a
+  // marcacao antiga e ficou VERMELHO de 11/08 ate aqui — os deploys sairam sem CI verde.
+  // A protecao nao sumiu: mudou de lugar, e o teste logo abaixo trava o novo mecanismo.
   const casos: Array<[string, string]> = [
     ["src/components/sortable-header.tsx", "cabecalho ordenavel (usado em 5 tabelas)"],
     ["src/components/ui/table.tsx", "TableHead sortable"],
     ["src/app/not-found.tsx", "links de acao do 404"],
     ["src/app/(app)/boletos/page.tsx", "link 'Ver boleto'"],
-    ["src/components/venda-rapida-form-v2.tsx", "botao 'Cadastrar cliente'"],
   ];
 
   for (const [arquivo, descricao] of casos) {
@@ -176,7 +182,18 @@ describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", ()
     expect(ler("src/components/ui/table.tsx").includes('"h-3.5 w-3.5 shrink-0 transition-opacity"')).toBe(true);
     expect(ler("src/app/not-found.tsx").includes('<Home className="h-4 w-4 shrink-0" />')).toBe(true);
     expect(ler("src/app/not-found.tsx").includes('<LogIn className="h-4 w-4 shrink-0" />')).toBe(true);
-    expect(ler("src/components/venda-rapida-form-v2.tsx").includes('<Plus className="h-3.5 w-3.5 shrink-0" />')).toBe(true);
+  });
+
+  it("o 'Cadastrar cliente' da venda rapida herda a garantia do Button em vez de repeti-la", () => {
+    // Regressao que este assert pega: alguem trocar o `<Button>` por marcacao a mao
+    // (`inline-flex` cru), que e exatamente o caso sem `buttonVariants` descrito acima.
+    const form = ler("src/components/venda-rapida-form-v2.tsx");
+    expect(form.includes("leftIcon={<Plus className=\"h-4 w-4\" />}")).toBe(true);
+
+    const base = ler("src/components/ui/button-variants.ts");
+    expect(base.includes("whitespace-nowrap")).toBe(true);
+    expect(base.includes("[&_svg]:shrink-0")).toBe(true);
+    expect(ler("src/components/ui/button.tsx").includes('<span className="inline-flex shrink-0 items-center justify-center">{leftIcon}</span>')).toBe(true);
   });
 
   it("a pilula do ponto de equilibrio nao quebra e o ponto nao some", () => {
