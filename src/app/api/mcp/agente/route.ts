@@ -88,7 +88,10 @@ export async function POST(req: Request) {
         // precisa ter ANTES de decidir o que responder. Ver comentário em
         // `instrucoesDaSessao`. Nenhum dado sensível vai nele além do nome do
         // próprio cliente da conversa.
-        instructions: await instrucoesDaSessao(contato.telefone),
+        instructions: await instrucoesDaSessao(
+          contato.telefone,
+          contato.nomeNoWhatsapp,
+        ),
       });
 
     case "notifications/initialized":

@@ -22,6 +22,12 @@ const envSchema = z.object({
   // inclusive admin. Opcional porque o servidor MCP falha fechado sem ele — a
   // rota devolve 401 e nao consulta nada.
   MCP_AGENTE_SECRET: z.string().min(32, "MCP_AGENTE_SECRET precisa ter minimo 32 chars").optional(),
+  // Busca semantica do catalogo no MCP do agente (src/lib/busca-produtos.ts).
+  // Opcionais: sem elas a busca cai para lexical (unaccent + trigrama), que
+  // degrada o resultado mas nao derruba a consulta.
+  EMBEDDING_URL: z.string().optional(),
+  EMBEDDING_API_KEY: z.string().optional(),
+  EMBEDDING_MODELO: z.string().optional(),
 
   // Opcionais — MinIO
   MINIO_ENDPOINT: z.string().optional(),

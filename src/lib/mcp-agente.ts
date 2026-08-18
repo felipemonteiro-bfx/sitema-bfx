@@ -1,5 +1,6 @@
 import { jwtVerify } from "jose";
 import { prisma } from "@/lib/db";
+import { buscarProdutos } from "@/lib/busca-produtos";
 
 /**
  * `mcp-bfx` — servidor MCP para o agente de WhatsApp que atende o CLIENTE
@@ -102,7 +103,7 @@ function segredo(): Uint8Array | null {
  */
 export async function verificarToken(
   authorization: string | null,
-): Promise<{ telefone: string } | null> {
+): Promise<{ telefone: string; nomeNoWhatsapp?: string } | null> {
   const chave = segredo();
   if (!chave) return null;
   if (!authorization || !authorization.startsWith("Bearer ")) return null;
@@ -118,7 +119,15 @@ export async function verificarToken(
     });
     const telefone = typeof payload.sub === "string" ? payload.sub.trim() : "";
     if (!telefone) return null;
-    return { telefone };
+    // Nome de exibição do WhatsApp, quando o gateway o envia. Não é
+    // identidade — qualquer um escolhe o próprio nome de perfil — e por isso
+    // NÃO participa da resolução do cadastro. Serve só para o agente chamar a
+    // pessoa pelo nome em vez de "você".
+    const nome =
+      typeof payload.nome === "string" && payload.nome.trim()
+        ? payload.nome.trim().slice(0, 60)
+        : undefined;
+    return { telefone, nomeNoWhatsapp: nome };
   } catch {
     return null;
   }
@@ -429,18 +438,26 @@ export async function executarTool(
     case "catalogo_produtos": {
       const busca = typeof args.busca === "string" ? args.busca.trim() : "";
       const limite = Math.min(Math.max(Number(args.limite) || 20, 1), 50);
-      const produtos = await prisma.produto.findMany({
-        where: busca ? { nome: { contains: busca, mode: "insensitive" } } : {},
-        select: {
-          nome: true,
-          marca: true,
-          categoria: true,
-          valorVenda: true,
-          qtdEstoque: true,
-        },
-        orderBy: { nome: "asc" },
-        take: limite,
-      });
+
+      // Com termo de busca vai pela híbrida (texto + significado); sem termo é
+      // só listagem. Ver `lib/busca-produtos.ts` para as medições que levaram
+      // a esse desenho.
+      const produtos = busca
+        ? await buscarProdutos(busca, limite)
+        : (
+            await prisma.produto.findMany({
+              select: {
+                nome: true,
+                marca: true,
+                categoria: true,
+                valorVenda: true,
+                qtdEstoque: true,
+              },
+              orderBy: { nome: "asc" },
+              take: limite,
+            })
+          ).map((p) => ({ ...p, via: "texto" as const }));
+
       return {
         total: produtos.length,
         // `custoPadrao` fica de fora deliberadamente: é o custo interno da BFX,
@@ -455,7 +472,6 @@ export async function executarTool(
         })),
       };
     }
-
     default:
       throw new Error(`tool_desconhecida: ${nome}`);
   }
@@ -474,15 +490,19 @@ export async function executarTool(
  */
 export async function instrucoesDaSessao(
   telefoneDoContato: string,
+  nomeNoWhatsapp?: string,
 ): Promise<string> {
   const base =
     "As ferramentas deste servidor já sabem quem está falando: a identidade " +
     "vem da credencial da conexão, não dos argumentos. Nunca peça CPF, " +
     "número de cadastro, matrícula ou telefone — não existe consulta por " +
     "eles.";
+  const apelido = nomeNoWhatsapp
+    ? ` O nome que a pessoa usa no WhatsApp é "${nomeNoWhatsapp}" — pode chamá-la assim. Não é comprovação de identidade e não vale para liberar dado nenhum.`
+    : "";
   const r = await resolverEscopo(telefoneDoContato);
   if (r.ok) {
-    return `${base} O cliente desta conversa é ${r.escopo.nome}, já identificado.`;
+    return `${base} O cliente desta conversa é ${r.escopo.nome}, já identificado.${apelido}`;
   }
-  return `${base} ATENÇÃO: ${r.paraOCliente} ${r.instrucao}`;
+  return `${base} ATENÇÃO: ${r.paraOCliente} ${r.instrucao}${apelido}`;
 }
