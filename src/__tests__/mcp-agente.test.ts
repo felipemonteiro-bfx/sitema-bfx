@@ -19,6 +19,9 @@ const dbMock = {
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 
+const buscaMock = { buscarProdutos: vi.fn() };
+vi.mock("@/lib/busca-produtos", () => buscaMock);
+
 const SEGREDO = "segredo-de-teste-com-mais-de-32-caracteres-ok";
 process.env.MCP_AGENTE_SECRET = SEGREDO;
 process.env.SESSION_SECRET = "outro-segredo-totalmente-diferente-com-32+";
@@ -339,6 +342,43 @@ describe("escopo por cliente — imposto no servidor", () => {
     expect(texto).not.toContain("parcelas_vencimento");
     expect(texto).not.toContain("relation");
     expect(body.result.isError).toBe(true);
+  });
+
+  it("avisa quando nada casou pelo nome — senão o agente oferece qualquer coisa", async () => {
+    // Medido: pedindo capacete, o agente ofereceu mochila e blusa de tricô.
+    // O `aproximado: true` em cada item não bastou; o aviso vai no resultado
+    // da tool porque é o texto que o modelo lê logo antes de responder.
+    dbMock.$queryRaw.mockResolvedValue([]);
+    buscaMock.buscarProdutos.mockResolvedValue([
+      { nome: "MOCHILA SPORT MULTI", marca: null, categoria: "acessorios",
+        valorVenda: 18900, qtdEstoque: 3, imagem: null, via: "significado" },
+    ]);
+    const token = await assinar("5511900000000");
+    const { body } = await rpc(
+      "tools/call",
+      { name: "catalogo_produtos", arguments: { busca: "capacete de motocicleta" } },
+      token,
+    );
+    const dados = JSON.parse(body.result.content[0].text);
+    expect(dados.aviso).toMatch(/Nenhum produto/i);
+    expect(dados.produtos[0].aproximado).toBe(true);
+  });
+
+  it("não avisa quando o nome casou — o resultado é confiável", async () => {
+    dbMock.$queryRaw.mockResolvedValue([]);
+    buscaMock.buscarProdutos.mockResolvedValue([
+      { nome: "CAPACETE LS2", marca: "LS2", categoria: "acessorios",
+        valorVenda: 50000, qtdEstoque: 1, imagem: null, via: "texto" },
+    ]);
+    const token = await assinar("5511900000000");
+    const { body } = await rpc(
+      "tools/call",
+      { name: "catalogo_produtos", arguments: { busca: "capacete" } },
+      token,
+    );
+    const dados = JSON.parse(body.result.content[0].text);
+    expect(dados.aviso).toBeUndefined();
+    expect(dados.produtos[0].aproximado).toBe(false);
   });
 
   it("catalogo_produtos funciona sem cadastro — não é dado pessoal", async () => {

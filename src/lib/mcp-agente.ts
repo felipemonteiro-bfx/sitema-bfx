@@ -459,8 +459,33 @@ export async function executarTool(
             })
           ).map((p) => ({ ...p, via: "texto" as const }));
 
+      // Nada casou pelo NOME — tudo o que veio é aproximação por significado.
+      // Com bge-m3 a similaridade entre textos em português é alta por padrão
+      // (medido: "capacete de motocicleta" x "conjunto tricô tropical" = 0,548,
+      // contra 0,634 do capacete de verdade), então nenhum piso separa os dois
+      // casos e a busca sempre devolve "os menos ruins".
+      //
+      // O aviso vai NO RESULTADO DA TOOL, não no prompt, e de propósito: com o
+      // modelo barato do piloto, regra distante no prompt perde para o dado que
+      // ele acabou de receber — foi por isso que ele ofereceu mochila e blusa
+      // de tricô a quem pediu capacete, mesmo com `aproximado: true` em todos.
+      const soAproximados =
+        busca.length > 0 &&
+        produtos.length > 0 &&
+        produtos.every((p) => p.via === "significado");
+
       return {
         total: produtos.length,
+        ...(soAproximados
+          ? {
+              aviso:
+                "Nenhum produto do catálogo corresponde ao que foi pedido. " +
+                "Os itens abaixo são apenas os mais próximos que existem e " +
+                "podem ser de outro tipo. Só ofereça algum se de fato servir " +
+                "para o que a pessoa pediu; se não servir, não liste nenhum e " +
+                "pergunte mais sobre o que ela procura.",
+            }
+          : {}),
         // `custoPadrao` fica de fora deliberadamente: é o custo interno da BFX,
         // não é dado do cliente e não vai para o WhatsApp. `qtdEstoque` vira um
         // booleano pelo mesmo motivo — quantidade exata é informação comercial.
