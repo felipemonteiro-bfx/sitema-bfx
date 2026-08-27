@@ -5,7 +5,7 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { parseDataISO, dataExibidaDoInput, dataParaHidden } from "@/lib/data-input"
+import { parseDataISO, dataExibidaDoInput, dataParaHidden, selecaoDeDataDoCalendario } from "@/lib/data-input"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -49,11 +49,16 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
     }, [controlado, defaultValue])
 
     const handleSelect = (selectedDate: Date | undefined) => {
-      if (!controlado) setInterno(selectedDate)
+      const { novaData, limpar } = selecaoDeDataDoCalendario({
+        selecionada: selectedDate,
+        obrigatorio: required,
+      })
       setOpen(false)
-      if (onChange && selectedDate) {
-        onChange(format(selectedDate, "yyyy-MM-dd"))
-      }
+      // Toque no dia que ja estava selecionado (toggle-off do calendario): so limpa
+      // onde limpar e' valido — regra em `selecaoDeDataDoCalendario`.
+      if (novaData === undefined && !limpar) return
+      if (!controlado) setInterno(selectedDate)
+      if (novaData !== undefined) onChange?.(novaData)
     }
 
     const formattedDate = date
@@ -85,6 +90,16 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
           <Calendar
             mode="single"
             selected={date}
+            // Sem `defaultMonth` o calendario SEMPRE abre no mes de hoje: em
+            // react-day-picker v9 o mes inicial e' `month || defaultMonth || today` —
+            // `selected` nao entra na conta — e o Popover desmonta o conteudo ao
+            // fechar, entao toda abertura recomecava em hoje. A parcela que vence em
+            // abril/2027 abria em agosto/2026, sem dia marcado, e so dava para chegar
+            // la clicando o chevron mes a mes.
+            defaultMonth={date}
+            // Desliga o toggle-off na origem onde limpar nao e' operacao valida: sem
+            // isto o calendario devolve `undefined` ao tocar no dia ja selecionado.
+            required={required}
             onSelect={handleSelect}
             initialFocus
           />

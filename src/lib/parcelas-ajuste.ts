@@ -150,3 +150,68 @@ export function ajustarParcelas(input: {
     minimoPorPagas,
   };
 }
+
+/**
+ * Decide o que a auto-init de `parcelas-vencimento-form.tsx` deve fazer a cada
+ * render. `parcelas: null` significa "nada a fazer" — o componente so chama
+ * `onChange` quando vem uma lista.
+ *
+ * O bug que motivou a funcao (relatado em 2026-08-27): a condicao da auto-init era
+ *
+ *   parcelas.length !== numeroParcelas ||
+ *   parcelas[0]?.valorParcela !== Math.trunc((valorTotal / numeroParcelas) * 100) / 100
+ *
+ * isto e, o VALOR DA PRIMEIRA PARCELA servia de sentinela de "a lista esta
+ * desatualizada". Ajustar o valor da 1a parcela — o proprio campo diz "ajustar se
+ * necessario" — tornava a condicao verdadeira e o effect regenerava a lista inteira,
+ * descartando a edicao e reescrevendo TODAS as datas de vencimento ja escolhidas. Da
+ * 2a parcela em diante ninguem olhava, por isso so a primeira parecia travada.
+ *
+ * A sentinela correta e o que de fato invalida a lista: o numero de parcelas (muda o
+ * tamanho) e o valor total (muda a divisao, nunca as datas).
+ *
+ * `valorTotalObservado` e o valor que o chamador deve guardar para o proximo render.
+ * Ele NAO e sempre `valorTotal`: quando a funcao pula sem olhar o total (venda em uma
+ * parcela so, entrada invalida), o anterior tem que continuar valendo. Avancar mesmo
+ * assim engole a mudanca — achado do review: carrinho de 1400 em 3x, cai para 400 e o
+ * campo Parcelas vai a 1, volta para 1400 em 3x, e a lista fica presa em 3x 133,33.
+ */
+export function sincronizarParcelasAuto(input: {
+  parcelas: ParcelaAjuste[];
+  numeroParcelas: number;
+  valorTotal: number;
+  /** Total do render anterior. `null` no primeiro render — sem "mudanca" a detectar. */
+  valorTotalAnterior: number | null;
+  dataVenda?: string;
+}): { parcelas: ParcelaAjuste[] | null; valorTotalObservado: number | null } {
+  const { parcelas, numeroParcelas, valorTotal, valorTotalAnterior, dataVenda } = input;
+  const pular = { parcelas: null, valorTotalObservado: valorTotalAnterior };
+
+  // Pagamento unico: o card nem aparece e nao existe lista a manter.
+  if (numeroParcelas <= 1) return pular;
+
+  // Entrada corrompida (querystring solta, campo em branco). Sem os guardas, cada um
+  // destes e um loop de render: com NaN, `valorTotalAnterior !== valorTotal` e sempre
+  // verdadeiro; com 2.5 parcelas, `Array.from({ length: 2.5 })` gera 2 e o tamanho
+  // nunca fecha. A auto-init antiga tinha os mesmos dois loops.
+  if (!Number.isFinite(valorTotal)) return pular;
+  if (!Number.isInteger(numeroParcelas)) return pular;
+
+  if (parcelas.length !== numeroParcelas) {
+    return {
+      parcelas: ajustarParcelas({ parcelas, numeroParcelas, valorTotal, dataVenda }).parcelas,
+      valorTotalObservado: valorTotal,
+    };
+  }
+
+  if (valorTotalAnterior !== null && valorTotalAnterior !== valorTotal) {
+    return {
+      parcelas: redistribuirValores(parcelas, valorTotal),
+      valorTotalObservado: valorTotal,
+    };
+  }
+
+  // Mesmo tamanho e mesmo total: qualquer diferenca aqui e edicao do usuario
+  // (valor de uma parcela ou data de vencimento) e precisa ser preservada.
+  return { parcelas: null, valorTotalObservado: valorTotal };
+}

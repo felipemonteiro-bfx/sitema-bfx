@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import { formatBRL, calcularPrimeiroVencimento } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 import { DateInput } from "@/components/ui/date-input";
+import { dataParaHidden, parseDataISO } from "@/lib/data-input";
+import { sincronizarParcelasAuto } from "@/lib/parcelas-ajuste";
 
 interface Parcela {
   numeroParcela: number;
@@ -24,22 +26,30 @@ interface Props {
 }
 
 export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit = false }: Props) {
-  // Inicializar parcelas automaticamente
+  // Sincronizacao automatica da lista. A REGRA VIVE EM `sincronizarParcelasAuto`,
+  // modulo puro e testado — aqui fica so o efeito colateral.
+  //
+  // A versao anterior comparava `parcelas[0].valorParcela` com o valor dividido para
+  // decidir se a lista estava desatualizada. Ajustar o valor da 1a parcela tornava
+  // essa condicao verdadeira e regenerava tudo, descartando a edicao e reescrevendo
+  // as datas de vencimento ja escolhidas — o bug relatado em 2026-08-27.
+  const totalAnterior = useRef<number | null>(null);
   useEffect(() => {
     if (disableAutoInit) return;
-    if (numeroParcelas > 0 && (parcelas.length !== numeroParcelas || parcelas[0]?.valorParcela !== Math.trunc((valorTotal / numeroParcelas) * 100) / 100)) {
-      const dataBase = dataVenda ? new Date(dataVenda) : new Date();
-      const primeiroVencimento = calcularPrimeiroVencimento(dataBase);
-      const novasParcelas: Parcela[] = Array.from({ length: numeroParcelas }).map((_, i) => {
-        const dataVencimento = new Date(Date.UTC(primeiroVencimento.getUTCFullYear(), primeiroVencimento.getUTCMonth() + i, 10));
-        return {
-          numeroParcela: i + 1,
-          dataVencimento: dataVencimento.toISOString().split('T')[0],
-          valorParcela: Math.trunc((valorTotal / numeroParcelas) * 100) / 100,
-        };
-      });
-      onChange(novasParcelas);
-    }
+    const { parcelas: proximas, valorTotalObservado } = sincronizarParcelasAuto({
+      parcelas,
+      numeroParcelas,
+      valorTotal,
+      valorTotalAnterior: totalAnterior.current,
+      // `ajustarParcelas` recusa gerar do zero sem data da venda, para nao depender do
+      // relogio de quem chama. No formulario o fallback e hoje, data local do browser —
+      // e vale tambem para data corrompida, que faria o effect lancar.
+      dataVenda: parseDataISO(dataVenda) ? dataVenda : dataParaHidden(new Date()),
+    });
+    // Nunca `= valorTotal` direto: quando a sincronizacao pula sem olhar o total, o
+    // anterior tem que continuar valendo, senao a mudanca de total e engolida.
+    totalAnterior.current = valorTotalObservado;
+    if (proximas) onChange(proximas);
   }, [numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit]);
 
   const handleDataChange = (index: number, newData: string) => {

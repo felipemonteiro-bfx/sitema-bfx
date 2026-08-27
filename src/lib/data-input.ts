@@ -42,3 +42,25 @@ export function dataParaHidden(data: Date | undefined): string {
   const dia = String(data.getDate()).padStart(2, "0");
   return `${ano}-${mes}-${dia}`;
 }
+
+/**
+ * O que o <DateInput> deve fazer com o que o calendario devolve no `onSelect`.
+ *
+ * `mode="single"` sem `required` faz toggle-off: tocar no dia JA selecionado devolve
+ * `undefined` (react-day-picker, `selection/useSingle.js`). O que isso significa
+ * depende do campo:
+ *
+ * - Campo obrigatorio (vencimento de parcela, data da venda): limpar nao e' operacao
+ *   valida. Antes, num campo nao-controlado, o toque zerava a data e o hidden ia ""
+ *   no submit — a action recusava com "Dados invalidos". Agora e' toque sem efeito.
+ * - Campo opcional (data de nascimento do cliente): limpar E' valido, o backend grava
+ *   null, e o toggle-off e' o unico gesto que a UI oferece para isso — o campo nao tem
+ *   botao de limpar. Continua limpando.
+ */
+export function selecaoDeDataDoCalendario(params: {
+  selecionada?: Date;
+  obrigatorio?: boolean;
+}): { novaData?: string; limpar: boolean } {
+  if (params.selecionada) return { novaData: dataParaHidden(params.selecionada), limpar: false };
+  return { novaData: undefined, limpar: !params.obrigatorio };
+}
