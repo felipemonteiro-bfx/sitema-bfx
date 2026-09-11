@@ -13,7 +13,7 @@ import { FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import AntecipacaoCompradores from "@/components/antecipacao-compradores";
 import { TAXA_MENSAL_PADRAO, calcularAntecipacao, parsePeriodoMesAno, titulosDeVenda } from "@/lib/antecipacao";
-import type { CompradorAntecipacao, ResumoAntecipacaoCompradores } from "@/lib/antecipacao-compradores";
+import type { CompradorAntecipacao, MesAntecipacao, ResumoAntecipacaoCompradores } from "@/lib/antecipacao-compradores";
 import { formatarDataPura } from "@/lib/data-pura";
 
 interface ParcelaDetalhe {
@@ -56,6 +56,8 @@ interface Props {
   vencimentosPorEmpresa: Record<string, number>;
   empresasDisponiveis: string[];
   resumoCompradores: ResumoAntecipacaoCompradores;
+  /** Os mesmos baldes do resumo, agrupados pelo mês do vencimento. */
+  resumoMeses: MesAntecipacao[];
   /** Dia civil de Manaus (YYYY-MM-DD), o mesmo que o servidor usou no resumo. */
   hoje: string;
 }
@@ -89,7 +91,7 @@ function StatusBadge({ status }: { status: Venda['status'] }) {
   );
 }
 
-export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis, resumoCompradores, hoje }: Props) {
+export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis, resumoCompradores, resumoMeses, hoje }: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [filtroEmpresa, setFiltroEmpresa] = useState<string>("todas");
@@ -320,23 +322,27 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">De mês/ano</label>
+          {/* O filtro e pelo mes do VENCIMENTO, que o sistema poe no mes seguinte ao
+              desconto em folha — "De mes/ano" levava a pedir 09 querendo o desconto de setembro. */}
+          <label htmlFor="filtro-vencimento-de" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Vencimento de</label>
           <Input
+            id="filtro-vencimento-de"
             type="text"
             value={periodoInicio}
             onChange={(e) => setPeriodoInicio(e.target.value)}
-            placeholder="03/2025"
+            placeholder="10/2026"
             maxLength={7}
             className="w-28"
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Até mês/ano</label>
+          <label htmlFor="filtro-vencimento-ate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Vencimento até</label>
           <Input
+            id="filtro-vencimento-ate"
             type="text"
             value={periodoFim}
             onChange={(e) => setPeriodoFim(e.target.value)}
-            placeholder="04/2025"
+            placeholder="12/2026"
             maxLength={7}
             className="w-28"
           />
@@ -665,6 +671,8 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     <div className="space-y-6">
       <AntecipacaoCompradores
         resumo={resumoCompradores}
+        meses={resumoMeses}
+        hoje={hoje}
         compradorNaFila={filtroComprador?.chave ?? null}
         onVerNaFila={verNaFila}
       />

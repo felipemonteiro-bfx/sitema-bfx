@@ -3,7 +3,12 @@ FROM node:20-bullseye-slim AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN apt-get update && apt-get install -y git --no-install-recommends && rm -rf /var/lib/apt/lists/*
+# O Release do bullseye-security expirou (set/2026) e o apt-get update passou a
+# derrubar todo build. Check-Valid-Until=false ignora so a DATA de validade do
+# indice; as assinaturas dos pacotes continuam verificadas. A imagem de runtime
+# nao muda (bullseye + OpenSSL 1.1 das engines do Prisma). O conserto definitivo
+# e migrar os tres estagios para bookworm, conferindo as engines com OpenSSL 3.
+RUN apt-get -o Acquire::Check-Valid-Until=false update && apt-get install -y git --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # Install Yarn
 RUN corepack enable && corepack prepare yarn@stable --activate

@@ -84,6 +84,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       dataPagamento: Date | null;
       dataVencimento: Date;
       valorParcela: number;
+      antecipada: boolean;
     };
     let parcelasExistentes: ParcelaExistente[] = [];
     // Ligado quando a venda vira pagamento unico sem payload de parcelas (CR-01).
@@ -91,13 +92,18 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     try {
       parcelasExistentes = await prisma.parcelaVencimento.findMany({
         where: { vendaId: id },
-        select: { numeroParcela: true, paga: true, dataPagamento: true, dataVencimento: true, valorParcela: true },
+        select: { numeroParcela: true, paga: true, dataPagamento: true, dataVencimento: true, valorParcela: true, antecipada: true },
       });
     } catch {
       // Tabela parcelas_vencimento pode não existir em produção antiga
     }
+    // As linhas sao apagadas e recriadas no save: o que precisa sobreviver a
+    // edicao (pagamento e antecipacao na Prudent) sai daqui, pelo numero da parcela.
     const pagasMap = new Map(
-      parcelasExistentes.map((p) => [p.numeroParcela, { paga: p.paga, dataPagamento: p.dataPagamento }])
+      parcelasExistentes.map((p) => [
+        p.numeroParcela,
+        { paga: p.paga, dataPagamento: p.dataPagamento, antecipada: p.antecipada },
+      ])
     );
 
     if (parcelasForm.length > 0) {
@@ -106,12 +112,16 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       // para apagar e recriar todas as linhas de parcelas_vencimento, entao a guarda
       // precisa estar aqui, ANTES de qualquer escrita (cabecalho ainda intacto).
       const numerosNoPayload = new Set(parcelasForm.map((p) => p.numeroParcela));
-      const pagasDescartadas = parcelasExistentes.filter((p) => p.paga && !numerosNoPayload.has(p.numeroParcela));
-      if (pagasDescartadas.length > 0) {
-        const numeros = pagasDescartadas.map((p) => p.numeroParcela).join(", ");
+      // Antecipada conta como paga: a linha e o unico registro de que o dinheiro ja
+      // veio da Prudent, e apaga-la faria a parcela sumir do "ja antecipado".
+      const travadasDescartadas = parcelasExistentes.filter(
+        (p) => (p.paga || p.antecipada) && !numerosNoPayload.has(p.numeroParcela)
+      );
+      if (travadasDescartadas.length > 0) {
+        const numeros = travadasDescartadas.map((p) => p.numeroParcela).join(", ");
         return {
           success: false,
-          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ja esta(o) paga(s) e seria(m) apagada(s).`,
+          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ja esta(o) paga(s) ou antecipada(s) e seria(m) apagada(s).`,
         };
       }
 
@@ -134,12 +144,13 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     // cabecalho gravava `parcelas: 1` e as N linhas antigas continuavam la.
     // Era o bug da venda 182 reproduzido por uso normal, sem erro na tela.
     if (parcelasForm.length === 0 && parcelasExistentes.length > 0 && parcelasNum !== parcelasExistentes.length) {
-      const pagasExistentes = parcelasExistentes.filter((p) => p.paga);
-      if (pagasExistentes.length > 0) {
-        const numeros = pagasExistentes.map((p) => p.numeroParcela).join(", ");
+      // Mesma trava da guarda acima: parcela antecipada tambem nao pode ser apagada.
+      const travadasExistentes = parcelasExistentes.filter((p) => p.paga || p.antecipada);
+      if (travadasExistentes.length > 0) {
+        const numeros = travadasExistentes.map((p) => p.numeroParcela).join(", ");
         return {
           success: false,
-          error: `Nao e possivel mudar para ${parcelasNum} parcela(s): a(s) parcela(s) ${numeros} ja esta(o) paga(s).`,
+          error: `Nao e possivel mudar para ${parcelasNum} parcela(s): a(s) parcela(s) ${numeros} ja esta(o) paga(s) ou antecipada(s).`,
         };
       }
       if (parcelasNum > 1) {
@@ -184,9 +195,23 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     });
     const lucroFinal = lucroLiquidoComAntecipacao(lucro, taxaAntecipacao);
 
+    // Com antecipacao registrada por parcela, o flag da venda segue a regra da action
+    // `antecipar` (todas -> 1, algumas -> 3): sem isto uma venda em 1 que ganhasse uma
+    // parcela nova a esconderia da fila para sempre. Sem nenhuma parcela marcada o flag
+    // nao e tocado — as vendas legadas tem a antecipacao so na venda (antecipada = 1).
+    const numerosFinais = limparParcelasSemPayload
+      ? []
+      : parcelasForm.length > 0
+        ? parcelasForm.map((p) => p.numeroParcela)
+        : parcelasExistentes.map((p) => p.numeroParcela);
+    const antecipadasAposSalvar = numerosFinais.filter((n) => pagasMap.get(n)?.antecipada).length;
+    const novoStatusAntecipacao =
+      antecipadasAposSalvar === 0 ? undefined : antecipadasAposSalvar === numerosFinais.length ? 1 : 3;
+
     await prisma.venda.update({
       where: { id },
       data: {
+        ...(novoStatusAntecipacao !== undefined ? { antecipada: novoStatusAntecipacao } : {}),
         dataVenda: new Date(data),
         vendedor: vendedorTexto,
         vendedorId: vendedorUser?.id ?? undefined,
@@ -240,6 +265,9 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
               valorParcela: p.valorParcela,
               paga: existente?.paga ?? false,
               dataPagamento: existente?.dataPagamento ?? null,
+              // Sem isto a parcela ja antecipada na Prudent voltava a "a antecipar"
+              // a cada edicao da venda, e a fila deixava antecipa-la de novo.
+              antecipada: existente?.antecipada ?? false,
             };
           }),
         });

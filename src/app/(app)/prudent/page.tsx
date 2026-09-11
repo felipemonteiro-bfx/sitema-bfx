@@ -5,6 +5,7 @@ import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import {
   chaveComprador,
   resumirAntecipacaoPorComprador,
+  resumirAntecipacaoPorMes,
   situacaoParcelasVenda,
   type VendaParaResumo,
 } from "@/lib/antecipacao-compradores";
@@ -247,7 +248,9 @@ export default async function Page() {
     empresa: v.cliente?.empresa ?? null,
     parcelas_detalhes: v.parcelasVencimento,
   });
-  const resumoCompradores = resumirAntecipacaoPorComprador(todasVendas.map(paraResumo), hoje);
+  const vendasParaResumo = todasVendas.map(paraResumo);
+  const resumoCompradores = resumirAntecipacaoPorComprador(vendasParaResumo, hoje);
+  const resumoMeses = resumirAntecipacaoPorMes(vendasParaResumo, hoje);
 
   const vendasFormatadas = todasVendas.map((v) => {
     const antecipada = v.antecipada ?? 0;
@@ -306,6 +309,7 @@ export default async function Page() {
         vencimentosPorEmpresa={vencimentosPorEmpresa}
         empresasDisponiveis={empresasUnicas}
         resumoCompradores={resumoCompradores}
+        resumoMeses={resumoMeses}
         hoje={hoje}
       />
       <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} />

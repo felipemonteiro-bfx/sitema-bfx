@@ -8,6 +8,7 @@
 import { describe, it, expect } from "vitest";
 import {
   resumirAntecipacaoPorComprador,
+  resumirAntecipacaoPorMes,
   situacaoParcelasVenda,
   type VendaParaResumo,
 } from "@/lib/antecipacao-compradores";
@@ -256,6 +257,59 @@ describe("achados da revisão", () => {
       valor: soma((c) => c.vencidasSemAntecipar.valor),
     });
     expect(totais.vendasSemParcelas).toBe(soma((c) => c.vendasSemParcelas));
+  });
+});
+
+describe("resumirAntecipacaoPorMes — as abas da planilha", () => {
+  it("separa por mês de vencimento e soma os três baldes", () => {
+    const meses = resumirAntecipacaoPorMes(
+      [
+        venda({ id: 1, clienteId: 1, parcelas_detalhes: [parcela("2026-08-10", 100), parcela("2026-09-10", 100, true), parcela("2026-10-10", 100)] }),
+        venda({ id: 2, clienteId: 2, parcelas_detalhes: [parcela("2026-10-10", 250), parcela("2026-11-10", 250)] }),
+      ],
+      HOJE
+    );
+    expect(meses).toEqual([
+      { mes: "2026-08", antecipadas: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 0, valor: 0 }, vencidasSemAntecipar: { qtd: 1, valor: 100 } },
+      { mes: "2026-09", antecipadas: { qtd: 1, valor: 100 }, aAntecipar: { qtd: 0, valor: 0 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
+      { mes: "2026-10", antecipadas: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 2, valor: 350 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
+      { mes: "2026-11", antecipadas: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 1, valor: 250 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
+    ]);
+  });
+
+  it("venda legada antecipada = 1 aparece como antecipada no mês de cada parcela", () => {
+    const meses = resumirAntecipacaoPorMes(
+      [venda({ id: 1, antecipada: 1, parcelas_detalhes: [parcela("2026-10-10", 400), parcela("2026-11-10", 400)] })],
+      HOJE
+    );
+    expect(meses.map((m) => [m.mes, m.antecipadas.qtd, m.aAntecipar.qtd])).toEqual([
+      ["2026-10", 1, 0],
+      ["2026-11", 1, 0],
+    ]);
+  });
+
+  it("venda cancelada não entra em mês nenhum", () => {
+    const meses = resumirAntecipacaoPorMes(
+      [venda({ id: 1, status: "cancelada", parcelas_detalhes: [parcela("2026-10-10", 400)] })],
+      HOJE
+    );
+    expect(meses).toEqual([]);
+  });
+
+  it("a soma dos meses bate com os totais do resumo por comprador", () => {
+    const vendas = [
+      venda({ id: 1, clienteId: 1, antecipada: 1, parcelas_detalhes: [parcela("2026-09-30", 133.33), parcela("2026-10-31", 133.33)] }),
+      venda({ id: 2, clienteId: 2, parcelas_detalhes: [parcela("2026-08-31", 206.66), parcela("2026-09-30", 206.66, true), parcela("2026-10-31", 206.68)] }),
+      venda({ id: 3, clienteId: 3, status: "estornada", parcelas_detalhes: [parcela("2026-11-30", 50)] }),
+    ];
+    const meses = resumirAntecipacaoPorMes(vendas, HOJE);
+    const { totais } = resumirAntecipacaoPorComprador(vendas, HOJE);
+    const soma = (f: (m: (typeof meses)[number]) => number) => Math.round(meses.reduce((s, m) => s + f(m), 0) * 100) / 100;
+    expect({ qtd: soma((m) => m.antecipadas.qtd), valor: soma((m) => m.antecipadas.valor) }).toEqual(totais.antecipadas);
+    expect({ qtd: soma((m) => m.aAntecipar.qtd), valor: soma((m) => m.aAntecipar.valor) }).toEqual(totais.aAntecipar);
+    expect({ qtd: soma((m) => m.vencidasSemAntecipar.qtd), valor: soma((m) => m.vencidasSemAntecipar.valor) }).toEqual(
+      totais.vencidasSemAntecipar
+    );
   });
 });
 

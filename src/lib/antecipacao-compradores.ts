@@ -1,16 +1,16 @@
 /**
- * Antecipação por comprador: quanto de cada um já foi antecipado na Prudent e
+ * Antecipação por comprador e por mês: quanto já foi antecipado na Prudent e
  * quantas parcelas ainda faltam antecipar, com os totais gerais.
  *
- * Espelha o controle que a equipe mantém em planilha (uma aba por mês de
- * desconto, status `ANTECIPAÇÃO OK` / `PENDENTE DE REPASSE` / `PAGO`), mas
- * agrupado por comprador. Puro e sem banco, para ser testado direto.
+ * Espelha o controle que a equipe mantinha em planilha (uma aba por mês de
+ * desconto, status `ANTECIPAÇÃO OK` / `PENDENTE DE REPASSE` / `PAGO`). Puro e
+ * sem banco, para ser testado direto.
  *
- * Cada parcela cai em exatamente um balde:
+ * Cada parcela cai em exatamente um balde (`baldeDaParcela`, a regra única):
  *   - antecipada: flag da parcela, OU venda com o flag legado `antecipada = 1`.
- *     Medido em produção (2026-09-11): as 26 vendas marcadas assim têm todas as
- *     parcelas com o flag em false — sem esta regra o resumo diria que nada foi
- *     antecipado, enquanto a fila mostra essas vendas como "Antecipado".
+ *     Medido em produção (2026-09-11): as 26 vendas marcadas assim tinham todas
+ *     as parcelas com o flag em false — sem esta regra o resumo diria que nada
+ *     foi antecipado, enquanto a fila mostra essas vendas como "Antecipado".
  *   - a antecipar: não antecipada e vence hoje ou depois.
  *   - vencida sem antecipar: não antecipada e já venceu. Fica fora do "falta
  *     antecipar" porque o desconto em folha já aconteceu. Não dá para chamar de
@@ -84,6 +84,14 @@ export interface ResumoAntecipacaoCompradores {
   };
 }
 
+export interface MesAntecipacao {
+  /** Mês do vencimento, `YYYY-MM`. */
+  mes: string;
+  antecipadas: Contagem;
+  aAntecipar: Contagem;
+  vencidasSemAntecipar: Contagem;
+}
+
 /** Mesmo recorte de `finance.ts`: venda desfeita não gera parcela a receber. */
 const STATUS_FORA = new Set(["cancelada", "estornada"]);
 
@@ -93,6 +101,8 @@ interface Balde {
   qtd: number;
   centavos: number;
 }
+
+type TipoBalde = "antecipadas" | "aAntecipar" | "vencidas";
 
 interface Classificacao {
   antecipadas: Balde;
@@ -132,6 +142,23 @@ function diaUtc(valor: string | Date): number {
 
 const dataDoDia = (dia: number): string => new Date(dia * MS_POR_DIA).toISOString().slice(0, 10);
 
+/**
+ * A regra única: em que balde cai uma parcela. `null` quando o vencimento é
+ * ilegível e a parcela não está antecipada — chutar um balde para ela
+ * inventaria pendência ou atraso (mesma regra de `titulosDeVenda`).
+ */
+function baldeDaParcela(
+  vendaAntecipada: boolean,
+  parcela: ParcelaParaResumo,
+  dia: number,
+  hojeDia: number
+): TipoBalde | null {
+  // Antecipada não depende do vencimento: o valor já foi recebido da Prudent.
+  if (vendaAntecipada || parcela.antecipada) return "antecipadas";
+  if (!Number.isFinite(dia)) return null;
+  return dia >= hojeDia ? "aAntecipar" : "vencidas";
+}
+
 function classificar(venda: VendaParaResumo, hojeDia: number): Classificacao {
   const vendaAntecipada = venda.antecipada === 1;
   const c: Classificacao = {
@@ -145,22 +172,11 @@ function classificar(venda: VendaParaResumo, hojeDia: number): Classificacao {
   };
 
   for (const p of venda.parcelas_detalhes ?? []) {
-    const centavos = paraCentavos(p.valorParcela);
-    // Antecipada não depende do vencimento: o valor já foi recebido da Prudent.
-    if (vendaAntecipada || p.antecipada) {
-      somar(c.antecipadas, centavos);
-      continue;
-    }
     const dia = diaUtc(p.dataVencimento);
-    // Vencimento ilegível é descartado, como em `titulosDeVenda`: chutar um
-    // balde para ele inventaria pendência ou atraso.
-    if (!Number.isFinite(dia)) continue;
-    if (dia >= hojeDia) {
-      somar(c.aAntecipar, centavos);
-      if (c.proximoDia === null || dia < c.proximoDia) c.proximoDia = dia;
-    } else {
-      somar(c.vencidas, centavos);
-    }
+    const tipo = baldeDaParcela(vendaAntecipada, p, dia, hojeDia);
+    if (!tipo) continue;
+    somar(c[tipo], paraCentavos(p.valorParcela));
+    if (tipo === "aAntecipar" && (c.proximoDia === null || dia < c.proximoDia)) c.proximoDia = dia;
   }
   return c;
 }
@@ -280,4 +296,41 @@ export function resumirAntecipacaoPorComprador(
       vendasSemParcelas,
     },
   };
+}
+
+/**
+ * Os mesmos três baldes, agrupados pelo mês do vencimento — as abas da
+ * planilha, com uma diferença que a tela precisa explicar: a aba da planilha é
+ * o mês do DESCONTO em folha, e aqui o mês é o do VENCIMENTO, que o sistema põe
+ * no dia 10 do mês seguinte (`calcularPrimeiroVencimento`). Do mais antigo ao
+ * mais novo. Parcela sem vencimento legível não tem mês e fica de fora, mesmo
+ * antecipada.
+ */
+export function resumirAntecipacaoPorMes(vendas: VendaParaResumo[], hoje: string): MesAntecipacao[] {
+  const hojeDia = diaUtc(hoje);
+  const meses = new Map<string, Record<TipoBalde, Balde>>();
+
+  for (const venda of vendas) {
+    if (vendaDesfeita(venda)) continue;
+    const vendaAntecipada = venda.antecipada === 1;
+    for (const p of venda.parcelas_detalhes ?? []) {
+      const dia = diaUtc(p.dataVencimento);
+      if (!Number.isFinite(dia)) continue;
+      const tipo = baldeDaParcela(vendaAntecipada, p, dia, hojeDia);
+      if (!tipo) continue;
+      const mes = dataDoDia(dia).slice(0, 7);
+      const baldes = meses.get(mes) ?? { antecipadas: baldeVazio(), aAntecipar: baldeVazio(), vencidas: baldeVazio() };
+      somar(baldes[tipo], paraCentavos(p.valorParcela));
+      meses.set(mes, baldes);
+    }
+  }
+
+  return [...meses.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([mes, b]) => ({
+      mes,
+      antecipadas: contagem(b.antecipadas),
+      aAntecipar: contagem(b.aAntecipar),
+      vencidasSemAntecipar: contagem(b.vencidas),
+    }));
 }
