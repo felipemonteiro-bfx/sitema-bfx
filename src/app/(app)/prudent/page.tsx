@@ -4,11 +4,13 @@ import { agruparAntecipacoesSemLote, idsEmLotes } from "@/lib/antecipacoes-sem-l
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import {
   chaveComprador,
+  parcelasDaVenda,
   resumirAntecipacaoPorComprador,
   resumirAntecipacaoPorMes,
-  situacaoParcelasVenda,
   type VendaParaResumo,
 } from "@/lib/antecipacao-compradores";
+import { contagensDaFila, mesesEmAberto } from "@/lib/fila-antecipacao";
+import { linhasDosItens } from "@/lib/itens-venda";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { revalidarVenda } from "@/lib/revalidacao";
 import AntecipacaoClient from "@/components/antecipacao-client";
@@ -252,47 +254,32 @@ export default async function Page() {
   const resumoCompradores = resumirAntecipacaoPorComprador(vendasParaResumo, hoje);
   const resumoMeses = resumirAntecipacaoPorMes(vendasParaResumo, hoje);
 
-  const vendasFormatadas = todasVendas.map((v) => {
-    const antecipada = v.antecipada ?? 0;
-    let status: "pendente" | "em_andamento" | "antecipado" | "parcialmente_antecipado";
-    if (antecipada === 1) {
-      status = "antecipado";
-    } else if (antecipada === 2) {
-      status = "em_andamento";
-    } else if (antecipada === 3) {
-      status = "parcialmente_antecipado";
-    } else {
-      status = "pendente";
-    }
+  type StatusFila = "pendente" | "em_andamento" | "antecipado" | "parcialmente_antecipado";
+  const statusDaVenda = (antecipada: number): StatusFila =>
+    antecipada === 1 ? "antecipado" : antecipada === 2 ? "em_andamento" : antecipada === 3 ? "parcialmente_antecipado" : "pendente";
 
-    const situacao = situacaoParcelasVenda(paraResumo(v), hoje);
-    return {
-      id: v.id,
-      compradorChave: chaveComprador(v),
-      faltamAntecipar: situacao.aAntecipar.qtd,
-      vencidasSemAntecipar: situacao.vencidasSemAntecipar.qtd,
-      dataVenda: v.dataVenda,
-      produtoNome: v.produtoNome,
-      valorVenda: valorTotalVenda(v),
-      parcelas: v.parcelas,
-      empresaConveniada: v.cliente?.empresa || null,
-      clienteNome: v.cliente?.nome || null,
-      clienteCpf: v.cliente?.cpf || null,
-      clienteCnpj: v.cliente?.cnpj || null,
-      status,
-      itens: v.itens.map((i) => ({
-        produtoNome: i.produtoNome,
-        quantidade: i.quantidade,
-        subtotal: i.subtotal,
-      })),
-      parcelas_detalhes: v.parcelasVencimento.map((p) => ({
-        numeroParcela: p.numeroParcela,
-        dataVencimento: p.dataVencimento.toISOString(),
-        valorParcela: p.valorParcela,
-        antecipada: p.antecipada,
-      })),
-    };
-  });
+  // Tudo que a fila mostra sai calculado daqui, do servidor — a tela só exibe
+  // (pedido do André, 2026-09-11). As parcelas cruas não vão mais para o navegador.
+  const vendasFormatadas = todasVendas.map((v) => ({
+    id: v.id,
+    compradorChave: chaveComprador(v),
+    dataVenda: v.dataVenda,
+    produtoNome: v.produtoNome,
+    valorVenda: valorTotalVenda(v),
+    parcelas: v.parcelas,
+    empresaConveniada: v.cliente?.empresa || null,
+    clienteNome: v.cliente?.nome || null,
+    clienteCpf: v.cliente?.cpf || null,
+    clienteCnpj: v.cliente?.cnpj || null,
+    status: statusDaVenda(v.antecipada ?? 0),
+    produtos: linhasDosItens(v.itens),
+    parcelasInfo: parcelasDaVenda({ ...paraResumo(v), dataVenda: v.dataVenda }, hoje),
+    // Sem parcela cadastrada: null — o filtro de vencimento não tem como julgar e
+    // deixa a venda na lista, como antes.
+    mesesEmAberto: v.parcelasVencimento.length > 0 ? mesesEmAberto(v.parcelasVencimento) : null,
+  }));
+  const contagens = contagensDaFila(vendasFormatadas.map((v) => ({ empresa: v.empresaConveniada, status: v.status })));
+  const valoresPorMes = Object.fromEntries(resumoMeses.map((m) => [m.mes, m.aAntecipar.valor]));
 
   return (
     <div className="space-y-6">
@@ -310,6 +297,8 @@ export default async function Page() {
         empresasDisponiveis={empresasUnicas}
         resumoCompradores={resumoCompradores}
         resumoMeses={resumoMeses}
+        contagens={contagens}
+        valoresPorMes={valoresPorMes}
         hoje={hoje}
       />
       <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} />

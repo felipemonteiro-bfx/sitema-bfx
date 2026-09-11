@@ -94,6 +94,18 @@ export function estadoDoMes(mes: string, intervalo: IntervaloMeses): EstadoMes {
   return c > i && c < f ? "dentro" : "fora";
 }
 
+/**
+ * Filtro de vencimento da fila: a venda passa se algum dos meses com parcela
+ * em aberto (YYYY-MM, vindos do servidor) cai no intervalo escolhido (MM/AAAA).
+ * Sem período, toda venda passa.
+ */
+export function algumMesNoIntervalo(meses: string[], inicio: string, fim: string): boolean {
+  if (!inicio && !fim) return true;
+  const de = inicio ? chaveDoMes(inicio) : "0000-00";
+  const ate = fim ? chaveDoMes(fim) : "9999-99";
+  return meses.some((mes) => mes >= de && mes <= ate);
+}
+
 /** Valor curto para caber na célula do mês: "R$ 850", "R$ 3,5 mil". Zero some. */
 export function valorCompacto(valor: number): string {
   if (!Number.isFinite(valor) || valor <= 0) return "";

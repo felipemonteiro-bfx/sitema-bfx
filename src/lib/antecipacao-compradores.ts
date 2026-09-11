@@ -26,9 +26,82 @@
  */
 
 export interface ParcelaParaResumo {
+  numeroParcela?: number;
   dataVencimento: string | Date;
   valorParcela: number;
   antecipada?: boolean | null;
+}
+
+export type SituacaoParcela = "antecipada" | "a_antecipar" | "vencida";
+
+export interface ParcelaDetalhada {
+  numero: number;
+  vencimento: string;
+  valor: number;
+  situacao: SituacaoParcela;
+}
+
+export interface ParcelasDaVenda {
+  dataCompra: string;
+  quantidade: number;
+  valorParcela: number | null;
+  contagem: { antecipadas: number; aAntecipar: number; vencidas: number };
+  lista: ParcelaDetalhada[];
+  totais: { antecipado: number; faltaAntecipar: number };
+  /** Venda cancelada ou estornada: lista vazia, e a tela diz por quê. */
+  desfeita: boolean;
+}
+
+/**
+ * Parcelas de uma venda para o popover da fila, calculadas no servidor: a
+ * situação de cada uma (a mesma regra do resumo, `baldeDaParcela`), as
+ * contagens e os totais em centavos. Ordena pelo número da parcela; sem número
+ * gravado, pelo vencimento. Venda desfeita não tem nada a antecipar.
+ */
+export function parcelasDaVenda(venda: VendaParaResumo & { dataVenda: string | Date }, hoje: string): ParcelasDaVenda {
+  const hojeDia = diaUtc(hoje);
+  const diaCompra = diaUtc(venda.dataVenda);
+  const dataCompra = Number.isFinite(diaCompra) ? dataDoDia(diaCompra) : "";
+  const parcelas = venda.parcelas_detalhes ?? [];
+  const contagem = { antecipadas: 0, aAntecipar: 0, vencidas: 0 };
+  const desfeita = vendaDesfeita(venda);
+  const base = { dataCompra, quantidade: parcelas.length, valorParcela: valorUnicoDasParcelas(parcelas), desfeita };
+
+  if (desfeita) {
+    return { ...base, contagem, lista: [], totais: { antecipado: 0, faltaAntecipar: 0 } };
+  }
+
+  const vendaAntecipada = venda.antecipada === 1;
+  let antecipado = 0;
+  let falta = 0;
+  const lista = parcelas
+    .map((p) => ({ p, dia: diaUtc(p.dataVencimento) }))
+    .filter(({ dia }) => Number.isFinite(dia))
+    .sort((a, b) => (a.p.numeroParcela ?? 0) - (b.p.numeroParcela ?? 0) || a.dia - b.dia)
+    .map(({ p, dia }, i): ParcelaDetalhada => {
+      const tipo = baldeDaParcela(vendaAntecipada, p, dia, hojeDia);
+      const situacao: SituacaoParcela = tipo === "antecipadas" ? "antecipada" : tipo === "aAntecipar" ? "a_antecipar" : "vencida";
+      const c = paraCentavos(p.valorParcela);
+      if (situacao === "antecipada") {
+        contagem.antecipadas += 1;
+        antecipado += c;
+      } else if (situacao === "a_antecipar") {
+        contagem.aAntecipar += 1;
+        falta += c;
+      } else {
+        contagem.vencidas += 1;
+      }
+      return { numero: p.numeroParcela ?? i + 1, vencimento: dataDoDia(dia), valor: c / 100, situacao };
+    });
+
+  return { ...base, contagem, lista, totais: { antecipado: antecipado / 100, faltaAntecipar: falta / 100 } };
+}
+
+/** Valor da parcela quando todas são iguais; `null` quando variam (ou não há parcela). */
+function valorUnicoDasParcelas(parcelas: ParcelaParaResumo[]): number | null {
+  if (parcelas.length === 0) return null;
+  const primeira = paraCentavos(parcelas[0].valorParcela);
+  return parcelas.every((p) => paraCentavos(p.valorParcela) === primeira) ? primeira / 100 : null;
 }
 
 export interface VendaParaResumo {

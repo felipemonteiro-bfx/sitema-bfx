@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -11,24 +11,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
 import { IntervaloMesesPicker } from "@/components/intervalo-meses-picker";
-import { ProdutosVendaPopover } from "@/components/produtos-venda-popover";
+import { ProdutosVendaPopover, type ProdutosDaVenda } from "@/components/produtos-venda-popover";
+import { LegendaParcelas, ParcelasVendaPopover } from "@/components/parcelas-venda-popover";
 import AntecipacaoCompradores, { TABELA_COM_ROLAGEM } from "@/components/antecipacao-compradores";
-import { TAXA_MENSAL_PADRAO, calcularAntecipacao, parsePeriodoMesAno, titulosDeVenda } from "@/lib/antecipacao";
-import type { CompradorAntecipacao, MesAntecipacao, ResumoAntecipacaoCompradores } from "@/lib/antecipacao-compradores";
+import { TAXA_MENSAL_PADRAO } from "@/lib/antecipacao";
+import type {
+  CompradorAntecipacao,
+  MesAntecipacao,
+  ParcelasDaVenda,
+  ResumoAntecipacaoCompradores,
+} from "@/lib/antecipacao-compradores";
+import type { ContagensFila, ResultadoSelecao } from "@/lib/fila-antecipacao";
+import { algumMesNoIntervalo } from "@/lib/periodo-meses";
 import { formatarDataPura } from "@/lib/data-pura";
-
-interface ParcelaDetalhe {
-  numeroParcela: number;
-  dataVencimento: string;
-  valorParcela: number;
-  antecipada?: boolean;
-}
-
-interface ItemVenda {
-  produtoNome: string;
-  quantidade: number;
-  subtotal: number;
-}
+import { calcularSelecaoAction } from "@/app/(app)/prudent/actions";
 
 interface Venda {
   id: number;
@@ -41,14 +37,14 @@ interface Venda {
   clienteCpf?: string | null;
   clienteCnpj?: string | null;
   status: 'pendente' | 'em_andamento' | 'antecipado' | 'parcialmente_antecipado';
-  itens?: ItemVenda[];
-  parcelas_detalhes?: ParcelaDetalhe[];
   /** Mesma chave do resumo por comprador — liga o "Ver na fila" a esta linha. */
   compradorChave: string;
-  /** Parcelas ainda não antecipadas que vencem de hoje em diante. */
-  faltamAntecipar: number;
-  /** Parcelas não antecipadas já vencidas — ainda entram no lote se a venda for selecionada. */
-  vencidasSemAntecipar: number;
+  /** Tabela de produtos pronta do servidor (linhas, preço unitário, totais). */
+  produtos: ProdutosDaVenda;
+  /** Parcelas prontas do servidor: situação de cada uma, contagens e totais. */
+  parcelasInfo: ParcelasDaVenda;
+  /** Meses (YYYY-MM) com parcela em aberto; `null` = venda sem parcela cadastrada. */
+  mesesEmAberto: string[] | null;
 }
 
 interface Props {
@@ -59,9 +55,16 @@ interface Props {
   resumoCompradores: ResumoAntecipacaoCompradores;
   /** Os mesmos baldes do resumo, agrupados pelo mês do vencimento. */
   resumoMeses: MesAntecipacao[];
+  /** Quantas vendas cada opção dos dropdowns traz — contado no servidor. */
+  contagens: ContagensFila;
+  /** Quanto falta antecipar em cada mês de vencimento (YYYY-MM), para o seletor de meses. */
+  valoresPorMes: Record<string, number>;
   /** Dia civil de Manaus (YYYY-MM-DD), o mesmo que o servidor usou no resumo. */
   hoje: string;
 }
+
+/** Espera antes de pedir o cálculo da seleção: marcar várias vendas seguidas vira um pedido só. */
+const ESPERA_CALCULO_MS = 200;
 
 function StatusBadge({ status }: { status: Venda['status'] }) {
   if (status === 'antecipado') {
@@ -85,14 +88,25 @@ function StatusBadge({ status }: { status: Venda['status'] }) {
       </Badge>
     );
   }
+  // "A antecipar" (antes "Pendente"): mesma palavra do resumo e das parcelas.
   return (
     <Badge className="bg-warning text-warning-foreground border-0 font-semibold text-xs">
-      Pendente
+      A antecipar
     </Badge>
   );
 }
 
-export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis, resumoCompradores, resumoMeses, hoje }: Props) {
+export default function AntecipacaoClient({
+  vendasIniciais,
+  onSubmit,
+  vencimentosPorEmpresa,
+  empresasDisponiveis,
+  resumoCompradores,
+  resumoMeses,
+  contagens,
+  valoresPorMes,
+  hoje,
+}: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [filtroEmpresa, setFiltroEmpresa] = useState<string>("todas");
@@ -101,6 +115,13 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const [periodoFim, setPeriodoFim] = useState<string>("");
   // Comprador escolhido no resumo ("Ver na fila"). O nome e guardado so para o chip.
   const [filtroComprador, setFiltroComprador] = useState<{ chave: string; nome: string } | null>(null);
+  // Card de selecao: calculado no servidor (calcularSelecaoAction). A tela so mostra.
+  const [calculo, setCalculo] = useState<ResultadoSelecao | null>(null);
+  const [calculando, setCalculando] = useState(false);
+  const [erroCalculo, setErroCalculo] = useState<string | null>(null);
+  // Refaz o calculo depois de um erro sem exigir mudar a selecao ou o periodo.
+  const [tentativa, setTentativa] = useState(0);
+  const pedidoAtual = useRef(0);
 
   const verNaFila = (comprador: CompradorAntecipacao) => {
     // Clicar de novo no comprador que ja filtra a fila desliga o filtro.
@@ -122,66 +143,55 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     fila?.focus({ preventScroll: true });
   };
 
-  // Range em UTC, identico ao que a server action `antecipar` usa para escolher as
-  // parcelas. Antes o filtro da tela montava o range em horario local e podia
-  // divergir da gravacao em parcelas de borda do mes.
-  const periodo = parsePeriodoMesAno(periodoInicio, periodoFim);
+  // Pede ao servidor o card de selecao a cada mudanca de selecao ou periodo.
+  // So a resposta do pedido mais recente vale: marcar e desmarcar rapido nao
+  // deixa um numero antigo chegar por ultimo.
+  useEffect(() => {
+    const pedido = ++pedidoAtual.current;
+    if (selectedIds.length === 0) {
+      setCalculo(null);
+      setErroCalculo(null);
+      setCalculando(false);
+      return;
+    }
+    setCalculando(true);
+    const espera = setTimeout(async () => {
+      try {
+        const resposta = await calcularSelecaoAction({
+          ids: selectedIds,
+          mesInicio: periodoInicio || undefined,
+          mesFim: periodoFim || undefined,
+        });
+        if (pedido !== pedidoAtual.current) return;
+        if (resposta.ok) {
+          setCalculo(resposta.resultado);
+          setErroCalculo(null);
+        } else {
+          setCalculo(null);
+          setErroCalculo(resposta.erro);
+        }
+      } catch {
+        if (pedido === pedidoAtual.current) {
+          setCalculo(null);
+          setErroCalculo("Não foi possível calcular a seleção. Tente de novo.");
+        }
+      } finally {
+        if (pedido === pedidoAtual.current) setCalculando(false);
+      }
+    }, ESPERA_CALCULO_MS);
+    return () => clearTimeout(espera);
+  }, [selectedIds, periodoInicio, periodoFim, tentativa]);
 
-  // Periodo digitado que o parser recusa (mes 13, intervalo invertido, formato
-  // errado). Sem sinalizar, o filtro seria silenciosamente ignorado e a tela
-  // mostraria tudo como se o usuario nao tivesse pedido recorte nenhum.
-  const periodoInvalido = Boolean((periodoInicio || periodoFim) && !periodo);
-
-  // Filtrar vendas baseado nos filtros ativos
+  // Filtrar vendas: so comparacao com o que o servidor mandou, nenhum calculo.
   const vendasFiltradas = vendasIniciais.filter((v) => {
     const passaEmpresa = filtroEmpresa === "todas" || v.empresaConveniada === filtroEmpresa;
     const passaStatus = filtroStatus === "todas" || v.status === filtroStatus;
     const passaComprador = !filtroComprador || v.compradorChave === filtroComprador.chave;
-
-    // Filtro de periodo: se periodo definido, venda precisa ter parcela no range
-    let passaPeriodo = true;
-    if (periodo && v.parcelas_detalhes && v.parcelas_detalhes.length > 0) {
-      // Parcela ja antecipada nao conta: senao a linha aparece como elegivel e o
-      // usuario so descobre que nao e ao clicar em Antecipar.
-      passaPeriodo = v.parcelas_detalhes.some((p) => {
-        if (p.antecipada) return false;
-        const d = new Date(p.dataVencimento);
-        return d >= periodo.inicio && d <= periodo.fim;
-      });
-    }
-
+    // Venda sem parcela cadastrada (mesesEmAberto null) nao tem como ser julgada
+    // pelo periodo e continua na lista, como antes.
+    const passaPeriodo = v.mesesEmAberto === null || algumMesNoIntervalo(v.mesesEmAberto, periodoInicio, periodoFim);
     return passaEmpresa && passaStatus && passaPeriodo && passaComprador;
   });
-
-  const selectedVendas = vendasIniciais.filter(v => selectedIds.includes(v.id));
-
-  // Os titulos que a server action vai antecipar de fato: parcelas ainda nao
-  // antecipadas e dentro do periodo filtrado. O calculo antigo usava o valor cheio
-  // da venda e um prazo aproximado de 30 dias por parcela, entao divergia do lote.
-  const titulosSelecionados = selectedVendas.flatMap((v) => titulosDeVenda(v, periodo));
-  const {
-    prazoMedioDias: prazoMedio,
-    taxaPercent,
-    valorBruto: totalSelecionado,
-    valorTaxa,
-    valorLiquido,
-  } = calcularAntecipacao(titulosSelecionados);
-
-  // Parcelas vencidas que a selecao leva ao lote: `titulosDeVenda` e a action nao
-  // tem piso de data, enquanto o resumo por comprador as deixa fora do "falta
-  // antecipar". Contar aqui evita que o lote as carregue sem ninguem perceber.
-  const vencidasNaSelecao = selectedVendas.reduce(
-    (total, v) =>
-      total +
-      (v.parcelas_detalhes ?? []).filter((p) => {
-        if (p.antecipada) return false;
-        const venc = new Date(p.dataVencimento);
-        if (Number.isNaN(venc.getTime())) return false;
-        if (periodo && (venc < periodo.inicio || venc > periodo.fim)) return false;
-        return p.dataVencimento.slice(0, 10) < hoje;
-      }).length,
-    0
-  );
 
   // Selecao que os filtros atuais escondem: continua no lote e no card, mas some da
   // tabela — sem este contador o total nao fecha com o que esta a vista.
@@ -208,21 +218,27 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
 
   const handleAction = async (formData: FormData) => {
     if (selectedIds.length === 0) return;
-    if (periodoInvalido) {
-      toast.error("Período inválido. Escolha de novo o intervalo de meses.");
+    if (calculando || (!calculo && !erroCalculo)) {
+      toast.info("Aguarde o cálculo da seleção terminar.");
+      return;
+    }
+    if (erroCalculo || !calculo) {
+      // Sem refazer, o erro ficava gravado e cada clique so repetia o aviso.
+      toast.error("O cálculo da seleção falhou — calculando de novo. Clique em Antecipar quando terminar.");
+      setTentativa((n) => n + 1);
       return;
     }
     // A action nao encontra parcela elegivel e retorna em silencio: sem este aviso
     // o usuario clica, nada acontece e a tela nao explica por que.
-    if (titulosSelecionados.length === 0) {
+    if (calculo.parcelas === 0) {
       toast.error("Nenhuma parcela elegível na seleção — todas já foram antecipadas ou estão fora do período.");
       return;
     }
-    // Venda legada sem parcela cadastrada: a tela estima os titulos, mas a action
-    // so enxerga linhas reais e retornaria em silencio, limpando a selecao como se
-    // tivesse dado certo.
-    if (!selectedVendas.some((v) => v.parcelas_detalhes?.some((p) => !p.antecipada))) {
-      toast.error("As vendas selecionadas não têm parcelas cadastradas para antecipar.");
+    // Nenhum titulo vem de parcela cadastrada (so venda legada, com prazo
+    // estimado): a action so enxerga linhas reais e retornaria em silencio,
+    // limpando a selecao como se tivesse dado certo.
+    if (calculo.parcelasCadastradas === 0) {
+      toast.error("As vendas selecionadas não têm parcelas cadastradas em aberto para antecipar.");
       return;
     }
 
@@ -289,31 +305,26 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   // Vencimento de parcela e data pura — ver src/lib/data-pura.ts
   const formatDateBR = formatarDataPura;
 
-  // Contagem em cada opção dos dropdowns: quantas vendas da fila a escolha traz.
-  // Sobre a fila inteira, não a filtrada — senão escolher uma empresa zeraria as outras.
-  const vendasPorEmpresa = new Map<string, number>();
-  const vendasPorStatus = new Map<string, number>();
-  for (const v of vendasIniciais) {
-    if (v.empresaConveniada) vendasPorEmpresa.set(v.empresaConveniada, (vendasPorEmpresa.get(v.empresaConveniada) ?? 0) + 1);
-    vendasPorStatus.set(v.status, (vendasPorStatus.get(v.status) ?? 0) + 1);
-  }
-  const contagem = (n: number | undefined) => String(n ?? 0);
+  // Numeros prontos do servidor; aqui so viram texto.
+  const n = (valor: number | undefined) => String(valor ?? 0);
   const opcoesEmpresa = [
-    { value: "todas", label: "Todas as empresas", hint: contagem(vendasIniciais.length) },
-    ...empresasDisponiveis.map((e: string) => ({ value: e, label: e, hint: contagem(vendasPorEmpresa.get(e)) })),
+    { value: "todas", label: "Todas as empresas", hint: n(contagens.total) },
+    ...empresasDisponiveis.map((e: string) => ({ value: e, label: e, hint: n(contagens.porEmpresa[e]) })),
   ];
   // A bolinha repete a cor do selo da coluna Status (StatusBadge).
   const opcoesStatus = [
-    { value: "todas", label: "Todos os status", hint: contagem(vendasIniciais.length) },
-    { value: "pendente", label: "Pendente", indicador: "bg-warning", hint: contagem(vendasPorStatus.get("pendente")) },
-    { value: "parcialmente_antecipado", label: "Parcialmente antecipado", indicador: "bg-status-partial", hint: contagem(vendasPorStatus.get("parcialmente_antecipado")) },
-    { value: "em_andamento", label: "Em andamento", indicador: "bg-info", hint: contagem(vendasPorStatus.get("em_andamento")) },
-    { value: "antecipado", label: "Antecipado", indicador: "bg-success", hint: contagem(vendasPorStatus.get("antecipado")) },
+    { value: "todas", label: "Todos os status", hint: n(contagens.total) },
+    { value: "pendente", label: "A antecipar", indicador: "bg-warning", hint: n(contagens.porStatus.pendente) },
+    { value: "parcialmente_antecipado", label: "Parcialmente antecipado", indicador: "bg-status-partial", hint: n(contagens.porStatus.parcialmente_antecipado) },
+    { value: "em_andamento", label: "Em andamento", indicador: "bg-info", hint: n(contagens.porStatus.em_andamento) },
+    { value: "antecipado", label: "Antecipado", indicador: "bg-success", hint: n(contagens.porStatus.antecipado) },
   ];
-  // Quanto falta antecipar em cada mês de vencimento, para o seletor de meses.
-  const valoresPorMes = Object.fromEntries(resumoMeses.map((m) => [m.mes, m.aAntecipar.valor]));
   const temFiltro = filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "" || Boolean(filtroComprador);
   const rotuloFiltro = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+
+  const totalSelecionado = calculo?.valorBruto ?? 0;
+  const parcelasSelecionadas = calculo?.parcelas ?? 0;
+  const vencidasNaSelecao = calculo?.vencidas ?? 0;
 
   const fila = (
     <form action={handleAction}>
@@ -412,7 +423,14 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             <TableHead className="hidden md:table-cell">Produto</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Valor</TableHead>
-            <TableHead className="text-right">Parcelas</TableHead>
+            <TableHead className="text-right">
+              {/* Legenda da célula "4 / 2 / 1 / 1" no "?": o cabeçalho fica enxuto e
+                  a linha não precisa repetir o texto (pedido do André). */}
+              <span className="inline-flex items-center justify-end gap-1">
+                Parcelas
+                <LegendaParcelas />
+              </span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -426,6 +444,8 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             vendasFiltradas.map((v) => {
               const isTotalmenteAntecipado = v.status === 'antecipado';
               const isSelected = selectedIds.includes(v.id);
+              const variosProdutos = v.produtos.linhas.length > 1;
+              const produtoUnico = v.produtos.linhas[0]?.produtoNome ?? v.produtoNome ?? '';
               return (
                 <TableRow
                   key={v.id}
@@ -456,10 +476,10 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                         com o popover de produtos ainda ao alcance do toque. */}
                     <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 text-xs text-muted-foreground md:hidden">
                       {v.empresaConveniada && <span className="truncate">{v.empresaConveniada}</span>}
-                      {v.itens && v.itens.length > 1 ? (
-                        <ProdutosVendaPopover itens={v.itens} className="h-11" />
+                      {variosProdutos ? (
+                        <ProdutosVendaPopover produtos={v.produtos} className="h-11" />
                       ) : (
-                        <span className="truncate">{v.itens?.[0]?.produtoNome ?? v.produtoNome ?? ''}</span>
+                        <span className="truncate">{produtoUnico}</span>
                       )}
                     </div>
                   </TableCell>
@@ -473,17 +493,13 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                     )}
                   </TableCell>
                   <TableCell className="hidden font-semibold text-foreground max-w-[250px] md:table-cell">
-                    {v.itens && v.itens.length > 1 ? (
+                    {variosProdutos ? (
                       // Hover abre, clique fixa, sair sem clicar fecha — e o clique
-                      // nunca seleciona a venda (ver produtos-venda-popover.tsx).
-                      <ProdutosVendaPopover itens={v.itens} />
-                    ) : v.itens && v.itens.length === 1 ? (
-                      <span className="block truncate" title={v.itens[0].produtoNome}>
-                        {v.itens[0].produtoNome}
-                      </span>
+                      // nunca seleciona a venda (ver use-popover-hover.ts).
+                      <ProdutosVendaPopover produtos={v.produtos} />
                     ) : (
-                      <span className="block truncate" title={v.produtoNome || ''}>
-                        {v.produtoNome || '—'}
+                      <span className="block truncate" title={produtoUnico}>
+                        {produtoUnico || '—'}
                       </span>
                     )}
                   </TableCell>
@@ -491,24 +507,15 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                     <StatusBadge status={v.status} />
                   </TableCell>
                   <TableCell className="text-right tabular-nums font-bold text-foreground">{formatBRL(v.valorVenda || 0)}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {/* Tint opaco (bg-info-bg), nao um composto com alfa da
-                        propria matiz: o composto de 20% escurece o proprio tom e
-                        trava o texto em 4.02:1 mesmo com --info-text. O tint
-                        opaco da 4.59:1 (fase 16, achado 4). */}
-                    <span className="inline-flex items-center justify-center rounded-md bg-info-bg px-2 py-0.5 text-xs font-bold text-info-text">
-                      {v.parcelas}x
-                    </span>
-                    {/* "a antecipar" e o PENDENTE DE REPASSE da planilha. As
-                        vencidas ficam fora do resumo, mas ainda entram no lote se
-                        a venda for selecionada — por isso aparecem aqui tambem. */}
-                    {(v.faltamAntecipar > 0 || v.vencidasSemAntecipar > 0) && (
-                      <div className="mt-1 whitespace-nowrap text-xs text-muted-foreground">
-                        {v.faltamAntecipar > 0 && `${v.faltamAntecipar} a antecipar`}
-                        {v.faltamAntecipar > 0 && v.vencidasSemAntecipar > 0 && " · "}
-                        {v.vencidasSemAntecipar > 0 &&
-                          `${v.vencidasSemAntecipar} ${v.vencidasSemAntecipar === 1 ? "vencida" : "vencidas"}`}
-                      </div>
+                  <TableCell className="text-right">
+                    {/* "total / antecipadas / a antecipar / vencidas", contados no
+                        servidor; a legenda fica no "?" do cabecalho da coluna. */}
+                    {v.parcelasInfo.lista.length > 0 ? (
+                      <ParcelasVendaPopover parcelas={v.parcelasInfo} />
+                    ) : (
+                      <span className="text-sm font-bold tabular-nums" title={v.parcelasInfo.desfeita ? "Venda cancelada ou estornada" : "Venda sem parcelas cadastradas"}>
+                        {v.parcelas ?? '—'}
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -520,30 +527,32 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
       </div>
 
       {/* Degrau de destaque (D-03): esta e a card principal da tela — total
-          selecionado + CTA de antecipar. A card de vencimentos abaixo (linha
-          ~534) e secundaria e fica no degrau de repouso, para nao ter dois
+          selecionado + CTA de antecipar. A card de vencimentos abaixo e
+          secundaria e fica no degrau de repouso, para nao ter dois
           "flutuantes" na mesma superficie sem dialogo nem menu. */}
-      <Card className="mt-6 overflow-hidden border-2 border-primary/20 shadow-lg dark:shadow-[var(--shadow-lg)]">
-        {/* Linha 1: Total + Métricas */}
+      <Card className="mt-6 overflow-hidden border-2 border-primary/20 shadow-lg dark:shadow-[var(--shadow-lg)]" aria-busy={calculando}>
+        {/* Linha 1: Total + Métricas — tudo vindo do servidor (calcularSelecaoAction). */}
         <div className="p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
           {/* Total selecionado */}
           <div className="flex-shrink-0 min-w-[140px]">
-            <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Total a Antecipar</div>
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Total a Antecipar
+              {calculando && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-label="Calculando" />}
+            </div>
             <div className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums leading-none mt-0.5">
               {formatBRL(totalSelecionado)}
             </div>
             <div className="text-xs text-muted-foreground mt-1.5">
               {selectedIds.length} {selectedIds.length === 1 ? 'venda selecionada' : 'vendas selecionadas'}
-              {titulosSelecionados.length > 0 && (
-                <> · {titulosSelecionados.length} {titulosSelecionados.length === 1 ? 'parcela' : 'parcelas'}</>
+              {parcelasSelecionadas > 0 && (
+                <> · {parcelasSelecionadas} {parcelasSelecionadas === 1 ? 'parcela' : 'parcelas'}</>
               )}
+              {calculando && <> · calculando…</>}
             </div>
-            {periodoInvalido && (
-              <div className="text-xs font-semibold text-warning-text mt-1">
-                Período inválido — escolha de novo o intervalo de meses.
-              </div>
+            {erroCalculo && (
+              <div className="text-xs font-semibold text-warning-text mt-1">{erroCalculo}</div>
             )}
-            {!periodoInvalido && selectedIds.length > 0 && titulosSelecionados.length === 0 && (
+            {!calculando && calculo && selectedIds.length > 0 && calculo.parcelas === 0 && (
               <div className="text-xs font-semibold text-warning-text mt-1">
                 Nenhuma parcela elegível — já antecipadas ou fora do período.
               </div>
@@ -570,21 +579,21 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             <div className="rounded-lg bg-info-bg border border-info px-3 py-2.5">
               <div className="text-xs font-bold uppercase tracking-wider text-info-text">Prazo médio</div>
               <div className="text-xl font-bold text-info-text tabular-nums leading-tight">
-                {prazoMedio.toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
+                {(calculo?.prazoMedioDias ?? 0).toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
               </div>
               <div className="text-xs text-info-text font-medium mt-0.5">D+1</div>
             </div>
             <div className="rounded-lg bg-warning-bg border border-warning px-3 py-2.5">
               <div className="text-xs font-bold uppercase tracking-wider text-warning-text">Taxa total</div>
               <div className="text-xl font-bold text-warning-text tabular-nums leading-tight">
-                {taxaPercent.toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
+                {(calculo?.taxaPercent ?? 0).toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
               </div>
               <div className="text-xs text-warning-text font-medium mt-0.5">Smart</div>
             </div>
             <div className="rounded-lg bg-success-bg border border-success px-3 py-2.5">
               <div className="text-xs font-bold uppercase tracking-wider text-success-text">Líquido</div>
               <div className="text-base sm:text-lg font-bold text-success-text tabular-nums leading-tight truncate">
-                {formatBRL(valorLiquido)}
+                {formatBRL(calculo?.valorLiquido ?? 0)}
               </div>
               <div className="text-xs text-success-text font-medium mt-0.5">estimado</div>
             </div>
@@ -621,9 +630,9 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             </Button>
           </div>
 
-          {/* CTA principal */}
+          {/* CTA principal — espera o cálculo do servidor para não antecipar no escuro. */}
           <Button
-            disabled={selectedIds.length === 0 || isProcessing}
+            disabled={selectedIds.length === 0 || isProcessing || calculando}
             className="w-full sm:w-auto sm:ml-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-bold bg-success hover:bg-success/90 active:bg-success/80 text-success-foreground shadow-md dark:shadow-[var(--shadow-md)] hover:shadow-success/30 transition-all gap-2 cursor-pointer"
           >
             {isProcessing ? (

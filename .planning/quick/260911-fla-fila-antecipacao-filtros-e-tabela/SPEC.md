@@ -49,6 +49,42 @@ Decisões do André (perguntadas): **seletor de intervalo de meses** num só pop
   `rotuloIntervalo`, `chaveDoMes` (MM/AAAA ↔ YYYY-MM), `valorCompacto` (R$ 3,9 mil).
 - `src/lib/popover-hover.ts`: `transicaoPopoverHover(estado, evento)` — estados aberto/fixo.
 
+## Ajuste pedido depois do deploy — produtos em tabela
+
+> "O que é 1x 2x? Quero que sempre mostre usando subgrid ou table pra ficarem alinhados."
+
+O popover listava "CROPPED BÁSIC MARROM (2x) R$ 90,00": o "2x" (quantidade) parecia número de
+parcelas, e nomes longos desalinhavam os valores. Passa a ser uma tabela do shadcn, compacta:
+**Produto | Qtd. | Valor**, números à direita com `tabular-nums`, preço de cada unidade sob o
+valor quando a quantidade passa de 1 ("R$ 45,00 cada"), nomes longos em até duas linhas e rodapé
+"Total dos produtos" com a soma das quantidades e dos valores (a borda do rodapé é a linha
+separadora pedida antes). Lógica em `src/lib/itens-venda.ts` (`linhasDosItens`), testada.
+
+## Aprovado no design v4 — cálculos no servidor, parcelas e "A antecipar"
+
+> "De forma alguma os cálculos vêm do front, tudo deve vir do backend, o front só mostra." —
+> e: popover nas parcelas com a data da compra, quantas parcelas, quais foram antecipadas ou não;
+> e: trocar o status "Pendente" por "A antecipar".
+
+- **Servidor calcula, tela mostra.** `page.tsx` manda pronto, por venda: a tabela de produtos
+  (`linhasDosItens`), as parcelas com situação e totais (`parcelasDaVenda`) e os meses com
+  parcela em aberto (`mesesEmAberto`); e, para a fila: as contagens dos dropdowns
+  (`contagensDaFila`) e o valor a antecipar por mês. A tela deixa de receber as parcelas cruas.
+- **Card de seleção no servidor.** Total, parcelas, prazo médio, taxa, líquido e vencidas da
+  seleção vêm de uma server action (`calcularSelecaoAction`, com `requireAdminOrThrow`), chamada
+  a cada mudança de seleção ou período, com espera de ~200 ms e descarte de resposta antiga. A
+  lógica fica em `calcularSelecao` (`src/lib/fila-antecipacao.ts`), pura e testada, sobre as
+  mesmas `titulosDeVenda` + `calcularAntecipacao`. Enquanto calcula, o card mostra "Calculando…"
+  e o botão Antecipar fica desabilitado.
+- **Popover de parcelas** no "Nx" da coluna Parcelas (abre no hover, fixa no clique): data da
+  compra, quantidade e valor da parcela, contagem por situação, tabela Nº | Vencimento | Valor |
+  Situação e rodapé com já antecipado e falta antecipar da venda.
+- **Selo "A antecipar"** no lugar de "Pendente" (selo da coluna Status e opção do dropdown). O
+  valor gravado (`pendente`) não muda.
+
+O que continua na tela e não é cálculo de negócio: filtrar a lista (comparar o mês escolhido com os
+meses que o servidor mandou), buscar por nome, formatar moeda e data.
+
 ## Fora do escopo
 
 Regras de antecipação, action `antecipar`, relatórios. O `FormSelect` não muda de visual nem de
