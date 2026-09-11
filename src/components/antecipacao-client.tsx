@@ -4,16 +4,15 @@ import { useState } from 'react';
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown, FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
+import { FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
-import AntecipacaoCompradores from "@/components/antecipacao-compradores";
+import { IntervaloMesesPicker } from "@/components/intervalo-meses-picker";
+import { ProdutosVendaPopover } from "@/components/produtos-venda-popover";
+import AntecipacaoCompradores, { TABELA_COM_ROLAGEM } from "@/components/antecipacao-compradores";
 import { TAXA_MENSAL_PADRAO, calcularAntecipacao, parsePeriodoMesAno, titulosDeVenda } from "@/lib/antecipacao";
 import type { CompradorAntecipacao, MesAntecipacao, ResumoAntecipacaoCompradores } from "@/lib/antecipacao-compradores";
 import { formatarDataPura } from "@/lib/data-pura";
@@ -210,7 +209,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const handleAction = async (formData: FormData) => {
     if (selectedIds.length === 0) return;
     if (periodoInvalido) {
-      toast.error("Período inválido. Use o formato MM/AAAA, com o mês inicial antes do final.");
+      toast.error("Período inválido. Escolha de novo o intervalo de meses.");
       return;
     }
     // A action nao encontra parcela elegivel e retorna em silencio: sem este aviso
@@ -290,77 +289,89 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   // Vencimento de parcela e data pura — ver src/lib/data-pura.ts
   const formatDateBR = formatarDataPura;
 
+  // Contagem em cada opção dos dropdowns: quantas vendas da fila a escolha traz.
+  // Sobre a fila inteira, não a filtrada — senão escolher uma empresa zeraria as outras.
+  const vendasPorEmpresa = new Map<string, number>();
+  const vendasPorStatus = new Map<string, number>();
+  for (const v of vendasIniciais) {
+    if (v.empresaConveniada) vendasPorEmpresa.set(v.empresaConveniada, (vendasPorEmpresa.get(v.empresaConveniada) ?? 0) + 1);
+    vendasPorStatus.set(v.status, (vendasPorStatus.get(v.status) ?? 0) + 1);
+  }
+  const contagem = (n: number | undefined) => String(n ?? 0);
+  const opcoesEmpresa = [
+    { value: "todas", label: "Todas as empresas", hint: contagem(vendasIniciais.length) },
+    ...empresasDisponiveis.map((e: string) => ({ value: e, label: e, hint: contagem(vendasPorEmpresa.get(e)) })),
+  ];
+  // A bolinha repete a cor do selo da coluna Status (StatusBadge).
+  const opcoesStatus = [
+    { value: "todas", label: "Todos os status", hint: contagem(vendasIniciais.length) },
+    { value: "pendente", label: "Pendente", indicador: "bg-warning", hint: contagem(vendasPorStatus.get("pendente")) },
+    { value: "parcialmente_antecipado", label: "Parcialmente antecipado", indicador: "bg-status-partial", hint: contagem(vendasPorStatus.get("parcialmente_antecipado")) },
+    { value: "em_andamento", label: "Em andamento", indicador: "bg-info", hint: contagem(vendasPorStatus.get("em_andamento")) },
+    { value: "antecipado", label: "Antecipado", indicador: "bg-success", hint: contagem(vendasPorStatus.get("antecipado")) },
+  ];
+  // Quanto falta antecipar em cada mês de vencimento, para o seletor de meses.
+  const valoresPorMes = Object.fromEntries(resumoMeses.map((m) => [m.mes, m.aAntecipar.valor]));
+  const temFiltro = filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "" || Boolean(filtroComprador);
+  const rotuloFiltro = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+
   const fila = (
     <form action={handleAction}>
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Empresa</label>
+      {/* Filtros: uma coluna no celular (controles com alvo de 44px); em linha a partir de sm. */}
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
+        <div className="flex flex-col gap-1 sm:w-56">
+          <label htmlFor="filtro-empresa" className={rotuloFiltro}>Empresa</label>
           <FormSelect
+            id="filtro-empresa"
             name="_filtroEmpresa"
-            options={[
-              { value: "todas", label: "Todas as empresas" },
-              ...empresasDisponiveis.map((e: string) => ({ value: e, label: e })),
-            ]}
+            options={opcoesEmpresa}
             value={filtroEmpresa}
             onValueChange={setFiltroEmpresa}
             searchable={empresasDisponiveis.length > 5}
+            className="h-11 sm:h-10"
           />
         </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</label>
+        <div className="flex flex-col gap-1 sm:w-64">
+          <label htmlFor="filtro-status" className={rotuloFiltro}>Status</label>
           <FormSelect
+            id="filtro-status"
             name="_filtroStatus"
-            options={[
-              { value: "todas", label: "Todos os status" },
-              { value: "pendente", label: "Pendente" },
-              { value: "parcialmente_antecipado", label: "Parcialmente antecipado" },
-              { value: "em_andamento", label: "Em andamento" },
-              { value: "antecipado", label: "Antecipado" },
-            ]}
+            options={opcoesStatus}
             value={filtroStatus}
             onValueChange={setFiltroStatus}
             searchable={false}
+            className="h-11 sm:h-10"
           />
         </div>
         <div className="flex flex-col gap-1">
           {/* O filtro e pelo mes do VENCIMENTO, que o sistema poe no mes seguinte ao
-              desconto em folha — "De mes/ano" levava a pedir 09 querendo o desconto de setembro. */}
-          <label htmlFor="filtro-vencimento-de" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Vencimento de</label>
-          <Input
-            id="filtro-vencimento-de"
-            type="text"
-            value={periodoInicio}
-            onChange={(e) => setPeriodoInicio(e.target.value)}
-            placeholder="10/2026"
-            maxLength={7}
-            className="w-28"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="filtro-vencimento-ate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Vencimento até</label>
-          <Input
-            id="filtro-vencimento-ate"
-            type="text"
-            value={periodoFim}
-            onChange={(e) => setPeriodoFim(e.target.value)}
-            placeholder="12/2026"
-            maxLength={7}
-            className="w-28"
+              desconto em folha. O seletor grava MM/AAAA, o formato que parsePeriodoMesAno le. */}
+          <label htmlFor="filtro-vencimento" className={rotuloFiltro}>Vencimento</label>
+          <IntervaloMesesPicker
+            id="filtro-vencimento"
+            inicio={periodoInicio}
+            fim={periodoFim}
+            onChange={(inicio, fim) => {
+              setPeriodoInicio(inicio);
+              setPeriodoFim(fim);
+            }}
+            hoje={hoje}
+            valoresPorMes={valoresPorMes}
           />
         </div>
         {filtroComprador && (
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Comprador</span>
+            <span className={rotuloFiltro}>Comprador</span>
             {/* Par info-bg/info-text, policiado pela catraca de contraste: o
                 text-primary sobre bg-primary/10 da pilula de empresa mede 4.39:1. */}
-            <div className="flex h-10 items-center gap-1 rounded-md bg-info-bg pl-3 pr-1 text-sm font-semibold text-info-text">
-              <span className="truncate max-w-[220px]" title={filtroComprador.nome}>{filtroComprador.nome}</span>
+            <div className="flex h-11 items-center gap-1 rounded-md bg-info-bg pl-3 pr-1 text-sm font-semibold text-info-text sm:h-10">
+              <span className="truncate sm:max-w-[220px]" title={filtroComprador.nome}>{filtroComprador.nome}</span>
               <Button
                 type="button"
                 variant="ghost"
                 size="iconSm"
                 aria-label="Remover filtro de comprador"
+                className="ml-auto"
                 onClick={() => setFiltroComprador(null)}
               >
                 <X className="h-4 w-4" />
@@ -368,24 +379,25 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             </div>
           </div>
         )}
-        {(filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "" || filtroComprador) && (
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground opacity-0">.</label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-10 text-muted-foreground hover:text-foreground"
-              onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); setFiltroComprador(null); }}
-            >
-              Limpar filtros
-            </Button>
-          </div>
+        {temFiltro && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-11 justify-self-start text-muted-foreground hover:text-foreground sm:h-10"
+            onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); setFiltroComprador(null); }}
+          >
+            Limpar filtros
+          </Button>
         )}
       </div>
 
+      {/* Mesma receita das tabelas do resumo: no maximo 80% da tela, rolagem por
+          dentro e cabecalho fixo — a fila passa de cem vendas. O seletor mira o
+          div de rolagem que o <Table> cria em volta da <table>. */}
+      <div className={TABELA_COM_ROLAGEM}>
       <Table>
-        <TableHeader>
+        <TableHeader sticky>
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
@@ -396,8 +408,8 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             </TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Cliente</TableHead>
-            <TableHead>Empresa Conveniada</TableHead>
-            <TableHead>Produto</TableHead>
+            <TableHead className="hidden md:table-cell">Empresa Conveniada</TableHead>
+            <TableHead className="hidden md:table-cell">Produto</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Valor</TableHead>
             <TableHead className="text-right">Parcelas</TableHead>
@@ -425,7 +437,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                       : v.status === 'em_andamento'
                       ? 'bg-info-bg cursor-pointer hover:bg-info/15'
                       : isSelected
-                      ? 'bg-warning-bg border-l-4 border-warning cursor-pointer'
+                      ? 'bg-warning-bg cursor-pointer'
                       : 'cursor-pointer hover:bg-accent/50'
                   }`}
                   onClick={() => !isProcessing && toggleSelect(v.id, isTotalmenteAntecipado)}
@@ -438,8 +450,20 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                     />
                   </TableCell>
                   <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
-                  <TableCell className="text-foreground text-sm truncate max-w-[150px]">{v.clienteNome || '—'}</TableCell>
-                  <TableCell className="text-foreground">
+                  <TableCell className="text-foreground text-sm max-w-[180px] md:max-w-[150px]">
+                    <span className="block truncate">{v.clienteNome || '—'}</span>
+                    {/* No celular Empresa e Produto deixam de ser colunas e vem aqui,
+                        com o popover de produtos ainda ao alcance do toque. */}
+                    <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-3 text-xs text-muted-foreground md:hidden">
+                      {v.empresaConveniada && <span className="truncate">{v.empresaConveniada}</span>}
+                      {v.itens && v.itens.length > 1 ? (
+                        <ProdutosVendaPopover itens={v.itens} className="h-11" />
+                      ) : (
+                        <span className="truncate">{v.itens?.[0]?.produtoNome ?? v.produtoNome ?? ''}</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden text-foreground md:table-cell">
                     {v.empresaConveniada ? (
                       <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                         {v.empresaConveniada}
@@ -448,49 +472,11 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                       <span className="text-muted-foreground text-xs">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="font-semibold text-foreground max-w-[250px]">
+                  <TableCell className="hidden font-semibold text-foreground max-w-[250px] md:table-cell">
                     {v.itens && v.itens.length > 1 ? (
-                      // Popover em vez de <details>: expandir empurrava a linha e as
-                      // vizinhas para baixo. stopPropagation porque clicar na linha
-                      // seleciona a venda, e evento React atravessa o portal do
-                      // conteudo ate o <tr>.
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="-ml-3 gap-1 font-semibold"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {v.itens.length} produtos
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="start" className="w-80 p-3" onClick={(e) => e.stopPropagation()}>
-                          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            Produtos da venda
-                          </div>
-                          <ul className="space-y-1.5 text-sm">
-                            {v.itens.map((item, idx) => (
-                              <li key={idx} className="flex justify-between gap-3">
-                                <span className="min-w-0 truncate" title={item.produtoNome}>
-                                  {item.produtoNome} <span className="text-muted-foreground">({item.quantidade}x)</span>
-                                </span>
-                                <span className="tabular-nums shrink-0 font-medium">{formatBRL(item.subtotal)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                          <Separator className="my-2.5" />
-                          {/* So a soma dos itens: o Valor da linha pode incluir frete e desconto. */}
-                          <div className="flex justify-between gap-3 text-sm font-bold">
-                            <span>Total dos produtos</span>
-                            <span className="tabular-nums shrink-0">
-                              {formatBRL(v.itens.reduce((soma, item) => soma + item.subtotal, 0))}
-                            </span>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                      // Hover abre, clique fixa, sair sem clicar fecha — e o clique
+                      // nunca seleciona a venda (ver produtos-venda-popover.tsx).
+                      <ProdutosVendaPopover itens={v.itens} />
                     ) : v.itens && v.itens.length === 1 ? (
                       <span className="block truncate" title={v.itens[0].produtoNome}>
                         {v.itens[0].produtoNome}
@@ -531,6 +517,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
           )}
         </TableBody>
       </Table>
+      </div>
 
       {/* Degrau de destaque (D-03): esta e a card principal da tela — total
           selecionado + CTA de antecipar. A card de vencimentos abaixo (linha
@@ -553,7 +540,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             </div>
             {periodoInvalido && (
               <div className="text-xs font-semibold text-warning-text mt-1">
-                Período inválido — informe MM/AAAA, com o mês inicial antes do final.
+                Período inválido — escolha de novo o intervalo de meses.
               </div>
             )}
             {!periodoInvalido && selectedIds.length > 0 && titulosSelecionados.length === 0 && (

@@ -37,7 +37,7 @@ interface Props {
  * das colunas, e a fila logo abaixo continua a um scroll de distância. O seletor
  * mira o <div> de rolagem que o <Table> cria em volta da <table>.
  */
-const TABELA_COM_ROLAGEM = 'rounded-lg border border-border [&>div]:max-h-[80dvh]';
+export const TABELA_COM_ROLAGEM = 'rounded-lg border border-border [&>div]:max-h-[80dvh]';
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
@@ -208,11 +208,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                         const semSobra = c.vencidasSemAntecipar.qtd === 0 && c.vendasSemParcelas === 0;
                         const tudoAntecipado = c.aAntecipar.qtd === 0 && c.antecipadas.qtd > 0 && semSobra;
                         return (
-                          <TableRow
-                            key={c.chave}
-                            isSelected={naFila}
-                            className={naFila ? 'border-l-4 border-l-primary' : undefined}
-                          >
+                          <TableRow key={c.chave} isSelected={naFila}>
                             <TableCell>
                               <div
                                 className="font-semibold text-foreground truncate max-w-[150px] sm:max-w-[260px]"
