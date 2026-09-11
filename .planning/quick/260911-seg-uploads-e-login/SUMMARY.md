@@ -15,8 +15,7 @@ Data: 2026-09-11 · Spec: `SPEC.md` (nesta pasta)
 ## Não mexido (motivo na SPEC)
 
 - Cache do `resolverEscopo` do MCP e CORS explícito no middleware.
-- Senha do Postgres em `deploy/bfx/secrets.yaml`: aguarda confirmação do André (infra/GitOps +
-  rotação da senha do banco de produção).
+- ~~Senha do Postgres em `deploy/bfx/secrets.yaml`~~ — **feito** (autorizado pelo André): ver abaixo.
 
 ## Verificação
 
@@ -41,3 +40,16 @@ Data: 2026-09-11 · Spec: `SPEC.md` (nesta pasta)
 - Aceito: com 2 IPs dá para manter uma conta bloqueada (equipe pequena; revisar se virar problema).
 - Teste que estourava o timeout de 5 s no primeiro import sob a suíte inteira: import aquecido em
   `beforeAll`. Suíte completa: 1.205 testes passando (Uber só no CI).
+
+## Senha do Postgres — rotacionada e fora do git (commit 4a37d81)
+
+- `ALTER ROLE postgres` no `bfx-db-0` com senha nova de 40 caracteres; `DATABASE_URL` novo em
+  `/softlive/bfx/prod/secrets/bfx-app-secrets` (v5 → v6, as outras 25 chaves conferidas por
+  asserção); parâmetro novo `/softlive/bfx/prod/secrets/bfx-db-secrets` (POSTGRES_*,
+  EVOLUTION_DATABASE_URI) materializado por `deploy/bfx/externalsecret-db.yaml`.
+- Evolution API lê `DATABASE_CONNECTION_URI` do Secret; a linha saiu do ConfigMap. `secrets.yaml`
+  removido.
+- Verificado: ExternalSecrets `SecretSynced`, pod novo do app `Ready` sem P1000, Evolution
+  "Migration succeeded", `/api/health` → `db: up`. Arquivos com a senha apagados do scratchpad.
+- **Pendente**: o ConfigMap da Evolution ainda tem `AUTHENTICATION_API_KEY` em texto no git
+  (e `CORS_ORIGIN=*`) — mover para o SSM e rotacionar a chave exige atualizar quem chama a Evolution.
