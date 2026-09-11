@@ -32,7 +32,6 @@ data:
 
     DATABASE_ENABLED=true
     DATABASE_PROVIDER=postgresql
-    DATABASE_CONNECTION_URI=postgresql://postgres:postgres@bfx-db:5432/evolution?schema=public
     DATABASE_CONNECTION_CLIENT_NAME=evolution_bfx
     DATABASE_SAVE_DATA_INSTANCE=true
     DATABASE_SAVE_DATA_NEW_MESSAGE=false
@@ -88,8 +87,13 @@ spec:
               value: "true"
             - name: DATABASE_PROVIDER
               value: "postgresql"
+            # Senha do banco vem do SSM via externalsecret-db.yaml, nao do git
+            # (2026-09-11: a senha `postgres` estava aqui e no ConfigMap acima).
             - name: DATABASE_CONNECTION_URI
-              value: "postgresql://postgres:postgres@bfx-db:5432/evolution?schema=public"
+              valueFrom:
+                secretKeyRef:
+                  name: bfx-db-secrets
+                  key: EVOLUTION_DATABASE_URI
           volumeMounts:
             - name: evolution-data
               mountPath: /evolution/instances

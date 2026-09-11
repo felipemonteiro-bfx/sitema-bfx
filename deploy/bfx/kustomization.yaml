@@ -5,8 +5,8 @@ namespace: bfx
 resources:
 - namespace.yaml
 - serviceaccount.yaml
-- secrets.yaml
 - externalsecret-app.yaml
+- externalsecret-db.yaml
 - externalsecret-minio.yaml
 - postgres.yaml
 - minio.yaml
