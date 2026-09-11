@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { lerObjeto } from "@/lib/minio";
 import { chavePublica } from "@/lib/storage-policy";
 
+/** Raster que o navegador so desenha, sem executar nada. SVG fica de fora de proposito. */
+const TIPOS_SERVIDOS_COMO_IMAGEM = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"]);
+
 /**
  * GET /produtos/<chave> — serve um objeto publico do bucket.
  *
@@ -55,13 +58,21 @@ export async function GET(
     return new NextResponse(null, { status: 404 });
   }
 
+  // So imagem raster sai como imagem. Ate 2026-09-11 o upload gravava o
+  // Content-Type que o navegador mandasse: objeto antigo pode estar como HTML
+  // ou SVG, e servido daqui rodaria script no dominio do app — esse sai como
+  // download. A CSP com sandbox cobre o que escapar.
+  const tipo = obj.contentType.split(";")[0].trim().toLowerCase();
+  const ehImagem = TIPOS_SERVIDOS_COMO_IMAGEM.has(tipo);
   const headers = new Headers({
-    "Content-Type": obj.contentType,
+    "Content-Type": ehImagem ? obj.contentType : "application/octet-stream",
+    "Content-Security-Policy": "default-src 'none'; sandbox",
     // Imagem de produto e logo sao imutaveis na pratica: a chave carrega
     // `Date.now()`, entao trocar a imagem gera chave nova.
     "Cache-Control": "public, max-age=31536000, immutable",
     "X-Content-Type-Options": "nosniff",
   });
+  if (!ehImagem) headers.set("Content-Disposition", "attachment");
   if (obj.contentLength !== null) headers.set("Content-Length", String(obj.contentLength));
   if (obj.etag) headers.set("ETag", obj.etag);
   if (obj.lastModified) headers.set("Last-Modified", obj.lastModified.toUTCString());

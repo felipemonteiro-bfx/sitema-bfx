@@ -272,7 +272,7 @@ export default function ProdutoFormClient({
             </div>
             <Input
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp"
               onChange={handleImageUpload}
               disabled={isUploading}
               className="h-auto min-h-10 w-full py-2 text-xs file:mr-2"

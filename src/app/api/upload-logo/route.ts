@@ -2,9 +2,18 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
 import { revalidarConfig } from "@/lib/revalidacao";
 import { uploadToMinIO, isMinIOConfigured } from "@/lib/minio";
 import { deveRecusarUpload, exigeStorageDuravel, montarChaveLogo } from "@/lib/storage-policy";
+import {
+  ERRO_IMAGEM_GRANDE,
+  MIMES_LOGO,
+  TAMANHO_MAXIMO_IMAGEM,
+  corpoGrandeDemais,
+  nomeComExtensaoReal,
+  validarImagem,
+} from "@/lib/upload-imagem";
 
 async function persistirLogoPath(logoPath: string) {
   const cfg = await prisma.config.findFirst();
@@ -18,11 +27,21 @@ async function persistirLogoPath(logoPath: string) {
 }
 
 export async function POST(req: Request) {
+  // O logo sai no recibo, no boleto e nos PDFs de toda venda: so admin troca.
+  // O middleware ja exige sessao; aqui e o perfil (revisao de seguranca, 2026-09-11).
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Somente administradores podem trocar o logo." }, { status: 403 });
+  }
+  // Recusa pelo Content-Length antes de ler o formulario inteiro para a memoria.
+  if (corpoGrandeDemais(req)) {
+    return NextResponse.json({ error: ERRO_IMAGEM_GRANDE }, { status: 413 });
+  }
+
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
 
-    if (!file) {
+    if (!file || typeof file === "string") {
       return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
     }
 
@@ -36,11 +55,22 @@ export async function POST(req: Request) {
       );
     }
 
+    if (file.size > TAMANHO_MAXIMO_IMAGEM) {
+      return NextResponse.json({ error: ERRO_IMAGEM_GRANDE }, { status: 413 });
+    }
     const buffer = Buffer.from(await file.arrayBuffer());
-    const contentType = file.type || "image/png";
+    // Tipo pelos bytes, nunca pelo `file.type` do navegador. So PNG e JPEG: o
+    // PDF do recibo nao embute WebP, e a extensao da chave sai do tipo real
+    // (ver @/lib/upload-imagem e logo-loader.ts).
+    const validacao = validarImagem(buffer, MIMES_LOGO);
+    if (!validacao.ok) {
+      return NextResponse.json({ error: validacao.erro }, { status: validacao.status });
+    }
+    const contentType = validacao.tipo.mime;
+    const nomeSeguro = nomeComExtensaoReal(file.name, validacao.tipo);
 
     if (isMinIOConfigured()) {
-      const chave = montarChaveLogo(file.name, Date.now());
+      const chave = montarChaveLogo(nomeSeguro, Date.now());
       try {
         const url = await uploadToMinIO(buffer, chave, contentType);
         if (url) {
@@ -62,7 +92,7 @@ export async function POST(req: Request) {
     }
 
     // Fallback legado (somente fora de producao): disco efemero de public/uploads.
-    const filename = `${Date.now()}-${file.name}`;
+    const filename = `${Date.now()}-${nomeSeguro}`;
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     const filePath = path.join(uploadDir, filename);
 

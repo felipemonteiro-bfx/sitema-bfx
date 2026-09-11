@@ -4,13 +4,19 @@ import path from "path";
 import fs from "fs";
 import { uploadToMinIO, isMinIOConfigured } from "@/lib/minio";
 import { deveRecusarUpload, exigeStorageDuravel } from "@/lib/storage-policy";
+import { ERRO_IMAGEM_GRANDE, TAMANHO_MAXIMO_IMAGEM, corpoGrandeDemais, nomeComExtensaoReal, validarImagem } from "@/lib/upload-imagem";
 
 export async function POST(req: Request) {
+  // Recusa pelo Content-Length antes de ler o formulario inteiro para a memoria.
+  if (corpoGrandeDemais(req)) {
+    return NextResponse.json({ error: ERRO_IMAGEM_GRANDE }, { status: 413 });
+  }
+
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
 
-    if (!file) {
+    if (!file || typeof file === "string") {
       return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
     }
 
@@ -25,9 +31,18 @@ export async function POST(req: Request) {
       );
     }
 
+    if (file.size > TAMANHO_MAXIMO_IMAGEM) {
+      return NextResponse.json({ error: ERRO_IMAGEM_GRANDE }, { status: 413 });
+    }
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-    const contentType = file.type || "image/jpeg";
+    // Tipo pelos bytes, nunca pelo `file.type` do navegador; nome sem caminho e
+    // com a extensao do tipo real (ver @/lib/upload-imagem).
+    const validacao = validarImagem(buffer);
+    if (!validacao.ok) {
+      return NextResponse.json({ error: validacao.erro }, { status: validacao.status });
+    }
+    const filename = `${Date.now()}-${nomeComExtensaoReal(file.name, validacao.tipo)}`;
+    const contentType = validacao.tipo.mime;
 
     // Preferir MinIO quando configurado
     if (isMinIOConfigured()) {

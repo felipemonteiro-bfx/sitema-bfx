@@ -23,6 +23,9 @@ vi.mock("@/lib/minio", () => ({
 
 import { prisma } from "@/lib/db";
 import { uploadToMinIO, isMinIOConfigured } from "@/lib/minio";
+// A rota exige admin desde 2026-09-11; este teste cobre o caminho do arquivo.
+vi.mock("@/lib/guards", () => ({ requireAdmin: vi.fn().mockResolvedValue(true) }));
+
 import { POST } from "@/app/api/upload-logo/route";
 import { carregarLogo } from "@/lib/logo-loader";
 

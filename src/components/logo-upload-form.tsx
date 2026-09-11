@@ -102,7 +102,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
             <input
               id="logo-upload"
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg"
               onChange={handleFileChange}
               className="sr-only"
             />
