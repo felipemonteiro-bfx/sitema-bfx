@@ -31,8 +31,13 @@ interface Props {
   onVerNaFila: (comprador: CompradorAntecipacao) => void;
 }
 
-/** Linhas visíveis antes do "Mostrar todos": a fila, que é a tarefa do dia, fica logo abaixo. */
-const LINHAS_INICIAIS = 10;
+/**
+ * As tabelas do resumo rolam por dentro, com no máximo 80% da altura da tela e o
+ * cabeçalho fixo: dá para correr a lista inteira sem perder de vista os títulos
+ * das colunas, e a fila logo abaixo continua a um scroll de distância. O seletor
+ * mira o <div> de rolagem que o <Table> cria em volta da <table>.
+ */
+const TABELA_COM_ROLAGEM = 'rounded-lg border border-border [&>div]:max-h-[80dvh]';
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
@@ -61,19 +66,16 @@ function CelulaValor({ qtd, valor, tom }: { qtd: number; valor: number; tom: 'su
 export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorNaFila, onVerNaFila }: Props) {
   const [busca, setBusca] = useState('');
   const [soPendentes, setSoPendentes] = useState(false);
-  const [mostrarTodos, setMostrarTodos] = useState(false);
   const [mesesAnteriores, setMesesAnteriores] = useState(false);
   const { totais } = resumo;
 
   const termo = normalizar(busca);
+  // Todos os compradores: a tabela rola por dentro (TABELA_COM_ROLAGEM), sem corte.
   const filtrados = resumo.compradores.filter((c) => {
     if (soPendentes && c.aAntecipar.qtd === 0) return false;
     if (!termo) return true;
     return normalizar(c.nome).includes(termo) || normalizar(c.empresa ?? '').includes(termo);
   });
-  // Com busca digitada o usuário já sabe quem procura: mostra tudo que casou.
-  const limitar = !mostrarTodos && !termo && filtrados.length > LINHAS_INICIAIS;
-  const visiveis = limitar ? filtrados.slice(0, LINHAS_INICIAIS) : filtrados;
 
   const mesAtual = hoje.slice(0, 7);
   const mesesVisiveis = mesesAnteriores ? meses : meses.filter((m) => m.mes >= mesAtual);
@@ -187,9 +189,9 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                   description="Ajuste a busca ou desligue o filtro de pendentes."
                 />
               ) : (
-                <div className="rounded-lg border border-border">
+                <div className={TABELA_COM_ROLAGEM}>
                   <Table>
-                    <TableHeader>
+                    <TableHeader sticky>
                       <TableRow>
                         <TableHead>Comprador</TableHead>
                         <TableHead className="hidden sm:table-cell text-right">Já antecipado</TableHead>
@@ -201,7 +203,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {visiveis.map((c) => {
+                      {filtrados.map((c) => {
                         const naFila = compradorNaFila === c.chave;
                         const semSobra = c.vencidasSemAntecipar.qtd === 0 && c.vendasSemParcelas === 0;
                         const tudoAntecipado = c.aAntecipar.qtd === 0 && c.antecipadas.qtd > 0 && semSobra;
@@ -271,13 +273,6 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                 </div>
               )}
 
-              {(limitar || (mostrarTodos && filtrados.length > LINHAS_INICIAIS && !termo)) && (
-                <div className="flex justify-center">
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setMostrarTodos((v) => !v)}>
-                    {limitar ? `Mostrar todos os ${filtrados.length} compradores` : 'Mostrar só os primeiros'}
-                  </Button>
-                </div>
-              )}
             </TabsContent>
 
             <TabsContent value="mes" className="space-y-4">
@@ -310,9 +305,9 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                   description="Ligue &ldquo;Mostrar meses anteriores&rdquo; para ver o histórico."
                 />
               ) : (
-                <div className="rounded-lg border border-border">
+                <div className={TABELA_COM_ROLAGEM}>
                   <Table>
-                    <TableHeader>
+                    <TableHeader sticky>
                       <TableRow>
                         <TableHead>Vencimento</TableHead>
                         <TableHead className="text-right">Já antecipado</TableHead>

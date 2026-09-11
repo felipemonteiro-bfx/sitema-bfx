@@ -55,6 +55,18 @@ deploy` real com exit 0.
 "ANTECIPAÇÃO OK" e não tem a 5/5. Pela regra "nunca rebaixa", a parcela que vence em 30/09/2026
 continua contada como antecipada. Se não foi, ela está escondida da fila.
 
+## Ajustes pedidos depois do deploy (aprovados no design)
+
+Design do plano: https://claude.ai/code/artifact/c7d0eb09-fffd-493d-997a-40095ce7d671
+
+- Tabelas do resumo (por comprador e por mês) com altura máxima de 80dvh, rolagem interna e
+  cabeçalho fixo (`TableHeader sticky`); todos os compradores aparecem, sem o corte em 10 linhas
+  e o "Mostrar todos".
+- Coluna Produto da fila: venda com mais de um produto abre um `Popover` do shadcn/ui (não
+  expande mais a linha com `<details>`), com a lista, uma linha separadora (`Separator`) e o
+  total dos produtos. Clique no gatilho ou no conteúdo não seleciona a venda (`stopPropagation`:
+  evento React atravessa o portal).
+
 ## Continua fora
 
 - A fila ainda deixa antecipar parcela vencida (decisão do André: muda a action e o DRE).

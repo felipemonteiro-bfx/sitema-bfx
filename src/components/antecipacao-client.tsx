@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
+import { ChevronDown, FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { FormSelect } from "@/components/form-select";
 import AntecipacaoCompradores from "@/components/antecipacao-compradores";
 import { TAXA_MENSAL_PADRAO, calcularAntecipacao, parsePeriodoMesAno, titulosDeVenda } from "@/lib/antecipacao";
@@ -448,19 +450,47 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                   </TableCell>
                   <TableCell className="font-semibold text-foreground max-w-[250px]">
                     {v.itens && v.itens.length > 1 ? (
-                      <details className="cursor-pointer">
-                        <summary className="truncate text-sm">
-                          {v.itens.length} produtos
-                        </summary>
-                        <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                          {v.itens.map((item, idx) => (
-                            <li key={idx} className="flex justify-between gap-2">
-                              <span className="truncate">{item.produtoNome} ({item.quantidade}x)</span>
-                              <span className="tabular-nums shrink-0">{formatBRL(item.subtotal)}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </details>
+                      // Popover em vez de <details>: expandir empurrava a linha e as
+                      // vizinhas para baixo. stopPropagation porque clicar na linha
+                      // seleciona a venda, e evento React atravessa o portal do
+                      // conteudo ate o <tr>.
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="-ml-3 gap-1 font-semibold"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {v.itens.length} produtos
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-80 p-3" onClick={(e) => e.stopPropagation()}>
+                          <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                            Produtos da venda
+                          </div>
+                          <ul className="space-y-1.5 text-sm">
+                            {v.itens.map((item, idx) => (
+                              <li key={idx} className="flex justify-between gap-3">
+                                <span className="min-w-0 truncate" title={item.produtoNome}>
+                                  {item.produtoNome} <span className="text-muted-foreground">({item.quantidade}x)</span>
+                                </span>
+                                <span className="tabular-nums shrink-0 font-medium">{formatBRL(item.subtotal)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <Separator className="my-2.5" />
+                          {/* So a soma dos itens: o Valor da linha pode incluir frete e desconto. */}
+                          <div className="flex justify-between gap-3 text-sm font-bold">
+                            <span>Total dos produtos</span>
+                            <span className="tabular-nums shrink-0">
+                              {formatBRL(v.itens.reduce((soma, item) => soma + item.subtotal, 0))}
+                            </span>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     ) : v.itens && v.itens.length === 1 ? (
                       <span className="block truncate" title={v.itens[0].produtoNome}>
                         {v.itens[0].produtoNome}
