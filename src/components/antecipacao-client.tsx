@@ -6,12 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileSpreadsheet, ImageIcon, Loader2 } from "lucide-react";
+import { FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
 import { FormSelect } from "@/components/form-select";
+import AntecipacaoCompradores from "@/components/antecipacao-compradores";
 import { TAXA_MENSAL_PADRAO, calcularAntecipacao, parsePeriodoMesAno, titulosDeVenda } from "@/lib/antecipacao";
+import type { CompradorAntecipacao, ResumoAntecipacaoCompradores } from "@/lib/antecipacao-compradores";
 import { formatarDataPura } from "@/lib/data-pura";
 
 interface ParcelaDetalhe {
@@ -40,6 +42,12 @@ interface Venda {
   status: 'pendente' | 'em_andamento' | 'antecipado' | 'parcialmente_antecipado';
   itens?: ItemVenda[];
   parcelas_detalhes?: ParcelaDetalhe[];
+  /** Mesma chave do resumo por comprador — liga o "Ver na fila" a esta linha. */
+  compradorChave: string;
+  /** Parcelas ainda não antecipadas que vencem de hoje em diante. */
+  faltamAntecipar: number;
+  /** Parcelas não antecipadas já vencidas — ainda entram no lote se a venda for selecionada. */
+  vencidasSemAntecipar: number;
 }
 
 interface Props {
@@ -47,6 +55,9 @@ interface Props {
   onSubmit: (formData: FormData) => Promise<void>;
   vencimentosPorEmpresa: Record<string, number>;
   empresasDisponiveis: string[];
+  resumoCompradores: ResumoAntecipacaoCompradores;
+  /** Dia civil de Manaus (YYYY-MM-DD), o mesmo que o servidor usou no resumo. */
+  hoje: string;
 }
 
 function StatusBadge({ status }: { status: Venda['status'] }) {
@@ -78,13 +89,35 @@ function StatusBadge({ status }: { status: Venda['status'] }) {
   );
 }
 
-export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis }: Props) {
+export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimentosPorEmpresa, empresasDisponiveis, resumoCompradores, hoje }: Props) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [filtroEmpresa, setFiltroEmpresa] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todas");
   const [periodoInicio, setPeriodoInicio] = useState<string>("");
   const [periodoFim, setPeriodoFim] = useState<string>("");
+  // Comprador escolhido no resumo ("Ver na fila"). O nome e guardado so para o chip.
+  const [filtroComprador, setFiltroComprador] = useState<{ chave: string; nome: string } | null>(null);
+
+  const verNaFila = (comprador: CompradorAntecipacao) => {
+    // Clicar de novo no comprador que ja filtra a fila desliga o filtro.
+    if (filtroComprador?.chave === comprador.chave) {
+      setFiltroComprador(null);
+      return;
+    }
+    // Comprador e mais especifico que empresa, status e periodo: manter esses
+    // filtros poderia esconder justamente as vendas que o usuario pediu para ver.
+    setFiltroComprador({ chave: comprador.chave, nome: comprador.nome });
+    setFiltroEmpresa("todas");
+    setFiltroStatus("todas");
+    setPeriodoInicio("");
+    setPeriodoFim("");
+    // A rolagem sozinha deixava o foco no botao la em cima: o proximo Tab
+    // devolvia a tela ao resumo. O foco vai junto para o card da fila.
+    const fila = document.getElementById("fila-antecipacao");
+    fila?.scrollIntoView({ behavior: "smooth", block: "start" });
+    fila?.focus({ preventScroll: true });
+  };
 
   // Range em UTC, identico ao que a server action `antecipar` usa para escolher as
   // parcelas. Antes o filtro da tela montava o range em horario local e podia
@@ -100,6 +133,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   const vendasFiltradas = vendasIniciais.filter((v) => {
     const passaEmpresa = filtroEmpresa === "todas" || v.empresaConveniada === filtroEmpresa;
     const passaStatus = filtroStatus === "todas" || v.status === filtroStatus;
+    const passaComprador = !filtroComprador || v.compradorChave === filtroComprador.chave;
 
     // Filtro de periodo: se periodo definido, venda precisa ter parcela no range
     let passaPeriodo = true;
@@ -113,7 +147,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
       });
     }
 
-    return passaEmpresa && passaStatus && passaPeriodo;
+    return passaEmpresa && passaStatus && passaPeriodo && passaComprador;
   });
 
   const selectedVendas = vendasIniciais.filter(v => selectedIds.includes(v.id));
@@ -129,6 +163,22 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
     valorTaxa,
     valorLiquido,
   } = calcularAntecipacao(titulosSelecionados);
+
+  // Parcelas vencidas que a selecao leva ao lote: `titulosDeVenda` e a action nao
+  // tem piso de data, enquanto o resumo por comprador as deixa fora do "falta
+  // antecipar". Contar aqui evita que o lote as carregue sem ninguem perceber.
+  const vencidasNaSelecao = selectedVendas.reduce(
+    (total, v) =>
+      total +
+      (v.parcelas_detalhes ?? []).filter((p) => {
+        if (p.antecipada) return false;
+        const venc = new Date(p.dataVencimento);
+        if (Number.isNaN(venc.getTime())) return false;
+        if (periodo && (venc < periodo.inicio || venc > periodo.fim)) return false;
+        return p.dataVencimento.slice(0, 10) < hoje;
+      }).length,
+    0
+  );
 
   // Selecao que os filtros atuais escondem: continua no lote e no card, mas some da
   // tabela — sem este contador o total nao fecha com o que esta a vista.
@@ -236,7 +286,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
   // Vencimento de parcela e data pura — ver src/lib/data-pura.ts
   const formatDateBR = formatarDataPura;
 
-  return (
+  const fila = (
     <form action={handleAction}>
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 mb-4">
@@ -291,7 +341,26 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
             className="w-28"
           />
         </div>
-        {(filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "") && (
+        {filtroComprador && (
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Comprador</span>
+            {/* Par info-bg/info-text, policiado pela catraca de contraste: o
+                text-primary sobre bg-primary/10 da pilula de empresa mede 4.39:1. */}
+            <div className="flex h-10 items-center gap-1 rounded-md bg-info-bg pl-3 pr-1 text-sm font-semibold text-info-text">
+              <span className="truncate max-w-[220px]" title={filtroComprador.nome}>{filtroComprador.nome}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="iconSm"
+                aria-label="Remover filtro de comprador"
+                onClick={() => setFiltroComprador(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        {(filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "" || filtroComprador) && (
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground opacity-0">.</label>
             <Button
@@ -299,7 +368,7 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
               variant="ghost"
               size="sm"
               className="h-10 text-muted-foreground hover:text-foreground"
-              onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); }}
+              onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); setFiltroComprador(null); }}
             >
               Limpar filtros
             </Button>
@@ -408,6 +477,17 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                     <span className="inline-flex items-center justify-center rounded-md bg-info-bg px-2 py-0.5 text-xs font-bold text-info-text">
                       {v.parcelas}x
                     </span>
+                    {/* "a antecipar" e o PENDENTE DE REPASSE da planilha. As
+                        vencidas ficam fora do resumo, mas ainda entram no lote se
+                        a venda for selecionada — por isso aparecem aqui tambem. */}
+                    {(v.faltamAntecipar > 0 || v.vencidasSemAntecipar > 0) && (
+                      <div className="mt-1 whitespace-nowrap text-xs text-muted-foreground">
+                        {v.faltamAntecipar > 0 && `${v.faltamAntecipar} a antecipar`}
+                        {v.faltamAntecipar > 0 && v.vencidasSemAntecipar > 0 && " · "}
+                        {v.vencidasSemAntecipar > 0 &&
+                          `${v.vencidasSemAntecipar} ${v.vencidasSemAntecipar === 1 ? "vencida" : "vencidas"}`}
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               );
@@ -445,8 +525,15 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
                 Nenhuma parcela elegível — já antecipadas ou fora do período.
               </div>
             )}
+            {vencidasNaSelecao > 0 && (
+              <div className="text-xs font-semibold text-warning-text mt-1">
+                Inclui {vencidasNaSelecao} {vencidasNaSelecao === 1 ? 'parcela vencida' : 'parcelas vencidas'} — o desconto em folha {vencidasNaSelecao === 1 ? 'dela' : 'delas'} já ocorreu.
+              </div>
+            )}
+            {/* Com o filtro por comprador, trocar de comprador esconde a selecao
+                anterior: o aviso precisa ser visto, nao so estar la. */}
             {selecionadosOcultos > 0 && (
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs font-semibold text-warning-text mt-1">
                 {selecionadosOcultos} {selecionadosOcultos === 1 ? 'selecionada não aparece' : 'selecionadas não aparecem'} nos filtros atuais e {selecionadosOcultos === 1 ? 'continua' : 'continuam'} na seleção.
               </div>
             )}
@@ -572,5 +659,34 @@ export default function AntecipacaoClient({ vendasIniciais, onSubmit, vencimento
         </Card>
       )}
     </form>
+  );
+
+  return (
+    <div className="space-y-6">
+      <AntecipacaoCompradores
+        resumo={resumoCompradores}
+        compradorNaFila={filtroComprador?.chave ?? null}
+        onVerNaFila={verNaFila}
+      />
+      {/* Variante padrao, a mesma do card irmao abaixo (Historico de
+          Antecipacoes). Antes este era elevado: os dois divergiam em fundo e
+          blur nos dois temas, apesar de terem a mesma largura e o mesmo papel
+          (fase 16, achado 8). O card saiu da page.tsx quando o resumo por
+          comprador passou a dividir o filtro "Ver na fila" com a fila. */}
+      {/* tabIndex -1: recebe o foco do "Ver na fila" sem entrar na ordem do Tab. */}
+      <Card id="fila-antecipacao" tabIndex={-1} className="border-primary/20 scroll-mt-4 focus:outline-none">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            Vendas — Antecipação
+          </CardTitle>
+        </CardHeader>
+        <CardContent>{fila}</CardContent>
+      </Card>
+    </div>
   );
 }

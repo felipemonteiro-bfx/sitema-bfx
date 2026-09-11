@@ -2,13 +2,18 @@ import { prisma } from "@/lib/db";
 import { valorTotalVenda, produtosTexto } from "@/lib/venda-utils";
 import { agruparAntecipacoesSemLote, idsEmLotes } from "@/lib/antecipacoes-sem-lote";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
+import {
+  chaveComprador,
+  resumirAntecipacaoPorComprador,
+  situacaoParcelasVenda,
+  type VendaParaResumo,
+} from "@/lib/antecipacao-compradores";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { revalidarVenda } from "@/lib/revalidacao";
 import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 import { PageHeader } from "@/components/page-header";
-import { formatarMesAnoPuro } from "@/lib/data-pura";
+import { formatarMesAnoPuro, hojeDataPura } from "@/lib/data-pura";
 
 export const dynamic = "force-dynamic";
 
@@ -229,6 +234,21 @@ export default async function Page() {
     idsEmLotes(batches)
   );
 
+  // O que ja foi antecipado de cada comprador e o que falta — as regras moram em
+  // src/lib/antecipacao-compradores.ts. "Hoje" e o dia civil de Manaus: o dia UTC
+  // do servidor viraria as 20h e daria parcela do dia como vencida.
+  const hoje = hojeDataPura();
+  const paraResumo = (v: (typeof todasVendas)[number]): VendaParaResumo => ({
+    id: v.id,
+    status: v.status,
+    antecipada: v.antecipada,
+    clienteId: v.clienteId,
+    clienteNome: v.cliente?.nome ?? null,
+    empresa: v.cliente?.empresa ?? null,
+    parcelas_detalhes: v.parcelasVencimento,
+  });
+  const resumoCompradores = resumirAntecipacaoPorComprador(todasVendas.map(paraResumo), hoje);
+
   const vendasFormatadas = todasVendas.map((v) => {
     const antecipada = v.antecipada ?? 0;
     let status: "pendente" | "em_andamento" | "antecipado" | "parcialmente_antecipado";
@@ -242,8 +262,12 @@ export default async function Page() {
       status = "pendente";
     }
 
+    const situacao = situacaoParcelasVenda(paraResumo(v), hoje);
     return {
       id: v.id,
+      compradorChave: chaveComprador(v),
+      faltamAntecipar: situacao.aAntecipar.qtd,
+      vencidasSemAntecipar: situacao.vencidasSemAntecipar.qtd,
       dataVenda: v.dataVenda,
       produtoNome: v.produtoNome,
       valorVenda: valorTotalVenda(v),
@@ -271,33 +295,19 @@ export default async function Page() {
     <div className="space-y-6">
       <PageHeader
         title="Central de Antecipação Prudent"
-        description="Selecione as vendas para realizar a antecipação de recebíveis com taxa inteligente."
+        description="Veja o que já foi antecipado de cada comprador e o que falta, e selecione as vendas para antecipar com a taxa Smart."
         breadcrumbs={[{ label: "Antecipação Prudent" }]}
       />
-      {/* Variante padrao, a mesma do card irmao logo abaixo (Historico de
-          Antecipacoes). Antes este era elevado: os dois divergiam em fundo e
-          blur nos dois temas, apesar de terem a mesma largura e o mesmo papel
-          (fase 16, achado 8). */}
-      <Card className="border-primary/20">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            Vendas — Antecipação
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AntecipacaoClient
-            vendasIniciais={vendasFormatadas}
-            onSubmit={antecipar}
-            vencimentosPorEmpresa={vencimentosPorEmpresa}
-            empresasDisponiveis={empresasUnicas}
-          />
-        </CardContent>
-      </Card>
+      {/* O resumo por comprador e a fila de vendas compartilham o filtro "Ver na
+          fila", entao os dois cards sao desenhados dentro do AntecipacaoClient. */}
+      <AntecipacaoClient
+        vendasIniciais={vendasFormatadas}
+        onSubmit={antecipar}
+        vencimentosPorEmpresa={vencimentosPorEmpresa}
+        empresasDisponiveis={empresasUnicas}
+        resumoCompradores={resumoCompradores}
+        hoje={hoje}
+      />
       <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} />
     </div>
   );

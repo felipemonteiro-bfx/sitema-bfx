@@ -29,6 +29,25 @@ export function formatarDataPura(valor: Date | string | null | undefined): strin
   return new Intl.DateTimeFormat("pt-BR", { timeZone: FUSO_DATA_PURA }).format(d);
 }
 
+/** Fuso onde a operacao acontece: e o "hoje" de quem usa o sistema. */
+const FUSO_OPERACAO = "America/Manaus";
+
+/**
+ * Hoje como data pura "YYYY-MM-DD" — o dia civil em Manaus, pronto para comparar
+ * com vencimento gravado a meia-noite UTC. Usar o dia UTC do servidor viraria o
+ * dia as 20h de Manaus: uma parcela que vence hoje passaria a "vencida" antes da hora.
+ */
+export function hojeDataPura(agora: Date = new Date()): string {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: FUSO_OPERACAO,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(agora);
+  const parte = (tipo: string) => partes.find((p) => p.type === tipo)?.value ?? "";
+  return `${parte("year")}-${parte("month")}-${parte("day")}`;
+}
+
 /** "ago. de 2026" — usado nos rotulos de periodo. */
 export function formatarMesAnoPuro(valor: Date | string | null | undefined): string {
   const d = paraDate(valor);

@@ -69,6 +69,7 @@ const TELAS_FINANCEIRAS = [
   "src/app/(app)/relatorios/mensais/page.tsx",
   "src/components/antecipacao-client.tsx",
   "src/components/historico-antecipacoes.tsx",
+  "src/components/antecipacao-compradores.tsx",
   "src/components/commissions-dashboard-client.tsx",
   // Componentes compartilhados que renderizam os valores dessas telas:
   // CardStats desenha os KPIs de /boletos, Badge os status de /relatorios/mensais.
