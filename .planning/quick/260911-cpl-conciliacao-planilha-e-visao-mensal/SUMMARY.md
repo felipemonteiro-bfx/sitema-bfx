@@ -18,8 +18,12 @@ Data: 2026-09-11 · Spec: `SPEC.md` (nesta pasta)
    única `baldeDaParcela` compartilhada com o resumo por comprador). Aviso reescrito para dizer
    exatamente o que a conciliação cobre. Filtros da fila rotulados "Vencimento de/até", com label
    ligado ao campo.
-4. **Deploy destravado** — `Dockerfile`: `apt-get -o Acquire::Check-Valid-Until=false update` no
-   estágio `deps` (Release do bullseye-security expirado derrubava todo build).
+4. **Deploy destravado** — `Dockerfile`: o estágio `deps` não roda mais `apt-get`. Primeiro o
+   Release do bullseye-security expirou; o `Check-Valid-Until=false` (commit `ff69118`) passou do
+   índice, mas o deploy seguinte caiu em 404 nos pacotes (`libperl5.32`, `libexpat1`), porque o
+   bullseye-security saiu do espelho. O apt só instalava o `git`, que o build não usa: nenhuma
+   dependência vem de repositório git (`yarn.lock` v1), não há `prepare`/`postinstall`, e o `.git`
+   nem entra no contexto (`.dockerignore`). Sem apt, o build não depende mais do espelho do Debian.
 
 ## Verificação
 
