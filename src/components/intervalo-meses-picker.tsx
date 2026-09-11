@@ -134,7 +134,7 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
                 <span
                   className={cn(
                     // min-h-4: mês sem valor mantém a mesma altura dos outros.
-                    "min-h-4 text-[11px] font-medium leading-4 tabular-nums",
+                    "min-h-4 text-xs font-medium leading-4 tabular-nums",
                     preenchido ? "text-primary-foreground" : "text-muted-foreground"
                   )}
                 >
