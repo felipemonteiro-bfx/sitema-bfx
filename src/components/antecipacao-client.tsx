@@ -13,6 +13,7 @@ import { FormSelect } from "@/components/form-select";
 import { IntervaloMesesPicker } from "@/components/intervalo-meses-picker";
 import { ProdutosVendaPopover, type ProdutosDaVenda } from "@/components/produtos-venda-popover";
 import { LegendaParcelas, ParcelasVendaPopover } from "@/components/parcelas-venda-popover";
+import { PlanilhaControlePopover } from "@/components/planilha-controle-popover";
 import AntecipacaoCompradores, { TABELA_COM_ROLAGEM } from "@/components/antecipacao-compradores";
 import { TAXA_MENSAL_PADRAO } from "@/lib/antecipacao";
 import type {
@@ -710,6 +711,7 @@ export default function AntecipacaoClient({
       {/* tabIndex -1: recebe o foco do "Ver na fila" sem entrar na ordem do Tab. */}
       <Card id="fila-antecipacao" tabIndex={-1} className="border-primary/20 scroll-mt-4 focus:outline-none">
         <CardHeader className="pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-xl">
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -718,6 +720,9 @@ export default function AntecipacaoClient({
             </div>
             Vendas — Antecipação
           </CardTitle>
+          {/* A base inteira no formato da planilha da equipe (design v7 aprovado). */}
+          <PlanilhaControlePopover empresas={empresasDisponiveis} hoje={hoje} />
+          </div>
         </CardHeader>
         <CardContent>{fila}</CardContent>
       </Card>

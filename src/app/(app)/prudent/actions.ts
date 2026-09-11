@@ -4,6 +4,12 @@ import { prisma } from "@/lib/db";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import { calcularSelecao, type ResultadoSelecao } from "@/lib/fila-antecipacao";
+import {
+  SELECT_VENDA_PLANILHA,
+  montarPlanilhaControle,
+  normalizarFiltroPlanilha,
+  type ResumoPlanilha,
+} from "@/lib/planilha-controle";
 import { hojeDataPura } from "@/lib/data-pura";
 import { valorTotalVenda } from "@/lib/venda-utils";
 
@@ -67,4 +73,29 @@ export async function calcularSelecaoAction(entrada: {
     hoje
   );
   return { ok: true, resultado };
+}
+
+export type RespostaResumoPlanilha = { ok: true; resumo: ResumoPlanilha } | { ok: false; erro: string };
+
+/**
+ * Resumo do popover "Baixar planilha de controle" — quantas abas, parcelas e
+ * quanto já foi antecipado nos filtros escolhidos. Mesmo modelo e mesmo recorte
+ * do download (`/api/relatorios/controle-xlsx`), para os números baterem com o
+ * arquivo. Guarda própria, como a de cima.
+ */
+export async function resumoPlanilhaControleAction(entrada: {
+  mesInicio?: string;
+  mesFim?: string;
+  empresa?: string;
+  incluirPassados?: boolean;
+}): Promise<RespostaResumoPlanilha> {
+  await requireAdminOrThrow();
+
+  const filtro = normalizarFiltroPlanilha(entrada ?? {});
+  if ((filtro.mesInicio || filtro.mesFim) && !parsePeriodoMesAno(filtro.mesInicio ?? "", filtro.mesFim ?? "")) {
+    return { ok: false, erro: "Período inválido." };
+  }
+
+  const vendas = await prisma.venda.findMany({ where: WHERE_VENDA_ANTECIPAVEL, select: SELECT_VENDA_PLANILHA });
+  return { ok: true, resumo: montarPlanilhaControle(vendas, filtro, hojeDataPura()).resumo };
 }
