@@ -12,8 +12,8 @@ export type ContratoParaCalculo = {
 
 export type VendaParaCalculo = {
   dataVenda: Date;
-  parcelas: number;
-  valorParcela: number;
+  parcelas: number | null;
+  valorParcela: number | null;
   status: string;
   descontoEmFolha: boolean;
   formaPagamento?: string | null;
