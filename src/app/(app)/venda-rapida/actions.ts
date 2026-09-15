@@ -9,6 +9,8 @@ import { successResponse, errorResponse } from "@/lib/action-response";
 import { vendaV2Schema } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
+import { calcularConsignado, recalcularConsignado } from "@/lib/consignado-db";
+import { decidirConfirmacaoConsignado } from "@/lib/consignado-venda";
 import { createAuditLog } from "@/lib/audit";
 import {
   getAsaasConfig,
@@ -301,7 +303,25 @@ export async function criarVendaV2(
     // Limite de crédito é sempre recalculado no servidor — o valor de "excedeuLimite"
     // vindo do client é só um aviso de UX e nunca é usado para gravar no banco.
     const credito = await checkCredito(clienteId, valorParcela);
-    const excedeuLimite = credito.ok ? 0 : 1;
+    const consignado = await calcularConsignado(clienteId);
+    const confirmouLimiteConsignado = checkboxLigado(formData.get("confirmouLimiteConsignado"));
+    const decisaoFolha = decidirConfirmacaoConsignado({
+      formaPagamento,
+      descontoEmFolha,
+      renda: consignado.renda,
+      tomadoAtual: consignado.tomado,
+      valorParcelaNova: valorParcela,
+      confirmouLimiteConsignado,
+    });
+    if (!decisaoFolha.ok) {
+      registrarRejeicaoVenda({
+        ...contextoRejeicao,
+        motivo: "Cliente em 30% ou mais de consignado. Confirme para vender.",
+        clienteId,
+      });
+      return errorResponse("Cliente em 30% ou mais de consignado. Confirme para vender.");
+    }
+    const excedeuLimite = descontoEmFolha ? decisaoFolha.excedeuLimite : credito.ok ? 0 : 1;
 
     // Criar venda com transação
     const assinaturaToken = formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA ? randomUUID() : undefined;
@@ -398,6 +418,11 @@ export async function criarVendaV2(
     });
 
     revalidarVenda();
+    if (clienteId) {
+      void recalcularConsignado(clienteId).catch((e) =>
+        console.error("[consignado] Falha ao recalcular faixa:", e),
+      );
+    }
 
     await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
 

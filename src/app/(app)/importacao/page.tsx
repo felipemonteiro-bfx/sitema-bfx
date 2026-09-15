@@ -66,6 +66,12 @@ export default async function Page() {
           >
             Importar clientes
           </Link>
+          <Link
+            href="/importacao/consignado"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+          >
+            Importar e-Consignado
+          </Link>
         </CardContent>
       </Card>
     </div>

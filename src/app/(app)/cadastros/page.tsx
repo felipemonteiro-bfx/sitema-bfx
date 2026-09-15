@@ -22,8 +22,9 @@ import { PageHeader } from "@/components/page-header";
 import { createAuditLog } from "@/lib/audit";
 import { requireAdminOrThrow, requireSessionOrThrow } from "@/lib/guards";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
+import { recalcularConsignado } from "@/lib/consignado-db";
 
-type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string };
+type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string; faixa_consignado?: string; empresa_parceira?: string };
 
 function normalizeUppercase(value: FormDataEntryValue | null) {
   return String(value || "").trim().toLocaleUpperCase("pt-BR");
@@ -55,6 +56,7 @@ export async function addCliente(formData: FormData) {
       },
     });
     await createAuditLog("cliente:create", { clienteId: cliente.id, nome });
+    await recalcularConsignado(cliente.id);
     revalidarCliente();
   } catch (e) {
     const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -90,6 +92,7 @@ export async function updateCliente(formData: FormData) {
       },
     });
     await createAuditLog("cliente:update", { clienteId: id, nome });
+    await recalcularConsignado(id);
     revalidarCliente();
   } catch (e) {
     const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -361,7 +364,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const editClienteData = editClienteId ? await prisma.cliente.findUnique({
     where: { id: editClienteId },
-    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true, empresaParceiraId: true, dataNascimento: true },
+    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true, empresaParceiraId: true, dataNascimento: true, pctConsignado: true, faixaConsignado: true },
   }) : null;
   const editProdutoData = editProdutoId ? await prisma.produto.findUnique({
     where: { id: editProdutoId },
@@ -391,15 +394,21 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     ? await unaccentFindClienteIds(sp.q_clientes)
     : [];
 
+  const faixaConsignado = sp.faixa_consignado;
+  const empresaParceiraFiltro = Number(sp.empresa_parceira || 0);
   const clientes = await prisma.cliente.findMany({
-    where: sp.q_clientes ? {
-      OR: [
-        { id: { in: clienteIdsPorNome } },
-        { cpf: { contains: sp.q_clientes, mode: 'insensitive' } },
-        { cnpj: { contains: sp.q_clientes, mode: 'insensitive' } },
-      ]
-    } : {},
-    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true, empresaParceiraId: true, dataNascimento: true },
+    where: {
+      ...(sp.q_clientes ? {
+        OR: [
+          { id: { in: clienteIdsPorNome } },
+          { cpf: { contains: sp.q_clientes, mode: 'insensitive' } },
+          { cnpj: { contains: sp.q_clientes, mode: 'insensitive' } },
+        ]
+      } : {}),
+      ...(faixaConsignado ? { faixaConsignado } : {}),
+      ...(empresaParceiraFiltro > 0 ? { empresaParceiraId: empresaParceiraFiltro } : {}),
+    },
+    select: { id: true, nome: true, cpf: true, cnpj: true, renda: true, empresa: true, matricula: true, telefone: true, cep: true, tipo: true, empresaParceiraId: true, dataNascimento: true, pctConsignado: true, faixaConsignado: true },
     orderBy: { nome: "asc" }
   });
 
@@ -478,6 +487,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     q_produtos: sp.q_produtos,
     q_fornecedores: sp.q_fornecedores,
     q_empresas: sp.q_empresas,
+    faixa_consignado: sp.faixa_consignado,
+    empresa_parceira: sp.empresa_parceira,
     editCliente: sp.editCliente,
     editProduto: sp.editProduto,
     editFornecedor: sp.editFornecedor,

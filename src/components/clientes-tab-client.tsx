@@ -32,6 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 
 type ClienteListItem = {
@@ -47,6 +48,8 @@ type ClienteListItem = {
   tipo: string | null;
   empresaParceiraId: number | null;
   dataNascimento: Date | string | null;
+  pctConsignado?: number | null;
+  faixaConsignado?: string | null;
 };
 
 type EmpresaOption = { id: number; nome: string };
@@ -293,6 +296,50 @@ export default function ClientesTabClient({
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-primary">Clientes</CardTitle>
+          <div className="flex flex-wrap items-center gap-2 w-full justify-end">
+          <div className="w-40">
+            <FormSelect
+              id="filtro-faixa-consignado"
+              name="faixa_consignado"
+              options={[
+                { value: "todas", label: "Todas as faixas" },
+                { value: "ok", label: "Abaixo de 20%" },
+                { value: "alerta", label: "20–30%" },
+                { value: "limite", label: "30% ou mais" },
+                { value: "renda_pendente", label: "Renda pendente" },
+              ]}
+              value={sp.faixa_consignado || "todas"}
+              onValueChange={(v) => {
+                const params = new URLSearchParams();
+                params.set("tab", "clientes");
+                if (sp.q_clientes) params.set("q_clientes", sp.q_clientes);
+                if (v && v !== "todas") params.set("faixa_consignado", v);
+                if (sp.empresa_parceira) params.set("empresa_parceira", sp.empresa_parceira);
+                router.push(`/cadastros?${params.toString()}`);
+              }}
+              placeholder="Faixa consignado"
+            />
+          </div>
+          <div className="w-48">
+            <FormSelect
+              id="filtro-empresa-consignado"
+              name="empresa_parceira"
+              options={[
+                { value: "todas", label: "Todas as empresas" },
+                ...empresasParceiras.map((e) => ({ value: String(e.id), label: e.nome })),
+              ]}
+              value={sp.empresa_parceira || "todas"}
+              onValueChange={(v) => {
+                const params = new URLSearchParams();
+                params.set("tab", "clientes");
+                if (sp.q_clientes) params.set("q_clientes", sp.q_clientes);
+                if (sp.faixa_consignado) params.set("faixa_consignado", sp.faixa_consignado);
+                if (v && v !== "todas") params.set("empresa_parceira", v);
+                router.push(`/cadastros?${params.toString()}`);
+              }}
+              placeholder="Empresa parceira"
+            />
+          </div>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -306,6 +353,7 @@ export default function ClientesTabClient({
                 <Trash2 className="h-3 w-3" />
               </Button>
             )}
+          </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -370,13 +418,14 @@ export default function ClientesTabClient({
                 <SortableHeader label="Doc" field="cpf" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} />
                 <SortableHeader label="Telefone" field="telefone" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} />
                 <SortableHeader label="Renda" field="renda" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} className="text-right" />
+                <TableHead>Consignado</TableHead>
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {table.paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6}>
+                  <TableCell colSpan={7}>
                     <EmptyState variant="clients" size="sm" title="Nenhum cliente encontrado" description={table.search ? "Tente outro termo de busca." : "Cadastre o primeiro cliente acima."} />
                   </TableCell>
                 </TableRow>
@@ -394,6 +443,24 @@ export default function ClientesTabClient({
                     <TableCell>{c.cpf || c.cnpj}</TableCell>
                     <TableCell>{c.telefone}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatBRL(c.renda || 0)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="tabular-nums text-sm">
+                          {c.faixaConsignado === "renda_pendente" || c.pctConsignado == null
+                            ? "—"
+                            : `${c.pctConsignado}%`}
+                        </span>
+                        {c.faixaConsignado === "alerta" && (
+                          <Badge variant="warning">Alerta 20%</Badge>
+                        )}
+                        {c.faixaConsignado === "limite" && (
+                          <Badge variant="error">Limite 30%</Badge>
+                        )}
+                        {c.faixaConsignado === "renda_pendente" && (
+                          <Badge variant="outline">Renda pendente</Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <button
                         type="button"

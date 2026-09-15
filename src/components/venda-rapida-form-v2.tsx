@@ -42,6 +42,17 @@ import { CurrencyInput } from "@/components/currency-input";
 import { Badge } from "@/components/ui/badge";
 import { CadastrarClienteRapidoDialog } from "@/components/cadastrar-cliente-rapido-dialog";
 import type { ActionResponse } from "@/lib/action-response";
+import { decidirConfirmacaoConsignado } from "@/lib/consignado-venda";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ProdutoItem {
   id: string;
@@ -212,11 +223,21 @@ export default function VendaRapidaFormV2({
 
   // Limite e margem disponível do cliente
   const [limiteData, setLimiteData] = useState<{
+    renda: number;
     margemTotal: number;
     comprometimentoAtual: number;
     margemDisponivel: number;
     tetoParcelaMax: number;
+    tomadoConsignado?: number;
+    tomadoFolhaBfx?: number;
+    pctConsignado?: number | null;
+    faixaConsignado?: string | null;
+    margemFolhaTotal?: number;
+    margemFolhaDisponivel?: number;
   } | null>(null);
+  const [confirmConsignadoOpen, setConfirmConsignadoOpen] = useState(false);
+  const confirmouConsignadoRef = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const submitLockRef = useRef(false);
@@ -361,9 +382,12 @@ export default function VendaRapidaFormV2({
   const valorComissao = (lucroBruto * comissaoPct) / 100;
 
   const valorParcela = numParcelas > 0 ? totalVenda / numParcelas : 0;
-  const excedeuMargem = limiteData
-    ? valorParcela > limiteData.margemDisponivel + 1
-    : false;
+  const margemFolhaDisponivel = limiteData?.margemFolhaDisponivel ?? limiteData?.margemDisponivel ?? 0;
+  const margemParaExceder = descontoEmFolha ? margemFolhaDisponivel : (limiteData?.margemDisponivel ?? 0);
+  const excedeuMargem = limiteData ? valorParcela > margemParaExceder + 1 : false;
+  const faixaFolha = limiteData?.faixaConsignado ?? "ok";
+  const alertaConsignado = descontoEmFolha && faixaFolha === "alerta";
+  const limiteConsignado = descontoEmFolha && (faixaFolha === "limite" || excedeuMargem);
 
   // Sugestão automática de parcelas (apenas desconto em folha)
   useEffect(() => {
@@ -603,7 +627,24 @@ export default function VendaRapidaFormV2({
     const subtotalFiltrado = produtosFiltrados.reduce((s, p) => s + p.subtotal, 0);
     const totalFiltrado = subtotalFiltrado + numFrete;
     const valorParcelaFiltrado = numParcelas > 0 ? totalFiltrado / numParcelas : 0;
-    const excedeuLimite = limiteData && valorParcelaFiltrado > limiteData.margemDisponivel + 1 ? 1 : 0;
+    const excedeuLimite = limiteData && valorParcelaFiltrado > margemParaExceder + 1 ? 1 : 0;
+
+    if (descontoEmFolha && limiteData) {
+      const decisao = decidirConfirmacaoConsignado({
+        formaPagamento: formaPagamentoSelected || FORMA_PAGAMENTO.DESCONTO_FOLHA,
+        descontoEmFolha: true,
+        renda: limiteData.renda || null,
+        tomadoAtual: (limiteData.tomadoConsignado ?? 0) + (limiteData.tomadoFolhaBfx ?? 0),
+        valorParcelaNova: valorParcelaFiltrado,
+        confirmouLimiteConsignado: confirmouConsignadoRef.current,
+      });
+      if (!decisao.ok) {
+        setLoading(false);
+        submitLockRef.current = false;
+        setConfirmConsignadoOpen(true);
+        return;
+      }
+    }
 
     const formData = new FormData();
     formData.append("data", dataVenda);
@@ -620,6 +661,7 @@ export default function VendaRapidaFormV2({
     formData.append("boleto", String(boleto));
     if (formaPagamentoSelected) formData.append("formaPagamento", formaPagamentoSelected);
     formData.append("excedeuLimite", String(excedeuLimite));
+    formData.append("confirmouLimiteConsignado", confirmouConsignadoRef.current ? "1" : "0");
     formData.append("produtos", JSON.stringify(produtosFiltrados));
 
     if (numParcelas > 1 && parcelasVencimento.length > 0) {
@@ -644,6 +686,7 @@ export default function VendaRapidaFormV2({
         });
         setParcelasVencimento([]);
         setProdutoParaSugestoes(null);
+        confirmouConsignadoRef.current = false;
         // O estoque caiu com a venda: sem refresh a proxima venda na mesma tela
         // ainda enxerga a quantidade antiga.
         router.refresh();
@@ -679,7 +722,7 @@ export default function VendaRapidaFormV2({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       {successAssinaturaToken && (
         <Card className="border-success/30 bg-success/5 animate-fade-in">
           <CardContent className="pt-6">
@@ -911,9 +954,11 @@ export default function VendaRapidaFormV2({
         <Card
           className={cn(
             "border-2 transition-colors",
-            excedeuMargem
-              ? "bg-warning/10 border-warning/30"
-              : "bg-success/10 border-success/30"
+            limiteConsignado
+              ? "bg-error-bg border-error/30"
+              : alertaConsignado || excedeuMargem
+                ? "bg-warning/10 border-warning/30"
+                : "bg-success/10 border-success/30"
           )}
         >
           <CardHeader className="pb-3">
@@ -922,7 +967,13 @@ export default function VendaRapidaFormV2({
                 <CreditCard className="h-4 w-4" />
                 Limite e Margem
               </span>
-              {excedeuMargem && (
+              {descontoEmFolha && faixaFolha === "alerta" && (
+                <Badge variant="warning">Alerta 20%</Badge>
+              )}
+              {descontoEmFolha && faixaFolha === "limite" && (
+                <Badge variant="error">Limite 30%</Badge>
+              )}
+              {!descontoEmFolha && excedeuMargem && (
                 <Badge variant="secondary" className="bg-warning/20 text-warning-foreground dark:text-warning">
                   Excede disponível
                 </Badge>
@@ -930,36 +981,62 @@ export default function VendaRapidaFormV2({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {descontoEmFolha && faixaFolha === "renda_pendente" && (
+              <p className="text-xs text-muted-foreground">
+                Renda pendente — % de consignado não calculada.
+              </p>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Limite</div>
-                <div className="text-sm font-bold tabular-nums text-foreground">{formatBRL(limiteData.margemTotal)}</div>
+                <div className="text-sm font-bold tabular-nums text-foreground">
+                  {formatBRL(descontoEmFolha ? (limiteData.margemFolhaTotal ?? limiteData.margemTotal) : limiteData.margemTotal)}
+                </div>
               </div>
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Comprometido</div>
-                <div className="text-sm font-bold tabular-nums text-foreground">{formatBRL(limiteData.comprometimentoAtual)}</div>
+                <div className="text-sm font-bold tabular-nums text-foreground">
+                  {formatBRL(
+                    descontoEmFolha
+                      ? (limiteData.tomadoConsignado ?? 0) + (limiteData.tomadoFolhaBfx ?? 0)
+                      : limiteData.comprometimentoAtual,
+                  )}
+                </div>
               </div>
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Disponível</div>
                 <div
                   className={cn(
                     "text-sm font-bold tabular-nums",
-                    limiteData.margemDisponivel > 0 ? "text-success-text" : "text-error-text"
+                    (descontoEmFolha ? margemFolhaDisponivel : limiteData.margemDisponivel) > 0
+                      ? "text-success-text"
+                      : "text-error-text"
                   )}
                 >
-                  {formatBRL(limiteData.margemDisponivel)}
+                  {formatBRL(descontoEmFolha ? margemFolhaDisponivel : limiteData.margemDisponivel)}
                 </div>
               </div>
             </div>
-            <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-              <div
-                className={cn("h-full transition-all", excedeuMargem ? "bg-warning" : "bg-success")}
-                style={{
-                  width: `${Math.min(100, limiteData.margemTotal > 0 ? (limiteData.comprometimentoAtual / limiteData.margemTotal) * 100 : 0)}%`,
-                }}
-              />
-            </div>
-            {excedeuMargem && (
+            {descontoEmFolha && limiteData.pctConsignado != null && (
+              <p className="text-xs text-center text-muted-foreground">
+                Consignado atual: {limiteData.pctConsignado}%
+              </p>
+            )}
+            {descontoEmFolha && alertaConsignado && !limiteConsignado && (
+              <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>Já está em alerta de consignado: {limiteData.pctConsignado}%.</div>
+              </div>
+            )}
+            {descontoEmFolha && limiteConsignado && (
+              <div className="flex items-start gap-2 text-xs text-error-text bg-error-bg p-3 rounded-lg border border-error/30">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>
+                  Cliente em 30% ou mais de consignado. A venda só sai se você confirmar.
+                </div>
+              </div>
+            )}
+            {!descontoEmFolha && excedeuMargem && (
               <div className="flex items-start gap-2 text-xs text-warning-foreground dark:text-warning bg-warning/10 dark:bg-warning/20 p-3 rounded-lg border border-warning/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
@@ -971,6 +1048,29 @@ export default function VendaRapidaFormV2({
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={confirmConsignadoOpen} onOpenChange={setConfirmConsignadoOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cliente em 30% ou mais de consignado. Vender mesmo assim?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A venda em desconto em folha será gravada com indicação de excedeu limite.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { confirmouConsignadoRef.current = false; }}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                confirmouConsignadoRef.current = true;
+                setConfirmConsignadoOpen(false);
+                formRef.current?.requestSubmit();
+              }}
+            >
+              Vender mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Seção 3: Produtos */}
       <div className="space-y-4">

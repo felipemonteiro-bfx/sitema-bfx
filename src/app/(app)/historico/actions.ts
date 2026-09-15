@@ -12,6 +12,7 @@ import {
   type FormaPagamento,
 } from "@/lib/forma-pagamento";
 import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
+import { recalcularConsignado } from "@/lib/consignado-db";
 
 export async function updateVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const id = Number(formData.get("id") || 0);
@@ -208,7 +209,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     const novoStatusAntecipacao =
       antecipadasAposSalvar === 0 ? undefined : antecipadasAposSalvar === numerosFinais.length ? 1 : 3;
 
-    await prisma.venda.update({
+    const vendaAtualizada = await prisma.venda.update({
       where: { id },
       data: {
         ...(novoStatusAntecipacao !== undefined ? { antecipada: novoStatusAntecipacao } : {}),
@@ -234,6 +235,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         boleto,
         formaPagamento,
       },
+      select: { clienteId: true },
     });
 
     if (itens.length > 0) {
@@ -286,6 +288,11 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     }
 
     await createAuditLog("venda:update", { vendaId: id, subtotal, lucro: lucroFinal });
+    if (vendaAtualizada.clienteId) {
+      void recalcularConsignado(vendaAtualizada.clienteId).catch((e) =>
+        console.error("[consignado] Falha ao recalcular faixa:", e),
+      );
+    }
     revalidarVenda();
     return { success: true };
   } catch (err) {
