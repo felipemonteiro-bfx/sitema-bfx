@@ -238,7 +238,7 @@ function chaveContrato(linha: LinhaConsignado): string {
 }
 
 function ehErro(item: LinhaConsignado | ErroParseConsignado): item is ErroParseConsignado {
-  return "motivo" in item && !("valorParcela" in item && typeof (item as LinhaConsignado).valorParcela === "number");
+  return "motivo" in item;
 }
 
 function consolidarLimpo(itens: Array<LinhaConsignado | ErroParseConsignado>): ResultadoParseConsignado {

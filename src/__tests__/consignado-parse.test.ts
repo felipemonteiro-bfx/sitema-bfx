@@ -13,7 +13,7 @@ import {
   montarXlsxConsignado,
 } from "./helpers/consignado-xlsx";
 
-function csvDe(linhas: (string | number | null)[][], cabecalhos = CABECALHOS_CONSIGNADO): string {
+function csvDe(linhas: (string | number | null)[][], cabecalhos: readonly string[] = CABECALHOS_CONSIGNADO): string {
   const serial = (v: string | number | null) => (v === null || v === undefined ? "" : String(v));
   return [cabecalhos.join(";"), ...linhas.map((l) => l.map(serial).join(";"))].join("\n");
 }

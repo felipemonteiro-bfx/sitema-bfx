@@ -103,12 +103,14 @@ describe("planejarImportacaoConsignado — casamento", () => {
       contratos: [],
     });
 
-    expect(plano.contratos[0].cliente.acao).toBe("casar");
-    expect(plano.contratos[0].cliente.clienteId).toBe(7);
-    expect(plano.contratos[0].cliente.preencher.nome).toBeUndefined();
-    expect(plano.contratos[0].cliente.preencher.renda).toBeUndefined();
-    expect(plano.contratos[0].cliente.preencher.estagioCrm).toBeUndefined();
-    expect(plano.contratos[0].cliente.preencher.matricula).toBe("1001");
+    const casado = plano.contratos[0].cliente;
+    expect(casado.acao).toBe("casar");
+    if (casado.acao !== "casar") throw new Error("esperado casar");
+    expect(casado.clienteId).toBe(7);
+    expect(casado.preencher.nome).toBeUndefined();
+    expect(casado.preencher.renda).toBeUndefined();
+    expect(casado.preencher.estagioCrm).toBeUndefined();
+    expect(casado.preencher.matricula).toBe("1001");
     expect(plano.resumo.clientesCasados).toBe(1);
     expect(plano.resumo.leadsCriar).toBe(0);
   });
@@ -144,8 +146,10 @@ describe("planejarImportacaoConsignado — casamento", () => {
       empresas: [EMPRESA],
       contratos: [],
     });
-    expect(plano.contratos[0].cliente.clienteId).toBe(9);
-    expect(plano.contratos[0].cliente.avisos).toContain("cpf_duplicado");
+    const casado = plano.contratos[0].cliente;
+    if (casado.acao !== "casar") throw new Error("esperado casar");
+    expect(casado.clienteId).toBe(9);
+    expect(casado.avisos).toContain("cpf_duplicado");
   });
 
   it("CPF novo vira lead import_consignado sem renda", () => {
@@ -156,8 +160,10 @@ describe("planejarImportacaoConsignado — casamento", () => {
       contratos: [],
     });
 
-    expect(plano.contratos[0].cliente.acao).toBe("lead");
-    expect(plano.contratos[0].cliente.lead).toMatchObject({
+    const lead = plano.contratos[0].cliente;
+    expect(lead.acao).toBe("lead");
+    if (lead.acao !== "lead") throw new Error("esperado lead");
+    expect(lead.lead).toMatchObject({
       origem: "import_consignado",
       estagioCrm: "novo_lead",
       renda: null,
@@ -187,9 +193,11 @@ describe("planejarImportacaoConsignado — casamento", () => {
       contratos: [],
     });
 
-    expect(plano.contratos[0].cliente.acao).toBe("casar");
-    expect(plano.contratos[0].cliente.clienteId).toBe(4);
-    expect(plano.contratos[0].cliente.preencher).toEqual({ cpf: "52998224725" });
+    const casado = plano.contratos[0].cliente;
+    expect(casado.acao).toBe("casar");
+    if (casado.acao !== "casar") throw new Error("esperado casar");
+    expect(casado.clienteId).toBe(4);
+    expect(casado.preencher).toEqual({ cpf: "52998224725" });
   });
 
   it("CNPJ desconhecido deixa empresaParceiraId null", () => {
