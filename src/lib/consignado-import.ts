@@ -2,7 +2,7 @@ import { normalizarNomeClienteImport } from "@/lib/cliente-import";
 import type { LinhaConsignado } from "@/lib/consignado-parse";
 import { ESTAGIOS_CRM } from "@/lib/crm";
 
-export const ORIGEM_IMPORT_CONSIGNADO = "import_consignado";
+export const ORIGEM_IMPORT_CONSIGNADO = "import_consignado" as const;
 
 export type ClienteExistenteConsignado = {
   id: number;
@@ -166,7 +166,7 @@ export function planejarImportacaoConsignado(input: {
     const existenteContrato = porChave.get(`${linha.ifConcessoraCodigo}\0${linha.contrato}`);
     try {
       const match = casarCliente(linha, input.clientes, empresaParceiraId);
-      const cliente = match
+      const cliente: PlanoContratoConsignado["cliente"] = match
         ? {
             acao: "casar" as const,
             clienteId: match.cliente.id,
