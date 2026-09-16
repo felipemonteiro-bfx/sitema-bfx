@@ -198,6 +198,25 @@ atual: X% · com esta venda: Y%" e os avisos citam a % posterior.
    `pctPosterior` 25.
 5. Fonte das duas importações sem `ScrollArea`.
 
+## 10. Terceira rodada: backfill e produto sem nome
+
+### 10.1 Backfill de `valor_parcela` (aplicado em produção, VKE)
+
+34 vendas editadas antes de `786146a` tinham a parcela da versão anterior (ex.: 80 com
+R$ 1.639 numa venda de R$ 1.785 em 5x). Critério, valor novo e backup em
+`docs/backfills/2026-09-16-valor-parcela.sql` e `…-antes.csv`; uma linha
+`venda:backfill_valor_parcela` por venda em `audit_logs`. 27 clientes ficaram com
+`consignado_mes_ref` nulo para a faixa ser refeita. Rodar de novo aborta (trava de
+contagem). A venda 205 ficou de fora: nunca editada, 4 parcelas no cabeçalho e 6 linhas.
+
+### 10.2 Save de venda sem nome de produto
+
+O form de edição descarta item com nome vazio/só espaço e não tem `valor`/`custo_prod`;
+o servidor gravava `valorVenda` 0 e lucro sem receita (0 vendas assim em produção hoje).
+Agora: lista de itens enviada e vazia → recusa com "Preencha o nome do produto"; venda
+com itens gravados sem itens no payload → recusa; payload sem a lista em venda só de
+cabeçalho → mantém valor, quantidade, custo e nome gravados.
+
 ## Fora de escopo
 
 - Ordenar pela coluna Consignado.

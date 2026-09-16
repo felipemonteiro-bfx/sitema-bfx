@@ -48,11 +48,64 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     try { itens = JSON.parse(String(itensRaw)); } catch { /* ignore */ }
   }
 
-  const valorLegado = itens.length > 0 ? 0 : Number(formData.get("valor") || 0);
-  const quantidadeLegado = itens.length > 0 ? 0 : Number(formData.get("quantidade") || 1);
-  const custoLegado = itens.length > 0 ? 0 : Number(formData.get("custo_prod") || 0);
-
   if (!id || !data) return { success: false, error: "Dados inválidos." };
+
+  // Venda como está gravada: base do "mudou ou não" do valorParcela e dos dados de
+  // produto quando o form não os traz.
+  let vendaAntes: {
+    parcelas: number | null;
+    valorFrete: number | null;
+    desconto: number | null;
+    valorVenda: number | null;
+    quantidade: number | null;
+    custoProduto: number | null;
+    produtoNome: string | null;
+    itens: { subtotal: number }[];
+  } | null = null;
+  try {
+    vendaAntes = await prisma.venda.findUnique({
+      where: { id },
+      select: {
+        parcelas: true,
+        valorFrete: true,
+        desconto: true,
+        valorVenda: true,
+        quantidade: true,
+        custoProduto: true,
+        produtoNome: true,
+        itens: { select: { subtotal: true } },
+      },
+    });
+  } catch (err) {
+    console.error("Erro ao ler venda para edição:", err);
+    return { success: false, error: "Erro ao salvar alterações. Tente novamente." };
+  }
+
+  // O form de edição descarta item cujo nome é vazio/só espaço e não tem `valor`/`custo_prod`.
+  // Sem dado de produto, o caminho legado gravaria valorVenda 0 e lucro sem receita.
+  // - form mandou a lista e ela veio vazia: a edição do item seria perdida em silêncio → recusa;
+  // - venda com itens gravados e nenhum item no payload: o cabeçalho não representa os itens → recusa;
+  // - payload sem a lista numa venda legada (só cabeçalho): mantém os dados de produto gravados.
+  const semDadoDeProduto = itens.length === 0 && !formData.has("valor");
+  if (semDadoDeProduto && (itensRaw != null || (vendaAntes?.itens.length ?? 0) > 0)) {
+    return {
+      success: false,
+      error: "Preencha o nome do produto antes de salvar: item sem nome não é gravado.",
+    };
+  }
+  const legadoDoBanco = semDadoDeProduto ? vendaAntes : null;
+  const valorLegado = itens.length > 0
+    ? 0
+    : legadoDoBanco ? (legadoDoBanco.valorVenda ?? 0) : Number(formData.get("valor") || 0);
+  const quantidadeLegado = itens.length > 0
+    ? 0
+    : legadoDoBanco ? (legadoDoBanco.quantidade ?? 1) : Number(formData.get("quantidade") || 1);
+  const custoLegado = itens.length > 0
+    ? 0
+    : legadoDoBanco ? (legadoDoBanco.custoProduto ?? 0) : Number(formData.get("custo_prod") || 0);
+  const produtoLegado = legadoDoBanco
+    ? (legadoDoBanco.produtoNome ?? "")
+    : String(formData.get("produto") || "");
 
   const subtotal = itens.length > 0
     ? itens.reduce((s, i) => s + i.subtotal, 0)
@@ -219,20 +272,9 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     // valorParcela alimenta limite de credito e consignado. Mudou parcelas ou total, a
     // parcela e recalculada; save sem mudanca nao reescreve o valor gravado (ver
     // valorParcelaAposEdicao). O total gravado e reconstruido do mesmo jeito que `total`.
-    const vendaAntes = await prisma.venda.findUnique({
-      where: { id },
-      select: {
-        parcelas: true,
-        valorFrete: true,
-        desconto: true,
-        valorVenda: true,
-        quantidade: true,
-        itens: { select: { subtotal: true } },
-      },
-    });
-    // O form de edição descarta item sem nome de produto e não tem campo `valor`: sem
-    // itens e sem `valor`, `total` acima sai 0 por falta de dado, não por mudança real.
-    const totalConhecido = itens.length > 0 || formData.has("valor");
+    // Sem itens, sem `valor` e sem a venda gravada para completar, `total` sai 0 por
+    // falta de dado, não por mudança real.
+    const totalConhecido = itens.length > 0 || formData.has("valor") || legadoDoBanco != null;
     const novoValorParcela = valorParcelaAposEdicao({
       antes: vendaAntes ? { parcelas: vendaAntes.parcelas, total: valorTotalVenda(vendaAntes) } : null,
       depois: { parcelas: parcelasNum, total: totalConhecido ? total : null },
@@ -246,7 +288,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         dataVenda: new Date(data),
         vendedor: vendedorTexto,
         vendedorId: vendedorUser?.id ?? undefined,
-        produtoNome: itens.length > 0 ? (itens[0].produtoNome || "") : String(formData.get("produto") || ""),
+        produtoNome: itens.length > 0 ? (itens[0].produtoNome || "") : produtoLegado,
         quantidade: itens.length > 0 ? itens.reduce((s, i) => s + i.quantidade, 0) : quantidadeLegado,
         valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,
         valorFrete: frete,

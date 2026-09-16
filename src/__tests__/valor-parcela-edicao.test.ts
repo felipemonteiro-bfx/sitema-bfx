@@ -119,25 +119,57 @@ describe("updateVenda — valorParcela", () => {
     expect(dbMock.venda.update.mock.calls[0][0].data.valorParcela).toBe(100);
   });
 
-  it("produto sem nome: o form nao manda itens nem valor, e a parcela nao e zerada", async () => {
-    // edit-venda-itens-client descarta item sem produtoNome; sem `valor` no form o
-    // caminho legado calcularia total 0 e gravaria valorParcela 0.
-    dbMock.venda.findUnique.mockResolvedValue({
-      parcelas: 12,
-      valorParcela: 50,
-      valorFrete: 0,
-      desconto: 0,
-      valorVenda: 600,
-      quantidade: 1,
-      itens: [],
-    });
+  const LEGADA_SEM_NOME = {
+    parcelas: 12,
+    valorFrete: 0,
+    desconto: 0,
+    valorVenda: 600,
+    quantidade: 1,
+    custoProduto: 250,
+    produtoNome: "",
+    itens: [],
+  };
+
+  it("item sem nome no form (itensJson vazio): recusa o save em vez de descartar a edicao", async () => {
+    // edit-venda-itens-client descarta item cujo nome e so espaco. Salvar assim perdia em
+    // silencio o valor editado (antes: valorVenda 0 e parcela 0; cabecalho x parcelas divergentes).
+    dbMock.venda.findUnique.mockResolvedValue(LEGADA_SEM_NOME);
     const fd = formVenda(12);
     fd.set("itensJson", "[]");
 
     const r = await updateVenda(fd);
 
+    expect(r.success).toBe(false);
+    expect(r.error).toContain("nome do produto");
+    expect(dbMock.venda.update).not.toHaveBeenCalled();
+  });
+
+  it("sem itensJson (payload fora da tela) em venda legada: dados de produto e parcela gravados sobrevivem", async () => {
+    dbMock.venda.findUnique.mockResolvedValue(LEGADA_SEM_NOME);
+    const fd = formVenda(12);
+    fd.delete("itensJson");
+    fd.set("formaPagamento", "PIX");
+
+    const r = await updateVenda(fd);
+
     expect(r).toEqual({ success: true });
-    expect("valorParcela" in dbMock.venda.update.mock.calls[0][0].data).toBe(false);
+    const data = dbMock.venda.update.mock.calls[0][0].data;
+    expect(data.valorVenda).toBe(600);
+    expect(data.quantidade).toBe(1);
+    expect(data.lucroLiquido).toBe(350);
+    expect(data.produtoNome).toBe("");
+    expect("valorParcela" in data).toBe(false);
+  });
+
+  it("sem itensJson em venda que tem itens gravados: recusa (o cabecalho nao representa os itens)", async () => {
+    dbMock.venda.findUnique.mockResolvedValue({ ...LEGADA_SEM_NOME, itens: [{ subtotal: 300 }, { subtotal: 300 }] });
+    const fd = formVenda(12);
+    fd.delete("itensJson");
+
+    const r = await updateVenda(fd);
+
+    expect(r.success).toBe(false);
+    expect(dbMock.venda.update).not.toHaveBeenCalled();
   });
 
   it("save identico nao manda valorParcela no update", async () => {
