@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,8 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { descreverAvisoConsignado, descreverMotivoConsignado } from "@/lib/consignado-import";
 import type {
   ResultadoAnaliseConsignado,
   ResultadoCommitConsignado,
@@ -109,6 +109,10 @@ export default function ImportacaoConsignadoClient({
   };
 
   const podeConfirmar = plano != null && plano.contratos.length > 0;
+  // Avisos do parse (duplicata no arquivo) e do casamento (CPF repetido no cadastro).
+  const avisos = plano
+    ? [...plano.parse.avisos, ...plano.avisos].sort((a, b) => a.linha - b.linha)
+    : [];
 
   return (
     <>
@@ -159,7 +163,21 @@ export default function ImportacaoConsignadoClient({
               <span className="text-sm text-muted-foreground">
                 {fileName ?? "Nenhum arquivo escolhido"}
               </span>
-              {analisando && <Loader2 className="h-5 w-5 animate-spin text-info-text" />}
+              {/* Região viva sempre montada: leitor de tela ignora região que já nasce com texto. */}
+              <span role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+                {analisando && (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-info-text" aria-hidden />
+                    Analisando…
+                  </>
+                )}
+                {!analisando && plano && (
+                  <span className="sr-only">
+                    Análise pronta: {plano.contratos.length} contratos, {avisos.length} avisos,{" "}
+                    {plano.erros.length} linhas recusadas.
+                  </span>
+                )}
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">
               Layout: aba <strong>eConsignadoCLT</strong> (xlsx) ou CSV com as colunas{" "}
@@ -171,7 +189,7 @@ export default function ImportacaoConsignadoClient({
 
         {plano && (
           <Card className="border-info bg-info-bg">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-primary">2. Análise — nada foi gravado ainda</CardTitle>
               <Button
                 type="button"
@@ -195,27 +213,56 @@ export default function ImportacaoConsignadoClient({
                 <Contador label="Clientes" valor={plano.resumo.clientesCasados} />
                 <Contador label="Leads" valor={plano.resumo.leadsCriar} />
               </div>
+              {avisos.length > 0 && (
+                <div className="rounded-md border border-warning/30 bg-warning-bg p-3">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-warning-text">
+                    <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+                    Avisos ({avisos.length}) — não impedem a importação
+                  </div>
+                  <ul
+                    tabIndex={0}
+                    aria-label="Avisos da análise"
+                    className="max-h-48 space-y-1 overflow-y-auto text-xs text-warning-text"
+                  >
+                    {avisos.map((aviso, i) => (
+                      <li key={i}>{descreverAvisoConsignado(aviso)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {plano.erros.length > 0 && (
-                <ScrollArea className="max-h-64 rounded-md border bg-card">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-20">Linha</TableHead>
-                        <TableHead>Motivo</TableHead>
-                        <TableHead>Conteúdo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {plano.erros.map((erro, i) => (
-                        <TableRow key={i}>
-                          <TableCell>{erro.linha}</TableCell>
-                          <TableCell>{erro.motivo}</TableCell>
-                          <TableCell className="font-mono text-xs">{erro.conteudo}</TableCell>
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-foreground">
+                    Linhas recusadas ({plano.erros.length}) — ficam de fora, o resto importa
+                  </div>
+                  {/* div com overflow, não ScrollArea: o Viewport do Radix (h-full) ignora o
+                      max-h do Root e corta as linhas sem barra de rolagem. */}
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Linhas recusadas"
+                    className="max-h-64 overflow-y-auto rounded-md border bg-card"
+                  >
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-20">Linha</TableHead>
+                          <TableHead>Motivo</TableHead>
+                          <TableHead>Conteúdo</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
+                      </TableHeader>
+                      <TableBody>
+                        {plano.erros.map((erro, i) => (
+                          <TableRow key={i}>
+                            <TableCell>{erro.linha}</TableCell>
+                            <TableCell>{descreverMotivoConsignado(erro.motivo)}</TableCell>
+                            <TableCell className="font-mono text-xs">{erro.conteudo}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

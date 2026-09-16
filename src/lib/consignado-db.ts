@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/db";
 import {
   calcularConsignadoDeRegistros,
+  mesRefConsignado,
   montarPayloadLimite,
+  planejarRecalculoConsignado,
   type ResultadoConsignado,
 } from "@/lib/consignado";
 import type { PlanoImportacaoConsignado } from "@/lib/consignado-import";
@@ -29,12 +31,89 @@ export async function calcularConsignado(
 }
 
 export async function recalcularConsignado(clienteId: number) {
-  const r = await calcularConsignado(clienteId);
+  const agora = new Date();
+  const r = await calcularConsignado(clienteId, agora);
   await prisma.cliente.update({
     where: { id: clienteId },
-    data: { pctConsignado: r.pct, faixaConsignado: r.faixa },
+    data: { pctConsignado: r.pct, faixaConsignado: r.faixa, consignadoMesRef: mesRefConsignado(agora) },
   });
   return r;
+}
+
+/**
+ * Recalcula depois de uma venda ou importação já gravada. Falha aqui não pode
+ * desfazer nem reportar como falha a operação principal: o cache se corrige no
+ * próximo `recalcularConsignadoPendentes`.
+ */
+export async function recalcularConsignadoSeguro(clienteId: number | null | undefined) {
+  if (!clienteId) return;
+  try {
+    await recalcularConsignado(clienteId);
+  } catch (e) {
+    console.error("[consignado] Falha ao recalcular faixa:", e);
+  }
+}
+
+const LOTE_RECALCULO = 1000;
+
+/**
+ * Recalcula quem nunca teve a faixa calculada ou foi calculado em outro mês — a %
+ * depende do mês corrente (contrato que termina, parcela BFX que começa). Cobre os
+ * clientes anteriores à feature e os criados por caminhos que não recalculam.
+ * Chamado no render de /cadastros: o primeiro acesso do mês paga o custo.
+ */
+export async function recalcularConsignadoPendentes(agora: Date = new Date()): Promise<number> {
+  const mesRef = mesRefConsignado(agora);
+  const filtroPendente = { OR: [{ consignadoMesRef: null }, { consignadoMesRef: { not: mesRef } }] };
+  const pendentes = await prisma.cliente.findMany({
+    where: filtroPendente,
+    select: { id: true, renda: true },
+  });
+
+  for (let i = 0; i < pendentes.length; i += LOTE_RECALCULO) {
+    const lote = pendentes.slice(i, i + LOTE_RECALCULO);
+    const ids = lote.map((c) => c.id);
+    const [contratos, vendas] = await Promise.all([
+      prisma.contratoConsignado.findMany({
+        where: { clienteId: { in: ids } },
+        select: {
+          clienteId: true,
+          ifConcessoraCodigo: true,
+          contrato: true,
+          valorParcela: true,
+          competenciaInicioDesconto: true,
+          competenciaFimDesconto: true,
+        },
+      }),
+      prisma.venda.findMany({
+        where: {
+          clienteId: { in: ids },
+          status: { notIn: ["cancelada", "estornada"] },
+          OR: [{ descontoEmFolha: true }, { formaPagamento: "DESCONTO_FOLHA" }],
+        },
+        select: {
+          clienteId: true,
+          dataVenda: true,
+          parcelas: true,
+          valorParcela: true,
+          status: true,
+          descontoEmFolha: true,
+          formaPagamento: true,
+        },
+      }),
+    ]);
+
+    const grupos = planejarRecalculoConsignado({ clientes: lote, contratos, vendas, mesRef: agora });
+    for (const grupo of grupos) {
+      await prisma.cliente.updateMany({
+        // Repete o filtro de pendente: quem foi recalculado por uma venda entre a leitura
+        // acima e esta gravação já está no mês atual e não pode voltar ao valor velho.
+        where: { id: { in: grupo.ids }, ...filtroPendente },
+        data: { pctConsignado: grupo.pct, faixaConsignado: grupo.faixa, consignadoMesRef: mesRef },
+      });
+    }
+  }
+  return pendentes.length;
 }
 
 function dadosContrato(
@@ -69,43 +148,51 @@ function dadosContrato(
 }
 
 export async function aplicarImportacaoConsignado(plano: PlanoImportacaoConsignado) {
-  const clienteIds = new Set<number>();
-  const leadPorCpf = new Map<string, number>();
+  // Tudo ou nada: uma falha no meio (ex.: nome único) não pode deixar metade dos
+  // leads e contratos gravados. O timeout padrão (5 s) não cobre um arquivo grande.
+  const clienteIds = await prisma.$transaction(
+    async (tx) => {
+      const tocados = new Set<number>();
+      const leadPorChave = new Map<string, number>();
 
-  for (const item of plano.contratos) {
-    let clienteId: number;
-    if (item.cliente.acao === "casar") {
-      clienteId = item.cliente.clienteId;
-      const preencher = item.cliente.preencher;
-      if (Object.keys(preencher).length > 0) {
-        await prisma.cliente.update({ where: { id: clienteId }, data: preencher });
+      for (const item of plano.contratos) {
+        let clienteId: number;
+        if (item.cliente.acao === "casar") {
+          clienteId = item.cliente.clienteId;
+          const preencher = item.cliente.preencher;
+          if (Object.keys(preencher).length > 0) {
+            await tx.cliente.update({ where: { id: clienteId }, data: preencher });
+          }
+        } else {
+          const existente = leadPorChave.get(item.cliente.chave);
+          if (existente != null) {
+            clienteId = existente;
+          } else {
+            const criado = await tx.cliente.create({ data: item.cliente.lead });
+            clienteId = criado.id;
+            leadPorChave.set(item.cliente.chave, clienteId);
+          }
+        }
+        tocados.add(clienteId);
+        const data = dadosContrato(item.linha, clienteId, item.empresaParceiraId);
+        await tx.contratoConsignado.upsert({
+          where: {
+            ifConcessoraCodigo_contrato: {
+              ifConcessoraCodigo: item.linha.ifConcessoraCodigo,
+              contrato: item.linha.contrato,
+            },
+          },
+          create: data,
+          update: data,
+        });
       }
-    } else {
-      const cpf = item.cliente.lead.cpf;
-      if (cpf && leadPorCpf.has(cpf)) {
-        clienteId = leadPorCpf.get(cpf)!;
-      } else {
-        const criado = await prisma.cliente.create({ data: item.cliente.lead });
-        clienteId = criado.id;
-        if (cpf) leadPorCpf.set(cpf, clienteId);
-      }
-    }
-    clienteIds.add(clienteId);
-    const data = dadosContrato(item.linha, clienteId, item.empresaParceiraId);
-    await prisma.contratoConsignado.upsert({
-      where: {
-        ifConcessoraCodigo_contrato: {
-          ifConcessoraCodigo: item.linha.ifConcessoraCodigo,
-          contrato: item.linha.contrato,
-        },
-      },
-      create: data,
-      update: data,
-    });
-  }
+      return tocados;
+    },
+    { maxWait: 10_000, timeout: 120_000 },
+  );
 
   for (const id of clienteIds) {
-    await recalcularConsignado(id);
+    await recalcularConsignadoSeguro(id);
   }
 
   return {

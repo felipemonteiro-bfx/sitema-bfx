@@ -9,7 +9,7 @@ import { successResponse, errorResponse } from "@/lib/action-response";
 import { vendaV2Schema } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
-import { calcularConsignado, recalcularConsignado } from "@/lib/consignado-db";
+import { calcularConsignado, recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { decidirConfirmacaoConsignado } from "@/lib/consignado-venda";
 import { createAuditLog } from "@/lib/audit";
 import {
@@ -27,6 +27,7 @@ import { valorEmReais } from "@/lib/fidelidade";
 import { logError } from "@/lib/logger";
 import { registrarRejeicaoVenda } from "@/lib/venda-observabilidade";
 import { getSession } from "@/lib/session";
+import { requireSessionOrThrow } from "@/lib/guards";
 import {
   FORMA_PAGAMENTO,
   formaFromLegacyFlags,
@@ -36,7 +37,11 @@ import {
 } from "@/lib/forma-pagamento";
 import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
 
+// As duas actions exigem sessão na primeira linha: o matcher do middleware cobre só /api
+// e o layout roda depois da action. Sem isto, quem tiver o Action ID cria venda, baixa
+// estoque e dispara boleto/WhatsApp sem estar logado.
 export async function criarVenda(formData: FormData) {
+  await requireSessionOrThrow();
   const data = String(formData.get("data") || "");
   const vendedor = String(formData.get("vendedor") || "");
   const clienteId = Number(formData.get("cliente") || 0);
@@ -141,6 +146,7 @@ export async function criarVenda(formData: FormData) {
 export async function criarVendaV2(
   formData: FormData
 ): Promise<ActionResponse<{ vendaId: number; boletoUrl?: string; assinaturaToken?: string }>> {
+  await requireSessionOrThrow();
   try {
     // Identificacao da tentativa, lida antes de qualquer validacao: as primeiras rejeicoes
     // acontecem antes do parse, e sem isso a linha de log nao diz de quem era a venda.
@@ -417,12 +423,8 @@ export async function criarVendaV2(
       return vendaCriada;
     });
 
+    await recalcularConsignadoSeguro(clienteId);
     revalidarVenda();
-    if (clienteId) {
-      void recalcularConsignado(clienteId).catch((e) =>
-        console.error("[consignado] Falha ao recalcular faixa:", e),
-      );
-    }
 
     await createAuditLog("venda:create", { vendaId: venda.id, clienteId, vendedor, total: totalVenda });
 

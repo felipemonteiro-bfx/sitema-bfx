@@ -12,9 +12,14 @@ import {
   type FormaPagamento,
 } from "@/lib/forma-pagamento";
 import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
-import { recalcularConsignado } from "@/lib/consignado-db";
+import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
+import { requireSessionOrThrow } from "@/lib/guards";
+
+// Toda action daqui precisa da própria guarda: o matcher do middleware cobre só /api
+// e o layout roda depois da action, então nenhum dos dois protege.
 
 export async function updateVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
+  await requireSessionOrThrow();
   const id = Number(formData.get("id") || 0);
   const data = String(formData.get("data") || "");
   const frete = Number(formData.get("frete") || 0);
@@ -288,11 +293,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     }
 
     await createAuditLog("venda:update", { vendaId: id, subtotal, lucro: lucroFinal });
-    if (vendaAtualizada.clienteId) {
-      void recalcularConsignado(vendaAtualizada.clienteId).catch((e) =>
-        console.error("[consignado] Falha ao recalcular faixa:", e),
-      );
-    }
+    await recalcularConsignadoSeguro(vendaAtualizada.clienteId);
     revalidarVenda();
     return { success: true };
   } catch (err) {
@@ -302,6 +303,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
 }
 
 export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: boolean; error?: string }> {
+  await requireSessionOrThrow();
   if (!vendaId) return { success: false, error: "ID da venda invalido." };
 
   try {
@@ -335,10 +337,14 @@ export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: bo
 }
 
 export async function deleteVenda(formData: FormData): Promise<void> {
+  await requireSessionOrThrow();
   const id = Number(formData.get("id") || 0);
   if (!id) return;
 
   try {
+    // O cliente sai da venda junto com ela: guardar antes para recalcular a faixa depois.
+    const venda = await prisma.venda.findUnique({ where: { id }, select: { clienteId: true } });
+
     // Restaurar estoque antes de deletar
     const itens = await prisma.itemVenda.findMany({
       where: { vendaId: id },
@@ -357,6 +363,7 @@ export async function deleteVenda(formData: FormData): Promise<void> {
 
     await prisma.venda.delete({ where: { id } });
     await createAuditLog("venda:delete", { vendaId: id });
+    await recalcularConsignadoSeguro(venda?.clienteId);
     revalidarVenda();
   } catch (err) {
     console.error("Erro ao excluir venda:", err);

@@ -52,6 +52,8 @@ export type PlanoContratoConsignado = {
       }
     | {
         acao: "lead";
+        /** Identidade do lead no arquivo: linhas com a mesma chave criam um lead só. */
+        chave: string;
         lead: {
           nome: string;
           cpf: string | null;
@@ -65,6 +67,8 @@ export type PlanoContratoConsignado = {
         avisos: string[];
       };
 };
+
+type LeadConsignado = Extract<PlanoContratoConsignado["cliente"], { acao: "lead" }>["lead"];
 
 export type PlanoImportacaoConsignado = {
   contratos: PlanoContratoConsignado[];
@@ -137,12 +141,84 @@ function preencherVazios(
   return preencher;
 }
 
-function nomeDoLead(linha: LinhaConsignado, clientes: ClienteExistenteConsignado[]): string {
+/**
+ * CPF identifica o trabalhador; sem CPF, matrícula dentro do empregador — a empresa
+ * parceira quando casou, senão o CNPJ que veio na linha. Sem o CNPJ, a mesma matrícula
+ * em dois empregadores não cadastrados viraria um lead só.
+ */
+function chaveLead(linha: LinhaConsignado, empresaParceiraId: number | null): string {
+  if (linha.cpf) return `cpf:${linha.cpf}`;
+  const empregador =
+    empresaParceiraId != null
+      ? String(empresaParceiraId)
+      : `cnpj:${linha.numeroInscricaoEstabelecimento ?? linha.numeroInscricaoEmpregador ?? ""}`;
+  return `mat:${linha.matricula ?? ""}|${empregador}`;
+}
+
+/**
+ * Chave de unicidade do nome igual à do banco: há um índice único em
+ * `f_unaccent(upper(nome))`, então "JOSÉ" e "JOSE" colidem mesmo sendo textos diferentes.
+ */
+function chaveNome(nome: string): string {
+  return nome
+    .normalize("NFD")
+    .split("")
+    .filter((c) => c < "̀" || c > "ͯ")
+    .join("")
+    .toLocaleUpperCase("pt-BR");
+}
+
+function erroNomeDuplicado(): Error {
+  return Object.assign(new Error("nome duplicado sem CPF para desambiguar"), { motivo: "nome_duplicado" });
+}
+
+/**
+ * `Cliente.nome` é único. O nome do lead não pode repetir um cliente cadastrado nem
+ * outro lead do mesmo arquivo — sem isso o segundo `create` quebra no meio da gravação.
+ */
+function nomeDoLead(
+  linha: LinhaConsignado,
+  nomesClientes: Set<string>,
+  nomesReservados: Set<string>,
+): string {
   const base = normalizarNomeClienteImport(linha.nomeTrabalhador) || "SEM NOME";
-  const colide = clientes.some((c) => c.nome === base);
-  if (!colide) return base;
-  if (linha.cpf && linha.cpf.length >= 4) return `${base} (${linha.cpf.slice(-4)})`;
-  throw Object.assign(new Error("nome duplicado sem CPF para desambiguar"), { motivo: "nome_duplicado" });
+  const ocupado = (nome: string) => {
+    const chave = chaveNome(nome);
+    return nomesReservados.has(chave) || nomesClientes.has(chave);
+  };
+  if (!ocupado(base)) return base;
+  if (!linha.cpf || linha.cpf.length < 4) throw erroNomeDuplicado();
+  const comSufixo = `${base} (${linha.cpf.slice(-4)})`;
+  if (ocupado(comSufixo)) throw erroNomeDuplicado();
+  return comSufixo;
+}
+
+const DESCRICAO_MOTIVO: Record<string, string> = {
+  sem_financeira: "Sem o código da financeira (ifConcessora.codigo).",
+  sem_contrato: "Sem o número do contrato.",
+  sem_cpf_nem_matricula: "Sem CPF e sem matrícula: não dá para identificar o trabalhador.",
+  valor_parcela_invalido: "Valor da parcela vazio ou não numérico.",
+  competencia_invalida: "Competência de desconto fora do formato MM/AAAA.",
+  nome_duplicado: "Nome já usado por outro cadastro ou trabalhador do arquivo, e não deu para diferenciar pelo CPF.",
+  erro: "Não foi possível processar a linha.",
+};
+
+export function descreverMotivoConsignado(motivo: string): string {
+  return DESCRICAO_MOTIVO[motivo] ?? `Linha recusada: ${motivo}.`;
+}
+
+export function descreverAvisoConsignado(aviso: {
+  linha: number;
+  motivo: string;
+  substituidaPor?: number;
+}): string {
+  if (aviso.motivo === "duplicata_substituida") {
+    return `Linha ${aviso.linha} substituída pela linha ${aviso.substituidaPor} (mesmo contrato na mesma financeira).`;
+  }
+  if (aviso.motivo === "cpf_duplicado") {
+    return `Linha ${aviso.linha}: o CPF está em mais de um cadastro; o contrato foi ligado ao mais antigo.`;
+  }
+  return `Linha ${aviso.linha}: ${aviso.motivo}.`;
 }
 
 export function planejarImportacaoConsignado(input: {
@@ -158,39 +234,44 @@ export function planejarImportacaoConsignado(input: {
   const erros: PlanoImportacaoConsignado["erros"] = [];
   const avisos: PlanoImportacaoConsignado["avisos"] = [];
   const casados = new Set<number>();
-  const leadsCpf = new Set<string>();
-  let leadsSemCpf = 0;
+  const leadsPorChave = new Map<string, LeadConsignado>();
+  const nomesReservados = new Set<string>();
+  const nomesClientes = new Set(input.clientes.map((c) => chaveNome(c.nome)));
 
   for (const linha of input.linhas) {
     const empresaParceiraId = casarEmpresa(linha, input.empresas);
     const existenteContrato = porChave.get(`${linha.ifConcessoraCodigo}\0${linha.contrato}`);
     try {
       const match = casarCliente(linha, input.clientes, empresaParceiraId);
-      const cliente: PlanoContratoConsignado["cliente"] = match
-        ? {
-            acao: "casar" as const,
-            clienteId: match.cliente.id,
-            preencher: preencherVazios(match.cliente, linha, empresaParceiraId),
-            avisos: match.avisos,
-          }
-        : {
-            acao: "lead" as const,
-            lead: {
-              nome: nomeDoLead(linha, input.clientes),
-              cpf: linha.cpf,
-              matricula: linha.matricula,
-              empresa: linha.nomeEmpregador,
-              empresaParceiraId,
-              origem: ORIGEM_IMPORT_CONSIGNADO,
-              estagioCrm: ESTAGIOS_CRM.NOVO_LEAD,
-              renda: null,
-            },
-            avisos: [] as string[],
+      let cliente: PlanoContratoConsignado["cliente"];
+      if (match) {
+        cliente = {
+          acao: "casar",
+          clienteId: match.cliente.id,
+          preencher: preencherVazios(match.cliente, linha, empresaParceiraId),
+          avisos: match.avisos,
+        };
+      } else {
+        const chave = chaveLead(linha, empresaParceiraId);
+        let lead = leadsPorChave.get(chave);
+        if (!lead) {
+          lead = {
+            nome: nomeDoLead(linha, nomesClientes, nomesReservados),
+            cpf: linha.cpf,
+            matricula: linha.matricula,
+            empresa: linha.nomeEmpregador,
+            empresaParceiraId,
+            origem: ORIGEM_IMPORT_CONSIGNADO,
+            estagioCrm: ESTAGIOS_CRM.NOVO_LEAD,
+            renda: null,
           };
-      if (cliente.acao === "casar") casados.add(cliente.clienteId);
-      else if (cliente.lead.cpf) leadsCpf.add(cliente.lead.cpf);
-      else leadsSemCpf += 1;
+          leadsPorChave.set(chave, lead);
+          nomesReservados.add(chaveNome(lead.nome));
+        }
+        cliente = { acao: "lead", chave, lead, avisos: [] };
+      }
       if (cliente.acao === "casar") {
+        casados.add(cliente.clienteId);
         for (const a of cliente.avisos) avisos.push({ linha: linha.linha, motivo: a });
       }
       contratos.push({
@@ -215,7 +296,7 @@ export function planejarImportacaoConsignado(input: {
       contratosNovos: contratos.filter((c) => c.acaoContrato === "criar").length,
       contratosAtualizados: contratos.filter((c) => c.acaoContrato === "atualizar").length,
       clientesCasados: casados.size,
-      leadsCriar: leadsCpf.size + leadsSemCpf,
+      leadsCriar: leadsPorChave.size,
       erros: erros.length,
     },
   };

@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 import {
   calcularConsignadoDeRegistros,
   clientePassaFiltroConsignado,
+  formatarPctConsignado,
+  mesRefConsignado,
   montarPayloadLimite,
+  OPCOES_FILTRO_FAIXA_CONSIGNADO,
+  planejarRecalculoConsignado,
+  ROTULO_FAIXA_CONSIGNADO,
 } from "@/lib/consignado";
 
 const MES = new Date(2026, 8, 15); // 15/09/2026
@@ -185,5 +190,67 @@ describe("clientePassaFiltroConsignado", () => {
     expect(clientePassaFiltroConsignado(alertaAmazon, filtro)).toBe(true);
     expect(clientePassaFiltroConsignado(alertaOutra, filtro)).toBe(false);
     expect(clientePassaFiltroConsignado(limiteAmazon, filtro)).toBe(false);
+  });
+});
+
+describe("planejarRecalculoConsignado", () => {
+  it("cliente so com folha BFX a 25% vira alerta; sem renda vira renda_pendente; agrupa por pct e faixa", () => {
+    const grupos = planejarRecalculoConsignado({
+      clientes: [
+        { id: 1, renda: 1000 },
+        { id: 2, renda: null },
+        { id: 3, renda: 2000 },
+        { id: 4, renda: 500 },
+      ],
+      contratos: [
+        { clienteId: 3, ...contrato({ valorParcela: 500 }), ifConcessoraCodigo: "237", contrato: "X1" },
+      ],
+      vendas: [
+        { clienteId: 1, ...folha(250) },
+        { clienteId: 2, ...folha(100) },
+        { clienteId: null, ...folha(999) },
+      ],
+      mesRef: MES,
+    });
+
+    const porId = new Map<number, { pct: number | null; faixa: string }>();
+    for (const g of grupos) for (const id of g.ids) porId.set(id, { pct: g.pct, faixa: g.faixa });
+
+    expect(porId.get(1)).toEqual({ pct: 25, faixa: "alerta" });
+    expect(porId.get(3)).toEqual({ pct: 25, faixa: "alerta" });
+    expect(porId.get(2)).toEqual({ pct: null, faixa: "renda_pendente" });
+    expect(porId.get(4)).toEqual({ pct: 0, faixa: "ok" });
+    expect(grupos.find((g) => g.faixa === "alerta")?.ids.sort()).toEqual([1, 3]);
+    expect(grupos).toHaveLength(3);
+  });
+});
+
+describe("mesRefConsignado", () => {
+  it("formata o mes civil como YYYY-MM", () => {
+    expect(mesRefConsignado(new Date(2026, 8, 30))).toBe("2026-09");
+    expect(mesRefConsignado(new Date(2027, 0, 1))).toBe("2027-01");
+  });
+});
+
+describe("formatarPctConsignado", () => {
+  it("usa virgula decimal pt-BR e traco quando nao ha %", () => {
+    expect(formatarPctConsignado(25.5)).toBe("25,5%");
+    expect(formatarPctConsignado(33.33)).toBe("33,33%");
+    expect(formatarPctConsignado(20)).toBe("20%");
+    expect(formatarPctConsignado(null)).toBe("—");
+    expect(formatarPctConsignado(undefined)).toBe("—");
+  });
+});
+
+describe("rotulos de faixa", () => {
+  it("filtro e selo usam o mesmo texto para cada faixa", () => {
+    expect(ROTULO_FAIXA_CONSIGNADO.alerta).toBe("Alerta 20%");
+    expect(ROTULO_FAIXA_CONSIGNADO.limite).toBe("Limite 30%");
+    expect(ROTULO_FAIXA_CONSIGNADO.renda_pendente).toBe("Renda pendente");
+    const valores = OPCOES_FILTRO_FAIXA_CONSIGNADO.map((o) => o.value);
+    expect(valores).toEqual(["ok", "alerta", "limite", "renda_pendente"]);
+    for (const o of OPCOES_FILTRO_FAIXA_CONSIGNADO) {
+      expect(o.label).toBe(ROTULO_FAIXA_CONSIGNADO[o.value]);
+    }
   });
 });

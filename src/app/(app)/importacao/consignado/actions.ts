@@ -75,7 +75,7 @@ export async function analisarImportacaoConsignado(
   await requireAdminOrThrow();
   try {
     const parse = await lerArquivo(formData);
-    return montarPlano(parse);
+    return await montarPlano(parse);
   } catch (e) {
     const msg = e instanceof ArquivoConsignadoInvalido ? e.message : "Falha ao ler o arquivo.";
     return { erro: msg };

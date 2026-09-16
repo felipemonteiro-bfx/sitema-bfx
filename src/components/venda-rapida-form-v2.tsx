@@ -42,7 +42,12 @@ import { CurrencyInput } from "@/components/currency-input";
 import { Badge } from "@/components/ui/badge";
 import { CadastrarClienteRapidoDialog } from "@/components/cadastrar-cliente-rapido-dialog";
 import type { ActionResponse } from "@/lib/action-response";
-import { decidirConfirmacaoConsignado } from "@/lib/consignado-venda";
+import {
+  decidirConfirmacaoConsignado,
+  estadoCardLimite,
+  type LimiteClientePayload,
+} from "@/lib/consignado-venda";
+import { formatarPctConsignado, ROTULO_FAIXA_CONSIGNADO } from "@/lib/consignado";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -222,19 +227,7 @@ export default function VendaRapidaFormV2({
   const [successAssinaturaToken, setSuccessAssinaturaToken] = useState<string | null>(null);
 
   // Limite e margem disponível do cliente
-  const [limiteData, setLimiteData] = useState<{
-    renda: number;
-    margemTotal: number;
-    comprometimentoAtual: number;
-    margemDisponivel: number;
-    tetoParcelaMax: number;
-    tomadoConsignado?: number;
-    tomadoFolhaBfx?: number;
-    pctConsignado?: number | null;
-    faixaConsignado?: string | null;
-    margemFolhaTotal?: number;
-    margemFolhaDisponivel?: number;
-  } | null>(null);
+  const [limiteData, setLimiteData] = useState<LimiteClientePayload | null>(null);
   const [confirmConsignadoOpen, setConfirmConsignadoOpen] = useState(false);
   const confirmouConsignadoRef = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -381,13 +374,17 @@ export default function VendaRapidaFormV2({
   const comissaoPct = selectedVendedorData?.comissaoPct || 0;
   const valorComissao = (lucroBruto * comissaoPct) / 100;
 
-  const valorParcela = numParcelas > 0 ? totalVenda / numParcelas : 0;
-  const margemFolhaDisponivel = limiteData?.margemFolhaDisponivel ?? limiteData?.margemDisponivel ?? 0;
-  const margemParaExceder = descontoEmFolha ? margemFolhaDisponivel : (limiteData?.margemDisponivel ?? 0);
-  const excedeuMargem = limiteData ? valorParcela > margemParaExceder + 1 : false;
-  const faixaFolha = limiteData?.faixaConsignado ?? "ok";
-  const alertaConsignado = descontoEmFolha && faixaFolha === "alerta";
-  const limiteConsignado = descontoEmFolha && (faixaFolha === "limite" || excedeuMargem);
+  // Parcela com desconto manual e de pontos, como o servidor grava. O card e a
+  // confirmação no submit usam esta mesma conta; com contas diferentes o diálogo de
+  // 30% abria para uma venda que o card mostrava abaixo do limite.
+  const parcelaDe = (subtotal: number) =>
+    numParcelas > 0 ? (subtotal + numFrete - desconto - descontoPontos) / numParcelas : 0;
+  const valorParcela = parcelaDe(subtotalProdutos);
+  // Tom e números do card saem de uma função só: em folha sem renda não há trava,
+  // e o vermelho só aparece quando o diálogo de confirmação também vai aparecer.
+  const cardLimite = limiteData
+    ? estadoCardLimite({ descontoEmFolha, limite: limiteData, valorParcela })
+    : null;
 
   // Sugestão automática de parcelas (apenas desconto em folha)
   useEffect(() => {
@@ -625,9 +622,11 @@ export default function VendaRapidaFormV2({
     setLoading(true);
 
     const subtotalFiltrado = produtosFiltrados.reduce((s, p) => s + p.subtotal, 0);
-    const totalFiltrado = subtotalFiltrado + numFrete;
-    const valorParcelaFiltrado = numParcelas > 0 ? totalFiltrado / numParcelas : 0;
-    const excedeuLimite = limiteData && valorParcelaFiltrado > margemParaExceder + 1 ? 1 : 0;
+    const valorParcelaFiltrado = parcelaDe(subtotalFiltrado);
+    const tomFiltrado = limiteData
+      ? estadoCardLimite({ descontoEmFolha, limite: limiteData, valorParcela: valorParcelaFiltrado }).tom
+      : null;
+    const excedeuLimite = tomFiltrado === "limite" || tomFiltrado === "excede" ? 1 : 0;
 
     if (descontoEmFolha && limiteData) {
       const decisao = decidirConfirmacaoConsignado({
@@ -950,15 +949,17 @@ export default function VendaRapidaFormV2({
       )}
 
       {/* Seção 2.6: Limite e Margem Disponível */}
-      {selectedCliente && limiteData && (
+      {selectedCliente && limiteData && cardLimite && (
         <Card
           className={cn(
             "border-2 transition-colors",
-            limiteConsignado
+            cardLimite.tom === "limite"
               ? "bg-error-bg border-error/30"
-              : alertaConsignado || excedeuMargem
+              : cardLimite.tom === "alerta" || cardLimite.tom === "excede"
                 ? "bg-warning/10 border-warning/30"
-                : "bg-success/10 border-success/30"
+                : cardLimite.tom === "renda_pendente"
+                  ? "bg-muted/40 border-border"
+                  : "bg-success/10 border-success/30"
           )}
         >
           <CardHeader className="pb-3">
@@ -967,13 +968,16 @@ export default function VendaRapidaFormV2({
                 <CreditCard className="h-4 w-4" />
                 Limite e Margem
               </span>
-              {descontoEmFolha && faixaFolha === "alerta" && (
-                <Badge variant="warning">Alerta 20%</Badge>
+              {cardLimite.tom === "alerta" && (
+                <Badge variant="warning">{ROTULO_FAIXA_CONSIGNADO.alerta}</Badge>
               )}
-              {descontoEmFolha && faixaFolha === "limite" && (
-                <Badge variant="error">Limite 30%</Badge>
+              {cardLimite.tom === "limite" && (
+                <Badge variant="error">{ROTULO_FAIXA_CONSIGNADO.limite}</Badge>
               )}
-              {!descontoEmFolha && excedeuMargem && (
+              {cardLimite.tom === "renda_pendente" && (
+                <Badge variant="outline">{ROTULO_FAIXA_CONSIGNADO.renda_pendente}</Badge>
+              )}
+              {cardLimite.tom === "excede" && (
                 <Badge variant="secondary" className="bg-warning/20 text-warning-foreground dark:text-warning">
                   Excede disponível
                 </Badge>
@@ -981,26 +985,22 @@ export default function VendaRapidaFormV2({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {descontoEmFolha && faixaFolha === "renda_pendente" && (
+            {cardLimite.tom === "renda_pendente" && (
               <p className="text-xs text-muted-foreground">
-                Renda pendente — % de consignado não calculada.
+                Renda pendente — % de consignado não calculada. A venda segue sem trava.
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Limite</div>
                 <div className="text-sm font-bold tabular-nums text-foreground">
-                  {formatBRL(descontoEmFolha ? (limiteData.margemFolhaTotal ?? limiteData.margemTotal) : limiteData.margemTotal)}
+                  {cardLimite.limite == null ? "—" : formatBRL(cardLimite.limite)}
                 </div>
               </div>
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Comprometido</div>
                 <div className="text-sm font-bold tabular-nums text-foreground">
-                  {formatBRL(
-                    descontoEmFolha
-                      ? (limiteData.tomadoConsignado ?? 0) + (limiteData.tomadoFolhaBfx ?? 0)
-                      : limiteData.comprometimentoAtual,
-                  )}
+                  {formatBRL(cardLimite.comprometido)}
                 </div>
               </div>
               <div>
@@ -1008,35 +1008,52 @@ export default function VendaRapidaFormV2({
                 <div
                   className={cn(
                     "text-sm font-bold tabular-nums",
-                    (descontoEmFolha ? margemFolhaDisponivel : limiteData.margemDisponivel) > 0
-                      ? "text-success-text"
-                      : "text-error-text"
+                    cardLimite.disponivel == null
+                      ? "text-muted-foreground"
+                      : cardLimite.disponivel > 0
+                        ? "text-success-text"
+                        : "text-error-text"
                   )}
                 >
-                  {formatBRL(descontoEmFolha ? margemFolhaDisponivel : limiteData.margemDisponivel)}
+                  {cardLimite.disponivel == null ? "—" : formatBRL(cardLimite.disponivel)}
                 </div>
               </div>
             </div>
-            {descontoEmFolha && limiteData.pctConsignado != null && (
-              <p className="text-xs text-center text-muted-foreground">
-                Consignado atual: {limiteData.pctConsignado}%
-              </p>
-            )}
-            {descontoEmFolha && alertaConsignado && !limiteConsignado && (
-              <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                <div>Já está em alerta de consignado: {limiteData.pctConsignado}%.</div>
+            {cardLimite.pctBarra != null && (
+              <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full transition-all",
+                    cardLimite.tom === "limite"
+                      ? "bg-error"
+                      : cardLimite.tom === "alerta" || cardLimite.tom === "excede"
+                        ? "bg-warning"
+                        : "bg-success"
+                  )}
+                  style={{ width: `${cardLimite.pctBarra}%` }}
+                />
               </div>
             )}
-            {descontoEmFolha && limiteConsignado && (
+            {cardLimite.pctConsignado != null && (
+              <p className="text-xs text-center text-muted-foreground">
+                Consignado atual: {formatarPctConsignado(cardLimite.pctConsignado)}
+              </p>
+            )}
+            {cardLimite.tom === "alerta" && (
+              <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div>Já está em alerta de consignado: {formatarPctConsignado(cardLimite.pctConsignado)}.</div>
+              </div>
+            )}
+            {cardLimite.tom === "limite" && (
               <div className="flex items-start gap-2 text-xs text-error-text bg-error-bg p-3 rounded-lg border border-error/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  Cliente em 30% ou mais de consignado. A venda só sai se você confirmar.
+                  Cliente chega a 30% ou mais de consignado. A venda só sai se você confirmar.
                 </div>
               </div>
             )}
-            {!descontoEmFolha && excedeuMargem && (
+            {cardLimite.tom === "excede" && (
               <div className="flex items-start gap-2 text-xs text-warning-foreground dark:text-warning bg-warning/10 dark:bg-warning/20 p-3 rounded-lg border border-warning/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
@@ -1052,7 +1069,7 @@ export default function VendaRapidaFormV2({
       <AlertDialog open={confirmConsignadoOpen} onOpenChange={setConfirmConsignadoOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cliente em 30% ou mais de consignado. Vender mesmo assim?</AlertDialogTitle>
+            <AlertDialogTitle>Com esta venda o cliente chega a 30% ou mais de consignado. Vender mesmo assim?</AlertDialogTitle>
             <AlertDialogDescription>
               A venda em desconto em folha será gravada com indicação de excedeu limite.
             </AlertDialogDescription>

@@ -37,6 +37,7 @@ model Cliente {
   pontoTransacoes PontoTransacao[]
   pctConsignado  Float?   @map("pct_consignado")
   faixaConsignado String? @map("faixa_consignado") // ok | alerta | limite | renda_pendente
+  consignadoMesRef String? @map("consignado_mes_ref") // YYYY-MM em que pct/faixa foram calculados
   contratosConsignados ContratoConsignado[]
 
   @@map("clientes")

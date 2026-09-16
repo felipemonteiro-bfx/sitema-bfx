@@ -22,7 +22,7 @@ import { PageHeader } from "@/components/page-header";
 import { createAuditLog } from "@/lib/audit";
 import { requireAdminOrThrow, requireSessionOrThrow } from "@/lib/guards";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
-import { recalcularConsignado } from "@/lib/consignado-db";
+import { recalcularConsignadoPendentes, recalcularConsignadoSeguro } from "@/lib/consignado-db";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string; faixa_consignado?: string; empresa_parceira?: string };
 
@@ -56,7 +56,7 @@ export async function addCliente(formData: FormData) {
       },
     });
     await createAuditLog("cliente:create", { clienteId: cliente.id, nome });
-    await recalcularConsignado(cliente.id);
+    await recalcularConsignadoSeguro(cliente.id);
     revalidarCliente();
   } catch (e) {
     const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -92,7 +92,7 @@ export async function updateCliente(formData: FormData) {
       },
     });
     await createAuditLog("cliente:update", { clienteId: id, nome });
-    await recalcularConsignado(id);
+    await recalcularConsignadoSeguro(id);
     revalidarCliente();
   } catch (e) {
     const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
@@ -393,6 +393,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const clienteIdsPorNome = sp.q_clientes
     ? await unaccentFindClienteIds(sp.q_clientes)
     : [];
+
+  // A faixa de consignado é cache que depende do mês corrente: antes de listar e
+  // filtrar, recalcula quem nunca foi calculado ou ficou no mês anterior.
+  try {
+    await recalcularConsignadoPendentes();
+  } catch (e) {
+    console.error("[consignado] Falha no recalculo pendente:", e);
+  }
 
   const faixaConsignado = sp.faixa_consignado;
   const empresaParceiraFiltro = Number(sp.empresa_parceira || 0);

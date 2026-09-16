@@ -34,6 +34,20 @@ import {
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import {
+  formatarPctConsignado,
+  OPCOES_FILTRO_FAIXA_CONSIGNADO,
+  ROTULO_FAIXA_CONSIGNADO,
+  type FaixaConsignado,
+} from "@/lib/consignado";
+
+// Bolinha de cor de cada faixa no filtro — mesmo significado das cores do selo.
+const INDICADOR_FAIXA: Record<FaixaConsignado, string> = {
+  ok: "bg-success",
+  alerta: "bg-warning",
+  limite: "bg-error",
+  renda_pendente: "bg-muted-foreground",
+};
 
 type ClienteListItem = {
   id: number;
@@ -294,19 +308,19 @@ export default function ClientesTabClient({
       </Card>
 
       <Card className="mt-4">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-primary">Clientes</CardTitle>
-          <div className="flex flex-wrap items-center gap-2 w-full justify-end">
-          <div className="w-40">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:justify-end">
+          <div className="w-full sm:w-44">
+            <Label htmlFor="filtro-faixa-consignado" className="sr-only">
+              Faixa de consignado
+            </Label>
             <FormSelect
               id="filtro-faixa-consignado"
               name="faixa_consignado"
               options={[
                 { value: "todas", label: "Todas as faixas" },
-                { value: "ok", label: "Abaixo de 20%" },
-                { value: "alerta", label: "20–30%" },
-                { value: "limite", label: "30% ou mais" },
-                { value: "renda_pendente", label: "Renda pendente" },
+                ...OPCOES_FILTRO_FAIXA_CONSIGNADO.map((o) => ({ ...o, indicador: INDICADOR_FAIXA[o.value] })),
               ]}
               value={sp.faixa_consignado || "todas"}
               onValueChange={(v) => {
@@ -320,7 +334,10 @@ export default function ClientesTabClient({
               placeholder="Faixa consignado"
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
+            <Label htmlFor="filtro-empresa-consignado" className="sr-only">
+              Empresa parceira
+            </Label>
             <FormSelect
               id="filtro-empresa-consignado"
               name="empresa_parceira"
@@ -340,7 +357,7 @@ export default function ClientesTabClient({
               placeholder="Empresa parceira"
             />
           </div>
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Pesquisar clientes..."
@@ -446,18 +463,16 @@ export default function ClientesTabClient({
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="tabular-nums text-sm">
-                          {c.faixaConsignado === "renda_pendente" || c.pctConsignado == null
-                            ? "—"
-                            : `${c.pctConsignado}%`}
+                          {formatarPctConsignado(c.faixaConsignado === "renda_pendente" ? null : c.pctConsignado)}
                         </span>
                         {c.faixaConsignado === "alerta" && (
-                          <Badge variant="warning">Alerta 20%</Badge>
+                          <Badge variant="warning">{ROTULO_FAIXA_CONSIGNADO.alerta}</Badge>
                         )}
                         {c.faixaConsignado === "limite" && (
-                          <Badge variant="error">Limite 30%</Badge>
+                          <Badge variant="error">{ROTULO_FAIXA_CONSIGNADO.limite}</Badge>
                         )}
                         {c.faixaConsignado === "renda_pendente" && (
-                          <Badge variant="outline">Renda pendente</Badge>
+                          <Badge variant="outline">{ROTULO_FAIXA_CONSIGNADO.renda_pendente}</Badge>
                         )}
                       </div>
                     </TableCell>

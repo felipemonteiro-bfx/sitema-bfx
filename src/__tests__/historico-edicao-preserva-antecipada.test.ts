@@ -23,6 +23,9 @@ vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/audit", () => auditMock);
 vi.mock("@/lib/email", () => emailMock);
 vi.mock("next/cache", () => cacheMock);
+// updateVenda exige sessao desde 2026-09-16; guarda e recalculo de consignado nao sao o que este teste mede.
+vi.mock("@/lib/guards", () => ({ requireSessionOrThrow: vi.fn(async () => ({ id: 1, username: "vendedor-teste", role: "vendedor" })) }));
+vi.mock("@/lib/consignado-db", () => ({ recalcularConsignadoSeguro: vi.fn() }));
 
 const { updateVenda } = await import("@/app/(app)/historico/actions");
 const { FORMA_PAGAMENTO } = await import("@/lib/forma-pagamento");

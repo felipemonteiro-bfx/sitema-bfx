@@ -112,6 +112,74 @@ export function calcularConsignadoDeRegistros(input: {
   return { pct, faixa: faixaDePct(pct), tomadoConsignado, tomadoFolhaBfx, tomado };
 }
 
+/** Texto único de cada faixa: o selo da lista e o filtro dizem a mesma coisa. */
+export const ROTULO_FAIXA_CONSIGNADO: Record<FaixaConsignado, string> = {
+  ok: "Abaixo de 20%",
+  alerta: "Alerta 20%",
+  limite: "Limite 30%",
+  renda_pendente: "Renda pendente",
+};
+
+export const OPCOES_FILTRO_FAIXA_CONSIGNADO: { value: FaixaConsignado; label: string }[] = (
+  ["ok", "alerta", "limite", "renda_pendente"] as const
+).map((value) => ({ value, label: ROTULO_FAIXA_CONSIGNADO[value] }));
+
+export function formatarPctConsignado(pct: number | null | undefined): string {
+  if (pct == null) return "—";
+  return `${pct.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
+}
+
+/** Mês civil em que o cache `pctConsignado`/`faixaConsignado` foi calculado. */
+export function mesRefConsignado(data: Date = new Date()): string {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export type GrupoRecalculoConsignado = {
+  pct: number | null;
+  faixa: FaixaConsignado;
+  ids: number[];
+};
+
+/**
+ * Recálculo em lote do cache de vários clientes. Agrupa quem terminou com o mesmo
+ * `(pct, faixa)` para a gravação sair em poucos `updateMany`.
+ */
+export function planejarRecalculoConsignado(input: {
+  clientes: { id: number; renda: number | null }[];
+  contratos: (ContratoParaCalculo & { clienteId: number })[];
+  vendas: (VendaParaCalculo & { clienteId: number | null })[];
+  mesRef?: Date;
+}): GrupoRecalculoConsignado[] {
+  const contratosPorCliente = new Map<number, ContratoParaCalculo[]>();
+  for (const c of input.contratos) {
+    const lista = contratosPorCliente.get(c.clienteId) ?? [];
+    lista.push(c);
+    contratosPorCliente.set(c.clienteId, lista);
+  }
+  const vendasPorCliente = new Map<number, VendaParaCalculo[]>();
+  for (const v of input.vendas) {
+    if (v.clienteId == null) continue;
+    const lista = vendasPorCliente.get(v.clienteId) ?? [];
+    lista.push(v);
+    vendasPorCliente.set(v.clienteId, lista);
+  }
+
+  const grupos = new Map<string, GrupoRecalculoConsignado>();
+  for (const cliente of input.clientes) {
+    const r = calcularConsignadoDeRegistros({
+      renda: cliente.renda,
+      contratos: contratosPorCliente.get(cliente.id) ?? [],
+      vendasFolha: vendasPorCliente.get(cliente.id) ?? [],
+      mesRef: input.mesRef,
+    });
+    const chave = `${r.pct}|${r.faixa}`;
+    const grupo = grupos.get(chave) ?? { pct: r.pct, faixa: r.faixa, ids: [] };
+    grupo.ids.push(cliente.id);
+    grupos.set(chave, grupo);
+  }
+  return [...grupos.values()];
+}
+
 export function clientePassaFiltroConsignado(
   cliente: { faixaConsignado: string | null; empresaParceiraId: number | null },
   filtro: { faixa?: string | null; empresaParceiraId?: number | null },
