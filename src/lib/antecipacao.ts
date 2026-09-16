@@ -222,7 +222,10 @@ export function calcularAntecipacao(
 export function vendaEhAntecipavel(venda: {
   formaPagamento?: string | null;
   descontoEmFolha?: boolean | null;
+  status?: string | null;
 }): boolean {
+  // Venda desfeita não vai para a financeira (mesma regra da planilha de controle).
+  if (venda.status === "cancelada" || venda.status === "estornada") return false;
   if (venda.formaPagamento != null) {
     return venda.formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA;
   }
@@ -234,6 +237,7 @@ export function vendaEhAntecipavel(venda: {
  * trazer todas as vendas e descartar em memória.
  */
 export const WHERE_VENDA_ANTECIPAVEL = {
+  status: { notIn: ["cancelada", "estornada"] },
   OR: [
     { formaPagamento: FORMA_PAGAMENTO.DESCONTO_FOLHA },
     { formaPagamento: null, descontoEmFolha: true },

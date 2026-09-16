@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
+import { escaparXml } from "@/lib/xml";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 
@@ -21,14 +23,8 @@ function mesAnoLabel(year: number, month: number): string {
   return `${meses[month]}-${year}`;
 }
 
-function escapeXml(value: string): string {
-  return value
-    .split('&').join('&amp;')
-    .split('<').join('&lt;')
-    .split('>').join('&gt;')
-    .split('"').join('&quot;')
-    .split("'").join('&apos;');
-}
+// Escape compartilhado: também remove caractere de controle, que deixava o XML inválido.
+const escapeXml = (value: string) => escaparXml(value);
 
 interface LinhaAba {
   nome: string;
@@ -75,6 +71,10 @@ ${dataRows}
 }
 
 export async function GET(request: NextRequest) {
+  // Só admin (a fila /prudent é só admin): a planilha leva CPF e valores do lote.
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Somente administradores geram a planilha de antecipação." }, { status: 403 });
+  }
   const { searchParams } = new URL(request.url);
   const idsStr = searchParams.get("ids");
 
@@ -132,14 +132,14 @@ export async function GET(request: NextRequest) {
       const clienteEmpresa = venda.cliente?.empresa || 'Sem empresa';
       const dataCompra = formatDateBR(venda.dataVenda);
 
-      // Produto: usar produtoNome da venda ou combinar itens
-      let produto = venda.produtoNome || '';
-      if (!produto && venda.itens.length > 0) {
-        produto = venda.itens.map((i) => {
-          const qty = i.quantidade && i.quantidade > 1 ? `${i.quantidade}x ` : '';
-          return `${qty}${i.produtoNome || ''}`;
-        }).join(', ');
-      }
+      // Produto: itens primeiro. O cabeçalho guarda só o nome do 1º item, e usá-lo antes
+      // fazia venda de 3 produtos aparecer com 1 na planilha (o CSV listava os 3).
+      const produto = venda.itens.length > 0
+        ? venda.itens.map((i) => {
+            const qty = i.quantidade && i.quantidade > 1 ? `${i.quantidade}x ` : '';
+            return `${qty}${i.produtoNome || ''}`;
+          }).join(', ')
+        : venda.produtoNome || '';
 
       if (venda.parcelasVencimento.length > 0) {
         // Usar parcelas reais, descartando as ja antecipadas — repeti-las faria a

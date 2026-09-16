@@ -5,6 +5,7 @@ import { formaPagamentoLabel, formaFromLegacyFlags, type FormaPagamento } from "
 import { getSession } from "@/lib/session";
 import { resolveVendedorScope } from "@/lib/vendedor-scope";
 import { resolverPeriodo } from "@/lib/periodo-data";
+import { escaparXml } from "@/lib/xml";
 
 function formatDateBR(date: Date): string {
   const d = new Date(date);
@@ -14,14 +15,8 @@ function formatDateBR(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
-function escapeXml(value: string): string {
-  return value
-    .split("&").join("&amp;")
-    .split("<").join("&lt;")
-    .split(">").join("&gt;")
-    .split('"').join("&quot;")
-    .split("'").join("&apos;");
-}
+// Escape compartilhado: também remove caractere de controle, que deixava o XML inválido.
+const escapeXml = (value: string) => escaparXml(value);
 
 interface LinhaVenda {
   cliente: string;

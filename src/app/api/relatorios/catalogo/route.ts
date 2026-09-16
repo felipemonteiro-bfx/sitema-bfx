@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { formatBRL } from "@/lib/utils";
+import { escaparHtml, urlImagemSegura } from "@/lib/html";
 
 export async function GET() {
   try {
@@ -48,26 +49,31 @@ export async function GET() {
           </header>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            ${produtos.map(p => `
+            ${produtos.map(p => {
+              // Campos gravados por qualquer usuário em /cadastros: sem escape, um valor com
+              // aspas ou tag vira script executado na sessão de quem abre o catálogo.
+              const imagem = urlImagemSegura(p.imagem);
+              return `
               <div class="product-card bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-full transform transition-all hover:scale-[1.02]">
                 <div class="relative aspect-square bg-slate-100 flex items-center justify-center">
-                  ${p.imagem 
-                    ? `<img src="${p.imagem}" class="w-full h-full object-cover" alt="${p.nome}">`
+                  ${imagem
+                    ? `<img src="${escaparHtml(imagem)}" class="w-full h-full object-cover" alt="${escaparHtml(p.nome)}">`
                     : `<div class="text-slate-300 font-bold text-lg italic">Sem Foto</div>`
                   }
                   <div class="absolute top-3 left-3 bg-blue-900/90 text-white text-[10px] font-black px-2 py-1 rounded-md uppercase">
-                    ${p.categoria || 'Geral'}
+                    ${escaparHtml(p.categoria || 'Geral')}
                   </div>
                 </div>
                 <div class="p-5 flex flex-col flex-grow">
-                  <div class="mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">${p.marca || 'BFX'}</div>
-                  <h3 class="text-lg font-bold text-slate-800 leading-tight mb-4 flex-grow">${p.nome}</h3>
+                  <div class="mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">${escaparHtml(p.marca || 'BFX')}</div>
+                  <h3 class="text-lg font-bold text-slate-800 leading-tight mb-4 flex-grow">${escaparHtml(p.nome)}</h3>
                   <div class="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
                     <span class="text-2xl font-black text-blue-900">${formatBRL(p.valorVenda)}</span>
                   </div>
                 </div>
               </div>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
 
           <footer class="mt-16 text-center text-slate-400 text-sm border-t pt-8">

@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
+import { alturaPaginaAntecipacao } from "@/lib/antecipacao-pdf-layout";
 import { formatarDataPura } from "@/lib/data-pura";
 
 function formatBRL(value: number): string {
@@ -21,6 +24,10 @@ function getMesAnoKey(date: Date): string {
 }
 
 export async function GET(request: NextRequest) {
+  // Só admin (a fila /prudent é só admin): o PDF leva compradores e valores do lote.
+  if (!(await requireAdmin())) {
+    return Response.json({ error: "Somente administradores geram o PDF de antecipação." }, { status: 403 });
+  }
   const { searchParams } = new URL(request.url);
   const idsStr = searchParams.get("ids");
 
@@ -111,28 +118,17 @@ export async function GET(request: NextRequest) {
     const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
     const pdfDoc = await PDFDocument.create();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const font = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.Helvetica));
+    const fontBold = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.HelveticaBold));
 
-    // Calcular altura total estimada para dimensionar a pagina
-    let estimatedHeight = 120; // header
-    for (const empresa of Object.keys(empresaMap)) {
-      const data = empresaMap[empresa];
-      estimatedHeight += 80; // bloco empresa
-      // Agrupar parcelas por mes
-      const parcelasPorMes: Record<string, typeof data.parcelas> = {};
-      for (const p of data.parcelas) {
-        const key = getMesAnoKey(p.dataVencimento);
-        if (!parcelasPorMes[key]) parcelasPorMes[key] = [];
-        parcelasPorMes[key].push(p);
-      }
-      const numMeses = Object.keys(parcelasPorMes).length;
-      const numParcelas = data.parcelas.length;
-      estimatedHeight += numMeses * 30 + numParcelas * 18 + 40; // linhas de parcelas + subtotal
-    }
-    estimatedHeight += 60; // footer
-
-    const PAGE_HEIGHT = Math.max(842, estimatedHeight + 80);
+    // Página única com altura do que será desenhado: a estimativa antiga gastava menos
+    // por mês do que o desenho e cortava o TOTAL GERAL com 2 ou mais empresas.
+    const PAGE_HEIGHT = alturaPaginaAntecipacao(
+      Object.values(empresaMap).map((data) => ({
+        meses: new Set(data.parcelas.map((p) => getMesAnoKey(p.dataVencimento))).size,
+        parcelas: data.parcelas.length,
+      })),
+    );
     const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
 
     // Cor primaria: azul escuro

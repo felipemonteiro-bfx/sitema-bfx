@@ -69,7 +69,6 @@ type Props = {
   updateAction: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
   deleteAction: (formData: FormData) => Promise<void>;
   gerarBoletoAction: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
-  initialTotal: number;
 };
 
 export function EditVendaHistoricoForm({
@@ -80,9 +79,11 @@ export function EditVendaHistoricoForm({
   updateAction,
   deleteAction,
   gerarBoletoAction,
-  initialTotal,
 }: Props) {
   const [loading, setLoading] = useState(false);
+  // Texto do input (aceita "" e "1." enquanto digita); as parcelas recebem o número.
+  const [frete, setFrete] = useState(String(editVenda.valorFrete || 0));
+  const [desconto, setDesconto] = useState(String(editVenda.desconto || 0));
   const router = useRouter();
 
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -150,7 +151,8 @@ export function EditVendaHistoricoForm({
         }
         initialParcelas={editParcelasVenc}
         initialNumeroParcelas={editVenda.parcelas || 1}
-        initialTotal={initialTotal}
+        frete={Number(frete) || 0}
+        desconto={Number(desconto) || 0}
         dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
         parcelasPagas={parcelasPagas}
       />
@@ -180,7 +182,7 @@ export function EditVendaHistoricoForm({
 
       <div className="space-y-1">
         <Label htmlFor="edit-frete">Frete ao cliente</Label>
-        <Input id="edit-frete" name="frete" type="number" step="0.01" defaultValue={editVenda.valorFrete || 0} />
+        <Input id="edit-frete" name="frete" type="number" step="0.01" value={frete} onChange={(e) => setFrete(e.target.value)} />
       </div>
       <div className="space-y-1">
         <Label htmlFor="edit-envio">Custo de envio</Label>
@@ -188,7 +190,7 @@ export function EditVendaHistoricoForm({
       </div>
       <div className="space-y-1">
         <Label htmlFor="edit-desconto">Desconto (R$)</Label>
-        <Input id="edit-desconto" name="desconto" type="number" step="0.01" min="0" defaultValue={editVenda.desconto || 0} />
+        <Input id="edit-desconto" name="desconto" type="number" step="0.01" min="0" value={desconto} onChange={(e) => setDesconto(e.target.value)} />
       </div>
 
       <FormSecaoTitulo>Fiscal e documentos</FormSecaoTitulo>

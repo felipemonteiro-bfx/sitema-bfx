@@ -7,6 +7,7 @@
  * Produtos | Valor | Parcelas). Quebra de pagina automatica.
  */
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage, type PDFImage } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
 import { formatBRL } from "@/lib/utils";
 import { periodoLabel, type RelatorioMensalData } from "@/lib/relatorio-mensal";
 import { embedLogoNoPdf } from "@/lib/logo-loader";
@@ -87,8 +88,8 @@ export type RelatorioMensalPdfInput = {
 export async function gerarRelatorioMensalPdf(input: RelatorioMensalPdfInput): Promise<Buffer> {
   const { empresaNome, periodo, dados, logoPath } = input;
   const pdf = await PDFDocument.create();
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const font = fontePdfSegura(await pdf.embedFont(StandardFonts.Helvetica));
+  const fontBold = fontePdfSegura(await pdf.embedFont(StandardFonts.HelveticaBold));
 
   let logoImage: PDFImage | null = null;
   const logoDims = { width: 0, height: 0 };

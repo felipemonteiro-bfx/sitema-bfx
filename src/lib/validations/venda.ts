@@ -31,7 +31,7 @@ export type VendaRapidaFormData = z.infer<typeof vendaRapidaSchema>
 /**
  * Schema para item de produto na venda V2
  */
-const produtoItemSchema = z.object({
+export const produtoItemSchema = z.object({
   produtoNome: z.string().min(1, "Nome do produto é obrigatório"),
   custoProduto: z.number().min(0, "Custo não pode ser negativo"),
   // Valor de venda deve ser > 0: impede venda salva com R$ 0,00 (produto sem preço).

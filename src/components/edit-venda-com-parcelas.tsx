@@ -5,6 +5,7 @@ import { EditVendaItens } from "@/components/edit-venda-itens-client";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
 import { FormSecaoTitulo } from "@/components/form-secao-titulo";
 import { Input } from "@/components/ui/input";
+import { totalParaParcelas } from "@/lib/parcelas-ajuste";
 
 interface ProdutoItem {
   produtoNome: string;
@@ -24,7 +25,9 @@ interface Props {
   initialItens: ProdutoItem[];
   initialParcelas: Parcela[];
   initialNumeroParcelas: number;
-  initialTotal: number;
+  /** Frete e desconto atuais do form: as parcelas somam itens + frete − desconto. */
+  frete: number;
+  desconto: number;
   dataVenda: string;
   parcelasPagas?: number[];
 }
@@ -33,14 +36,20 @@ export function EditVendaComParcelas({
   initialItens,
   initialParcelas,
   initialNumeroParcelas,
-  initialTotal,
+  frete,
+  desconto,
   dataVenda,
   parcelasPagas,
 }: Props) {
-  const [total, setTotal] = useState(initialTotal);
+  // Começa na soma dos itens, a mesma que EditVendaItens avisa na montagem: se começasse
+  // em outro valor, a primeira notificação mudaria o total e as parcelas seriam
+  // redistribuídas só por abrir a edição.
+  const [subtotalItens, setSubtotalItens] = useState(() =>
+    initialItens.reduce((s, i) => s + i.subtotal, 0),
+  );
   const [numeroParcelas, setNumeroParcelas] = useState(initialNumeroParcelas);
 
-  const handleTotalChange = useCallback((t: number) => setTotal(t), []);
+  const handleTotalChange = useCallback((t: number) => setSubtotalItens(t), []);
 
   return (
     <>
@@ -62,7 +71,7 @@ export function EditVendaComParcelas({
       <EditParcelasSection
         initialParcelas={initialParcelas}
         numeroParcelas={numeroParcelas}
-        valorTotal={total}
+        valorTotal={totalParaParcelas({ subtotalItens, frete, desconto })}
         dataVenda={dataVenda}
         parcelasPagas={parcelasPagas}
       />

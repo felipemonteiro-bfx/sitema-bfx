@@ -589,6 +589,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           description="Ajuste os dados e salve para atualizar o Histórico."
         >
           <EditVendaHistoricoForm
+            key={editVenda.id}
             editVenda={editVenda}
             editParcelasVenc={editParcelasVenc}
             parcelasPagas={editParcelasPagas}
@@ -596,7 +597,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             updateAction={updateVenda}
             deleteAction={deleteVenda}
             gerarBoletoAction={gerarBoletoAsaas}
-            initialTotal={valorTotalVenda(editVenda)}
           />
         </EditVendaSheetWrapper>
       )}

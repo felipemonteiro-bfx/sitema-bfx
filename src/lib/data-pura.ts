@@ -48,6 +48,11 @@ export function hojeDataPura(agora: Date = new Date()): string {
   return `${parte("year")}-${parte("month")}-${parte("day")}`;
 }
 
+/** Primeiro dia do mês de uma data pura: "2026-08-31" → "2026-08-01". */
+export function inicioDoMesDataPura(dataPura: string): string {
+  return `${dataPura.slice(0, 8)}01`;
+}
+
 /** "ago. de 2026" — usado nos rotulos de periodo. */
 export function formatarMesAnoPuro(valor: Date | string | null | undefined): string {
   const d = paraDate(valor);

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { formatBRL } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
 import { embedLogoNoPdf } from "@/lib/logo-loader";
 
 function wrapText(text: string, font: any, size: number, maxWidth: number) {
@@ -31,8 +32,8 @@ export async function GET(req: Request) {
   });
 
   const pdf = await PDFDocument.create();
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const font = fontePdfSegura(await pdf.embedFont(StandardFonts.Helvetica));
+  const fontBold = fontePdfSegura(await pdf.embedFont(StandardFonts.HelveticaBold));
 
   const pageWidth = 595;
   const pageHeight = 842;

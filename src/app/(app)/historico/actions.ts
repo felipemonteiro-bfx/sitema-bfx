@@ -16,6 +16,9 @@ import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { requireSessionOrThrow } from "@/lib/guards";
 import { valorParcelaAposEdicao } from "@/lib/parcelas";
 import { valorTotalVenda } from "@/lib/venda-utils";
+import { z } from "zod";
+import { produtoItemSchema } from "@/lib/validations/venda";
+import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 
 // Toda action daqui precisa da própria guarda: o matcher do middleware cobre só /api
 // e o layout roda depois da action, então nenhum dos dois protege.
@@ -49,6 +52,27 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   }
 
   if (!id || !data) return { success: false, error: "Dados inválidos." };
+
+  // Mesmas regras da criação (vendaV2Schema + validarItensContraCatalogo): sem isto a
+  // edição gravava custo negativo, subtotal que não é valor × quantidade ou frete negativo.
+  const itensValidos = z.array(produtoItemSchema).safeParse(itens);
+  if (!itensValidos.success) {
+    return { success: false, error: itensValidos.error.issues[0]?.message ?? "Produtos inválidos." };
+  }
+  const erroItens = validarItensContraCatalogo(itens);
+  if (erroItens) return { success: false, error: erroItens };
+  if (!Number.isFinite(frete) || !Number.isFinite(envio) || !Number.isFinite(desconto) || !Number.isFinite(taxaNota)) {
+    return { success: false, error: "Frete, custo de envio, desconto e taxa da nota precisam ser números." };
+  }
+  if (frete < 0 || envio < 0 || desconto < 0) {
+    return { success: false, error: "Frete, custo de envio e desconto não podem ser negativos." };
+  }
+  if (taxaNota < 0 || taxaNota > 100) {
+    return { success: false, error: "Taxa da nota deve ficar entre 0% e 100%." };
+  }
+  if (!Number.isInteger(parcelasNum) || parcelasNum < 1) {
+    return { success: false, error: "Número de parcelas deve ser pelo menos 1." };
+  }
 
   // Venda como está gravada: base do "mudou ou não" do valorParcela e dos dados de
   // produto quando o form não os traz.
@@ -115,6 +139,9 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     : custoLegado * quantidadeLegado;
   const valorDescontoNota = temNota ? (subtotal * taxaNota) / 100 : 0;
   const total = subtotal + frete - desconto;
+  if (total < 0) {
+    return { success: false, error: "Desconto maior que o valor da venda (produtos + frete)." };
+  }
   const lucro = total - (totalCusto + envio + valorDescontoNota);
 
   // Parse do campo de parcelas subido para ANTES do `prisma.venda.update`:

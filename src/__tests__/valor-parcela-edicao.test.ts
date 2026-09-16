@@ -172,6 +172,58 @@ describe("updateVenda — valorParcela", () => {
     expect(dbMock.venda.update).not.toHaveBeenCalled();
   });
 
+  describe("validacao igual a da criacao (antes a edicao aceitava qualquer itensJson)", () => {
+    const itemValido = { produtoNome: "Produto X", custoProduto: 300, valorVenda: 600, quantidade: 1, subtotal: 600 };
+
+    async function salvarCom(ajuste: (fd: FormData) => void) {
+      dbMock.venda.findUnique.mockResolvedValue({ ...LEGADA_SEM_NOME, itens: [{ subtotal: 600 }] });
+      const fd = formVenda(12);
+      ajuste(fd);
+      return updateVenda(fd);
+    }
+
+    it("custo negativo recusa sem gravar", async () => {
+      const r = await salvarCom((fd) => fd.set("itensJson", JSON.stringify([{ ...itemValido, custoProduto: -50 }])));
+      expect(r.success).toBe(false);
+      expect(dbMock.venda.update).not.toHaveBeenCalled();
+    });
+
+    it("subtotal diferente de valor x quantidade recusa sem gravar", async () => {
+      const r = await salvarCom((fd) => fd.set("itensJson", JSON.stringify([{ ...itemValido, subtotal: 999 }])));
+      expect(r.success).toBe(false);
+      expect(r.error).toContain("Subtotal");
+      expect(dbMock.venda.update).not.toHaveBeenCalled();
+    });
+
+    it("frete, envio ou desconto negativo recusa sem gravar", async () => {
+      for (const campo of ["frete", "envio", "desconto"]) {
+        dbMock.venda.update.mockClear();
+        const r = await salvarCom((fd) => fd.set(campo, "-10"));
+        expect(r.success).toBe(false);
+        expect(dbMock.venda.update).not.toHaveBeenCalled();
+      }
+    });
+
+    it("desconto maior que produtos + frete, taxa da nota fora de 0-100 ou campo nao numerico recusam", async () => {
+      const casos: [string, string][] = [["desconto", "5000"], ["taxaNota", "150"], ["frete", "abc"]];
+      for (const [campo, valor] of casos) {
+        dbMock.venda.update.mockClear();
+        const r = await salvarCom((fd) => fd.set(campo, valor));
+        expect({ campo, ok: r.success }).toEqual({ campo, ok: false });
+        expect(dbMock.venda.update).not.toHaveBeenCalled();
+      }
+    });
+
+    it("zero parcelas recusa sem gravar", async () => {
+      const r = await salvarCom((fd) => {
+        fd.set("parcelas", "0");
+        fd.delete("parcelasVencimento");
+      });
+      expect(r.success).toBe(false);
+      expect(dbMock.venda.update).not.toHaveBeenCalled();
+    });
+  });
+
   it("save identico nao manda valorParcela no update", async () => {
     dbMock.venda.findUnique.mockResolvedValue({
       parcelas: 12,

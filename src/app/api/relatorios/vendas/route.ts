@@ -33,7 +33,8 @@ export async function GET(req: Request) {
     orderBy: { dataVenda: "desc" },
   });
 
-  const csv = cabecalhoCsv(colunas) + "\n" + vendas.map((v) => linhaCsv(colunas, v)).join("\n");
+  // BOM: sem ele o Excel do Windows abre o CSV em ANSI e quebra os acentos.
+  const csv = "\uFEFF" + cabecalhoCsv(colunas) + "\n" + vendas.map((v) => linhaCsv(colunas, v)).join("\n");
 
   return new Response(csv, {
     headers: {

@@ -4,20 +4,19 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { Label } from "@/components/ui/label";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { format } from "date-fns";
 import { ReportButtonsClient } from "@/components/report-buttons-client";
 import { cn } from "@/lib/utils";
 import { montarEmpresaOptions } from "@/lib/empresa-options";
-import { formatarDataPura } from "@/lib/data-pura";
+import { formatarDataPura, hojeDataPura, inicioDoMesDataPura } from "@/lib/data-pura";
 
 export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div>Acesso restrito.</div>;
   
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const today = format(now, "yyyy-MM-dd");
-  const monthStartStr = format(monthStart, "yyyy-MM-dd");
+  // Dia civil de Manaus: o container roda em UTC, e depois das 20h o "hoje" do servidor
+  // já era amanhã (no dia 31 os links saíam com período do mês seguinte, vazio).
+  const today = hojeDataPura();
+  const monthStartStr = inicioDoMesDataPura(today);
   const [empresas, fornecedores] = await Promise.all([
     prisma.empresaParceira.findMany({ orderBy: { nome: "asc" } }),
     prisma.fornecedor.findMany({ where: { deletedAt: null }, select: { nome: true } }),
@@ -86,13 +85,13 @@ export default async function Page() {
               <Label>Inadimplência</Label>
               <div className="flex gap-2">
                 <a
-                  href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=csv`}
+                  href={`/api/relatorios/inadimplencia?to=${today}&format=csv`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
                   CSV
                 </a>
                 <a
-                  href={`/api/relatorios/inadimplencia?from=${monthStartStr}&to=${today}&format=pdf`}
+                  href={`/api/relatorios/inadimplencia?to=${today}&format=pdf`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
                 >
                   PDF

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
+import { celulaCsv } from "@/lib/csv";
 import { produtosTexto } from "@/lib/venda-utils";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
 
 export async function GET(request: NextRequest) {
+  // Só admin (a fila /prudent é só admin): o arquivo leva CPF, e-mail e valores do lote.
+  if (!(await requireAdmin())) {
+    return NextResponse.json({ error: "Somente administradores geram o relatório de antecipação." }, { status: 403 });
+  }
   const { searchParams } = new URL(request.url);
   const idsStr = searchParams.get("ids");
 
@@ -70,12 +76,14 @@ export async function GET(request: NextRequest) {
       totalGeral += valorTotal;
       totaisPorEmpresa[empresa] = (totaisPorEmpresa[empresa] || 0) + valorTotal;
 
+      // celulaCsv: aspas internas dobradas e texto que começa com = + - @ neutralizado —
+      // este arquivo vai para a financeira, e um nome como =HYPERLINK(...) virava fórmula.
       const row = [
-        `"${v.cliente?.nome || "N/D"}"`,
-        `"${doc}"`,
-        `"${email}"`,
-        `"${empresa}"`,
-        `"${produtosTexto(v)}"`,
+        celulaCsv(v.cliente?.nome || "N/D"),
+        celulaCsv(doc),
+        celulaCsv(email),
+        celulaCsv(empresa),
+        celulaCsv(produtosTexto(v)),
         valorTotal.toFixed(2),
         parcelasDoLote.length,
         (valorTotal / parcelasDoLote.length).toFixed(2),
@@ -94,7 +102,7 @@ export async function GET(request: NextRequest) {
     Object.entries(totaisPorEmpresa)
       .sort((a, b) => b[1] - a[1])
       .forEach(([empresa, valor]) => {
-        csv += `"${empresa}","${valor.toFixed(2)}"\n`;
+        csv += `${celulaCsv(empresa)},${valor.toFixed(2)}\n`;
       });
 
     return new Response(csv, {

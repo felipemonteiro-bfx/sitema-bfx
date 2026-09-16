@@ -1,4 +1,10 @@
 /**
+ * Filtro Prisma de venda que conta em número financeiro (DRE, relatórios, resumos):
+ * cancelada e estornada ficam de fora.
+ */
+export const FILTRO_VENDA_VALIDA = { status: { notIn: ["cancelada", "estornada"] } };
+
+/**
  * Calcula o valor total de uma venda, considerando itens (múltiplos produtos) ou campos legados.
  */
 export function valorTotalVenda(v: {

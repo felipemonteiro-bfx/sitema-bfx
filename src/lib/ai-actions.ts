@@ -9,7 +9,9 @@ import {
   revalidarFornecedor,
 } from "@/lib/revalidacao";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
-import { custoTotalVenda, valorTotalVenda } from "@/lib/venda-utils";
+import { custoTotalVenda, FILTRO_VENDA_VALIDA, valorTotalVenda } from "@/lib/venda-utils";
+import { agregarMargemPorProduto } from "@/lib/margem-produto";
+import { filtroPeriodoVendas, resumirRelatorioVendas } from "@/lib/resumo-vendas";
 import {
   fuzzyFindClientes,
   fuzzyFindProdutos,
@@ -632,6 +634,10 @@ export const aiActions: AiActionDef[] = [
     parameters: {
       type: "object",
       properties: {
+        // Sem anunciar from/to o modelo não tinha como pedir período e "margem de agosto"
+        // voltava com o histórico inteiro (o validador já aceitava os dois).
+        from: { type: "string", description: "Data inicial YYYY-MM-DD" },
+        to: { type: "string", description: "Data final YYYY-MM-DD" },
         limit: { type: "number", description: "Top N produtos (padrão: 20)" },
       },
     },
@@ -1310,11 +1316,11 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
       }
       case "resumo_relatorio_vendas": {
         requireAdmin(ctx);
-        const from = parsedParams?.from ? new Date(parsedParams.from) : undefined;
-        const to = parsedParams?.to ? new Date(parsedParams.to) : undefined;
         const vendas = await prisma.venda.findMany({
           where: {
-            dataVenda: from && to ? { gte: from, lte: to } : undefined,
+            ...FILTRO_VENDA_VALIDA,
+            // Cada ponta do período vale sozinha (antes só filtrava com from e to juntos).
+            dataVenda: filtroPeriodoVendas(parsedParams?.from, parsedParams?.to),
             vendedor: parsedParams?.vendedor ? { equals: parsedParams.vendedor } : undefined,
           },
           include: {
@@ -1323,76 +1329,38 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           },
           orderBy: { dataVenda: "desc" },
         });
-        const totalVendas = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-        const totalCusto = vendas.reduce((s, v) => {
-          // Mesma regra de custo do DRE: sem itens, custo unitário do cabeçalho × quantidade.
-          const custoItens = custoTotalVenda(v) ?? 0;
-          const notaCost = v.temNota ? ((valorTotalVenda(v) - (v.valorFrete ?? 0)) * (v.taxaNota ?? 5.97) / 100) : 0;
-          return s + custoItens + (v.custoEnvio || 0) + notaCost;
-        }, 0);
-        const porVendedor: Record<string, number> = {};
-        const porEmpresa: Record<string, number> = {};
-        for (const v of vendas) {
-          const vend = v.vendedor || "Sem Vendedor";
-          porVendedor[vend] = (porVendedor[vend] ?? 0) + valorTotalVenda(v);
-          const emp = v.cliente?.empresa || "Sem Empresa";
-          if (parsedParams?.empresa && emp !== parsedParams.empresa) continue;
-          porEmpresa[emp] = (porEmpresa[emp] ?? 0) + valorTotalVenda(v);
-        }
         result = {
           periodo: { from: parsedParams?.from, to: parsedParams?.to },
-          totalVendas: Math.trunc(totalVendas * 100) / 100,
-          totalCusto: Math.trunc(totalCusto * 100) / 100,
-          lucroTotal: Math.trunc((totalVendas - totalCusto) * 100) / 100,
-          quantidadeVendas: vendas.length,
-          porVendedor: Object.entries(porVendedor)
-            .sort((a, b) => b[1] - a[1])
-            .map(([nome, total]) => ({ nome, total: Math.trunc(total * 100) / 100 })),
-          porEmpresa: Object.entries(porEmpresa)
-            .sort((a, b) => b[1] - a[1])
-            .map(([nome, total]) => ({ nome, total: Math.trunc(total * 100) / 100 })),
+          ...resumirRelatorioVendas(vendas, { empresa: parsedParams?.empresa }),
         };
         break;
       }
       case "resumo_margem_produto": {
         requireAdmin(ctx);
         const limit = Math.min(Number(parsedParams?.limit || 20), 100);
-        const fromDate = parsedParams?.from ? new Date(parsedParams.from) : undefined;
-        const toDate = parsedParams?.to ? new Date(parsedParams.to) : undefined;
-        const itens = await prisma.itemVenda.findMany({
-          where: (fromDate || toDate) ? {
-            venda: {
-              dataVenda: {
-                ...(fromDate ? { gte: fromDate } : {}),
-                ...(toDate ? { lte: toDate } : {}),
-              },
-            },
-          } : undefined,
+        // Mesma agregação do relatório de margem: sem cancelada/estornada e com as vendas
+        // só de cabeçalho (antes lia itens_venda direto e perdia as duas coisas).
+        const periodoMargem = filtroPeriodoVendas(parsedParams?.from, parsedParams?.to);
+        const vendasMargem = await prisma.venda.findMany({
+          where: periodoMargem ? { dataVenda: periodoMargem } : undefined,
           select: {
+            status: true,
             produtoNome: true,
-            subtotal: true,
-            custoProduto: true,
+            valorVenda: true,
             quantidade: true,
+            custoProduto: true,
+            itens: { select: { produtoNome: true, subtotal: true, custoProduto: true, quantidade: true } },
           },
         });
-        const porProduto = new Map<string, { receita: number; custo: number; qtd: number }>();
-        for (const i of itens) {
-          const nome = i.produtoNome || "Sem Nome";
-          const rec = i.subtotal || 0;
-          const cus = (i.custoProduto || 0) * (i.quantidade || 1);
-          const atual = porProduto.get(nome) ?? { receita: 0, custo: 0, qtd: 0 };
-          porProduto.set(nome, { receita: atual.receita + rec, custo: atual.custo + cus, qtd: atual.qtd + (i.quantidade || 1) });
-        }
-        result = Array.from(porProduto.entries())
-          .map(([nome, d]) => ({
-            nome,
-            receita: Math.trunc(d.receita * 100) / 100,
-            custo: Math.trunc(d.custo * 100) / 100,
-            lucro: Math.trunc((d.receita - d.custo) * 100) / 100,
-            margemPct: d.receita > 0 ? Math.trunc(((d.receita - d.custo) / d.receita) * 10000) / 100 : 0,
-            qtdVendas: d.qtd,
+        result = agregarMargemPorProduto(vendasMargem)
+          .map((l) => ({
+            nome: l.produto,
+            receita: Math.trunc(l.receitaTotal * 100) / 100,
+            custo: Math.trunc(l.custoTotal * 100) / 100,
+            lucro: Math.trunc(l.lucro * 100) / 100,
+            margemPct: Math.trunc(l.margemPct * 100) / 100,
+            qtdVendas: l.quantidade,
           }))
-          .sort((a, b) => b.lucro - a.lucro)
           .slice(0, limit);
         break;
       }

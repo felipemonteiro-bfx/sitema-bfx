@@ -1,8 +1,16 @@
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
+import { agregarMargemPorProduto } from "@/lib/margem-produto";
+import { linhaCsv } from "@/lib/csv";
 
 export async function GET(req: Request) {
+  // Só admin (decisão T-QT-01: custo e margem não saem para vendedor).
+  if (!(await requireAdmin())) {
+    return Response.json({ error: "Somente administradores geram o relatório de margem." }, { status: 403 });
+  }
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
@@ -13,55 +21,31 @@ export async function GET(req: Request) {
     : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   const end = to ? new Date(to + "T23:59:59") : new Date();
 
-  const itens = await prisma.itemVenda.findMany({
-    where: {
-      venda: { dataVenda: { gte: start, lte: end } },
+  // Agregação única (também usada pela IA): sem cancelada/estornada e com as vendas só
+  // de cabeçalho — lendo itens_venda direto, as duas coisas saíam erradas.
+  const vendas = await prisma.venda.findMany({
+    where: { dataVenda: { gte: start, lte: end } },
+    select: {
+      status: true,
+      produtoNome: true,
+      valorVenda: true,
+      quantidade: true,
+      custoProduto: true,
+      itens: { select: { produtoNome: true, subtotal: true, custoProduto: true, quantidade: true } },
     },
   });
 
-  const agg = new Map<
-    string,
-    { custoTotal: number; receitaTotal: number; quantidade: number }
-  >();
-
-  for (const i of itens) {
-    const custo = i.custoProduto * i.quantidade;
-    const receita = i.subtotal;
-    const cur = agg.get(i.produtoNome) ?? {
-      custoTotal: 0,
-      receitaTotal: 0,
-      quantidade: 0,
-    };
-    cur.custoTotal += custo;
-    cur.receitaTotal += receita;
-    cur.quantidade += i.quantidade;
-    agg.set(i.produtoNome, cur);
-  }
-
-  const rows = Array.from(agg.entries()).map(([produto, d]) => {
-    const margem =
-      d.receitaTotal > 0
-        ? ((d.receitaTotal - d.custoTotal) / d.receitaTotal) * 100
-        : 0;
-    const lucro = d.receitaTotal - d.custoTotal;
-    return {
-      produto,
-      quantidade: d.quantidade,
-      custoTotal: d.custoTotal,
-      receitaTotal: d.receitaTotal,
-      lucro,
-      margemPct: margem.toFixed(1),
-    };
-  });
-
-  rows.sort((a, b) => b.lucro - a.lucro);
+  const rows = agregarMargemPorProduto(vendas).map((l) => ({
+    ...l,
+    margemPct: l.margemPct.toFixed(1),
+  }));
 
   if (format === "pdf") {
     const pdfDoc = await PDFDocument.create();
     let page = pdfDoc.addPage([595, 842]);
     const { width, height } = page.getSize();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const font = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.Helvetica));
+    const fontBold = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.HelveticaBold));
 
     page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: rgb(0.07, 0.15, 0.3) });
     page.drawText("MARGEM POR PRODUTO", {
@@ -111,9 +95,9 @@ export async function GET(req: Request) {
     });
   }
 
-  const header = "Produto,Quantidade,Custo Total,Receita Total,Lucro,Margem (%)\n";
+  const header = "\uFEFFProduto,Quantidade,Custo Total,Receita Total,Lucro,Margem (%)\n";
   const lines = rows.map((r) =>
-    [r.produto, r.quantidade, r.custoTotal.toFixed(2), r.receitaTotal.toFixed(2), r.lucro.toFixed(2), r.margemPct].join(",")
+    linhaCsv([r.produto, r.quantidade, r.custoTotal.toFixed(2), r.receitaTotal.toFixed(2), r.lucro.toFixed(2), r.margemPct])
   );
   const csv = header + lines.join("\n");
 

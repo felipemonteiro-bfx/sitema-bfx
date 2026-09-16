@@ -10,6 +10,7 @@
  */
 
 import { valorTotalVenda, produtosTexto, quantidadeTotal, margemVenda } from "@/lib/venda-utils";
+import { celulaCsv } from "@/lib/csv";
 import { formaPagamentoLabel, formaFromLegacyFlags, FORMA_PAGAMENTO, type FormaPagamento } from "@/lib/forma-pagamento";
 import { formatarDataPura } from "@/lib/data-pura";
 import { formatBRL } from "@/lib/utils";
@@ -301,12 +302,13 @@ export function resolverColunasParaExport(param: string | null | undefined, ehAd
   return filtrarColunasPorPerfil(resolverColunas(null), ehAdmin);
 }
 
-/** Escapa uma celula em RFC 4180: aspas apenas quando necessario, dobrando as internas. */
+/**
+ * Escapa uma celula em RFC 4180 (aspas so quando necessario, dobrando as internas) e
+ * neutraliza texto que comeca com = + - @: nome de cliente como =HYPERLINK(...) virava
+ * formula no Excel. Numero em texto continua numero.
+ */
 function escaparCsv(valor: string): string {
-  if (valor.includes(",") || valor.includes('"') || valor.includes("\n") || valor.includes("\r")) {
-    return `"${valor.replace(/"/g, '""')}"`;
-  }
-  return valor;
+  return celulaCsv(valor);
 }
 
 function formatarValorCsv(tipo: TipoColuna, bruto: string | number | Date | null): string {

@@ -82,8 +82,11 @@ describe("calcularMetricasPeriodo — venda sem itens", () => {
 
 describe("resumo financeiro da IA — mesma regra de custo", () => {
   it("ai-actions nao soma custo de cabecalho sem a quantidade", () => {
-    const fonte = readFileSync(join(process.cwd(), "src/lib/ai-actions.ts"), "utf8");
-    expect(fonte.includes(": (v.custoProduto || 0);")).toBe(false);
-    expect(fonte.includes("custoTotalVenda(")).toBe(true);
+    // O calculo saiu de ai-actions para resumirRelatorioVendas (src/lib/resumo-vendas.ts).
+    const ia = readFileSync(join(process.cwd(), "src/lib/ai-actions.ts"), "utf8");
+    const resumo = readFileSync(join(process.cwd(), "src/lib/resumo-vendas.ts"), "utf8");
+    expect(ia.includes(": (v.custoProduto || 0);")).toBe(false);
+    expect(ia.includes("resumirRelatorioVendas(")).toBe(true);
+    expect(resumo.includes("custoTotalVenda(")).toBe(true);
   });
 });

@@ -24,6 +24,15 @@ export type ParcelaAjuste = {
 };
 
 /**
+ * Total que as parcelas da edição de venda devem somar: itens + frete − desconto, o
+ * mesmo de `valorTotalVenda`. Arredondado em centavos para a montagem da tela não
+ * enxergar uma "mudança" de ponto flutuante e redistribuir parcelas sem motivo.
+ */
+export function totalParaParcelas(input: { subtotalItens: number; frete: number; desconto: number }): number {
+  return Math.round((input.subtotalItens + input.frete - input.desconto) * 100) / 100;
+}
+
+/**
  * Divide `valorTotal` entre as parcelas: trunc de duas casas para todas menos a
  * ultima, e a ultima absorve o resto — a soma sempre fecha o total exato, mesmo
  * quando a divisao nao e exata (ex.: 100 em 3 -> 33.33 / 33.33 / 33.34).

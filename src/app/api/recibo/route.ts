@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { verifyReciboSig } from "@/lib/recibo-url";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb, PDFFont, PDFPage, breakTextIntoLines } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
 import { embedLogoNoPdf } from "@/lib/logo-loader";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -223,8 +224,8 @@ export async function GET(req: Request) {
 
     // ── PDF Setup — fontes primeiro para calcular alturas reais ───────────────
     const pdf = await PDFDocument.create();
-    const font = await pdf.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+    const font = fontePdfSegura(await pdf.embedFont(StandardFonts.Helvetica));
+    const fontBold = fontePdfSegura(await pdf.embedFont(StandardFonts.HelveticaBold));
 
     const marginX = 36;
     const contentW = 595 - marginX * 2; // 523

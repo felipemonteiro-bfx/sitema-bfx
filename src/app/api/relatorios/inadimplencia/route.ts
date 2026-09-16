@@ -1,21 +1,34 @@
 import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/guards";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
+import { linhaCsv } from "@/lib/csv";
+import { FILTRO_VENDA_VALIDA } from "@/lib/venda-utils";
 
 export async function GET(req: Request) {
+  // Só admin (a tela /relatorios é só admin): nomes, empresas e valores em atraso.
+  if (!(await requireAdmin())) {
+    return Response.json({ error: "Somente administradores geram o relatório de inadimplência." }, { status: 403 });
+  }
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");
   const format = (searchParams.get("format") || "csv").toLowerCase();
 
   const hoje = new Date();
-  const start = from ? new Date(from + "T00:00:00") : new Date(hoje.getFullYear(), 0, 1);
+  // Sem `from`, sem piso: atraso de ano anterior também é inadimplência (antes cortava em
+  // 1º de janeiro, e a tela ainda mandava o dia 1 do mês corrente).
+  const start = from ? new Date(from + "T00:00:00") : null;
   const end = to ? new Date(to + "T23:59:59") : hoje;
 
   const parcelas = await prisma.parcelaVencimento.findMany({
     where: {
       paga: false,
-      dataVencimento: { gte: start, lte: end },
+      // Parcela antecipada já foi paga pela Prudent: não é atraso do cliente.
+      antecipada: false,
+      dataVencimento: { ...(start ? { gte: start } : {}), lte: end },
+      venda: FILTRO_VENDA_VALIDA,
     },
     include: {
       venda: {
@@ -47,14 +60,14 @@ export async function GET(req: Request) {
     const pdfDoc = await PDFDocument.create();
     let page = pdfDoc.addPage([595, 842]);
     const { width, height } = page.getSize();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const font = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.Helvetica));
+    const fontBold = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.HelveticaBold));
 
     page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: rgb(0.07, 0.15, 0.3) });
     page.drawText("RELATÓRIO DE INADIMPLÊNCIA", {
       x: 40, y: height - 45, size: 18, font: fontBold, color: rgb(1, 1, 1),
     });
-    page.drawText(`Período: ${formatDateBR(start)} até ${formatDateBR(end)}`, {
+    page.drawText(start ? `Período: ${formatDateBR(start)} até ${formatDateBR(end)}` : `Vencidas até ${formatDateBR(end)}`, {
       x: 40, y: height - 65, size: 10, font, color: rgb(0.9, 0.9, 0.9),
     });
 
@@ -103,8 +116,9 @@ export async function GET(req: Request) {
     });
   }
 
-  const header = "Vencimento,VendaId,Cliente,Empresa,Parcela,Valor,DiasAtraso\n";
-  const csv = header + rows.map((r) => [r.vencimento, r.vendaId, r.cliente, r.empresa, r.parcela, r.valor.toFixed(2), r.diasAtraso].join(",")).join("\n");
+  // BOM para o Excel ler acento; célula escapada (nome com vírgula deslocava colunas).
+  const header = "\uFEFFVencimento,VendaId,Cliente,Empresa,Parcela,Valor,DiasAtraso\n";
+  const csv = header + rows.map((r) => linhaCsv([r.vencimento, r.vendaId, r.cliente, r.empresa, r.parcela, r.valor.toFixed(2), r.diasAtraso])).join("\n");
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { formatBRL } from "@/lib/utils";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
 import { resolverPeriodo, fimInclusivoParaInput } from "@/lib/periodo-data";
 import { formatarDataPura } from "@/lib/data-pura";
 import { getSession } from "@/lib/session";
@@ -49,8 +50,8 @@ export async function GET(req: Request) {
     let page = pdfDoc.addPage([842, 595]); // Landscape A4
     const { width, height } = page.getSize();
 
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const font = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.Helvetica));
+    const fontBold = fontePdfSegura(await pdfDoc.embedFont(StandardFonts.HelveticaBold));
 
     // Header
     page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: rgb(0.07, 0.15, 0.3) });
