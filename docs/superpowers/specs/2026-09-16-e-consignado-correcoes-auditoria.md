@@ -217,6 +217,19 @@ Agora: lista de itens enviada e vazia → recusa com "Preencha o nome do produto
 com itens gravados sem itens no payload → recusa; payload sem a lista em venda só de
 cabeçalho → mantém valor, quantidade, custo e nome gravados.
 
+## 11. DRE: custo de venda sem itens sem a quantidade
+
+**Hoje.** `calcularMetricasPeriodo` (`src/lib/finance.ts`) e o resumo financeiro da IA
+(`src/lib/ai-actions.ts`) somam `custoProduto` do cabeçalho sem multiplicar por
+`quantidade`. O custo do cabeçalho é unitário (criação legada, `updateVenda` e
+`custoTotalVenda` multiplicam): venda de 2 unidades a custo 250 entrava com CMV 250 no DRE
+e 500 no lucro gravado.
+
+**Correção.** Os três pontos passam a usar `custoTotalVenda(v) ?? 0`.
+
+**Dado.** Produção (16/09): 18 vendas sem itens, nenhuma com quantidade > 1 — o DRE de
+hoje não muda; sem backfill.
+
 ## Fora de escopo
 
 - Ordenar pela coluna Consignado.

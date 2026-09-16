@@ -9,7 +9,7 @@ import {
   revalidarFornecedor,
 } from "@/lib/revalidacao";
 import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
-import { valorTotalVenda } from "@/lib/venda-utils";
+import { custoTotalVenda, valorTotalVenda } from "@/lib/venda-utils";
 import {
   fuzzyFindClientes,
   fuzzyFindProdutos,
@@ -1325,10 +1325,8 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         });
         const totalVendas = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
         const totalCusto = vendas.reduce((s, v) => {
-          const custoItens =
-            v.itens && v.itens.length > 0
-              ? v.itens.reduce((si, i) => si + (i.custoProduto || 0) * (i.quantidade || 1), 0)
-              : (v.custoProduto || 0);
+          // Mesma regra de custo do DRE: sem itens, custo unitário do cabeçalho × quantidade.
+          const custoItens = custoTotalVenda(v) ?? 0;
           const notaCost = v.temNota ? ((valorTotalVenda(v) - (v.valorFrete ?? 0)) * (v.taxaNota ?? 5.97) / 100) : 0;
           return s + custoItens + (v.custoEnvio || 0) + notaCost;
         }, 0);

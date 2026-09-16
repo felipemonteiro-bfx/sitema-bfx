@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { valorTotalVenda } from "@/lib/venda-utils";
+import { custoTotalVenda, valorTotalVenda } from "@/lib/venda-utils";
 import { addMonths, format } from "date-fns";
 
 export type MetricasPeriodo = {
@@ -38,12 +38,9 @@ export async function calcularMetricasPeriodo(
   });
 
   const receita = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-  const cmv = vendas.reduce((s, v) => {
-    if (v.itens && v.itens.length > 0) {
-      return s + v.itens.reduce((si, i) => si + (i.custoProduto || 0) * (i.quantidade || 1), 0);
-    }
-    return s + (v.custoProduto || 0);
-  }, 0);
+  // `custoTotalVenda`: itens (custo × quantidade) ou, sem itens, custo unitário do
+  // cabeçalho × quantidade — a mesma regra do lucro gravado na criação e na edição.
+  const cmv = vendas.reduce((s, v) => s + (custoTotalVenda(v) ?? 0), 0);
   const freteReal = vendas.reduce((s, v) => s + (v.custoEnvio || 0), 0);
 
   // Custo de antecipacao Prudent (QK-LGJ-01): lido DIRETO da coluna gravada
@@ -62,9 +59,7 @@ export async function calcularMetricasPeriodo(
     porVendedor[key].total += recVenda;
     porVendedor[key].vendas += 1;
 
-    const cmvVenda = v.itens && v.itens.length > 0
-      ? v.itens.reduce((s, i) => s + (i.custoProduto || 0) * (i.quantidade || 1), 0)
-      : (v.custoProduto || 0);
+    const cmvVenda = custoTotalVenda(v) ?? 0;
     const freteVenda = v.custoEnvio || 0;
     const notaVenda = v.temNota
       ? (recVenda - (v.valorFrete ?? 0)) * ((v.taxaNota ?? 5.97) / 100)
