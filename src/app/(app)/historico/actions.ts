@@ -14,6 +14,8 @@ import {
 import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
 import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { requireSessionOrThrow } from "@/lib/guards";
+import { valorParcelaAposEdicao } from "@/lib/parcelas";
+import { valorTotalVenda } from "@/lib/venda-utils";
 
 // Toda action daqui precisa da própria guarda: o matcher do middleware cobre só /api
 // e o layout roda depois da action, então nenhum dos dois protege.
@@ -214,10 +216,33 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     const novoStatusAntecipacao =
       antecipadasAposSalvar === 0 ? undefined : antecipadasAposSalvar === numerosFinais.length ? 1 : 3;
 
+    // valorParcela alimenta limite de credito e consignado. Mudou parcelas ou total, a
+    // parcela e recalculada; save sem mudanca nao reescreve o valor gravado (ver
+    // valorParcelaAposEdicao). O total gravado e reconstruido do mesmo jeito que `total`.
+    const vendaAntes = await prisma.venda.findUnique({
+      where: { id },
+      select: {
+        parcelas: true,
+        valorFrete: true,
+        desconto: true,
+        valorVenda: true,
+        quantidade: true,
+        itens: { select: { subtotal: true } },
+      },
+    });
+    // O form de edição descarta item sem nome de produto e não tem campo `valor`: sem
+    // itens e sem `valor`, `total` acima sai 0 por falta de dado, não por mudança real.
+    const totalConhecido = itens.length > 0 || formData.has("valor");
+    const novoValorParcela = valorParcelaAposEdicao({
+      antes: vendaAntes ? { parcelas: vendaAntes.parcelas, total: valorTotalVenda(vendaAntes) } : null,
+      depois: { parcelas: parcelasNum, total: totalConhecido ? total : null },
+    });
+
     const vendaAtualizada = await prisma.venda.update({
       where: { id },
       data: {
         ...(novoStatusAntecipacao !== undefined ? { antecipada: novoStatusAntecipacao } : {}),
+        ...(novoValorParcela !== undefined ? { valorParcela: novoValorParcela } : {}),
         dataVenda: new Date(data),
         vendedor: vendedorTexto,
         vendedorId: vendedorUser?.id ?? undefined,

@@ -139,6 +139,65 @@ Reportados e **não** aplicados (anteriores à feature ou decisão de negócio):
 PIX/cartão diz "excede" sem renda e ignora o teto de R$ 475 que o servidor usa;
 alerta 20% olha a faixa atual, não a posterior (conforme spec original).
 
+## 9. Segunda rodada (pedido do André, mesmo dia)
+
+Os quatro itens que ficaram "reportados e não aplicados" acima.
+
+### 9.1 Editar venda não atualiza `valorParcela`
+
+**Hoje.** `updateVenda` grava `parcelas`, total e itens, mas nunca `valorParcela`.
+Venda de R$ 600 em 12x (R$ 50) editada para 6x fica `parcelas=6, valorParcela=50`:
+limite de crédito e consignado contam metade.
+
+**Risco da correção.** Recalcular sempre quebraria idempotência (ver memória de
+round-trip): venda importada ou legada cujo `valorParcela` não é `total/parcelas`
+(juros embutidos, planilha) seria reescrita num save sem mudança nenhuma.
+
+**Correção.** Função pura `valorParcelaAposEdicao` em `src/lib/parcelas.ts`:
+recalcula `trunc(total / parcelas, 2 casas)` (mesma conta de `criarVendaV2`)
+**só** quando o número de parcelas ou o total (itens + frete − desconto) mudou em
+relação ao que está gravado; senão devolve `undefined` e o campo não é tocado.
+`updateVenda` lê a venda antes do update para comparar.
+
+### 9.2 Card de PIX/cartão diverge do servidor
+
+**Hoje.** Nas formas que não são folha, o card usa `renda × 30%` como limite e diz
+"Excede disponível" para cliente sem renda. O servidor (`checkCredito`) libera
+quem não tem renda e usa teto `min(renda × 30%, R$ 475)`.
+
+**Correção.** Ramo não-folha de `estadoCardLimite` espelha `checkCredito`: sem
+renda → tom `renda_pendente` (sem limite/disponível, texto "sem renda
+cadastrada, limite não calculado"); com renda → limite = `min(margemTotal,
+tetoParcelaMax)`, excede quando `comprometido + parcela > limite + 1`.
+
+### 9.3 Tabela cortada nas outras importações
+
+`importacao-clientes-client.tsx` e `importacao-fornecedores-client.tsx` têm o
+mesmo `ScrollArea` com `max-h-64` que cortava as linhas sem rolagem. Mesma
+troca feita no e-Consignado (div com `overflow-y-auto`, rolável por teclado).
+
+### 9.4 Alerta 20% olha a venda que está sendo feita
+
+**Hoje (spec original).** Amarelo só se a faixa **atual** é `alerta`. Cliente em
+15% que vai a 25% com esta venda não vê aviso.
+
+**Correção (muda a spec original a pedido).** Em folha, tom `alerta` quando a
+faixa atual é `alerta` **ou** a % depois da parcela nova fica entre 20 e 30.
+`estadoCardLimite` passa a devolver `pctPosterior`; o card mostra "Consignado
+atual: X% · com esta venda: Y%" e os avisos citam a % posterior.
+
+### Testes (falham antes)
+
+1. `valorParcelaAposEdicao`: sem mudança → `undefined`; 12x→6x → 100; total
+   mudou → recalcula; venda com juros salva sem mudança → `undefined`.
+2. `updateVenda` grava `valorParcela` novo ao mudar parcelas e não grava num
+   save idêntico.
+3. `estadoCardLimite` PIX: sem renda → `renda_pendente`; renda 3000 com
+   comprometido 400 e parcela 100 → `excede`, limite 475.
+4. `estadoCardLimite` folha: 15% + parcela que leva a 25% → `alerta`,
+   `pctPosterior` 25.
+5. Fonte das duas importações sem `ScrollArea`.
+
 ## Fora de escopo
 
 - Ordenar pela coluna Consignado.

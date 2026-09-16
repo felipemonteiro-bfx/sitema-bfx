@@ -127,13 +127,43 @@ describe("estadoCardLimite", () => {
     expect(r.pctBarra).toBe(50);
   });
 
-  it("PIX com parcela acima do disponivel fica em excede e usa as chaves antigas", () => {
+  it("PIX com parcela acima do disponivel fica em excede (teto do servidor = 30% da renda aqui)", () => {
     const r = estadoCardLimite({ descontoEmFolha: false, limite: base, valorParcela: 250 });
     expect(r.tom).toBe("excede");
     expect(r.limite).toBe(300);
     expect(r.comprometido).toBe(100);
     expect(r.disponivel).toBe(200);
     expect(r.pctConsignado).toBeNull();
+  });
+
+  it("PIX sem renda espelha o servidor: sem limite calculado, sem 'excede'", () => {
+    const r = estadoCardLimite({
+      descontoEmFolha: false,
+      limite: { ...base, renda: 0, margemTotal: 0, margemDisponivel: -100 },
+      valorParcela: 250,
+    });
+    expect(r.tom).toBe("renda_pendente");
+    expect(r.limite).toBeNull();
+    expect(r.disponivel).toBeNull();
+    expect(r.pctBarra).toBeNull();
+  });
+
+  it("PIX com renda alta usa o teto de R$ 475 do servidor, nao 30% da renda", () => {
+    const r = estadoCardLimite({
+      descontoEmFolha: false,
+      limite: { ...base, renda: 3000, margemTotal: 900, comprometimentoAtual: 400, margemDisponivel: 500 },
+      valorParcela: 100,
+    });
+    expect(r.tom).toBe("excede");
+    expect(r.limite).toBe(475);
+    expect(r.disponivel).toBe(75);
+  });
+
+  it("folha em 15% com parcela que leva a 25% ja fica em alerta e informa a % posterior", () => {
+    const r = estadoCardLimite({ descontoEmFolha: true, limite: base, valorParcela: 100 });
+    expect(r.tom).toBe("alerta");
+    expect(r.pctPosterior).toBe(25);
+    expect(r.pctConsignado).toBe(15);
   });
 
   it("PIX normal fica ok e mantem a barra de comprometimento", () => {

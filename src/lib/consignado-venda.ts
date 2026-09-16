@@ -1,5 +1,6 @@
 import { FORMA_PAGAMENTO } from "@/lib/forma-pagamento";
 import { faixaDePct, type FaixaConsignado } from "@/lib/consignado";
+import { VALOR_PARCELA_MAX } from "@/lib/parcelas";
 
 export type DecisaoConsignado =
   | {
@@ -74,6 +75,8 @@ export type EstadoCardLimite = {
   pctBarra: number | null;
   /** % de consignado atual; só no caminho de folha. */
   pctConsignado: number | null;
+  /** % de consignado depois da parcela desta venda; só no caminho de folha com renda. */
+  pctPosterior: number | null;
 };
 
 function pctDaBarra(comprometido: number, limite: number): number {
@@ -83,7 +86,9 @@ function pctDaBarra(comprometido: number, limite: number): number {
 /**
  * Tom e números do card "Limite e Margem". Em folha usa as chaves de consignado e a
  * mesma conta de `decidirConfirmacaoConsignado`, para o card e o diálogo de
- * confirmação nunca discordarem. Nas outras formas segue as chaves antigas.
+ * confirmação nunca discordarem. Nas outras formas espelha `checkCredito`
+ * (`src/lib/credit.ts`), que é quem decide `excedeuLimite` no servidor: sem renda
+ * libera, e o teto é `min(renda × 30%, R$ 475)`.
  */
 export function estadoCardLimite(input: {
   descontoEmFolha: boolean;
@@ -93,13 +98,27 @@ export function estadoCardLimite(input: {
   const { limite, valorParcela } = input;
 
   if (!input.descontoEmFolha) {
+    const comprometido = limite.comprometimentoAtual;
+    if (!(limite.renda > 0)) {
+      return {
+        tom: "renda_pendente",
+        limite: null,
+        comprometido,
+        disponivel: null,
+        pctBarra: null,
+        pctConsignado: null,
+        pctPosterior: null,
+      };
+    }
+    const teto = Math.min(limite.margemTotal, limite.tetoParcelaMax ?? VALOR_PARCELA_MAX);
     return {
-      tom: valorParcela > limite.margemDisponivel + 1 ? "excede" : "ok",
-      limite: limite.margemTotal,
-      comprometido: limite.comprometimentoAtual,
-      disponivel: limite.margemDisponivel,
-      pctBarra: pctDaBarra(limite.comprometimentoAtual, limite.margemTotal),
+      tom: comprometido + valorParcela > teto + 1 ? "excede" : "ok",
+      limite: teto,
+      comprometido,
+      disponivel: teto - comprometido,
+      pctBarra: pctDaBarra(comprometido, teto),
       pctConsignado: null,
+      pctPosterior: null,
     };
   }
 
@@ -112,6 +131,7 @@ export function estadoCardLimite(input: {
       disponivel: null,
       pctBarra: null,
       pctConsignado: null,
+      pctPosterior: null,
     };
   }
 
@@ -124,9 +144,12 @@ export function estadoCardLimite(input: {
     valorParcelaNova: valorParcela,
     confirmouLimiteConsignado: false,
   });
+  // O alerta olha também a venda em curso: cliente em 15% que vai a 25% com esta
+  // parcela já vê o amarelo antes de vender, não só na lista depois.
+  const pctPosterior = decisao.pctPosterior;
   const tom = !decisao.ok || limite.faixaConsignado === "limite"
     ? "limite"
-    : limite.faixaConsignado === "alerta"
+    : limite.faixaConsignado === "alerta" || (pctPosterior != null && pctPosterior >= 20)
       ? "alerta"
       : "ok";
 
@@ -137,5 +160,6 @@ export function estadoCardLimite(input: {
     disponivel: limite.margemFolhaDisponivel ?? limiteFolha - tomado,
     pctBarra: pctDaBarra(tomado, limiteFolha),
     pctConsignado: limite.pctConsignado ?? null,
+    pctPosterior,
   };
 }

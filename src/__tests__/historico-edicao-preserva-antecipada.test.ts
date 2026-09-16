@@ -10,7 +10,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mesmo padrao de mocks de antecipacao-custo-edicao.test.ts.
 const dbMock = {
   usuario: { findFirst: vi.fn() },
-  venda: { update: vi.fn() },
+  // findUnique sem valor = venda anterior desconhecida: valorParcela nao e tocado (fora do escopo deste teste).
+  venda: { update: vi.fn(), findUnique: vi.fn() },
   itemVenda: { deleteMany: vi.fn(), createMany: vi.fn() },
   parcelaVencimento: { findMany: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn() },
   despesa: { create: vi.fn() },

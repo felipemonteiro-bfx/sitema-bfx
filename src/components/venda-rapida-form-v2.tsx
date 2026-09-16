@@ -978,16 +978,16 @@ export default function VendaRapidaFormV2({
                 <Badge variant="outline">{ROTULO_FAIXA_CONSIGNADO.renda_pendente}</Badge>
               )}
               {cardLimite.tom === "excede" && (
-                <Badge variant="secondary" className="bg-warning/20 text-warning-foreground dark:text-warning">
-                  Excede disponível
-                </Badge>
+                <Badge variant="warning">Excede disponível</Badge>
               )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {cardLimite.tom === "renda_pendente" && (
               <p className="text-xs text-muted-foreground">
-                Renda pendente — % de consignado não calculada. A venda segue sem trava.
+                {descontoEmFolha
+                  ? "Renda pendente — % de consignado não calculada. A venda segue sem trava."
+                  : "Sem renda cadastrada — limite de crédito não calculado. A venda segue sem trava."}
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
@@ -1037,27 +1037,34 @@ export default function VendaRapidaFormV2({
             {cardLimite.pctConsignado != null && (
               <p className="text-xs text-center text-muted-foreground">
                 Consignado atual: {formatarPctConsignado(cardLimite.pctConsignado)}
+                {valorParcela > 0 && cardLimite.pctPosterior != null && (
+                  <> · com esta venda: {formatarPctConsignado(cardLimite.pctPosterior)}</>
+                )}
               </p>
             )}
             {cardLimite.tom === "alerta" && (
               <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                <div>Já está em alerta de consignado: {formatarPctConsignado(cardLimite.pctConsignado)}.</div>
+                <div>
+                  {valorParcela > 0 ? "Com esta venda o consignado fica em" : "Consignado em"}{" "}
+                  {formatarPctConsignado(cardLimite.pctPosterior)} (alerta a partir de 20%).
+                </div>
               </div>
             )}
             {cardLimite.tom === "limite" && (
               <div className="flex items-start gap-2 text-xs text-error-text bg-error-bg p-3 rounded-lg border border-error/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  Cliente chega a 30% ou mais de consignado. A venda só sai se você confirmar.
+                  {valorParcela > 0 ? "Com esta venda o consignado chega a" : "Consignado em"}{" "}
+                  {formatarPctConsignado(cardLimite.pctPosterior)}. A venda só sai se você confirmar.
                 </div>
               </div>
             )}
             {cardLimite.tom === "excede" && (
-              <div className="flex items-start gap-2 text-xs text-warning-foreground dark:text-warning bg-warning/10 dark:bg-warning/20 p-3 rounded-lg border border-warning/30">
+              <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  Parcela ({formatBRL(valorParcela)}) excede o valor disponível ({formatBRL(limiteData.margemDisponivel)}).
+                  Parcela ({formatBRL(valorParcela)}) excede o valor disponível ({formatBRL(cardLimite.disponivel ?? 0)}).
                   A venda será registrada com indicação de excedeu limite.
                 </div>
               </div>

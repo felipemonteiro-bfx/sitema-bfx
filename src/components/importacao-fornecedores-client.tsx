@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -180,7 +179,12 @@ export default function ImportacaoFornecedoresClient({
             </div>
 
             {plano.erros.length > 0 && (
-              <ScrollArea className="max-h-64 rounded-md border bg-white">
+              <div
+                tabIndex={0}
+                role="region"
+                aria-label="Linhas com erro"
+                className="max-h-64 overflow-y-auto rounded-md border bg-card"
+              >
                 <Table>
                   <TableHeader className="bg-muted">
                     <TableRow>
@@ -199,7 +203,7 @@ export default function ImportacaoFornecedoresClient({
                     ))}
                   </TableBody>
                 </Table>
-              </ScrollArea>
+              </div>
             )}
           </CardContent>
         </Card>
