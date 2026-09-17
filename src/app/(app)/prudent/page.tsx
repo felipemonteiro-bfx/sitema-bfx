@@ -91,6 +91,17 @@ async function antecipar(formData: FormData) {
     data: { antecipada: true },
   });
 
+  // Decisão do André (2026-09-16): antecipada = paga — a Prudent pagou a BFX. Só nas parcelas
+  // ainda abertas, para não pisar baixa manual ou do Asaas.
+  await prisma.parcelaVencimento.updateMany({
+    where: { id: { in: parcelaIds }, paga: false },
+    data: {
+      paga: true,
+      dataPagamento: new Date(`${hojeDataPura()}T00:00:00.000Z`),
+      origemPagamento: "prudent",
+    },
+  });
+
   // Atualizar status das vendas baseado nas parcelas
   for (const vendaId of vendaIdsAfetados) {
     const totalParcelas = await prisma.parcelaVencimento.count({ where: { vendaId } });

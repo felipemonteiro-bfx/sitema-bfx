@@ -173,6 +173,9 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       dataVencimento: Date;
       valorParcela: number;
       antecipada: boolean;
+      origemPagamento?: string | null;
+      asaasPaymentId?: string | null;
+      baixaPor?: string | null;
     };
     let parcelasExistentes: ParcelaExistente[] = [];
     // Ligado quando a venda vira pagamento unico sem payload de parcelas (CR-01).
@@ -180,17 +183,34 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     try {
       parcelasExistentes = await prisma.parcelaVencimento.findMany({
         where: { vendaId: id },
-        select: { numeroParcela: true, paga: true, dataPagamento: true, dataVencimento: true, valorParcela: true, antecipada: true },
+        select: {
+          numeroParcela: true,
+          paga: true,
+          dataPagamento: true,
+          dataVencimento: true,
+          valorParcela: true,
+          antecipada: true,
+          origemPagamento: true,
+          asaasPaymentId: true,
+          baixaPor: true,
+        },
       });
     } catch {
       // Tabela parcelas_vencimento pode não existir em produção antiga
     }
     // As linhas sao apagadas e recriadas no save: o que precisa sobreviver a
-    // edicao (pagamento e antecipacao na Prudent) sai daqui, pelo numero da parcela.
+    // edicao (pagamento, baixa e antecipacao na Prudent) sai daqui, pelo numero da parcela.
     const pagasMap = new Map(
       parcelasExistentes.map((p) => [
         p.numeroParcela,
-        { paga: p.paga, dataPagamento: p.dataPagamento, antecipada: p.antecipada },
+        {
+          paga: p.paga,
+          dataPagamento: p.dataPagamento,
+          antecipada: p.antecipada,
+          origemPagamento: p.origemPagamento ?? null,
+          asaasPaymentId: p.asaasPaymentId ?? null,
+          baixaPor: p.baixaPor ?? null,
+        },
       ])
     );
 
@@ -356,19 +376,33 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         // Reaproveita o `pagasMap` montado a partir da leitura hoisted no topo do
         // try — nao reler aqui evita que as duas fontes discordem entre si.
         await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
+        // asaas_payment_id é único: número de parcela repetido no payload copiaria o mesmo id para
+        // duas linhas, o createMany lançaria P2002 depois do deleteMany e a venda perderia as linhas.
+        const cobrancasUsadas = new Set<string>();
         await prisma.parcelaVencimento.createMany({
           data: parcelasForm.map((p) => {
             const existente = pagasMap.get(p.numeroParcela);
+            // A cobrança do Asaas quita UMA parcela: na linha repetida a baixa dela não é copiada
+            // (a antecipação é, porque trava a parcela contra ser apagada).
+            const baixaRepetida =
+              existente?.asaasPaymentId != null && cobrancasUsadas.has(existente.asaasPaymentId);
+            if (existente?.asaasPaymentId) cobrancasUsadas.add(existente.asaasPaymentId);
+            const baixa = baixaRepetida ? undefined : existente;
             return {
               vendaId: id,
               numeroParcela: p.numeroParcela,
               dataVencimento: new Date(p.dataVencimento),
               valorParcela: p.valorParcela,
-              paga: existente?.paga ?? false,
-              dataPagamento: existente?.dataPagamento ?? null,
+              paga: baixa?.paga ?? false,
+              dataPagamento: baixa?.dataPagamento ?? null,
               // Sem isto a parcela ja antecipada na Prudent voltava a "a antecipar"
               // a cada edicao da venda, e a fila deixava antecipa-la de novo.
               antecipada: existente?.antecipada ?? false,
+              // A baixa (Asaas, Prudent, manual) tambem precisa sobreviver: sem a origem e a
+              // cobranca, a sincronizacao do Asaas nao reconhece a propria baixa.
+              origemPagamento: baixa?.origemPagamento ?? null,
+              asaasPaymentId: baixa?.asaasPaymentId ?? null,
+              baixaPor: baixa?.baixaPor ?? null,
             };
           }),
         });

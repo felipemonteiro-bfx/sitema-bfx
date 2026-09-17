@@ -12,6 +12,7 @@ import { calcularDre, calcularFluxoCaixa } from "@/lib/finance";
 import { custoTotalVenda, FILTRO_VENDA_VALIDA, valorTotalVenda } from "@/lib/venda-utils";
 import { agregarMargemPorProduto } from "@/lib/margem-produto";
 import { filtroPeriodoVendas, resumirRelatorioVendas } from "@/lib/resumo-vendas";
+import { FILTRO_PARCELA_COMPROMETIDA, situacaoParaCliente } from "@/lib/baixa-parcelas";
 import {
   fuzzyFindClientes,
   fuzzyFindProdutos,
@@ -1155,31 +1156,37 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         if (!clienteId) { result = { erro: "Informe clienteNome ou clienteId." }; break; }
 
         const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        // Visão do cliente (situacaoParaCliente): antecipada na Prudent segue em aberto até vencer,
+        // porque a folha ainda desconta. `origemPagamento` mostra de onde veio a baixa.
         const parcelas = await prisma.parcelaVencimento.findMany({
           where: {
             venda: { clienteId },
-            ...(parsedParams?.apenasEmAberto ? { paga: false } : {}),
+            ...(parsedParams?.apenasEmAberto
+              ? { OR: [{ paga: false }, { origemPagamento: "prudent", dataVencimento: { gte: hoje } }] }
+              : {}),
             ...(parsedParams?.apenasVencidas ? { paga: false, dataVencimento: { lt: hoje } } : {}),
           },
           include: { venda: { select: { id: true, produtoNome: true, parcelas: true } } },
           orderBy: { dataVencimento: "asc" },
         });
 
-        const totalEmAberto = parcelas.filter(p => !p.paga).reduce((s, p) => s + p.valorParcela, 0);
-        const totalVencido = parcelas.filter(p => !p.paga && p.dataVencimento < hoje).reduce((s, p) => s + p.valorParcela, 0);
+        const comSituacao = parcelas.map((p) => ({ p, situacao: situacaoParaCliente(p, hoje) }));
+        const totalEmAberto = comSituacao.filter((x) => x.situacao !== "paga").reduce((s, x) => s + x.p.valorParcela, 0);
+        const totalVencido = comSituacao.filter((x) => x.situacao === "vencida").reduce((s, x) => s + x.p.valorParcela, 0);
         result = {
           cliente: clienteNome,
           totalEmAberto: Math.trunc(totalEmAberto * 100) / 100,
           totalVencido: Math.trunc(totalVencido * 100) / 100,
-          parcelas: parcelas.map(p => ({
+          parcelas: comSituacao.map(({ p, situacao }) => ({
             vendaId: p.venda.id,
             produto: p.venda.produtoNome,
             numeroParcela: `${p.numeroParcela}/${p.venda.parcelas}`,
             dataVencimento: p.dataVencimento.toISOString().split("T")[0],
             valor: Math.trunc(p.valorParcela * 100) / 100,
-            paga: p.paga,
+            paga: situacao === "paga",
+            origemPagamento: p.origemPagamento,
             dataPagamento: p.dataPagamento?.toISOString().split("T")[0] ?? null,
-            diasAtraso: !p.paga && p.dataVencimento < hoje
+            diasAtraso: situacao === "vencida"
               ? Math.floor((hoje.getTime() - p.dataVencimento.getTime()) / 86400000)
               : 0,
           })),
@@ -1233,7 +1240,8 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
         // Parcelas em aberto (comprometimento atual)
         const parcelasEmAberto = await prisma.parcelaVencimento.findMany({
-          where: { venda: { clienteId }, paga: false, dataVencimento: { gte: hoje } },
+          // Parcela quitada pela Prudent ainda é descontada em folha: compromete a renda.
+          where: { venda: { clienteId }, ...FILTRO_PARCELA_COMPROMETIDA, dataVencimento: { gte: hoje } },
           select: { valorParcela: true, dataVencimento: true },
           orderBy: { dataVencimento: "asc" },
         });

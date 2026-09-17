@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { autorizarCron } from "@/lib/segredo";
 import { prisma } from "@/lib/db";
 import fs from "fs/promises";
 import path from "path";
@@ -16,9 +17,8 @@ const MINIO_REPORT_MAX_AGE_DAYS = 180;
  * Chamado por Vercel Cron ou manualmente (requer CRON_SECRET).
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Fechado: sem CRON_SECRET nega (antes a rota passava com o segredo vazio).
+  if (!autorizarCron(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

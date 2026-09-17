@@ -98,6 +98,41 @@ export async function listPayments(config: AsaasConfig, params: {
   };
 }
 
+/** Cobrança com os campos que a baixa de parcela usa (`src/lib/baixa-parcelas.ts`). */
+export type AsaasPagamentoDetalhe = {
+  id: string;
+  status: string;
+  externalReference?: string | null;
+  installment?: string | null;
+  installmentNumber?: number | null;
+  paymentDate?: string | null;
+  clientPaymentDate?: string | null;
+  confirmedDate?: string | null;
+  deleted?: boolean | null;
+};
+
+/** Cobrança atual no Asaas — fonte da verdade da baixa (o evento do webhook é só gatilho). */
+export async function getPayment(config: AsaasConfig, id: string): Promise<AsaasPagamentoDetalhe> {
+  return asaasFetch<AsaasPagamentoDetalhe>(config, `/v3/payments/${encodeURIComponent(id)}`);
+}
+
+/**
+ * Todas as cobranças de uma venda (`externalReference = venda.id`), paginando de 100 em 100.
+ * O parcelamento de boleto gera uma cobrança por parcela com a mesma referência.
+ */
+export async function listPaymentsDaVenda(config: AsaasConfig, vendaId: number): Promise<AsaasPagamentoDetalhe[]> {
+  const todas: AsaasPagamentoDetalhe[] = [];
+  for (let offset = 0; offset <= 1000; ) {
+    const qs = new URLSearchParams({ externalReference: String(vendaId), limit: "100", offset: String(offset) });
+    const res = await asaasFetch<{ data?: AsaasPagamentoDetalhe[]; hasMore?: boolean }>(config, `/v3/payments?${qs}`);
+    const pagina = res.data ?? [];
+    todas.push(...pagina);
+    if (!res.hasMore || pagina.length === 0) break;
+    offset += pagina.length;
+  }
+  return todas;
+}
+
 type AsaasCustomerResponse = {
   id: string;
   name?: string;
@@ -136,6 +171,8 @@ async function asaasFetch<T>(
     method,
     headers,
     body: body != null ? JSON.stringify(body) : undefined,
+    // Sem limite, um Asaas travado prendia o webhook e o cron diário por minutos.
+    signal: AbortSignal.timeout(20_000),
   });
 
   const data = (await res.json().catch(() => ({}))) as T & AsaasErrorResponse;

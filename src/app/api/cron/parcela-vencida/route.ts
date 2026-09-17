@@ -1,24 +1,36 @@
 import { NextResponse } from "next/server";
+import { autorizarCron } from "@/lib/segredo";
 import { prisma } from "@/lib/db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
 import { formatBRL } from "@/lib/utils";
+import { sincronizarBaixasAsaas } from "@/lib/baixa-parcelas-db";
 
 /**
  * Parcela vencida – lembrete de inadimplência.
  * Parcelas com dataVencimento < hoje e paga = false (apenas vendas com boleto).
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Fechado: sem CRON_SECRET nega (antes a rota passava com o segredo vazio).
+  if (!autorizarCron(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  }
+
+  // Baixa dos boletos pagos no Asaas antes de olhar vencidas: é o único cron diário já agendado
+  // perto deste assunto (sem CronJob novo), e sem isto um boleto quitado seria cobrado. Falha na
+  // sincronização não impede o resto.
+  let sincronizacaoAsaas: Awaited<ReturnType<typeof sincronizarBaixasAsaas>> | { erro: string };
+  try {
+    sincronizacaoAsaas = await sincronizarBaixasAsaas();
+  } catch (e) {
+    console.error("[parcela-vencida] Falha ao sincronizar baixas do Asaas:", e);
+    sincronizacaoAsaas = { erro: "falha_sincronizacao" };
   }
 
   try {
     const waConfig = await getWhatsAppFlags();
     if (!waConfig?.autoInadimplencia) {
-      return NextResponse.json({ ok: true, enviados: 0, total: 0, desativado: true });
+      return NextResponse.json({ ok: true, enviados: 0, total: 0, desativado: true, sincronizacaoAsaas });
     }
 
     const hoje = new Date();
@@ -69,6 +81,7 @@ export async function GET(req: Request) {
       total: parcelas.length,
       enviados,
       erros: erros.length > 0 ? erros : undefined,
+      sincronizacaoAsaas,
     });
   } catch (error) {
     console.error("Erro na parcela vencida:", error);

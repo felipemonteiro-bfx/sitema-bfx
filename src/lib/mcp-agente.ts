@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import { prisma } from "@/lib/db";
 import { buscarProdutos } from "@/lib/busca-produtos";
+import { FILTRO_PARCELA_COMPROMETIDA, situacaoParaCliente } from "@/lib/baixa-parcelas";
 
 /**
  * `mcp-bfx` — servidor MCP para o agente de WhatsApp que atende o CLIENTE
@@ -336,33 +337,37 @@ export async function executarTool(
       if (!escopo) throw new Error("escopo_ausente");
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
+      // Visão do cliente (situacaoParaCliente): parcela antecipada na Prudent segue em aberto até
+      // vencer, porque a folha ainda desconta — o `paga` do banco é a visão da BFX.
       const parcelas = await prisma.parcelaVencimento.findMany({
         where: {
           venda: { clienteId: escopo.clienteId },
-          ...(args.apenasEmAberto ? { paga: false } : {}),
+          ...(args.apenasEmAberto
+            ? { OR: [{ paga: false }, { origemPagamento: "prudent", dataVencimento: { gte: hoje } }] }
+            : {}),
           ...(args.apenasVencidas ? { paga: false, dataVencimento: { lt: hoje } } : {}),
         },
         include: { venda: { select: { id: true, produtoNome: true, parcelas: true } } },
         orderBy: { dataVencimento: "asc" },
         take: 200,
       });
-      const emAberto = parcelas.filter((p) => !p.paga);
+      const comSituacao = parcelas.map((p) => ({ p, situacao: situacaoParaCliente(p, hoje) }));
       return {
         cliente: escopo.nome,
-        totalEmAberto: centavos(emAberto.reduce((s, p) => s + p.valorParcela, 0)),
-        totalVencido: centavos(
-          emAberto
-            .filter((p) => p.dataVencimento < hoje)
-            .reduce((s, p) => s + p.valorParcela, 0),
+        totalEmAberto: centavos(
+          comSituacao.filter((x) => x.situacao !== "paga").reduce((s, x) => s + x.p.valorParcela, 0),
         ),
-        parcelas: parcelas.map((p) => ({
+        totalVencido: centavos(
+          comSituacao.filter((x) => x.situacao === "vencida").reduce((s, x) => s + x.p.valorParcela, 0),
+        ),
+        parcelas: comSituacao.map(({ p, situacao }) => ({
           produto: p.venda.produtoNome,
           numeroParcela: `${p.numeroParcela}/${p.venda.parcelas}`,
           dataVencimento: dia(p.dataVencimento),
           valor: centavos(p.valorParcela),
-          paga: p.paga,
+          paga: situacao === "paga",
           diasAtraso:
-            !p.paga && p.dataVencimento < hoje
+            situacao === "vencida"
               ? Math.floor((hoje.getTime() - p.dataVencimento.getTime()) / 86400000)
               : 0,
         })),
@@ -381,7 +386,8 @@ export async function executarTool(
       const emAberto = await prisma.parcelaVencimento.findMany({
         where: {
           venda: { clienteId: escopo.clienteId },
-          paga: false,
+          // Parcela quitada pela Prudent ainda é descontada em folha: compromete a renda.
+          ...FILTRO_PARCELA_COMPROMETIDA,
           dataVencimento: { gte: hoje },
         },
         select: { valorParcela: true, dataVencimento: true },

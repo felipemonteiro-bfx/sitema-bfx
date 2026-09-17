@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { autorizarCron } from "@/lib/segredo";
 import { prisma } from "@/lib/db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
@@ -10,9 +11,8 @@ const DIAS_APOS_COMPRA = 1;
  * Apenas 1x por venda (verifica WhatsAppEnvioLog).
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Fechado: sem CRON_SECRET nega (antes a rota passava com o segredo vazio).
+  if (!autorizarCron(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

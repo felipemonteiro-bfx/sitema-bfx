@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { autorizarCron } from "@/lib/segredo";
 import { prisma } from "@/lib/db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
@@ -8,9 +9,8 @@ import { comFallback, TEMPLATES } from "@/lib/whatsapp-templates";
  * Usa whatsappDiasInativo (default 60). Evita reenvio em 30 dias via WhatsAppEnvioLog.
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Fechado: sem CRON_SECRET nega (antes a rota passava com o segredo vazio).
+  if (!autorizarCron(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 

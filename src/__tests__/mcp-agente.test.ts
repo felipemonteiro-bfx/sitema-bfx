@@ -226,6 +226,46 @@ describe("superfície de tools", () => {
   });
 });
 
+describe("parcela antecipada na Prudent, vista pelo cliente (2026-09-16)", () => {
+  // Antecipada = paga PARA A BFX (a Prudent pagou). Para o cliente a folha continua descontando
+  // até o vencimento: não pode aparecer como paga nem liberar margem.
+  const HOJE = new Date();
+  const futuro = new Date(HOJE.getTime() + 20 * 86400000);
+  const passado = new Date(HOJE.getTime() - 20 * 86400000);
+  const venda = { id: 1, produtoNome: "BOTA", parcelas: 4 };
+
+  it("meu_limite conta como comprometida a parcela futura quitada pela Prudent", async () => {
+    const token = await assinar(TELEFONE_TOKEN);
+    await rpc("tools/call", { name: "meu_limite", arguments: {} }, token);
+    const where = dbMock.parcelaVencimento.findMany.mock.calls[0][0].where;
+    expect(where.paga).toBeUndefined();
+    expect(where.OR).toEqual([{ paga: false }, { origemPagamento: "prudent" }]);
+  });
+
+  it("minhas_parcelas: Prudent a vencer em aberto; Prudent vencida descontada; Asaas paga; aberta vencida em atraso", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      { numeroParcela: 1, dataVencimento: passado, valorParcela: 100, paga: true, origemPagamento: "prudent", venda },
+      { numeroParcela: 2, dataVencimento: futuro, valorParcela: 100, paga: true, origemPagamento: "prudent", venda },
+      { numeroParcela: 3, dataVencimento: passado, valorParcela: 50, paga: true, origemPagamento: "asaas", venda },
+      { numeroParcela: 4, dataVencimento: passado, valorParcela: 30, paga: false, origemPagamento: null, venda },
+    ]);
+    const token = await assinar(TELEFONE_TOKEN);
+    const { body } = await rpc("tools/call", { name: "minhas_parcelas", arguments: {} }, token);
+    const dados = JSON.parse(body.result.content[0].text);
+
+    expect(dados.parcelas.map((p: { paga: boolean }) => p.paga)).toEqual([true, false, true, false]);
+    expect(dados.totalEmAberto).toBe(130);
+    expect(dados.totalVencido).toBe(30);
+  });
+
+  it("apenasEmAberto inclui a parcela futura da Prudent", async () => {
+    const token = await assinar(TELEFONE_TOKEN);
+    await rpc("tools/call", { name: "minhas_parcelas", arguments: { apenasEmAberto: true } }, token);
+    const where = dbMock.parcelaVencimento.findMany.mock.calls[0][0].where;
+    expect(JSON.stringify(where)).toContain('"origemPagamento":"prudent"');
+  });
+});
+
 describe("escopo por cliente — imposto no servidor", () => {
   it("minhas_parcelas consulta apenas o cliente resolvido do token", async () => {
     const token = await assinar(TELEFONE_TOKEN);

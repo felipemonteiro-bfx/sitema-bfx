@@ -73,6 +73,48 @@ beforeEach(() => {
   dbMock.venda.update.mockResolvedValue({ id: 10 });
 });
 
+describe("updateVenda — preserva a baixa das parcelas (2026-09-16)", () => {
+  it("origem, cobranca do Asaas e usuario da baixa sobrevivem a recriacao das linhas", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      { ...linhaExistente(1, false), paga: true, dataPagamento: new Date("2026-02-09T00:00:00Z"), origemPagamento: "asaas", asaasPaymentId: "pay_1", baixaPor: null },
+      { ...linhaExistente(2, false), paga: true, dataPagamento: new Date("2026-03-09T00:00:00Z"), origemPagamento: "manual", asaasPaymentId: null, baixaPor: "andre" },
+      linhaExistente(3, false),
+    ]);
+
+    await updateVenda(formVenda());
+
+    const recriadas = dbMock.parcelaVencimento.createMany.mock.calls[0][0].data as Record<string, unknown>[];
+    const porNumero = new Map(recriadas.map((p) => [p.numeroParcela, p]));
+    expect(porNumero.get(1)).toMatchObject({ paga: true, origemPagamento: "asaas", asaasPaymentId: "pay_1", baixaPor: null });
+    expect(porNumero.get(2)).toMatchObject({ paga: true, origemPagamento: "manual", asaasPaymentId: null, baixaPor: "andre" });
+    expect(porNumero.get(3)).toMatchObject({ paga: false, origemPagamento: null, asaasPaymentId: null, baixaPor: null });
+  });
+
+  it("numero de parcela repetido no payload nao duplica o id da cobranca (unico no banco)", async () => {
+    // Sem isto o createMany lancava P2002 depois do deleteMany, o catch engolia e a venda
+    // ficava sem nenhuma linha de parcela — pagas inclusive.
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      { ...linhaExistente(1, false), paga: true, origemPagamento: "asaas", asaasPaymentId: "pay_1", baixaPor: null },
+      linhaExistente(2, false),
+      linhaExistente(3, false),
+    ]);
+    const fd = formVenda();
+    fd.set(
+      "parcelasVencimento",
+      JSON.stringify([
+        { numeroParcela: 1, dataVencimento: "2026-02-10", valorParcela: 300 },
+        { numeroParcela: 1, dataVencimento: "2026-03-10", valorParcela: 300 },
+        { numeroParcela: 3, dataVencimento: "2026-04-10", valorParcela: 300 },
+      ]),
+    );
+
+    await updateVenda(fd);
+
+    const recriadas = dbMock.parcelaVencimento.createMany.mock.calls[0][0].data as { asaasPaymentId: string | null }[];
+    expect(recriadas.filter((p) => p.asaasPaymentId === "pay_1")).toHaveLength(1);
+  });
+});
+
 describe("updateVenda — preserva o flag antecipada das parcelas", () => {
   it("a parcela antecipada continua antecipada depois de salvar a edição", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([

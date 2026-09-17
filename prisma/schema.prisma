@@ -237,6 +237,9 @@ model ParcelaVencimento {
   paga            Boolean  @default(false)
   dataPagamento   DateTime? @map("data_pagamento")
   antecipada      Boolean  @default(false)
+  origemPagamento String?  @map("origem_pagamento") // asaas | prudent | manual
+  asaasPaymentId  String?  @unique @map("asaas_payment_id") // cobrança do Asaas que quitou a parcela
+  baixaPor        String?  @map("baixa_por") // usuário da baixa manual
 
   venda           Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
 
@@ -254,6 +257,7 @@ model Config {
   geminiKey             String? @map("gemini_key")
   asaasApiKey           String? @map("asaas_api_key")         // API Key do Asaas (boletos)
   asaasEnv              String? @map("asaas_env")             // sandbox | production
+  asaasWebhookToken     String? @map("asaas_webhook_token")   // token do header asaas-access-token (baixa de parcela)
   evolutionApiUrl       String? @map("evolution_api_url")
   evolutionApiKey       String? @map("evolution_api_key")
   evolutionInstance     String? @map("evolution_instance")    // Nome da instância na Evolution API

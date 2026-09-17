@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { autorizarCron } from "@/lib/segredo";
 import { processarRelatorioMensal } from "@/lib/relatorio-mensal-service";
 import { periodoMesAnterior } from "@/lib/relatorio-mensal";
 import { logCron, logCronError } from "@/lib/logger";
@@ -18,9 +19,8 @@ import { logCron, logCronError } from "@/lib/logger";
  * Requer header Authorization: Bearer $CRON_SECRET.
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Fechado: sem CRON_SECRET nega (antes a rota passava com o segredo vazio).
+  if (!autorizarCron(req)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
