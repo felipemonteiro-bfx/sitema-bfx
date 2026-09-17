@@ -1,7 +1,7 @@
 /**
  * Escapa texto para XML de planilha (.xlsx). Remove caractere de controle, U+FFFE e
  * U+FFFF: um nome colado com `\x0B` gerava arquivo que o Excel recusa. Mesma regra
- * de `planilha-controle-xlsx.ts`.
+ * de `xlsx/pacote-xlsx.ts`.
  */
 export function escaparXml(valor: string): string {
   return valor

@@ -28,6 +28,8 @@ interface Props {
   hoje: string;
   /** Quanto falta antecipar em cada mês de vencimento, por chave YYYY-MM. */
   valoresPorMes?: Record<string, number>;
+  /** Um mês só (competência da folha): o clique escolhe o mês e fecha. */
+  unico?: boolean;
   id?: string;
   className?: string;
 }
@@ -48,7 +50,7 @@ const ESTILO_MES: Record<EstadoMes, string> = {
  * antes); cada mês mostra quanto falta antecipar nele, para a escolha já
  * mostrar o tamanho do lote. As regras puras moram em `@/lib/periodo-meses`.
  */
-export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMes = {}, id, className }: Props) {
+export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMes = {}, unico = false, id, className }: Props) {
   const [aberto, setAberto] = React.useState(false);
   const [aguardandoFim, setAguardandoFim] = React.useState(false);
   const anoAtual = Number(hoje.slice(0, 4));
@@ -105,7 +107,7 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
           </Button>
         </div>
         <p className="mt-1 text-center text-xs text-muted-foreground">
-          {intervalo.aguardandoFim ? "Agora escolha o mês final" : "Escolha o mês inicial"}
+          {unico ? "Escolha o mês" : intervalo.aguardandoFim ? "Agora escolha o mês final" : "Escolha o mês inicial"}
         </p>
 
         <div className="mt-2 grid grid-cols-3 gap-1" role="group" aria-label={`Meses de ${ano}`}>
@@ -122,7 +124,11 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
                 aria-pressed={selecionado}
                 aria-current={mes === mesDeHoje ? "date" : undefined}
                 aria-label={`${NOMES_MESES[i]} de ${ano}${valor ? `, falta antecipar ${valor}` : ""}`}
-                onClick={() => aplicar(proximoIntervalo(intervalo, mes), intervalo.aguardandoFim)}
+                onClick={() =>
+                  unico
+                    ? aplicar({ inicio: mes, fim: mes, aguardandoFim: false }, true)
+                    : aplicar(proximoIntervalo(intervalo, mes), intervalo.aguardandoFim)
+                }
                 className={cn(
                   "h-14 flex-col gap-0 rounded-md px-1 font-semibold",
                   ESTILO_MES[estado],
@@ -149,10 +155,12 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
           <Button type="button" variant="outline" size="sm" onClick={() => aplicar(intervaloEsteMes(hoje), true)}>
             Este mês
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => aplicar(intervaloProximosMeses(hoje, 3), true)}>
-            Próximos 3 meses
-          </Button>
-          {rotulo && (
+          {!unico && (
+            <Button type="button" variant="outline" size="sm" onClick={() => aplicar(intervaloProximosMeses(hoje, 3), true)}>
+              Próximos 3 meses
+            </Button>
+          )}
+          {rotulo && !unico && (
             <Button
               type="button"
               variant="ghost"
@@ -164,7 +172,9 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
             </Button>
           )}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Valor em cada mês: quanto falta antecipar com vencimento nele.</p>
+        {!unico && (
+          <p className="mt-2 text-xs text-muted-foreground">Valor em cada mês: quanto falta antecipar com vencimento nele.</p>
+        )}
       </PopoverContent>
     </Popover>
   );

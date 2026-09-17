@@ -14,6 +14,7 @@ import { IntervaloMesesPicker } from "@/components/intervalo-meses-picker";
 import { ProdutosVendaPopover, type ProdutosDaVenda } from "@/components/produtos-venda-popover";
 import { LegendaParcelas, ParcelasVendaPopover } from "@/components/parcelas-venda-popover";
 import { PlanilhaControlePopover } from "@/components/planilha-controle-popover";
+import { PlanilhaFolhaPopover } from "@/components/planilha-folha-popover";
 import AntecipacaoCompradores, { TABELA_COM_ROLAGEM } from "@/components/antecipacao-compradores";
 import { TAXA_MENSAL_PADRAO } from "@/lib/antecipacao";
 import type {
@@ -720,8 +721,12 @@ export default function AntecipacaoClient({
             </div>
             Vendas — Antecipação
           </CardTitle>
-          {/* A base inteira no formato da planilha da equipe (design v7 aprovado). */}
-          <PlanilhaControlePopover empresas={empresasDisponiveis} hoje={hoje} />
+          <div className="flex flex-wrap gap-2">
+            {/* A base inteira no formato da planilha da equipe (design v7 aprovado). */}
+            <PlanilhaControlePopover empresas={empresasDisponiveis} hoje={hoje} />
+            {/* A coluna Desconto de Produto da folha do Domínio (design de 17/09 aprovado). */}
+            <PlanilhaFolhaPopover empresas={empresasDisponiveis} hoje={hoje} />
+          </div>
           </div>
         </CardHeader>
         <CardContent>{fila}</CardContent>

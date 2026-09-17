@@ -10,6 +10,7 @@ import {
   normalizarFiltroPlanilha,
   type ResumoPlanilha,
 } from "@/lib/planilha-controle";
+import { SELECT_VENDA_FOLHA, montarPlanilhaFolha, normalizarCompetencia } from "@/lib/planilha-folha";
 import { hojeDataPura } from "@/lib/data-pura";
 import { valorTotalVenda } from "@/lib/venda-utils";
 
@@ -98,4 +99,27 @@ export async function resumoPlanilhaControleAction(entrada: {
 
   const vendas = await prisma.venda.findMany({ where: WHERE_VENDA_ANTECIPAVEL, select: SELECT_VENDA_PLANILHA });
   return { ok: true, resumo: montarPlanilhaControle(vendas, filtro, hojeDataPura()).resumo };
+}
+
+export type RespostaResumoFolha =
+  | { ok: true; resumo: { compradores: number; total: number; semMatricula: number } }
+  | { ok: false; erro: string };
+
+/**
+ * Resumo do popover "Baixar planilha da folha" — quantos compradores, o total a
+ * descontar e quantos estão sem matrícula na competência. Mesmo modelo e mesmo
+ * recorte do download (`/api/relatorios/folha-xlsx`), que também exige a
+ * empresa. Guarda própria.
+ */
+export async function resumoPlanilhaFolhaAction(entrada: { competencia?: string; empresa?: string }): Promise<RespostaResumoFolha> {
+  await requireAdminOrThrow();
+
+  const competencia = normalizarCompetencia(entrada?.competencia);
+  if (!competencia) return { ok: false, erro: "Competência inválida." };
+  const empresa = typeof entrada?.empresa === "string" ? entrada.empresa.trim() : "";
+  if (!empresa || empresa === "todas") return { ok: false, erro: "Escolha a empresa." };
+
+  const vendas = await prisma.venda.findMany({ where: WHERE_VENDA_ANTECIPAVEL, select: SELECT_VENDA_FOLHA });
+  const planilha = montarPlanilhaFolha(vendas, { competencia, empresa });
+  return { ok: true, resumo: { compradores: planilha.linhas.length, total: planilha.total, semMatricula: planilha.semMatricula } };
 }
