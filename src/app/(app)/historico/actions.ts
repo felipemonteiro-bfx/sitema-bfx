@@ -6,6 +6,7 @@ import { revalidarVenda } from "@/lib/revalidacao";
 import { createAuditLog } from "@/lib/audit";
 import { sendVendaNotification } from "@/lib/email";
 import {
+  FORMA_PAGAMENTO,
   formaFromLegacyFlags,
   isFormaPagamento,
   legacyFlagsFromForma,
@@ -14,7 +15,7 @@ import {
 import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
 import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { requireSessionOrThrow } from "@/lib/guards";
-import { valorParcelaAposEdicao } from "@/lib/parcelas";
+import { parcelaUnicaDaFolha, valorParcelaAposEdicao } from "@/lib/parcelas";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
 import { produtoItemSchema } from "@/lib/validations/venda";
@@ -206,6 +207,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         {
           paga: p.paga,
           dataPagamento: p.dataPagamento,
+          dataVencimento: p.dataVencimento,
+          valorParcela: p.valorParcela,
           antecipada: p.antecipada,
           origemPagamento: p.origemPagamento ?? null,
           asaasPaymentId: p.asaasPaymentId ?? null,
@@ -273,6 +276,37 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       limparParcelasSemPayload = true;
     }
 
+    // Em 1x sem payload (a secao de datas nao aparece), as linhas passam a ser as de
+    // `parcelaUnicaDaFolha`: em folha, a parcela 1 recriada com o vencimento e o total
+    // atuais; fora da folha, nenhuma. Com o total desconhecido nao da para gerar: nao mexe.
+    const totalConhecido = itens.length > 0 || formData.has("valor") || legadoDoBanco != null;
+    const linhasUnicas =
+      parcelasForm.length === 0 && parcelasNum === 1 && totalConhecido
+        ? parcelaUnicaDaFolha({ emFolha: formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA, dataVenda: new Date(data), total })
+            // Parcela paga ou antecipada mantem o vencimento e o valor gravados: a linha e o
+            // registro do que a Prudent pagou. Aplicado aqui, e nao na hora de gravar, para a
+            // taxa de antecipacao sair da MESMA lista que vai para o banco.
+            .map((p) => {
+              const existente = pagasMap.get(p.numeroParcela);
+              return existente && (existente.paga || existente.antecipada)
+                ? { ...p, dataVencimento: existente.dataVencimento, valorParcela: existente.valorParcela }
+                : p;
+            })
+        : null;
+    if (linhasUnicas) {
+      // So recusa a parcela travada que SUMIRIA (virou outra forma de pagamento, ou sobrava linha
+      // de um parcelamento maior). A parcela 1 que fica e preservada mais abaixo.
+      const numerosFinaisUnicos = new Set(linhasUnicas.map((p) => p.numeroParcela));
+      const travadas = parcelasExistentes.filter((p) => (p.paga || p.antecipada) && !numerosFinaisUnicos.has(p.numeroParcela));
+      if (travadas.length > 0) {
+        const numeros = travadas.map((p) => p.numeroParcela).join(", ");
+        return {
+          success: false,
+          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ja esta(o) paga(s) ou antecipada(s) e seria(m) apagada(s).`,
+        };
+      }
+    }
+
     const vendedorTexto = String(formData.get("vendedor") || "");
     const vendedorUser = vendedorTexto ? await prisma.usuario.findFirst({
       where: { OR: [{ username: { equals: vendedorTexto, mode: "insensitive" } }, { nomeExibicao: { equals: vendedorTexto, mode: "insensitive" } }] },
@@ -287,7 +321,9 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     const parcelasParaCusto =
       parcelasForm.length > 0
         ? parcelasForm.map((p) => ({ dataVencimento: p.dataVencimento, valorParcela: p.valorParcela }))
-        : parcelasExistentes.map((p) => ({ dataVencimento: p.dataVencimento, valorParcela: p.valorParcela }));
+        : linhasUnicas
+          ? linhasUnicas
+          : parcelasExistentes.map((p) => ({ dataVencimento: p.dataVencimento, valorParcela: p.valorParcela }));
 
     // Custo de antecipacao Prudent (QK-LGJ-01): dado derivado da forma de
     // pagamento, no mesmo espirito do comentario acima sobre
@@ -307,11 +343,13 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     // `antecipar` (todas -> 1, algumas -> 3): sem isto uma venda em 1 que ganhasse uma
     // parcela nova a esconderia da fila para sempre. Sem nenhuma parcela marcada o flag
     // nao e tocado — as vendas legadas tem a antecipacao so na venda (antecipada = 1).
-    const numerosFinais = limparParcelasSemPayload
-      ? []
-      : parcelasForm.length > 0
-        ? parcelasForm.map((p) => p.numeroParcela)
-        : parcelasExistentes.map((p) => p.numeroParcela);
+    const numerosFinais = linhasUnicas
+      ? linhasUnicas.map((p) => p.numeroParcela)
+      : limparParcelasSemPayload
+        ? []
+        : parcelasForm.length > 0
+          ? parcelasForm.map((p) => p.numeroParcela)
+          : parcelasExistentes.map((p) => p.numeroParcela);
     const antecipadasAposSalvar = numerosFinais.filter((n) => pagasMap.get(n)?.antecipada).length;
     const novoStatusAntecipacao =
       antecipadasAposSalvar === 0 ? undefined : antecipadasAposSalvar === numerosFinais.length ? 1 : 3;
@@ -321,7 +359,6 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     // valorParcelaAposEdicao). O total gravado e reconstruido do mesmo jeito que `total`.
     // Sem itens, sem `valor` e sem a venda gravada para completar, `total` sai 0 por
     // falta de dado, não por mudança real.
-    const totalConhecido = itens.length > 0 || formData.has("valor") || legadoDoBanco != null;
     const novoValorParcela = valorParcelaAposEdicao({
       antes: vendaAntes ? { parcelas: vendaAntes.parcelas, total: valorTotalVenda(vendaAntes) } : null,
       depois: { parcelas: parcelasNum, total: totalConhecido ? total : null },
@@ -406,6 +443,34 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
             };
           }),
         });
+      } catch {
+        // Tabela parcelas_vencimento pode não existir em produção antiga
+      }
+    } else if (linhasUnicas && (linhasUnicas.length > 0 || parcelasExistentes.length > 0)) {
+      // 1x: ja foi verificado acima que nenhuma linha descartada esta paga ou antecipada. A
+      // parcela mantida leva a baixa e a antecipacao que tinha — e, se estiver travada, tambem o
+      // vencimento e o valor gravados: a linha antecipada e o registro do que a Prudent pagou.
+      try {
+        await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
+        if (linhasUnicas.length > 0) {
+          await prisma.parcelaVencimento.createMany({
+            data: linhasUnicas.map((p) => {
+              const existente = pagasMap.get(p.numeroParcela);
+              return {
+                vendaId: id,
+                numeroParcela: p.numeroParcela,
+                dataVencimento: p.dataVencimento,
+                valorParcela: p.valorParcela,
+                paga: existente?.paga ?? false,
+                dataPagamento: existente?.dataPagamento ?? null,
+                antecipada: existente?.antecipada ?? false,
+                origemPagamento: existente?.origemPagamento ?? null,
+                asaasPaymentId: existente?.asaasPaymentId ?? null,
+                baixaPor: existente?.baixaPor ?? null,
+              };
+            }),
+          });
+        }
       } catch {
         // Tabela parcelas_vencimento pode não existir em produção antiga
       }

@@ -18,6 +18,7 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
+import { parcelasDaVendaRapida } from "@/lib/parcelas";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { signReciboId } from "@/lib/recibo-url";
@@ -273,24 +274,13 @@ export async function criarVendaV2(
     // calculo do custo de antecipacao logo abaixo E a criacao das linhas
     // dentro da transacao. Duas fontes divergentes fariam o numero da venda
     // discordar do que a tela da Prudent mostra para a mesma venda.
-    const parcelasParaGravar: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] =
-      parcelasValidadas && parcelasValidadas.length > 0
-        ? parcelasValidadas.map((p) => ({
-            numeroParcela: p.numeroParcela,
-            dataVencimento: new Date(p.dataVencimento),
-            valorParcela: p.valorParcela,
-          }))
-        : parcelas > 1
-          ? (() => {
-              // Gerar parcelas automaticamente: regra dia 20 -> dia 10.
-              const primeiroVenc = calcularPrimeiroVencimento(new Date(dataStr));
-              return Array.from({ length: parcelas }).map((_, i) => ({
-                numeroParcela: i + 1,
-                dataVencimento: new Date(primeiroVenc.getFullYear(), primeiroVenc.getMonth() + i, 10),
-                valorParcela,
-              }));
-            })()
-          : [];
+    const parcelasParaGravar = parcelasDaVendaRapida({
+      informadas: parcelasValidadas,
+      parcelas,
+      dataVenda: new Date(dataStr),
+      total: totalVenda,
+      emFolha: formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA,
+    });
 
     // Custo de antecipacao Prudent (QK-LGJ-01): toda venda em desconto em
     // folha vai ser antecipada na Prudent, entao o desagio ja e custo certo

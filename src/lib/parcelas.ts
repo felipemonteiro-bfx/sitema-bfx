@@ -1,3 +1,5 @@
+import { calcularPrimeiroVencimento } from "@/lib/utils";
+
 export const VALOR_PARCELA_MIN = 200; // parcela mínima (configurável)
 export const VALOR_PARCELA_MAX = 475; // parcela máxima / teto (configurável)
 
@@ -28,4 +30,56 @@ export function valorParcelaAposEdicao(input: {
   const mudouTotal = Math.abs(antes.total - depois.total) >= 0.01;
   if (!mudouParcelas && !mudouTotal) return undefined;
   return depois.parcelas > 0 ? Math.trunc((depois.total / depois.parcelas) * 100) / 100 : 0;
+}
+
+/**
+ * A linha de `parcelas_vencimento` da venda em desconto em folha em 1x (2026-09-17). A venda
+ * rápida e a edição só geravam linhas com mais de uma parcela: a venda em 1x ficava sem baixa,
+ * sem antecipação e fora da fila da Prudent. Vencimento pela regra da criação
+ * (`calcularPrimeiroVencimento`), valor = total em centavos. Fora da folha, nenhuma linha.
+ * Ver docs/superpowers/specs/2026-09-17-parcela-venda-folha-1x.md.
+ */
+/**
+ * As linhas de `parcelas_vencimento` que a venda rápida grava. Puro, para a regra ser testável
+ * (a action importa Asaas, WhatsApp e e-mail e não roda em teste). Datas informadas no formulário
+ * mandam; sem elas, parcelada gera uma por mês no dia 10 em UTC com o valor truncado que o
+ * cabeçalho também grava, e 1x cai em `parcelaUnicaDaFolha`.
+ */
+export function parcelasDaVendaRapida(input: {
+  informadas?: { numeroParcela: number; dataVencimento: string | Date; valorParcela: number }[];
+  parcelas: number;
+  dataVenda: Date;
+  total: number;
+  emFolha: boolean;
+}): { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] {
+  const { informadas, parcelas, dataVenda, total, emFolha } = input;
+  if (informadas && informadas.length > 0) {
+    return informadas.map((p) => ({
+      numeroParcela: p.numeroParcela,
+      dataVencimento: new Date(p.dataVencimento),
+      valorParcela: p.valorParcela,
+    }));
+  }
+  if (parcelas > 1) {
+    const primeiro = calcularPrimeiroVencimento(dataVenda);
+    const valorParcela = Math.trunc((total / parcelas) * 100) / 100;
+    return Array.from({ length: parcelas }, (_, i) => ({
+      numeroParcela: i + 1,
+      // UTC como o resto da regra (`calcularPrimeiroVencimento`, a planilha da folha e a
+      // migração): com o construtor local, um servidor a leste do meridiano gravaria dia 9.
+      dataVencimento: new Date(Date.UTC(primeiro.getUTCFullYear(), primeiro.getUTCMonth() + i, 10)),
+      valorParcela,
+    }));
+  }
+  return parcelaUnicaDaFolha({ emFolha, dataVenda, total });
+}
+
+export function parcelaUnicaDaFolha(input: {
+  emFolha: boolean;
+  dataVenda: Date;
+  total: number;
+}): { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] {
+  const centavos = Math.round(input.total * 100);
+  if (!input.emFolha || !(centavos > 0) || Number.isNaN(input.dataVenda.getTime())) return [];
+  return [{ numeroParcela: 1, dataVencimento: calcularPrimeiroVencimento(input.dataVenda), valorParcela: centavos / 100 }];
 }
