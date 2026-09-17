@@ -258,6 +258,7 @@ model Config {
   asaasApiKey           String? @map("asaas_api_key")         // API Key do Asaas (boletos)
   asaasEnv              String? @map("asaas_env")             // sandbox | production
   asaasWebhookToken     String? @map("asaas_webhook_token")   // token do header asaas-access-token (baixa de parcela)
+  asaasWebhookUltimoAvisoEm DateTime? @map("asaas_webhook_ultimo_aviso_em") // último POST autenticado do Asaas
   evolutionApiUrl       String? @map("evolution_api_url")
   evolutionApiKey       String? @map("evolution_api_key")
   evolutionInstance     String? @map("evolution_instance")    // Nome da instância na Evolution API

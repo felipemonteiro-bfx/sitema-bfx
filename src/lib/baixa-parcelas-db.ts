@@ -80,6 +80,18 @@ export async function configAsaasAtual(): Promise<{ asaas: AsaasConfig | null; w
   return { asaas: getAsaasConfig(cfg ?? undefined), webhookToken: cfg?.asaasWebhookToken ?? null };
 }
 
+/**
+ * Marca que o Asaas chamou o webhook com token válido — a tela mostra "Recebendo avisos". Só grava
+ * onde o token ainda é o validado: um aviso com o token antigo que termine depois de "Gerar novo
+ * token" não pode marcar o novo como cadastrado.
+ */
+export async function registrarAvisoWebhookAsaas(tokenValidado: string, agora: Date = new Date()) {
+  await prisma.config.updateMany({
+    where: { asaasWebhookToken: tokenValidado },
+    data: { asaasWebhookUltimoAvisoEm: agora },
+  });
+}
+
 /** Busca a cobrança atual e aplica — usado pelo webhook, onde o evento é só gatilho. */
 export async function aplicarCobrancaAsaasPorId(config: AsaasConfig, paymentId: string) {
   return aplicarPagamentoAsaas(await getPayment(config, paymentId));

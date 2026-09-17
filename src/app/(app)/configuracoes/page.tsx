@@ -18,6 +18,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { checkboxComoNumero } from "@/lib/form-values";
 import { PageHeader } from "@/components/page-header";
+import { WebhookAsaasCard } from "@/components/webhook-asaas-card";
+import { formatarUltimoAviso, mascararToken, statusWebhookAsaas, urlWebhookAsaas } from "@/lib/webhook-asaas-token";
+import { headers } from "next/headers";
 
 type Search = { tab?: string };
 
@@ -252,6 +255,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     // Tabela config pode ter colunas ausentes em produção
   }
 
+  // Webhook do Asaas: a página recebe só o token mascarado (o completo sai por action, ao copiar).
+  const headerList = await headers();
+  const webhookAsaas = {
+    url: urlWebhookAsaas(process.env.NEXT_PUBLIC_APP_URL, headerList.get("x-forwarded-host") ?? headerList.get("host")),
+    tokenMascarado: mascararToken(cfg?.asaasWebhookToken),
+    status: statusWebhookAsaas({ token: cfg?.asaasWebhookToken ?? null, ultimoAvisoEm: cfg?.asaasWebhookUltimoAvisoEm ?? null }),
+    ultimoAviso: cfg?.asaasWebhookUltimoAvisoEm ? formatarUltimoAviso(cfg.asaasWebhookUltimoAvisoEm) : null,
+  };
+
   // Endereço de coleta salvo como JSON (mesmo formato de UBER_PICKUP_ADDRESS_JSON) — aqui
   // vira 5 campos separados só para a UI ser preenchível sem exigir digitar JSON à mão.
   let uberPickup: { street: string; city: string; state: string; zip: string; country: string } = {
@@ -355,47 +367,50 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             value: "asaas",
             label: "Asaas",
             content: (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Integração Asaas (Boletos)</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Configure a API Key do Asaas para geração de boletos. As chaves aqui têm prioridade sobre
-                    as variáveis de ambiente ASAAS_API_KEY e ASAAS_ENV.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <form action={saveAsaas} className="space-y-4">
-                    <div className="space-y-1">
-                      <Label htmlFor="asaasApiKey">API Key</Label>
-                      <Input
-                        id="asaasApiKey"
-                        name="asaasApiKey"
-                        type="password"
-                        placeholder={(cfg as { asaasApiKey?: string | null })?.asaasApiKey ? "•••••••• (salva)" : "$aas_xxxxxxxxxxxxxxxx"}
-                      />
-                      {(cfg as { asaasApiKey?: string | null })?.asaasApiKey && (
-                        <div className="text-xs text-muted-foreground">Chave Asaas salva.</div>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Ambiente</Label>
-                      <FormSelect
-                        name="asaasEnv"
-                        options={[
-                          { value: "sandbox", label: "Sandbox (testes)" },
-                          { value: "production", label: "Producao" },
-                        ]}
-                        defaultValue={(cfg as { asaasEnv?: string | null })?.asaasEnv || "sandbox"}
-                        searchable={false}
-                      />
-                      <div className="text-xs text-muted-foreground">
-                        Use sandbox para testes; produção para boletos reais.
+              <div className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Integração Asaas (Boletos)</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Configure a API Key do Asaas para geração de boletos. As chaves aqui têm prioridade sobre
+                      as variáveis de ambiente ASAAS_API_KEY e ASAAS_ENV.
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <form action={saveAsaas} className="space-y-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="asaasApiKey">API Key</Label>
+                        <Input
+                          id="asaasApiKey"
+                          name="asaasApiKey"
+                          type="password"
+                          placeholder={(cfg as { asaasApiKey?: string | null })?.asaasApiKey ? "•••••••• (salva)" : "$aas_xxxxxxxxxxxxxxxx"}
+                        />
+                        {(cfg as { asaasApiKey?: string | null })?.asaasApiKey && (
+                          <div className="text-xs text-muted-foreground">Chave Asaas salva.</div>
+                        )}
                       </div>
-                    </div>
-                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
-                  </form>
-                </CardContent>
-              </Card>
+                      <div className="space-y-1">
+                        <Label>Ambiente</Label>
+                        <FormSelect
+                          name="asaasEnv"
+                          options={[
+                            { value: "sandbox", label: "Sandbox (testes)" },
+                            { value: "production", label: "Producao" },
+                          ]}
+                          defaultValue={(cfg as { asaasEnv?: string | null })?.asaasEnv || "sandbox"}
+                          searchable={false}
+                        />
+                        <div className="text-xs text-muted-foreground">
+                          Use sandbox para testes; produção para boletos reais.
+                        </div>
+                      </div>
+                      <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                    </form>
+                  </CardContent>
+                </Card>
+                <WebhookAsaasCard {...webhookAsaas} />
+              </div>
             ),
           },
           {

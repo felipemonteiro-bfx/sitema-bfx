@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { aplicarCobrancaAsaasPorId, configAsaasAtual } from "@/lib/baixa-parcelas-db";
+import { aplicarCobrancaAsaasPorId, configAsaasAtual, registrarAvisoWebhookAsaas } from "@/lib/baixa-parcelas-db";
 import { segredoIgual } from "@/lib/segredo";
 
 export const runtime = "nodejs";
@@ -18,9 +18,12 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request) {
   const { asaas, webhookToken } = await configAsaasAtual();
-  if (!segredoIgual(req.headers.get("asaas-access-token"), webhookToken)) {
+  if (!webhookToken || !segredoIgual(req.headers.get("asaas-access-token"), webhookToken)) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
+
+  // Autenticado: registra o aviso (a tela de Configurações mostra que o cadastro no Asaas funciona).
+  await registrarAvisoWebhookAsaas(webhookToken).catch((e) => console.error("[webhook-asaas] Falha ao registrar aviso:", e));
 
   const corpo = (await req.json().catch(() => null)) as { event?: string; payment?: { id?: string } } | null;
   const paymentId = corpo?.payment?.id;

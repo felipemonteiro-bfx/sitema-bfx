@@ -28,7 +28,9 @@ import {
   formaPagamentoLabel,
 } from "@/lib/forma-pagamento";
 import { resolverPeriodo, paraInputDate, fimInclusivoParaInput } from "@/lib/periodo-data";
-import { formatarDataPura } from "@/lib/data-pura";
+import { formatarDataPura, hojeDataPura } from "@/lib/data-pura";
+import { getSession } from "@/lib/session";
+import { totalParcelasExibido, type ParcelaRecebimento } from "@/lib/recebimento-parcelas";
 
 // Data de venda e data pura (meia-noite UTC): formatar em Manaus mostrava o dia
 // anterior — 02/07 virava 01/07 — e fazia o filtro de periodo parecer quebrado.
@@ -178,19 +180,46 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   // Parcelas ja marcadas como pagas: alimenta o aviso de protecao em EditParcelasSection
   // (T-ddr-01) — o front nao pode deixar o usuario cortar uma parcela ja paga da lista.
   let editParcelasPagas: number[] = [];
-  if (editVenda && (editVenda.parcelas || 1) > 1) {
+  // "Recebimento das parcelas": todas as parcelas, inclusive de venda 1x. So admin da baixa —
+  // as actions tambem exigem admin; aqui e so para nao mostrar botao que seria recusado.
+  let editRecebimento: ParcelaRecebimento[] = [];
+  const podeDarBaixa = editVenda ? (await getSession())?.role === "admin" : false;
+  if (editVenda) {
     try {
       const raw = await prisma.parcelaVencimento.findMany({
         where: { vendaId: editVenda.id },
-        select: { numeroParcela: true, dataVencimento: true, valorParcela: true, paga: true },
-        orderBy: { numeroParcela: "asc" },
+        select: {
+          id: true,
+          numeroParcela: true,
+          dataVencimento: true,
+          valorParcela: true,
+          paga: true,
+          dataPagamento: true,
+          origemPagamento: true,
+          baixaPor: true,
+        },
+        orderBy: [{ numeroParcela: "asc" }, { id: "asc" }],
       });
-      editParcelasVenc = raw.map((p) => ({
+      if ((editVenda.parcelas || 1) > 1) {
+        editParcelasVenc = raw.map((p) => ({
+          numeroParcela: p.numeroParcela,
+          dataVencimento: p.dataVencimento.toISOString().slice(0, 10),
+          valorParcela: p.valorParcela,
+        }));
+        editParcelasPagas = raw.filter((p) => p.paga).map((p) => p.numeroParcela);
+      }
+      const totalParcelas = totalParcelasExibido(editVenda.parcelas, raw.map((p) => p.numeroParcela));
+      editRecebimento = raw.map((p) => ({
+        id: p.id,
         numeroParcela: p.numeroParcela,
+        totalParcelas,
         dataVencimento: p.dataVencimento.toISOString().slice(0, 10),
         valorParcela: p.valorParcela,
+        paga: p.paga,
+        dataPagamento: p.dataPagamento ? p.dataPagamento.toISOString().slice(0, 10) : null,
+        origemPagamento: p.origemPagamento,
+        baixaPor: p.baixaPor,
       }));
-      editParcelasPagas = raw.filter((p) => p.paga).map((p) => p.numeroParcela);
     } catch {
       // Tabela parcelas_vencimento pode não existir em produção antiga
     }
@@ -593,6 +622,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             editVenda={editVenda}
             editParcelasVenc={editParcelasVenc}
             parcelasPagas={editParcelasPagas}
+            recebimento={{ parcelas: editRecebimento, hoje: hojeDataPura(), podeDarBaixa }}
             vendedores={vendedores}
             updateAction={updateVenda}
             deleteAction={deleteVenda}

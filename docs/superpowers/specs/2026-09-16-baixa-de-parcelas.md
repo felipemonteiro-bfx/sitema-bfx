@@ -82,6 +82,31 @@ sincronização no log do cron; carga da Prudent só em venda ativa; baixa manua
 desfazer condicionado à origem lida; `updateVenda` não duplica `asaas_payment_id` quando o payload
 repete número de parcela (evita P2002 depois do `deleteMany`).
 
+### Telas (desenho aprovado pelo André em 2026-09-17)
+
+Artifact: https://claude.ai/artifact/GJLH94z5xEt8H5xeNPAGVh
+
+- **Ficha da venda (`/historico`) — "Recebimento das parcelas"**: todas as parcelas da venda
+  (inclusive 1x), com vencimento, valor, situação (Paga / Vencida com dias de atraso / Em aberto)
+  e origem da baixa (Prudent · antecipada; Asaas · boleto pago em data; Manual · data · por quem).
+  "Recebido R$ X de R$ Y". Só admin vê "Dar baixa" (abre data, padrão hoje, sem data futura) e
+  "Desfazer" (baixa manual desfaz direto; Asaas/Prudent pede confirmação). A baixa é gravada na
+  hora, fora do "Salvar alterações" da venda. Regra de exibição pura em
+  `src/lib/recebimento-parcelas.ts`.
+- **Configurações › Asaas — "Baixa automática de boletos"**: URL
+  `${NEXT_PUBLIC_APP_URL}/api/webhooks/asaas` para copiar; token mascarado com Copiar e
+  "Gerar novo token" (confirmação quando já existe); passo a passo do painel do Asaas; aviso de
+  gerar o token antes de cadastrar. Selo: sem token → "Sem token"; token sem aviso recebido →
+  "Falta cadastrar no Asaas"; aviso recebido → "Recebendo avisos" com data do último.
+  `config.asaas_webhook_ultimo_aviso_em` é gravado pelo webhook a cada chamada autenticada,
+  condicionado ao token validado (aviso com o token antigo não marca o novo como cadastrado).
+  Token: 48 caracteres aleatórios base64url, sem três caracteres iguais seguidos. A página recebe
+  só o token mascarado; o Copiar busca o completo por action só de admin
+  (`lerTokenWebhookAsaas`), e sem área de transferência mostra o token num diálogo.
+- Ajustes da revisão: parcela com número repetido (vendas 51–53) mostra aviso e o "n/total" usa o
+  maior número; calendário da baixa não deixa escolher data futura; URL em https fora de
+  localhost quando `NEXT_PUBLIC_APP_URL` não está definido.
+
 ## Fora de escopo
 
 Conciliação de PIX/cartão; reativar cobrança por WhatsApp; import do status `PAGO` da planilha

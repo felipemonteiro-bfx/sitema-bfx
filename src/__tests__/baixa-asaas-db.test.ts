@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const dbMock = {
   parcelaVencimento: { findMany: vi.fn(), updateMany: vi.fn() },
   venda: { findMany: vi.fn() },
-  config: { findFirst: vi.fn() },
+  config: { findFirst: vi.fn(), updateMany: vi.fn() },
 };
 const asaasMock = {
   getAsaasConfig: vi.fn((): { baseUrl: string; apiKey: string } | null => ({ baseUrl: "https://api.asaas.com", apiKey: "k" })),
@@ -117,6 +117,17 @@ describe("POST /api/webhooks/asaas", () => {
     expect((await POST(requisicao("token-errado-000000", EVENTO))).status).toBe(401);
     expect((await POST(requisicao(null, EVENTO))).status).toBe(401);
     expect(asaasMock.getPayment).not.toHaveBeenCalled();
+    expect(dbMock.config.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("chamada autenticada registra o ultimo aviso, mesmo sem cobranca no corpo", async () => {
+    await POST(requisicao("token-certo-123456", { event: "PAYMENT_CREATED" }));
+    // Condicionado ao token validado: aviso com o token antigo, gravado depois de "Gerar novo
+    // token", nao pode marcar o novo como "Recebendo avisos".
+    expect(dbMock.config.updateMany).toHaveBeenCalledWith({
+      where: { asaasWebhookToken: "token-certo-123456" },
+      data: { asaasWebhookUltimoAvisoEm: expect.any(Date) },
+    });
   });
 
   it("token certo: busca a cobranca atual no Asaas e aplica o status dela, nao o do evento", async () => {

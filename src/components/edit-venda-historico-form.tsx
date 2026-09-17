@@ -24,6 +24,8 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
+import { RecebimentoParcelas } from "@/components/recebimento-parcelas";
+import type { ParcelaRecebimento } from "@/lib/recebimento-parcelas";
 
 type ProdutoItem = {
   produtoNome: string;
@@ -65,6 +67,7 @@ type Props = {
   editVenda: EditVendaData;
   editParcelasVenc: Parcela[];
   parcelasPagas?: number[];
+  recebimento?: { parcelas: ParcelaRecebimento[]; hoje: string; podeDarBaixa: boolean };
   vendedores: { nomeExibicao: string | null; username: string }[];
   updateAction: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
   deleteAction: (formData: FormData) => Promise<void>;
@@ -75,6 +78,7 @@ export function EditVendaHistoricoForm({
   editVenda,
   editParcelasVenc,
   parcelasPagas,
+  recebimento,
   vendedores,
   updateAction,
   deleteAction,
@@ -107,7 +111,7 @@ export function EditVendaHistoricoForm({
   }, [updateAction, router]);
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-3">
+    <form onSubmit={handleSubmit} className="grid min-w-0 gap-4 md:grid-cols-3">
       <input type="hidden" name="id" value={editVenda.id} />
 
       <FormSecaoTitulo>Dados da venda</FormSecaoTitulo>
@@ -177,6 +181,14 @@ export function EditVendaHistoricoForm({
           options={FORMAS_PAGAMENTO_LIST.map((f) => ({ value: f, label: formaPagamentoLabel(f) }))}
         />
       </div>
+
+      {recebimento && recebimento.parcelas.length > 0 && (
+        <RecebimentoParcelas
+          parcelas={recebimento.parcelas}
+          hoje={recebimento.hoje}
+          podeDarBaixa={recebimento.podeDarBaixa}
+        />
+      )}
 
       <FormSecaoTitulo>Custos e descontos</FormSecaoTitulo>
 

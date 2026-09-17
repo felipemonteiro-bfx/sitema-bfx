@@ -24,10 +24,12 @@ export interface DateInputProps {
   "aria-label"?: string
   disabled?: boolean
   required?: boolean
+  /** "YYYY-MM-DD": dias depois dele ficam desabilitados no calendario. */
+  max?: string
 }
 
 const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
-  ({ id, name, defaultValue, value, onChange, className, disabled, required, ...props }, ref) => {
+  ({ id, name, defaultValue, value, onChange, className, disabled, required, max, ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const controlado = value !== undefined
     const [interno, setInterno] = React.useState<Date | undefined>(() =>
@@ -100,6 +102,7 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             // Desliga o toggle-off na origem onde limpar nao e' operacao valida: sem
             // isto o calendario devolve `undefined` ao tocar no dia ja selecionado.
             required={required}
+            disabled={max ? { after: parseDataISO(max)! } : undefined}
             onSelect={handleSelect}
             initialFocus
           />
