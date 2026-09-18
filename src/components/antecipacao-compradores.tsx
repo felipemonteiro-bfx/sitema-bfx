@@ -47,9 +47,16 @@ function normalizar(texto: string): string {
 }
 
 /** Valor em negrito e a quantidade embaixo — a mesma ordem em toda coluna de dinheiro. */
-function CelulaValor({ qtd, valor, tom }: { qtd: number; valor: number; tom: 'success' | 'warning' | 'neutro' }) {
+function CelulaValor({ qtd, valor, tom }: { qtd: number; valor: number; tom: 'success' | 'info' | 'warning' | 'neutro' }) {
   if (qtd === 0) return <span className="text-muted-foreground">—</span>;
-  const cor = tom === 'success' ? 'text-success-text' : tom === 'warning' ? 'text-warning-text' : 'text-foreground';
+  const cor =
+    tom === 'success'
+      ? 'text-success-text'
+      : tom === 'info'
+        ? 'text-info-text'
+        : tom === 'warning'
+          ? 'text-warning-text'
+          : 'text-foreground';
   return (
     <>
       <div className={`font-bold ${cor}`}>{formatBRL(valor)}</div>
@@ -95,7 +102,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-lg bg-success-bg border border-success px-4 py-3">
             <div className="text-xs font-bold uppercase tracking-wider text-success-text">Já antecipado</div>
             <div className="text-xl sm:text-2xl font-bold text-success-text tabular-nums leading-tight mt-0.5">
@@ -105,8 +112,18 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
               {plural(totais.antecipadas.qtd, 'parcela', 'parcelas')}
             </div>
           </div>
+          {/* Enviado à Prudent e ainda sem retorno (2026-09-17): saiu da fila, mas não é dinheiro. */}
+          <div className="rounded-lg bg-info-bg border border-info px-4 py-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-info-text">Em andamento</div>
+            <div className="text-xl sm:text-2xl font-bold text-info-text tabular-nums leading-tight mt-0.5">
+              {formatBRL(totais.emAndamento.valor)}
+            </div>
+            <div className="text-xs text-info-text font-medium mt-0.5">
+              {plural(totais.emAndamento.qtd, 'parcela', 'parcelas')} · esperando retorno
+            </div>
+          </div>
           <div className="rounded-lg bg-warning-bg border border-warning px-4 py-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-warning-text">Falta antecipar</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-warning-text">A antecipar</div>
             <div className="text-xl sm:text-2xl font-bold text-warning-text tabular-nums leading-tight mt-0.5">
               {formatBRL(totais.aAntecipar.valor)}
             </div>
@@ -195,7 +212,8 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                       <TableRow>
                         <TableHead>Comprador</TableHead>
                         <TableHead className="hidden sm:table-cell text-right">Já antecipado</TableHead>
-                        <TableHead className="text-right">Falta antecipar</TableHead>
+                        <TableHead className="hidden lg:table-cell text-right">Em andamento</TableHead>
+                        <TableHead className="text-right">A antecipar</TableHead>
                         <TableHead className="hidden md:table-cell">Próximo vencimento</TableHead>
                         <TableHead className="w-px">
                           <span className="sr-only">Ações</span>
@@ -226,9 +244,18 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                                   Antecipado: {formatBRL(c.antecipadas.valor)}
                                 </div>
                               )}
+                              {/* A coluna "Em andamento" some antes das outras; o valor vem aqui. */}
+                              {c.emAndamento.qtd > 0 && (
+                                <div className="lg:hidden text-xs font-semibold text-info-text tabular-nums">
+                                  Em andamento: {formatBRL(c.emAndamento.valor)}
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell className="hidden sm:table-cell text-right tabular-nums">
                               <CelulaValor qtd={c.antecipadas.qtd} valor={c.antecipadas.valor} tom="success" />
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell text-right tabular-nums">
+                              <CelulaValor qtd={c.emAndamento.qtd} valor={c.emAndamento.valor} tom="info" />
                             </TableCell>
                             <TableCell className="text-right tabular-nums">
                               {c.aAntecipar.qtd > 0 ? (
@@ -307,7 +334,8 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                       <TableRow>
                         <TableHead>Vencimento</TableHead>
                         <TableHead className="text-right">Já antecipado</TableHead>
-                        <TableHead className="text-right">Falta antecipar</TableHead>
+                        <TableHead className="hidden lg:table-cell text-right">Em andamento</TableHead>
+                        <TableHead className="text-right">A antecipar</TableHead>
                         <TableHead className="hidden sm:table-cell text-right">Vencidas sem antecipação</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -324,10 +352,20 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                           <TableCell className="text-right tabular-nums">
                             <CelulaValor qtd={m.antecipadas.qtd} valor={m.antecipadas.valor} tom="success" />
                           </TableCell>
+                          <TableCell className="hidden lg:table-cell text-right tabular-nums">
+                            <CelulaValor qtd={m.emAndamento.qtd} valor={m.emAndamento.valor} tom="info" />
+                          </TableCell>
                           <TableCell className="text-right tabular-nums">
                             <CelulaValor qtd={m.aAntecipar.qtd} valor={m.aAntecipar.valor} tom="warning" />
                             {/* No celular a coluna de vencidas some; sem isto mes passado
                                 apareceria so com "—" e as vencidas em lugar nenhum. */}
+                            {/* As colunas "Em andamento" e "Vencidas" somem em telas menores;
+                                sem isto o valor não apareceria em lugar nenhum. */}
+                            {m.emAndamento.qtd > 0 && (
+                              <div className="lg:hidden text-xs font-semibold text-info-text tabular-nums">
+                                Em andamento: {formatBRL(m.emAndamento.valor)}
+                              </div>
+                            )}
                             {m.vencidasSemAntecipar.qtd > 0 && (
                               <div className="sm:hidden text-xs text-muted-foreground">
                                 {plural(m.vencidasSemAntecipar.qtd, 'vencida', 'vencidas')}

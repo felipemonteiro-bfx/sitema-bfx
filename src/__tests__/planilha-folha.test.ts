@@ -230,6 +230,30 @@ describe("montarPlanilhaFolha — ordem, sem matrícula e resumo", () => {
     expect(linhas.every((l) => l.nome === "SEM NOME" && l.matricula === "")).toBe(true);
   });
 
+  it("mesma matrícula em cadastros diferentes: uma linha só, e o resumo avisa quais são", () => {
+    // Erro de digitação ou cadastro duplicado junta duas pessoas na mesma linha da folha: o
+    // desconto de uma cairia na outra. A planilha não tem como separar, então precisa avisar.
+    const { linhas, matriculasRepetidas } = montarPlanilhaFolha(
+      [
+        venda({ id: 10, nome: "JOSÉ DA SILVA", matricula: "45" }, [p("2026-09-10", 100)]),
+        venda({ id: 11, nome: "JOSE SILVA", matricula: "00045" }, [p("2026-09-10", 50)]),
+        venda({ id: 12, nome: "ANA LIMA", matricula: "77" }, [p("2026-09-10", 10)]),
+      ],
+      { competencia: AGOSTO }
+    );
+    expect(linhas).toHaveLength(2);
+    // Ordem do comparador pt-BR, que ignora acento: "JOSE DA SILVA" antes de "JOSE SILVA".
+    expect(matriculasRepetidas).toEqual([{ matricula: "45", nomes: ["JOSÉ DA SILVA", "JOSE SILVA"] }]);
+  });
+
+  it("mesmo cadastro com duas compras não é matrícula repetida", () => {
+    const { matriculasRepetidas } = montarPlanilhaFolha(
+      [venda({ id: 20, matricula: "45" }, [p("2026-09-10", 100)]), venda({ id: 20, matricula: "45" }, [p("2026-09-10", 50)])],
+      { competencia: AGOSTO }
+    );
+    expect(matriculasRepetidas).toEqual([]);
+  });
+
   it("resumo: total, quantidade de linhas e quantos estão sem matrícula", () => {
     expect(planilha.total).toBe(420);
     expect(planilha.linhas).toHaveLength(4);
@@ -238,6 +262,12 @@ describe("montarPlanilhaFolha — ordem, sem matrícula e resumo", () => {
   });
 
   it("nenhuma parcela na competência: planilha vazia, total zero", () => {
-    expect(montarPlanilhaFolha(vendas, { competencia: "2027-01" })).toEqual({ competencia: "2027-01", linhas: [], total: 0, semMatricula: 0 });
+    expect(montarPlanilhaFolha(vendas, { competencia: "2027-01" })).toEqual({
+      competencia: "2027-01",
+      linhas: [],
+      total: 0,
+      semMatricula: 0,
+      matriculasRepetidas: [],
+    });
   });
 });

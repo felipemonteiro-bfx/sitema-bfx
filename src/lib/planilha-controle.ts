@@ -108,6 +108,9 @@ const MESES = [
 
 const STATUS: Record<SituacaoParcela, StatusPlanilha> = {
   antecipada: "ANTECIPAÇÃO OK",
+  // Enviada à Prudent, sem retorno confirmado: para a planilha da equipe ainda é "À VENCER" —
+  // só ANTECIPAÇÃO OK entra na coluna K (2026-09-17).
+  em_andamento: "À VENCER",
   a_antecipar: "À VENCER",
   // O sistema não sabe se a folha repassou (PAGO) ou não (PENDENTE DE REPASSE).
   vencida: "VENCIDA - CONFERIR REPASSE",

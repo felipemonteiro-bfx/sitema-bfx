@@ -116,6 +116,7 @@ export async function GET(request: NextRequest) {
             dataVencimento: true,
             valorParcela: true,
             antecipada: true,
+            antecipacaoLoteId: true,
           },
           orderBy: { numeroParcela: 'asc' },
         },
@@ -147,7 +148,8 @@ export async function GET(request: NextRequest) {
         // se fornecido. O denominador de "parcela X/Y" continua sendo o total da
         // venda, nao o do lote.
         const parcelasFiltradas = venda.parcelasVencimento
-          .filter((p) => incluirAntecipadas || !p.antecipada)
+          // Parcela já num lote na Prudent também fica fora: reemitir manda o mesmo título duas vezes.
+          .filter((p) => incluirAntecipadas || (!p.antecipada && p.antecipacaoLoteId == null))
           .filter((p) => {
             if (!periodo) return true;
             const d = new Date(p.dataVencimento);

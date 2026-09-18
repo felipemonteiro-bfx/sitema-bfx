@@ -52,7 +52,7 @@ describe("resumoPlanilhaFolhaAction", () => {
   it("conta compradores, total e sem matrícula — os números do arquivo", async () => {
     expect(await resumoPlanilhaFolhaAction({ competencia: "08/2026", empresa: "AMAZON FIVE" })).toEqual({
       ok: true,
-      resumo: { compradores: 2, total: 425.5, semMatricula: 1 },
+      resumo: { compradores: 2, total: 425.5, semMatricula: 1, matriculasRepetidas: [] },
     });
   });
 });

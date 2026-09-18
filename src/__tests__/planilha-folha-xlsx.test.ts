@@ -16,6 +16,7 @@ const AGOSTO: PlanilhaFolha = {
   ],
   total: 437.5,
   semMatricula: 1,
+  matriculasRepetidas: [],
 };
 
 const CABECALHO = { razaoSocial: "AMAZON FIVE", cnpj: "01.288.370/0001-39" };
@@ -122,7 +123,7 @@ describe("gerarXlsxPlanilhaFolha — o layout do Domínio", () => {
 
 describe("gerarXlsxPlanilhaFolha — competência sem desconto", () => {
   it("só o cabeçalho e o TOTAL zerado na linha 11", () => {
-    const planilha = lerZip(gerarXlsxPlanilhaFolha({ competencia: "2027-01", linhas: [], total: 0, semMatricula: 0 }, CABECALHO)).get(
+    const planilha = lerZip(gerarXlsxPlanilhaFolha({ competencia: "2027-01", linhas: [], total: 0, semMatricula: 0, matriculasRepetidas: [] }, CABECALHO)).get(
       "xl/worksheets/sheet1.xml"
     )!;
     expect(texto(planilha, "A11")).toBe("TOTAL");

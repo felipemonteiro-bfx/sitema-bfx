@@ -1,10 +1,28 @@
 'use client';
 
-import { History, FileSpreadsheet, ImageIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { History, FileSpreadsheet, ImageIcon, Check, Loader2, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DateInput } from '@/components/ui/date-input';
+import { Label } from '@/components/ui/label';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatBRL } from '@/lib/utils';
 import { formatarDataPura } from '@/lib/data-pura';
+import { ROTULO_STATUS_LOTE, STATUS_LOTE } from '@/lib/lote-antecipacao';
+import { cancelarLoteAction, concluirLoteAction } from '@/app/(app)/prudent/actions';
 
 interface Batch {
   id: number;
@@ -15,6 +33,11 @@ interface Batch {
   periodoDescricao: string | null;
   periodoInicio: Date | string | null;
   periodoFim: Date | string | null;
+  /** Ciclo do lote (2026-09-17). */
+  status: string;
+  origem: string;
+  concluidaEm: Date | string | null;
+  concluidaPor: string | null;
 }
 
 interface GrupoSemLote {
@@ -33,9 +56,61 @@ interface Props {
    * "Antecipado" — verdadeiro sobre lotes, enganoso para quem le.
    */
   semLote?: GrupoSemLote[];
+  /** Dia civil de Manaus, para a data do retorno já vir preenchida. */
+  hoje: string;
 }
 
-export default function HistoricoAntecipacoes({ batches, semLote = [] }: Props) {
+/** Cor do selo por status, nos tokens do design system. */
+const ESTILO_STATUS: Record<string, string> = {
+  [STATUS_LOTE.emAndamento]: 'bg-info-bg text-info-text',
+  [STATUS_LOTE.concluido]: 'bg-success-bg text-success-text',
+  [STATUS_LOTE.cancelado]: 'bg-muted text-muted-foreground',
+};
+
+export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: Props) {
+  const router = useRouter();
+  const [concluindo, setConcluindo] = useState<Batch | null>(null);
+  const [cancelando, setCancelando] = useState<Batch | null>(null);
+  const [dataRetorno, setDataRetorno] = useState(hoje);
+  const [salvando, setSalvando] = useState(false);
+
+  const concluir = async () => {
+    if (!concluindo) return;
+    setSalvando(true);
+    try {
+      const r = await concluirLoteAction({ loteId: concluindo.id, dataRetorno });
+      if (!r.ok) {
+        toast.error(r.erro);
+        return;
+      }
+      toast.success(`Lote #${concluindo.id} concluído: ${r.parcelas} parcelas, ${formatBRL(r.valor)}.`);
+      setConcluindo(null);
+      router.refresh();
+    } catch {
+      toast.error('Não foi possível concluir o lote.');
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const cancelar = async () => {
+    if (!cancelando) return;
+    setSalvando(true);
+    try {
+      const r = await cancelarLoteAction({ loteId: cancelando.id });
+      if (!r.ok) {
+        toast.error(r.erro);
+        return;
+      }
+      toast.success(`Lote #${cancelando.id} cancelado: ${r.parcelas} parcelas voltaram para a fila.`);
+      setCancelando(null);
+      router.refresh();
+    } catch {
+      toast.error('Não foi possível cancelar o lote.');
+    } finally {
+      setSalvando(false);
+    }
+  };
   const vazio = batches.length === 0 && semLote.length === 0;
   const totalSemLote = semLote.reduce((s, g) => s + g.quantidadeVendas, 0);
   const formatData = (d: Date | string) =>
@@ -103,8 +178,43 @@ export default function HistoricoAntecipacoes({ batches, semLote = [] }: Props) 
                     <span>{b.quantidadeVendas} {b.quantidadeVendas === 1 ? 'venda' : 'vendas'}</span>
                     <span className="font-bold text-success-text text-sm">{formatBRL(b.valorTotal)}</span>
                   </div>
+                  {b.concluidaEm && b.status === STATUS_LOTE.concluido && (
+                    <span className="text-xs text-muted-foreground">
+                      Retorno confirmado em {formatarDataPura(b.concluidaEm)}
+                      {b.concluidaPor ? ` por ${b.concluidaPor}` : ''}
+                    </span>
+                  )}
                 </div>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap items-center">
+                  <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${ESTILO_STATUS[b.status] ?? 'bg-muted text-muted-foreground'}`}>
+                    {ROTULO_STATUS_LOTE[b.status as keyof typeof ROTULO_STATUS_LOTE] ?? b.status}
+                  </span>
+                  {b.status === STATUS_LOTE.emAndamento && (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="gap-1.5 text-xs"
+                        onClick={() => {
+                          setDataRetorno(hoje);
+                          setConcluindo(b);
+                        }}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Marcar como concluída
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 text-xs border-error text-error-text"
+                        onClick={() => setCancelando(b)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Cancelar lote
+                      </Button>
+                    </>
+                  )}
                   <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleExcel(b)}>
                     <FileSpreadsheet className="h-3.5 w-3.5" />
                     Planilha
@@ -155,6 +265,52 @@ export default function HistoricoAntecipacoes({ batches, semLote = [] }: Props) 
           </div>
         )}
       </CardContent>
+
+      <Dialog open={concluindo !== null} onOpenChange={(aberto) => !aberto && setConcluindo(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Concluir a antecipação do lote #{concluindo?.id}</DialogTitle>
+            <DialogDescription>
+              As parcelas do lote passam a contar como antecipadas e quitadas pela Prudent. A folha continua descontando
+              delas até o vencimento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="data-retorno-lote">Data do retorno</Label>
+            <DateInput id="data-retorno-lote" value={dataRetorno} onChange={setDataRetorno} max={hoje} />
+          </div>
+          <p className="rounded-lg bg-info-bg px-3 py-2 text-sm text-info-text">
+            Recebeu só uma parte? Conclua o lote e depois desfaça a baixa das parcelas que não vieram, na ficha da venda.
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setConcluindo(null)} disabled={salvando}>
+              Cancelar
+            </Button>
+            <Button type="button" className="gap-2" onClick={concluir} disabled={salvando || !dataRetorno}>
+              {salvando ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" />}
+              Confirmar conclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={cancelando !== null} onOpenChange={(aberto) => !aberto && setCancelando(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar o lote #{cancelando?.id}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As {cancelando?.quantidadeVendas ?? 0} vendas voltam para a fila e podem entrar em outro lote. O lote fica
+              no histórico como cancelado.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={salvando}>Voltar</AlertDialogCancel>
+            <AlertDialogAction onClick={cancelar} disabled={salvando}>
+              Cancelar lote
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

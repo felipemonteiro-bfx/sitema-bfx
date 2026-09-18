@@ -238,14 +238,19 @@ model ParcelaVencimento {
   dataPagamento   DateTime? @map("data_pagamento")
   antecipada      Boolean  @default(false)
   origemPagamento String?  @map("origem_pagamento") // asaas | prudent | manual
+  // Lote enviado à Prudent que ainda não voltou (2026-09-17). Com lote em andamento a parcela
+  // sai da fila mas não é antecipada nem paga; concluir o lote é que grava isso.
+  antecipacaoLoteId Int?   @map("antecipacao_lote_id")
   asaasPaymentId  String?  @unique @map("asaas_payment_id") // cobrança do Asaas que quitou a parcela
   baixaPor        String?  @map("baixa_por") // usuário da baixa manual
 
   venda           Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  antecipacaoLote AnticipacaoBatch? @relation(fields: [antecipacaoLoteId], references: [id], onDelete: SetNull)
 
   @@map("parcelas_vencimento")
   @@index([vendaId])
   @@index([dataVencimento])
+  @@index([antecipacaoLoteId])
 }
 
 model Config {
@@ -567,6 +572,16 @@ model AnticipacaoBatch {
   periodoDescricao  String?   @map("periodo_descricao") // ex: "mar/2025 - abr/2025"
   periodoInicio     DateTime? @map("periodo_inicio")
   periodoFim        DateTime? @map("periodo_fim")
+  // Ciclo do lote (2026-09-17): nasce `em_andamento` no envio, vira `concluido` quando o André
+  // confirma o retorno da Prudent, ou `cancelado` quando ela recusa.
+  status            String    @default("em_andamento")
+  // envio (gerou o Excel) | registro (antecipação feita antes de o sistema saber) | conciliacao
+  origem            String    @default("envio")
+  concluidaEm       DateTime? @map("concluida_em")
+  concluidaPor      String?   @map("concluida_por")
+  observacao        String?
+
+  parcelas          ParcelaVencimento[]
 
   @@map("antecipacao_batches")
 }

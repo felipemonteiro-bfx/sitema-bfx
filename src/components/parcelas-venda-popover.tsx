@@ -12,6 +12,7 @@ import { usePopoverHover } from "@/hooks/use-popover-hover";
 
 const SITUACAO: Record<SituacaoParcela, { rotulo: string; classe: string }> = {
   antecipada: { rotulo: "Antecipada", classe: "bg-success-bg text-success-text" },
+  em_andamento: { rotulo: "Em andamento na Prudent", classe: "bg-info-bg text-info-text" },
   a_antecipar: { rotulo: "A antecipar", classe: "bg-warning-bg text-warning-text" },
   vencida: { rotulo: "Venceu sem antecipar", classe: "bg-error-bg text-error-text" },
 };
@@ -35,7 +36,7 @@ const Barra = () => (
 
 /**
  * Parcelas de uma venda, na célula "4 / 2 / 1 / 1" da coluna Parcelas da fila (total /
- * antecipadas / a antecipar / vencidas; legenda no "?" do cabeçalho, `LegendaParcelas`).
+ * antecipadas / em andamento / a antecipar / vencidas; legenda no "?" do cabeçalho.
  * Abre com a data da compra,
  * quantas parcelas e de quanto, a contagem por situação, a tabela parcela a
  * parcela e o que já foi e o que falta antecipar. Tudo calculado no servidor
@@ -46,6 +47,7 @@ export function ParcelasVendaPopover({ parcelas }: { parcelas: ParcelasDaVenda }
   const { contagem, lista, totais } = parcelas;
   const chips = [
     { n: contagem.antecipadas, texto: plural(contagem.antecipadas, "antecipada", "antecipadas"), classe: SITUACAO.antecipada.classe },
+    { n: contagem.emAndamento, texto: `${contagem.emAndamento} em andamento`, classe: SITUACAO.em_andamento.classe },
     { n: contagem.aAntecipar, texto: `${contagem.aAntecipar} a antecipar`, classe: SITUACAO.a_antecipar.classe },
     {
       n: contagem.vencidas,
@@ -61,7 +63,7 @@ export function ParcelasVendaPopover({ parcelas }: { parcelas: ParcelasDaVenda }
           type="button"
           variant="ghost"
           {...gatilho}
-          aria-label={`${plural(parcelas.quantidade, "parcela", "parcelas")}: ${contagem.antecipadas} antecipadas, ${contagem.aAntecipar} a antecipar, ${contagem.vencidas} vencidas sem antecipação. Ver parcelas`}
+          aria-label={`${plural(parcelas.quantidade, "parcela", "parcelas")}: ${contagem.antecipadas} antecipadas, ${contagem.emAndamento} em andamento na Prudent, ${contagem.aAntecipar} a antecipar, ${contagem.vencidas} vencidas sem antecipação. Ver parcelas`}
           // Sempre os quatro números, na ordem da legenda do "?" do cabeçalho: a
           // posição e a cor dizem o que cada um conta. Tints opacos com a família -text
           // (policiados pela catraca de contraste). 44px de alvo no celular.
@@ -70,6 +72,8 @@ export function ParcelasVendaPopover({ parcelas }: { parcelas: ParcelasDaVenda }
           <span className="text-sm font-bold text-foreground">{parcelas.quantidade}</span>
           <Barra />
           <Contador valor={contagem.antecipadas} classe={SITUACAO.antecipada.classe} />
+          <Barra />
+          <Contador valor={contagem.emAndamento} classe={SITUACAO.em_andamento.classe} />
           <Barra />
           <Contador valor={contagem.aAntecipar} classe={SITUACAO.a_antecipar.classe} />
           <Barra />
@@ -146,6 +150,7 @@ export function ParcelasVendaPopover({ parcelas }: { parcelas: ParcelasDaVenda }
 const LEGENDA = [
   { numero: <span className="px-1 text-sm font-bold text-foreground">4</span>, texto: "total de parcelas da venda" },
   { numero: <Contador valor={2} classe={SITUACAO.antecipada.classe} />, texto: "já antecipadas" },
+  { numero: <Contador valor={1} classe={SITUACAO.em_andamento.classe} />, texto: "em andamento — enviadas à Prudent, sem retorno" },
   { numero: <Contador valor={1} classe={SITUACAO.a_antecipar.classe} />, texto: "a antecipar — vencem de hoje em diante" },
   { numero: <Contador valor={1} classe={SITUACAO.vencida.classe} />, texto: "venceram sem antecipar" },
 ];

@@ -8,7 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
+import { Check, FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DateInput } from "@/components/ui/date-input";
+import { Label } from "@/components/ui/label";
+import { registrarAntecipacaoConcluidaAction } from "@/app/(app)/prudent/actions";
 import { FormSelect } from "@/components/form-select";
 import { IntervaloMesesPicker } from "@/components/intervalo-meses-picker";
 import { ProdutosVendaPopover, type ProdutosDaVenda } from "@/components/produtos-venda-popover";
@@ -109,8 +114,13 @@ export default function AntecipacaoClient({
   valoresPorMes,
   hoje,
 }: Props) {
+  const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  // "Registrar já concluída": antecipação que a Prudent comprou antes de o sistema saber.
+  const [registroAberto, setRegistroAberto] = useState(false);
+  const [dataRegistro, setDataRegistro] = useState(hoje);
+  const [registrando, setRegistrando] = useState(false);
   const [filtroEmpresa, setFiltroEmpresa] = useState<string>("todas");
   const [filtroStatus, setFiltroStatus] = useState<string>("todas");
   const [periodoInicio, setPeriodoInicio] = useState<string>("");
@@ -282,6 +292,31 @@ export default function AntecipacaoClient({
       toast.error("Ocorreu um erro ao processar a antecipação.");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const registrarJaConcluida = async () => {
+    if (selectedIds.length === 0) return;
+    setRegistrando(true);
+    try {
+      const r = await registrarAntecipacaoConcluidaAction({
+        ids: selectedIds,
+        mesInicio: periodoInicio || undefined,
+        mesFim: periodoFim || undefined,
+        dataRetorno: dataRegistro,
+      });
+      if (!r.ok) {
+        toast.error(r.erro);
+        return;
+      }
+      toast.success(`Registrado: ${r.parcelas} ${r.parcelas === 1 ? 'parcela' : 'parcelas'}, ${formatBRL(r.valor)}.`);
+      setRegistroAberto(false);
+      setSelectedIds([]);
+      router.refresh();
+    } catch {
+      toast.error('Não foi possível registrar a antecipação.');
+    } finally {
+      setRegistrando(false);
     }
   };
 
@@ -630,6 +665,22 @@ export default function AntecipacaoClient({
               <ImageIcon className="h-4 w-4" />
               Relatório Visual
             </Button>
+            {/* Antecipação que a Prudent já comprou antes de o sistema saber: registra direto como
+                concluída, sem gerar arquivo nenhum (2026-09-17). */}
+            <Button
+              type="button"
+              disabled={selectedIds.length === 0 || isProcessing || registrando}
+              variant="outline"
+              size="sm"
+              className="flex-1 sm:flex-none h-10 px-4 text-sm font-semibold gap-2 cursor-pointer"
+              onClick={() => {
+                setDataRegistro(hoje);
+                setRegistroAberto(true);
+              }}
+            >
+              <Check className="h-4 w-4" />
+              Registrar já concluída
+            </Button>
           </div>
 
           {/* CTA principal — espera o cálculo do servidor para não antecipar no escuro. */}
@@ -643,7 +694,7 @@ export default function AntecipacaoClient({
                 Processando...
               </>
             ) : (
-              `Antecipar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'}`
+              `Enviar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'} à Prudent`
             )}
           </Button>
         </div>
@@ -692,6 +743,31 @@ export default function AntecipacaoClient({
           </div>
         </Card>
       )}
+      <Dialog open={registroAberto} onOpenChange={(aberto) => !aberto && setRegistroAberto(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Registrar antecipação já concluída</DialogTitle>
+            <DialogDescription>
+              Para o que a Prudent já comprou antes: nenhum arquivo é gerado, e as parcelas das{' '}
+              {selectedIds.length === 1 ? 'venda marcada' : `${selectedIds.length} vendas marcadas`} passam a contar como
+              antecipadas e quitadas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="data-registro-antecipacao">Data da antecipação</Label>
+            <DateInput id="data-registro-antecipacao" value={dataRegistro} onChange={setDataRegistro} max={hoje} />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setRegistroAberto(false)} disabled={registrando}>
+              Cancelar
+            </Button>
+            <Button type="button" className="gap-2" onClick={registrarJaConcluida} disabled={registrando || !dataRegistro}>
+              {registrando ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" />}
+              Registrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 

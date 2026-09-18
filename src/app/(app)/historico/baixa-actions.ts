@@ -33,8 +33,10 @@ export async function darBaixaParcela(formData: FormData): Promise<Resultado> {
   // Comparação de "YYYY-MM-DD" como texto já é cronológica.
   if (data > hoje) return { success: false, error: "Data de pagamento não pode ser no futuro." };
 
+  // Parcela num lote enviado à Prudent tem dono: a baixa dela é a conclusão do lote, no histórico.
+  // Sem esta recusa ela terminaria "antecipada" com origem "manual", mentindo sobre quem pagou.
   const { count } = await prisma.parcelaVencimento.updateMany({
-    where: { id: parcelaId, paga: false },
+    where: { id: parcelaId, paga: false, antecipacaoLoteId: null },
     data: {
       paga: true,
       dataPagamento: new Date(`${data}T00:00:00.000Z`),

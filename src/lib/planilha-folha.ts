@@ -48,6 +48,8 @@ export interface PlanilhaFolha {
   linhas: LinhaFolha[];
   total: number;
   semMatricula: number;
+  /** Mesma matrícula em cadastros diferentes: viram uma linha só, e o desconto pode cair na pessoa errada. */
+  matriculasRepetidas: { matricula: string; nomes: string[] }[];
 }
 
 export const SELECT_VENDA_FOLHA = {
@@ -119,7 +121,7 @@ function chaveDaMatricula(matricula: string): string {
 
 export function montarPlanilhaFolha(vendas: VendaParaFolha[], filtro: { competencia: string; empresa?: string }): PlanilhaFolha {
   const empresaFiltro = filtro.empresa?.trim().toUpperCase() || null;
-  const grupos = new Map<string, { matricula: string; nome: string; centavos: number }>();
+  const grupos = new Map<string, { matricula: string; nome: string; centavos: number; clientes: Map<number, string> }>();
 
   for (const venda of vendas) {
     if (venda.status === "cancelada" || venda.status === "estornada") continue;
@@ -140,8 +142,10 @@ export function montarPlanilhaFolha(vendas: VendaParaFolha[], filtro: { competen
       : venda.cliente
         ? `c:${venda.cliente.id}`
         : `v:${venda.id}`;
-    const grupo = grupos.get(chave) ?? { matricula, nome: (venda.cliente?.nome ?? "").trim() || "SEM NOME", centavos: 0 };
+    const nome = (venda.cliente?.nome ?? "").trim() || "SEM NOME";
+    const grupo = grupos.get(chave) ?? { matricula, nome, centavos: 0, clientes: new Map<number, string>() };
     grupo.centavos += centavos;
+    if (venda.cliente) grupo.clientes.set(venda.cliente.id, nome);
     grupos.set(chave, grupo);
   }
 
@@ -155,5 +159,9 @@ export function montarPlanilhaFolha(vendas: VendaParaFolha[], filtro: { competen
     linhas,
     total: todas.reduce((soma, g) => soma + g.centavos, 0) / 100,
     semMatricula: linhas.filter((l) => !l.matricula).length,
+    matriculasRepetidas: todas
+      .filter((g) => g.matricula && g.clientes.size > 1)
+      .map((g) => ({ matricula: g.matricula, nomes: [...g.clientes.values()].sort(comparar) }))
+      .sort((a, b) => comparar(a.matricula, b.matricula)),
   };
 }

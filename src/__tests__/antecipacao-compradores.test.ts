@@ -162,6 +162,7 @@ describe("resumirAntecipacaoPorComprador", () => {
     );
     expect(totais).toEqual({
       antecipadas: { qtd: 3, valor: 875 },
+      emAndamento: { qtd: 0, valor: 0 },
       aAntecipar: { qtd: 1, valor: 150 },
       vencidasSemAntecipar: { qtd: 1, valor: 150 },
       compradores: 3,
@@ -270,10 +271,10 @@ describe("resumirAntecipacaoPorMes — as abas da planilha", () => {
       HOJE
     );
     expect(meses).toEqual([
-      { mes: "2026-08", antecipadas: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 0, valor: 0 }, vencidasSemAntecipar: { qtd: 1, valor: 100 } },
-      { mes: "2026-09", antecipadas: { qtd: 1, valor: 100 }, aAntecipar: { qtd: 0, valor: 0 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
-      { mes: "2026-10", antecipadas: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 2, valor: 350 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
-      { mes: "2026-11", antecipadas: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 1, valor: 250 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
+      { mes: "2026-08", antecipadas: { qtd: 0, valor: 0 }, emAndamento: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 0, valor: 0 }, vencidasSemAntecipar: { qtd: 1, valor: 100 } },
+      { mes: "2026-09", antecipadas: { qtd: 1, valor: 100 }, emAndamento: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 0, valor: 0 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
+      { mes: "2026-10", antecipadas: { qtd: 0, valor: 0 }, emAndamento: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 2, valor: 350 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
+      { mes: "2026-11", antecipadas: { qtd: 0, valor: 0 }, emAndamento: { qtd: 0, valor: 0 }, aAntecipar: { qtd: 1, valor: 250 }, vencidasSemAntecipar: { qtd: 0, valor: 0 } },
     ]);
   });
 

@@ -166,6 +166,33 @@ describe("updateVenda — venda em folha em 1x", () => {
   });
 });
 
+describe("updateVenda — parcela num lote da Prudent (2026-09-17)", () => {
+  // Sem isto, salvar a venda apagava o vínculo: o lote ficava vazio e as parcelas voltavam para a
+  // fila, prontas para ir num segundo lote — o mesmo título vendido duas vezes.
+  const comLote = (numero: number) => linha(numero, { antecipacaoLoteId: 7 });
+
+  it("o vínculo com o lote sobrevive ao salvar", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([comLote(1)]);
+    const r = await updateVenda(formUmaVez());
+    expect(r).toMatchObject({ success: true });
+    expect(criadas()[0]).toMatchObject({ numeroParcela: 1, antecipacaoLoteId: 7 });
+  });
+
+  it("recusa quando a parcela do lote sumiria", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([comLote(1), linha(2), linha(3)]);
+    const r = (await updateVenda(formUmaVez())) as { success: boolean; error?: string };
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/lote|Prudent/i);
+    expect(dbMock.parcelaVencimento.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("a venda continua marcada como em andamento (flag 2)", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([comLote(1)]);
+    await updateVenda(formUmaVez());
+    expect(dbMock.venda.update.mock.calls[0][0].data.antecipada).toBe(2);
+  });
+});
+
 describe("updateVenda — 1x fora da folha", () => {
   it("de folha para PIX em 1x: a linha aberta some", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([linha(1)]);

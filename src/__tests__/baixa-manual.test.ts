@@ -42,7 +42,9 @@ describe("darBaixaParcela", () => {
 
     expect(r).toEqual({ success: true });
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
-      where: { id: 5, paga: false },
+      // `antecipacaoLoteId: null`: parcela em lote enviado à Prudent não aceita baixa manual — a
+      // baixa dela é a conclusão do lote, no histórico (2026-09-17).
+      where: { id: 5, paga: false, antecipacaoLoteId: null },
       data: {
         paga: true,
         dataPagamento: new Date("2026-09-15T00:00:00.000Z"),
@@ -93,13 +95,17 @@ describe("desfazerBaixaParcela", () => {
   });
 });
 
-describe("antecipar na /prudent da baixa com origem prudent", () => {
-  it("a acao antecipar grava paga + origem prudent so nas parcelas ainda abertas do lote", () => {
+describe("antecipar na /prudent so abre o lote (2026-09-17)", () => {
+  // Antes esta action gravava paga + origem prudent no mesmo clique. Agora o envio abre um lote
+  // em andamento e a baixa e' o retorno confirmado, em `concluirLote`
+  // (src/lib/lote-antecipacao-db.ts, coberto por lote-antecipacao.test.ts).
+  it("o envio nao marca nada como pago", () => {
     const fonte = readFileSync(join(process.cwd(), "src/app/(app)/prudent/page.tsx"), "utf8");
     const inicio = fonte.indexOf("async function antecipar(");
     const corpo = fonte.slice(inicio, fonte.indexOf("revalidarVenda()", inicio));
-    expect(corpo.includes("where: { id: { in: parcelaIds }, paga: false }")).toBe(true);
-    expect(corpo.includes('origemPagamento: "prudent"')).toBe(true);
-    expect(corpo.includes("paga: true")).toBe(true);
+    expect(corpo.includes("abrirLote(")).toBe(true);
+    expect(corpo.includes('origemPagamento: "prudent"')).toBe(false);
+    expect(corpo.includes("paga: true")).toBe(false);
+    expect(corpo.includes("antecipada: true")).toBe(false);
   });
 });

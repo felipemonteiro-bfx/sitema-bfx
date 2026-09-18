@@ -13,112 +13,33 @@ import { contagensDaFila, mesesEmAberto } from "@/lib/fila-antecipacao";
 import { linhasDosItens } from "@/lib/itens-venda";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { revalidarVenda } from "@/lib/revalidacao";
+import { abrirLote } from "@/lib/lote-antecipacao-db";
+import { idsValidos } from "@/app/(app)/prudent/actions";
 import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 import { PageHeader } from "@/components/page-header";
-import { formatarMesAnoPuro, hojeDataPura } from "@/lib/data-pura";
+import { hojeDataPura } from "@/lib/data-pura";
 
 export const dynamic = "force-dynamic";
 
 async function antecipar(formData: FormData) {
   "use server";
   await requireAdminOrThrow();
-  const ids = formData.getAll("id").map((v) => Number(v));
-  const mesInicio = formData.get("mesInicio") as string | null; // MM/YYYY
-  const mesFim = formData.get("mesFim") as string | null;
+  const ids = idsValidos(formData.getAll("id"));
   if (!ids.length) return;
 
   // Range de datas para filtrar parcelas. O parse mora no lib porque a tela, esta
   // action e os relatorios precisam concordar — antes cada um fazia o seu, e um
   // mes invalido como "13/2025" virava janeiro de 2026 so aqui.
-  const periodo = parsePeriodoMesAno(mesInicio, mesFim);
+  const periodo = parsePeriodoMesAno(formData.get("mesInicio") as string | null, formData.get("mesFim") as string | null);
 
   // Periodo pedido mas ilegivel: abortar em vez de antecipar tudo. Sem esta guarda
   // um "13/2025" digitado errado viraria um lote com todas as parcelas em aberto.
-  if ((mesInicio || mesFim) && !periodo) return;
+  if ((formData.get("mesInicio") || formData.get("mesFim")) && !periodo) return;
 
-  // Buscar parcelas das vendas selecionadas no período.
-  // A action repete o filtro de forma de pagamento da fila: a tela ja so lista
-  // vendas em desconto em folha, mas o form e postavel com qualquer id.
-  const parcelas = await prisma.parcelaVencimento.findMany({
-    where: {
-      vendaId: { in: ids },
-      venda: WHERE_VENDA_ANTECIPAVEL,
-      antecipada: false,
-      ...(periodo ? {
-        dataVencimento: { gte: periodo.inicio, lte: periodo.fim },
-      } : {}),
-    },
-    include: { venda: { include: { itens: { select: { subtotal: true } } } } },
-  });
-
-  if (parcelas.length === 0) return;
-
-  const parcelaIds = parcelas.map((p) => p.id);
-  const valorTotal = parcelas.reduce((sum, p) => sum + p.valorParcela, 0);
-  const vendaIdsAfetados = [...new Set(parcelas.map((p) => p.vendaId))];
-
-  const datas = parcelas.map((p) => new Date(p.dataVencimento)).sort((a, b) => a.getTime() - b.getTime());
-  const periodoInicio = datas[0] || null;
-  const periodoFim = datas[datas.length - 1] || null;
-
-  // Vencimento e data pura: em Manaus o dia 1 do mes virava o mes anterior no rotulo.
-  const formatMesAno = formatarMesAnoPuro;
-
-  const periodoDescricao =
-    periodoInicio && periodoFim
-      ? periodoInicio.getMonth() === periodoFim.getMonth() &&
-        periodoInicio.getFullYear() === periodoFim.getFullYear()
-        ? formatMesAno(periodoInicio)
-        : `${formatMesAno(periodoInicio)} - ${formatMesAno(periodoFim)}`
-      : null;
-
-  // Salvar batch
-  await prisma.anticipacaoBatch.create({
-    data: {
-      vendaIds: JSON.stringify(vendaIdsAfetados),
-      valorTotal,
-      quantidadeVendas: vendaIdsAfetados.length,
-      periodoDescricao,
-      periodoInicio,
-      periodoFim,
-    },
-  });
-
-  // Marcar parcelas como antecipadas
-  await prisma.parcelaVencimento.updateMany({
-    where: { id: { in: parcelaIds } },
-    data: { antecipada: true },
-  });
-
-  // Decisão do André (2026-09-16): antecipada = paga — a Prudent pagou a BFX. Só nas parcelas
-  // ainda abertas, para não pisar baixa manual ou do Asaas.
-  await prisma.parcelaVencimento.updateMany({
-    where: { id: { in: parcelaIds }, paga: false },
-    data: {
-      paga: true,
-      dataPagamento: new Date(`${hojeDataPura()}T00:00:00.000Z`),
-      origemPagamento: "prudent",
-    },
-  });
-
-  // Atualizar status das vendas baseado nas parcelas
-  for (const vendaId of vendaIdsAfetados) {
-    const totalParcelas = await prisma.parcelaVencimento.count({ where: { vendaId } });
-    const parcelasAntecipadas = await prisma.parcelaVencimento.count({ where: { vendaId, antecipada: true } });
-
-    let novoStatus = 0; // pendente
-    if (parcelasAntecipadas === totalParcelas) {
-      novoStatus = 1; // totalmente antecipado
-    } else if (parcelasAntecipadas > 0) {
-      novoStatus = 3; // parcialmente antecipado
-    }
-
-    await prisma.venda.update({
-      where: { id: vendaId },
-      data: { antecipada: novoStatus },
-    });
-  }
+  // 2026-09-17: o envio abre um lote EM ANDAMENTO. Nada de `paga` nem `antecipada` aqui — isso
+  // é o retorno da Prudent, confirmado no histórico (`concluirLoteAction`).
+  await abrirLote({ vendaIds: ids, periodo });
 
   revalidarVenda();
 }
@@ -150,6 +71,8 @@ export default async function Page() {
           dataVencimento: true,
           valorParcela: true,
           antecipada: true,
+          // Vínculo com lote aberto = parcela em andamento (2026-09-17).
+          antecipacaoLoteId: true,
         },
       },
     },
@@ -212,6 +135,11 @@ export default async function Page() {
     // O historico precisa do periodo gravado para reemitir o relatorio do lote.
     periodoInicio: b.periodoInicio,
     periodoFim: b.periodoFim,
+    // Ciclo do lote (2026-09-17): o histórico é onde o retorno da Prudent é confirmado.
+    status: b.status,
+    origem: b.origem,
+    concluidaEm: b.concluidaEm,
+    concluidaPor: b.concluidaPor,
   }));
 
   // Antecipacoes que existem SEM lote. Medido em producao (2026-08-11):
@@ -259,7 +187,7 @@ export default async function Page() {
     clienteId: v.clienteId,
     clienteNome: v.cliente?.nome ?? null,
     empresa: v.cliente?.empresa ?? null,
-    parcelas_detalhes: v.parcelasVencimento,
+    parcelas_detalhes: v.parcelasVencimento.map((p) => ({ ...p, emAndamento: p.antecipacaoLoteId != null })),
   });
   const vendasParaResumo = todasVendas.map(paraResumo);
   const resumoCompradores = resumirAntecipacaoPorComprador(vendasParaResumo, hoje);
@@ -287,7 +215,10 @@ export default async function Page() {
     parcelasInfo: parcelasDaVenda({ ...paraResumo(v), dataVenda: v.dataVenda }, hoje),
     // Sem parcela cadastrada: null — o filtro de vencimento não tem como julgar e
     // deixa a venda na lista, como antes.
-    mesesEmAberto: v.parcelasVencimento.length > 0 ? mesesEmAberto(v.parcelasVencimento) : null,
+    mesesEmAberto:
+      v.parcelasVencimento.length > 0
+        ? mesesEmAberto(v.parcelasVencimento.map((p) => ({ ...p, emAndamento: p.antecipacaoLoteId != null })))
+        : null,
   }));
   const contagens = contagensDaFila(vendasFormatadas.map((v) => ({ empresa: v.empresaConveniada, status: v.status })));
   const valoresPorMes = Object.fromEntries(resumoMeses.map((m) => [m.mes, m.aAntecipar.valor]));
@@ -312,7 +243,7 @@ export default async function Page() {
         valoresPorMes={valoresPorMes}
         hoje={hoje}
       />
-      <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} />
+      <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} hoje={hoje} />
     </div>
   );
 }

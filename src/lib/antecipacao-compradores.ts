@@ -30,9 +30,11 @@ export interface ParcelaParaResumo {
   dataVencimento: string | Date;
   valorParcela: number;
   antecipada?: boolean | null;
+  /** Está num lote enviado à Prudent que ainda não voltou (2026-09-17). */
+  emAndamento?: boolean | null;
 }
 
-export type SituacaoParcela = "antecipada" | "a_antecipar" | "vencida";
+export type SituacaoParcela = "antecipada" | "em_andamento" | "a_antecipar" | "vencida";
 
 export interface ParcelaDetalhada {
   numero: number;
@@ -45,9 +47,9 @@ export interface ParcelasDaVenda {
   dataCompra: string;
   quantidade: number;
   valorParcela: number | null;
-  contagem: { antecipadas: number; aAntecipar: number; vencidas: number };
+  contagem: { antecipadas: number; emAndamento: number; aAntecipar: number; vencidas: number };
   lista: ParcelaDetalhada[];
-  totais: { antecipado: number; faltaAntecipar: number };
+  totais: { antecipado: number; emAndamento: number; faltaAntecipar: number };
   /** Venda cancelada ou estornada: lista vazia, e a tela diz por quê. */
   desfeita: boolean;
 }
@@ -63,16 +65,17 @@ export function parcelasDaVenda(venda: VendaParaResumo & { dataVenda: string | D
   const diaCompra = diaUtc(venda.dataVenda);
   const dataCompra = Number.isFinite(diaCompra) ? dataDoDia(diaCompra) : "";
   const parcelas = venda.parcelas_detalhes ?? [];
-  const contagem = { antecipadas: 0, aAntecipar: 0, vencidas: 0 };
+  const contagem = { antecipadas: 0, emAndamento: 0, aAntecipar: 0, vencidas: 0 };
   const desfeita = vendaDesfeita(venda);
   const base = { dataCompra, quantidade: parcelas.length, valorParcela: valorUnicoDasParcelas(parcelas), desfeita };
 
   if (desfeita) {
-    return { ...base, contagem, lista: [], totais: { antecipado: 0, faltaAntecipar: 0 } };
+    return { ...base, contagem, lista: [], totais: { antecipado: 0, emAndamento: 0, faltaAntecipar: 0 } };
   }
 
   const vendaAntecipada = venda.antecipada === 1;
   let antecipado = 0;
+  let emAndamento = 0;
   let falta = 0;
   const lista = parcelas
     .map((p) => ({ p, dia: diaUtc(p.dataVencimento) }))
@@ -80,11 +83,21 @@ export function parcelasDaVenda(venda: VendaParaResumo & { dataVenda: string | D
     .sort((a, b) => (a.p.numeroParcela ?? 0) - (b.p.numeroParcela ?? 0) || a.dia - b.dia)
     .map(({ p, dia }, i): ParcelaDetalhada => {
       const tipo = baldeDaParcela(vendaAntecipada, p, dia, hojeDia);
-      const situacao: SituacaoParcela = tipo === "antecipadas" ? "antecipada" : tipo === "aAntecipar" ? "a_antecipar" : "vencida";
+      const situacao: SituacaoParcela =
+        tipo === "antecipadas"
+          ? "antecipada"
+          : tipo === "emAndamento"
+            ? "em_andamento"
+            : tipo === "aAntecipar"
+              ? "a_antecipar"
+              : "vencida";
       const c = paraCentavos(p.valorParcela);
       if (situacao === "antecipada") {
         contagem.antecipadas += 1;
         antecipado += c;
+      } else if (situacao === "em_andamento") {
+        contagem.emAndamento += 1;
+        emAndamento += c;
       } else if (situacao === "a_antecipar") {
         contagem.aAntecipar += 1;
         falta += c;
@@ -94,7 +107,12 @@ export function parcelasDaVenda(venda: VendaParaResumo & { dataVenda: string | D
       return { numero: p.numeroParcela ?? i + 1, vencimento: dataDoDia(dia), valor: c / 100, situacao };
     });
 
-  return { ...base, contagem, lista, totais: { antecipado: antecipado / 100, faltaAntecipar: falta / 100 } };
+  return {
+    ...base,
+    contagem,
+    lista,
+    totais: { antecipado: antecipado / 100, emAndamento: emAndamento / 100, faltaAntecipar: falta / 100 },
+  };
 }
 
 /** Valor da parcela quando todas são iguais; `null` quando variam (ou não há parcela). */
@@ -127,6 +145,7 @@ export interface ContagemAAntecipar extends Contagem {
 
 export interface SituacaoParcelas {
   antecipadas: Contagem;
+  emAndamento: Contagem;
   aAntecipar: ContagemAAntecipar;
   vencidasSemAntecipar: Contagem;
   semParcelas: boolean;
@@ -141,6 +160,7 @@ export interface CompradorAntecipacao {
   vendas: number;
   vendasSemParcelas: number;
   antecipadas: Contagem;
+  emAndamento: Contagem;
   aAntecipar: ContagemAAntecipar;
   vencidasSemAntecipar: Contagem;
 }
@@ -149,6 +169,7 @@ export interface ResumoAntecipacaoCompradores {
   compradores: CompradorAntecipacao[];
   totais: {
     antecipadas: Contagem;
+    emAndamento: Contagem;
     aAntecipar: Contagem;
     vencidasSemAntecipar: Contagem;
     compradores: number;
@@ -161,6 +182,7 @@ export interface MesAntecipacao {
   /** Mês do vencimento, `YYYY-MM`. */
   mes: string;
   antecipadas: Contagem;
+  emAndamento: Contagem;
   aAntecipar: Contagem;
   vencidasSemAntecipar: Contagem;
 }
@@ -175,10 +197,11 @@ interface Balde {
   centavos: number;
 }
 
-type TipoBalde = "antecipadas" | "aAntecipar" | "vencidas";
+type TipoBalde = "antecipadas" | "emAndamento" | "aAntecipar" | "vencidas";
 
 interface Classificacao {
   antecipadas: Balde;
+  emAndamento: Balde;
   aAntecipar: Balde;
   vencidas: Balde;
   proximoDia: number | null;
@@ -228,6 +251,8 @@ function baldeDaParcela(
 ): TipoBalde | null {
   // Antecipada não depende do vencimento: o valor já foi recebido da Prudent.
   if (vendaAntecipada || parcela.antecipada) return "antecipadas";
+  // Enviada à Prudent e sem retorno: saiu da fila, mas ainda não é dinheiro.
+  if (parcela.emAndamento) return "emAndamento";
   if (!Number.isFinite(dia)) return null;
   return dia >= hojeDia ? "aAntecipar" : "vencidas";
 }
@@ -236,6 +261,7 @@ function classificar(venda: VendaParaResumo, hojeDia: number): Classificacao {
   const vendaAntecipada = venda.antecipada === 1;
   const c: Classificacao = {
     antecipadas: baldeVazio(),
+    emAndamento: baldeVazio(),
     aAntecipar: baldeVazio(),
     vencidas: baldeVazio(),
     proximoDia: null,
@@ -268,10 +294,18 @@ export function chaveComprador(venda: { id: number; clienteId: number | null }):
  */
 export function situacaoParcelasVenda(venda: VendaParaResumo, hoje: string): SituacaoParcelas {
   const c = vendaDesfeita(venda)
-    ? { antecipadas: baldeVazio(), aAntecipar: baldeVazio(), vencidas: baldeVazio(), proximoDia: null, semParcelas: false }
+    ? {
+        antecipadas: baldeVazio(),
+        emAndamento: baldeVazio(),
+        aAntecipar: baldeVazio(),
+        vencidas: baldeVazio(),
+        proximoDia: null,
+        semParcelas: false,
+      }
     : classificar(venda, diaUtc(hoje));
   return {
     antecipadas: contagem(c.antecipadas),
+    emAndamento: contagem(c.emAndamento),
     aAntecipar: {
       ...contagem(c.aAntecipar),
       proximoVencimento: c.proximoDia === null ? null : dataDoDia(c.proximoDia),
@@ -311,6 +345,7 @@ export function resumirAntecipacaoPorComprador(
       vendas: 0,
       vendasSemParcelas: 0,
       antecipadas: baldeVazio(),
+      emAndamento: baldeVazio(),
       aAntecipar: baldeVazio(),
       vencidas: baldeVazio(),
       proximoDia: null,
@@ -320,6 +355,7 @@ export function resumirAntecipacaoPorComprador(
     grupo.vendas += 1;
     if (c.semParcelas) grupo.vendasSemParcelas += 1;
     juntar(grupo.antecipadas, c.antecipadas);
+    juntar(grupo.emAndamento, c.emAndamento);
     juntar(grupo.aAntecipar, c.aAntecipar);
     juntar(grupo.vencidas, c.vencidas);
     if (c.proximoDia !== null && (grupo.proximoDia === null || c.proximoDia < grupo.proximoDia)) {
@@ -332,12 +368,13 @@ export function resumirAntecipacaoPorComprador(
     ([, a], [, b]) => b.aAntecipar.centavos - a.aAntecipar.centavos || a.nome.localeCompare(b.nome, "pt-BR")
   );
 
-  const total = { antecipadas: baldeVazio(), aAntecipar: baldeVazio(), vencidas: baldeVazio() };
+  const total = { antecipadas: baldeVazio(), emAndamento: baldeVazio(), aAntecipar: baldeVazio(), vencidas: baldeVazio() };
   let compradoresComPendencia = 0;
   let vendasSemParcelas = 0;
 
   const compradores = ordenados.map(([chave, g]): CompradorAntecipacao => {
     juntar(total.antecipadas, g.antecipadas);
+    juntar(total.emAndamento, g.emAndamento);
     juntar(total.aAntecipar, g.aAntecipar);
     juntar(total.vencidas, g.vencidas);
     if (g.aAntecipar.qtd > 0) compradoresComPendencia += 1;
@@ -350,6 +387,7 @@ export function resumirAntecipacaoPorComprador(
       vendas: g.vendas,
       vendasSemParcelas: g.vendasSemParcelas,
       antecipadas: contagem(g.antecipadas),
+      emAndamento: contagem(g.emAndamento),
       aAntecipar: {
         ...contagem(g.aAntecipar),
         proximoVencimento: g.proximoDia === null ? null : dataDoDia(g.proximoDia),
@@ -362,6 +400,7 @@ export function resumirAntecipacaoPorComprador(
     compradores,
     totais: {
       antecipadas: contagem(total.antecipadas),
+      emAndamento: contagem(total.emAndamento),
       aAntecipar: contagem(total.aAntecipar),
       vencidasSemAntecipar: contagem(total.vencidas),
       compradores: compradores.length,
@@ -392,7 +431,12 @@ export function resumirAntecipacaoPorMes(vendas: VendaParaResumo[], hoje: string
       const tipo = baldeDaParcela(vendaAntecipada, p, dia, hojeDia);
       if (!tipo) continue;
       const mes = dataDoDia(dia).slice(0, 7);
-      const baldes = meses.get(mes) ?? { antecipadas: baldeVazio(), aAntecipar: baldeVazio(), vencidas: baldeVazio() };
+      const baldes = meses.get(mes) ?? {
+        antecipadas: baldeVazio(),
+        emAndamento: baldeVazio(),
+        aAntecipar: baldeVazio(),
+        vencidas: baldeVazio(),
+      };
       somar(baldes[tipo], paraCentavos(p.valorParcela));
       meses.set(mes, baldes);
     }
@@ -403,6 +447,7 @@ export function resumirAntecipacaoPorMes(vendas: VendaParaResumo[], hoje: string
     .map(([mes, b]) => ({
       mes,
       antecipadas: contagem(b.antecipadas),
+      emAndamento: contagem(b.emAndamento),
       aAntecipar: contagem(b.aAntecipar),
       vencidasSemAntecipar: contagem(b.vencidas),
     }));

@@ -12,10 +12,21 @@ import {
 } from "@/lib/planilha-controle";
 import { SELECT_VENDA_FOLHA, montarPlanilhaFolha, normalizarCompetencia } from "@/lib/planilha-folha";
 import { hojeDataPura } from "@/lib/data-pura";
+import { cancelarLote, concluirLote, registrarLoteConcluido } from "@/lib/lote-antecipacao-db";
+import { revalidarVenda } from "@/lib/revalidacao";
 import { valorTotalVenda } from "@/lib/venda-utils";
 
 /** Teto de ids por chamada: a fila inteira tem poucas centenas de vendas. */
 const LIMITE_IDS = 1000;
+
+/**
+ * Ids de venda vindos do formulário ou da tela: só inteiros positivos, sem repetição e com teto.
+ * A action `antecipar` (em `page.tsx`) usa a mesma função — um `NaN` ali virava erro cru do Prisma.
+ */
+export function idsValidos(entrada: (FormDataEntryValue | number)[]): number[] {
+  const numeros = entrada.map((v) => Number(v)).filter((n) => Number.isInteger(n) && n > 0);
+  return [...new Set(numeros)].slice(0, LIMITE_IDS);
+}
 
 export type RespostaSelecao = { ok: true; resultado: ResultadoSelecao } | { ok: false; erro: string };
 
@@ -102,7 +113,16 @@ export async function resumoPlanilhaControleAction(entrada: {
 }
 
 export type RespostaResumoFolha =
-  | { ok: true; resumo: { compradores: number; total: number; semMatricula: number } }
+  | {
+      ok: true;
+      resumo: {
+        compradores: number;
+        total: number;
+        semMatricula: number;
+        /** Mesma matrícula em cadastros diferentes: viram uma linha só na folha. */
+        matriculasRepetidas: { matricula: string; nomes: string[] }[];
+      };
+    }
   | { ok: false; erro: string };
 
 /**
@@ -121,5 +141,86 @@ export async function resumoPlanilhaFolhaAction(entrada: { competencia?: string;
 
   const vendas = await prisma.venda.findMany({ where: WHERE_VENDA_ANTECIPAVEL, select: SELECT_VENDA_FOLHA });
   const planilha = montarPlanilhaFolha(vendas, { competencia, empresa });
-  return { ok: true, resumo: { compradores: planilha.linhas.length, total: planilha.total, semMatricula: planilha.semMatricula } };
+  return {
+    ok: true,
+    resumo: {
+      compradores: planilha.linhas.length,
+      total: planilha.total,
+      semMatricula: planilha.semMatricula,
+      matriculasRepetidas: planilha.matriculasRepetidas,
+    },
+  };
+}
+
+export type RespostaLote = { ok: true; parcelas: number; vendas: number; valor: number } | { ok: false; erro: string };
+
+/** Mensagem do erro para a tela, sem vazar detalhe do banco. */
+function erroDoLote(e: unknown): RespostaLote {
+  const msg = e instanceof Error ? e.message : "";
+  return { ok: false, erro: msg && msg.length < 120 ? msg : "Não foi possível atualizar o lote." };
+}
+
+/**
+ * O retorno da Prudent chegou (2026-09-17): as parcelas do lote viram antecipadas e quitadas na
+ * data informada. Guarda própria — é gravação de dinheiro.
+ */
+export async function concluirLoteAction(entrada: { loteId: number; dataRetorno: string }): Promise<RespostaLote> {
+  const sessao = await requireAdminOrThrow();
+  if (!Number.isInteger(entrada?.loteId) || entrada.loteId <= 0) return { ok: false, erro: "Lote inválido." };
+  try {
+    const r = await concluirLote({
+      loteId: entrada.loteId,
+      dataRetorno: entrada.dataRetorno,
+      usuario: sessao.nomeExibicao ?? sessao.username ?? null,
+    });
+    revalidarVenda();
+    return { ok: true, parcelas: r.parcelas, vendas: r.vendas, valor: r.valor };
+  } catch (e) {
+    return erroDoLote(e);
+  }
+}
+
+/** A Prudent recusou: as parcelas voltam para a fila e o lote fica cancelado no histórico. */
+export async function cancelarLoteAction(entrada: { loteId: number }): Promise<RespostaLote> {
+  await requireAdminOrThrow();
+  if (!Number.isInteger(entrada?.loteId) || entrada.loteId <= 0) return { ok: false, erro: "Lote inválido." };
+  try {
+    const r = await cancelarLote({ loteId: entrada.loteId });
+    revalidarVenda();
+    return { ok: true, parcelas: r.parcelas, vendas: r.vendas, valor: r.valor };
+  } catch (e) {
+    return erroDoLote(e);
+  }
+}
+
+/**
+ * Antecipação que a Prudent já tinha comprado antes de o sistema saber: registra um lote já
+ * concluído, sem gerar arquivo nenhum.
+ */
+export async function registrarAntecipacaoConcluidaAction(entrada: {
+  ids: number[];
+  mesInicio?: string;
+  mesFim?: string;
+  dataRetorno: string;
+}): Promise<RespostaLote> {
+  const sessao = await requireAdminOrThrow();
+  const ids = idsValidos(entrada?.ids ?? []);
+  if (ids.length === 0) return { ok: false, erro: "Nenhuma venda selecionada." };
+
+  const periodo = parsePeriodoMesAno(entrada.mesInicio ?? "", entrada.mesFim ?? "");
+  if ((entrada.mesInicio || entrada.mesFim) && !periodo) return { ok: false, erro: "Período inválido." };
+
+  try {
+    const r = await registrarLoteConcluido({
+      vendaIds: ids,
+      periodo,
+      dataRetorno: entrada.dataRetorno,
+      usuario: sessao.nomeExibicao ?? sessao.username ?? null,
+    });
+    if (!r) return { ok: false, erro: "Nenhuma parcela elegível na seleção." };
+    revalidarVenda();
+    return { ok: true, parcelas: r.parcelas, vendas: r.vendas, valor: r.valor };
+  } catch (e) {
+    return erroDoLote(e);
+  }
 }

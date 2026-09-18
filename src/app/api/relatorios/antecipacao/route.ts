@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
         parcelasVencimento: {
           where: {
             antecipada: false,
+      // Parcela já num lote na Prudent não volta para outro arquivo (2026-09-17).
+      antecipacaoLoteId: null,
             ...(periodo ? { dataVencimento: { gte: periodo.inicio, lte: periodo.fim } } : {}),
           },
           select: { valorParcela: true },

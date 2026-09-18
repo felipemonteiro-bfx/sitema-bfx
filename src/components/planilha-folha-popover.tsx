@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { AlertTriangle, Download, Loader2 } from "lucide-react";
+import { AlertTriangle, Download, Loader2, UserSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { FormSelect } from "@/components/form-select";
@@ -169,6 +169,28 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
             )
           ) : null}
         </div>
+
+        {!contando && !erro && resumo && resumo.matriculasRepetidas.length > 0 && (
+          <div role="status" className="mt-2 flex items-start gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+            <UserSearch className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <div>
+              <p>
+                <span className="font-bold">
+                  {plural(resumo.matriculasRepetidas.length, "matrícula em mais de um cadastro.", "matrículas em mais de um cadastro.")}
+                </span>{" "}
+                As compras entram na mesma linha e o desconto pode cair na pessoa errada.
+              </p>
+              {resumo.matriculasRepetidas.slice(0, 3).map((m) => (
+                <p key={m.matricula} className="mt-1 font-semibold tabular-nums">
+                  {m.matricula} — {m.nomes.length > 1 ? `${m.nomes.slice(0, -1).join(", ")} e ${m.nomes[m.nomes.length - 1]}` : m.nomes[0]}
+                </p>
+              ))}
+              {resumo.matriculasRepetidas.length > 3 && (
+                <p className="mt-1">e mais {resumo.matriculasRepetidas.length - 3}.</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {!contando && !erro && resumo && resumo.semMatricula > 0 && (
           <div role="status" className="mt-2 flex items-start gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">

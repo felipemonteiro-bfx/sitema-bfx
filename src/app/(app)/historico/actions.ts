@@ -16,6 +16,7 @@ import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecip
 import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { requireSessionOrThrow } from "@/lib/guards";
 import { parcelaUnicaDaFolha, valorParcelaAposEdicao } from "@/lib/parcelas";
+import { flagDaVenda } from "@/lib/lote-antecipacao";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
 import { produtoItemSchema } from "@/lib/validations/venda";
@@ -23,6 +24,17 @@ import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 
 // Toda action daqui precisa da própria guarda: o matcher do middleware cobre só /api
 // e o layout roda depois da action, então nenhum dos dois protege.
+
+/** Parcela que a edição não pode apagar: paga, antecipada ou num lote aberto da Prudent. */
+function travada(p: { paga: boolean; antecipada: boolean; antecipacaoLoteId?: number | null }): boolean {
+  return p.paga || p.antecipada || p.antecipacaoLoteId != null;
+}
+
+function motivoTravada(parcelas: { paga: boolean; antecipada: boolean; antecipacaoLoteId?: number | null }[]): string {
+  return parcelas.some((p) => p.antecipacaoLoteId != null && !p.paga && !p.antecipada)
+    ? "esta(o) num lote enviado a Prudent"
+    : "ja esta(o) paga(s) ou antecipada(s)";
+}
 
 export async function updateVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
   await requireSessionOrThrow();
@@ -177,6 +189,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       origemPagamento?: string | null;
       asaasPaymentId?: string | null;
       baixaPor?: string | null;
+      /** Lote enviado à Prudent esperando retorno (2026-09-17). */
+      antecipacaoLoteId?: number | null;
     };
     let parcelasExistentes: ParcelaExistente[] = [];
     // Ligado quando a venda vira pagamento unico sem payload de parcelas (CR-01).
@@ -194,6 +208,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           origemPagamento: true,
           asaasPaymentId: true,
           baixaPor: true,
+          antecipacaoLoteId: true,
         },
       });
     } catch {
@@ -213,6 +228,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           origemPagamento: p.origemPagamento ?? null,
           asaasPaymentId: p.asaasPaymentId ?? null,
           baixaPor: p.baixaPor ?? null,
+          antecipacaoLoteId: p.antecipacaoLoteId ?? null,
         },
       ])
     );
@@ -226,13 +242,13 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       // Antecipada conta como paga: a linha e o unico registro de que o dinheiro ja
       // veio da Prudent, e apaga-la faria a parcela sumir do "ja antecipado".
       const travadasDescartadas = parcelasExistentes.filter(
-        (p) => (p.paga || p.antecipada) && !numerosNoPayload.has(p.numeroParcela)
+        (p) => travada(p) && !numerosNoPayload.has(p.numeroParcela)
       );
       if (travadasDescartadas.length > 0) {
         const numeros = travadasDescartadas.map((p) => p.numeroParcela).join(", ");
         return {
           success: false,
-          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ja esta(o) paga(s) ou antecipada(s) e seria(m) apagada(s).`,
+          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ${motivoTravada(travadasDescartadas)} e seria(m) apagada(s).`,
         };
       }
 
@@ -256,12 +272,12 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     // Era o bug da venda 182 reproduzido por uso normal, sem erro na tela.
     if (parcelasForm.length === 0 && parcelasExistentes.length > 0 && parcelasNum !== parcelasExistentes.length) {
       // Mesma trava da guarda acima: parcela antecipada tambem nao pode ser apagada.
-      const travadasExistentes = parcelasExistentes.filter((p) => p.paga || p.antecipada);
+      const travadasExistentes = parcelasExistentes.filter(travada);
       if (travadasExistentes.length > 0) {
         const numeros = travadasExistentes.map((p) => p.numeroParcela).join(", ");
         return {
           success: false,
-          error: `Nao e possivel mudar para ${parcelasNum} parcela(s): a(s) parcela(s) ${numeros} ja esta(o) paga(s) ou antecipada(s).`,
+          error: `Nao e possivel mudar para ${parcelasNum} parcela(s): a(s) parcela(s) ${numeros} ${motivoTravada(travadasExistentes)}.`,
         };
       }
       if (parcelasNum > 1) {
@@ -297,12 +313,12 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       // So recusa a parcela travada que SUMIRIA (virou outra forma de pagamento, ou sobrava linha
       // de um parcelamento maior). A parcela 1 que fica e preservada mais abaixo.
       const numerosFinaisUnicos = new Set(linhasUnicas.map((p) => p.numeroParcela));
-      const travadas = parcelasExistentes.filter((p) => (p.paga || p.antecipada) && !numerosFinaisUnicos.has(p.numeroParcela));
+      const travadas = parcelasExistentes.filter((p) => travada(p) && !numerosFinaisUnicos.has(p.numeroParcela));
       if (travadas.length > 0) {
         const numeros = travadas.map((p) => p.numeroParcela).join(", ");
         return {
           success: false,
-          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ja esta(o) paga(s) ou antecipada(s) e seria(m) apagada(s).`,
+          error: `Nao e possivel salvar: a(s) parcela(s) ${numeros} ${motivoTravada(travadas)} e seria(m) apagada(s).`,
         };
       }
     }
@@ -350,9 +366,13 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         : parcelasForm.length > 0
           ? parcelasForm.map((p) => p.numeroParcela)
           : parcelasExistentes.map((p) => p.numeroParcela);
-    const antecipadasAposSalvar = numerosFinais.filter((n) => pagasMap.get(n)?.antecipada).length;
+    const linhasFinais = numerosFinais.map((n) => ({
+      antecipada: Boolean(pagasMap.get(n)?.antecipada),
+      emAndamento: pagasMap.get(n)?.antecipacaoLoteId != null,
+    }));
+    // Mesma regra do lote (`flagDaVenda`): sem ela uma venda em andamento perdia o flag 2 ao salvar.
     const novoStatusAntecipacao =
-      antecipadasAposSalvar === 0 ? undefined : antecipadasAposSalvar === numerosFinais.length ? 1 : 3;
+      linhasFinais.some((l) => l.antecipada || l.emAndamento) ? flagDaVenda(linhasFinais) : undefined;
 
     // valorParcela alimenta limite de credito e consignado. Mudou parcelas ou total, a
     // parcela e recalculada; save sem mudanca nao reescreve o valor gravado (ver
@@ -432,6 +452,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
               valorParcela: p.valorParcela,
               paga: baixa?.paga ?? false,
               dataPagamento: baixa?.dataPagamento ?? null,
+              // Sem isto o lote em andamento perdia as parcelas a cada save da venda.
+              antecipacaoLoteId: existente?.antecipacaoLoteId ?? null,
               // Sem isto a parcela ja antecipada na Prudent voltava a "a antecipar"
               // a cada edicao da venda, e a fila deixava antecipa-la de novo.
               antecipada: existente?.antecipada ?? false,
@@ -463,6 +485,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
                 valorParcela: p.valorParcela,
                 paga: existente?.paga ?? false,
                 dataPagamento: existente?.dataPagamento ?? null,
+                antecipacaoLoteId: existente?.antecipacaoLoteId ?? null,
                 antecipada: existente?.antecipada ?? false,
                 origemPagamento: existente?.origemPagamento ?? null,
                 asaasPaymentId: existente?.asaasPaymentId ?? null,

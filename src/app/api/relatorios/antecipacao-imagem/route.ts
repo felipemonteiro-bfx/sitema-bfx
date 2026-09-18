@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         // PDF mostrava parcelas que nao estavam no lote.
         parcelasVencimento: {
           where: {
-            ...(incluirAntecipadas ? {} : { antecipada: false }),
+            ...(incluirAntecipadas ? {} : { antecipada: false, antecipacaoLoteId: null }),
             ...(periodo ? { dataVencimento: { gte: periodo.inicio, lte: periodo.fim } } : {}),
           },
           select: {

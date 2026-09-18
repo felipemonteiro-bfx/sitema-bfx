@@ -46,8 +46,8 @@ describe("parcelasDaVenda — o popover das parcelas", () => {
       [2, "2026-09-10", 305, "antecipada"],
       [3, "2026-10-10", 305, "a_antecipar"],
     ]);
-    expect(r.contagem).toEqual({ antecipadas: 1, aAntecipar: 1, vencidas: 1 });
-    expect(r.totais).toEqual({ antecipado: 305, faltaAntecipar: 305 });
+    expect(r.contagem).toEqual({ antecipadas: 1, emAndamento: 0, aAntecipar: 1, vencidas: 1 });
+    expect(r.totais).toEqual({ antecipado: 305, emAndamento: 0, faltaAntecipar: 305 });
     expect(r.desfeita).toBe(false);
   });
 
@@ -58,7 +58,7 @@ describe("parcelasDaVenda — o popover das parcelas", () => {
 
   it("venda legada com antecipada = 1: todas as parcelas antecipadas", () => {
     const r = parcelasDaVenda(venda({ antecipada: 1, parcelas_detalhes: [p("2026-08-10", 100, false, 1), p("2026-10-10", 100, false, 2)] }), HOJE);
-    expect(r.contagem).toEqual({ antecipadas: 2, aAntecipar: 0, vencidas: 0 });
+    expect(r.contagem).toEqual({ antecipadas: 2, emAndamento: 0, aAntecipar: 0, vencidas: 0 });
   });
 
   it("sem número gravado, numera pela ordem de vencimento", () => {
@@ -71,8 +71,8 @@ describe("parcelasDaVenda — o popover das parcelas", () => {
 
   it("venda cancelada não tem parcela a antecipar", () => {
     const r = parcelasDaVenda(venda({ status: "cancelada", parcelas_detalhes: [p("2026-10-10", 100, false, 1)] }), HOJE);
-    expect(r.contagem).toEqual({ antecipadas: 0, aAntecipar: 0, vencidas: 0 });
-    expect(r.totais).toEqual({ antecipado: 0, faltaAntecipar: 0 });
+    expect(r.contagem).toEqual({ antecipadas: 0, emAndamento: 0, aAntecipar: 0, vencidas: 0 });
+    expect(r.totais).toEqual({ antecipado: 0, emAndamento: 0, faltaAntecipar: 0 });
     // A tela diz "cancelada ou estornada" em vez de "sem parcelas cadastradas".
     expect(r.desfeita).toBe(true);
   });
