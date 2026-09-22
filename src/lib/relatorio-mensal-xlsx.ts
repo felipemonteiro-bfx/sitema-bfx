@@ -68,7 +68,7 @@ function linhaProduto(linha: LinhaProdutoRelatorio): string {
   ].join("")}</Row>`;
 }
 
-/** Gera o primeiro anexo mensal no layout XML do modelo de antecipacao. */
+/** Fonte de verdade autocontida do primeiro anexo no layout aprovado. */
 export function gerarPlanilhaAntecipacao(
   linhas: LinhaProdutoRelatorio[],
   competencia: string

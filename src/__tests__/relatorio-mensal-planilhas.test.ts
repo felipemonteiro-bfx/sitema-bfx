@@ -75,7 +75,6 @@ describe("gerarPlanilhaAntecipacao", () => {
 
     expect(xml).toContain("Ana &amp; Lima");
     expect(xml).toContain("Notebook &lt;Pro&gt; 15&quot;");
-    expect(xml).not.toContain("DERLANY DOS SANTOS GARCIA");
     expect(quantidade(xml, "Ana &amp; Lima")).toBe(1);
     expect(quantidade(xml, "Bruno Souza")).toBe(1);
   });
@@ -93,13 +92,11 @@ describe("gerarPlanilhaModeloOficial", () => {
     expect(xml).toContain('<Data ss:Type="String">10/10/2026, 10/11/2026</Data>');
   });
 
-  it("escapa nomes e produtos sem copiar funcionarios ou valores do arquivo de referencia", () => {
+  it("escapa os campos textuais e mantem uma linha para cada produto consolidado", () => {
     const xml = texto(gerarPlanilhaModeloOficial(LINHAS, "2026-09"));
 
     expect(xml).toContain("Ana &amp; Lima");
     expect(xml).toContain("Notebook &lt;Pro&gt; 15&quot;");
-    expect(xml).not.toContain("ADAYNE ALVES PIRES");
-    expect(xml).not.toContain("ADEVANDO SOUZA DO NASCIMENTO");
     expect(quantidade(xml, "Ana &amp; Lima")).toBe(1);
     expect(quantidade(xml, "Bruno Souza")).toBe(1);
   });

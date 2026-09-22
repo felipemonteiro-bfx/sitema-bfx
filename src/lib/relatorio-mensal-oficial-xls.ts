@@ -33,7 +33,7 @@ function linhaProduto(linha: LinhaProdutoRelatorio): string {
   ].join("")}</Row>`;
 }
 
-/** Gera o segundo anexo no layout oficial normalizado para SpreadsheetML. */
+/** Fonte de verdade autocontida do segundo anexo no layout oficial aprovado. */
 export function gerarPlanilhaModeloOficial(
   linhas: LinhaProdutoRelatorio[],
   competencia: string
