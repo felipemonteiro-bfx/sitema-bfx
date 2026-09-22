@@ -36,6 +36,7 @@ describe("enviarTermoAssinadoAoRh", () => {
       empresa: "Empresa legada",
       empresaParceiraId: 7,
     },
+    assinatura: { assinaturaStatus: "assinado" },
     itens: [{ produtoNome: "Produto & teste", quantidade: 1, subtotal: 123.45 }],
   };
   const empresa = {
@@ -159,6 +160,36 @@ describe("enviarTermoAssinadoAoRh", () => {
     expect(dbMock.venda.update.mock.calls.at(-1)?.[0].data).not.toHaveProperty("assinaturaToken");
   });
 
+  it("marca falhou quando SMTP não está configurado", async () => {
+    delete process.env.SMTP_HOST;
+    delete process.env.SMTP_USER;
+    delete process.env.SMTP_PASS;
+    dbMock.config.findFirst.mockResolvedValue(null);
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    await expect(enviarTermoAssinadoAoRh(vendaId)).resolves.toEqual({
+      status: "falhou",
+      error: "SMTP não configurado",
+    });
+    expect(dbMock.venda.update).toHaveBeenCalledWith({
+      where: { id: vendaId },
+      data: expect.objectContaining({ termoEmailStatus: "falhou", termoEmailErro: "SMTP não configurado" }),
+    });
+  });
+
+  it("marca erro_dados e não envia antes da assinatura estar assinado", async () => {
+    dbMock.venda.findUnique.mockResolvedValue({ ...venda, assinatura: { assinaturaStatus: "pendente" } });
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    await expect(enviarTermoAssinadoAoRh(vendaId)).resolves.toEqual({ status: "erro_dados" });
+    expect(documentoMock).not.toHaveBeenCalled();
+    expect(smtpWrites).toHaveLength(0);
+    expect(dbMock.venda.update).toHaveBeenCalledWith({
+      where: { id: vendaId },
+      data: expect.objectContaining({ termoEmailStatus: "erro_dados" }),
+    });
+  });
+
   it("marca erro_dados quando o documento assinado não existe", async () => {
     documentoMock.mockResolvedValue(null);
     const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
@@ -179,5 +210,31 @@ describe("enviarTermoAssinadoAoRh", () => {
     expect(dbMock.empresaParceira.findFirst).toHaveBeenCalledWith({
       where: { nome: { equals: "Empresa legada", mode: "insensitive" } },
     });
+  });
+
+  it("usa o fallback por nome quando a FK existe mas não resolve empresa", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue(null);
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    await enviarTermoAssinadoAoRh(vendaId);
+
+    expect(dbMock.empresaParceira.findFirst).toHaveBeenCalledWith({
+      where: { nome: { equals: "Empresa legada", mode: "insensitive" } },
+    });
+  });
+
+  it("limita o erro SMTP sanitizado a 500 caracteres", async () => {
+    const erroLongo = `prefixo\n${"x".repeat(700)}`;
+    netConnectMock.mockImplementation(() => {
+      throw new Error(erroLongo);
+    });
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    const resultado = await enviarTermoAssinadoAoRh(vendaId);
+
+    expect(resultado.status).toBe("falhou");
+    expect(resultado.error).toHaveLength(500);
+    expect(resultado.error).not.toMatch(/[\r\n\u0000-\u001f\u007f]/);
+    expect(dbMock.venda.update.mock.calls.at(-1)?.[0].data.termoEmailErro).toBe(resultado.error);
   });
 });

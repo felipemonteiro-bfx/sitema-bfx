@@ -100,8 +100,7 @@ function escapeHtml(s: string): string {
 export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   const cfg = await getSmtpConfig();
   if (!cfg) {
-    console.warn("[email] SMTP not configured — skipping email send.");
-    return;
+    throw new Error("SMTP não configurado");
   }
 
   const toList = Array.isArray(opts.to) ? opts.to : [opts.to];
@@ -132,19 +131,25 @@ async function updateTermoEmailStatus(vendaId: number, data: {
 export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEmailResult> {
   const venda = await prisma.venda.findUnique({
     where: { id: vendaId },
-    include: { cliente: true, itens: true },
+    include: { cliente: true, itens: true, assinatura: true },
   });
 
-  if (!venda?.cliente) {
-    await updateTermoEmailStatus(vendaId, { termoEmailStatus: "erro_dados", termoEmailErro: "Venda ou cliente não encontrado" });
+  if (!venda?.cliente || venda.assinatura?.assinaturaStatus !== "assinado") {
+    await updateTermoEmailStatus(vendaId, {
+      termoEmailStatus: "erro_dados",
+      termoEmailErro: !venda?.cliente ? "Venda ou cliente não encontrado" : "Assinatura não está assinada",
+    });
     return { status: "erro_dados" };
   }
 
-  const empresa = venda.cliente.empresaParceiraId
+  let empresa = venda.cliente.empresaParceiraId
     ? await prisma.empresaParceira.findUnique({ where: { id: venda.cliente.empresaParceiraId } })
-    : venda.cliente.empresa
-      ? await prisma.empresaParceira.findFirst({ where: { nome: { equals: venda.cliente.empresa, mode: "insensitive" } } })
-      : null;
+    : null;
+  if (!empresa && venda.cliente.empresa) {
+    empresa = await prisma.empresaParceira.findFirst({
+      where: { nome: { equals: venda.cliente.empresa, mode: "insensitive" } },
+    });
+  }
 
   if (!empresa) {
     await updateTermoEmailStatus(vendaId, { termoEmailStatus: "erro_dados", termoEmailErro: "Empresa parceira não encontrada" });
