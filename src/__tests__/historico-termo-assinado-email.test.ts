@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readFileSync } from "node:fs";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
+import { obterEstadoTermoAssinado } from "@/lib/historico-termo-email";
 
 const mocks = vi.hoisted(() => ({
   prisma: { venda: { findUnique: vi.fn() } },
@@ -60,15 +60,6 @@ describe("enviarEmailEmpresa no histórico", () => {
 });
 
 describe("histórico — reenvio do termo", () => {
-  const page = () => readFileSync("src/app/(app)/historico/page.tsx", "utf8");
-
-  it("consulta o status persistido do email do termo", () => {
-    const source = page();
-    expect(source).toContain("termoEmailStatus: true");
-    expect(source).toContain("termoEmailEnviadoEm: true");
-    expect(source).toContain("termoEmailErro: true");
-  });
-
   it("renderiza o botão real com o contexto do termo ao RH", () => {
     const markup = renderToStaticMarkup(React.createElement(EnviarEmailEmpresaButton, {
       vendaId: 42,
@@ -80,11 +71,21 @@ describe("histórico — reenvio do termo", () => {
     expect(markup).not.toContain("Empresa</button>");
   });
 
-  it("mantém a condição de assinatura e os status persistidos no histórico", () => {
-    const source = page();
-    expect(source).toContain('v.assinatura?.assinaturaStatus === "assinado"');
-    expect(source).toContain('v.termoEmailStatus === "enviado"');
-    expect(source).toContain('v.termoEmailStatus === "falhou"');
-    expect(source).toContain('v.termoEmailStatus === "sem_email"');
+  it.each([
+    ["enviado", "Enviado"],
+    ["falhou", "Falhou"],
+    ["sem_email", "Sem e-mail do RH"],
+  ] as const)("usa o rótulo de status %s no runtime", (status, statusLabel) => {
+    expect(obterEstadoTermoAssinado("assinado", status)).toEqual({
+      mostrarReenvio: true,
+      statusLabel,
+    });
+  });
+
+  it("não mostra reenvio para venda não assinada", () => {
+    expect(obterEstadoTermoAssinado("pendente", "enviado")).toEqual({
+      mostrarReenvio: false,
+      statusLabel: null,
+    });
   });
 });

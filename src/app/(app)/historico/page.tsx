@@ -31,6 +31,7 @@ import { resolverPeriodo, paraInputDate, fimInclusivoParaInput } from "@/lib/per
 import { formatarDataPura, hojeDataPura } from "@/lib/data-pura";
 import { getSession } from "@/lib/session";
 import { totalParcelasExibido, type ParcelaRecebimento } from "@/lib/recebimento-parcelas";
+import { obterEstadoTermoAssinado } from "@/lib/historico-termo-email";
 
 // Data de venda e data pura (meia-noite UTC): formatar em Manaus mostrava o dia
 // anterior — 02/07 virava 01/07 — e fazia o filtro de periodo parecer quebrado.
@@ -527,24 +528,25 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         ) : v.assinaturaToken ? (
                           <CopiarLinkAssinatura token={v.assinaturaToken} />
                         ) : null}
-                        {v.assinatura?.assinaturaStatus === "assinado" && (
+                        {(() => {
+                          const termoEmail = obterEstadoTermoAssinado(
+                            v.assinatura?.assinaturaStatus,
+                            v.termoEmailStatus,
+                          );
+
+                          return termoEmail.mostrarReenvio && (
                           <div className="flex flex-col items-end gap-1">
                             <EnviarEmailEmpresaButton
                               vendaId={v.id}
                               onSend={enviarEmailEmpresa}
                               label="Reenviar termo ao RH"
                             />
-                            {v.termoEmailStatus === "enviado" && (
-                              <span className="text-xs text-success-text">Enviado</span>
-                            )}
-                            {v.termoEmailStatus === "falhou" && (
-                              <span className="text-xs text-destructive">Falhou</span>
-                            )}
-                            {v.termoEmailStatus === "sem_email" && (
-                              <span className="text-xs text-warning-text">Sem e-mail do RH</span>
+                            {termoEmail.statusLabel && (
+                              <span className="text-xs text-muted-foreground">{termoEmail.statusLabel}</span>
                             )}
                           </div>
-                        )}
+                          );
+                        })()}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -651,5 +653,4 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     </div>
   );
 }
-
 
