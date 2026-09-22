@@ -190,7 +190,8 @@ export default async function Page() {
       grupo.push(venda);
       grupos.set(empresa, grupo);
     }
-    const gruposParaExibir = grupos.size > 0 ? [...grupos.entries()] : [["Sem empresa", [] as typeof vendas]];
+    const gruposParaExibir: Array<[string, typeof vendas]> =
+      grupos.size > 0 ? [...grupos.entries()] : [["Sem empresa", []]];
     return gruposParaExibir.map(([empresa, vendasDoGrupo], indice) => ({
       id: b.id,
       chave: `${b.id}-${indice}-${empresa}`,
