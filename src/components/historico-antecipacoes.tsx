@@ -26,6 +26,7 @@ import { cancelarLoteAction, concluirLoteAction } from '@/app/(app)/prudent/acti
 
 interface Batch {
   id: number;
+  chave?: string;
   criadaEm: Date | string;
   vendaIds: string;
   valorTotal: number;
@@ -184,7 +185,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
         ) : (
           <div className="space-y-3">
             {batchesPagina.map((b) => (
-              <details key={b.id} className="group rounded-xl border border-border bg-card transition-all hover:border-primary/30">
+              <details key={b.chave ?? b.id} className="group rounded-xl border border-border bg-card transition-all hover:border-primary/30">
                 <summary className="flex cursor-pointer list-none flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <div className="flex items-center gap-2">

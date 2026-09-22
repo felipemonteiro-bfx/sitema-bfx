@@ -159,22 +159,8 @@ export default async function Page() {
     : [];
   const vendaPorId = new Map(vendasDosLotes.map((v) => [v.id, v]));
 
-  const batchesFormatados = batches.map((b) => ({
-    id: b.id,
-    criadaEm: b.criadaEm,
-    vendaIds: b.vendaIds,
-    valorTotal: b.valorTotal,
-    quantidadeVendas: b.quantidadeVendas,
-    periodoDescricao: b.periodoDescricao,
-    // O historico precisa do periodo gravado para reemitir o relatorio do lote.
-    periodoInicio: b.periodoInicio,
-    periodoFim: b.periodoFim,
-    // Ciclo do lote (2026-09-17): o histórico é onde o retorno da Prudent é confirmado.
-    status: b.status,
-    origem: b.origem,
-    concluidaEm: b.concluidaEm,
-    concluidaPor: b.concluidaPor,
-    vendas: (() => {
+  const batchesFormatados = batches.flatMap((b) => {
+    const vendas = (() => {
       try {
         const ids = JSON.parse(b.vendaIds);
         if (!Array.isArray(ids)) return [];
@@ -192,8 +178,37 @@ export default async function Page() {
       } catch {
         return [];
       }
-    })(),
-  }));
+    })();
+
+    // Lotes antigos podiam conter empresas diferentes. Eles continuam sendo
+    // um único registro no banco para conclusão/cancelamento, mas aparecem em
+    // cartões separados e cada relatório usa somente a empresa correspondente.
+    const grupos = new Map<string, typeof vendas>();
+    for (const venda of vendas) {
+      const empresa = (venda.empresa ?? "Sem empresa").trim() || "Sem empresa";
+      const grupo = grupos.get(empresa) ?? [];
+      grupo.push(venda);
+      grupos.set(empresa, grupo);
+    }
+    const gruposParaExibir = grupos.size > 0 ? [...grupos.entries()] : [["Sem empresa", [] as typeof vendas]];
+    return gruposParaExibir.map(([empresa, vendasDoGrupo], indice) => ({
+      id: b.id,
+      chave: `${b.id}-${indice}-${empresa}`,
+      criadaEm: b.criadaEm,
+      vendaIds: JSON.stringify(vendasDoGrupo.map((v) => v.id)),
+      valorTotal: vendasDoGrupo.reduce((total, v) => total + v.valorTotal, 0),
+      quantidadeVendas: vendasDoGrupo.length,
+      periodoDescricao: b.periodoDescricao,
+      periodoInicio: b.periodoInicio,
+      periodoFim: b.periodoFim,
+      status: b.status,
+      origem: b.origem,
+      concluidaEm: b.concluidaEm,
+      concluidaPor: b.concluidaPor,
+      empresa,
+      vendas: vendasDoGrupo,
+    }));
+  });
 
   // Antecipacoes que existem SEM lote. Medido em producao (2026-08-11):
   // `antecipacao_batches` vazia e 26 vendas com `antecipada = 1`. Sem este
