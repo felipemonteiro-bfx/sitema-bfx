@@ -173,6 +173,9 @@ model Venda {
   asaasPaymentId     String?   @map("asaas_payment_id")
   boletoUrl          String?   @map("boleto_url")
   assinaturaToken    String?   @unique @map("assinatura_token")
+  termoEmailStatus      String?   @map("termo_email_status")
+  termoEmailEnviadoEm   DateTime? @map("termo_email_enviado_em")
+  termoEmailErro        String?   @map("termo_email_erro")
 
   // QK-F21-02: rastreabilidade do custo real capturado da Uber Direct (Get Delivery
   // Status) e protecao contra sobrescrita. uberDeliveryId e @unique para que o mesmo
