@@ -18,6 +18,16 @@ export type MimeMessageInput = {
   attachments?: EmailAttachment[];
 };
 
+const EMAIL_ADDRESS_PATTERN = /^[^\s@<>(),:;[\]\\"]+@[^\s@<>(),:;[\]\\"]+$/;
+
+export function assertSafeEmailAddresses(addresses: string[], label = "endereço de e-mail"): void {
+  for (const address of addresses) {
+    if (!address || /[\u0000-\u001f\u007f]/.test(address) || !EMAIL_ADDRESS_PATTERN.test(address)) {
+      throw new Error(`${label} inválido`);
+    }
+  }
+}
+
 /** Codifica string em base64 (headers/corpo). */
 export function toBase64(str: string): string {
   return Buffer.from(str).toString("base64");
@@ -46,6 +56,9 @@ export function buildMimeMessage(
 ): string {
   const toList = Array.isArray(opts.to) ? opts.to : [opts.to];
   const ccList = opts.cc || [];
+  assertSafeEmailAddresses(toList, "destinatário");
+  assertSafeEmailAddresses(ccList, "Cc");
+  assertSafeEmailAddresses([from], "remetente");
   const boundary = overrides?.boundary ?? `bfx_${Date.now()}`;
   const dateHeader = overrides?.date ?? new Date().toUTCString();
   const ccHeaderLine = ccList.length ? `Cc: ${ccList.join(", ")}` : null;

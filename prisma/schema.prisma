@@ -530,7 +530,7 @@ model AiMensagem {
 model Assinatura {
   id               Int       @id @default(autoincrement())
   vendaId          Int       @unique @map("venda_id")
-  assinaturaStatus String?   @map("assinatura_status") // pendente | assinado | expirado
+  assinaturaStatus String?   @map("assinatura_status") // pendente | processando | assinado | expirado
   assinaturaEm     DateTime? @map("assinatura_em")
   venda            Venda     @relation(fields: [vendaId], references: [id])
 

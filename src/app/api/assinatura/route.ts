@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Token e assinatura são obrigatórios' }, { status: 400 });
   }
 
+  let claimOwned = false;
+  let claimedVendaId: number | null = null;
+
   try {
     const venda = await prisma.venda.findUnique({
       where: {
@@ -78,6 +81,38 @@ export async function POST(request: NextRequest) {
     if (existingAssinatura && existingAssinatura.assinaturaStatus === 'assinado') {
       return NextResponse.json({ error: 'Esta venda já foi assinada.' }, { status: 409 });
     }
+
+    // Claim the unique Assinatura row before doing expensive PDF work. Only the
+    // request that changes pendente/expirado/null to processando may continue.
+    const claim = await prisma.assinatura.updateMany({
+      where: {
+        vendaId: venda.id,
+        OR: [
+          { assinaturaStatus: 'pendente' },
+          { assinaturaStatus: 'expirado' },
+          { assinaturaStatus: null },
+        ],
+      },
+      data: { assinaturaStatus: 'processando' },
+    });
+
+    if (claim.count === 0) {
+      if (existingAssinatura) {
+        return NextResponse.json({ error: 'Esta assinatura já está sendo processada.' }, { status: 409 });
+      }
+      try {
+        await prisma.assinatura.create({
+          data: { vendaId: venda.id, assinaturaStatus: 'processando' },
+        });
+      } catch (error) {
+        if ((error as { code?: string })?.code === 'P2002') {
+          return NextResponse.json({ error: 'Esta assinatura já está sendo processada.' }, { status: 409 });
+        }
+        throw error;
+      }
+    }
+    claimOwned = true;
+    claimedVendaId = venda.id;
 
     // Generate the full recibo PDF with embedded signature
     const pdfBytes = await generateReciboPdf(venda.id, 'autorizacao');
@@ -122,29 +157,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Always store in Documento table as authoritative copy
-    await prisma.documento.create({
-      data: {
-        vendaId: venda.id,
-        tipo: 'comprovante_assinatura',
-        mimeType: 'application/pdf',
-        conteudo: pdfBuffer,
-        tamanhoBytes: pdfBuffer.length,
-      },
+    // Persist the authoritative PDF and finalize the claim together. A failed
+    // transaction rolls back the document, so a retry cannot duplicate it.
+    await prisma.$transaction(async (tx) => {
+      await tx.documento.create({
+        data: {
+          vendaId: venda.id,
+          tipo: 'comprovante_assinatura',
+          mimeType: 'application/pdf',
+          conteudo: pdfBuffer,
+          tamanhoBytes: pdfBuffer.length,
+        },
+      });
+      await tx.assinatura.update({
+        where: { vendaId: venda.id },
+        data: {
+          assinaturaStatus: 'assinado',
+          assinaturaEm: new Date(),
+        },
+      });
     });
-
-    await prisma.assinatura.upsert({
-      where: { vendaId: venda.id },
-      update: {
-        assinaturaStatus: 'assinado',
-        assinaturaEm: new Date(),
-      },
-      create: {
-        vendaId: venda.id,
-        assinaturaStatus: 'assinado',
-        assinaturaEm: new Date(),
-      },
-    });
+    claimOwned = false;
 
     try {
       await enviarTermoAssinadoAoRh(venda.id);
@@ -161,6 +194,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: 'Assinatura recebida com sucesso!' });
   } catch (error) {
+    if (claimOwned) {
+      try {
+        await prisma.assinatura.updateMany({
+          where: { vendaId: claimedVendaId as number, assinaturaStatus: 'processando' },
+          data: { assinaturaStatus: 'pendente' },
+        });
+      } catch (resetError) {
+        console.error('Erro ao liberar claim da assinatura:', resetError);
+      }
+    }
     console.error('Erro ao salvar assinatura:', error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }

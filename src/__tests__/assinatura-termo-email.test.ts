@@ -3,9 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   prisma: {
     venda: { findUnique: vi.fn() },
-    assinatura: { findFirst: vi.fn(), upsert: vi.fn() },
+    assinatura: { findFirst: vi.fn(), updateMany: vi.fn(), create: vi.fn(), update: vi.fn() },
     documento: { create: vi.fn() },
     notificacao: { create: vi.fn() },
+    $transaction: vi.fn(),
   },
   enviarTermoAssinadoAoRh: vi.fn(),
   generateReciboPdf: vi.fn(),
@@ -57,8 +58,10 @@ describe("POST /api/assinatura — notificação do termo assinado", () => {
     mocks.prisma.documento.create.mockImplementation(async () => {
       ordem.push("documento.create");
     });
-    mocks.prisma.assinatura.upsert.mockImplementation(async () => {
-      ordem.push("assinatura.upsert");
+    mocks.prisma.assinatura.updateMany.mockResolvedValue({ count: 1 });
+    mocks.prisma.$transaction.mockImplementation(async (callback: (tx: typeof mocks.prisma) => Promise<void>) => callback(mocks.prisma));
+    mocks.prisma.assinatura.update.mockImplementation(async () => {
+      ordem.push("assinatura.update");
     });
     mocks.prisma.notificacao.create.mockResolvedValue({});
     mocks.generateReciboPdf.mockResolvedValue(new Uint8Array([1]));
@@ -74,8 +77,24 @@ describe("POST /api/assinatura — notificação do termo assinado", () => {
     expect(mocks.enviarTermoAssinadoAoRh).toHaveBeenCalledWith(42);
     expect(ordem).toEqual([
       "documento.create",
-      "assinatura.upsert",
+      "assinatura.update",
       "enviarTermoAssinadoAoRh",
     ]);
+  });
+
+  it("retorna 409 quando outro POST já reivindicou a assinatura", async () => {
+    mocks.generateReciboPdf.mockClear();
+    mocks.prisma.documento.create.mockClear();
+    mocks.enviarTermoAssinadoAoRh.mockClear();
+    mocks.prisma.venda.findUnique.mockResolvedValue({ id: 42 });
+    mocks.prisma.assinatura.updateMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.assinatura.findFirst.mockResolvedValue({ assinaturaStatus: "processando" });
+
+    const response = await POST(fakeRequest());
+
+    expect(response.status).toBe(409);
+    expect(mocks.generateReciboPdf).not.toHaveBeenCalled();
+    expect(mocks.prisma.documento.create).not.toHaveBeenCalled();
+    expect(mocks.enviarTermoAssinadoAoRh).not.toHaveBeenCalled();
   });
 });

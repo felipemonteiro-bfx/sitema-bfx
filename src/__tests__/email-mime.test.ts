@@ -4,6 +4,13 @@ import { buildMimeMessage, chunkBase64 } from "@/lib/email-mime";
 const FIXED = { boundary: "bfx_TEST", date: "Tue, 14 Jul 2026 00:00:00 GMT" };
 
 describe("buildMimeMessage — sem anexos", () => {
+  it("rejeita destinatário, cópia e remetente inválidos antes de montar headers", () => {
+    expect(() => buildMimeMessage({ to: "invalido", subject: "s", html: "h" }, "from@test.com")).toThrow(/e-?mail|destinatário/i);
+    expect(() => buildMimeMessage({ to: "to@test.com\r\nBcc: x@test.com", subject: "s", html: "h" }, "from@test.com")).toThrow(/inválido|controle|email/i);
+    expect(() => buildMimeMessage({ to: "to@test.com", cc: [""], subject: "s", html: "h" }, "from@test.com")).toThrow(/e-?mail|Cc/i);
+    expect(() => buildMimeMessage({ to: "to@test.com", subject: "s", html: "h" }, "from@test.com\nBcc: x@test.com")).toThrow(/inválido|controle|email/i);
+  });
+
   it("usa multipart/alternative e mantem comportamento historico", () => {
     const msg = buildMimeMessage(
       { to: "rh@empresa.com", subject: "Olá", html: "<p>oi</p>" },

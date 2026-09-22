@@ -14,7 +14,7 @@ import { formatBRL, formatDateBR } from "@/lib/utils";
 import { enviarWhatsApp } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { obterDocumentoPorVendaETipo } from "@/lib/documento-service";
-import { buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
+import { assertSafeEmailAddresses, buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
 import { TERMO_EMAIL_STATUS_VALUES, type TermoEmailStatus } from "@/lib/termo-email-status";
 
 export { TERMO_EMAIL_STATUS_VALUES };
@@ -98,16 +98,18 @@ function escapeHtml(s: string): string {
  * Sends an email via raw SMTP (supports STARTTLS on port 587 or TLS on port 465).
  */
 export async function sendEmail(opts: SendEmailOptions): Promise<void> {
+  const toList = Array.isArray(opts.to) ? opts.to : [opts.to];
+  const ccList = opts.cc || [];
+  assertSafeEmailAddresses(toList, "destinatário");
+  assertSafeEmailAddresses(ccList, "Cc");
+
   const cfg = await getSmtpConfig();
   if (!cfg) {
     throw new Error("SMTP não configurado");
   }
 
-  const toList = Array.isArray(opts.to) ? opts.to : [opts.to];
-  const ccList = opts.cc || [];
+  assertSafeEmailAddresses([cfg.from], "remetente");
   const allRecipients = [...toList, ...ccList];
-
-  if (allRecipients.length === 0) return;
 
   const message = buildMimeMessage(opts, cfg.from);
 
@@ -170,6 +172,7 @@ export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEma
 
   const clienteNome = venda.cliente.nome || "Cliente";
   const produtos = produtosTexto(venda);
+  const totalValor = valorTotalVenda(venda);
   const html = `
 <!DOCTYPE html>
 <html lang="pt-BR"><head><meta charset="UTF-8"></head>
@@ -179,13 +182,16 @@ export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEma
   <p>Segue em anexo o termo assinado da venda para o colaborador <strong>${escapeHtml(clienteNome)}</strong>.</p>
   <p><strong>Matrícula:</strong> ${escapeHtml(venda.cliente.matricula || "N/D")}</p>
   <p><strong>Produto(s):</strong> ${escapeHtml(produtos)}</p>
+  <p><strong>Vendedor:</strong> ${escapeHtml(venda.vendedor || "N/D")}</p>
   <p><strong>Data da venda:</strong> ${formatDateBR(venda.dataVenda)}</p>
+  <p><strong>Parcelas:</strong> ${venda.parcelas || 1}x</p>
+  <p><strong>Valor total:</strong> ${formatBRL(totalValor)}</p>
 </body></html>`;
 
   try {
     await sendEmail({
       to: emailRh,
-      subject: `Termo assinado — ${clienteNome}`,
+      subject: `Termo assinado — venda #${vendaId} — ${clienteNome}`,
       html,
       attachments: [{
         filename: `termo-assinado-${vendaId}.pdf`,

@@ -106,6 +106,14 @@ describe("enviarTermoAssinadoAoRh", () => {
     expect(smtpWrites.some((write) => write.includes("RCPT TO:<rh@empresa.test>"))).toBe(true);
     expect(smtpWrites.some((write) => write.includes(`termo-assinado-${vendaId}.pdf`))).toBe(true);
     expect(smtpWrites.some((write) => write.includes(pdf.toString("base64")))).toBe(true);
+    expect(smtpWrites.some((write) => write.includes(Buffer.from("Termo assinado — venda #42 — Cliente <Teste>").toString("base64")))).toBe(true);
+    const mime = smtpWrites.find((write) => write.includes("\r\n.\r\n")) || "";
+    const htmlPart = mime.match(/Content-Type: text\/html; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n([A-Za-z0-9+/=\r\n]+)\r\n\r\n--/)?.[1] || "";
+    const decodedHtml = Buffer.from(htmlPart.replace(/\s/g, ""), "base64").toString("utf8");
+    expect(decodedHtml).toContain("Vendedor");
+    expect(decodedHtml).toContain("3x");
+    expect(decodedHtml).toContain("Valor total:");
+    expect(decodedHtml).toContain("123,45");
     expect(smtpWrites.some((write) => write.includes("extra@empresa.test"))).toBe(false);
     expect(dbMock.venda.update).toHaveBeenCalledWith({
       where: { id: vendaId },
@@ -236,5 +244,21 @@ describe("enviarTermoAssinadoAoRh", () => {
     expect(resultado.error).toHaveLength(500);
     expect(resultado.error).not.toMatch(/[\r\n\u0000-\u001f\u007f]/);
     expect(dbMock.venda.update.mock.calls.at(-1)?.[0].data.termoEmailErro).toBe(resultado.error);
+  });
+
+  it("rejeita emailRh vazio ou malformado antes de abrir SMTP", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue({ ...empresa, emailRh: "nao-e-email" });
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    await expect(enviarTermoAssinadoAoRh(vendaId)).resolves.toMatchObject({ status: "falhou" });
+    expect(netConnectMock).not.toHaveBeenCalled();
+  });
+
+  it("rejeita control character no destinatário antes de construir MIME", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue({ ...empresa, emailRh: "rh@empresa.test\r\nBcc: atacante@test.com" });
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    await expect(enviarTermoAssinadoAoRh(vendaId)).resolves.toMatchObject({ status: "falhou" });
+    expect(netConnectMock).not.toHaveBeenCalled();
   });
 });
