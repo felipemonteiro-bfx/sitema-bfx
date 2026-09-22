@@ -9,8 +9,22 @@
  */
 import { formaPagamentoLabel } from "@/lib/forma-pagamento";
 import type { RelatorioMensalData } from "@/lib/relatorio-mensal";
+import type { LinhaProdutoRelatorio } from "@/lib/relatorio-mensal-produtos";
 
-function escapeXml(value: string): string {
+export const RELATORIO_MENSAL_XLS_MIME = "application/vnd.ms-excel";
+
+export const CABECALHOS_PLANILHA_MENSAL = [
+  "Nome",
+  "CPF",
+  "Empresa",
+  "Data da Compra",
+  "Produto",
+  "Valor da Parcela",
+  "Parcela",
+  "Data de Desconto",
+] as const;
+
+export function escapeXml(value: string): string {
   return value
     .split("&").join("&amp;")
     .split("<").join("&lt;")
@@ -19,17 +33,69 @@ function escapeXml(value: string): string {
     .split("'").join("&apos;");
 }
 
-function cellStr(value: string): string {
+export function cellStr(value: string): string {
   return `<Cell><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
 }
-function cellStrBold(value: string): string {
+export function cellStrBold(value: string): string {
   return `<Cell ss:StyleID="bold"><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
 }
-function cellNum(value: number): string {
+export function cellNum(value: number): string {
   return `<Cell><Data ss:Type="Number">${value.toFixed(2)}</Data></Cell>`;
 }
 function cellNumBold(value: number): string {
   return `<Cell ss:StyleID="bold"><Data ss:Type="Number">${value.toFixed(2)}</Data></Cell>`;
+}
+
+function nomeAbaCompetencia(competencia: string): string {
+  const [ano, mes] = competencia.split("-");
+  const meses = [
+    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez",
+  ];
+  return `${meses[Number(mes) - 1] ?? mes}-${ano}`;
+}
+
+function linhaProduto(linha: LinhaProdutoRelatorio): string {
+  return `<Row>${[
+    cellStr(linha.nome),
+    cellStr(linha.cpf),
+    cellStr(linha.empresa),
+    cellStr(linha.dataCompra),
+    cellStr(linha.produto),
+    cellNum(linha.valorAcumulado),
+    cellStr(linha.parcela),
+    cellStr(linha.dataDesconto),
+  ].join("")}</Row>`;
+}
+
+/** Gera o primeiro anexo mensal no layout XML do modelo de antecipacao. */
+export function gerarPlanilhaAntecipacao(
+  linhas: LinhaProdutoRelatorio[],
+  competencia: string
+): Buffer {
+  const cabecalho = `<Row>${CABECALHOS_PLANILHA_MENSAL.map(cellStrBold).join("")}</Row>`;
+  const dados = linhas.map(linhaProduto).join("\n");
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:x="urn:schemas-microsoft-com:office:excel"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:html="http://www.w3.org/TR/REC-html40">
+<Styles>
+  <Style ss:ID="bold">
+    <Font ss:Bold="1"/>
+  </Style>
+</Styles>
+<Worksheet ss:Name="${escapeXml(nomeAbaCompetencia(competencia))}">
+<Table>
+${cabecalho}
+${dados}
+</Table>
+</Worksheet>
+</Workbook>`;
+
+  return Buffer.from(xml, "utf-8");
 }
 
 function sheetVendas(dados: RelatorioMensalData): string {
