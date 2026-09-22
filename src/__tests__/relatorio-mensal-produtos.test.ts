@@ -118,6 +118,37 @@ describe("consolidarProdutosRelatorio", () => {
     expect(consolidar([...itens].reverse())).toEqual(esperado);
   });
 
+  it("desempata chaves de produto equivalentes no locale ao distribuir o centavo residual", () => {
+    const consolidar = (itens: VendaRelatorioProduto["itens"]) =>
+      consolidarProdutosRelatorio(
+        [
+          venda(12, "2026-09-10", {
+            itens,
+            parcelasVencimento: [
+              {
+                numeroParcela: 1,
+                dataVencimento: new Date("2026-10-10T00:00:00.000Z"),
+                valorParcela: 1.01,
+              },
+            ],
+          }),
+        ],
+        INICIO,
+        FIM
+      ).linhas.map(({ produto, valorAcumulado }) => ({ produto, valorAcumulado }));
+    const itens = [
+      { produtoNome: "OE", quantidade: 1, subtotal: 1 },
+      { produtoNome: "Œ", quantidade: 1, subtotal: 1 },
+    ];
+    const esperado = [
+      { produto: "OE", valorAcumulado: 0.5 },
+      { produto: "Œ", valorAcumulado: 0.51 },
+    ];
+
+    expect(consolidar(itens)).toEqual(esperado);
+    expect(consolidar([...itens].reverse())).toEqual(esperado);
+  });
+
   it("nao mistura o mesmo produto de clientes diferentes e ordena por nome e produto", () => {
     const resultado = consolidarProdutosRelatorio(
       [

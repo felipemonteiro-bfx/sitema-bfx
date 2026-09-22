@@ -45,6 +45,10 @@ type GrupoProduto = Omit<LinhaProdutoRelatorio, "dataCompra" | "valorAcumulado" 
 
 const comparar = new Intl.Collator("pt-BR", { sensitivity: "base" }).compare;
 
+function compararChaves(a: string, b: string): number {
+  return comparar(a, b) || (a < b ? -1 : a > b ? 1 : 0);
+}
+
 function texto(valor: string | null | undefined, fallback = ""): string {
   return valor?.trim().replace(/\s+/g, " ") || fallback;
 }
@@ -135,7 +139,7 @@ export function consolidarProdutosRelatorio(
       venda.itens?.length
         ? venda.itens.map((item) => ({ nome: texto(item.produtoNome, "—"), peso: item.subtotal }))
         : [{ nome: texto(venda.produtoNome, "—"), peso: valorTotalVenda(venda) }]
-    ).sort((a, b) => comparar(normalizar(a.nome), normalizar(b.nome)));
+    ).sort((a, b) => compararChaves(normalizar(a.nome), normalizar(b.nome)));
     const detalhes = detalhesParcelas(venda);
     const valores = distribuirCentavos(detalhes.totalCentavos, itens.map((item) => item.peso));
 
@@ -180,7 +184,12 @@ export function consolidarProdutosRelatorio(
         dataDesconto: [...grupo.datasDesconto].sort().map(formatarData).join(", "),
       };
     })
-    .sort((a, b) => comparar(a.nome, b.nome) || comparar(a.produto, b.produto) || a.clienteId - b.clienteId);
+    .sort(
+      (a, b) =>
+        comparar(a.nome, b.nome) ||
+        compararChaves(normalizar(a.produto), normalizar(b.produto)) ||
+        a.clienteId - b.clienteId
+    );
 
   return {
     linhas,
