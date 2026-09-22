@@ -22,7 +22,6 @@ import { parcelasDaVendaRapida } from "@/lib/parcelas";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { signReciboId } from "@/lib/recibo-url";
-import { sendVendaNotification } from "@/lib/email";
 import { creditarPontosVenda, resgatarPontos } from "@/lib/fidelidade-service";
 import { valorEmReais } from "@/lib/fidelidade";
 import { logError } from "@/lib/logger";
@@ -115,28 +114,6 @@ export async function criarVenda(formData: FormData) {
         data: { qtdEstoque: { decrement: quantidade } },
       });
     }
-  }
-  // Fire-and-forget: notify partner company via email
-  if (clienteId) {
-    void (async () => {
-      try {
-        const vendaComCliente = await prisma.venda.findUnique({
-          where: { id: vendaCriada.id },
-          include: {
-            cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
-            itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
-          },
-        });
-        if (vendaComCliente) {
-          await sendVendaNotification({
-            ...vendaComCliente,
-            cliente: vendaComCliente.cliente ?? undefined,
-          });
-        }
-      } catch (e) {
-        console.error("[email] sendVendaNotification failed (criarVenda):", e);
-      }
-    })();
   }
   revalidarVenda();
 }
@@ -438,29 +415,6 @@ export async function criarVendaV2(
           console.error("[fidelidade] Falha ao debitar pontos resgatados:", e)
         );
       }
-    }
-
-    // Fire-and-forget: notify partner company via email
-    if (clienteId) {
-      void (async () => {
-        try {
-          const vendaComCliente = await prisma.venda.findUnique({
-            where: { id: venda.id },
-            include: {
-              cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
-              itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
-            },
-          });
-          if (vendaComCliente) {
-            await sendVendaNotification({
-              ...vendaComCliente,
-              cliente: vendaComCliente.cliente ?? undefined,
-            });
-          }
-        } catch (e) {
-          console.error("[email] sendVendaNotification failed:", e);
-        }
-      })();
     }
 
     let boletoUrl: string | undefined;

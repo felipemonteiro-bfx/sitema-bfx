@@ -4,6 +4,7 @@ import { PrismaClient } from '@/generated/prisma';
 import { PDFDocument } from 'pdf-lib';
 import { generateReciboPdf } from '@/lib/recibo-pdf';
 import { uploadToMinIO, isMinIOConfigured } from '@/lib/minio';
+import { enviarTermoAssinadoAoRh } from '@/lib/email';
 
 const prisma = new PrismaClient();
 
@@ -144,6 +145,12 @@ export async function POST(request: NextRequest) {
         assinaturaEm: new Date(),
       },
     });
+
+    try {
+      await enviarTermoAssinadoAoRh(venda.id);
+    } catch (error) {
+      console.error('Erro ao notificar RH sobre termo assinado:', error);
+    }
 
     await prisma.notificacao.create({
       data: {
