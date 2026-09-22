@@ -1,8 +1,8 @@
 /**
  * Orquestracao (com efeitos) do relatorio mensal por empresa parceira.
  *
- * Reune a logica pura (`relatorio-mensal.ts`), os geradores PDF/XLSX, o upload
- * MinIO, o envio de email (com anexos) e o registro em `RelatorioEnvioLog`.
+ * Reune a logica pura, os dois geradores XLS e o envio ao RH, registrando o
+ * resultado em `RelatorioEnvioLog`.
  *
  * Reusado por:
  *  - a rota cron `src/app/api/cron/relatorio-mensal/route.ts` (envio agendado);
@@ -10,9 +10,6 @@
  */
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
-import { enviarWhatsApp } from "@/lib/whatsapp";
-import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
-import { uploadToMinIO, isMinIOConfigured } from "@/lib/minio";
 import { formatBRL } from "@/lib/utils";
 import {
   resolverGruposEconomicos,
@@ -25,7 +22,9 @@ import {
   type RelatorioMensalData,
 } from "@/lib/relatorio-mensal";
 import { gerarRelatorioMensalPdf } from "@/lib/relatorio-mensal-pdf";
-import { gerarRelatorioMensalXlsx } from "@/lib/relatorio-mensal-xlsx";
+import { gerarPlanilhaAntecipacao, gerarRelatorioMensalXlsx } from "@/lib/relatorio-mensal-xlsx";
+import { gerarPlanilhaModeloOficial } from "@/lib/relatorio-mensal-oficial-xls";
+import { consolidarProdutosRelatorio } from "@/lib/relatorio-mensal-produtos";
 
 export type StatusRelatorio = "enviado" | "erro" | "sem_vendas" | "sem_email";
 
@@ -61,8 +60,7 @@ function slugFilename(s: string): string {
 }
 
 /** Busca vendas ativas do grupo economico no periodo (FK + fallback texto legado). */
-async function buscarVendasDoGrupo(grupo: GrupoEconomico, periodo: string) {
-  const { inicio, fim } = periodoBoundaries(periodo);
+async function buscarVendasDoGrupo(grupo: GrupoEconomico, inicio: Date, fim: Date) {
   const orClauses = [
     { empresaParceiraId: { in: grupo.empresaIds } },
     ...grupo.empresas.map((e) => ({
@@ -78,7 +76,7 @@ async function buscarVendasDoGrupo(grupo: GrupoEconomico, periodo: string) {
       cliente: { OR: orClauses },
     },
     include: {
-      cliente: { select: { nome: true, matricula: true } },
+      cliente: { select: { id: true, nome: true, cpf: true, matricula: true, empresa: true } },
       itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
       parcelasVencimento: {
         select: { numeroParcela: true, dataVencimento: true, valorParcela: true },
@@ -132,7 +130,7 @@ function resumoHtml(empresaNome: string, periodo: string, dados: RelatorioMensal
 </style></head><body>
 <div class="card">
   <h2>Relatório Mensal de Vendas — ${empresaNome}</h2>
-  <p>Segue em anexo (PDF e planilha) o relatório de <strong>${periodoLabel(periodo)}</strong> com as vendas realizadas aos colaboradores da sua empresa.</p>
+  <p>Seguem em anexo as duas planilhas de desconto em folha de <strong>${periodoLabel(periodo)}</strong>.</p>
   <div>
     <div class="kpi"><span>Total de vendas</span><strong>${dados.totalVendas}</strong></div>
     <div class="kpi"><span>Valor total</span><strong>${formatBRL(dados.valorTotal)}</strong></div>
@@ -146,7 +144,7 @@ function resumoHtml(empresaNome: string, periodo: string, dados: RelatorioMensal
 async function processarGrupo(
   grupo: GrupoEconomico,
   periodo: string,
-  cfg: { logoPath: string | null; adminEmail: string | null },
+  limites: { inicio: Date; fim: Date },
   force: boolean
 ): Promise<ResultadoEmpresa> {
   const empresaId = grupo.canonica.id;
@@ -163,7 +161,7 @@ async function processarGrupo(
     }
   }
 
-  const vendas = await buscarVendasDoGrupo(grupo, periodo);
+  const vendas = await buscarVendasDoGrupo(grupo, limites.inicio, limites.fim);
   const dados = montarDadosRelatorio(vendas);
 
   if (dados.totalVendas === 0) {
@@ -172,60 +170,27 @@ async function processarGrupo(
   }
 
   try {
-    const pdf = await gerarRelatorioMensalPdf({ empresaNome, periodo, dados, logoPath: cfg.logoPath });
-    const xlsx = gerarRelatorioMensalXlsx(dados);
-
-    // Upload MinIO (opcional — download regenera se ausente)
-    let pdfKey: string | null = null;
-    let xlsxKey: string | null = null;
-    if (isMinIOConfigured()) {
-      pdfKey = `relatorios/mensal/${periodo}/${empresaId}.pdf`;
-      xlsxKey = `relatorios/mensal/${periodo}/${empresaId}.xls`;
-      await uploadToMinIO(pdf, pdfKey, "application/pdf");
-      await uploadToMinIO(xlsx, xlsxKey, "application/vnd.ms-excel");
-    }
-
-    const nomeArquivo = `relatorio-${slugFilename(empresaNome)}-${periodo}`;
+    const consolidado = consolidarProdutosRelatorio(vendas, limites.inicio, limites.fim);
+    const antecipacao = gerarPlanilhaAntecipacao(consolidado.linhas, periodo);
+    const oficial = gerarPlanilhaModeloOficial(consolidado.linhas, periodo);
+    const empresaArquivo = slugFilename(empresaNome);
     const anexos = [
-      { filename: `${nomeArquivo}.pdf`, contentType: "application/pdf", content: pdf },
-      { filename: `${nomeArquivo}.xls`, contentType: "application/vnd.ms-excel", content: xlsx },
+      { filename: `antecipacao-${empresaArquivo}-${periodo}.xls`, contentType: "application/vnd.ms-excel", content: antecipacao },
+      { filename: `relatorio-oficial-${empresaArquivo}-${periodo}.xls`, contentType: "application/vnd.ms-excel", content: oficial },
     ];
 
-    // Sem e-mail: fallback WhatsApp para o telefone do RH.
-    if (grupo.emails.length === 0) {
-      const telefone = grupo.empresas.find((e) => e.telefoneRh)?.telefoneRh ?? null;
-      if (telefone) {
-        const msg = [
-          `[BFX] Relatório mensal de vendas — ${periodoLabel(periodo)}`,
-          `Empresa: ${empresaNome}`,
-          `Total de vendas: ${dados.totalVendas}`,
-          `Valor total: ${formatBRL(dados.valorTotal)}`,
-          `A descontar em folha: ${formatBRL(dados.totalDescontoFolha)}`,
-        ].join("\n");
-        try {
-          await enviarWhatsApp({
-            telefone,
-            origem: "relatorio",
-            template: comFallback(TEMPLATES.relatorioEmpresa, [msg], msg),
-          });
-        } catch (err) {
-          console.error(`[relatorio-mensal] Falha WhatsApp fallback ${empresaNome}:`, err);
-        }
-      }
+    const emailRh = grupo.canonica.emailRh?.trim();
+    if (!emailRh) {
       await upsertLog(empresaId, periodo, {
         status: "sem_email",
         totalVendas: dados.totalVendas,
         valorTotal: dados.valorTotal,
-        pdfKey,
-        xlsxKey,
       });
       return { ...baseResult, status: "sem_email", totalVendas: dados.totalVendas, valorTotal: dados.valorTotal };
     }
 
-    const cc = cfg.adminEmail ? [cfg.adminEmail] : [];
     await sendEmail({
-      to: grupo.emails,
-      cc,
+      to: emailRh,
       subject: `Relatório Mensal de Vendas — ${empresaNome} (${periodoLabel(periodo)})`,
       html: resumoHtml(empresaNome, periodo, dados),
       attachments: anexos,
@@ -233,11 +198,9 @@ async function processarGrupo(
 
     await upsertLog(empresaId, periodo, {
       status: "enviado",
-      destinatarios: grupo.emails.join(", "),
+      destinatarios: emailRh,
       totalVendas: dados.totalVendas,
       valorTotal: dados.valorTotal,
-      pdfKey,
-      xlsxKey,
     });
     await prisma.notificacao.create({
       data: {
@@ -264,13 +227,17 @@ async function processarGrupo(
 /** Carrega empresas + vinculos e monta os grupos economicos. */
 async function carregarGrupos(): Promise<GrupoEconomico[]> {
   const empresas = await prisma.empresaParceira.findMany({
-    select: { id: true, nome: true, emailRh: true, emailsExtras: true, telefoneRh: true },
+    select: { id: true, nome: true, emailRh: true },
     orderBy: { id: "asc" },
   });
   const vinculosRaw = await prisma.empresaVinculo.findMany({
     select: { empresaId: true, vinculadaId: true },
   });
-  const empresasLite: EmpresaLite[] = empresas;
+  const empresasLite: EmpresaLite[] = empresas.map((empresa) => ({
+    ...empresa,
+    emailsExtras: null,
+    telefoneRh: null,
+  }));
   const vinculos: VinculoLite[] = vinculosRaw;
   return resolverGruposEconomicos(empresasLite, vinculos);
 }
@@ -287,7 +254,8 @@ export async function gerarArtefatosRelatorioMensal(
   const grupo = grupos.find((g) => g.empresaIds.includes(empresaId));
   if (!grupo) return null;
 
-  const vendas = await buscarVendasDoGrupo(grupo, periodo);
+  const { inicio, fim } = periodoBoundaries(periodo);
+  const vendas = await buscarVendasDoGrupo(grupo, inicio, fim);
   const dados = montarDadosRelatorio(vendas);
   const cfgRow = await prisma.config.findFirst();
   const logoPath = (cfgRow?.logoPath as string | undefined) ?? null;
@@ -303,19 +271,18 @@ export type ProcessarRelatorioMensalOptions = {
   empresaId?: number;
   /** Ignora a idempotencia (reenvia mesmo se ja enviado). */
   force?: boolean;
+  /** Inicio UTC do periodo; informe junto com `fim` para um mes corrente parcial. */
+  inicio?: Date;
+  /** Fim UTC do periodo; informe junto com `inicio` para um mes corrente parcial. */
+  fim?: Date;
 };
 
 /** Processa o relatorio mensal de todas as empresas (ou de uma so, se `empresaId`). */
 export async function processarRelatorioMensal(
   opts: ProcessarRelatorioMensalOptions
 ): Promise<{ periodo: string; resultados: ResultadoEmpresa[] }> {
-  const { periodo, empresaId, force = false } = opts;
-
-  const cfgRow = await prisma.config.findFirst();
-  const cfg = {
-    logoPath: (cfgRow?.logoPath as string | undefined) ?? null,
-    adminEmail: (cfgRow?.adminEmail as string | undefined) ?? null,
-  };
+  const { periodo, empresaId, force = false, inicio, fim } = opts;
+  const limites = inicio && fim ? { inicio, fim } : periodoBoundaries(periodo);
 
   let grupos = await carregarGrupos();
   if (empresaId) {
@@ -324,7 +291,7 @@ export async function processarRelatorioMensal(
 
   const resultados: ResultadoEmpresa[] = [];
   for (const grupo of grupos) {
-    resultados.push(await processarGrupo(grupo, periodo, cfg, force));
+    resultados.push(await processarGrupo(grupo, periodo, limites, force));
   }
   return { periodo, resultados };
 }

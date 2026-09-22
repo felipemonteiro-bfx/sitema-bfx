@@ -130,8 +130,11 @@ export type VendaRelatorioMensal = {
   itens?: { produtoNome: string; quantidade: number; subtotal: number }[];
   parcelasVencimento?: { numeroParcela: number; dataVencimento: Date; valorParcela: number }[];
   cliente?: {
+    id?: number | null;
     nome?: string | null;
+    cpf?: string | null;
     matricula?: string | null;
+    empresa?: string | null;
   } | null;
 };
 
@@ -243,6 +246,31 @@ export function periodoBoundaries(periodo: string): { inicio: Date; fim: Date } 
   const inicio = new Date(ano, mes - 1, 1, 0, 0, 0, 0);
   const fim = new Date(ano, mes, 0, 23, 59, 59, 999); // dia 0 do mes seguinte = ultimo dia
   return { inicio, fim };
+}
+
+const MANAUS_TIME_ZONE = "America/Manaus";
+
+/**
+ * Limites UTC para o mes corrente ate o fim do dia da referencia em Manaus.
+ * Manaus permanece em UTC-4, sem horario de verao.
+ */
+export function periodoAtualManausBoundaries(referencia: Date): { inicio: Date; fim: Date } {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: MANAUS_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(referencia);
+  const valor = (tipo: Intl.DateTimeFormatPartTypes): number =>
+    Number(partes.find((parte) => parte.type === tipo)?.value);
+  const ano = valor("year");
+  const mes = valor("month");
+  const dia = valor("day");
+
+  return {
+    inicio: new Date(Date.UTC(ano, mes - 1, 1, 4, 0, 0, 0)),
+    fim: new Date(Date.UTC(ano, mes - 1, dia + 1, 3, 59, 59, 999)),
+  };
 }
 
 /** Periodo "YYYY-MM" do mes anterior a uma data de referencia. */
