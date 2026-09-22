@@ -13,7 +13,12 @@ import { produtosTexto, valorTotalVenda } from "@/lib/venda-utils";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { enviarWhatsApp } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
+import { obterDocumentoPorVendaETipo } from "@/lib/documento-service";
 import { buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
+import { TERMO_EMAIL_STATUS_VALUES, type TermoEmailStatus } from "@/lib/termo-email-status";
+
+export { TERMO_EMAIL_STATUS_VALUES };
+export type { TermoEmailStatus };
 
 type SmtpConfig = {
   host: string;
@@ -30,6 +35,11 @@ type SendEmailOptions = {
   html: string;
   cc?: string[];
   attachments?: EmailAttachment[];
+};
+
+type TermoEmailResult = {
+  status: Exclude<TermoEmailStatus, "pendente">;
+  error?: string;
 };
 
 async function getSmtpConfig(): Promise<SmtpConfig | null> {
@@ -103,6 +113,92 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   const message = buildMimeMessage(opts, cfg.from);
 
   await smtpSend(cfg, allRecipients, message);
+}
+
+function sanitizeEmailError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return (message.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim() || "Falha ao enviar e-mail").slice(0, 500);
+}
+
+async function updateTermoEmailStatus(vendaId: number, data: {
+  termoEmailStatus: Exclude<TermoEmailStatus, "pendente">;
+  termoEmailEnviadoEm?: Date | null;
+  termoEmailErro?: string | null;
+}) {
+  await prisma.venda.update({ where: { id: vendaId }, data });
+}
+
+/** Envia o termo assinado exclusivamente ao e-mail de RH da empresa parceira. */
+export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEmailResult> {
+  const venda = await prisma.venda.findUnique({
+    where: { id: vendaId },
+    include: { cliente: true, itens: true },
+  });
+
+  if (!venda?.cliente) {
+    await updateTermoEmailStatus(vendaId, { termoEmailStatus: "erro_dados", termoEmailErro: "Venda ou cliente não encontrado" });
+    return { status: "erro_dados" };
+  }
+
+  const empresa = venda.cliente.empresaParceiraId
+    ? await prisma.empresaParceira.findUnique({ where: { id: venda.cliente.empresaParceiraId } })
+    : venda.cliente.empresa
+      ? await prisma.empresaParceira.findFirst({ where: { nome: { equals: venda.cliente.empresa, mode: "insensitive" } } })
+      : null;
+
+  if (!empresa) {
+    await updateTermoEmailStatus(vendaId, { termoEmailStatus: "erro_dados", termoEmailErro: "Empresa parceira não encontrada" });
+    return { status: "erro_dados" };
+  }
+
+  const emailRh = empresa.emailRh?.trim();
+  if (!emailRh) {
+    await updateTermoEmailStatus(vendaId, { termoEmailStatus: "sem_email", termoEmailErro: null });
+    return { status: "sem_email" };
+  }
+
+  const documento = await obterDocumentoPorVendaETipo(vendaId);
+  if (!documento) {
+    await updateTermoEmailStatus(vendaId, { termoEmailStatus: "erro_dados", termoEmailErro: "Documento assinado não encontrado" });
+    return { status: "erro_dados" };
+  }
+
+  const clienteNome = venda.cliente.nome || "Cliente";
+  const produtos = produtosTexto(venda);
+  const html = `
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"></head>
+<body>
+  <h2>Termo assinado</h2>
+  <p>Olá, ${escapeHtml(empresa.nome)}.</p>
+  <p>Segue em anexo o termo assinado da venda para o colaborador <strong>${escapeHtml(clienteNome)}</strong>.</p>
+  <p><strong>Matrícula:</strong> ${escapeHtml(venda.cliente.matricula || "N/D")}</p>
+  <p><strong>Produto(s):</strong> ${escapeHtml(produtos)}</p>
+  <p><strong>Data da venda:</strong> ${formatDateBR(venda.dataVenda)}</p>
+</body></html>`;
+
+  try {
+    await sendEmail({
+      to: emailRh,
+      subject: `Termo assinado — ${clienteNome}`,
+      html,
+      attachments: [{
+        filename: `termo-assinado-${vendaId}.pdf`,
+        contentType: "application/pdf",
+        content: documento.buffer,
+      }],
+    });
+    await updateTermoEmailStatus(vendaId, {
+      termoEmailStatus: "enviado",
+      termoEmailEnviadoEm: new Date(),
+      termoEmailErro: null,
+    });
+    return { status: "enviado" };
+  } catch (error) {
+    const errorMessage = sanitizeEmailError(error);
+    await updateTermoEmailStatus(vendaId, { termoEmailStatus: "falhou", termoEmailErro: errorMessage });
+    return { status: "falhou", error: errorMessage };
+  }
 }
 
 /**

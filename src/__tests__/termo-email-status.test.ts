@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Prisma } from "@/generated/prisma";
-
-const TERMO_EMAIL_STATUS_VALUES = ["pendente", "enviado", "falhou", "sem_email", "erro_dados"] as const;
+import { TERMO_EMAIL_STATUS_VALUES } from "@/lib/termo-email-status";
 
 describe("contrato do envio de termo por e-mail", () => {
   it("expõe os campos nullable de status no modelo Venda", () => {
