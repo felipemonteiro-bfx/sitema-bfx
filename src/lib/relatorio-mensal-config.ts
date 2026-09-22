@@ -12,7 +12,8 @@ export function validarDiaRelatorioMensal(value: unknown): number | null {
 }
 
 export function diaEfetivoRelatorioMensal(
-  value: number | null | undefined
+  value: number | null | undefined,
+  ultimoDiaDoMes = 31
 ): number {
-  return value ?? 1;
+  return Math.min(value ?? 1, ultimoDiaDoMes);
 }

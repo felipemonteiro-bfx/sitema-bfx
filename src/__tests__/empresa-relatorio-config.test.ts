@@ -27,4 +27,9 @@ describe("diaEfetivoRelatorioMensal", () => {
   it("preserva o dia configurado pela empresa", () => {
     expect(diaEfetivoRelatorioMensal(21)).toBe(21);
   });
+
+  it("antecipa o dia 31 para o ultimo dia de fevereiro e abril", () => {
+    expect(diaEfetivoRelatorioMensal(31, 28)).toBe(28);
+    expect(diaEfetivoRelatorioMensal(31, 30)).toBe(30);
+  });
 });
