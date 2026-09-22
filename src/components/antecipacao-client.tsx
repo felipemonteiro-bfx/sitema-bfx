@@ -213,18 +213,43 @@ export default function AntecipacaoClient({
 
   const toggleSelect = (id: number, isTotalmenteAntecipado: boolean) => {
     if (isTotalmenteAntecipado) return;
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+    const venda = vendasIniciais.find((item) => item.id === id);
+    if (!venda) return;
+    setSelectedIds((prev) => {
+      if (prev.includes(id)) return prev.filter((i) => i !== id);
+      const empresaSelecionada = prev
+        .map((selectedId) => vendasIniciais.find((item) => item.id === selectedId)?.empresaConveniada ?? "Sem empresa")
+        .find(Boolean);
+      const empresaNova = venda.empresaConveniada ?? "Sem empresa";
+      if (empresaSelecionada && empresaSelecionada !== empresaNova) {
+        toast.error("Cada lote deve conter vendas de uma única empresa. Remova a seleção atual ou filtre a empresa.");
+        return prev;
+      }
+      return [...prev, id];
+    });
   };
 
   const toggleAll = () => {
     const selectableIds = vendasFiltradas.filter(v => v.status !== 'antecipado').map(v => v.id);
-    const allSelected = selectableIds.every(id => selectedIds.includes(id));
-    if (allSelected && selectableIds.length > 0) {
-      setSelectedIds(prev => prev.filter(id => !selectableIds.includes(id)));
+    const empresasVisiveis = new Set(
+      vendasFiltradas.filter((v) => v.status !== 'antecipado').map((v) => v.empresaConveniada ?? "Sem empresa")
+    );
+    const empresaSelecionada = selectedIds
+      .map((selectedId) => vendasIniciais.find((v) => v.id === selectedId)?.empresaConveniada ?? "Sem empresa")
+      .find(Boolean);
+    if (!empresaSelecionada && empresasVisiveis.size > 1) {
+      toast.error("Selecione uma empresa antes de marcar todas as vendas: cada lote pertence a uma única empresa.");
+      return;
+    }
+    const idsDaEmpresa = selectableIds.filter((id) => {
+      const empresa = vendasIniciais.find((v) => v.id === id)?.empresaConveniada ?? "Sem empresa";
+      return !empresaSelecionada || empresa === empresaSelecionada;
+    });
+    const allSelected = idsDaEmpresa.length > 0 && idsDaEmpresa.every(id => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !idsDaEmpresa.includes(id)));
     } else {
-      setSelectedIds(prev => [...new Set([...prev, ...selectableIds])]);
+      setSelectedIds(prev => [...new Set([...prev, ...idsDaEmpresa])]);
     }
   };
 

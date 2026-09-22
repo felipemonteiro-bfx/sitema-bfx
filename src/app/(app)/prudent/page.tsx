@@ -128,6 +128,37 @@ export default async function Page() {
     take: 50,
   });
 
+  // O histórico precisa mostrar exatamente o conteúdo de cada lote. Os IDs são
+  // legados em JSON, então uma única consulta evita misturar empresas na tela e
+  // também mantém lotes antigos auditáveis.
+  const idsDosLotes = [...new Set(
+    batches.flatMap((b) => {
+      try {
+        const ids = JSON.parse(b.vendaIds);
+        return Array.isArray(ids) ? ids.filter((id): id is number => Number.isInteger(id)) : [];
+      } catch {
+        return [];
+      }
+    })
+  )];
+  const vendasDosLotes = idsDosLotes.length > 0
+    ? await prisma.venda.findMany({
+        where: { id: { in: idsDosLotes } },
+        select: {
+          id: true,
+          produtoNome: true,
+          quantidade: true,
+          valorVenda: true,
+          valorFrete: true,
+          desconto: true,
+          parcelas: true,
+          cliente: { select: { nome: true, empresa: true } },
+          itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+        },
+      })
+    : [];
+  const vendaPorId = new Map(vendasDosLotes.map((v) => [v.id, v]));
+
   const batchesFormatados = batches.map((b) => ({
     id: b.id,
     criadaEm: b.criadaEm,
@@ -143,6 +174,25 @@ export default async function Page() {
     origem: b.origem,
     concluidaEm: b.concluidaEm,
     concluidaPor: b.concluidaPor,
+    vendas: (() => {
+      try {
+        const ids = JSON.parse(b.vendaIds);
+        if (!Array.isArray(ids)) return [];
+        return ids.flatMap((id) => {
+          const v = vendaPorId.get(id);
+          return v ? [{
+            id: v.id,
+            clienteNome: v.cliente?.nome ?? null,
+            empresa: v.cliente?.empresa ?? null,
+            produtos: produtosTexto(v),
+            valorTotal: valorTotalVenda(v),
+            parcelas: v.parcelas ?? 0,
+          }] : [];
+        });
+      } catch {
+        return [];
+      }
+    })(),
   }));
 
   // Antecipacoes que existem SEM lote. Medido em producao (2026-08-11):

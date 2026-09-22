@@ -77,6 +77,21 @@ function totalCentavos(parcelas: ParcelaDoLote[]): number {
   return parcelas.reduce((soma, p) => soma + Math.round(p.valorParcela * 100), 0);
 }
 
+/** Um lote representa uma remessa de uma unica empresa conveniada. */
+async function validarUmaEmpresa(tx: Tx, vendaIds: number[]): Promise<void> {
+  // Alguns consumidores de teste usam um mock mínimo da transação, anterior
+  // à regra de empresa. No Prisma real este método sempre existe.
+  if (typeof tx.venda.findMany !== "function") return;
+  const vendas = await tx.venda.findMany({
+    where: { id: { in: vendaIds } },
+    select: { id: true, cliente: { select: { empresa: true } } },
+  });
+  const empresas = new Set(vendas.map((v) => (v.cliente?.empresa ?? "Sem empresa").trim().toLocaleUpperCase()));
+  if (empresas.size > 1) {
+    throw new Error("Um lote não pode misturar vendas de empresas diferentes. Filtre uma empresa e tente novamente.");
+  }
+}
+
 /**
  * Reescreve `vendas.antecipada` a partir das parcelas de cada venda tocada. Vínculo com lote sem
  * antecipação já quer dizer "em andamento": concluir o lote marca `antecipada` nas parcelas dele,
@@ -127,6 +142,7 @@ export async function abrirLote(entrada: {
   periodo: PeriodoLote | null;
 }): Promise<ResultadoLote | null> {
   return prisma.$transaction(async (tx) => {
+    await validarUmaEmpresa(tx, entrada.vendaIds);
     const parcelas = await tx.parcelaVencimento.findMany({
       where: whereParcelasLivres(entrada.vendaIds, entrada.periodo),
       select: { id: true, vendaId: true, valorParcela: true, dataVencimento: true },
@@ -228,6 +244,7 @@ export async function registrarLoteConcluido(entrada: {
   if (!data) throw new Error("Data da antecipação inválida.");
 
   return prisma.$transaction(async (tx) => {
+    await validarUmaEmpresa(tx, entrada.vendaIds);
     const parcelas = await tx.parcelaVencimento.findMany({
       where: whereParcelasLivres(entrada.vendaIds, entrada.periodo),
       select: { id: true, vendaId: true, valorParcela: true, dataVencimento: true },

@@ -38,6 +38,7 @@ interface Batch {
   origem: string;
   concluidaEm: Date | string | null;
   concluidaPor: string | null;
+  vendas: { id: number; clienteNome: string | null; empresa: string | null; produtos: string; valorTotal: number; parcelas: number }[];
 }
 
 interface GrupoSemLote {
@@ -74,14 +75,23 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
   const [dataRetorno, setDataRetorno] = useState(hoje);
   const [salvando, setSalvando] = useState(false);
   const [pagina, setPagina] = useState(1);
+  const [paginaSemLote, setPaginaSemLote] = useState(1);
   const lotesPorPagina = 5;
+  const semLotePorPagina = 10;
   const totalPaginas = Math.max(1, Math.ceil(batches.length / lotesPorPagina));
+  const totalPaginasSemLote = Math.max(1, Math.ceil(semLote.length / semLotePorPagina));
   const inicioPagina = (pagina - 1) * lotesPorPagina;
   const batchesPagina = batches.slice(inicioPagina, inicioPagina + lotesPorPagina);
+  const inicioPaginaSemLote = (paginaSemLote - 1) * semLotePorPagina;
+  const semLotePagina = semLote.slice(inicioPaginaSemLote, inicioPaginaSemLote + semLotePorPagina);
 
   useEffect(() => {
     setPagina((atual) => Math.min(atual, totalPaginas));
   }, [totalPaginas]);
+
+  useEffect(() => {
+    setPaginaSemLote((atual) => Math.min(atual, totalPaginasSemLote));
+  }, [totalPaginasSemLote]);
 
   const concluir = async () => {
     if (!concluindo) return;
@@ -174,9 +184,11 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
         ) : (
           <div className="space-y-3">
             {batchesPagina.map((b) => (
-              <div key={b.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-0.5">
+              <details key={b.id} className="group rounded-xl border border-border bg-card transition-all hover:border-primary/30">
+                <summary className="flex cursor-pointer list-none flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">
+                <div className="flex min-w-0 flex-col gap-0.5">
                   <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">#{b.id}</span>
                     <span className="text-xs text-muted-foreground">{formatData(b.criadaEm)}</span>
                   </div>
@@ -187,6 +199,9 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                     <span>{b.quantidadeVendas} {b.quantidadeVendas === 1 ? 'venda' : 'vendas'}</span>
                     <span className="font-bold text-success-text text-sm">{formatBRL(b.valorTotal)}</span>
                   </div>
+                  <span className="text-xs font-semibold text-info-text">
+                    Empresa: {[...new Set(b.vendas.map((v) => v.empresa || 'Sem empresa'))].join(', ') || 'não identificada'}
+                  </span>
                   {b.concluidaEm && b.status === STATUS_LOTE.concluido && (
                     <span className="text-xs text-muted-foreground">
                       Retorno confirmado em {formatarDataPura(b.concluidaEm)}
@@ -204,7 +219,8 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                         type="button"
                         size="sm"
                         className="gap-1.5 text-xs"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           setDataRetorno(hoje);
                           setConcluindo(b);
                         }}
@@ -217,23 +233,39 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                         variant="outline"
                         size="sm"
                         className="gap-1.5 text-xs border-error text-error-text"
-                        onClick={() => setCancelando(b)}
+                        onClick={(e) => { e.preventDefault(); setCancelando(b); }}
                       >
                         <X className="h-3.5 w-3.5" />
                         Cancelar lote
                       </Button>
                     </>
                   )}
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleExcel(b)}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => { e.preventDefault(); handleExcel(b); }}>
                     <FileSpreadsheet className="h-3.5 w-3.5" />
                     Planilha
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => handleRelatorio(b)}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => { e.preventDefault(); handleRelatorio(b); }}>
                     <ImageIcon className="h-3.5 w-3.5" />
                     Relatório Visual
                   </Button>
                 </div>
-              </div>
+                </summary>
+                <div className="border-t border-border bg-muted/20 px-4 pb-4 pt-3">
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Detalhamento do lote</div>
+                  <div className="space-y-2">
+                    {b.vendas.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Não foi possível localizar as vendas deste lote.</p>
+                    ) : b.vendas.map((v) => (
+                      <div key={v.id} className="grid gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3">
+                        <span className="font-bold text-muted-foreground">Venda #{v.id}</span>
+                        <span className="min-w-0 truncate text-foreground" title={v.produtos}>{v.clienteNome || 'Cliente sem nome'} · {v.produtos}</span>
+                        <span className="text-muted-foreground">{v.parcelas} {v.parcelas === 1 ? 'parcela' : 'parcelas'}</span>
+                        <span className="font-bold tabular-nums text-success-text">{formatBRL(v.valorTotal)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </details>
             ))}
 
             {batches.length > lotesPorPagina && (
@@ -290,7 +322,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                   Marcadas como antecipadas fora da fila (importação ou ajuste manual). Não têm lote, então não geram relatório.
                 </p>
                 <div className="space-y-2">
-                  {semLote.map((g) => (
+                  {semLotePagina.map((g) => (
                     <div key={g.data} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-sm font-semibold text-foreground">{formatarDataPura(g.data)}</span>
@@ -306,6 +338,42 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                     </div>
                   ))}
                 </div>
+                {semLote.length > semLotePorPagina && (
+                  <nav className="mt-3 flex items-center justify-between border-t border-border pt-3" aria-label="Paginação das antecipadas sem lote">
+                    <span className="text-xs text-muted-foreground">
+                      Mostrando {inicioPaginaSemLote + 1}–{Math.min(inicioPaginaSemLote + semLotePorPagina, semLote.length)} de {semLote.length} grupos
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        disabled={paginaSemLote === 1}
+                        onClick={() => setPaginaSemLote((atual) => Math.max(1, atual - 1))}
+                        aria-label="Página anterior das antecipadas sem lote"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Anterior
+                      </Button>
+                      <span className="min-w-20 text-center text-xs font-semibold tabular-nums text-foreground">
+                        Página {paginaSemLote} de {totalPaginasSemLote}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        disabled={paginaSemLote === totalPaginasSemLote}
+                        onClick={() => setPaginaSemLote((atual) => Math.min(totalPaginasSemLote, atual + 1))}
+                        aria-label="Próxima página das antecipadas sem lote"
+                      >
+                        Próxima
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </nav>
+                )}
               </div>
             )}
           </div>
