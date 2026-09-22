@@ -7,7 +7,6 @@ on:
     paths-ignore:
       - deploy/**
       - k8s/**
-      - .github/**
   pull_request:
     branches: [main, nextjs-migration]
 

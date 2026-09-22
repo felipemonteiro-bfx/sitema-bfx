@@ -1,4 +1,8 @@
-@import "tailwindcss";
+/* O Tailwind v4 faz varredura automatica a partir da raiz do projeto. Isso
+   inclui documentos de design com exemplos como `var(--shadow-*)`, que nao
+   sao classes CSS validas e geram avisos durante o build. */
+@import "tailwindcss" source(none);
+@source "../";
 @import "tw-animate-css";
 @plugin "tailwindcss-animate";
 
