@@ -369,8 +369,8 @@ metadata:
   labels:
     app: bfx-relatorio-mensal
 spec:
-  # Dia 1 de cada mes as 12:00 UTC (09:00 BRT) — envia o relatorio do mes anterior.
-  schedule: "0 12 1 * *"
+  # Diario as 12:00 UTC (08:00 Manaus); o filtro por empresa determina os destinatarios.
+  schedule: "0 12 * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

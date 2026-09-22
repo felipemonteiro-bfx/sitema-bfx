@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { autorizarCron } from "@/lib/segredo";
+import { prisma } from "@/lib/db";
 import { processarRelatorioMensal } from "@/lib/relatorio-mensal-service";
-import { periodoMesAnterior } from "@/lib/relatorio-mensal";
+import { periodoAtualManausBoundaries } from "@/lib/relatorio-mensal";
+import { diaEfetivoRelatorioMensal } from "@/lib/relatorio-mensal-config";
+import { hojeDataPura } from "@/lib/data-pura";
 import { logCron, logCronError } from "@/lib/logger";
 
 /**
@@ -9,11 +12,10 @@ import { logCron, logCronError } from "@/lib/logger";
  *
  * Gera e envia o relatorio mensal de vendas por empresa parceira (PDF + XLSX anexos).
  * Agrupa empresas vinculadas (grupos economicos) para enviar UM email consolidado.
- * Idempotente: nao reenvia um periodo ja enviado, salvo `?force=1`.
+ * Idempotente: nao reenvia o periodo corrente ja enviado, salvo `?force=1`.
+ * A selecao diaria respeita `diaRelatorioMensal` de cada empresa (dia 1 por padrao).
  *
  * Query params:
- *   - periodo=YYYY-MM  (default: mes anterior)
- *   - empresaId=N      (processa apenas o grupo que contem esta empresa)
  *   - force=1          (ignora idempotencia)
  *
  * Requer header Authorization: Bearer $CRON_SECRET.
@@ -25,27 +27,45 @@ export async function GET(req: Request) {
   }
 
   const { searchParams } = new URL(req.url);
-  const periodo = searchParams.get("periodo") || periodoMesAnterior(new Date());
-  const empresaIdParam = searchParams.get("empresaId");
-  const empresaId = empresaIdParam ? Number(empresaIdParam) : undefined;
   const force = searchParams.get("force") === "1";
-
-  // Valida formato do periodo YYYY-MM
-  const partes = periodo.split("-");
-  if (partes.length !== 2 || partes[0]!.length !== 4 || Number.isNaN(Number(partes[0])) || Number.isNaN(Number(partes[1]))) {
-    return NextResponse.json({ error: "periodo inválido (use YYYY-MM)" }, { status: 400 });
-  }
+  const agora = new Date();
+  const hoje = hojeDataPura(agora);
+  const periodo = hoje.slice(0, 7);
+  const diaAtual = Number(hoje.slice(8, 10));
+  const { inicio, fim } = periodoAtualManausBoundaries(agora);
 
   try {
-    const { resultados } = await processarRelatorioMensal({ periodo, empresaId, force });
+    const empresas = await prisma.empresaParceira.findMany({
+      select: { id: true, diaRelatorioMensal: true },
+      orderBy: { id: "asc" },
+    });
+    const selecionadas = empresas.filter(
+      (empresa) => diaEfetivoRelatorioMensal(empresa.diaRelatorioMensal) === diaAtual
+    );
+    const resultados = [];
+    for (const empresa of selecionadas) {
+      const processado = await processarRelatorioMensal({
+        periodo,
+        empresaId: empresa.id,
+        force,
+        inicio,
+        fim,
+      });
+      resultados.push(...processado.resultados);
+    }
     const contagem = {
       enviado: resultados.filter((r) => r.status === "enviado").length,
       sem_vendas: resultados.filter((r) => r.status === "sem_vendas").length,
       sem_email: resultados.filter((r) => r.status === "sem_email").length,
       erro: resultados.filter((r) => r.status === "erro").length,
     };
-    logCron("relatorio-mensal", "concluido", { periodo, total: resultados.length, ...contagem });
-    return NextResponse.json({ ok: true, periodo, contagem, resultados });
+    logCron("relatorio-mensal", "concluido", {
+      periodo,
+      empresas: selecionadas.length,
+      total: resultados.length,
+      ...contagem,
+    });
+    return NextResponse.json({ ok: true, periodo, empresas: selecionadas.length, contagem, resultados });
   } catch (error) {
     logCronError("relatorio-mensal", "erro_geral", error, { periodo });
     return NextResponse.json({ error: "Erro ao processar relatorio mensal" }, { status: 500 });
