@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { diaEfetivoRelatorioMensal } from "@/lib/relatorio-mensal-config";
 
 type EmpresaListItem = {
   id: number;
@@ -39,6 +40,7 @@ type EmpresaListItem = {
   emailRh: string | null;
   cnpj: string | null;
   emailsExtras: string | null;
+  diaRelatorioMensal: number | null;
   vinculos?: { vinculada: { id: number; nome: string } }[];
   _count?: { clientes: number };
 };
@@ -213,6 +215,20 @@ export default function EmpresasTabClient({
               <div className="space-y-1">
                 <Label htmlFor="add-empresa-emailsExtras">Emails adicionais</Label>
                 <Input id="add-empresa-emailsExtras" name="emailsExtras" placeholder="email1@x.com, email2@y.com" />
+              </div>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="space-y-1">
+                <Label htmlFor="add-empresa-dia-relatorio">Dia do relatório mensal</Label>
+                <Input
+                  id="add-empresa-dia-relatorio"
+                  name="diaRelatorioMensal"
+                  type="number"
+                  min={1}
+                  max={31}
+                  step={1}
+                  defaultValue={diaEfetivoRelatorioMensal(null)}
+                />
               </div>
             </div>
             <div className="flex items-center justify-end">
@@ -420,6 +436,18 @@ export default function EmpresasTabClient({
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-emailsExtras">Emails adicionais</Label>
                   <Input id="edit-empresa-emailsExtras" name="emailsExtras" defaultValue={editingEmpresa.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="edit-empresa-dia-relatorio">Dia do relatório mensal</Label>
+                  <Input
+                    id="edit-empresa-dia-relatorio"
+                    name="diaRelatorioMensal"
+                    type="number"
+                    min={1}
+                    max={31}
+                    step={1}
+                    defaultValue={diaEfetivoRelatorioMensal(editingEmpresa.diaRelatorioMensal)}
+                  />
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-4">

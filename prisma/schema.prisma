@@ -360,6 +360,7 @@ model EmpresaParceira {
   emailRh       String? @map("email_rh")
   cnpj          String? @map("cnpj")
   emailsExtras  String? @map("emails_extras")
+  diaRelatorioMensal Int? @map("dia_relatorio_mensal")
 
   clientes      Cliente[]
   vinculos      EmpresaVinculo[] @relation("empresa_origem")
