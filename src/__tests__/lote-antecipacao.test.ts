@@ -51,7 +51,7 @@ describe("abrirLote — o envio à Prudent", () => {
   it("cria o lote em andamento, liga as parcelas e não marca nada como pago", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10), parcela(2, 10), parcela(3, 11)]);
 
-    const r = await abrirLote({ vendaIds: [10, 11], periodo: null, hoje: "2026-09-17" });
+    const r = await abrirLote({ vendaIds: [10, 11], periodo: null });
 
     expect(r).toMatchObject({ loteId: 42, parcelas: 3, valor: 900 });
     expect(dbMock.anticipacaoBatch.create.mock.calls[0][0].data).toMatchObject({
@@ -74,7 +74,7 @@ describe("abrirLote — o envio à Prudent", () => {
       // elegíveis, e depois a releitura para recalcular o flag (já ligadas ao lote)
       .mockResolvedValueOnce([parcela(1, 10), parcela(2, 10)])
       .mockResolvedValueOnce([parcela(1, 10, { antecipacaoLoteId: 42 }), parcela(2, 10, { antecipacaoLoteId: 42 })]);
-    await abrirLote({ vendaIds: [10], periodo: null, hoje: "2026-09-17" });
+    await abrirLote({ vendaIds: [10], periodo: null });
     expect(dbMock.venda.update.mock.calls[0][0]).toMatchObject({ where: { id: 10 }, data: { antecipada: 2 } });
   });
 
@@ -90,13 +90,13 @@ describe("abrirLote — o envio à Prudent", () => {
 
   it("sem parcela elegível, não cria lote nenhum", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
-    expect(await abrirLote({ vendaIds: [10], periodo: null, hoje: "2026-09-17" })).toBeNull();
+    expect(await abrirLote({ vendaIds: [10], periodo: null })).toBeNull();
     expect(dbMock.anticipacaoBatch.create).not.toHaveBeenCalled();
   });
 
   it("só pega parcela ainda livre: nem antecipada, nem já num lote", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10)]);
-    await abrirLote({ vendaIds: [10], periodo: null, hoje: "2026-09-17" });
+    await abrirLote({ vendaIds: [10], periodo: null });
     expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).toMatchObject({
       antecipada: false,
       antecipacaoLoteId: null,

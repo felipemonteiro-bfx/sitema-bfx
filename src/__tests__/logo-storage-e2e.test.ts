@@ -35,7 +35,7 @@ const mockCreate = vi.mocked(prisma.config.create);
 const mockUploadToMinIO = vi.mocked(uploadToMinIO);
 const mockIsMinIOConfigured = vi.mocked(isMinIOConfigured);
 
-function pngBytes(): Uint8Array {
+function pngBytes(): Uint8Array<ArrayBuffer> {
   // Assinatura PNG minima (magic bytes) — suficiente, o teste nao decodifica a imagem.
   return new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 }

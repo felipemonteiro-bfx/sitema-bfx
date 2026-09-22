@@ -77,7 +77,7 @@ describe("POST /api/upload-logo — STO-04 (recusa explicita em producao sem sto
   // O servidor decide o tipo pelos bytes: a fixture precisa ser um PNG de verdade.
   const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52]);
 
-  function fakeRequest(bytes: Uint8Array = PNG, nome = "logo.png") {
+  function fakeRequest(bytes: Uint8Array<ArrayBuffer> = PNG, nome = "logo.png") {
     const fd = new FormData();
     fd.set("file", new File([bytes], nome, { type: "image/png" }));
     return new Request("http://local/api/upload-logo", { method: "POST", body: fd });

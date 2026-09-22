@@ -52,7 +52,7 @@ describe("POST /api/produtos/upload — STO-04 (recusa explicita em producao sem
   const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d, 0x49, 0x48, 0x44, 0x52]);
   const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46]);
 
-  function fakeRequest(bytes: Uint8Array = PNG, nome = "foto.png", tipo = "image/png") {
+  function fakeRequest(bytes: Uint8Array<ArrayBuffer> = PNG, nome = "foto.png", tipo = "image/png") {
     const fd = new FormData();
     fd.set("file", new File([bytes], nome, { type: tipo }));
     return new Request("http://local/api/produtos/upload", { method: "POST", body: fd });

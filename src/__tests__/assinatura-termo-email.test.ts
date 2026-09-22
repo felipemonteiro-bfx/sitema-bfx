@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { NextRequest } from "next/server";
 
 const mocks = vi.hoisted(() => ({
   prisma: {
@@ -47,7 +48,7 @@ function fakeRequest() {
   return new Request("http://local/api/assinatura", {
     method: "POST",
     body: JSON.stringify({ token: "token-assinatura", signature: "data:image/png;base64,c2ln" }),
-  });
+  }) as NextRequest;
 }
 
 describe("POST /api/assinatura — notificação do termo assinado", () => {

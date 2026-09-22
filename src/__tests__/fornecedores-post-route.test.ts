@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { NextRequest } from "next/server";
 
 // Mocks — mesmo padrao de fornecedor-soft-delete.test.ts: objeto local de mock,
 // nunca importar `prisma`/`getSession`/`createAuditLog` reais no teste (evita
@@ -32,7 +33,7 @@ function req(body: Record<string, unknown>) {
   return new Request("http://local/api/fornecedores", {
     method: "POST",
     body: JSON.stringify(body),
-  });
+  }) as NextRequest;
 }
 
 describe("POST /api/fornecedores — cadastro rapido de fornecedor no PDV (D-06, D-07, PDV-16)", () => {

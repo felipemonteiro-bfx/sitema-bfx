@@ -27,7 +27,6 @@ import {
   analyzeSnapshot,
   fingerprint,
   LIMITES,
-  // @ts-expect-error — modulo .mjs sem tipos, importado pelo caminho relativo do repo
 } from "../../scripts/ui-runtime/rendered-ui-rules.mjs";
 
 type Rgba = [number, number, number, number];
