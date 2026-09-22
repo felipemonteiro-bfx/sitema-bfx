@@ -66,7 +66,7 @@ describe("parcelasDaVenda — o popover das parcelas", () => {
       parcelas_detalhes: [{ ...p("2026-08-10", 100, false, 1), id: 9, paga: true, origemPagamento: "manual" }],
     }), HOJE);
     expect(r.lista[0]).toMatchObject({ id: 9, situacao: "paga", origemPagamento: "manual" });
-    expect(r.contagem).toEqual({ antecipadas: 1, aAntecipar: 0, vencidas: 0 });
+    expect(r.contagem).toEqual({ antecipadas: 1, emAndamento: 0, aAntecipar: 0, vencidas: 0 });
     expect(titulosDeVenda({ dataVenda: "2026-07-12", valorVenda: 100, parcelas: 1, parcelas_detalhes: [{ ...p("2026-08-10", 100), paga: true }] })).toEqual([]);
   });
 

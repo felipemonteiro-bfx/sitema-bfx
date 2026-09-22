@@ -14,7 +14,7 @@ import { linhasDosItens } from "@/lib/itens-venda";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { revalidarVenda } from "@/lib/revalidacao";
 import { abrirLote } from "@/lib/lote-antecipacao-db";
-import { idsValidos } from "@/app/(app)/prudent/actions";
+import { idsValidos } from "@/lib/ids-validos";
 import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 import { PageHeader } from "@/components/page-header";

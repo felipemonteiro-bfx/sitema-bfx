@@ -15,18 +15,10 @@ import { hojeDataPura } from "@/lib/data-pura";
 import { cancelarLote, concluirLote, registrarLoteConcluido } from "@/lib/lote-antecipacao-db";
 import { revalidarVenda } from "@/lib/revalidacao";
 import { valorTotalVenda } from "@/lib/venda-utils";
+import { idsValidos } from "@/lib/ids-validos";
 
 /** Teto de ids por chamada: a fila inteira tem poucas centenas de vendas. */
 const LIMITE_IDS = 1000;
-
-/**
- * Ids de venda vindos do formulário ou da tela: só inteiros positivos, sem repetição e com teto.
- * A action `antecipar` (em `page.tsx`) usa a mesma função — um `NaN` ali virava erro cru do Prisma.
- */
-export function idsValidos(entrada: (FormDataEntryValue | number)[]): number[] {
-  const numeros = entrada.map((v) => Number(v)).filter((n) => Number.isInteger(n) && n > 0);
-  return [...new Set(numeros)].slice(0, LIMITE_IDS);
-}
 
 export type RespostaSelecao = { ok: true; resultado: ResultadoSelecao } | { ok: false; erro: string };
 
