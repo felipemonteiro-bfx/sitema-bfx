@@ -3,7 +3,7 @@
  * são os mesmos passos de `y` da rota; mudar o desenho exige mudar aqui.
  */
 export const LAYOUT_PDF_ANTECIPACAO = {
-  topo: 90, // cabeçalho até o primeiro bloco
+  topo: 162, // cabeçalho + resumo até o primeiro bloco
   blocoEmpresa: 54, // cabeçalho do bloco (50) + respiro (4)
   porMes: 42, // faixa do mês (22) + cabeçalho da tabela (16) + respiro (4)
   porParcela: 16,
