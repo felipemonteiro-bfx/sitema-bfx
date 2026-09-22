@@ -64,6 +64,22 @@ docker compose -f docker-compose.yml up --build
 - Prisma + Postgres.
 - Migracoes em `prisma/migrations`.
 
+## Teste local do e-mail do termo assinado
+
+Para testar a notificacao ao RH, configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
+`SMTP_PASS` e `SMTP_FROM` no `.env.local` (ou use a configuracao SMTP da tabela
+`Config`). Execute a migration local com `npm run db:migrate` e a suite focada com:
+
+```bash
+npx vitest run src/__tests__/email-mime.test.ts src/__tests__/termo-email-status.test.ts src/__tests__/termo-assinado-email.test.ts src/__tests__/assinatura-termo-email.test.ts src/__tests__/historico-termo-assinado-email.test.ts
+```
+
+No ambiente local, cadastre uma empresa com `emailRh`, crie uma venda assinavel e
+confirme que o envio ocorre somente depois da assinatura. Verifique no e-mail do
+RH o anexo `termo-assinado-{id}.pdf`; uma falha SMTP deve aparecer como `Falhou`
+no historico, onde o botao `Reenviar termo ao RH` permite nova tentativa depois
+que o SMTP for corrigido. `emailsExtras` nao recebe esse envio.
+
 ## Deploy na Vercel
 
 **Projeto:** `prj_mzQzGftbcte2j1rdqwZtf80Fs2f8` (para `vercel link` ou referência no dashboard).
