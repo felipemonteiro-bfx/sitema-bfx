@@ -85,6 +85,7 @@ export interface ParcelaParaAntecipacao {
   antecipada?: boolean | null;
   /** Já está num lote enviado à Prudent, esperando retorno (2026-09-17). */
   emAndamento?: boolean | null;
+  paga?: boolean | null;
 }
 
 export interface VendaParaAntecipacao {
@@ -141,7 +142,7 @@ export function titulosDeVenda(
   if (detalhes && detalhes.length > 0) {
     return detalhes
       // Parcela antecipada ou já num lote em andamento não entra em lote novo.
-      .filter((p) => !p.antecipada && !p.emAndamento)
+      .filter((p) => !p.antecipada && !p.emAndamento && !p.paga)
       .filter((p) => {
         const venc = p.dataVencimento instanceof Date ? p.dataVencimento : new Date(p.dataVencimento);
         // Data ilegível é descartada com ou sem período: entrar como prazo 0

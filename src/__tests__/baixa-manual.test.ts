@@ -15,7 +15,7 @@ vi.mock("@/lib/guards", () => guardsMock);
 vi.mock("@/lib/audit", () => auditMock);
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { darBaixaParcela, desfazerBaixaParcela } = await import("@/app/(app)/historico/baixa-actions");
+const { darBaixaParcela, darBaixaParcelas, desfazerBaixaParcela } = await import("@/app/(app)/historico/baixa-actions");
 
 function form(campos: Record<string, string>) {
   const fd = new FormData();
@@ -67,6 +67,35 @@ describe("darBaixaParcela", () => {
     expect((await darBaixaParcela(form({ parcelaId: "5", dataPagamento: "31/02/2026" }))).success).toBe(false);
     expect((await darBaixaParcela(form({ parcelaId: "5", dataPagamento: "2099-01-01" }))).success).toBe(false);
     expect((await darBaixaParcela(form({ parcelaId: "abc" }))).success).toBe(false);
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("darBaixaParcelas", () => {
+  it("baixa somente as parcelas abertas selecionadas", async () => {
+    dbMock.parcelaVencimento.updateMany.mockResolvedValueOnce({ count: 2 });
+    const r = await darBaixaParcelas(form({ parcelaIds: "[5,9]", dataPagamento: "2026-09-15" }));
+
+    expect(r).toEqual({ success: true, count: 2 });
+    expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: [5, 9] }, paga: false },
+      data: {
+        paga: true,
+        dataPagamento: new Date("2026-09-15T00:00:00.000Z"),
+        origemPagamento: "manual",
+        asaasPaymentId: null,
+        baixaPor: "André",
+      },
+    });
+    expect(auditMock.createAuditLog).toHaveBeenCalledWith(
+      "parcela:baixa-em-lote",
+      expect.objectContaining({ parcelaIds: [5, 9], origem: "manual", quantidade: 2 })
+    );
+  });
+
+  it("recusa selecao vazia ou ids invalidos sem alterar parcelas", async () => {
+    expect((await darBaixaParcelas(form({ parcelaIds: "[]" }))).success).toBe(false);
+    expect((await darBaixaParcelas(form({ parcelaIds: "[5,\"x\"]" }))).success).toBe(false);
     expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
   });
 });

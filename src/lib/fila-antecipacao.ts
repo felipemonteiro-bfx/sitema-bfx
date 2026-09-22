@@ -67,7 +67,7 @@ export function mesesEmAberto(parcelas: ParcelaParaResumo[]): string[] {
   const meses = new Set<string>();
   for (const p of parcelas) {
     // Em andamento também não: já está num lote na Prudent.
-    if (p.antecipada || p.emAndamento) continue;
+    if (p.antecipada || p.emAndamento || p.paga) continue;
     const d = paraData(p.dataVencimento);
     if (d) meses.add(d.toISOString().slice(0, 7));
   }
@@ -101,7 +101,7 @@ export function calcularSelecao(
       continue;
     }
     for (const p of parcelas) {
-      if (p.antecipada || p.emAndamento) continue;
+      if (p.antecipada || p.emAndamento || p.paga) continue;
       const d = paraData(p.dataVencimento);
       if (!d) continue;
       if (periodo && (d < periodo.inicio || d > periodo.fim)) continue;

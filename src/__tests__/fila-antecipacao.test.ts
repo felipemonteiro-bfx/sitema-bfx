@@ -61,6 +61,15 @@ describe("parcelasDaVenda — o popover das parcelas", () => {
     expect(r.contagem).toEqual({ antecipadas: 2, emAndamento: 0, aAntecipar: 0, vencidas: 0 });
   });
 
+  it("parcela baixada manualmente deixa de estar vencida e não volta para antecipação", () => {
+    const r = parcelasDaVenda(venda({
+      parcelas_detalhes: [{ ...p("2026-08-10", 100, false, 1), id: 9, paga: true, origemPagamento: "manual" }],
+    }), HOJE);
+    expect(r.lista[0]).toMatchObject({ id: 9, situacao: "paga", origemPagamento: "manual" });
+    expect(r.contagem).toEqual({ antecipadas: 1, aAntecipar: 0, vencidas: 0 });
+    expect(titulosDeVenda({ dataVenda: "2026-07-12", valorVenda: 100, parcelas: 1, parcelas_detalhes: [{ ...p("2026-08-10", 100), paga: true }] })).toEqual([]);
+  });
+
   it("sem número gravado, numera pela ordem de vencimento", () => {
     const r = parcelasDaVenda(venda({ parcelas_detalhes: [p("2026-11-10", 100), p("2026-10-10", 100)] }), HOJE);
     expect(r.lista.map((l) => [l.numero, l.vencimento])).toEqual([

@@ -69,7 +69,7 @@ export async function calcularSelecaoAction(entrada: {
       parcelas: true,
       itens: { select: { subtotal: true } },
       parcelasVencimento: {
-        select: { numeroParcela: true, dataVencimento: true, valorParcela: true, antecipada: true },
+        select: { numeroParcela: true, dataVencimento: true, valorParcela: true, antecipada: true, paga: true },
       },
     },
   });

@@ -548,7 +548,7 @@ export default function AntecipacaoClient({
                     {/* "total / antecipadas / a antecipar / vencidas", contados no
                         servidor; a legenda fica no "?" do cabecalho da coluna. */}
                     {v.parcelasInfo.lista.length > 0 ? (
-                      <ParcelasVendaPopover parcelas={v.parcelasInfo} />
+                      <ParcelasVendaPopover parcelas={v.parcelasInfo} hoje={hoje} />
                     ) : (
                       <span className="text-sm font-bold tabular-nums" title={v.parcelasInfo.desfeita ? "Venda cancelada ou estornada" : "Venda sem parcelas cadastradas"}>
                         {v.parcelas ?? '—'}

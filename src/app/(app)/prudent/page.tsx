@@ -68,11 +68,14 @@ export default async function Page() {
       parcelasVencimento: {
         select: {
           numeroParcela: true,
+          id: true,
           dataVencimento: true,
           valorParcela: true,
           antecipada: true,
           // Vínculo com lote aberto = parcela em andamento (2026-09-17).
           antecipacaoLoteId: true,
+          paga: true,
+          origemPagamento: true,
         },
       },
     },

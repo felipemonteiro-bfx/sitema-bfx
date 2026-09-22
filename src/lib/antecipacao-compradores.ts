@@ -26,21 +26,26 @@
  */
 
 export interface ParcelaParaResumo {
+  id?: number;
   numeroParcela?: number;
   dataVencimento: string | Date;
   valorParcela: number;
   antecipada?: boolean | null;
   /** Está num lote enviado à Prudent que ainda não voltou (2026-09-17). */
   emAndamento?: boolean | null;
+  paga?: boolean | null;
+  origemPagamento?: string | null;
 }
 
-export type SituacaoParcela = "antecipada" | "em_andamento" | "a_antecipar" | "vencida";
+export type SituacaoParcela = "antecipada" | "paga" | "em_andamento" | "a_antecipar" | "vencida";
 
 export interface ParcelaDetalhada {
+  id?: number;
   numero: number;
   vencimento: string;
   valor: number;
   situacao: SituacaoParcela;
+  origemPagamento?: string | null;
 }
 
 export interface ParcelasDaVenda {
@@ -91,20 +96,21 @@ export function parcelasDaVenda(venda: VendaParaResumo & { dataVenda: string | D
             : tipo === "aAntecipar"
               ? "a_antecipar"
               : "vencida";
+      const situacaoFinal: SituacaoParcela = p.paga && !p.antecipada && !vendaAntecipada ? "paga" : situacao;
       const c = paraCentavos(p.valorParcela);
-      if (situacao === "antecipada") {
+      if (situacaoFinal === "antecipada" || situacaoFinal === "paga") {
         contagem.antecipadas += 1;
         antecipado += c;
-      } else if (situacao === "em_andamento") {
+      } else if (situacaoFinal === "em_andamento") {
         contagem.emAndamento += 1;
         emAndamento += c;
-      } else if (situacao === "a_antecipar") {
+      } else if (situacaoFinal === "a_antecipar") {
         contagem.aAntecipar += 1;
         falta += c;
       } else {
         contagem.vencidas += 1;
       }
-      return { numero: p.numeroParcela ?? i + 1, vencimento: dataDoDia(dia), valor: c / 100, situacao };
+      return { id: p.id, numero: p.numeroParcela ?? i + 1, vencimento: dataDoDia(dia), valor: c / 100, situacao: situacaoFinal, origemPagamento: p.origemPagamento };
     });
 
   return {
@@ -253,6 +259,7 @@ function baldeDaParcela(
   if (vendaAntecipada || parcela.antecipada) return "antecipadas";
   // Enviada à Prudent e sem retorno: saiu da fila, mas ainda não é dinheiro.
   if (parcela.emAndamento) return "emAndamento";
+  if (parcela.paga) return "antecipadas";
   if (!Number.isFinite(dia)) return null;
   return dia >= hojeDia ? "aAntecipar" : "vencidas";
 }

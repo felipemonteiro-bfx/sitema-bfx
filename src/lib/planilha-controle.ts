@@ -11,7 +11,7 @@
 import { parcelasDaVenda, type SituacaoParcela } from "@/lib/antecipacao-compradores";
 import { chaveDoMes } from "@/lib/periodo-meses";
 
-export type StatusPlanilha = "ANTECIPAÇÃO OK" | "À VENCER" | "VENCIDA - CONFERIR REPASSE";
+export type StatusPlanilha = "ANTECIPAÇÃO OK" | "PAGO" | "À VENCER" | "VENCIDA - CONFERIR REPASSE";
 
 /** O formato que `SELECT_VENDA_PLANILHA` devolve do banco. */
 export interface VendaParaPlanilha {
@@ -27,6 +27,8 @@ export interface VendaParaPlanilha {
     dataVencimento: Date | string;
     valorParcela: number;
     antecipada: boolean;
+    paga?: boolean;
+    origemPagamento?: string | null;
   }[];
 }
 
@@ -86,7 +88,7 @@ export const SELECT_VENDA_PLANILHA = {
   itens: { select: { produtoNome: true, quantidade: true } },
   cliente: { select: { nome: true, cpf: true, cnpj: true, empresa: true } },
   parcelasVencimento: {
-    select: { numeroParcela: true, dataVencimento: true, valorParcela: true, antecipada: true },
+    select: { numeroParcela: true, dataVencimento: true, valorParcela: true, antecipada: true, paga: true, origemPagamento: true },
     orderBy: { numeroParcela: "asc" as const },
   },
 };
@@ -111,6 +113,7 @@ const STATUS: Record<SituacaoParcela, StatusPlanilha> = {
   // Enviada à Prudent, sem retorno confirmado: para a planilha da equipe ainda é "À VENCER" —
   // só ANTECIPAÇÃO OK entra na coluna K (2026-09-17).
   em_andamento: "À VENCER",
+  paga: "PAGO",
   a_antecipar: "À VENCER",
   // O sistema não sabe se a folha repassou (PAGO) ou não (PENDENTE DE REPASSE).
   vencida: "VENCIDA - CONFERIR REPASSE",

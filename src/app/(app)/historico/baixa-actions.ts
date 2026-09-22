@@ -6,7 +6,7 @@ import { createAuditLog } from "@/lib/audit";
 import { revalidarVenda } from "@/lib/revalidacao";
 import { hojeDataPura } from "@/lib/data-pura";
 
-type Resultado = { success: boolean; error?: string };
+type Resultado = { success: boolean; error?: string; count?: number };
 
 /** "YYYY-MM-DD" de calendário válido, ou null. */
 function dataPuraValida(valor: string): string | null {
@@ -50,6 +50,56 @@ export async function darBaixaParcela(formData: FormData): Promise<Resultado> {
   await createAuditLog("parcela:baixa", { parcelaId, origem: "manual", dataPagamento: data });
   revalidarVenda();
   return { success: true };
+}
+
+/**
+ * Baixa manual de parcelas escolhidas na fila da Prudent. A seleção é formada no
+ * popover, mas o servidor continua aceitando somente parcelas ainda abertas —
+ * assim uma seleção antiga nunca quita uma parcela já registrada por outra via.
+ */
+export async function darBaixaParcelas(formData: FormData): Promise<Resultado> {
+  const sessao = await requireAdminOrThrow();
+  const idsRaw = String(formData.get("parcelaIds") || "");
+  let ids: unknown;
+  try {
+    ids = JSON.parse(idsRaw);
+  } catch {
+    return { success: false, error: "Seleção de parcelas inválida." };
+  }
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > 100) {
+    return { success: false, error: "Selecione ao menos uma parcela." };
+  }
+  const parcelaIds = [...new Set(ids)];
+  if (!parcelaIds.every((id) => Number.isInteger(id) && id > 0)) {
+    return { success: false, error: "Seleção de parcelas inválida." };
+  }
+
+  const hoje = hojeDataPura();
+  const informada = String(formData.get("dataPagamento") || "").trim();
+  const data = informada ? dataPuraValida(informada) : hoje;
+  if (!data) return { success: false, error: "Data de pagamento inválida." };
+  if (data > hoje) return { success: false, error: "Data de pagamento não pode ser no futuro." };
+
+  const { count } = await prisma.parcelaVencimento.updateMany({
+    where: { id: { in: parcelaIds }, paga: false },
+    data: {
+      paga: true,
+      dataPagamento: new Date(`${data}T00:00:00.000Z`),
+      origemPagamento: "manual",
+      asaasPaymentId: null,
+      baixaPor: sessao.nomeExibicao || sessao.username,
+    },
+  });
+  if (count === 0) return { success: false, error: "As parcelas selecionadas já foram baixadas ou não existem." };
+
+  await createAuditLog("parcela:baixa-em-lote", {
+    parcelaIds,
+    quantidade: count,
+    origem: "manual",
+    dataPagamento: data,
+  });
+  revalidarVenda();
+  return { success: true, count };
 }
 
 /**
