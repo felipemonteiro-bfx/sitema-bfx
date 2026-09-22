@@ -189,7 +189,7 @@ metadata:
   labels:
     app: bfx-relatorio-semanal
 spec:
-  schedule: "0 11 * * 1"
+  schedule: "0 11 * * 5"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

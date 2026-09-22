@@ -16,6 +16,7 @@ import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { obterDocumentoPorVendaETipo } from "@/lib/documento-service";
 import { assertSafeEmailAddresses, buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
 import { TERMO_EMAIL_STATUS_VALUES, type TermoEmailStatus } from "@/lib/termo-email-status";
+import { agruparVendasPorSemana, type VendaSemanal } from "@/lib/relatorio-semanal";
 
 export { TERMO_EMAIL_STATUS_VALUES };
 export type { TermoEmailStatus };
@@ -553,98 +554,32 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
   return true;
 }
 
-type VendaRelatorio = {
-  id: number;
-  dataVenda: Date;
-  vendedor?: string | null;
-  vendedorId?: number | null;
-  parcelas?: number | null;
+type VendaRelatorio = VendaSemanal & {
   itens?: { produtoNome: string; quantidade: number; subtotal: number }[];
-  valorVenda?: number | null;
-  quantidade?: number | null;
-  valorFrete?: number | null;
-  desconto?: number | null;
-  cliente?: {
-    nome?: string | null;
-    matricula?: string | null;
-    empresa?: string | null;
-    empresaParceiraId?: number | null;
-  } | null;
 };
 
-/**
- * Generates and sends the weekly sales report for a given company.
- */
+type PeriodoRelatorioSemanal = {
+  inicioMes: Date;
+  fimPeriodo: Date;
+};
+
+/** Envia o consolidado do mês corrente, agrupado em semanas de sábado a sexta. */
 export async function sendWeeklyReport(
   empresaNome: string,
   vendas: VendaRelatorio[],
-  emailsTo: string[],
-  adminEmail?: string,
-  telefoneFallback?: string
+  emailRh: string | null | undefined,
+  periodo: PeriodoRelatorioSemanal
 ): Promise<void> {
   const smtpCfg = await getSmtpConfig();
 
-  // If SMTP not configured, fall back to WhatsApp
-  if (!smtpCfg) {
-    if (!telefoneFallback) {
-      console.warn(`[email] SMTP nao configurado e sem telefone de fallback para ${empresaNome} — relatorio ignorado.`);
-      return;
-    }
-    const totalGeralFallback = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-    const fimFallback = new Date();
-    const inicioFallback = new Date();
-    inicioFallback.setDate(inicioFallback.getDate() - 7);
-    const semanaLabelFallback = `${formatDateBR(inicioFallback)} a ${formatDateBR(fimFallback)}`;
-    const mensagem = [
-      `[BFX] Relatorio Semanal de Vendas`,
-      `Empresa: ${empresaNome}`,
-      `Periodo: ${semanaLabelFallback}`,
-      `Total de vendas: ${vendas.length}`,
-      `Valor total: ${formatBRL(totalGeralFallback)}`,
-    ].join("\n");
-    try {
-      await enviarWhatsApp({
-        telefone: telefoneFallback,
-        origem: "relatorio",
-        template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
-      });
-    } catch (err) {
-      console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);
-    }
-    return;
-  }
+  if (!smtpCfg) throw new Error("SMTP não configurado");
+  if (!emailRh?.trim()) throw new Error("Empresa sem e-mail de RH");
 
-  // If SMTP is configured but no email recipients, try WhatsApp fallback
-  if (emailsTo.length === 0) {
-    if (!telefoneFallback) {
-      console.warn(`[email] Empresa ${empresaNome} sem email e sem telefone — relatorio ignorado.`);
-      return;
-    }
-    const totalGeralWa = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-    const fimWa = new Date();
-    const inicioWa = new Date();
-    inicioWa.setDate(inicioWa.getDate() - 7);
-    const semanaLabelWa = `${formatDateBR(inicioWa)} a ${formatDateBR(fimWa)}`;
-    const mensagem = [
-      `[BFX] Relatorio Semanal de Vendas`,
-      `Empresa: ${empresaNome}`,
-      `Periodo: ${semanaLabelWa}`,
-      `Total de vendas: ${vendas.length}`,
-      `Valor total: ${formatBRL(totalGeralWa)}`,
-    ].join("\n");
-    try {
-      await enviarWhatsApp({
-        telefone: telefoneFallback,
-        origem: "relatorio",
-        template: comFallback(TEMPLATES.relatorioEmpresa, [mensagem], mensagem),
-      });
-    } catch (err) {
-      console.error(`[email] Falha ao enviar relatorio semanal via WhatsApp para ${empresaNome}:`, err);
-    }
-    return;
-  }
+  const grupos = agruparVendasPorSemana(vendas, periodo.inicioMes, periodo.fimPeriodo);
+  const totalGeral = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
+  const periodoLabel = `${grupos[0]?.inicio ?? formatDateBR(periodo.inicioMes)} a ${grupos.at(-1)?.fim ?? formatDateBR(periodo.fimPeriodo)}`;
 
-  const rows = vendas.map((v) => {
+  const rows = (grupo: (typeof grupos)[number]) => grupo.vendas.map((v) => {
     const total = valorTotalVenda(v);
     const produtos = escapeHtml(produtosTexto(v));
     const data = formatDateBR(v.dataVenda);
@@ -664,13 +599,12 @@ export async function sendWeeklyReport(
     </tr>`;
   }).join("\n");
 
-  const totalGeral = vendas.reduce((s, v) => s + valorTotalVenda(v), 0);
-  const semanaLabel = (() => {
-    const fim = new Date();
-    const inicio = new Date();
-    inicio.setDate(inicio.getDate() - 7);
-    return `${formatDateBR(inicio)} a ${formatDateBR(fim)}`;
-  })();
+  const secoes = grupos.map((grupo) => `
+    <h3>Semana ${grupo.inicio} a ${grupo.fim} — ${grupo.vendas.length} venda(s) — ${formatBRL(grupo.total)}</h3>
+    <table>
+      <thead><tr><th>Matrícula</th><th>Nome</th><th>Produtos</th><th>Vendedor</th><th>Data</th><th>Valor</th><th>Parcelas</th></tr></thead>
+      <tbody>${rows(grupo) || '<tr><td colspan="7" style="text-align:center;color:#888;">Nenhuma venda nesta semana.</td></tr>'}</tbody>
+    </table>`).join("\n");
 
   const html = `
 <!DOCTYPE html>
@@ -687,42 +621,20 @@ export async function sendWeeklyReport(
 </style></head>
 <body>
 <div class="card">
-  <h2>Relatorio Semanal de Vendas — ${escapeHtml(empresaNome)}</h2>
-  <p>Periodo: <strong>${semanaLabel}</strong> &nbsp;|&nbsp; Total de vendas: <strong>${vendas.length}</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Matricula</th>
-        <th>Nome</th>
-        <th>Produtos</th>
-        <th>Vendedor</th>
-        <th>Data</th>
-        <th>Valor</th>
-        <th>Parcelas</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${rows || '<tr><td colspan="7" style="text-align:center;color:#888;">Nenhuma venda no periodo.</td></tr>'}
-      <tr class="total-row">
-        <td colspan="5">TOTAL DO PERIODO</td>
-        <td>${formatBRL(totalGeral)}</td>
-        <td></td>
-      </tr>
-    </tbody>
-  </table>
+  <h2>Consolidado de Vendas — ${escapeHtml(empresaNome)}</h2>
+  <p>Período acumulado: <strong>${periodoLabel}</strong> &nbsp;|&nbsp; Total de vendas: <strong>${vendas.length}</strong></p>
+  ${secoes}
+  <p class="total-row">TOTAL ACUMULADO DO MÊS: ${formatBRL(totalGeral)}</p>
   <p style="margin-top:16px;font-size:0.85em;color:#888;">Este email foi enviado automaticamente pelo sistema BFX.</p>
 </div>
 </body>
 </html>`;
 
-  const cc = adminEmail ? [adminEmail] : [];
-
   try {
     await sendEmail({
-      to: emailsTo,
-      subject: `Relatorio Semanal de Vendas — ${empresaNome} (${semanaLabel})`,
+      to: emailRh,
+      subject: `Consolidado de Vendas — ${empresaNome} (${periodoLabel})`,
       html,
-      cc,
     });
     await prisma.notificacao.create({
       data: {
@@ -740,5 +652,6 @@ export async function sendWeeklyReport(
         usuarioId: 1,
       },
     });
+    throw err;
   }
 }

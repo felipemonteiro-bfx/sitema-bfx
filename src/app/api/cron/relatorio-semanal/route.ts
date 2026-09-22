@@ -16,11 +16,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Get admin email from config
-    const cfg = await prisma.config.findFirst();
-    const adminEmail = (cfg as Record<string, unknown> | null)?.adminEmail as string | undefined;
-
-    // Fetch ALL partner companies (including those without email, for WhatsApp fallback)
+    // Fetch all partner companies; only the primary RH email is notified.
     const empresas = await prisma.empresaParceira.findMany({
       orderBy: { nome: "asc" },
     });
@@ -29,21 +25,20 @@ export async function GET(req: Request) {
       return NextResponse.json({ ok: true, empresas: 0, enviados: 0 });
     }
 
-    const hoje = new Date();
-    const semanaAtras = new Date(hoje);
-    semanaAtras.setDate(semanaAtras.getDate() - 7);
-    semanaAtras.setHours(0, 0, 0, 0);
-    hoje.setHours(23, 59, 59, 999);
+    const agora = new Date();
+    const inicioMes = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), 1));
+    const fimPeriodo = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), agora.getUTCDate(), 23, 59, 59, 999));
 
     let enviados = 0;
     const erros: string[] = [];
 
     for (const empresa of empresas) {
-      // Fetch sales for this company in the last 7 days
+      // Fetch the month's active sales; the email groups them by Saturday-Friday.
       // Use FK (empresaParceiraId) when possible, fall back to text matching for legacy data
       const vendas = await prisma.venda.findMany({
         where: {
-          dataVenda: { gte: semanaAtras, lte: hoje },
+          dataVenda: { gte: inicioMes, lte: fimPeriodo },
+          status: "ativa",
           cliente: {
             OR: [
               { empresaParceiraId: empresa.id },
@@ -58,20 +53,8 @@ export async function GET(req: Request) {
         orderBy: { dataVenda: "desc" },
       });
 
-      // Build recipient list (may be empty if no emailRh — sendWeeklyReport will use WhatsApp fallback)
-      const toEmails: string[] = [];
-      if (empresa.emailRh) {
-        toEmails.push(empresa.emailRh);
-        if (empresa.emailsExtras) {
-          const extras = empresa.emailsExtras.split(",").map((e) => e.trim()).filter(Boolean);
-          toEmails.push(...extras);
-        }
-      }
-
-      const telefoneFallback = empresa.telefoneRh ?? undefined;
-
       try {
-        await sendWeeklyReport(empresa.nome, vendas, toEmails, adminEmail, telefoneFallback);
+        await sendWeeklyReport(empresa.nome, vendas, empresa.emailRh, { inicioMes, fimPeriodo });
         enviados++;
       } catch (err) {
         console.error(`[relatorio-semanal] Erro ao enviar para ${empresa.nome}:`, err);
