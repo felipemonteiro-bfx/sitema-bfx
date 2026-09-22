@@ -87,6 +87,37 @@ describe("consolidarProdutosRelatorio", () => {
     expect(resultado).toMatchObject({ totalFuncionarios: 1, totalProdutos: 2, totalDesconto: 1100 });
   });
 
+  it("distribui o centavo residual pelo produto canonico independentemente da ordem dos itens", () => {
+    const consolidar = (itens: VendaRelatorioProduto["itens"]) =>
+      consolidarProdutosRelatorio(
+        [
+          venda(9, "2026-09-10", {
+            itens,
+            parcelasVencimento: [
+              {
+                numeroParcela: 1,
+                dataVencimento: new Date("2026-10-10T00:00:00.000Z"),
+                valorParcela: 1.01,
+              },
+            ],
+          }),
+        ],
+        INICIO,
+        FIM
+      ).linhas.map(({ produto, valorAcumulado }) => ({ produto, valorAcumulado }));
+    const itens = [
+      { produtoNome: "Mouse", quantidade: 1, subtotal: 1 },
+      { produtoNome: "Notebook", quantidade: 1, subtotal: 1 },
+    ];
+    const esperado = [
+      { produto: "Mouse", valorAcumulado: 0.5 },
+      { produto: "Notebook", valorAcumulado: 0.51 },
+    ];
+
+    expect(consolidar(itens)).toEqual(esperado);
+    expect(consolidar([...itens].reverse())).toEqual(esperado);
+  });
+
   it("nao mistura o mesmo produto de clientes diferentes e ordena por nome e produto", () => {
     const resultado = consolidarProdutosRelatorio(
       [
@@ -120,6 +151,28 @@ describe("consolidarProdutosRelatorio", () => {
     );
 
     expect(resultado).toEqual({ linhas: [], totalFuncionarios: 0, totalProdutos: 0, totalDesconto: 0 });
+  });
+
+  it("inclui venda exatamente no inicio do periodo", () => {
+    const resultado = consolidarProdutosRelatorio(
+      [venda(10, "2026-09-01", { dataVenda: new Date(INICIO) })],
+      INICIO,
+      FIM
+    );
+
+    expect(resultado.linhas).toHaveLength(1);
+    expect(resultado.linhas[0]).toMatchObject({ dataCompra: "01/09/2026", valorAcumulado: 300 });
+  });
+
+  it("inclui venda exatamente no fim do periodo", () => {
+    const resultado = consolidarProdutosRelatorio(
+      [venda(11, "2026-09-21", { dataVenda: new Date(FIM) })],
+      INICIO,
+      FIM
+    );
+
+    expect(resultado.linhas).toHaveLength(1);
+    expect(resultado.linhas[0]).toMatchObject({ dataCompra: "21/09/2026", valorAcumulado: 300 });
   });
 
   it("usa o produto legado e o valor da venda quando nao ha itens nem parcelas", () => {

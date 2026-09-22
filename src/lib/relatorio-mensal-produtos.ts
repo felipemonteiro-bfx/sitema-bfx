@@ -131,9 +131,11 @@ export function consolidarProdutosRelatorio(
     const cpfNormalizado = somenteDigitos(cliente?.cpf);
     const clienteId = cliente?.id ?? 0;
     const chaveFuncionario = cpfNormalizado ? `cpf:${cpfNormalizado}` : `id:${clienteId || `venda:${venda.id}`}`;
-    const itens = venda.itens?.length
-      ? venda.itens.map((item) => ({ nome: texto(item.produtoNome, "—"), peso: item.subtotal }))
-      : [{ nome: texto(venda.produtoNome, "—"), peso: valorTotalVenda(venda) }];
+    const itens = (
+      venda.itens?.length
+        ? venda.itens.map((item) => ({ nome: texto(item.produtoNome, "—"), peso: item.subtotal }))
+        : [{ nome: texto(venda.produtoNome, "—"), peso: valorTotalVenda(venda) }]
+    ).sort((a, b) => comparar(normalizar(a.nome), normalizar(b.nome)));
     const detalhes = detalhesParcelas(venda);
     const valores = distribuirCentavos(detalhes.totalCentavos, itens.map((item) => item.peso));
 
