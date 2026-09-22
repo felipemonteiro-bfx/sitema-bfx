@@ -27,6 +27,7 @@ export interface VendaParaPlanilha {
     dataVencimento: Date | string;
     valorParcela: number;
     antecipada: boolean;
+    emAndamento?: boolean;
     paga?: boolean;
     origemPagamento?: string | null;
   }[];
@@ -88,7 +89,7 @@ export const SELECT_VENDA_PLANILHA = {
   itens: { select: { produtoNome: true, quantidade: true } },
   cliente: { select: { nome: true, cpf: true, cnpj: true, empresa: true } },
   parcelasVencimento: {
-    select: { numeroParcela: true, dataVencimento: true, valorParcela: true, antecipada: true, paga: true, origemPagamento: true },
+    select: { numeroParcela: true, dataVencimento: true, valorParcela: true, antecipada: true, antecipacaoLoteId: true, paga: true, origemPagamento: true },
     orderBy: { numeroParcela: "asc" as const },
   },
 };
