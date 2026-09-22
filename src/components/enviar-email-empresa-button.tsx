@@ -8,9 +8,10 @@ import { Mail } from 'lucide-react';
 interface Props {
   vendaId: number;
   onSend: (vendaId: number) => Promise<{ success: boolean; error?: string }>;
+  label?: string;
 }
 
-export function EnviarEmailEmpresaButton({ vendaId, onSend }: Props) {
+export function EnviarEmailEmpresaButton({ vendaId, onSend, label = 'Empresa' }: Props) {
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ success?: boolean; error?: string } | null>(null);
 
@@ -36,10 +37,10 @@ export function EnviarEmailEmpresaButton({ vendaId, onSend }: Props) {
       onClick={handleClick}
       disabled={sending}
       className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'text-xs gap-1')}
-      title="Enviar notificacao para empresa"
+      title={label}
     >
       <Mail className="h-3.5 w-3.5" />
-      {sending ? 'Enviando...' : result?.success ? 'Enviado!' : 'Empresa'}
+      {sending ? 'Enviando...' : result?.success ? 'Enviado!' : label}
       {result?.error && (
         <span className="text-destructive text-xs ml-1">{result.error}</span>
       )}

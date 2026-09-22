@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { checkboxLigado } from "@/lib/form-values";
 import { revalidarVenda } from "@/lib/revalidacao";
 import { createAuditLog } from "@/lib/audit";
-import { sendVendaNotification } from "@/lib/email";
+import { enviarTermoAssinadoAoRh } from "@/lib/email";
 import {
   FORMA_PAGAMENTO,
   formaFromLegacyFlags,
@@ -525,30 +525,31 @@ export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: bo
   try {
     const venda = await prisma.venda.findUnique({
       where: { id: vendaId },
-      include: {
-        cliente: { select: { nome: true, matricula: true, empresa: true, empresaParceiraId: true } },
-        itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
+      select: {
+        id: true,
+        assinatura: { select: { assinaturaStatus: true } },
       },
     });
 
-    if (!venda) return { success: false, error: "Venda nao encontrada." };
-    if (!venda.cliente?.empresaParceiraId && !venda.cliente?.empresa) {
-      return { success: false, error: "Cliente nao vinculado a nenhuma empresa." };
+    if (!venda) return { success: false, error: "Venda não encontrada" };
+    if (venda.assinatura?.assinaturaStatus !== "assinado") {
+      return { success: false, error: "Termo assinado não encontrado" };
     }
 
-    const sent = await sendVendaNotification({
-      ...venda,
-      cliente: venda.cliente ?? undefined,
-    });
-
-    if (!sent) {
-      return { success: false, error: "Empresa nao encontrada ou sem contato configurado." };
+    const resultado = await enviarTermoAssinadoAoRh(vendaId);
+    switch (resultado.status) {
+      case "enviado":
+        return { success: true };
+      case "sem_email":
+        return { success: false, error: "Empresa sem e-mail de RH" };
+      case "erro_dados":
+        return { success: false, error: "Termo assinado não encontrado" };
+      case "falhou":
+        return { success: false, error: "Falha ao enviar termo" };
     }
-
-    return { success: true };
   } catch (err) {
     console.error("[enviarEmailEmpresa] Erro:", err);
-    return { success: false, error: "Erro ao enviar email." };
+    return { success: false, error: "Erro ao enviar termo" };
   }
 }
 
