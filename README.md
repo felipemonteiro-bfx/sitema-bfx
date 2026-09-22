@@ -75,10 +75,15 @@ npx vitest run src/__tests__/email-mime.test.ts src/__tests__/termo-email-status
 ```
 
 No ambiente local, cadastre uma empresa com `emailRh`, crie uma venda assinavel e
-confirme que o envio ocorre somente depois da assinatura. Verifique no e-mail do
-RH o anexo `termo-assinado-{id}.pdf`; uma falha SMTP deve aparecer como `Falhou`
-no historico, onde o botao `Reenviar termo ao RH` permite nova tentativa depois
-que o SMTP for corrigido. `emailsExtras` nao recebe esse envio.
+confirme que nenhum e-mail e enviado na criacao da venda. Assine pelo link do
+cliente e verifique que somente `emailRh` recebe o e-mail, sem envio por
+WhatsApp, com o anexo `termo-assinado-{id}.pdf`; `emailsExtras` nao recebe esse
+envio.
+
+Para testar a recuperacao, simule uma falha SMTP e confirme o status `Falhou` no
+historico. Corrija o SMTP e use manualmente o botao `Reenviar termo ao RH`.
+Verifique que o reenvio reutiliza o PDF existente e nao gera um segundo
+documento.
 
 ## Deploy na Vercel
 
