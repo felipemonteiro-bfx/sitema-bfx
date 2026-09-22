@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { History, FileSpreadsheet, ImageIcon, Check, Loader2, X } from 'lucide-react';
+import { History, FileSpreadsheet, ImageIcon, Check, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DateInput } from '@/components/ui/date-input';
@@ -73,6 +73,15 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
   const [cancelando, setCancelando] = useState<Batch | null>(null);
   const [dataRetorno, setDataRetorno] = useState(hoje);
   const [salvando, setSalvando] = useState(false);
+  const [pagina, setPagina] = useState(1);
+  const lotesPorPagina = 5;
+  const totalPaginas = Math.max(1, Math.ceil(batches.length / lotesPorPagina));
+  const inicioPagina = (pagina - 1) * lotesPorPagina;
+  const batchesPagina = batches.slice(inicioPagina, inicioPagina + lotesPorPagina);
+
+  useEffect(() => {
+    setPagina((atual) => Math.min(atual, totalPaginas));
+  }, [totalPaginas]);
 
   const concluir = async () => {
     if (!concluindo) return;
@@ -164,7 +173,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
           <p className="text-center text-muted-foreground py-8 text-sm">Nenhuma antecipação realizada ainda.</p>
         ) : (
           <div className="space-y-3">
-            {batches.map((b) => (
+            {batchesPagina.map((b) => (
               <div key={b.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4 hover:border-primary/30 transition-all sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-2">
@@ -226,6 +235,43 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                 </div>
               </div>
             ))}
+
+            {batches.length > lotesPorPagina && (
+              <nav className="flex items-center justify-between border-t border-border pt-3" aria-label="Paginação do histórico de antecipações">
+                <span className="text-xs text-muted-foreground">
+                  Mostrando {inicioPagina + 1}–{Math.min(inicioPagina + lotesPorPagina, batches.length)} de {batches.length} lotes
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    disabled={pagina === 1}
+                    onClick={() => setPagina((atual) => Math.max(1, atual - 1))}
+                    aria-label="Página anterior do histórico"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Anterior
+                  </Button>
+                  <span className="min-w-20 text-center text-xs font-semibold tabular-nums text-foreground">
+                    Página {pagina} de {totalPaginas}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1"
+                    disabled={pagina === totalPaginas}
+                    onClick={() => setPagina((atual) => Math.min(totalPaginas, atual + 1))}
+                    aria-label="Próxima página do histórico"
+                  >
+                    Próxima
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </nav>
+            )}
 
             {semLote.length > 0 && (
               <div className="pt-2">
