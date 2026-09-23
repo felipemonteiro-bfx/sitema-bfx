@@ -1,7 +1,7 @@
 /**
  * Orquestracao (com efeitos) do relatorio mensal por empresa parceira.
  *
- * Reune a logica pura, os dois geradores XLS e o envio ao RH, registrando o
+ * Reune a logica pura, os dois geradores .xlsx e o envio ao RH, registrando o
  * resultado em `RelatorioEnvioLog`.
  *
  * Reusado por:
@@ -22,7 +22,7 @@ import {
   type RelatorioMensalData,
 } from "@/lib/relatorio-mensal";
 import { gerarRelatorioMensalPdf } from "@/lib/relatorio-mensal-pdf";
-import { gerarPlanilhaAntecipacao, gerarRelatorioMensalXlsx } from "@/lib/relatorio-mensal-xlsx";
+import { XLSX_MIME, gerarPlanilhaAntecipacao, gerarRelatorioMensalXlsx } from "@/lib/relatorio-mensal-xlsx";
 import { gerarPlanilhaModeloOficial } from "@/lib/relatorio-mensal-oficial-xls";
 import { consolidarProdutosRelatorio } from "@/lib/relatorio-mensal-produtos";
 
@@ -175,8 +175,8 @@ async function processarGrupo(
     const oficial = gerarPlanilhaModeloOficial(consolidado.linhas, periodo);
     const empresaArquivo = slugFilename(empresaNome);
     const anexos = [
-      { filename: `antecipacao-${empresaArquivo}-${periodo}.xls`, contentType: "application/vnd.ms-excel", content: antecipacao },
-      { filename: `relatorio-oficial-${empresaArquivo}-${periodo}.xls`, contentType: "application/vnd.ms-excel", content: oficial },
+      { filename: `antecipacao-${empresaArquivo}-${periodo}.xlsx`, contentType: XLSX_MIME, content: antecipacao },
+      { filename: `relatorio-oficial-${empresaArquivo}-${periodo}.xlsx`, contentType: XLSX_MIME, content: oficial },
     ];
 
     const emailRh = grupo.canonica.emailRh?.trim();

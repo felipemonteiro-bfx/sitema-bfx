@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { gerarPlanilhaModeloOficial } from "@/lib/relatorio-mensal-oficial-xls";
 import { gerarPlanilhaAntecipacao } from "@/lib/relatorio-mensal-xlsx";
 import type { LinhaProdutoRelatorio } from "@/lib/relatorio-mensal-produtos";
+import { lerZip } from "./helpers/ler-zip";
 
 const CABECALHOS = [
   "Nome",
@@ -41,8 +42,14 @@ const LINHAS: LinhaProdutoRelatorio[] = [
   },
 ];
 
-function texto(buffer: Buffer): string {
-  return buffer.toString("utf-8");
+type Planilha = { workbook: string; aba: string };
+
+/** Abre o .xlsx de verdade (zip) — o Gmail e o Planilhas Google não leem o XML Spreadsheet 2003. */
+function abrir(bytes: Uint8Array): Planilha {
+  expect(Buffer.from(bytes).subarray(0, 2).toString("latin1")).toBe("PK");
+  const arquivos = lerZip(bytes);
+  expect(arquivos.has("[Content_Types].xml")).toBe(true);
+  return { workbook: arquivos.get("xl/workbook.xml")!, aba: arquivos.get("xl/worksheets/sheet1.xml")! };
 }
 
 function quantidade(haystack: string, needle: string): number {
@@ -52,52 +59,60 @@ function quantidade(haystack: string, needle: string): number {
 function esperarCabecalhosNaOrdem(xml: string): void {
   let posicaoAnterior = -1;
   for (const cabecalho of CABECALHOS) {
-    const posicao = xml.indexOf(`>${cabecalho}</Data>`);
+    const posicao = xml.indexOf(`<t>${cabecalho}</t>`);
     expect(posicao).toBeGreaterThan(posicaoAnterior);
     posicaoAnterior = posicao;
   }
 }
 
 describe("gerarPlanilhaAntecipacao", () => {
-  it("gera somente a aba da competencia com as colunas do modelo de antecipacao", () => {
-    const xml = texto(gerarPlanilhaAntecipacao(LINHAS, "2026-09"));
+  it("gera um .xlsx com somente a aba da competencia e as colunas do modelo de antecipacao", () => {
+    const { workbook, aba } = abrir(gerarPlanilhaAntecipacao(LINHAS, "2026-09"));
 
-    expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-    expect(xml).toContain('<Worksheet ss:Name="Set-2026">');
-    esperarCabecalhosNaOrdem(xml);
-    expect(quantidade(xml, "<Worksheet ")).toBe(1);
-    expect(quantidade(xml, "<Row>")).toBe(LINHAS.length + 1);
-    expect(xml).toContain('<Data ss:Type="Number">900.50</Data>');
+    expect(quantidade(workbook, "<sheet ")).toBe(1);
+    expect(workbook).toContain('name="Set-2026"');
+    esperarCabecalhosNaOrdem(aba);
+    expect(quantidade(aba, "<row ")).toBe(LINHAS.length + 1);
+    expect(aba).toContain("<v>900.5</v>");
   });
 
   it("escapa os campos textuais e mantem uma linha para cada produto consolidado", () => {
-    const xml = texto(gerarPlanilhaAntecipacao(LINHAS, "2026-09"));
+    const { aba } = abrir(gerarPlanilhaAntecipacao(LINHAS, "2026-09"));
 
-    expect(xml).toContain("Ana &amp; Lima");
-    expect(xml).toContain("Notebook &lt;Pro&gt; 15&quot;");
-    expect(quantidade(xml, "Ana &amp; Lima")).toBe(1);
-    expect(quantidade(xml, "Bruno Souza")).toBe(1);
+    expect(aba).toContain("Ana &amp; Lima");
+    expect(aba).toContain("Notebook &lt;Pro&gt; 15&quot;");
+    expect(quantidade(aba, "Ana &amp; Lima")).toBe(1);
+    expect(quantidade(aba, "Bruno Souza")).toBe(1);
   });
 });
 
 describe("gerarPlanilhaModeloOficial", () => {
-  it("gera o layout oficial com as colunas aprovadas e campos de parcela como texto", () => {
-    const xml = texto(gerarPlanilhaModeloOficial(LINHAS, "2026-09"));
+  it("gera o .xlsx no layout oficial com as colunas aprovadas e campos de parcela como texto", () => {
+    const { workbook, aba } = abrir(gerarPlanilhaModeloOficial(LINHAS, "2026-09"));
 
-    expect(xml).toContain('<Worksheet ss:Name="PLANILHA">');
-    expect(xml).toContain("RELAÇÃO DE VALORES PARA FOLHA DE PAGAMENTO");
-    expect(xml).toContain("Competência: setembro/2026");
-    esperarCabecalhosNaOrdem(xml);
-    expect(xml).toContain('<Data ss:Type="String">1/2, 2/2</Data>');
-    expect(xml).toContain('<Data ss:Type="String">10/10/2026, 10/11/2026</Data>');
+    expect(workbook).toContain('name="PLANILHA"');
+    expect(aba).toContain("RELAÇÃO DE VALORES PARA FOLHA DE PAGAMENTO");
+    expect(aba).toContain("Competência: setembro/2026");
+    expect(aba).toContain('<mergeCell ref="A1:H1"/>');
+    esperarCabecalhosNaOrdem(aba);
+    expect(aba).toContain("<t>1/2, 2/2</t>");
+    expect(aba).toContain("<t>10/10/2026, 10/11/2026</t>");
+  });
+
+  it("mantem cabecalho congelado e as larguras do layout antigo (150 pt → 27,86 caracteres)", () => {
+    const { aba } = abrir(gerarPlanilhaModeloOficial(LINHAS, "2026-09"));
+
+    expect(aba).toContain('<pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/>');
+    expect(aba).toContain('<col min="1" max="1" width="27.86" customWidth="1"/>');
+    expect(aba).toContain('<col min="5" max="5" width="39.29" customWidth="1"/>');
   });
 
   it("escapa os campos textuais e mantem uma linha para cada produto consolidado", () => {
-    const xml = texto(gerarPlanilhaModeloOficial(LINHAS, "2026-09"));
+    const { aba } = abrir(gerarPlanilhaModeloOficial(LINHAS, "2026-09"));
 
-    expect(xml).toContain("Ana &amp; Lima");
-    expect(xml).toContain("Notebook &lt;Pro&gt; 15&quot;");
-    expect(quantidade(xml, "Ana &amp; Lima")).toBe(1);
-    expect(quantidade(xml, "Bruno Souza")).toBe(1);
+    expect(aba).toContain("Ana &amp; Lima");
+    expect(aba).toContain("Notebook &lt;Pro&gt; 15&quot;");
+    expect(quantidade(aba, "Ana &amp; Lima")).toBe(1);
+    expect(quantidade(aba, "Bruno Souza")).toBe(1);
   });
 });

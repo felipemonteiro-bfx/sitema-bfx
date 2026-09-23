@@ -1,10 +1,10 @@
 import type { LinhaProdutoRelatorio } from "@/lib/relatorio-mensal-produtos";
 import {
   CABECALHOS_PLANILHA_MENSAL,
-  cellNum,
-  cellStr,
-  escapeXml,
+  COLUNAS_PLANILHA_MENSAL,
+  preencherLinhasProduto,
 } from "@/lib/relatorio-mensal-xlsx";
+import { Grade, empacotarXlsx } from "@/lib/xlsx/pacote-xlsx";
 
 const MESES = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -16,85 +16,56 @@ function rotuloCompetencia(competencia: string): string {
   return `${MESES[Number(mes) - 1] ?? mes}/${ano}`;
 }
 
-function celulaCabecalho(value: string): string {
-  return `<Cell ss:StyleID="header"><Data ss:Type="String">${escapeXml(value)}</Data></Cell>`;
-}
+/** Índices em `cellXfs` (ver ESTILOS). */
+const S = { texto: 0, titulo: 1, competencia: 2, cabecalho: 3, numero: 4 } as const;
 
-function linhaProduto(linha: LinhaProdutoRelatorio): string {
-  return `<Row>${[
-    cellStr(linha.nome),
-    cellStr(linha.cpf),
-    cellStr(linha.empresa),
-    cellStr(linha.dataCompra),
-    cellStr(linha.produto),
-    cellNum(linha.valorAcumulado),
-    cellStr(linha.parcela),
-    cellStr(linha.dataDesconto),
-  ].join("")}</Row>`;
-}
+const ESTILOS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<fonts count="4"><font><sz val="10"/><name val="Arial"/><family val="2"/></font><font><b/><sz val="12"/><name val="Arial"/><family val="2"/></font><font><b/><sz val="10"/><name val="Arial"/><family val="2"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Arial"/><family val="2"/></font></fonts>
+<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF1F4E78"/><bgColor indexed="64"/></patternFill></fill></fills>
+<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="5">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="center"/></xf>
+<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+<xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+<xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyAlignment="1"><alignment vertical="center"/></xf>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`;
 
-/** Fonte de verdade autocontida do segundo anexo no layout oficial aprovado. */
+/** Larguras do layout aprovado, em pontos, convertidas para caracteres: (pt × 4/3 − 5) / 7. */
+const LARGURAS_PONTOS = [150, 90, 110, 110, 210, 90, 80, 120];
+const LARGURAS = LARGURAS_PONTOS.map((pt) => Math.round(((pt * 4) / 3 - 5) / 7 * 100) / 100);
+const COLUNAS = LARGURAS.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("");
+
+/** Segundo anexo (.xlsx) no layout oficial aprovado: titulo, competencia, cabecalho congelado. */
 export function gerarPlanilhaModeloOficial(
   linhas: LinhaProdutoRelatorio[],
   competencia: string
-): Buffer {
-  const cabecalho = `<Row ss:Height="30">${CABECALHOS_PLANILHA_MENSAL.map(celulaCabecalho).join("")}</Row>`;
-  const dados = linhas.map(linhaProduto).join("\n");
-  const competenciaLabel = `Competência: ${rotuloCompetencia(competencia)}`;
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-  xmlns:o="urn:schemas-microsoft-com:office:office"
-  xmlns:x="urn:schemas-microsoft-com:office:excel"
-  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
-  xmlns:html="http://www.w3.org/TR/REC-html40">
-<Styles>
-  <Style ss:ID="Default" ss:Name="Normal">
-    <Alignment ss:Vertical="Center"/>
-    <Font ss:FontName="Arial" ss:Size="10"/>
-  </Style>
-  <Style ss:ID="title">
-    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
-    <Font ss:FontName="Arial" ss:Size="12" ss:Bold="1"/>
-  </Style>
-  <Style ss:ID="competencia">
-    <Font ss:FontName="Arial" ss:Size="10" ss:Bold="1"/>
-  </Style>
-  <Style ss:ID="header">
-    <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
-    <Borders>
-      <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
-      <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
-    </Borders>
-    <Font ss:FontName="Arial" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/>
-    <Interior ss:Color="#1F4E78" ss:Pattern="Solid"/>
-  </Style>
-</Styles>
-<Worksheet ss:Name="PLANILHA">
-<Table>
-<Column ss:Width="150"/>
-<Column ss:Width="90"/>
-<Column ss:Width="110"/>
-<Column ss:Width="110"/>
-<Column ss:Width="210"/>
-<Column ss:Width="90"/>
-<Column ss:Width="80"/>
-<Column ss:Width="120"/>
-<Row ss:Height="22"><Cell ss:StyleID="title" ss:MergeAcross="7"><Data ss:Type="String">RELAÇÃO DE VALORES PARA FOLHA DE PAGAMENTO</Data></Cell></Row>
-<Row><Cell ss:StyleID="competencia" ss:MergeAcross="7"><Data ss:Type="String">${escapeXml(competenciaLabel)}</Data></Cell></Row>
-${cabecalho}
-${dados}
-</Table>
-<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-  <FreezePanes/>
-  <FrozenNoSplit/>
-  <SplitHorizontal>3</SplitHorizontal>
-  <TopRowBottomPane>3</TopRowBottomPane>
-</WorksheetOptions>
-</Worksheet>
-</Workbook>`;
+): Uint8Array<ArrayBuffer> {
+  const grade = new Grade();
 
-  return Buffer.from(xml, "utf-8");
+  grade.texto("A", 1, S.titulo, "RELAÇÃO DE VALORES PARA FOLHA DE PAGAMENTO");
+  grade.altura(1, 22);
+  grade.texto("A", 2, S.competencia, `Competência: ${rotuloCompetencia(competencia)}`);
+  grade.mesclas.push("A1:H1", "A2:H2");
+
+  CABECALHOS_PLANILHA_MENSAL.forEach((cabecalho, i) =>
+    grade.texto(COLUNAS_PLANILHA_MENSAL[i], 3, S.cabecalho, cabecalho)
+  );
+  grade.altura(3, 30);
+  preencherLinhasProduto(grade, linhas, 4, S);
+
+  const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
+<sheetFormatPr defaultRowHeight="13"/>
+<cols>${COLUNAS}</cols>
+<sheetData>${grade.xml()}</sheetData>
+<mergeCells count="${grade.mesclas.length}">${grade.mesclas.map((m) => `<mergeCell ref="${m}"/>`).join("")}</mergeCells>
+</worksheet>`;
+
+  return empacotarXlsx([{ nome: "PLANILHA", xml }], ESTILOS);
 }

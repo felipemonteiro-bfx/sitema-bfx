@@ -19,6 +19,7 @@ vi.mock("@/lib/email", () => ({ sendEmail: mocks.sendEmail }));
 vi.mock("@/lib/relatorio-mensal-xlsx", () => ({
   gerarPlanilhaAntecipacao: mocks.gerarPlanilhaAntecipacao,
   gerarRelatorioMensalXlsx: vi.fn(),
+  XLSX_MIME: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 }));
 vi.mock("@/lib/relatorio-mensal-oficial-xls", () => ({ gerarPlanilhaModeloOficial: mocks.gerarPlanilhaModeloOficial }));
 vi.mock("@/lib/relatorio-mensal-pdf", () => ({ gerarRelatorioMensalPdf: vi.fn() }));
@@ -106,8 +107,8 @@ describe("processarRelatorioMensal", () => {
       expect.objectContaining({
         to: "rh@empresa.test",
         attachments: [
-          expect.objectContaining({ filename: "antecipacao-empresa-prime-2026-09.xls", content: Buffer.from("antecipacao") }),
-          expect.objectContaining({ filename: "relatorio-oficial-empresa-prime-2026-09.xls", content: Buffer.from("oficial") }),
+          expect.objectContaining({ filename: "antecipacao-empresa-prime-2026-09.xlsx", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", content: Buffer.from("antecipacao") }),
+          expect.objectContaining({ filename: "relatorio-oficial-empresa-prime-2026-09.xlsx", contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", content: Buffer.from("oficial") }),
         ],
       })
     );
