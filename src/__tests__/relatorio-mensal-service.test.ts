@@ -123,6 +123,23 @@ describe("processarRelatorioMensal", () => {
     ]);
   });
 
+  it("manda o relatorio com copia para o emailCopia da empresa canonica", async () => {
+    dbMock.empresaParceira.findMany.mockResolvedValue([
+      { id: 7, nome: "Empresa Prime", emailRh: "rh@empresa.test", emailCopia: "fin@prudent.test" },
+    ]);
+    dbMock.venda.findMany.mockResolvedValue([venda()]);
+
+    await processarRelatorioMensal({ periodo: "2026-09" });
+
+    expect(dbMock.empresaParceira.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ select: expect.objectContaining({ emailCopia: true }) })
+    );
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: "rh@empresa.test", cc: ["fin@prudent.test"] }));
+    expect(dbMock.relatorioEnvioLog.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ create: expect.objectContaining({ destinatarios: "rh@empresa.test, fin@prudent.test" }) })
+    );
+  });
+
   it("registra sem_email sem enviar quando a empresa canonica nao tem emailRh", async () => {
     configurarEmpresa(null);
     dbMock.venda.findMany.mockResolvedValue([venda()]);

@@ -15,6 +15,7 @@ import { enviarWhatsApp } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { obterDocumentoPorVendaETipo } from "@/lib/documento-service";
 import { assertSafeEmailAddresses, buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
+import { emailsCopia } from "@/lib/email-copia";
 import { TERMO_EMAIL_STATUS_VALUES, type TermoEmailStatus } from "@/lib/termo-email-status";
 import { agruparVendasPorSemana, type VendaSemanal } from "@/lib/relatorio-semanal";
 
@@ -114,7 +115,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
 
   const message = buildMimeMessage(opts, cfg.from);
 
-  await smtpSend(cfg, allRecipients, message);
+  await smtpSend(cfg, allRecipients, message, toList.length);
 }
 
 function sanitizeEmailError(error: unknown): string {
@@ -190,8 +191,10 @@ export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEma
 </body></html>`;
 
   try {
+    const cc = emailsCopia(empresa.emailCopia, emailRh);
     await sendEmail({
       to: emailRh,
+      ...(cc.length > 0 ? { cc } : {}),
       subject: `Termo assinado — venda #${vendaId} — ${clienteNome}`,
       html,
       attachments: [{
@@ -216,10 +219,9 @@ export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEma
 /**
  * Low-level SMTP send via net/tls.
  */
-function smtpSend(cfg: SmtpConfig, recipients: string[], rawMessage: string): Promise<void> {
+/** `obrigatorios`: os primeiros N destinatarios (o To) — recusado um deles, o envio falha; Cc recusado e pulado. */
+function smtpSend(cfg: SmtpConfig, recipients: string[], rawMessage: string, obrigatorios = recipients.length): Promise<void> {
   return new Promise((resolve, reject) => {
-    const lines: string[] = [];
-
     const send = (sock: net.Socket | tls.TLSSocket, data: string) => {
       sock.write(data + "\r\n");
     };
@@ -227,10 +229,14 @@ function smtpSend(cfg: SmtpConfig, recipients: string[], rawMessage: string): Pr
     let sock: net.Socket | tls.TLSSocket;
     let tlsUpgraded = false;
     let step = 0;
+    // Cada RCPT TO tem a sua resposta: o proximo indice e contado aqui, e nao
+    // pelas respostas 250 da sessao (EHLO e MAIL FROM tambem sao 250 e faziam
+    // o DATA sair depois do primeiro destinatario, sem os Cc).
+    let rcptIndex = 0;
+    let rcptAceitos = 0;
 
     const handleData = (data: Buffer, activeSock: net.Socket | tls.TLSSocket) => {
       const response = data.toString();
-      lines.push(response.trim());
       const code = parseInt(response.slice(0, 3), 10);
 
       if (step === 0) {
@@ -320,17 +326,20 @@ function smtpSend(cfg: SmtpConfig, recipients: string[], rawMessage: string): Pr
           activeSock.destroy();
         }
       } else if (step === 7) {
-        // RCPT TO responses
-        if (code === 250 || code === 251) {
-          const nextRecipientIndex = lines.filter((l) => l.startsWith("250") || l.startsWith("251")).length;
-          if (nextRecipientIndex < recipients.length) {
-            send(activeSock, `RCPT TO:<${recipients[nextRecipientIndex]}>`);
-          } else {
-            step = 8;
-            send(activeSock, "DATA");
-          }
+        // RCPT TO responses — To recusado falha (a copia nao substitui o RH); Cc recusado e pulado
+        if (code === 250 || code === 251) rcptAceitos++;
+        else if (rcptIndex < obrigatorios) {
+          reject(new Error(`SMTP RCPT TO failed for ${recipients[rcptIndex]}: ${response}`));
+          activeSock.destroy();
+          return;
+        }
+        rcptIndex++;
+        if (rcptIndex < recipients.length) {
+          send(activeSock, `RCPT TO:<${recipients[rcptIndex]}>`);
+        } else if (rcptAceitos === 0) {
+          reject(new Error(`SMTP RCPT TO failed: ${response}`));
+          activeSock.destroy();
         } else {
-          // Non-fatal: skip bad recipient, continue
           step = 8;
           send(activeSock, "DATA");
         }
@@ -568,7 +577,8 @@ export async function sendWeeklyReport(
   empresaNome: string,
   vendas: VendaRelatorio[],
   emailRh: string | null | undefined,
-  periodo: PeriodoRelatorioSemanal
+  periodo: PeriodoRelatorioSemanal,
+  cc: string[] = []
 ): Promise<void> {
   const smtpCfg = await getSmtpConfig();
 
@@ -633,6 +643,7 @@ export async function sendWeeklyReport(
   try {
     await sendEmail({
       to: emailRh,
+      ...(cc.length > 0 ? { cc } : {}),
       subject: `Consolidado de Vendas — ${empresaNome} (${periodoLabel})`,
       html,
     });

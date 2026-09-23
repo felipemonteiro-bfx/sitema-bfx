@@ -12,6 +12,7 @@ const dbMock = {
 };
 
 const documentoMock = vi.fn();
+const recusados: string[] = [];
 
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/documento-service", () => ({ obterDocumentoPorVendaETipo: documentoMock }));
@@ -54,6 +55,7 @@ describe("enviarTermoAssinadoAoRh", () => {
     dbMock.empresaParceira.findFirst.mockResolvedValue(empresa);
     documentoMock.mockResolvedValue({ buffer: pdf, mimeType: "application/pdf" });
     smtpWrites.length = 0;
+    recusados.length = 0;
     netConnectMock.mockImplementation((_port: number, _host: string, onConnect: () => void) => {
       let onData: ((data: Buffer) => void) | undefined;
       const socket = {
@@ -77,7 +79,9 @@ describe("enviarTermoAssinadoAoRh", () => {
                     : command.startsWith("MAIL FROM:")
                       ? "250 remetente"
                       : command.startsWith("RCPT TO:")
-                        ? "250 destinatario"
+                        ? recusados.some((r) => command.includes(`<${r}>`))
+                          ? "550 recusado"
+                          : "250 destinatario"
                         : command === "DATA"
                           ? "354 dados"
                           : "221 encerrado";
@@ -123,6 +127,39 @@ describe("enviarTermoAssinadoAoRh", () => {
         termoEmailErro: null,
       }),
     });
+  });
+
+  it("manda cópia para o emailCopia da empresa e entrega a todos os destinatários", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue({ ...empresa, emailCopia: "fin@prudent.test, ops@prudent.test" });
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    await expect(enviarTermoAssinadoAoRh(vendaId)).resolves.toEqual({ status: "enviado" });
+    const rcpts = smtpWrites.filter((w) => w.startsWith("RCPT TO:")).map((w) => w.trim());
+    expect(rcpts).toEqual(["RCPT TO:<rh@empresa.test>", "RCPT TO:<fin@prudent.test>", "RCPT TO:<ops@prudent.test>"]);
+    const mime = smtpWrites.find((write) => write.includes("\r\n.\r\n")) || "";
+    expect(mime).toContain("To: rh@empresa.test\r\n");
+    expect(mime).toContain("Cc: fin@prudent.test, ops@prudent.test\r\n");
+  });
+
+  it("cópia recusada pelo servidor é pulada e o RH recebe", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue({ ...empresa, emailCopia: "fin@prudent.test, ops@prudent.test" });
+    recusados.push("fin@prudent.test");
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    await expect(enviarTermoAssinadoAoRh(vendaId)).resolves.toEqual({ status: "enviado" });
+    expect(smtpWrites.filter((w) => w.startsWith("RCPT TO:"))).toHaveLength(3);
+    expect(smtpWrites.some((w) => w.trim() === "DATA")).toBe(true);
+  });
+
+  it("RH recusado pelo servidor falha o envio mesmo com cópia aceita", async () => {
+    dbMock.empresaParceira.findUnique.mockResolvedValue({ ...empresa, emailCopia: "fin@prudent.test" });
+    recusados.push("rh@empresa.test");
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+
+    const resultado = await enviarTermoAssinadoAoRh(vendaId);
+    expect(resultado.status).toBe("falhou");
+    expect(resultado.error).toContain("rh@empresa.test");
+    expect(smtpWrites.some((w) => w.trim() === "DATA")).toBe(false);
   });
 
   it("não usa emailsExtras nem WhatsApp", async () => {

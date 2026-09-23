@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmailCopiaForm } from "@/components/email-copia-form";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,11 @@ export default async function Page() {
     take: 200,
   });
 
+  const empresas = await prisma.empresaParceira.findMany({
+    select: { id: true, nome: true, emailRh: true, emailCopia: true },
+    orderBy: { nome: "asc" },
+  });
+
   const periodoDefault = periodoMesAnterior(new Date());
 
   // agrupa por periodo (mantendo ordem desc)
@@ -70,6 +76,70 @@ export default async function Page() {
         description="Histórico de envios do relatório mensal de vendas às empresas parceiras."
         breadcrumbs={[{ label: "Relatórios", href: "/relatorios" }, { label: "Mensais" }]}
       />
+
+      {empresas.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-primary">Destinatários por empresa</CardTitle>
+            <CardDescription>
+              Quem está em cópia recebe tudo o que vai ao RH da empresa: termo assinado, consolidado semanal e
+              relatório mensal. Para mais de um endereço, separe por vírgula.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Desktop: tabela */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-56">Empresa</TableHead>
+                    <TableHead className="w-64">E-mail do RH</TableHead>
+                    <TableHead>Em cópia</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {empresas.map((empresa) => (
+                    <TableRow key={empresa.id}>
+                      <TableCell className="font-medium">{empresa.nome}</TableCell>
+                      <TableCell>
+                        {empresa.emailRh ? empresa.emailRh : <Badge variant="warning">Sem e-mail do RH</Badge>}
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <EmailCopiaForm
+                          empresaId={empresa.id}
+                          empresaNome={empresa.nome}
+                          valor={empresa.emailCopia}
+                          idPrefixo="tabela"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile: cards */}
+            <div className="space-y-3 md:hidden">
+              {empresas.map((empresa) => (
+                <div key={empresa.id} className="space-y-2 rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{empresa.nome}</span>
+                    {!empresa.emailRh && <Badge variant="warning">Sem e-mail do RH</Badge>}
+                  </div>
+                  {empresa.emailRh && <div className="text-xs text-muted-foreground">RH: {empresa.emailRh}</div>}
+                  <EmailCopiaForm
+                    empresaId={empresa.id}
+                    empresaNome={empresa.nome}
+                    valor={empresa.emailCopia}
+                    idPrefixo="cartao"
+                    rotuloVisivel
+                  />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

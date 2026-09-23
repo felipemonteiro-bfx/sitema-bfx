@@ -11,6 +11,7 @@ vi.mock("@/lib/relatorio-mensal-service", () => ({
 }));
 vi.mock("@/lib/guards", () => ({ requireAdminOrThrow: mocks.requireAdminOrThrow }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
+vi.mock("@/lib/db", () => ({ prisma: {} }));
 
 const { reenviarRelatorioMensal } = await import("@/app/(app)/relatorios/mensais/actions");
 

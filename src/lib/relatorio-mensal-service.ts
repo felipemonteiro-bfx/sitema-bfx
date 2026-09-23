@@ -10,6 +10,7 @@
  */
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { emailsCopia } from "@/lib/email-copia";
 import { formatBRL } from "@/lib/utils";
 import {
   resolverGruposEconomicos,
@@ -189,8 +190,10 @@ async function processarGrupo(
       return { ...baseResult, status: "sem_email", totalVendas: dados.totalVendas, valorTotal: dados.valorTotal };
     }
 
+    const cc = emailsCopia(grupo.canonica.emailCopia, emailRh);
     await sendEmail({
       to: emailRh,
+      ...(cc.length > 0 ? { cc } : {}),
       subject: `Relatório Mensal de Vendas — ${empresaNome} (${periodoLabel(periodo)})`,
       html: resumoHtml(empresaNome, periodo, dados),
       attachments: anexos,
@@ -198,7 +201,7 @@ async function processarGrupo(
 
     await upsertLog(empresaId, periodo, {
       status: "enviado",
-      destinatarios: emailRh,
+      destinatarios: [emailRh, ...cc].join(", "),
       totalVendas: dados.totalVendas,
       valorTotal: dados.valorTotal,
     });
@@ -227,7 +230,7 @@ async function processarGrupo(
 /** Carrega empresas + vinculos e monta os grupos economicos. */
 async function carregarGrupos(): Promise<GrupoEconomico[]> {
   const empresas = await prisma.empresaParceira.findMany({
-    select: { id: true, nome: true, emailRh: true },
+    select: { id: true, nome: true, emailRh: true, emailCopia: true },
     orderBy: { id: "asc" },
   });
   const vinculosRaw = await prisma.empresaVinculo.findMany({

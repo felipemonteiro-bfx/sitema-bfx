@@ -40,7 +40,24 @@ describe("cron do consolidado semanal", () => {
       "Empresa",
       [],
       "rh@empresa.test",
-      { inicioMes: expect.any(Date), fimPeriodo: expect.any(Date) }
+      { inicioMes: expect.any(Date), fimPeriodo: expect.any(Date) },
+      []
+    );
+  });
+
+  it("repassa o emailCopia da empresa como cópia", async () => {
+    empresaFindMany.mockResolvedValue([
+      { id: 7, nome: "Empresa", emailRh: "rh@empresa.test", emailCopia: "fin@prudent.test; RH@empresa.test" },
+    ]);
+    const { GET } = await import("@/app/api/cron/relatorio-semanal/route");
+    await GET(new Request("http://local/api/cron/relatorio-semanal"));
+
+    expect(sendWeeklyReport).toHaveBeenCalledWith(
+      "Empresa",
+      [],
+      "rh@empresa.test",
+      { inicioMes: expect.any(Date), fimPeriodo: expect.any(Date) },
+      ["fin@prudent.test"]
     );
   });
 });

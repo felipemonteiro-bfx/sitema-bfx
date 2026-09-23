@@ -24,6 +24,8 @@ export type EmpresaLite = {
   emailRh: string | null;
   emailsExtras: string | null;
   telefoneRh: string | null;
+  /** Cc de todo e-mail ao RH (ver `@/lib/email-copia`). */
+  emailCopia?: string | null;
 };
 
 export type VinculoLite = {

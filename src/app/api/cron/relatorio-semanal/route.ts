@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { autorizarCron } from "@/lib/segredo";
 import { prisma } from "@/lib/db";
 import { sendWeeklyReport } from "@/lib/email";
+import { emailsCopia } from "@/lib/email-copia";
 
 /**
  * GET /api/cron/relatorio-semanal
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    // Fetch all partner companies; only the primary RH email is notified.
+    // Fetch all partner companies; the RH email is notified, with emailCopia in Cc.
     const empresas = await prisma.empresaParceira.findMany({
       orderBy: { nome: "asc" },
     });
@@ -54,7 +55,13 @@ export async function GET(req: Request) {
       });
 
       try {
-        await sendWeeklyReport(empresa.nome, vendas, empresa.emailRh, { inicioMes, fimPeriodo });
+        await sendWeeklyReport(
+          empresa.nome,
+          vendas,
+          empresa.emailRh,
+          { inicioMes, fimPeriodo },
+          emailsCopia(empresa.emailCopia, empresa.emailRh)
+        );
         enviados++;
       } catch (err) {
         console.error(`[relatorio-semanal] Erro ao enviar para ${empresa.nome}:`, err);

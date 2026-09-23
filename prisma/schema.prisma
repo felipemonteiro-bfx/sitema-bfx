@@ -360,6 +360,8 @@ model EmpresaParceira {
   emailRh       String? @map("email_rh")
   cnpj          String? @map("cnpj")
   emailsExtras  String? @map("emails_extras")
+  /// Em cópia (Cc) de todo e-mail ao RH: termo, consolidado semanal e relatório mensal.
+  emailCopia    String? @map("email_copia")
   diaRelatorioMensal Int? @map("dia_relatorio_mensal")
 
   clientes      Cliente[]
