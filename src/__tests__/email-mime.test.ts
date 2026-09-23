@@ -95,3 +95,27 @@ describe("chunkBase64", () => {
     expect(chunkBase64("abc")).toBe("abc");
   });
 });
+
+describe("buildMimeMessage — entrega em servidores reais", () => {
+  const htmlLongo = `<table>${"<tr><td>FUNCIONARIO</td><td>R$ 1.234,56</td></tr>".repeat(200)}</table>`;
+  const anexo = { filename: "a.xls", contentType: "application/vnd.ms-excel", content: Buffer.alloc(5000, 1) };
+
+  it("nenhuma linha passa de 998 caracteres, com ou sem anexo (Exim recusa acima de 2048)", () => {
+    for (const attachments of [undefined, [anexo]]) {
+      const msg = buildMimeMessage({ to: "rh@empresa.com", subject: "Consolidado", html: htmlLongo, attachments }, "bfx@bfx.com", FIXED);
+      const maior = Math.max(...msg.split("\r\n").map((l) => l.length));
+      expect(maior).toBeLessThanOrEqual(998);
+    }
+  });
+
+  it("inclui Message-ID único no domínio do remetente (Gmail recusa sem ele)", () => {
+    for (const attachments of [undefined, [anexo]]) {
+      const a = buildMimeMessage({ to: "rh@empresa.com", subject: "s", html: "<p>h</p>", attachments }, "Vendas06@bfxshop.com.br");
+      const b = buildMimeMessage({ to: "rh@empresa.com", subject: "s", html: "<p>h</p>", attachments }, "Vendas06@bfxshop.com.br");
+      const idA = a.split("\r\n").find((l) => l.startsWith("Message-ID: "));
+      const idB = b.split("\r\n").find((l) => l.startsWith("Message-ID: "));
+      expect(idA).toMatch(/^Message-ID: <[^<>@\s]+@bfxshop\.com\.br>$/);
+      expect(idA).not.toBe(idB);
+    }
+  });
+});

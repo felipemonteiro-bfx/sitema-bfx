@@ -3,6 +3,7 @@
  *
  * Modulo puro, sem dependencias de DB/env — importavel em testes isoladamente.
  */
+import { randomUUID } from "node:crypto";
 
 export type EmailAttachment = {
   filename: string;
@@ -42,6 +43,12 @@ export function chunkBase64(b64: string): string {
   return lines.join("\r\n");
 }
 
+/** Message-ID unico no dominio do remetente — o Gmail recusa mensagem sem ele (550 5.7.1). */
+function gerarMessageId(from: string): string {
+  const dominio = from.split("@")[1];
+  return `<${Date.now().toString(36)}.${randomUUID()}@${dominio}>`;
+}
+
 /**
  * Monta a mensagem MIME completa (headers + corpo).
  * Sem anexos: multipart/alternative (comportamento historico).
@@ -69,6 +76,7 @@ export function buildMimeMessage(
     ccHeaderLine,
     `Subject: =?UTF-8?B?${toBase64(opts.subject)}?=`,
     `Date: ${dateHeader}`,
+    `Message-ID: ${gerarMessageId(from)}`,
     `MIME-Version: 1.0`,
   ];
 
@@ -83,7 +91,7 @@ export function buildMimeMessage(
       `Content-Type: text/html; charset=UTF-8`,
       `Content-Transfer-Encoding: base64`,
       ``,
-      toBase64(opts.html),
+      chunkBase64(toBase64(opts.html)),
       ``,
       `--${boundary}--`,
     ]
