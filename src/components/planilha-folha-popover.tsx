@@ -165,7 +165,13 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
             semDesconto ? (
               "Nenhum desconto nessa competência."
             ) : (
-              `${plural(resumo.compradores, "comprador", "compradores")} · ${formatBRL(resumo.total)} a descontar`
+              // Um <span> so em volta de tudo: o container e flex com gap, e texto
+              // solto ao lado do <span> do valor viraria outro item de flex.
+              <span>
+                {`${plural(resumo.compradores, "comprador", "compradores")} · `}
+                <span className="valor-sensivel">{formatBRL(resumo.total)}</span>
+                {" a descontar"}
+              </span>
             )
           ) : null}
         </div>
@@ -182,6 +188,8 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
               </p>
               {resumo.matriculasRepetidas.slice(0, 3).map((m) => (
                 <p key={m.matricula} className="mt-1 font-semibold tabular-nums">
+                  {/* Sem máscara aqui: neste aviso a matrícula identifica a LINHA repetida da
+                      planilha, e é o que o operador precisa ler para corrigir antes do RH. */}
                   {m.matricula} — {m.nomes.length > 1 ? `${m.nomes.slice(0, -1).join(", ")} e ${m.nomes[m.nomes.length - 1]}` : m.nomes[0]}
                 </p>
               ))}

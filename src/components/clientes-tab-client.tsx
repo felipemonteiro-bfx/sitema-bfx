@@ -457,12 +457,12 @@ export default function ClientesTabClient({
                       />
                     </TableCell>
                     <TableCell className="font-medium">{c.nome}</TableCell>
-                    <TableCell>{c.cpf || c.cnpj}</TableCell>
-                    <TableCell>{c.telefone}</TableCell>
-                    <TableCell className="text-right tabular-nums">{formatBRL(c.renda || 0)}</TableCell>
+                    <TableCell className="valor-sensivel">{c.cpf || c.cnpj}</TableCell>
+                    <TableCell className="valor-sensivel">{c.telefone}</TableCell>
+                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">{formatBRL(c.renda || 0)}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="tabular-nums text-sm">
+                        <span className="tabular-nums text-sm valor-sensivel">
                           {formatarPctConsignado(c.faixaConsignado === "renda_pendente" ? null : c.pctConsignado)}
                         </span>
                         {c.faixaConsignado === "alerta" && (

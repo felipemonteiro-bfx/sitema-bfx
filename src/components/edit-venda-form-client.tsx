@@ -318,25 +318,25 @@ export function EditVendaFormClient({
           <div className="md:col-span-3 p-4 rounded-lg bg-muted/50 space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal produtos</span>
-              <span className="font-semibold">{formatBRL(subtotalProdutos)}</span>
+              <span className="font-semibold valor-sensivel">{formatBRL(subtotalProdutos)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Frete</span>
-              <span className="font-semibold">{formatBRL(frete)}</span>
+              <span className="font-semibold valor-sensivel">{formatBRL(frete)}</span>
             </div>
             {descontoValor > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Desconto</span>
-                <span className="font-semibold text-destructive">-{formatBRL(descontoValor)}</span>
+                <span className="font-semibold text-destructive valor-sensivel">-{formatBRL(descontoValor)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm font-bold border-t pt-2">
               <span>Total</span>
-              <span>{formatBRL(totalVenda)}</span>
+              <span className="valor-sensivel">{formatBRL(totalVenda)}</span>
             </div>
             {numParcelas > 1 && (
               <div className="text-xs text-muted-foreground">
-                {numParcelas}x de {formatBRL(valorParcela)}
+                {numParcelas}x de <span className="valor-sensivel">{formatBRL(valorParcela)}</span>
               </div>
             )}
           </div>

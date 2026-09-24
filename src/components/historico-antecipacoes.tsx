@@ -103,7 +103,13 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
         toast.error(r.erro);
         return;
       }
-      toast.success(`Lote #${concluindo.id} concluído: ${r.parcelas} parcelas, ${formatBRL(r.valor)}.`);
+      // JSX pelo mesmo motivo do registro: o toast sai num portal e leva o valor.
+      toast.success(
+        <span>
+          Lote #{concluindo.id} concluído: {r.parcelas} parcelas,{' '}
+          <span className="valor-sensivel">{formatBRL(r.valor)}</span>.
+        </span>
+      );
       setConcluindo(null);
       router.refresh();
     } catch {
@@ -198,7 +204,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                   )}
                   <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
                     <span>{b.quantidadeVendas} {b.quantidadeVendas === 1 ? 'venda' : 'vendas'}</span>
-                    <span className="font-bold text-success-text text-sm">{formatBRL(b.valorTotal)}</span>
+                    <span className="font-bold text-success-text text-sm valor-sensivel">{formatBRL(b.valorTotal)}</span>
                   </div>
                   <span className="text-xs font-semibold text-info-text">
                     Empresa: {[...new Set(b.vendas.map((v) => v.empresa || 'Sem empresa'))].join(', ') || 'não identificada'}
@@ -261,7 +267,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                         <span className="font-bold text-muted-foreground">Venda #{v.id}</span>
                         <span className="min-w-0 truncate text-foreground" title={v.produtos}>{v.clienteNome || 'Cliente sem nome'} · {v.produtos}</span>
                         <span className="text-muted-foreground">{v.parcelas} {v.parcelas === 1 ? 'parcela' : 'parcelas'}</span>
-                        <span className="font-bold tabular-nums text-success-text">{formatBRL(v.valorTotal)}</span>
+                        <span className="font-bold tabular-nums text-success-text valor-sensivel">{formatBRL(v.valorTotal)}</span>
                       </div>
                     ))}
                   </div>
@@ -334,7 +340,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                       </div>
                       <div className="flex gap-3 text-xs text-muted-foreground">
                         <span>{g.quantidadeVendas} {g.quantidadeVendas === 1 ? "venda" : "vendas"}</span>
-                        <span className="font-bold text-success-text text-sm tabular-nums">{formatBRL(g.valorTotal)}</span>
+                        <span className="font-bold text-success-text text-sm tabular-nums valor-sensivel">{formatBRL(g.valorTotal)}</span>
                       </div>
                     </div>
                   ))}

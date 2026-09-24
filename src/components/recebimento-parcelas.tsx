@@ -81,8 +81,8 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
         <span className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <span>Recebimento das parcelas</span>
           <span className="font-normal normal-case tracking-normal">
-            Recebido <strong className="font-semibold text-foreground tabular-nums">{formatBRL(recebido)}</strong> de{" "}
-            <span className="tabular-nums">{formatBRL(total)}</span>
+            Recebido <strong className="font-semibold text-foreground tabular-nums valor-sensivel">{formatBRL(recebido)}</strong> de{" "}
+            <span className="tabular-nums valor-sensivel">{formatBRL(total)}</span>
           </span>
         </span>
       </FormSecaoTitulo>
@@ -126,7 +126,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
                   <TableRow className={cn(linha.situacao === "vencida" && TINT_VENCIDA, aberta && "border-b-0")}>
                     <TableCell className="tabular-nums">{rotulo}</TableCell>
                     <TableCell className="tabular-nums">{formatarDataPura(p.dataVencimento)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{formatBRL(p.valorParcela)}</TableCell>
+                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">{formatBRL(p.valorParcela)}</TableCell>
                     <TableCell>
                       {linha.situacao === "paga" ? (
                         <Badge variant="success">Paga</Badge>

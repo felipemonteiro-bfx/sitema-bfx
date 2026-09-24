@@ -249,6 +249,10 @@ export function DashboardCharts({
   const hasNeg = evoData.some((d) => d.lucro < 0);
 
   return (
+    // Modo discreto: `bloco-sensivel` na raiz do proprio componente, e nao num
+    // O `bloco-sensivel` fica em cada CardContent, nao aqui: na raiz ele desfocava
+    // tambem titulo, legenda e o estado vazio, e o `pointer-events: none` matava
+    // qualquer controle que os cards venham a ter.
     <div className="grid gap-4 lg:grid-cols-3">
       <Card animated className="lg:col-span-2 stagger-5">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -272,7 +276,7 @@ export function DashboardCharts({
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="h-72 min-h-[288px]">
+        <CardContent className="h-72 min-h-[288px] bloco-sensivel">
           {evoData.length === 0 ? (
             <EmptyStateInline
               message="Sem dados suficientes para histórico"
@@ -297,7 +301,7 @@ export function DashboardCharts({
           </div>
           <p className="text-xs text-muted-foreground">Por volume de vendas</p>
         </CardHeader>
-        <CardContent className="h-72 min-h-[288px]">
+        <CardContent className="h-72 min-h-[288px] bloco-sensivel">
           {topProdutos.length === 0 ? (
             <EmptyStateInline
               message="Sem dados de produtos"

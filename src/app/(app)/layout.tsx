@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ValoresToggle } from "@/components/valores-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { Badge } from "@/components/ui/badge";
 import { LayoutDashboard } from "lucide-react";
@@ -68,8 +69,13 @@ export default async function AppLayout({
           </div>
         </aside>
         <main className="flex-1 min-w-0 rounded-2xl border border-border bg-card px-4 py-5 shadow-lg backdrop-blur-sm transition-all duration-300 dark:shadow-[var(--shadow-md)] lg:px-8 lg:py-7 animate-fade-in">
-          <div className="mb-6 flex items-center justify-between gap-3 lg:hidden">
-            <div className="flex items-center gap-3 min-w-0">
+          {/* Navbar do conteudo. Antes existia so no celular (`lg:hidden`); agora vale em
+              qualquer tamanho porque e' aqui que ficam o sino e o olho do modo discreto
+              (pedido do Andre, 24/09: os tres botoes juntos no cabecalho da sidebar
+              disputavam atencao e espaco). O tema desceu para o pe da sidebar. No desktop
+              so o lado direito aparece — nome e perfil ja estao na sidebar. */}
+          <div className="mb-6 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0 lg:hidden">
               <MobileMenuTrigger>
                 <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
               </MobileMenuTrigger>
@@ -85,9 +91,9 @@ export default async function AppLayout({
                 </Badge>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2">
               <NotificationBell />
-              <ThemeToggle />
+              <ValoresToggle />
             </div>
           </div>
           <div className="animate-fade-in-up">
@@ -145,16 +151,19 @@ function SidebarContent({
             </Badge>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <NotificationBell />
-          <ThemeToggle />
-        </div>
       </div>
       <Separator className="my-5 bg-[var(--sidebar-border)]" />
       <SidebarNav menu={menu} />
       <div className="mt-auto">
         <Separator className="my-4 bg-[var(--sidebar-border)]" />
-        <LogoutButton />
+        {/* Tema junto do Sair (24/09): saiu do cabecalho, onde competia com o sino e com
+            o olho. O Sair ocupa a linha (`w-full` proprio) e o tema fica na ponta. */}
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <LogoutButton />
+          </div>
+          <ThemeToggle />
+        </div>
       </div>
     </div>
   );

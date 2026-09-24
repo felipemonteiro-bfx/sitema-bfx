@@ -67,7 +67,7 @@ function BoletoTable({
                 {p.description || `Cobrança ${p.id.slice(-8)}`}
               </TableCell>
               <TableCell className="tabular-nums">{formatDateBr(p.dueDate)}</TableCell>
-              <TableCell className="text-right font-semibold tabular-nums">
+              <TableCell className="text-right font-semibold tabular-nums valor-sensivel valor-sensivel-fim">
                 {formatBRL(p.value)}
               </TableCell>
               <TableCell>
@@ -378,7 +378,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                                 <TableCell>{formatDateBr(v.dataVenda.toISOString().slice(0, 10))}</TableCell>
                                 <TableCell>{v.cliente?.nome ?? "—"}</TableCell>
                                 <TableCell className="max-w-[180px] truncate">{v.produtoNome ?? "—"}</TableCell>
-                                <TableCell className="text-right tabular-nums font-semibold">{formatBRL(valorTotalVenda(v))}</TableCell>
+                                <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
                                 <TableCell>
                                   <GerarBoletoButton
                                     vendaId={v.id}

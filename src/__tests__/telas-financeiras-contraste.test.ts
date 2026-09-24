@@ -177,15 +177,20 @@ describe("achado 5 — botao Buscar da /boletos alinhado ao Input", () => {
 describe("achados 6, 7 e 11 — tabular-nums", () => {
   it("os KPIs de dinheiro da /financeiro usam tabular-nums", () => {
     const fonte = ler("src/app/(app)/financeiro/page.tsx");
-    expect(fonte.includes('"text-2xl font-bold tabular-nums"')).toBe(true);
+    // Sem as aspas de fechamento: o modo discreto (24/09) acrescenta `valor-sensivel`
+    // nas mesmas classes, e o que este teste garante e' o `tabular-nums` no KPI de
+    // dinheiro, nao a string exata do className.
+    expect(fonte.includes("text-2xl font-bold tabular-nums")).toBe(true);
     expect(fonte.split("text-2xl font-semibold tabular-nums").length - 1).toBeGreaterThanOrEqual(4);
     expect(fonte.split("text-base font-semibold tabular-nums").length - 1).toBeGreaterThanOrEqual(3);
   });
 
   it("as colunas numericas de /relatorios/mensais usam tabular-nums", () => {
     const fonte = ler("src/app/(app)/relatorios/mensais/page.tsx");
-    expect(fonte.includes('className="text-right tabular-nums"')).toBe(true);
-    expect(fonte.split('className="text-right tabular-nums"').length - 1).toBeGreaterThanOrEqual(2);
+    // Idem: uma das duas colunas ganhou `valor-sensivel` do modo discreto, entao a
+    // contagem olha o par de classes, nao o atributo inteiro.
+    expect(fonte.includes("text-right tabular-nums")).toBe(true);
+    expect(fonte.split("text-right tabular-nums").length - 1).toBeGreaterThanOrEqual(2);
   });
 
   it("a coluna Comissao (%) usa tabular-nums", () => {

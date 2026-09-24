@@ -230,7 +230,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                         <span className="font-medium">{p.nome}</span>
                       </div>
                       {p.valorVenda && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground valor-sensivel">
                           {formatBRL(p.valorVenda)}
                         </div>
                       )}
@@ -353,7 +353,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   de acessibilidade. */}
               <div className="rounded-lg bg-muted px-3 py-2 text-center">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
-                <div className="text-sm font-bold tabular-nums text-foreground">{formatBRL(item.subtotal)}</div>
+                <div className="text-sm font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(item.subtotal)}</div>
               </div>
               {/* Tint OPACO (`bg-<sem>-bg`), nao o composto `bg-<sem>/5`: este
                   Card fica dentro do card elevado de /venda-rapida, e o
@@ -363,7 +363,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   Financeiro", logo abaixo nesta mesma tela. */}
               <div className="rounded-lg bg-success-bg px-3 py-2 text-center">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro</div>
-                <div className="text-sm font-bold tabular-nums text-success-text">{formatBRL(lucro)}</div>
+                <div className="text-sm font-bold tabular-nums text-success-text valor-sensivel">{formatBRL(lucro)}</div>
               </div>
               {/* Margem por FAIXA, como no Dashboard e no Historico
                   (`>= 20` bom, `>= 10` atencao, abaixo disso ruim). Aqui ela era
@@ -379,7 +379,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
                 <div
                   className={cn(
-                    "text-sm font-bold tabular-nums",
+                    "text-sm font-bold tabular-nums valor-sensivel",
                     margem >= 20 ? "text-success-text" : margem >= 10 ? "text-warning-text" : "text-error-text"
                   )}
                 >

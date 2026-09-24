@@ -179,7 +179,13 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
             semParcelas ? (
               "Nenhuma parcela nesses filtros."
             ) : (
-              `${plural(resumo.abas, "aba", "abas")} · ${plural(resumo.parcelas, "parcela", "parcelas")} · ${formatBRL(resumo.valorAntecipado)} já antecipados`
+              // Um <span> so em volta de tudo: o container e flex com gap, e texto
+              // solto ao lado do <span> do valor viraria outro item de flex.
+              <span>
+                {`${plural(resumo.abas, "aba", "abas")} · ${plural(resumo.parcelas, "parcela", "parcelas")} · `}
+                <span className="valor-sensivel">{formatBRL(resumo.valorAntecipado)}</span>
+                {" já antecipados"}
+              </span>
             )
           ) : null}
         </div>

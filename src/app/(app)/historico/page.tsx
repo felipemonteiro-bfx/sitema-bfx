@@ -430,7 +430,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             {v.itens.map((item, idx) => (
                               <li key={idx} className="flex justify-between gap-2">
                                 <span className="truncate">{item.produtoNome} ({item.quantidade}x)</span>
-                                <span className="tabular-nums shrink-0">{formatBRL(item.subtotal)}</span>
+                                <span className="tabular-nums shrink-0 valor-sensivel">{formatBRL(item.subtotal)}</span>
                               </li>
                             ))}
                           </ul>
@@ -442,13 +442,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </TableCell>
                     <TableCell className="text-center font-medium">{quantidadeTotal(v)}</TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
                       {formatBRL(valorTotalVenda(v))}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
                       {custoTotalVenda(v) != null ? formatBRL(custoTotalVenda(v)!) : <span className="text-muted-foreground opacity-30">—</span>}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
                       {(() => {
                         const m = margemVenda(v);
                         if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
@@ -559,10 +559,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <TableCell colSpan={5} className="text-right font-semibold">
                     Totais ({totalVendas} {totalVendas === 1 ? "venda" : "vendas"})
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-semibold">
+                  <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
                     {formatBRL(totaisFiltro.valor)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-semibold">
+                  <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
                     {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
                   </TableCell>
                   <TableCell colSpan={5} />
@@ -583,13 +583,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <div className="mt-2 grid grid-cols-2 gap-3">
                 <div>
                   <div className="text-xs uppercase text-muted-foreground">Valor</div>
-                  <div className="text-base font-semibold tabular-nums text-primary">
+                  <div className="text-base font-semibold tabular-nums text-primary valor-sensivel">
                     {formatBRL(totaisFiltro.valor)}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs uppercase text-muted-foreground">Custo</div>
-                  <div className="text-base font-semibold tabular-nums">
+                  <div className="text-base font-semibold tabular-nums valor-sensivel">
                     {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
                   </div>
                 </div>

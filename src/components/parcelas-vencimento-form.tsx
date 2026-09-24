@@ -91,7 +91,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   {parcela.numeroParcela}ª Parcela
                 </Label>
-                <div className="text-sm font-bold text-foreground">
+                <div className="text-sm font-bold text-foreground valor-sensivel">
                   {formatBRL(parcela.valorParcela)}
                 </div>
               </div>
@@ -122,12 +122,14 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
         <div className="pt-3 border-t border-border">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Total das Parcelas:</span>
-            <span className="font-bold text-lg text-foreground">
+            <span className="font-bold text-lg text-foreground valor-sensivel">
               {formatBRL(parcelas.reduce((sum, p) => sum + p.valorParcela, 0))}
             </span>
           </div>
           {Math.abs(parcelas.reduce((sum, p) => sum + p.valorParcela, 0) - valorTotal) > 0.01 && (
             <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
+              {/* Sem máscara: o aviso existe para o usuário acertar os valores que está
+                  digitando — escondido, ele não diz por quanto divergiu. */}
               ⚠️ Atenção: A soma das parcelas ({formatBRL(parcelas.reduce((sum, p) => sum + p.valorParcela, 0))})
               difere do valor total ({formatBRL(valorTotal)})
             </div>

@@ -322,7 +322,7 @@ export default function ProdutosTabClient({
                     ? new Date(p.dataCompra).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                     : "—"}
                 </TableCell>
-                <TableCell className="text-right tabular-nums font-semibold">{formatBRL(p.valorVenda || 0)}</TableCell>
+                <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">{formatBRL(p.valorVenda || 0)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <AlertDialog>

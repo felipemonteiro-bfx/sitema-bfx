@@ -14,7 +14,10 @@ interface BreadcrumbEntry {
 
 interface PageHeaderProps {
   title: string;
-  description?: string;
+  // `ReactNode` e nao `string` por causa do modo discreto (24/09): descricao que
+  // mistura texto e valor precisa envolver so o valor num <span
+  // className="valor-sensivel">. Texto puro continua valendo.
+  description?: React.ReactNode;
   breadcrumbs?: BreadcrumbEntry[];
   actions?: React.ReactNode;
 }

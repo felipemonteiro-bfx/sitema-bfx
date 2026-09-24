@@ -118,7 +118,7 @@ function VendaCard({
                   ? venda.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ""}`).join(", ")
                   : venda.produtoNome || "—"}
               </p>
-              <p className="text-sm tabular-nums font-semibold text-primary mt-1">
+              <p className="text-sm tabular-nums font-semibold text-primary mt-1 valor-sensivel">
                 {formatBRL(valorTotal)}
               </p>
             </div>
@@ -154,11 +154,11 @@ function VendaCard({
                     : venda.quantidade || 1}
                 </span>
                 <span>Custo</span>
-                <span className="text-foreground tabular-nums">
+                <span className="text-foreground tabular-nums valor-sensivel">
                   {custoTotalVenda(venda) != null ? formatBRL(custoTotalVenda(venda)!) : "—"}
                 </span>
                 <span>Margem</span>
-                <span className={`text-foreground tabular-nums ${(() => {
+                <span className={`text-foreground tabular-nums valor-sensivel ${(() => {
                   const m = margemVenda(venda);
                   if (m == null) return "opacity-50";
                   return m > 0 ? "text-success-text" : m === 0 ? "text-warning-text" : "text-destructive";

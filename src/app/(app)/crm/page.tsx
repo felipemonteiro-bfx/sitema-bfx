@@ -294,7 +294,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableRow key={c.id} className="align-top">
                       <TableCell>
                         <div className="font-medium">{c.nome}</div>
-                        {c.telefone && <div className="text-xs text-muted-foreground">{c.telefone}</div>}
+                        {c.telefone && <div className="text-xs text-muted-foreground valor-sensivel">{c.telefone}</div>}
                       </TableCell>
                       <TableCell>{c.empresaParceira?.nome ?? c.empresa ?? "—"}</TableCell>
                       <TableCell>

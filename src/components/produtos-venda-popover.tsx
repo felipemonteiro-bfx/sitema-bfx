@@ -63,9 +63,9 @@ export function ProdutosVendaPopover({ produtos, className }: { produtos: Produt
                   <TableCell className={cn(CELULA, "break-words")}>{linha.produtoNome}</TableCell>
                   <TableCell className={NUMERO}>{linha.quantidade}</TableCell>
                   <TableCell className={NUMERO}>
-                    <div className="font-medium">{formatBRL(linha.subtotal)}</div>
+                    <div className="font-medium valor-sensivel valor-sensivel-fim">{formatBRL(linha.subtotal)}</div>
                     {linha.unitario !== null && (
-                      <div className="text-xs text-muted-foreground">{formatBRL(linha.unitario)} cada</div>
+                      <div className="text-xs text-muted-foreground"><span className="valor-sensivel">{formatBRL(linha.unitario)}</span> cada</div>
                     )}
                   </TableCell>
                 </TableRow>
@@ -76,7 +76,7 @@ export function ProdutosVendaPopover({ produtos, className }: { produtos: Produt
               <TableRow className="hover:bg-transparent">
                 <TableCell className="px-2 py-2 font-bold">Total dos produtos</TableCell>
                 <TableCell className="px-2 py-2 text-right font-bold tabular-nums">{totais.quantidade}</TableCell>
-                <TableCell className="px-2 py-2 text-right font-bold tabular-nums whitespace-nowrap">
+                <TableCell className="px-2 py-2 text-right font-bold tabular-nums whitespace-nowrap valor-sensivel valor-sensivel-fim">
                   {formatBRL(totais.valor)}
                 </TableCell>
               </TableRow>

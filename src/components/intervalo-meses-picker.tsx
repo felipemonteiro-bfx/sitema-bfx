@@ -140,7 +140,8 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
                 <span
                   className={cn(
                     // min-h-4: mês sem valor mantém a mesma altura dos outros.
-                    "min-h-4 text-xs font-medium leading-4 tabular-nums",
+                    // valor-sensivel: cada célula imprime quanto falta antecipar no mês.
+                    "min-h-4 text-xs font-medium leading-4 tabular-nums valor-sensivel",
                     preenchido ? "text-primary-foreground" : "text-muted-foreground"
                   )}
                 >

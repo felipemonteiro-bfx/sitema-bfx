@@ -109,7 +109,7 @@ export default async function Page() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Total Acumulado</p>
-              <div className="text-2xl font-bold text-primary">{formatBRL(totalComissao)}</div>
+              <div className="valor-sensivel text-2xl font-bold text-primary">{formatBRL(totalComissao)}</div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Sua Taxa</p>

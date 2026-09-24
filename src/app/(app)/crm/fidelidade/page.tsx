@@ -45,7 +45,12 @@ export default async function Page() {
     <div className="space-y-6">
       <PageHeader
         title="Fidelidade"
-        description={`Pontos por compra: ${PONTOS_POR_REAL} ponto por real · resgate: cada ponto vale ${formatBRL(VALOR_POR_PONTO)}.`}
+        description={
+          <>
+            Pontos por compra: {PONTOS_POR_REAL} ponto por real · resgate: cada ponto vale{" "}
+            <span className="valor-sensivel">{formatBRL(VALOR_POR_PONTO)}</span>.
+          </>
+        }
         breadcrumbs={[{ label: "CRM", href: "/crm" }, { label: "Fidelidade" }]}
       />
 
@@ -77,7 +82,7 @@ export default async function Page() {
                       <TableRow key={c.id}>
                         <TableCell>{c.nome}</TableCell>
                         <TableCell className="text-right font-medium">{c.pontos ?? 0}</TableCell>
-                        <TableCell className="text-right text-success-text">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
+                        <TableCell className="valor-sensivel valor-sensivel-fim text-right text-success-text">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
                         <TableCell>
                           <form action={resgatarPontosCliente} className="flex items-center gap-1">
                             <input type="hidden" name="clienteId" value={c.id} />

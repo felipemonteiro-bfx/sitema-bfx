@@ -128,7 +128,7 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
             <strong className="font-semibold">{plural(parcelas.quantidade, "parcela", "parcelas")}</strong>
             {parcelas.valorParcela !== null && (
               <>
-                {" "}de <span className="tabular-nums">{formatBRL(parcelas.valorParcela)}</span>
+                {" "}de <span className="tabular-nums valor-sensivel">{formatBRL(parcelas.valorParcela)}</span>
               </>
             )}
           </span>
@@ -172,7 +172,7 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
                     {p.numero}/{parcelas.quantidade}
                   </TableCell>
                   <TableCell className={CELULA}>{formatarDataPura(p.vencimento)}</TableCell>
-                  <TableCell className={cn(CELULA, "text-right whitespace-nowrap")}>{formatBRL(p.valor)}</TableCell>
+                  <TableCell className={cn(CELULA, "text-right whitespace-nowrap valor-sensivel valor-sensivel-fim")}>{formatBRL(p.valor)}</TableCell>
                   <TableCell className="px-2 py-1.5">
                     <span className={cn(PILULA, SITUACAO[p.situacao].classe)}>
                       {p.situacao === "paga" && p.origemPagamento === "manual" ? "Paga manual" : SITUACAO[p.situacao].rotulo}
@@ -197,7 +197,10 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
               />
             </label>
             <Button type="button" size="sm" loading={emAndamento} onClick={confirmarBaixa}>
-              Confirmar baixa · {selecionadas.length} · {formatBRL(valorSelecionado)}
+              {/* Rótulo inteiro num <span>: o `gap` do Button abriria folga em volta do valor. */}
+              <span>
+                Confirmar baixa · {selecionadas.length} · <span className="valor-sensivel">{formatBRL(valorSelecionado)}</span>
+              </span>
             </Button>
             <p className="pb-1 text-xs text-muted-foreground">Somente as parcelas marcadas serão baixadas.</p>
           </div>
@@ -205,11 +208,11 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
         <div className="mt-2.5 grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-success-bg px-2.5 py-2 text-success-text">
             <div className="text-xs font-bold uppercase tracking-wider">Já recebido</div>
-            <div className="font-bold tabular-nums">{formatBRL(totais.antecipado)}</div>
+            <div className="font-bold tabular-nums valor-sensivel">{formatBRL(totais.antecipado)}</div>
           </div>
           <div className="rounded-lg bg-warning-bg px-2.5 py-2 text-warning-text">
             <div className="text-xs font-bold uppercase tracking-wider">Falta antecipar</div>
-            <div className="font-bold tabular-nums">{formatBRL(totais.faltaAntecipar)}</div>
+            <div className="font-bold tabular-nums valor-sensivel">{formatBRL(totais.faltaAntecipar)}</div>
           </div>
         </div>
         {!estado.fixo && <p className="mt-2 text-xs text-muted-foreground">Clique nos números para manter aberto.</p>}

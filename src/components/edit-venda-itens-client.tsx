@@ -98,7 +98,7 @@ export function EditVendaItens({ initialItens, onTotalChange }: Props) {
         {itens.length > 1 && (
           <div className="text-sm font-medium">
             <span className="text-muted-foreground">Total produtos: </span>
-            <span>{formatBRL(totalSubtotal)}</span>
+            <span className="valor-sensivel">{formatBRL(totalSubtotal)}</span>
           </div>
         )}
       </div>

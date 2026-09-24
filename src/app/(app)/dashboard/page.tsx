@@ -285,7 +285,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <CardStats
               title="Lucro Líquido"
               value={formatBRL(lucro)}
-              description={`Margem: ${margem.toFixed(1)}%`}
+              description={<>Margem: <span className="valor-sensivel">{margem.toFixed(1)}%</span></>}
               icon={TrendingUp}
               trend={{
                 value: margem,
@@ -304,7 +304,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <CardStats
               title="Top Performance"
               value={bestRev?.vendedor || "—"}
-              description={bestRev ? formatBRL(bestRev.total) : undefined}
+              // O valor deste card e' o NOME do vendedor, nao dinheiro: aqui o modo
+              // discreto oculta o total, que vai na descricao.
+              valorSensivel={false}
+              description={bestRev ? <span className="valor-sensivel">{formatBRL(bestRev.total)}</span> : undefined}
               icon={Trophy}
               color="warning"
               className="stagger-4 !p-3 sm:!p-5 lg:!p-6"
@@ -366,13 +369,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               </div>
                             </TableCell>
                             <TableCell className="text-right tabular-nums max-sm:hidden">{r.vendas}</TableCell>
-                            <TableCell className="text-right tabular-nums font-medium">{formatBRL(r.total)}</TableCell>
-                            <TableCell className="text-right tabular-nums text-success-text font-medium">{formatBRL(r.lucro)}</TableCell>
-                            <TableCell className="text-right tabular-nums max-sm:hidden">{formatBRL(r.ticket)}</TableCell>
+                            <TableCell className="text-right tabular-nums font-medium valor-sensivel valor-sensivel-fim">{formatBRL(r.total)}</TableCell>
+                            <TableCell className="text-right tabular-nums text-success-text font-medium valor-sensivel valor-sensivel-fim">{formatBRL(r.lucro)}</TableCell>
+                            <TableCell className="text-right tabular-nums max-sm:hidden valor-sensivel valor-sensivel-fim">{formatBRL(r.ticket)}</TableCell>
                             <TableCell className="text-right">
                               <Badge
                                 variant={r.margem >= 20 ? "success" : r.margem >= 10 ? "warning" : "error"}
                                 size="sm"
+                                className="valor-sensivel valor-sensivel-fim"
                               >
                                 {r.margem.toFixed(1)}%
                               </Badge>
@@ -406,7 +410,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                     </div>
                     {bestRev && (
-                      <Badge variant="info" size="sm" className="shrink-0">{formatBRL(bestRev.total)}</Badge>
+                      <Badge variant="info" size="sm" className="shrink-0 valor-sensivel valor-sensivel-fim">{formatBRL(bestRev.total)}</Badge>
                     )}
                   </div>
 
@@ -421,7 +425,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                     </div>
                     {bestProf && (
-                      <Badge variant="success" size="sm" className="shrink-0">{formatBRL(bestProf.lucro)}</Badge>
+                      <Badge variant="success" size="sm" className="shrink-0 valor-sensivel valor-sensivel-fim">{formatBRL(bestProf.lucro)}</Badge>
                     )}
                   </div>
                 </CardContent>
@@ -439,7 +443,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Receita</div>
-                        <div className="text-lg font-bold text-info-text">{formatBRL(totalReceita)}</div>
+                        <div className="text-lg font-bold text-info-text valor-sensivel">{formatBRL(totalReceita)}</div>
                       </div>
                     </div>
                   </div>
@@ -451,7 +455,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Lucro</div>
-                        <div className="text-lg font-bold text-success-text">{formatBRL(lucro)}</div>
+                        <div className="text-lg font-bold text-success-text valor-sensivel">{formatBRL(lucro)}</div>
                       </div>
                     </div>
                   </div>
@@ -463,7 +467,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div>
                         <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Margem</div>
-                        <div className="text-lg font-bold text-warning-text">{margem.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-warning-text valor-sensivel">{margem.toFixed(1)}%</div>
                       </div>
                     </div>
                   </div>

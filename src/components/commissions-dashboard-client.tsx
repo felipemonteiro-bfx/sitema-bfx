@@ -120,7 +120,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Comissões</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-success-text tabular-nums">{formatBRL(totalComissoes)}</div>
+            <div className="valor-sensivel text-2xl font-bold text-success-text tabular-nums">{formatBRL(totalComissoes)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -136,7 +136,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             <CardTitle className="text-sm font-medium text-muted-foreground">Média por Vendedor</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold tabular-nums">{formatBRL(commissions.length > 0 ? totalComissoes / commissions.length : 0)}</div>
+            <div className="valor-sensivel text-2xl font-bold tabular-nums">{formatBRL(commissions.length > 0 ? totalComissoes / commissions.length : 0)}</div>
           </CardContent>
         </Card>
       </div>
@@ -153,29 +153,31 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             ) : commissions.length === 0 ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">Sem dados para exibir no gráfico.</div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
-                <BarChart data={commissions}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="vendedor" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `R$ ${value}`}
-                  />
-                  <Tooltip
-                    cursor={{fill: 'hsl(var(--muted))'}}
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    formatter={(value: any) => [formatBRL(Number(value)), 'Comissão']}
-                  />
-                  <Bar dataKey="valorComissao" radius={[4, 4, 0, 0]}>
-                    {commissions.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="bloco-sensivel h-full w-full">
+                <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
+                  <BarChart data={commissions}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="vendedor" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => `R$ ${value}`}
+                    />
+                    <Tooltip
+                      cursor={{fill: 'hsl(var(--muted))'}}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: any) => [formatBRL(Number(value)), 'Comissão']}
+                    />
+                    <Bar dataKey="valorComissao" radius={[4, 4, 0, 0]}>
+                      {commissions.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             )}
           </div>
         </CardContent>
@@ -218,10 +220,10 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
                         <TableCell>{d.vendedor}</TableCell>
                         <TableCell className="max-w-[150px] truncate">{d.cliente}</TableCell>
                         <TableCell className="max-w-[150px] truncate">{d.produto}</TableCell>
-                        <TableCell className="text-right tabular-nums">{formatBRL(d.valorVenda)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{formatBRL(d.lucroLiquido)}</TableCell>
+                        <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(d.valorVenda)}</TableCell>
+                        <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(d.lucroLiquido)}</TableCell>
                         <TableCell className="text-right tabular-nums">{d.percentualComissao}%</TableCell>
-                        <TableCell className="text-right font-semibold text-success-text tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
+                        <TableCell className="valor-sensivel valor-sensivel-fim text-right font-semibold text-success-text tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
                       </TableRow>
                     ))
                   )}

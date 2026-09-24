@@ -182,7 +182,7 @@ export default async function Page() {
               <Card key={periodo}>
                 <CardHeader className="flex-row items-center justify-between gap-2">
                   <CardTitle className="text-primary">{periodoLabel(periodo)}</CardTitle>
-                  <span className="text-sm tabular-nums text-muted-foreground">{formatBRL(totalPeriodo)}</span>
+                  <span className="valor-sensivel text-sm tabular-nums text-muted-foreground">{formatBRL(totalPeriodo)}</span>
                 </CardHeader>
                 <CardContent>
                   {/* Desktop: tabela */}
@@ -204,7 +204,7 @@ export default async function Page() {
                             <TableCell>{log.empresa?.nome ?? `#${log.empresaId}`}</TableCell>
                             <TableCell>{statusBadge(log.status)}</TableCell>
                             <TableCell className="text-right tabular-nums">{log.totalVendas}</TableCell>
-                            <TableCell className="text-right tabular-nums">{formatBRL(log.valorTotal)}</TableCell>
+                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(log.valorTotal)}</TableCell>
                             <TableCell className="tabular-nums text-muted-foreground">{formatDataHora(log.enviadoEm)}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap items-center gap-2">
@@ -244,7 +244,7 @@ export default async function Page() {
                           {statusBadge(log.status)}
                         </div>
                         <div className="mt-1 text-xs tabular-nums text-muted-foreground">
-                          {log.totalVendas} vendas · {formatBRL(log.valorTotal)} · {formatDataHora(log.enviadoEm)}
+                          {log.totalVendas} vendas · <span className="valor-sensivel">{formatBRL(log.valorTotal)}</span> · {formatDataHora(log.enviadoEm)}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <a

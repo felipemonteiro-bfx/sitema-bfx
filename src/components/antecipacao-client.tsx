@@ -334,7 +334,14 @@ export default function AntecipacaoClient({
         toast.error(r.erro);
         return;
       }
-      toast.success(`Registrado: ${r.parcelas} ${r.parcelas === 1 ? 'parcela' : 'parcelas'}, ${formatBRL(r.valor)}.`);
+      // JSX e nao template string: o toast vive num portal, fora da arvore marcada,
+      // e o valor precisa carregar a propria mascara.
+      toast.success(
+        <span>
+          Registrado: {r.parcelas} {r.parcelas === 1 ? 'parcela' : 'parcelas'},{' '}
+          <span className="valor-sensivel">{formatBRL(r.valor)}</span>.
+        </span>
+      );
       setRegistroAberto(false);
       setSelectedIds([]);
       router.refresh();
@@ -568,7 +575,7 @@ export default function AntecipacaoClient({
                   <TableCell>
                     <StatusBadge status={v.status} />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-bold text-foreground">{formatBRL(v.valorVenda || 0)}</TableCell>
+                  <TableCell className="text-right tabular-nums font-bold text-foreground valor-sensivel valor-sensivel-fim">{formatBRL(v.valorVenda || 0)}</TableCell>
                   <TableCell className="text-right">
                     {/* "total / antecipadas / a antecipar / vencidas", contados no
                         servidor; a legenda fica no "?" do cabecalho da coluna. */}
@@ -601,7 +608,7 @@ export default function AntecipacaoClient({
               Total a Antecipar
               {calculando && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-label="Calculando" />}
             </div>
-            <div className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums leading-none mt-0.5">
+            <div className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums leading-none mt-0.5 valor-sensivel">
               {formatBRL(totalSelecionado)}
             </div>
             <div className="text-xs text-muted-foreground mt-1.5">
@@ -654,7 +661,7 @@ export default function AntecipacaoClient({
             </div>
             <div className="rounded-lg bg-success-bg border border-success px-3 py-2.5">
               <div className="text-xs font-bold uppercase tracking-wider text-success-text">Líquido</div>
-              <div className="text-base sm:text-lg font-bold text-success-text tabular-nums leading-tight truncate">
+              <div className="text-base sm:text-lg font-bold text-success-text tabular-nums leading-tight truncate valor-sensivel">
                 {formatBRL(calculo?.valorLiquido ?? 0)}
               </div>
               <div className="text-xs text-success-text font-medium mt-0.5">estimado</div>
@@ -756,13 +763,13 @@ export default function AntecipacaoClient({
                   className="group relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-warning/50"
                 >
                   <div className="text-xs font-medium text-muted-foreground truncate">{empresa}</div>
-                  <div className="text-lg font-bold text-warning-text tabular-nums">{formatBRL(valor)}</div>
+                  <div className="text-lg font-bold text-warning-text tabular-nums valor-sensivel">{formatBRL(valor)}</div>
                 </div>
               ))}
           </div>
           <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
             <span className="text-sm font-medium text-muted-foreground">Total a vencer no mês</span>
-            <span className="text-xl font-bold text-warning-text tabular-nums">
+            <span className="text-xl font-bold text-warning-text tabular-nums valor-sensivel valor-sensivel-fim">
               {formatBRL(Object.values(vencimentosPorEmpresa).reduce((sum, v) => sum + v, 0))}
             </span>
           </div>

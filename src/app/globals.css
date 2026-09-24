@@ -946,3 +946,50 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ========================================
+   MODO DISCRETO (2026-09-24)
+   ========================================
+   O olho da barra (`ValoresToggle`) liga `data-valores-ocultos` no <html> e o resto acontece aqui.
+   Quem oculta é o CSS porque as telas de (app) são server components: um contexto de client não
+   alcançaria os ~150 pontos de dinheiro renderizados no servidor.
+
+   `valor-sensivel`: o texto fica transparente e uma fileira de pontos toma a MESMA largura, então
+   nenhuma coluna salta ao ligar e desligar. `bloco-sensivel`: gráfico, medidor ou miniatura sai de
+   foco inteiro, sem escala legível.
+
+   `!important` na cor porque alguns valores trazem cor própria por utilitário ou estilo inline
+   (verde de lucro, vermelho de vencido) e a máscara tem de vencer sempre. */
+
+/* A máscara vale só na TELA: impressão e PDF saem completos (os relatórios de verdade são
+   gerados no servidor e nunca passaram por aqui). Restrita à tela em vez de desfeita num bloco
+   de impressão: desfazer devolvia `color: inherit`, o que apagava a cor semântica do valor
+   (lucro verde, vencido vermelho) no papel. */
+@media screen {
+  [data-valores-ocultos="1"] .valor-sensivel {
+    color: transparent !important;
+    background-image: radial-gradient(circle at center, var(--muted-foreground) 38%, transparent 39%);
+    background-size: 0.62em 1.2em;
+    background-repeat: repeat-x;
+    background-position: left center;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Valor alinhado à direita (célula de tabela, total): os pontos acompanham a borda direita. */
+  [data-valores-ocultos="1"] .valor-sensivel-fim {
+    background-position: right center;
+  }
+
+  /* Um valor embrulhado em <span>/<strong> não pode escapar pela pintura do filho. */
+  [data-valores-ocultos="1"] .valor-sensivel * {
+    visibility: hidden;
+  }
+
+  [data-valores-ocultos="1"] .bloco-sensivel {
+    filter: blur(9px) saturate(0.35);
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
+}

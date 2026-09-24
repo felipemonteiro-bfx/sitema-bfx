@@ -65,7 +65,7 @@ export default async function Page() {
             </div>
             <div>
               <div className="text-xs font-bold uppercase text-muted-foreground leading-none mb-1">Última Venda</div>
-              <div className="text-sm font-bold text-foreground leading-none">{formatBRL(totalUltima)}</div>
+              <div className="text-sm font-bold text-foreground leading-none valor-sensivel">{formatBRL(totalUltima)}</div>
             </div>
             <Separator orientation="vertical" className="h-8 mx-2" />
             <div className="flex flex-wrap gap-2">

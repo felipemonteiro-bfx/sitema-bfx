@@ -4,6 +4,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToasterResponsive } from "@/components/toaster-responsive";
 import { PWARegister } from "@/components/pwa-register";
+import { scriptDeInicializacao } from "@/lib/modo-discreto";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -52,6 +53,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        {/* Modo discreto: aplica a escolha do aparelho ANTES da primeira pintura. Sem isto, quem
+            deixou os valores ocultos veria os números por um instante até o React montar o botão —
+            justamente o que o modo existe para evitar. Mesmo caminho do tema (next-themes). */}
+        <script dangerouslySetInnerHTML={{ __html: scriptDeInicializacao() }} />
+      </head>
       <body className={`${manrope.variable} ${spaceGrotesk.variable}`}>
         <ThemeProvider
           attribute="class"

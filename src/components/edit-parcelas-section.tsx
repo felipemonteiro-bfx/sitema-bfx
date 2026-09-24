@@ -104,16 +104,22 @@ export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTota
           onClick={() => setOpen(true)}
         >
           <Calendar className="h-4 w-4" />
-          Datas de Vencimento ({parcelas.length}x · {formatBRL(totalParcelas)})
+          {/* Um <span> em volta do rótulo INTEIRO: dentro do Button cada trecho de texto
+              vira item de flex e o `gap-2` abriria folga em volta do valor. */}
+          <span>
+            Datas de Vencimento ({parcelas.length}x · <span className="valor-sensivel">{formatBRL(totalParcelas)}</span>)
+          </span>
           {diverge && <span className="text-warning-text text-xs">⚠️</span>}
         </Button>
         <span className="text-xs text-muted-foreground">
-          Total das parcelas: {formatBRL(totalParcelas)}
+          Total das parcelas: <span className="valor-sensivel">{formatBRL(totalParcelas)}</span>
         </span>
       </div>
 
       {diverge && (
         <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
+          {/* Sem máscara de propósito: é o aviso que o usuário usa para ACERTAR as parcelas
+              durante o lançamento; escondido, ele diz que divergiu mas não por quanto. */}
           ⚠️ A soma das parcelas ({formatBRL(totalParcelas)}) difere do total da venda
           ({formatBRL(valorTotal)}).
         </div>

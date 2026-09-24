@@ -103,7 +103,11 @@ type ColorVariant = "default" | "success" | "warning" | "error" | "info"
 interface CardStatsProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
   value: string | number
-  description?: string
+  // `ReactNode` e nao `string` por causa do modo discreto: descricoes como
+  // "Margem: 20,5%" precisam ocultar so o numero, entao quem chama envolve o
+  // valor num <span className="valor-sensivel"> e passa o no pronto. Texto puro
+  // continua valendo (todo string e um ReactNode).
+  description?: React.ReactNode
   icon?: LucideIcon
   trend?: {
     value: number
@@ -111,6 +115,11 @@ interface CardStatsProps extends React.HTMLAttributes<HTMLDivElement> {
     label?: string
   }
   color?: ColorVariant
+  // Modo discreto: o `value` e' mascarado por padrao, porque em quase todo card
+  // ele e' dinheiro. Card cujo valor e' NOME (o "Top Performance" mostra o
+  // vendedor) passa `valorSensivel={false}` — ocultar o nome nao protege nada e
+  // so atrapalha quem esta lendo a tela.
+  valorSensivel?: boolean
   loading?: boolean
   animated?: boolean
 }
@@ -177,6 +186,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
     icon: Icon, 
     trend, 
     color = "default",
+    valorSensivel = true,
     loading = false,
     animated = true,
     ...props 
@@ -238,11 +248,15 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
             )}
           </div>
           
+          {/* Modo discreto: a marca vai num <span> em volta do numero, nao no <div>.
+              O <div> ocupa a largura do card, e a fileira de pontos iria de borda a
+              borda; no <span> ela fica do tamanho do valor. Cobre de uma vez os cards
+              do dashboard e os de /boletos. */}
           <div className={cn(
             "text-lg font-bold tabular-nums sm:text-2xl",
             colorStyles.value
           )}>
-            {value}
+            <span className={cn(valorSensivel && "valor-sensivel")}>{value}</span>
           </div>
           
           {(trend || description) && (
@@ -250,8 +264,12 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
               {trend && TrendIcon && (
                 <span className={cn("flex items-center gap-1 font-medium", trendColor)}>
                   <TrendIcon className="h-4 w-4" />
-                  {trend.value > 0 && "+"}
-                  {Number(trend.value.toFixed(1))}%
+                  {/* Modo discreto: so a porcentagem some; a seta fica, como o icone
+                      do card, porque e o rotulo da direcao e nao o valor. */}
+                  <span className="valor-sensivel">
+                    {trend.value > 0 && "+"}
+                    {Number(trend.value.toFixed(1))}%
+                  </span>
                 </span>
               )}
               {description && (

@@ -110,7 +110,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           <CardHeader>
             <CardTitle>Meta média</CardTitle>
           </CardHeader>
-          <CardContent className="text-2xl font-semibold">{formatMoney(metaMedia)}</CardContent>
+          <CardContent className="text-2xl font-semibold"><span className="valor-sensivel">{formatMoney(metaMedia)}</span></CardContent>
         </Card>
       </div>
 
@@ -155,7 +155,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 {u.role}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right tabular-nums">
+                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">
                               {formatMoney(u.metaMensal || 0)}
                             </TableCell>
                             <TableCell className="text-right tabular-nums">{u.comissaoPct}</TableCell>

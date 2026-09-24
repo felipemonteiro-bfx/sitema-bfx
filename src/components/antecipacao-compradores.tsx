@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { formatBRL } from '@/lib/utils';
+import { cn, formatBRL } from '@/lib/utils';
 import { formatarDataPura, formatarMesAnoPuro } from '@/lib/data-pura';
 import type {
   CompradorAntecipacao,
@@ -59,7 +59,7 @@ function CelulaValor({ qtd, valor, tom }: { qtd: number; valor: number; tom: 'su
           : 'text-foreground';
   return (
     <>
-      <div className={`font-bold ${cor}`}>{formatBRL(valor)}</div>
+      <div className={cn('font-bold valor-sensivel valor-sensivel-fim', cor)}>{formatBRL(valor)}</div>
       <div className="text-xs text-muted-foreground">{plural(qtd, 'parcela', 'parcelas')}</div>
     </>
   );
@@ -105,7 +105,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-lg bg-success-bg border border-success px-4 py-3">
             <div className="text-xs font-bold uppercase tracking-wider text-success-text">Já antecipado</div>
-            <div className="text-xl sm:text-2xl font-bold text-success-text tabular-nums leading-tight mt-0.5">
+            <div className="text-xl sm:text-2xl font-bold text-success-text tabular-nums leading-tight mt-0.5 valor-sensivel">
               {formatBRL(totais.antecipadas.valor)}
             </div>
             <div className="text-xs text-success-text font-medium mt-0.5">
@@ -115,7 +115,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
           {/* Enviado à Prudent e ainda sem retorno (2026-09-17): saiu da fila, mas não é dinheiro. */}
           <div className="rounded-lg bg-info-bg border border-info px-4 py-3">
             <div className="text-xs font-bold uppercase tracking-wider text-info-text">Em andamento</div>
-            <div className="text-xl sm:text-2xl font-bold text-info-text tabular-nums leading-tight mt-0.5">
+            <div className="text-xl sm:text-2xl font-bold text-info-text tabular-nums leading-tight mt-0.5 valor-sensivel">
               {formatBRL(totais.emAndamento.valor)}
             </div>
             <div className="text-xs text-info-text font-medium mt-0.5">
@@ -124,7 +124,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
           </div>
           <div className="rounded-lg bg-warning-bg border border-warning px-4 py-3">
             <div className="text-xs font-bold uppercase tracking-wider text-warning-text">A antecipar</div>
-            <div className="text-xl sm:text-2xl font-bold text-warning-text tabular-nums leading-tight mt-0.5">
+            <div className="text-xl sm:text-2xl font-bold text-warning-text tabular-nums leading-tight mt-0.5 valor-sensivel">
               {formatBRL(totais.aAntecipar.valor)}
             </div>
             <div className="text-xs text-warning-text font-medium mt-0.5">
@@ -135,7 +135,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
           {/* Degrau abaixo dos dois primeiros: nao pede acao, so explica a sobra. */}
           <div className="rounded-lg bg-muted px-4 py-3">
             <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Vencidas sem antecipação</div>
-            <div className="text-lg font-bold text-foreground tabular-nums leading-tight mt-0.5">
+            <div className="text-lg font-bold text-foreground tabular-nums leading-tight mt-0.5 valor-sensivel">
               {formatBRL(totais.vencidasSemAntecipar.valor)}
             </div>
             <div className="text-xs text-muted-foreground font-medium mt-0.5">
@@ -241,13 +241,13 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                               {/* No celular a coluna "Ja antecipado" some; o valor vem aqui. */}
                               {c.antecipadas.qtd > 0 && (
                                 <div className="sm:hidden text-xs font-semibold text-success-text tabular-nums">
-                                  Antecipado: {formatBRL(c.antecipadas.valor)}
+                                  Antecipado: <span className="valor-sensivel">{formatBRL(c.antecipadas.valor)}</span>
                                 </div>
                               )}
                               {/* A coluna "Em andamento" some antes das outras; o valor vem aqui. */}
                               {c.emAndamento.qtd > 0 && (
                                 <div className="lg:hidden text-xs font-semibold text-info-text tabular-nums">
-                                  Em andamento: {formatBRL(c.emAndamento.valor)}
+                                  Em andamento: <span className="valor-sensivel">{formatBRL(c.emAndamento.valor)}</span>
                                 </div>
                               )}
                             </TableCell>
@@ -363,7 +363,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                                 sem isto o valor não apareceria em lugar nenhum. */}
                             {m.emAndamento.qtd > 0 && (
                               <div className="lg:hidden text-xs font-semibold text-info-text tabular-nums">
-                                Em andamento: {formatBRL(m.emAndamento.valor)}
+                                Em andamento: <span className="valor-sensivel">{formatBRL(m.emAndamento.valor)}</span>
                               </div>
                             )}
                             {m.vencidasSemAntecipar.qtd > 0 && (

@@ -466,7 +466,11 @@ export default function VendaRapidaFormV2({
         return;
       }
       setFrete(data.fee ?? 0);
-      toast.success(`Frete Uber: R$ ${(data.fee ?? 0).toFixed(2)} (${data.duration ?? "?"} min)`);
+      toast.success(
+        <span>
+          Frete Uber: <span className="valor-sensivel">R$ {(data.fee ?? 0).toFixed(2)}</span> ({data.duration ?? "?"} min)
+        </span>
+      );
     } catch (err) {
       console.error(err);
       toast.error(mensagemFalhaUber("erro_upstream"));
@@ -897,17 +901,17 @@ export default function VendaRapidaFormV2({
                       <div className="font-medium">{c.nome}</div>
                       {c.renda && c.renda > 0 && (
                         <span className="text-xs px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success-text font-medium">
-                          Renda: {formatBRL(c.renda)}
+                          Renda: <span className="valor-sensivel">{formatBRL(c.renda)}</span>
                         </span>
                       )}
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground valor-sensivel">
                         {c.cpf || c.cnpj || "Sem documento"}
                       </span>
                       {c.ultimaVenda && (
                         <span className="text-xs text-muted-foreground">
-                          Última: {formatBRL(c.ultimaVenda.valor)} em {c.ultimaVenda.data.split("-").reverse().join("/")}
+                          Última: <span className="valor-sensivel">{formatBRL(c.ultimaVenda.valor)}</span> em {c.ultimaVenda.data.split("-").reverse().join("/")}
                         </span>
                       )}
                     </div>
@@ -993,13 +997,13 @@ export default function VendaRapidaFormV2({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Limite</div>
-                <div className="text-sm font-bold tabular-nums text-foreground">
+                <div className="text-sm font-bold tabular-nums text-foreground valor-sensivel">
                   {cardLimite.limite == null ? "—" : formatBRL(cardLimite.limite)}
                 </div>
               </div>
               <div>
                 <div className="text-xs font-bold uppercase text-muted-foreground">Comprometido</div>
-                <div className="text-sm font-bold tabular-nums text-foreground">
+                <div className="text-sm font-bold tabular-nums text-foreground valor-sensivel">
                   {formatBRL(cardLimite.comprometido)}
                 </div>
               </div>
@@ -1007,7 +1011,7 @@ export default function VendaRapidaFormV2({
                 <div className="text-xs font-bold uppercase text-muted-foreground">Disponível</div>
                 <div
                   className={cn(
-                    "text-sm font-bold tabular-nums",
+                    "text-sm font-bold tabular-nums valor-sensivel",
                     cardLimite.disponivel == null
                       ? "text-muted-foreground"
                       : cardLimite.disponivel > 0
@@ -1020,7 +1024,9 @@ export default function VendaRapidaFormV2({
               </div>
             </div>
             {cardLimite.pctBarra != null && (
-              <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+              /* bloco-sensivel: a barra mostra a faixa de comprometimento que os
+                 percentuais abaixo ocultam. */
+              <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden bloco-sensivel">
                 <div
                   className={cn(
                     "h-full transition-all",
@@ -1036,9 +1042,13 @@ export default function VendaRapidaFormV2({
             )}
             {cardLimite.pctConsignado != null && (
               <p className="text-xs text-center text-muted-foreground">
-                Consignado atual: {formatarPctConsignado(cardLimite.pctConsignado)}
+                Consignado atual:{" "}
+                <span className="valor-sensivel">{formatarPctConsignado(cardLimite.pctConsignado)}</span>
                 {valorParcela > 0 && cardLimite.pctPosterior != null && (
-                  <> · com esta venda: {formatarPctConsignado(cardLimite.pctPosterior)}</>
+                  <>
+                    {" "}· com esta venda:{" "}
+                    <span className="valor-sensivel">{formatarPctConsignado(cardLimite.pctPosterior)}</span>
+                  </>
                 )}
               </p>
             )}
@@ -1047,7 +1057,7 @@ export default function VendaRapidaFormV2({
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
                   {valorParcela > 0 ? "Com esta venda o consignado fica em" : "Consignado em"}{" "}
-                  {formatarPctConsignado(cardLimite.pctPosterior)} (alerta a partir de 20%).
+                  <span className="valor-sensivel">{formatarPctConsignado(cardLimite.pctPosterior)}</span> (alerta a partir de 20%).
                 </div>
               </div>
             )}
@@ -1056,7 +1066,7 @@ export default function VendaRapidaFormV2({
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
                   {valorParcela > 0 ? "Com esta venda o consignado chega a" : "Consignado em"}{" "}
-                  {formatarPctConsignado(cardLimite.pctPosterior)}. A venda só sai se você confirmar.
+                  <span className="valor-sensivel">{formatarPctConsignado(cardLimite.pctPosterior)}</span>. A venda só sai se você confirmar.
                 </div>
               </div>
             )}
@@ -1064,7 +1074,7 @@ export default function VendaRapidaFormV2({
               <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  Parcela ({formatBRL(valorParcela)}) excede o valor disponível ({formatBRL(cardLimite.disponivel ?? 0)}).
+                  Parcela (<span className="valor-sensivel">{formatBRL(valorParcela)}</span>) excede o valor disponível (<span className="valor-sensivel">{formatBRL(cardLimite.disponivel ?? 0)}</span>).
                   A venda será registrada com indicação de excedeu limite.
                 </div>
               </div>
@@ -1198,7 +1208,7 @@ export default function VendaRapidaFormV2({
               />
               {pontosResgatar > 0 && (
                 <p className="text-xs text-success-text">
-                  Desconto por pontos: -{formatBRL(descontoPontos)} (limitado ao saldo do cliente)
+                  Desconto por pontos: <span className="valor-sensivel">-{formatBRL(descontoPontos)}</span> (limitado ao saldo do cliente)
                 </p>
               )}
             </div>
@@ -1305,24 +1315,24 @@ export default function VendaRapidaFormV2({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
-              <div className="text-base font-bold tabular-nums text-foreground">{formatBRL(subtotalProdutos)}</div>
+              <div className="text-base font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(subtotalProdutos)}</div>
             </div>
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Frete</div>
-              <div className="text-base font-bold tabular-nums text-foreground">{formatBRL(numFrete)}</div>
+              <div className="text-base font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(numFrete)}</div>
             </div>
             <div className="rounded-lg bg-primary/5 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Total Venda</div>
-              <div className="text-lg font-bold tabular-nums text-primary">{formatBRL(totalVenda)}</div>
+              <div className="text-lg font-bold tabular-nums text-primary valor-sensivel">{formatBRL(totalVenda)}</div>
             </div>
             <div className="rounded-lg bg-info-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
-              <div className="text-base font-bold tabular-nums text-info-text">{formatBRL(totalVenda / numParcelas)}</div>
+              <div className="text-base font-bold tabular-nums text-info-text valor-sensivel">{formatBRL(totalVenda / numParcelas)}</div>
             </div>
           </div>
 
           {desconto > 0 && (
-            <div className="text-sm text-error-text font-medium">Desconto: -{formatBRL(desconto)}</div>
+            <div className="text-sm text-error-text font-medium">Desconto: <span className="valor-sensivel">-{formatBRL(desconto)}</span></div>
           )}
 
           <Separator />
@@ -1330,19 +1340,19 @@ export default function VendaRapidaFormV2({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Custo Total</div>
-              <div className="text-base font-bold tabular-nums text-foreground">{formatBRL(custoTotal)}</div>
+              <div className="text-base font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(custoTotal)}</div>
             </div>
             <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
-              <div className="text-base font-bold tabular-nums text-success-text">{formatBRL(lucroBruto)}</div>
+              <div className="text-base font-bold tabular-nums text-success-text valor-sensivel">{formatBRL(lucroBruto)}</div>
             </div>
             <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
-              <div className="text-base font-bold tabular-nums text-success-text">{margemPct.toFixed(1)}%</div>
+              <div className="text-base font-bold tabular-nums text-success-text valor-sensivel">{margemPct.toFixed(1)}%</div>
             </div>
             <div className="rounded-lg bg-warning-bg px-3 py-2.5 text-center">
               <div className="text-xs uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
-              <div className="text-base font-bold tabular-nums text-warning-text">{formatBRL(valorComissao)}</div>
+              <div className="text-base font-bold tabular-nums text-warning-text valor-sensivel">{formatBRL(valorComissao)}</div>
             </div>
           </div>
 
