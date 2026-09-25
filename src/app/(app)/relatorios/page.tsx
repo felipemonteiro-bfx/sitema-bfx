@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Label } from "@/components/ui/label";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { ReportButtonsClient } from "@/components/report-buttons-client";
@@ -11,7 +10,7 @@ import { formatarDataPura, hojeDataPura, inicioDoMesDataPura } from "@/lib/data-
 
 export default async function Page() {
   const ok = await requireAdmin();
-  if (!ok) return <div>Acesso restrito.</div>;
+  if (!ok) return <div className="p-6 text-sm text-muted-foreground">Acesso restrito a administradores.</div>;
   
   // Dia civil de Manaus: o container roda em UTC, e depois das 20h o "hoje" do servidor
   // já era amanhã (no dia 31 os links saíam com período do mês seguinte, vazio).
@@ -34,7 +33,7 @@ export default async function Page() {
     <div className="space-y-6">
       <PageHeader
         title="Relatórios"
-        description="Exporte relatórios de vendas e financeiro."
+        description="Baixe vendas, inadimplência e margem, e acompanhe o que foi enviado às empresas."
         breadcrumbs={[{ label: "Relatórios" }]}
       />
 
@@ -50,12 +49,13 @@ export default async function Page() {
               defaultTo={today}
             />
 
-            <div className="text-xs text-muted-foreground pt-2">
-              Período padrão: mês atual ({formatDateBR(monthStartStr)} a {formatDateBR(today)}).
-            </div>
-            
             <div className="flex flex-wrap gap-2 border-t pt-4">
-              <span className="w-full text-xs font-bold text-muted-foreground uppercase mb-1">Exportação Rápida (PDF)</span>
+              <div className="mb-1 w-full">
+                <h3 className="text-sm font-semibold">PDF do mês atual, por empresa</h3>
+                <p className="text-xs text-muted-foreground">
+                  Vendas de {formatDateBR(monthStartStr)} a {formatDateBR(today)}, sem precisar usar os filtros acima.
+                </p>
+              </div>
               {empresaOptions.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   Nenhuma empresa parceira elegível encontrada. Cadastre uma em{" "}
@@ -67,8 +67,9 @@ export default async function Page() {
                     key={empresa}
                     href={`/api/relatorios/vendas/pdf?empresa=${encodeURIComponent(empresa)}&from=${monthStartStr}&to=${today}`}
                     className={buttonVariants({ variant: "outline", size: "sm" })}
+                    aria-label={`Baixar PDF das vendas do mês de ${empresa}`}
                   >
-                    PDF {empresa}
+                    {empresa}
                   </a>
                 ))
               )}
@@ -78,38 +79,50 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary">Outros Relatórios</CardTitle>
+            <CardTitle className="text-primary">Outros relatórios</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-1">
-              <Label>Inadimplência</Label>
+            <div className="space-y-1.5">
+              <div>
+                <h3 className="text-sm font-medium">Inadimplência</h3>
+                <p className="text-xs text-muted-foreground">Parcelas vencidas e não pagas até hoje.</p>
+              </div>
               <div className="flex gap-2">
                 <a
                   href={`/api/relatorios/inadimplencia?to=${today}&format=csv`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                  aria-label="Baixar inadimplência em CSV"
                 >
                   CSV
                 </a>
                 <a
                   href={`/api/relatorios/inadimplencia?to=${today}&format=pdf`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                  aria-label="Baixar inadimplência em PDF"
                 >
                   PDF
                 </a>
               </div>
             </div>
-            <div className="space-y-1">
-              <Label>Margem por Produto</Label>
+            <div className="space-y-1.5">
+              <div>
+                <h3 className="text-sm font-medium">Margem por produto</h3>
+                <p className="text-xs text-muted-foreground">
+                  Vendas de {formatDateBR(monthStartStr)} a {formatDateBR(today)}.
+                </p>
+              </div>
               <div className="flex gap-2">
                 <a
                   href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=csv`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                  aria-label="Baixar margem por produto em CSV"
                 >
                   CSV
                 </a>
                 <a
                   href={`/api/relatorios/margem-produto?from=${monthStartStr}&to=${today}&format=pdf`}
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                  aria-label="Baixar margem por produto em PDF"
                 >
                   PDF
                 </a>
@@ -127,7 +140,7 @@ export default async function Page() {
               href="/relatorios/mensais"
               className={cn(buttonVariants({ variant: "default" }), "w-full")}
             >
-              Relatórios mensais por empresa
+              Relatório mensal das empresas
             </a>
             <a
               href="/relatorios/emails"
@@ -139,13 +152,13 @@ export default async function Page() {
               href="/relatorios"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
-              Limpar filtros
+              Limpar filtros de vendas
             </a>
             <a
               href="/financeiro"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
-              Abrir Financeiro
+              Ir para Financeiro
             </a>
           </CardContent>
         </Card>

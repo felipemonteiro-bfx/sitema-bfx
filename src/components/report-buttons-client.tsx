@@ -47,7 +47,7 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-1">
-          <Label htmlFor="rel-empresa">Empresa Parceira</Label>
+          <Label htmlFor="rel-empresa">Empresa</Label>
           <FormSelect
             id="rel-empresa"
             name="empresa"
@@ -147,7 +147,7 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
           leftIcon={<FileText className="h-4 w-4" />}
           disabled={semColunas}
         >
-          Baixar PDF (Impressão)
+          Baixar PDF
         </Button>
       </div>
     </div>
