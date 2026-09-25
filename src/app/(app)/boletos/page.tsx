@@ -1,13 +1,12 @@
 import { prisma } from "@/lib/db";
 import { valorTotalVenda } from "@/lib/venda-utils";
-import { getAsaasConfig, listPayments } from "@/lib/asaas";
+import { getAsaasConfig, listAllPayments } from "@/lib/asaas";
 import { requireAdmin } from "@/lib/guards";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { formatBRL, cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import {
   FileText,
@@ -20,9 +19,12 @@ import {
 import { buttonVariants } from "@/components/ui/button-variants";
 import { QueryTabs } from "@/components/query-tabs";
 import type { AsaasPaymentListItem } from "@/lib/asaas";
+import { BoletosFiltros } from "@/components/boletos-filtros";
+import { filtrarBoletos, intervaloDoPeriodo, lerFiltroBoletos } from "@/lib/boletos-filtro";
+import { hojeDataPura } from "@/lib/data-pura";
 import { PageHeader } from "@/components/page-header";
 
-type Search = { tab?: string; page?: string; q?: string };
+type Search = { tab?: string; page?: string; q?: string; periodo?: string; de?: string; ate?: string; empresa?: string };
 
 const PAGE_SIZE = 10;
 
@@ -134,7 +136,10 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const currentTab = sp.tab || "avencer";
   const page = Math.max(1, Number(sp.page || 1));
-  const q = (sp.q || "").toLowerCase().trim();
+  const filtro = lerFiltroBoletos(sp);
+  const q = filtro.q;
+  const hoje = hojeDataPura();
+  const intervalo = intervaloDoPeriodo(filtro, hoje);
 
   let cfg = null;
   try { cfg = await prisma.config.findFirst(); } catch { /* coluna ausente */ }
@@ -167,38 +172,65 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
   let asaasApiError: string | null = null;
 
   try {
-    const [resOverdue, resPending, resReceived] = await Promise.all([
-      listPayments(config, { billingType: "BOLETO", status: "OVERDUE", limit: 100 }),
-      listPayments(config, { billingType: "BOLETO", status: "PENDING", limit: 100 }),
-      listPayments(config, { billingType: "BOLETO", status: "RECEIVED", limit: 100 }),
+    // Todas as páginas: com só a primeira (100) os cartões saíam truncados em 100/200.
+    const [resOverdue, resPending, resReceived, resCash] = await Promise.all([
+      listAllPayments(config, { billingType: "BOLETO", status: "OVERDUE" }),
+      listAllPayments(config, { billingType: "BOLETO", status: "PENDING" }),
+      listAllPayments(config, { billingType: "BOLETO", status: "RECEIVED" }),
+      listAllPayments(config, { billingType: "BOLETO", status: "RECEIVED_IN_CASH" }),
     ]);
-    vencidos = resOverdue.data;
-    aVencer = resPending.data.filter((p) => new Date(p.dueDate) >= new Date(new Date().toDateString()));
-    pagos = resReceived.data;
-    const resCash = await listPayments(config, { billingType: "BOLETO", status: "RECEIVED_IN_CASH", limit: 100 });
-    pagos = [...pagos, ...resCash.data];
+    vencidos = resOverdue;
+    aVencer = resPending.filter((p) => p.dueDate.slice(0, 10) >= hoje);
+    pagos = [...resReceived, ...resCash];
   } catch (err) {
     asaasApiError = err instanceof Error ? err.message : "Erro ao conectar com o Asaas";
   }
 
-  const totalVencidos = vencidos.reduce((s, p) => s + p.value, 0);
-  const totalAVencer = aVencer.reduce((s, p) => s + p.value, 0);
-  const totalPagos = pagos.reduce((s, p) => s + p.value, 0);
+  // Cliente e empresa vêm da venda (externalReference = id da venda).
+  const idsVenda = [...new Set([...vencidos, ...aVencer, ...pagos].map((p) => Number(p.externalReference)).filter((n) => Number.isInteger(n) && n > 0))];
+  const [vendasDosBoletos, empresasCadastradas] = await Promise.all([
+    idsVenda.length
+      ? prisma.venda.findMany({ where: { id: { in: idsVenda } }, select: { id: true, cliente: { select: { nome: true, empresa: true } } } })
+      : Promise.resolve([]),
+    prisma.empresaParceira.findMany({ select: { nome: true }, orderBy: { nome: "asc" } }),
+  ]);
+  const vendaPorRef = new Map(vendasDosBoletos.map((v) => [String(v.id), { cliente: v.cliente?.nome ?? null, empresa: v.cliente?.empresa ?? null }]));
 
-  // Filtro por texto
-  const filterItems = (items: AsaasPaymentListItem[]) =>
-    q ? items.filter((p) => (p.description || "").toLowerCase().includes(q)) : items;
+  const filtrar = (items: AsaasPaymentListItem[], campo: "dueDate" | "paymentDate") =>
+    filtrarBoletos(items, { intervalo, campo, empresa: filtro.empresa, q }, vendaPorRef);
 
-  const filteredVencidos = filterItems(vencidos);
-  const filteredAVencer = filterItems(aVencer);
-  const filteredPagos = filterItems(pagos);
+  const filteredVencidos = filtrar(vencidos, "dueDate");
+  const filteredAVencer = filtrar(aVencer, "dueDate");
+  const filteredPagos = filtrar(pagos, "paymentDate");
+
+  const soma = (items: AsaasPaymentListItem[]) => items.reduce((s, p) => s + p.value, 0);
+  const totalVencidos = soma(filteredVencidos);
+  const totalAVencer = soma(filteredAVencer);
+  const totalPagos = soma(filteredPagos);
+  const resumoCartao = (items: AsaasPaymentListItem[]) => {
+    const clientes = new Set(items.map((p) => p.customer).filter(Boolean)).size;
+    return `${items.length} ${items.length === 1 ? "boleto" : "boletos"} · ${clientes} ${clientes === 1 ? "cliente" : "clientes"}`;
+  };
+  const dataCurta = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+  const resumoPeriodo = !intervalo
+    ? "tudo"
+    : intervalo.de && intervalo.ate
+      ? intervalo.de === intervalo.ate ? dataCurta(intervalo.de) : `${dataCurta(intervalo.de)} a ${dataCurta(intervalo.ate)}`
+      : intervalo.de ? `desde ${dataCurta(intervalo.de)}` : intervalo.ate ? `até ${dataCurta(intervalo.ate)}` : "tudo";
 
   // Paginação
   const paginatedVencidos = filteredVencidos.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const paginatedAVencer = filteredAVencer.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const paginatedPagos = filteredPagos.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const baseUrl = (tab: string) => `/boletos?tab=${tab}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+  const baseUrl = (tab: string) => {
+    const params = new URLSearchParams({ tab, periodo: filtro.periodo });
+    if (filtro.de) params.set("de", filtro.de);
+    if (filtro.ate) params.set("ate", filtro.ate);
+    if (filtro.empresa) params.set("empresa", filtro.empresa);
+    if (q) params.set("q", q);
+    return `/boletos?${params.toString()}`;
+  };
 
   // Vendas pendentes de boleto
   type VendaBoleto = {
@@ -237,36 +269,19 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
 
       {/* Summary cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <CardStats title="Vencidos" value={formatBRL(totalVencidos)} description={`${vencidos.length} boleto(s)`} icon={AlertTriangle} color="error" />
-        <CardStats title="A vencer" value={formatBRL(totalAVencer)} description={`${aVencer.length} boleto(s)`} icon={Clock} color="warning" />
-        <CardStats title="Pagos" value={formatBRL(totalPagos)} description={`${pagos.length} boleto(s)`} icon={CheckCircle2} color="success" />
+        <CardStats title="Vencidos" value={formatBRL(totalVencidos)} description={resumoCartao(filteredVencidos)} icon={AlertTriangle} color="error" />
+        <CardStats title="A vencer" value={formatBRL(totalAVencer)} description={resumoCartao(filteredAVencer)} icon={Clock} color="warning" />
+        <CardStats title="Pagos" value={formatBRL(totalPagos)} description={resumoCartao(filteredPagos)} icon={CheckCircle2} color="success" />
       </div>
 
-      {/* Search bar */}
-      <form method="GET" className="flex items-center gap-2 max-w-sm">
-        <input type="hidden" name="tab" value={currentTab} />
-        <input type="hidden" name="page" value="1" />
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            name="q"
-            defaultValue={q}
-            placeholder="Buscar por descrição..."
-            className="pl-8"
-          />
-        </div>
-        {/* Tamanho padrao, nao size:"sm": o Input ao lado tem 40px de altura,
-            raio 10 e fonte 14. O size sm da 36/8/12 e desalinhava a linha
-            inteira — as outras quatro rotas usam 40px (fase 16, achado 5). */}
-        <button type="submit" className={buttonVariants({ variant: "outline" })}>
-          Buscar
-        </button>
-        {q && (
-          <Link href={`/boletos?tab=${currentTab}`} className={buttonVariants({ variant: "ghost" })}>
-            Limpar
-          </Link>
-        )}
-      </form>
+      <BoletosFiltros
+        // Nova chave a cada filtro: voltar/avançar no navegador remonta com a busca certa.
+        key={`${filtro.periodo}|${filtro.de ?? ""}|${filtro.ate ?? ""}|${filtro.empresa ?? ""}|${q}`}
+        tab={currentTab}
+        filtro={filtro}
+        empresas={empresasCadastradas.map((e) => e.nome)}
+        resumoPeriodo={resumoPeriodo}
+      />
 
       {/* Tabs */}
       <QueryTabs
@@ -274,19 +289,19 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
         tabs={[
           {
             value: "avencer",
-            label: `A vencer${aVencer.length > 0 ? ` (${aVencer.length})` : ""}`,
+            label: `A vencer${filteredAVencer.length > 0 ? ` (${filteredAVencer.length})` : ""}`,
             content: (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Clock className="h-5 w-5 text-warning-text" />
                     A vencer
-                    {q && <span className="text-xs text-muted-foreground font-normal">· filtro: &quot;{q}&quot;</span>}
+                    <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="rounded-lg border overflow-hidden">
-                    <BoletoTable items={paginatedAVencer} emptyMessage={q ? "Nenhum resultado para o filtro." : "Nenhum boleto a vencer."} />
+                    <BoletoTable items={paginatedAVencer} emptyMessage="Nenhum boleto a vencer com esses filtros." />
                   </div>
                   <Pagination page={page} total={filteredAVencer.length} baseUrl={baseUrl("avencer")} />
                 </CardContent>
@@ -295,19 +310,19 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
           },
           {
             value: "vencidos",
-            label: `Vencidos${vencidos.length > 0 ? ` (${vencidos.length})` : ""}`,
+            label: `Vencidos${filteredVencidos.length > 0 ? ` (${filteredVencidos.length})` : ""}`,
             content: (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <AlertTriangle className="h-5 w-5 text-destructive" />
                     Vencidos
-                    {q && <span className="text-xs text-muted-foreground font-normal">· filtro: &quot;{q}&quot;</span>}
+                    <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="rounded-lg border overflow-hidden">
-                    <BoletoTable items={paginatedVencidos} emptyMessage={q ? "Nenhum resultado para o filtro." : "Nenhum boleto vencido."} />
+                    <BoletoTable items={paginatedVencidos} emptyMessage="Nenhum boleto vencido com esses filtros." />
                   </div>
                   <Pagination page={page} total={filteredVencidos.length} baseUrl={baseUrl("vencidos")} />
                 </CardContent>
@@ -316,19 +331,19 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
           },
           {
             value: "pagos",
-            label: `Pagos${pagos.length > 0 ? ` (${pagos.length})` : ""}`,
+            label: `Pagos${filteredPagos.length > 0 ? ` (${filteredPagos.length})` : ""}`,
             content: (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
                     <CheckCircle2 className="h-5 w-5 text-success-text" />
                     Pagos
-                    {q && <span className="text-xs text-muted-foreground font-normal">· filtro: &quot;{q}&quot;</span>}
+                    <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="rounded-lg border overflow-hidden">
-                    <BoletoTable items={paginatedPagos} emptyMessage={q ? "Nenhum resultado para o filtro." : "Nenhum boleto pago."} linkLabel="Ver comprovante" />
+                    <BoletoTable items={paginatedPagos} emptyMessage="Nenhum boleto pago com esses filtros." linkLabel="Ver comprovante" />
                   </div>
                   <Pagination page={page} total={filteredPagos.length} baseUrl={baseUrl("pagos")} />
                 </CardContent>

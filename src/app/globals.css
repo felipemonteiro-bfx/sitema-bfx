@@ -90,6 +90,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-novos: var(--chart-novos);
+  --color-chart-recorrentes: var(--chart-recorrentes);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-muted: var(--sidebar-muted);
@@ -227,6 +229,10 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  /* Clientes novos x recorrentes (Dashboard). Validado com o validador de paleta:
+     CVD e contraste >= 3:1 sobre o card; vai com legenda e rotulo direto. */
+  --chart-novos: oklch(0.576 0.155 142.9); /* #358F33 */
+  --chart-recorrentes: oklch(0.554 0.141 253.1); /* #2B74C2 */
 
   /* Sidebar — acompanha o tema (fase 19).
      Ate aqui esta familia era escura nos DOIS temas por decisao explicita. O
@@ -362,6 +368,8 @@
   --chart-3: oklch(0.80 0.20 70); /* Yellow vibrante */
   --chart-4: oklch(0.65 0.28 304); /* Pink vibrante */
   --chart-5: oklch(0.68 0.26 16); /* Orange vibrante */
+  --chart-novos: oklch(0.651 0.167 142.9); /* #46A843 */
+  --chart-recorrentes: oklch(0.611 0.143 252.3); /* #3A86D6 */
 
   /* Gradiente decorativo da marca — MESMOS valores de `:root`, repetidos de
      proposito. Em runtime a cascata ja resolveria (`:root` e `.dark` sao o

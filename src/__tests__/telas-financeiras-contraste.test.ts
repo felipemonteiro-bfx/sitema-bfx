@@ -168,9 +168,13 @@ describe("achado 3 — rolagem horizontal em 390px", () => {
 
 describe("achado 5 — botao Buscar da /boletos alinhado ao Input", () => {
   it("nao usa size sm na barra de busca", () => {
-    const fonte = ler("src/app/(app)/boletos/page.tsx");
-    const barra = fonte.split('<form method="GET"')[1].split("</form>")[0];
-    expect(barra.includes('size: "sm"')).toBe(false);
+    // Desde 25/09 a barra (periodo, empresa e busca) mora em boletos-filtros.tsx.
+    // O que importa e' a linha visivel: gatilho do periodo, select e busca na mesma
+    // altura do Input. Limpar/Aplicar ficam dentro do popover e podem ser sm.
+    const fonte = ler("src/components/boletos-filtros.tsx");
+    const semPopover = fonte.split("<PopoverContent")[0] + fonte.split("</PopoverContent>")[1];
+    expect(semPopover.includes('size="sm"')).toBe(false);
+    expect(semPopover.includes('size: "sm"')).toBe(false);
   });
 });
 

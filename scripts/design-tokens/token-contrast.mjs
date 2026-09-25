@@ -444,6 +444,9 @@ export const TOKEN_PAIRS = [
   { foreground: "sidebar-primary", background: "sidebar-primary-bg", min: TEXT_MIN, label: "badge NOVO — texto no tint da marca" },
   { foreground: "sidebar-primary-foreground", background: "sidebar-primary", min: TEXT_MIN, label: "badge de contagem — texto no preenchimento" },
   { foreground: "sidebar-primary", background: "sidebar-accent", min: NON_TEXT_MIN, label: "indicador do item ativo" },
+  // Barras do "Clientes que compraram, mes a mes" (Dashboard): marca sobre o card.
+  { foreground: "chart-novos", background: "card", min: NON_TEXT_MIN, label: "barra de clientes novos" },
+  { foreground: "chart-recorrentes", background: "card", min: NON_TEXT_MIN, label: "barra de clientes recorrentes" },
   { foreground: "sidebar-ring", background: "sidebar", min: NON_TEXT_MIN, label: "anel de foco na sidebar (UI-06)" },
   // A sidebar hospeda componentes que ela NAO desenha e que resolvem tokens
   // GLOBAIS — foi exatamente isso que quebrou no tema claro. Enquanto a

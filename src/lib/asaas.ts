@@ -98,6 +98,30 @@ export async function listPayments(config: AsaasConfig, params: {
   };
 }
 
+/**
+ * Todas as cobranças de um filtro, paginando pelo `hasMore` do Asaas. A tela de
+ * boletos usava só a primeira página (100) e os totais saíam truncados.
+ * `teto` limita a varredura.
+ */
+export async function listAllPayments(
+  config: AsaasConfig,
+  params: Omit<Parameters<typeof listPayments>[1], "limit" | "offset">,
+  teto = 2000
+): Promise<AsaasPaymentListItem[]> {
+  const todas: AsaasPaymentListItem[] = [];
+  for (let offset = 0; offset < teto; ) {
+    const qs = new URLSearchParams({ limit: "100", offset: String(offset) });
+    if (params.billingType) qs.set("billingType", params.billingType);
+    if (params.status) qs.set("status", params.status);
+    const res = await asaasFetch<AsaasPaymentsListResponse & { hasMore?: boolean }>(config, `/v3/payments?${qs}`);
+    const pagina = res.data ?? [];
+    todas.push(...pagina);
+    if (!res.hasMore || pagina.length === 0) break;
+    offset += pagina.length;
+  }
+  return todas.slice(0, teto);
+}
+
 /** Cobrança com os campos que a baixa de parcela usa (`src/lib/baixa-parcelas.ts`). */
 export type AsaasPagamentoDetalhe = {
   id: string;

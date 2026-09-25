@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
+import { ClientesMesAMes } from "@/components/clientes-mes-a-mes";
+import { clientesNoPeriodo, serieMensalClientes } from "@/lib/dashboard-clientes-db";
+import { periodoAnteriorComparavel, variacao } from "@/lib/dashboard-clientes";
 import { DateInput } from "@/components/ui/date-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
@@ -76,6 +79,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const margem = metrics.margemPct * 100;
   const peds = metrics.totalVendas;
   const tik = peds ? totalReceita / peds : 0;
+
+  // Comparação com o mesmo intervalo um mês antes (1–25/set → 1–25/ago).
+  const anterior = periodoAnteriorComparavel(start, end);
+  const [metricsAnt, clientes, clientesAnt, serieClientes] = await Promise.all([
+    calcularMetricasPeriodo(anterior.inicio, anterior.fim, vendorsFilter),
+    clientesNoPeriodo(start, end, vendorsFilter),
+    clientesNoPeriodo(anterior.inicio, anterior.fim, vendorsFilter),
+    // A série segue hoje, como o gráfico de faturamento — não o filtro de datas.
+    serieMensalClientes(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1))),
+  ]);
+  const diaMes = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", timeZone: "UTC" });
+  const baseComparacao = `vs ${diaMes.format(anterior.inicio).replace(".", "").replace(" de ", "/")}–${diaMes
+    .format(new Date(anterior.fim.getTime() - 1))
+    .replace(".", "")
+    .replace(" de ", "/")}`;
+  const tendencia = (atual: number, antes: number) => {
+    const v = variacao(atual, antes);
+    if (v.percentual === null) return undefined;
+    return {
+      value: v.percentual,
+      direction: (v.percentual > 0 ? "up" : v.percentual < 0 ? "down" : "neutral") as "up" | "down" | "neutral",
+      label: baseComparacao,
+    };
+  };
+  const tikAnt = metricsAnt.totalVendas ? metricsAnt.receita / metricsAnt.totalVendas : 0;
 
   const teamRows = Object.entries(porVendedor)
     .map(([vendedor, r]) => ({
@@ -273,11 +301,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
             <CardStats
               title="Faturamento Total"
               value={formatBRL(totalReceita)}
               description={`${peds} vendas`}
+              trend={tendencia(totalReceita, metricsAnt.receita)}
               icon={Wallet}
               color="info"
               className="stagger-1 !p-3 sm:!p-5 lg:!p-6"
@@ -287,19 +316,27 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               value={formatBRL(lucro)}
               description={<>Margem: <span className="valor-sensivel">{margem.toFixed(1)}%</span></>}
               icon={TrendingUp}
-              trend={{
-                value: margem,
-                direction: margem >= 20 ? "up" : margem >= 10 ? "neutral" : "down",
-              }}
+              trend={tendencia(lucro, metricsAnt.lucro)}
               color="success"
               className="stagger-2 !p-3 sm:!p-5 lg:!p-6"
             />
             <CardStats
               title="Ticket Médio"
               value={formatBRL(tik)}
+              trend={tendencia(tik, tikAnt)}
               icon={ShoppingCart}
               color="info"
               className="stagger-3 !p-3 sm:!p-5 lg:!p-6"
+            />
+            <CardStats
+              title="Clientes que compraram"
+              value={clientes.total}
+              valorSensivel={false}
+              description={`${clientes.novos} ${clientes.novos === 1 ? "novo" : "novos"} · ${clientes.recorrentes} ${clientes.recorrentes === 1 ? "recorrente" : "recorrentes"}`}
+              trend={tendencia(clientes.total, clientesAnt.total)}
+              icon={Users}
+              color="success"
+              className="stagger-4 !p-3 sm:!p-5 lg:!p-6"
             />
             <CardStats
               title="Top Performance"
@@ -310,11 +347,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               description={bestRev ? <span className="valor-sensivel">{formatBRL(bestRev.total)}</span> : undefined}
               icon={Trophy}
               color="warning"
-              className="stagger-4 !p-3 sm:!p-5 lg:!p-6"
+              className="stagger-5 col-span-2 !p-3 sm:!p-5 lg:!p-6 xl:col-span-1"
             />
           </div>
 
           <DashboardCharts evoData={evoData} topProdutos={topProd} />
+
+          <ClientesMesAMes meses={serieClientes} />
 
           <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3">
             <Card animated className="lg:col-span-2">
