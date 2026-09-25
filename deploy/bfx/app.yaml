@@ -27,6 +27,18 @@ spec:
     spec:
       imagePullSecrets:
         - name: ecr-creds
+      # 2026-09-25: a rede entre workers perde ~18% dos pacotes UDP para um dos
+      # CoreDNS (TCP chega 100%). Com o padrao do glibc (timeout 5s) uma consulta
+      # perdida estourava o connect do Prisma (P1001 "Can't reach bfx-db").
+      # timeout:1/attempts:3 refaz em 1s; single-request-reopen evita a corrida
+      # do conntrack entre as consultas A e AAAA no mesmo socket.
+      dnsConfig:
+        options:
+          - name: timeout
+            value: "1"
+          - name: attempts
+            value: "3"
+          - name: single-request-reopen
       initContainers:
         - name: wait-for-db
           image: postgres:16-alpine
