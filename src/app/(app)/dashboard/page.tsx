@@ -11,7 +11,7 @@ import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { ClientesMesAMes } from "@/components/clientes-mes-a-mes";
 import { clientesNoPeriodo, serieMensalClientes } from "@/lib/dashboard-clientes-db";
-import { periodoAnteriorComparavel, variacao } from "@/lib/dashboard-clientes";
+import { periodoAnteriorComparavel, ultimoDiaDoPeriodo, variacao } from "@/lib/dashboard-clientes";
 import { DateInput } from "@/components/ui/date-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
@@ -119,6 +119,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const vendasProd = await prisma.venda.findMany({
     where: {
       dataVenda: { gte: start, lt: end },
+      // Mesmo critério do resto do dashboard: cancelada/estornada não entra no top.
+      status: { not: { in: ["cancelada", "estornada"] } },
       vendedor: vendorsFilter ? { in: vendorsFilter } : undefined,
     },
     select: {
@@ -146,7 +148,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const bestRev = teamRows[0];
   const bestProf = [...teamRows].sort((a, b) => b.lucro - a.lucro)[0];
 
-  const formatDate = (d: Date) => new Intl.DateTimeFormat("pt-BR").format(d);
+  // UTC: as datas do filtro são dias de calendário à meia-noite UTC.
+  const formatDate = (d: Date) => new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(d);
 
   const evoData: { mes: string; total: number; lucro: number }[] = [];
   for (let i = 5; i >= 0; i--) {
@@ -187,8 +190,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       to: todayStr,
     },
   ];
+  // `end` é exclusivo (início do dia seguinte): o que o usuário filtrou é o dia anterior.
+  // Usar `end` direto fazia o campo "Fim" andar um dia a cada Filtrar.
   const currentFromStr = start.toISOString().slice(0, 10);
-  const currentToStr = end.toISOString().slice(0, 10);
+  const currentToStr = ultimoDiaDoPeriodo(end);
 
   const avisos = await prisma.aviso.findMany({
     where: { ativo: 1 },
@@ -211,7 +216,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             />
             <p className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
               <Calendar className="h-4 w-4" />
-              {formatDate(start)} — {formatDate(end)}
+              {formatDate(start)} — {formatDate(new Date(`${currentToStr}T12:00:00Z`))}
             </p>
           </div>
           
@@ -227,9 +232,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     href={`/dashboard?from=${s.from}&to=${s.to}${vendorsParam}`}
                     className={cn(
                       buttonVariants({ variant: "outline", size: "sm" }),
-                      "h-7 px-3 text-xs",
+                      "px-3",
                       isActive && "bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
                     )}
+                    aria-current={isActive ? "true" : undefined}
                   >
                     {s.label}
                   </Link>
@@ -240,11 +246,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <form className="grid grid-cols-2 items-end gap-2 sm:flex sm:flex-wrap sm:gap-3">
               <div className="space-y-1.5">
                 <label htmlFor="filter-from" className="label-form">Início</label>
-                <DateInput id="filter-from" name="from" defaultValue={start.toISOString().slice(0, 10)} />
+                <DateInput id="filter-from" name="from" defaultValue={currentFromStr} />
               </div>
               <div className="space-y-1.5">
                 <label htmlFor="filter-to" className="label-form">Fim</label>
-                <DateInput id="filter-to" name="to" defaultValue={end.toISOString().slice(0, 10)} />
+                <DateInput id="filter-to" name="to" defaultValue={currentToStr} />
               </div>
               <div className="col-span-2 space-y-1.5 sm:min-w-[180px]">
                 <label htmlFor="filter-vendors" className="label-form">Vendedores</label>
@@ -305,7 +311,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <CardStats
               title="Faturamento Total"
               value={formatBRL(totalReceita)}
-              description={`${peds} vendas`}
+              description={`${peds} ${peds === 1 ? "venda" : "vendas"} · ${clientes.total} ${clientes.total === 1 ? "cliente" : "clientes"}`}
               trend={tendencia(totalReceita, metricsAnt.receita)}
               icon={Wallet}
               color="info"
@@ -353,7 +359,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
           <DashboardCharts evoData={evoData} topProdutos={topProd} />
 
-          <ClientesMesAMes meses={serieClientes} />
+          {/* Os dois cobrem os mesmos 6 meses, na mesma ordem: junta o faturamento
+              de cada mês ao número de clientes que o gerou. */}
+          <ClientesMesAMes
+            meses={serieClientes.map((m, i) => ({
+              ...m,
+              faturamento: evoData.length === serieClientes.length ? evoData[i]?.total : undefined,
+            }))}
+          />
 
           <div className="flex flex-col gap-4 lg:grid lg:grid-cols-3">
             <Card animated className="lg:col-span-2">
@@ -378,7 +391,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <TableRow className="bg-muted/30 hover:bg-muted/30">
                         <TableHead className="font-semibold">Vendedor</TableHead>
                         <TableHead className="text-right font-semibold max-sm:hidden">Vendas</TableHead>
-                        <TableHead className="text-right font-semibold">Fat.</TableHead>
+                        <TableHead className="text-right font-semibold">Faturamento</TableHead>
                         <TableHead className="text-right font-semibold">Lucro</TableHead>
                         <TableHead className="text-right font-semibold max-sm:hidden">Ticket</TableHead>
                         <TableHead className="text-right font-semibold">Margem</TableHead>
@@ -409,7 +422,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             </TableCell>
                             <TableCell className="text-right tabular-nums max-sm:hidden">{r.vendas}</TableCell>
                             <TableCell className="text-right tabular-nums font-medium valor-sensivel valor-sensivel-fim">{formatBRL(r.total)}</TableCell>
-                            <TableCell className="text-right tabular-nums text-success-text font-medium valor-sensivel valor-sensivel-fim">{formatBRL(r.lucro)}</TableCell>
+                            <TableCell className={cn("text-right tabular-nums font-medium valor-sensivel valor-sensivel-fim", r.lucro < 0 ? "text-error-text" : "text-success-text")}>{formatBRL(r.lucro)}</TableCell>
                             <TableCell className="text-right tabular-nums max-sm:hidden valor-sensivel valor-sensivel-fim">{formatBRL(r.ticket)}</TableCell>
                             <TableCell className="text-right">
                               <Badge

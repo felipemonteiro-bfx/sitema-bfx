@@ -53,3 +53,11 @@ describe("contarClientes", () => {
     expect(r).toEqual({ total: 3, novos: 2, recorrentes: 1 });
   });
 });
+
+describe("ultimoDiaDoPeriodo", () => {
+  it("o fim exclusivo (26/09 00:00) volta a ser o último dia filtrado (25/09), sem andar a cada Filtrar", async () => {
+    const { ultimoDiaDoPeriodo } = await import("@/lib/dashboard-clientes");
+    expect(ultimoDiaDoPeriodo(d("2026-09-26"))).toBe("2026-09-25");
+    expect(ultimoDiaDoPeriodo(d("2027-01-01"))).toBe("2026-12-31");
+  });
+});

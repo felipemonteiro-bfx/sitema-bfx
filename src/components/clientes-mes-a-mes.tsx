@@ -4,7 +4,7 @@ import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, 
 import { Users } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { cn, formatBRL } from "@/lib/utils";
 
 export type MesClientes = {
   mes: string;
@@ -13,6 +13,8 @@ export type MesClientes = {
   novos: number;
   recorrentes: number;
   vendas: number;
+  /** Faturamento do mês (mesmo cálculo do gráfico de faturamento), quando disponível. */
+  faturamento?: number;
   /** Variação contra o mês anterior (o corrente compara com os mesmos dias). */
   variacao: { diferenca: number; percentual: number | null; base: string } | null;
 };
@@ -95,19 +97,26 @@ export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Mês</TableHead>
+                <TableHead className="text-right">Faturamento</TableHead>
                 <TableHead className="text-right">Clientes</TableHead>
-                <TableHead className="text-right">Novos</TableHead>
-                <TableHead className="text-right">Vendas</TableHead>
-                <TableHead className="text-right">vs mês anterior</TableHead>
+                <TableHead className="text-right">Por cliente</TableHead>
+                <TableHead className="text-right">Clientes vs mês anterior</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {[...meses].reverse().map((m) => (
                 <TableRow key={m.mesLongo}>
                   <TableCell>{m.mesLongo}</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">{m.total}</TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">{m.novos}</TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">{m.vendas}</TableCell>
+                  <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
+                    {m.faturamento === undefined ? "—" : formatBRL(m.faturamento)}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold tabular-nums">
+                    {m.total}
+                    <span className="block text-xs font-normal text-muted-foreground">{m.novos} {m.novos === 1 ? "novo" : "novos"}</span>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground valor-sensivel valor-sensivel-fim">
+                    {m.faturamento === undefined || m.total === 0 ? "—" : formatBRL(m.faturamento / m.total)}
+                  </TableCell>
                   <TableCell
                     className={cn(
                       "text-right font-semibold tabular-nums",

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +21,7 @@ import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -39,13 +41,13 @@ export default function LoginPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || "Falha no login.");
+        setError(data.error || "Usuário ou senha incorretos.");
         return;
       }
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Erro ao conectar.");
+      setError("Não foi possível conectar. Verifique a internet e tente de novo.");
     }
   }
 
@@ -74,10 +76,15 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Usuário</FormLabel>
                     <FormControl>
+                      {/* Sem placeholder de exemplo: "admin" ali entregava o nome
+                          do usuario administrador a qualquer visitante. */}
                       <Input
                         {...field}
-                        placeholder="admin"
                         autoComplete="username"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        autoFocus
                       />
                     </FormControl>
                     <FormMessage />
@@ -90,25 +97,46 @@ export default function LoginPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="password"
-                        placeholder="••••••••"
-                        autoComplete="current-password"
-                      />
-                    </FormControl>
+                    <div className="relative">
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type={mostrarSenha ? "text" : "password"}
+                          autoComplete="current-password"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          className="pr-11"
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setMostrarSenha((v) => !v)}
+                        aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                        aria-pressed={mostrarSenha}
+                        className="absolute right-0 top-0 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+                      >
+                        {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              {error && <div className="text-sm text-destructive">{error}</div>}
+              {/* Sempre no DOM: o role="alert" so anuncia quando o texto muda
+                  dentro de uma regiao que ja existia. */}
+              <p role="alert" className="min-h-5 text-sm text-error-text">
+                {error}
+              </p>
               <Button
                 type="submit"
                 className="w-full"
-                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
+                loadingText="Entrando…"
               >
-                {form.formState.isSubmitting ? "Entrando..." : "Entrar"}
+                Entrar
               </Button>
             </form>
           </Form>

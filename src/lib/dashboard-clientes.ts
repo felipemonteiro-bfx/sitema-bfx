@@ -49,3 +49,8 @@ export function contarClientes(
   }
   return { total: ids.size, novos, recorrentes: ids.size - novos };
 }
+
+/** "YYYY-MM-DD" do último dia de um período com fim exclusivo (26/09 00:00 → "2026-09-25"). */
+export function ultimoDiaDoPeriodo(fimExclusivo: Date): string {
+  return new Date(fimExclusivo.getTime() - DIA).toISOString().slice(0, 10);
+}
