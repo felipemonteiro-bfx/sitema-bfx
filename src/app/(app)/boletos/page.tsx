@@ -20,7 +20,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { QueryTabs } from "@/components/query-tabs";
 import type { AsaasPaymentListItem } from "@/lib/asaas";
 import { BoletosFiltros } from "@/components/boletos-filtros";
-import { filtrarBoletos, intervaloDoPeriodo, lerFiltroBoletos } from "@/lib/boletos-filtro";
+import { filtrarBoletos, intervaloDaSituacao, intervaloDoPeriodo, lerFiltroBoletos } from "@/lib/boletos-filtro";
 import { hojeDataPura } from "@/lib/data-pura";
 import { PageHeader } from "@/components/page-header";
 
@@ -196,12 +196,21 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
   ]);
   const vendaPorRef = new Map(vendasDosBoletos.map((v) => [String(v.id), { cliente: v.cliente?.nome ?? null, empresa: v.cliente?.empresa ?? null }]));
 
-  const filtrar = (items: AsaasPaymentListItem[], campo: "dueDate" | "paymentDate") =>
-    filtrarBoletos(items, { intervalo, campo, empresa: filtro.empresa, q }, vendaPorRef);
+  const filtrar = (items: AsaasPaymentListItem[], situacao: "vencidos" | "avencer" | "pagos") =>
+    filtrarBoletos(
+      items,
+      {
+        intervalo: intervaloDaSituacao(situacao, intervalo),
+        campo: situacao === "pagos" ? "paymentDate" : "dueDate",
+        empresa: filtro.empresa,
+        q,
+      },
+      vendaPorRef
+    );
 
-  const filteredVencidos = filtrar(vencidos, "dueDate");
-  const filteredAVencer = filtrar(aVencer, "dueDate");
-  const filteredPagos = filtrar(pagos, "paymentDate");
+  const filteredVencidos = filtrar(vencidos, "vencidos");
+  const filteredAVencer = filtrar(aVencer, "avencer");
+  const filteredPagos = filtrar(pagos, "pagos");
 
   const soma = (items: AsaasPaymentListItem[]) => items.reduce((s, p) => s + p.value, 0);
   const totalVencidos = soma(filteredVencidos);
@@ -269,7 +278,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
 
       {/* Summary cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <CardStats title="Vencidos" value={formatBRL(totalVencidos)} description={resumoCartao(filteredVencidos)} icon={AlertTriangle} color="error" />
+        <CardStats title="Vencidos (todo atraso)" value={formatBRL(totalVencidos)} description={resumoCartao(filteredVencidos)} icon={AlertTriangle} color="error" />
         <CardStats title="A vencer" value={formatBRL(totalAVencer)} description={resumoCartao(filteredAVencer)} icon={Clock} color="warning" />
         <CardStats title="Pagos" value={formatBRL(totalPagos)} description={resumoCartao(filteredPagos)} icon={CheckCircle2} color="success" />
       </div>
@@ -317,7 +326,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                   <CardTitle className="flex items-center gap-2 text-base">
                     <AlertTriangle className="h-5 w-5 text-destructive" />
                     Vencidos
-                    <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
+                    <span className="text-xs font-normal text-muted-foreground">· todo atraso{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">

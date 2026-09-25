@@ -24,7 +24,9 @@ Comparação mês a mês" e do print do filtro de período do Asaas.
 
 - Filtro de **período** (Hoje, Esta semana, Este mês — padrão —, Este ano, Desde o início,
   Personalizado de/até), **empresa** e busca por cliente ou descrição. Tudo na URL.
-- Vencidos e a vencer filtram por vencimento; pagos por data do pagamento. Cartões e abas obedecem.
+- A vencer filtra por vencimento; pagos por data do pagamento. **Vencidos ignoram o período**: é
+  todo o atraso, de qualquer mês (decisão do André em 25/09 — atraso não pode sumir com o filtro).
+  Empresa e busca valem para os três. Cartões e abas obedecem.
 - Cartões mostram `N boletos · M clientes`.
 - Correção junto: a lista do Asaas vinha só com os 100 primeiros de cada status (os cartões
   mostravam 100/200 redondos). Agora pagina até esgotar (teto 2.000 por status).

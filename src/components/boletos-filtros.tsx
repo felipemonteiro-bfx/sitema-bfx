@@ -137,7 +137,7 @@ export function BoletosFiltros({ tab, filtro, empresas, resumoPeriodo }: Props) 
       </form>
 
       <span className="basis-full text-xs text-muted-foreground lg:ml-auto lg:basis-auto">
-        Vencidos e a vencer pela data de vencimento · pagos pela data do pagamento
+        Vencidos: todo atraso · a vencer pelo vencimento · pagos pela data do pagamento
       </span>
     </div>
   );

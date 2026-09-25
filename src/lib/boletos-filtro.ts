@@ -56,6 +56,15 @@ export function intervaloDoPeriodo(f: Pick<FiltroBoletos, "periodo" | "de" | "at
   }
 }
 
+/**
+ * O período vale para "a vencer" e "pagos". Vencido é tudo o que está em atraso,
+ * de qualquer mês — é o que precisa de cobrança e não pode sumir com o filtro
+ * (decisão do André em 25/09).
+ */
+export function intervaloDaSituacao(situacao: "vencidos" | "avencer" | "pagos", intervalo: Intervalo | null): Intervalo | null {
+  return situacao === "vencidos" ? null : intervalo;
+}
+
 const semAcento = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
 type BoletoFiltravel = { dueDate: string; paymentDate?: string; description?: string; externalReference?: string };

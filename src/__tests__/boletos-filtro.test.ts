@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filtrarBoletos, intervaloDoPeriodo, lerFiltroBoletos } from "@/lib/boletos-filtro";
+import { filtrarBoletos, intervaloDaSituacao, intervaloDoPeriodo, lerFiltroBoletos } from "@/lib/boletos-filtro";
 
 const hoje = "2026-09-25"; // sexta-feira
 
@@ -49,5 +49,14 @@ describe("filtrarBoletos", () => {
     expect(filtrarBoletos(boletos, { intervalo: null, campo: "dueDate", q: "bruno" }, vendas).map((b) => b.id)).toEqual(["b"]);
     expect(filtrarBoletos(boletos, { intervalo: null, campo: "dueDate", q: "avulso" }, vendas).map((b) => b.id)).toEqual(["c"]);
     expect(filtrarBoletos(boletos, { intervalo: null, campo: "dueDate", empresa: "MIRAX SEGURANCA", q: "" }, vendas).map((b) => b.id)).toEqual(["b"]);
+  });
+});
+
+describe("intervaloDaSituacao", () => {
+  it("vencidos mostram todo atraso; a vencer e pagos seguem o período", () => {
+    const mes = { de: "2026-09-01", ate: "2026-09-30" };
+    expect(intervaloDaSituacao("vencidos", mes)).toBeNull();
+    expect(intervaloDaSituacao("avencer", mes)).toEqual(mes);
+    expect(intervaloDaSituacao("pagos", mes)).toEqual(mes);
   });
 });
