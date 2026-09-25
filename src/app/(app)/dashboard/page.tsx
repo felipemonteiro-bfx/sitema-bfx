@@ -153,7 +153,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     const mesStart = new Date(Date.UTC(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0));
     const mesEnd = new Date(Date.UTC(ref.getFullYear(), ref.getMonth() + 1, 1, 0, 0, 0, 0));
     const m = await calcularMetricasPeriodo(mesStart, mesEnd);
-    const mesLabel = new Intl.DateTimeFormat("pt-BR", { month: "short", year: "numeric" }).format(mesStart);
+    // "abr/26" em vez de "abr. de 2026": seis rótulos cabem sem repetir o ano por extenso.
+    const mesLabel = `${new Intl.DateTimeFormat("pt-BR", { month: "short", timeZone: "UTC" }).format(mesStart).replace(".", "")}/${String(mesStart.getUTCFullYear()).slice(2)}`;
     evoData.push({
       mes: mesLabel,
       total: Math.trunc(m.receita * 100) / 100,

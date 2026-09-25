@@ -151,21 +151,6 @@ export function KpiCard({
   return (
     <Card className={cn("relative overflow-hidden p-4 sm:p-5", estilo.borda, className)}>
       <div className={cn("pointer-events-none absolute inset-0", estilo.fundo)} aria-hidden="true" />
-      {d && (
-        <svg
-          viewBox="0 0 100 32"
-          preserveAspectRatio="none"
-          className={cn(
-            "kpi-tendencia pointer-events-none absolute inset-x-0 bottom-0 h-10 w-full opacity-35",
-            estilo.linha,
-            valorSensivel && "bloco-sensivel"
-          )}
-          style={{ animationDelay: `${ordem * PASSO_MS}ms` }}
-          aria-hidden="true"
-        >
-          <path d={d} pathLength={100} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" />
-        </svg>
-      )}
       {/* Três linhas de altura fixa: os valores de todos os cartões ficam na mesma linha. */}
       <div className="relative grid grid-rows-[1.25rem_2.25rem_1.25rem_1.75rem] gap-y-1.5">
         <div className="flex items-center justify-between gap-2">
@@ -202,6 +187,23 @@ export function KpiCard({
           <div />
         )}
       </div>
+      {/* Linha no rodapé, abaixo da variação e sangrando até a borda: antes era
+          absoluta e passava por cima do "▼ 52% vs …". */}
+      {d && (
+        <svg
+          viewBox="0 0 100 32"
+          preserveAspectRatio="none"
+          className={cn(
+            "kpi-tendencia pointer-events-none relative -mx-4 -mb-4 mt-2 block h-8 w-[calc(100%+2rem)] opacity-35 sm:-mx-5 sm:-mb-5 sm:w-[calc(100%+2.5rem)]",
+            estilo.linha,
+            valorSensivel && "bloco-sensivel"
+          )}
+          style={{ animationDelay: `${ordem * PASSO_MS}ms` }}
+          aria-hidden="true"
+        >
+          <path d={d} pathLength={100} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        </svg>
+      )}
     </Card>
   );
 }

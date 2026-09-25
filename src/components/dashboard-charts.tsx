@@ -11,9 +11,15 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { EmptyStateInline } from "@/components/ui/empty-state";
 import { TrendingUp, Package, BarChart3 } from "lucide-react";
+
+function passoRedondo(bruto: number): number {
+  if (!(bruto > 0)) return 1;
+  const potencia = 10 ** Math.floor(Math.log10(bruto));
+  const f = bruto / potencia;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * potencia;
+}
 
 function currency(v: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -107,6 +113,11 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
   const maxY = Math.max(...allY, 0);
   const minY = Math.min(...allY, 0);
   const pad = (maxY - minY) * 0.1;
+  // Eixo em degraus redondos (1-2-2,5-5 × 10ⁿ): o respiro de 10% gerava um topo
+  // quebrado como "R$ 51.052" colado em "R$ 45.000".
+  const passo = passoRedondo((maxY - Math.min(minY, 0)) / 4);
+  const topo = Math.ceil(maxY / passo) * passo || passo;
+  const ticks = minY < 0 ? undefined : Array.from({ length: Math.round(topo / passo) + 1 }, (_, i) => i * passo);
 
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
@@ -132,7 +143,8 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
         <YAxis
           // Sem valor negativo, o eixo começa em R$ 0: o respiro de 10% embaixo
           // gerava um "-R$ 4.641" que não existe nos dados.
-          domain={[minY < 0 ? minY - pad : 0, maxY + pad]}
+          domain={minY < 0 ? [minY - pad, maxY + pad] : [0, topo]}
+          ticks={ticks}
           tickFormatter={(v) => currency(Number(v))}
           tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
           axisLine={false}
@@ -242,19 +254,20 @@ export function DashboardCharts({
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-chart-1/10">
                 <TrendingUp className="h-4 w-4 text-chart-1" />
               </div>
-              Evolução Mensal
+              Evolução mensal
             </CardTitle>
             <p className="text-xs text-muted-foreground">Últimos 6 meses</p>
           </div>
-          <div className="flex gap-2 flex-wrap justify-end">
-            <Badge variant="outline" size="sm" className="gap-1">
-              <div className="h-2 w-2 rounded-full bg-chart-1" />
+          {/* Mesma legenda do "Clientes que compraram": ponto + texto, sem caixa. */}
+          <div className="flex flex-wrap justify-end gap-4 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-chart-1" aria-hidden="true" />
               Custo
-            </Badge>
-            <Badge variant="outline" size="sm" className="gap-1">
-              <div className={`h-2 w-2 rounded-full ${hasNeg ? "bg-destructive" : "bg-success"}`} />
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className={`h-2.5 w-2.5 rounded-sm ${hasNeg ? "bg-destructive" : "bg-success"}`} aria-hidden="true" />
               Faturamento
-            </Badge>
+            </span>
           </div>
         </CardHeader>
         <CardContent className="h-72 min-h-[288px] bloco-sensivel">
@@ -276,9 +289,8 @@ export function DashboardCharts({
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-chart-3/10">
                 <Package className="h-4 w-4 text-chart-3" />
               </div>
-              Top Produtos
+              Top produtos
             </CardTitle>
-            <Badge variant="secondary" size="sm">Top 5</Badge>
           </div>
           <p className="text-xs text-muted-foreground">Unidades vendidas no período</p>
         </CardHeader>
