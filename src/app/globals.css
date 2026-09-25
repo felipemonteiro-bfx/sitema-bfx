@@ -665,6 +665,29 @@
 .stagger-3 { animation-delay: 150ms; }
 .stagger-4 { animation-delay: 200ms; }
 .stagger-5 { animation-delay: 250ms; }
+
+/* Linha de tendencia dos cartoes do Dashboard: desenha da esquerda para a
+   direita (900 ms, ease-out). O atraso por cartao vem inline. Com
+   prefers-reduced-motion a regra global zera duracao e atraso: a linha ja aparece. */
+.kpi-tendencia path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: kpi-desenhar 900ms cubic-bezier(0.2, 0, 0, 1) forwards;
+  animation-delay: inherit;
+}
+@keyframes kpi-desenhar {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Barras do Top produtos crescem da esquerda (500 ms), escalonadas inline. */
+.barra-crescer {
+  transform-origin: left center;
+  animation: barra-crescer 500ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+@keyframes barra-crescer {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
 .stagger-6 { animation-delay: 300ms; }
 .stagger-7 { animation-delay: 350ms; }
 .stagger-8 { animation-delay: 400ms; }
@@ -950,6 +973,7 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }

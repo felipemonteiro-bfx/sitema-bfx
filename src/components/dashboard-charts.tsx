@@ -2,8 +2,6 @@
 
 import {
   Area,
-  Bar,
-  BarChart,
   CartesianGrid,
   ComposedChart,
   Line,
@@ -87,25 +85,6 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
-function TopTooltip({ active, payload }: { active?: boolean; payload?: { payload: TopRow }[] }) {
-  if (!active || !payload || payload.length === 0) return null;
-  const item = payload[0]?.payload;
-  return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg dark:shadow-[var(--shadow-lg)] animate-fade-in">
-      <div className="font-semibold text-foreground mb-1">{item.label}</div>
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Package className="h-3.5 w-3.5" />
-        <span className="text-sm">{item.value} unidades vendidas</span>
-      </div>
-    </div>
-  );
-}
-
-function shorten(label: string, max = 18) {
-  if (label.length <= max) return label;
-  return `${label.slice(0, max - 1)}…`;
-}
-
 function EvoChart({ evoData }: { evoData: EvoRow[] }) {
   const chartData: ChartRow[] = evoData.map((d) => {
     const custo = d.total - d.lucro;
@@ -151,7 +130,9 @@ function EvoChart({ evoData }: { evoData: EvoRow[] }) {
           tickLine={false}
         />
         <YAxis
-          domain={[minY - pad, maxY + pad]}
+          // Sem valor negativo, o eixo começa em R$ 0: o respiro de 10% embaixo
+          // gerava um "-R$ 4.641" que não existe nos dados.
+          domain={[minY < 0 ? minY - pad : 0, maxY + pad]}
           tickFormatter={(v) => currency(Number(v))}
           tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
           axisLine={false}
@@ -299,56 +280,35 @@ export function DashboardCharts({
             </CardTitle>
             <Badge variant="secondary" size="sm">Top 5</Badge>
           </div>
-          <p className="text-xs text-muted-foreground">Por volume de vendas</p>
+          <p className="text-xs text-muted-foreground">Unidades vendidas no período</p>
         </CardHeader>
-        <CardContent className="h-72 min-h-[288px] bloco-sensivel">
+        <CardContent className="min-h-72 bloco-sensivel">
           {topProdutos.length === 0 ? (
             <EmptyStateInline
               message="Sem dados de produtos"
               icon={Package}
             />
           ) : (
-            <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
-              <BarChart
-                data={[...topProdutos].sort((a, b) => a.value - b.value)}
-                layout="vertical"
-                margin={{ left: 12, right: 16, top: 8, bottom: 4 }}
-              >
-                <defs>
-                  <linearGradient id="barFill" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="var(--chart-3)" stopOpacity={0.7} />
-                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.9} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" opacity={0.4} />
-                <XAxis
-                  type="number"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="label"
-                  width={120}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  tickFormatter={(value) => shorten(String(value))}
-                />
-                <Tooltip
-                  cursor={{ fill: "var(--muted)", opacity: 0.1 }}
-                  content={<TopTooltip />}
-                />
-                <Bar
-                  dataKey="value"
-                  fill="url(#barFill)"
-                  radius={[0, 6, 6, 0]}
-                  animationDuration={800}
-                  animationEasing="ease-out"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            // Lista com barra (nome inteiro + quantidade), uma cor só: o gráfico
+            // anterior cortava os nomes e pintava as barras em degradê laranja→azul.
+            <ol className="space-y-3.5">
+              {[...topProdutos]
+                .sort((a, b) => b.value - a.value)
+                .map((p, i, lista) => (
+                  <li key={p.label} className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-3 text-sm">
+                      <span className="min-w-0 truncate" title={p.label}>{p.label}</span>
+                      <span className="shrink-0 font-semibold tabular-nums">{p.value} un.</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+                      <div
+                        className="barra-crescer h-full rounded-full bg-primary"
+                        style={{ width: `${(p.value / lista[0].value) * 100}%`, animationDelay: `${200 + i * 40}ms` }}
+                      />
+                    </div>
+                  </li>
+                ))}
+            </ol>
           )}
         </CardContent>
       </Card>

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { calcularMetricasPeriodo } from "@/lib/finance";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { VendorMultiSelect } from "@/components/vendor-multiselect";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { ClientesMesAMes } from "@/components/clientes-mes-a-mes";
+import { KpiCard } from "@/components/kpi-card";
 import { clientesNoPeriodo, serieMensalClientes } from "@/lib/dashboard-clientes-db";
 import { periodoAnteriorComparavel, ultimoDiaDoPeriodo, variacao } from "@/lib/dashboard-clientes";
 import { DateInput } from "@/components/ui/date-input";
@@ -94,14 +95,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     .format(new Date(anterior.fim.getTime() - 1))
     .replace(".", "")
     .replace(" de ", "/")}`;
-  const tendencia = (atual: number, antes: number) => {
+  const variacaoKpi = (atual: number, antes: number) => {
     const v = variacao(atual, antes);
-    if (v.percentual === null) return undefined;
-    return {
-      value: v.percentual,
-      direction: (v.percentual > 0 ? "up" : v.percentual < 0 ? "down" : "neutral") as "up" | "down" | "neutral",
-      label: baseComparacao,
-    };
+    return v.percentual === null ? null : { percentual: v.percentual, rotulo: baseComparacao };
   };
   const tikAnt = metricsAnt.totalVendas ? metricsAnt.receita / metricsAnt.totalVendas : 0;
 
@@ -151,7 +147,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   // UTC: as datas do filtro são dias de calendário à meia-noite UTC.
   const formatDate = (d: Date) => new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(d);
 
-  const evoData: { mes: string; total: number; lucro: number }[] = [];
+  const evoData: { mes: string; total: number; lucro: number; vendas: number }[] = [];
   for (let i = 5; i >= 0; i--) {
     const ref = new Date(today.getFullYear(), today.getMonth() - i, 1);
     const mesStart = new Date(Date.UTC(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0));
@@ -162,6 +158,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       mes: mesLabel,
       total: Math.trunc(m.receita * 100) / 100,
       lucro: Math.trunc(m.lucro * 100) / 100,
+      vendas: m.totalVendas,
     });
   }
 
@@ -307,53 +304,61 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         />
       ) : (
         <>
+          {/* Variante C aprovada em 25/09: 3 linhas fixas por cartão, contagem até o
+              valor e a linha dos últimos 6 meses ao fundo (kpi-card.tsx). */}
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
-            <CardStats
-              title="Faturamento Total"
-              value={formatBRL(totalReceita)}
-              description={`${peds} ${peds === 1 ? "venda" : "vendas"} · ${clientes.total} ${clientes.total === 1 ? "cliente" : "clientes"}`}
-              trend={tendencia(totalReceita, metricsAnt.receita)}
-              icon={Wallet}
-              color="info"
-              className="stagger-1 !p-3 sm:!p-5 lg:!p-6"
+            <KpiCard
+              ordem={0}
+              titulo="Faturamento"
+              icone="carteira"
+              tom="info"
+              valor={totalReceita}
+              contexto={`${peds} ${peds === 1 ? "venda" : "vendas"} · ${clientes.total} ${clientes.total === 1 ? "cliente" : "clientes"}`}
+              variacao={variacaoKpi(totalReceita, metricsAnt.receita)}
+              tendencia={evoData.map((m) => m.total)}
             />
-            <CardStats
-              title="Lucro Líquido"
-              value={formatBRL(lucro)}
-              description={<>Margem: <span className="valor-sensivel">{margem.toFixed(1)}%</span></>}
-              icon={TrendingUp}
-              trend={tendencia(lucro, metricsAnt.lucro)}
-              color="success"
-              className="stagger-2 !p-3 sm:!p-5 lg:!p-6"
+            <KpiCard
+              ordem={1}
+              titulo="Lucro líquido"
+              icone="lucro"
+              tom="success"
+              valor={lucro}
+              contexto={<>Margem <span className="valor-sensivel">{margem.toFixed(1).replace(".", ",")}%</span></>}
+              variacao={variacaoKpi(lucro, metricsAnt.lucro)}
+              tendencia={evoData.map((m) => m.lucro)}
             />
-            <CardStats
-              title="Ticket Médio"
-              value={formatBRL(tik)}
-              trend={tendencia(tik, tikAnt)}
-              icon={ShoppingCart}
-              color="info"
-              className="stagger-3 !p-3 sm:!p-5 lg:!p-6"
+            <KpiCard
+              ordem={2}
+              titulo="Ticket médio"
+              icone="carrinho"
+              tom="info"
+              valor={tik}
+              contexto="por venda"
+              variacao={variacaoKpi(tik, tikAnt)}
+              tendencia={evoData.map((m) => (m.vendas ? m.total / m.vendas : 0))}
             />
-            <CardStats
-              title="Clientes que compraram"
-              value={clientes.total}
+            <KpiCard
+              ordem={3}
+              titulo="Clientes"
+              icone="clientes"
+              tom="success"
+              valor={clientes.total}
+              formato="int"
               valorSensivel={false}
-              description={`${clientes.novos} ${clientes.novos === 1 ? "novo" : "novos"} · ${clientes.recorrentes} ${clientes.recorrentes === 1 ? "recorrente" : "recorrentes"}`}
-              trend={tendencia(clientes.total, clientesAnt.total)}
-              icon={Users}
-              color="success"
-              className="stagger-4 !p-3 sm:!p-5 lg:!p-6"
+              contexto={`${clientes.novos} ${clientes.novos === 1 ? "novo" : "novos"} · ${clientes.recorrentes} ${clientes.recorrentes === 1 ? "recorrente" : "recorrentes"}`}
+              variacao={variacaoKpi(clientes.total, clientesAnt.total)}
+              tendencia={serieClientes.map((m) => m.total)}
             />
-            <CardStats
-              title="Top Performance"
-              value={bestRev?.vendedor || "—"}
-              // O valor deste card e' o NOME do vendedor, nao dinheiro: aqui o modo
-              // discreto oculta o total, que vai na descricao.
+            <KpiCard
+              ordem={4}
+              titulo="Top vendedor"
+              icone="trofeu"
+              tom="warning"
+              texto={bestRev?.vendedor || "—"}
+              // O valor deste card e' o NOME do vendedor: o modo discreto oculta o total, no contexto.
               valorSensivel={false}
-              description={bestRev ? <span className="valor-sensivel">{formatBRL(bestRev.total)}</span> : undefined}
-              icon={Trophy}
-              color="warning"
-              className="stagger-5 col-span-2 !p-3 sm:!p-5 lg:!p-6 xl:col-span-1"
+              contexto={bestRev ? <span className="valor-sensivel">{formatBRL(bestRev.total)}</span> : "sem vendas"}
+              className="col-span-2 xl:col-span-1"
             />
           </div>
 
