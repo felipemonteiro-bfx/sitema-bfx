@@ -135,9 +135,17 @@ describe("processarRelatorioMensal", () => {
       expect.objectContaining({ select: expect.objectContaining({ emailCopia: true }) })
     );
     expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: "rh@empresa.test", cc: ["fin@prudent.test"] }));
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ registro: { tipo: "mensal", empresaId: 7, origem: "automatico" } }));
+    expect(dbMock.notificacao.create).toHaveBeenCalledWith({ data: expect.objectContaining({ link: "/relatorios/emails?empresa=7" }) });
     expect(dbMock.relatorioEnvioLog.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ create: expect.objectContaining({ destinatarios: "rh@empresa.test, fin@prudent.test" }) })
     );
+  });
+
+  it("reenvio manual grava origem manual no historico", async () => {
+    dbMock.venda.findMany.mockResolvedValue([venda()]);
+    await processarRelatorioMensal({ periodo: "2026-09", force: true, origem: "manual" });
+    expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ registro: { tipo: "mensal", empresaId: 7, origem: "manual" } }));
   });
 
   it("registra sem_email sem enviar quando a empresa canonica nao tem emailRh", async () => {

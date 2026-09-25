@@ -16,6 +16,7 @@ import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { obterDocumentoPorVendaETipo } from "@/lib/documento-service";
 import { assertSafeEmailAddresses, buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
 import { emailsCopia } from "@/lib/email-copia";
+import { linkHistoricoEmails, registrarEnvio, type OrigemEmail, type RegistroEnvio } from "@/lib/email-historico";
 import { TERMO_EMAIL_STATUS_VALUES, type TermoEmailStatus } from "@/lib/termo-email-status";
 import { agruparVendasPorSemana, type VendaSemanal } from "@/lib/relatorio-semanal";
 
@@ -37,6 +38,8 @@ type SendEmailOptions = {
   html: string;
   cc?: string[];
   attachments?: EmailAttachment[];
+  /** Grava a tentativa no histórico de e-mails (`email_envios`). */
+  registro?: RegistroEnvio;
 };
 
 type TermoEmailResult = {
@@ -102,20 +105,32 @@ function escapeHtml(s: string): string {
 export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   const toList = Array.isArray(opts.to) ? opts.to : [opts.to];
   const ccList = opts.cc || [];
-  assertSafeEmailAddresses(toList, "destinatário");
-  assertSafeEmailAddresses(ccList, "Cc");
+  let remetente = "";
+  try {
+    assertSafeEmailAddresses(toList, "destinatário");
+    assertSafeEmailAddresses(ccList, "Cc");
 
-  const cfg = await getSmtpConfig();
-  if (!cfg) {
-    throw new Error("SMTP não configurado");
+    const cfg = await getSmtpConfig();
+    if (!cfg) {
+      throw new Error("SMTP não configurado");
+    }
+    remetente = cfg.from;
+
+    assertSafeEmailAddresses([cfg.from], "remetente");
+    const allRecipients = [...toList, ...ccList];
+
+    const message = buildMimeMessage(opts, cfg.from);
+
+    await smtpSend(cfg, allRecipients, message, toList.length);
+  } catch (error) {
+    if (opts.registro) await registrarEnvio(opts.registro, dadosDoEnvio(opts, remetente, toList, ccList, sanitizeEmailError(error)));
+    throw error;
   }
+  if (opts.registro) await registrarEnvio(opts.registro, dadosDoEnvio(opts, remetente, toList, ccList, null));
+}
 
-  assertSafeEmailAddresses([cfg.from], "remetente");
-  const allRecipients = [...toList, ...ccList];
-
-  const message = buildMimeMessage(opts, cfg.from);
-
-  await smtpSend(cfg, allRecipients, message, toList.length);
+function dadosDoEnvio(opts: SendEmailOptions, remetente: string, para: string[], cc: string[], erro: string | null) {
+  return { remetente, para, cc, assunto: opts.subject, html: opts.html, anexos: opts.attachments ?? [], erro };
 }
 
 function sanitizeEmailError(error: unknown): string {
@@ -132,7 +147,10 @@ async function updateTermoEmailStatus(vendaId: number, data: {
 }
 
 /** Envia o termo assinado exclusivamente ao e-mail de RH da empresa parceira. */
-export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEmailResult> {
+export async function enviarTermoAssinadoAoRh(
+  vendaId: number,
+  opcoes: { origem?: OrigemEmail } = {}
+): Promise<TermoEmailResult> {
   const venda = await prisma.venda.findUnique({
     where: { id: vendaId },
     include: { cliente: true, itens: true, assinatura: true },
@@ -202,6 +220,7 @@ export async function enviarTermoAssinadoAoRh(vendaId: number): Promise<TermoEma
         contentType: "application/pdf",
         content: documento.buffer,
       }],
+      registro: { tipo: "termo", empresaId: empresa.id, vendaId, origem: opcoes.origem ?? "automatico" },
     });
     await updateTermoEmailStatus(vendaId, {
       termoEmailStatus: "enviado",
@@ -500,6 +519,7 @@ export async function sendVendaNotification(venda: VendaForEmail): Promise<boole
         to: toEmails,
         subject: `Nova venda — ${venda.cliente?.nome || "cliente"} (${empresa.nome})`,
         html,
+        registro: { tipo: "venda", empresaId: empresa.id, vendaId: venda.id },
       });
       await criarNotificacaoVenda(
         `Email enviado para ${empresa.nome}: venda #${venda.id} — ${venda.cliente?.nome || "cliente"} (${formatBRL(totalValor)})`,
@@ -578,7 +598,8 @@ export async function sendWeeklyReport(
   vendas: VendaRelatorio[],
   emailRh: string | null | undefined,
   periodo: PeriodoRelatorioSemanal,
-  cc: string[] = []
+  cc: string[] = [],
+  empresaId?: number
 ): Promise<void> {
   const smtpCfg = await getSmtpConfig();
 
@@ -646,11 +667,12 @@ export async function sendWeeklyReport(
       ...(cc.length > 0 ? { cc } : {}),
       subject: `Consolidado de Vendas — ${empresaNome} (${periodoLabel})`,
       html,
+      ...(empresaId ? { registro: { tipo: "semanal" as const, empresaId } } : {}),
     });
     await prisma.notificacao.create({
       data: {
         mensagem: `Relatório semanal enviado por email para ${empresaNome} (${vendas.length} vendas, ${formatBRL(totalGeral)})`,
-        link: `/relatorios`,
+        link: linkHistoricoEmails(empresaId),
         usuarioId: 1,
       },
     });
@@ -659,7 +681,7 @@ export async function sendWeeklyReport(
     await prisma.notificacao.create({
       data: {
         mensagem: `Falha ao enviar relatório semanal por email para ${empresaNome}`,
-        link: `/relatorios`,
+        link: linkHistoricoEmails(empresaId),
         usuarioId: 1,
       },
     });

@@ -44,7 +44,7 @@ describe("enviarEmailEmpresa no histórico", () => {
 
   it("envia o termo de venda assinada pelo serviço dedicado", async () => {
     await expect(enviarEmailEmpresa(42)).resolves.toEqual({ success: true });
-    expect(mocks.enviarTermoAssinadoAoRh).toHaveBeenCalledWith(42);
+    expect(mocks.enviarTermoAssinadoAoRh).toHaveBeenCalledWith(42, { origem: "manual" });
     expect(mocks.sendVendaNotification).not.toHaveBeenCalled();
   });
 

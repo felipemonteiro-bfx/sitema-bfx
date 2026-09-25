@@ -6,6 +6,7 @@ const { netConnectMock, smtpWrites } = vi.hoisted(() => ({
 }));
 
 const dbMock = {
+  emailEnvio: { create: vi.fn() },
   venda: { findUnique: vi.fn(), update: vi.fn() },
   empresaParceira: { findUnique: vi.fn(), findFirst: vi.fn() },
   config: { findFirst: vi.fn() },
@@ -160,6 +161,24 @@ describe("enviarTermoAssinadoAoRh", () => {
     expect(resultado.status).toBe("falhou");
     expect(resultado.error).toContain("rh@empresa.test");
     expect(smtpWrites.some((w) => w.trim() === "DATA")).toBe(false);
+  });
+
+  it("grava o termo no histórico de e-mails, com o PDF", async () => {
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+    await enviarTermoAssinadoAoRh(vendaId);
+
+    expect(dbMock.emailEnvio.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tipo: "termo", origem: "automatico", empresaId: 7, vendaId, status: "enviado",
+        anexos: { create: [expect.objectContaining({ nome: `termo-assinado-${vendaId}.pdf`, tamanho: pdf.length })] },
+      }),
+    });
+  });
+
+  it("reenvio manual do termo grava origem manual", async () => {
+    const { enviarTermoAssinadoAoRh } = await import("@/lib/email");
+    await enviarTermoAssinadoAoRh(vendaId, { origem: "manual" });
+    expect(dbMock.emailEnvio.create).toHaveBeenCalledWith({ data: expect.objectContaining({ tipo: "termo", origem: "manual" }) });
   });
 
   it("não usa emailsExtras nem WhatsApp", async () => {

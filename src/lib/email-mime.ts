@@ -19,15 +19,9 @@ export type MimeMessageInput = {
   attachments?: EmailAttachment[];
 };
 
-const EMAIL_ADDRESS_PATTERN = /^[^\s@<>(),:;[\]\\"]+@[^\s@<>(),:;[\]\\"]+$/;
+import { assertSafeEmailAddresses } from "@/lib/email-endereco";
 
-export function assertSafeEmailAddresses(addresses: string[], label = "endereço de e-mail"): void {
-  for (const address of addresses) {
-    if (!address || /[\u0000-\u001f\u007f]/.test(address) || !EMAIL_ADDRESS_PATTERN.test(address)) {
-      throw new Error(`${label} inválido`);
-    }
-  }
-}
+export { assertSafeEmailAddresses };
 
 /** Codifica string em base64 (headers/corpo). */
 export function toBase64(str: string): string {

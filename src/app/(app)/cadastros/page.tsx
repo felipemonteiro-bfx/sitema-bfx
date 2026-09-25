@@ -24,6 +24,7 @@ import { requireAdminOrThrow, requireSessionOrThrow } from "@/lib/guards";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
 import { recalcularConsignadoPendentes, recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { validarDiaRelatorioMensal } from "@/lib/relatorio-mensal-config";
+import { normalizarEmailsCopia } from "@/lib/email-copia";
 
 type Search = { tab?: string; q_clientes?: string; q_produtos?: string; q_fornecedores?: string; q_empresas?: string; editCliente?: string; editProduto?: string; editFornecedor?: string; editEmpresa?: string; error?: string; faixa_consignado?: string; empresa_parceira?: string };
 
@@ -273,6 +274,13 @@ export async function bulkDeleteFornecedores(ids: number[]) {
   revalidarFornecedor();
 }
 
+/** "Em cópia" do cadastro da empresa: normaliza ou lança dizendo qual endereço não passa. */
+function validarEmailCopia(valor: FormDataEntryValue | null): string | null {
+  const r = normalizarEmailsCopia(String(valor ?? ""));
+  if (!r.ok) throw new Error(`E-mail em cópia inválido: ${r.invalidos.join(", ")}`);
+  return r.valor;
+}
+
 export async function addEmpresa(formData: FormData) {
   "use server";
   await requireAdminOrThrow();
@@ -281,6 +289,7 @@ export async function addEmpresa(formData: FormData) {
   const cnpjRaw = String(formData.get("cnpj") || "").trim();
   const emailsExtrasRaw = String(formData.get("emailsExtras") || "").trim().toLowerCase();
   const diaRelatorioMensal = validarDiaRelatorioMensal(formData.get("diaRelatorioMensal"));
+  const emailCopia = validarEmailCopia(formData.get("emailCopia"));
   await prisma.empresaParceira.create({
     data: {
       nome,
@@ -289,6 +298,7 @@ export async function addEmpresa(formData: FormData) {
       emailRh: String(formData.get("email") || "").trim().toLowerCase() || null,
       cnpj: cnpjRaw ? cnpjRaw.toLocaleUpperCase("pt-BR") : null,
       emailsExtras: emailsExtrasRaw || null,
+      emailCopia,
       diaRelatorioMensal,
     },
   });
@@ -304,6 +314,7 @@ export async function updateEmpresa(formData: FormData) {
   const cnpjRaw = String(formData.get("cnpj") || "").trim();
   const emailsExtrasRaw = String(formData.get("emailsExtras") || "").trim().toLowerCase();
   const diaRelatorioMensal = validarDiaRelatorioMensal(formData.get("diaRelatorioMensal"));
+  const emailCopia = validarEmailCopia(formData.get("emailCopia"));
   await prisma.empresaParceira.update({
     where: { id },
     data: {
@@ -313,6 +324,7 @@ export async function updateEmpresa(formData: FormData) {
       emailRh: String(formData.get("email") || "").trim().toLowerCase() || null,
       cnpj: cnpjRaw ? cnpjRaw.toLocaleUpperCase("pt-BR") : null,
       emailsExtras: emailsExtrasRaw || null,
+      emailCopia,
       diaRelatorioMensal,
     },
   });
@@ -383,7 +395,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   }) : null;
   const editEmpresaData = editEmpresaId ? await prisma.empresaParceira.findUnique({
     where: { id: editEmpresaId },
-    select: { id: true, nome: true, responsavelRh: true, telefoneRh: true, emailRh: true, cnpj: true, emailsExtras: true, diaRelatorioMensal: true },
+    select: { id: true, nome: true, responsavelRh: true, telefoneRh: true, emailRh: true, cnpj: true, emailsExtras: true, emailCopia: true, diaRelatorioMensal: true },
   }).catch(() => null) : null;
 
   const errorMsg = sp.error === "nome_duplicado"

@@ -536,7 +536,7 @@ export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: bo
       return { success: false, error: "Termo assinado não encontrado" };
     }
 
-    const resultado = await enviarTermoAssinadoAoRh(vendaId);
+    const resultado = await enviarTermoAssinadoAoRh(vendaId, { origem: "manual" });
     switch (resultado.status) {
       case "enviado":
         return { success: true };

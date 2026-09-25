@@ -60,7 +60,8 @@ export async function GET(req: Request) {
           vendas,
           empresa.emailRh,
           { inicioMes, fimPeriodo },
-          emailsCopia(empresa.emailCopia, empresa.emailRh)
+          emailsCopia(empresa.emailCopia, empresa.emailRh),
+          empresa.id
         );
         enviados++;
       } catch (err) {

@@ -10,6 +10,7 @@
  */
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { linkHistoricoEmails, type OrigemEmail } from "@/lib/email-historico";
 import { emailsCopia } from "@/lib/email-copia";
 import { formatBRL } from "@/lib/utils";
 import {
@@ -146,7 +147,8 @@ async function processarGrupo(
   grupo: GrupoEconomico,
   periodo: string,
   limites: { inicio: Date; fim: Date },
-  force: boolean
+  force: boolean,
+  origem: OrigemEmail
 ): Promise<ResultadoEmpresa> {
   const empresaId = grupo.canonica.id;
   const empresaNome = grupo.canonica.nome;
@@ -197,6 +199,7 @@ async function processarGrupo(
       subject: `Relatório Mensal de Vendas — ${empresaNome} (${periodoLabel(periodo)})`,
       html: resumoHtml(empresaNome, periodo, dados),
       attachments: anexos,
+      registro: { tipo: "mensal", empresaId, origem },
     });
 
     await upsertLog(empresaId, periodo, {
@@ -208,7 +211,7 @@ async function processarGrupo(
     await prisma.notificacao.create({
       data: {
         mensagem: `Relatório mensal (${periodoLabel(periodo)}) enviado para ${empresaNome}: ${dados.totalVendas} vendas, ${formatBRL(dados.valorTotal)}`,
-        link: `/relatorios`,
+        link: linkHistoricoEmails(empresaId),
         usuarioId: 1,
       },
     });
@@ -274,6 +277,8 @@ export type ProcessarRelatorioMensalOptions = {
   empresaId?: number;
   /** Ignora a idempotencia (reenvia mesmo se ja enviado). */
   force?: boolean;
+  /** Quem disparou, para o historico de e-mails (reenvio pela tela = manual). */
+  origem?: OrigemEmail;
   /** Inicio UTC do periodo; informe junto com `fim` para um mes corrente parcial. */
   inicio?: Date;
   /** Fim UTC do periodo; informe junto com `inicio` para um mes corrente parcial. */
@@ -284,7 +289,7 @@ export type ProcessarRelatorioMensalOptions = {
 export async function processarRelatorioMensal(
   opts: ProcessarRelatorioMensalOptions
 ): Promise<{ periodo: string; resultados: ResultadoEmpresa[] }> {
-  const { periodo, empresaId, force = false, inicio, fim } = opts;
+  const { periodo, empresaId, force = false, inicio, fim, origem = "automatico" } = opts;
   const limites = inicio && fim ? { inicio, fim } : periodoBoundaries(periodo);
 
   let grupos = await carregarGrupos();
@@ -294,7 +299,7 @@ export async function processarRelatorioMensal(
 
   const resultados: ResultadoEmpresa[] = [];
   for (const grupo of grupos) {
-    resultados.push(await processarGrupo(grupo, periodo, limites, force));
+    resultados.push(await processarGrupo(grupo, periodo, limites, force, origem));
   }
   return { periodo, resultados };
 }

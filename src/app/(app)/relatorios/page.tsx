@@ -130,6 +130,12 @@ export default async function Page() {
               Relatórios mensais por empresa
             </a>
             <a
+              href="/relatorios/emails"
+              className={cn(buttonVariants({ variant: "outline" }), "w-full")}
+            >
+              E-mails enviados
+            </a>
+            <a
               href="/relatorios"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >

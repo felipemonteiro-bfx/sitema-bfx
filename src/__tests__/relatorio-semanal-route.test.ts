@@ -41,7 +41,8 @@ describe("cron do consolidado semanal", () => {
       [],
       "rh@empresa.test",
       { inicioMes: expect.any(Date), fimPeriodo: expect.any(Date) },
-      []
+      [],
+      7
     );
   });
 
@@ -57,7 +58,8 @@ describe("cron do consolidado semanal", () => {
       [],
       "rh@empresa.test",
       { inicioMes: expect.any(Date), fimPeriodo: expect.any(Date) },
-      ["fin@prudent.test"]
+      ["fin@prudent.test"],
+      7
     );
   });
 });

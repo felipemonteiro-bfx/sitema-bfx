@@ -3,7 +3,7 @@
  * aqui recebe, em Cc, tudo o que vai ao RH — termo assinado, consolidado semanal
  * e relatório mensal. Gravado normalizado: minúsculas, sem repetidos, ", ".
  */
-import { assertSafeEmailAddresses } from "@/lib/email-mime";
+import { assertSafeEmailAddresses } from "@/lib/email-endereco";
 
 function separar(texto: string): string[] {
   return texto

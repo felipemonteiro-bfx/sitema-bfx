@@ -34,6 +34,7 @@ describe("reenviarRelatorioMensal", () => {
       empresaId: 42,
       periodo: "2026-08",
       force: true,
+      origem: "manual",
     });
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/relatorios/mensais");
   });

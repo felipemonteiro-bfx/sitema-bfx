@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MaskedInput } from "@/components/masked-input";
 import { cn } from "@/lib/utils";
-import { Pencil, Search, Trash2 } from "lucide-react";
+import { Pencil, Search, Trash2, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useTableFeatures } from "@/hooks/use-table-features";
 import { alternarSelecaoDaPagina, contarSelecionadosForaDaPagina, estadoCheckboxDaPagina } from "@/lib/selecao-em-massa";
@@ -31,6 +31,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { diaEfetivoRelatorioMensal } from "@/lib/relatorio-mensal-config";
+import { normalizarEmailsCopia } from "@/lib/email-copia";
 
 type EmpresaListItem = {
   id: number;
@@ -40,6 +41,7 @@ type EmpresaListItem = {
   emailRh: string | null;
   cnpj: string | null;
   emailsExtras: string | null;
+  emailCopia: string | null;
   diaRelatorioMensal: number | null;
   vinculos?: { vinculada: { id: number; nome: string } }[];
   _count?: { clientes: number };
@@ -54,6 +56,53 @@ interface Props {
   onUpdateAction: (formData: FormData) => Promise<void>;
   onBulkDeleteAction: (ids: number[]) => Promise<void>;
   onVincularAction?: (empresaId: number, vinculadaIds: number[]) => Promise<void>;
+}
+
+/**
+ * Bloco "RH e e-mails" do cadastro e da edição. Cada e-mail diz o que recebe:
+ * o RH recebe termo e relatórios, "Em cópia" recebe junto tudo o que vai ao RH,
+ * e "Aviso de cada venda" (campo `emailsExtras`) só o aviso de venda nova.
+ */
+function CamposRhEmails({ prefixo, empresa }: { prefixo: string; empresa?: EmpresaListItem | null }) {
+  const campo = (nome: string) => `${prefixo}-empresa-${nome}`;
+  return (
+    <fieldset className="grid gap-3 rounded-xl border p-4">
+      <legend className="px-1.5 text-sm font-semibold text-muted-foreground">RH e e-mails</legend>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label htmlFor={campo("rh")}>Responsável RH</Label>
+          <Input id={campo("rh")} name="rh" defaultValue={empresa?.responsavelRh || ""} placeholder="Responsável RH" className="uppercase" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={campo("tel")}>Telefone RH</Label>
+          <MaskedInput id={campo("tel")} name="tel" mask="phone" defaultValue={empresa?.telefoneRh || ""} />
+        </div>
+      </div>
+      <div className={cn("grid gap-3", prefixo === "add" && "md:grid-cols-3")}>
+        <div className="space-y-1">
+          <Label htmlFor={campo("email")}>E-mail do RH</Label>
+          <Input id={campo("email")} name="email" type="email" defaultValue={empresa?.emailRh || ""} placeholder="rh@empresa.com.br" aria-describedby={campo("email-ajuda")} />
+          <p id={campo("email-ajuda")} className="text-xs text-muted-foreground">Recebe o termo assinado e os relatórios.</p>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={campo("emailCopia")}>Em cópia</Label>
+          <Input id={campo("emailCopia")} name="emailCopia" inputMode="email" autoComplete="off" defaultValue={empresa?.emailCopia || ""} placeholder="nome@prudent.com.br" aria-describedby={campo("emailCopia-ajuda")} />
+          <p id={campo("emailCopia-ajuda")} className="text-xs text-muted-foreground">Recebe junto tudo o que vai ao RH (ex.: Prudent). Vários: separe por vírgula.</p>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={campo("emailsExtras")}>Aviso de cada venda</Label>
+          <Input id={campo("emailsExtras")} name="emailsExtras" defaultValue={empresa?.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" aria-describedby={campo("emailsExtras-ajuda")} />
+          <p id={campo("emailsExtras-ajuda")} className="text-xs text-muted-foreground">Recebe um aviso a cada venda nova.</p>
+        </div>
+      </div>
+    </fieldset>
+  );
+}
+
+/** Recusa antes de enviar: a server action também valida, mas o erro dela chega ao toast sem o endereço. */
+function emailCopiaInvalido(formData: FormData): string | null {
+  const r = normalizarEmailsCopia(String(formData.get("emailCopia") ?? ""));
+  return r.ok ? null : `E-mail em cópia inválido: ${r.invalidos.join(", ")}`;
 }
 
 export default function EmpresasTabClient({
@@ -78,6 +127,11 @@ export default function EmpresasTabClient({
   const [savingVinculo, setSavingVinculo] = useState(false);
 
   const handleAdd = async (formData: FormData) => {
+    const invalido = emailCopiaInvalido(formData);
+    if (invalido) {
+      toast.error(invalido);
+      return;
+    }
     setSubmittingAdd(true);
     try {
       await onAddAction(formData);
@@ -93,6 +147,11 @@ export default function EmpresasTabClient({
   };
 
   const handleUpdate = async (formData: FormData) => {
+    const invalido = emailCopiaInvalido(formData);
+    if (invalido) {
+      toast.error(invalido);
+      return;
+    }
     setSubmittingUpdate(true);
     try {
       await onUpdateAction(formData);
@@ -169,13 +228,13 @@ export default function EmpresasTabClient({
     setSavingVinculo(true);
     try {
       await onVincularAction(vinculandoId, Array.from(vinculacaoIds));
-      toast.success("Vinculos atualizados com sucesso!");
+      toast.success("Vínculos atualizados.");
       setVinculandoId(null);
       startTransition(() => {
         router.refresh();
       });
     } catch {
-      toast.error("Erro ao atualizar vinculos. Tente novamente.");
+      toast.error("Não foi possível salvar os vínculos. Tente novamente.");
     } finally {
       setSavingVinculo(false);
     }
@@ -199,26 +258,6 @@ export default function EmpresasTabClient({
                 <Input id="add-empresa-cnpj" name="cnpj" placeholder="00.000.000/0000-00" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-empresa-rh">Responsavel RH</Label>
-                <Input id="add-empresa-rh" name="rh" placeholder="Responsavel RH" className="uppercase" />
-              </div>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="space-y-1">
-                <Label htmlFor="add-empresa-tel">Telefone RH</Label>
-                <MaskedInput id="add-empresa-tel" name="tel" mask="phone" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="add-empresa-email">Email RH</Label>
-                <Input id="add-empresa-email" name="email" placeholder="email@empresa.com" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="add-empresa-emailsExtras">Emails adicionais</Label>
-                <Input id="add-empresa-emailsExtras" name="emailsExtras" placeholder="email1@x.com, email2@y.com" />
-              </div>
-            </div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <div className="space-y-1">
                 <Label htmlFor="add-empresa-dia-relatorio">Dia do relatório mensal</Label>
                 <Input
                   id="add-empresa-dia-relatorio"
@@ -231,6 +270,7 @@ export default function EmpresasTabClient({
                 />
               </div>
             </div>
+            <CamposRhEmails prefixo="add" />
             <div className="flex items-center justify-end">
               <Button type="submit" loading={submittingAdd}>Salvar Empresa</Button>
             </div>
@@ -239,19 +279,20 @@ export default function EmpresasTabClient({
       </Card>
 
       <Card className="mt-4">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-2">
           <CardTitle className="text-primary">Empresas Parceiras</CardTitle>
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Pesquisar empresas..."
+              placeholder="Pesquisar empresas…"
+              aria-label="Pesquisar empresas"
               value={table.search}
               onChange={(e) => table.setSearch(e.target.value)}
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none">
-                <Trash2 className="h-3 w-3" />
+              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md text-muted-foreground shadow-none hover:bg-muted hover:text-foreground hover:shadow-none">
+                <X className="h-4 w-4" />
               </Button>
             )}
           </div>
@@ -260,10 +301,10 @@ export default function EmpresasTabClient({
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
               <span className="text-sm font-medium">
-                {selectedIds.size} selecionado(s)
+                {selectedIds.size === 1 ? "1 selecionada" : `${selectedIds.size} selecionadas`}
                 {selecionadosForaDaPagina > 0 && (
                   <span className="ml-1 font-normal text-muted-foreground">
-                    ({selecionadosForaDaPagina} fora desta pagina)
+                    ({selecionadosForaDaPagina} fora desta página)
                   </span>
                 )}
               </span>
@@ -276,12 +317,12 @@ export default function EmpresasTabClient({
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Excluir {selectedIds.size} empresa(s)</AlertDialogTitle>
+                    <AlertDialogTitle>{selectedIds.size === 1 ? "Excluir 1 empresa" : `Excluir ${selectedIds.size} empresas`}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tem certeza que deseja excluir {selectedIds.size} empresa(s)? Esta acao nao pode ser desfeita.
+                      Esta ação não pode ser desfeita.
                       {selecionadosForaDaPagina > 0 && (
                         <strong className="block mt-2 font-medium text-foreground">
-                          {selecionadosForaDaPagina} deles nao estao nesta pagina.
+                          {selecionadosForaDaPagina === 1 ? "1 delas não está nesta página." : `${selecionadosForaDaPagina} delas não estão nesta página.`}
                         </strong>
                       )}
                     </AlertDialogDescription>
@@ -299,7 +340,7 @@ export default function EmpresasTabClient({
                 </AlertDialogContent>
               </AlertDialog>
               <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
-                Limpar selecao
+                Limpar seleção
               </Button>
             </div>
           )}
@@ -342,16 +383,19 @@ export default function EmpresasTabClient({
                     </TableCell>
                     <TableCell className="font-medium">{e.nome}</TableCell>
                     <TableCell className="font-mono text-xs text-muted-foreground">{e.cnpj || "—"}</TableCell>
-                    <TableCell>{e.responsavelRh}</TableCell>
+                    <TableCell>{e.responsavelRh || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell>
-                      <div>{e.telefoneRh || ""}</div>
+                      {!e.telefoneRh && !e.emailRh && !e.emailCopia && <span className="text-muted-foreground">—</span>}
+                      {e.telefoneRh && <div>{e.telefoneRh}</div>}
                       {e.emailRh && <div className="text-xs text-muted-foreground">{e.emailRh}</div>}
-                      {e.emailsExtras && (
-                        <div className="text-xs text-muted-foreground">{e.emailsExtras}</div>
+                      {e.emailCopia && (
+                        <div className="text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground/80">Cc</span> {e.emailCopia}
+                        </div>
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", (e._count?.clientes ?? 0) > 0 ? "bg-info-bg text-info-text" : "text-muted-foreground opacity-40")}>
+                      <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", (e._count?.clientes ?? 0) > 0 ? "bg-info-bg text-info-text" : "text-muted-foreground")}>
                         {e._count?.clientes ?? 0}
                       </span>
                     </TableCell>
@@ -365,7 +409,7 @@ export default function EmpresasTabClient({
                           ))}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground opacity-40">—</span>
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -375,7 +419,8 @@ export default function EmpresasTabClient({
                             type="button"
                             onClick={() => openVinculos(e)}
                             className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 py-0 text-muted-foreground hover:text-foreground text-xs")}
-                            title="Gerenciar vinculos"
+                            title="Gerenciar vínculos"
+                            aria-label={`Vínculos de ${e.nome}`}
                           >
                             Vincular
                           </button>
@@ -404,38 +449,20 @@ export default function EmpresasTabClient({
       <Sheet open={!!editingEmpresa} onOpenChange={(open) => !open && setEditingEmpresa(null)}>
         <SheetContent className="overflow-y-auto sm:max-w-lg">
           <SheetHeader>
-            <SheetTitle>Editar empresa #{editingEmpresa?.id}</SheetTitle>
-            <SheetDescription>Atualize os dados da empresa abaixo.</SheetDescription>
+            <SheetTitle>Editar empresa</SheetTitle>
+            <SheetDescription>{editingEmpresa?.nome}</SheetDescription>
           </SheetHeader>
           {editingEmpresa && (
             <form action={handleUpdate} className="grid gap-4 mt-4">
               <input type="hidden" name="id" value={editingEmpresa.id} />
-              <div className="grid gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
-                  <Input id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
+                <Input id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-cnpj">CNPJ</Label>
                   <Input id="edit-empresa-cnpj" name="cnpj" defaultValue={editingEmpresa.cnpj || ""} placeholder="00.000.000/0000-00" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-rh">Responsavel RH</Label>
-                  <Input id="edit-empresa-rh" name="rh" defaultValue={editingEmpresa.responsavelRh || ""} placeholder="Responsavel RH" className="uppercase" />
-                </div>
-              </div>
-              <div className="grid gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-tel">Telefone RH</Label>
-                  <MaskedInput id="edit-empresa-tel" name="tel" mask="phone" defaultValue={editingEmpresa.telefoneRh || ""} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-email">Email RH</Label>
-                  <Input id="edit-empresa-email" name="email" type="email" defaultValue={editingEmpresa.emailRh || ""} placeholder="email@empresa.com" />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-emailsExtras">Emails adicionais</Label>
-                  <Input id="edit-empresa-emailsExtras" name="emailsExtras" defaultValue={editingEmpresa.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="edit-empresa-dia-relatorio">Dia do relatório mensal</Label>
@@ -450,64 +477,55 @@ export default function EmpresasTabClient({
                   />
                 </div>
               </div>
+              <CamposRhEmails prefixo="edit" empresa={editingEmpresa} />
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setEditingEmpresa(null)}>Cancelar</Button>
-                <Button type="submit" loading={submittingUpdate}>Salvar alteracoes</Button>
+                <Button type="submit" loading={submittingUpdate}>Salvar alterações</Button>
               </div>
             </form>
           )}
         </SheetContent>
       </Sheet>
 
-      {/* Vinculos dialog */}
-      {vinculandoId !== null && onVincularAction && (
-        <Card className="mt-4 border-info/20">
-          <CardHeader>
-            <CardTitle className="text-primary text-base">
-              Vinculos da empresa #{vinculandoId}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">Selecione as empresas vinculadas a esta:</p>
-            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-              {empresas
-                .filter((e) => e.id !== vinculandoId)
-                .map((e) => (
-                  // Estado React enviado por fetch/JSON — nao passa por
-                  // FormData, entao aqui e o `<Checkbox>` direto: um campo
-                  // oculto seria um campo sem dono. Nao ha selecao em massa
-                  // neste bloco (cada vinculo e independente), logo nao existe
-                  // estado indeterminado a tratar — o `toggleVinculo` ignora o
-                  // valor recebido e alterna a partir do Set.
-                  <label key={e.id} className="flex items-center gap-2 cursor-pointer text-sm rounded border px-3 py-2 hover:bg-muted">
-                    <Checkbox
-                      checked={vinculacaoIds.has(e.id)}
-                      onCheckedChange={() => toggleVinculo(e.id)}
-                      aria-label={`Vincular ${e.nome}`}
-                    />
-                    {e.nome}
-                  </label>
-                ))}
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setVinculandoId(null)}
-                className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}
-              >
-                Cancelar
-              </button>
-              <Button
-                type="button"
-                onClick={saveVinculos}
-                disabled={savingVinculo}
-              >
-                {savingVinculo ? "Salvando..." : "Salvar vinculos"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <Sheet open={vinculandoId !== null && !!onVincularAction} onOpenChange={(open) => !open && setVinculandoId(null)}>
+        <SheetContent className="flex flex-col overflow-y-auto sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Vínculos</SheetTitle>
+            <SheetDescription>
+              {empresas.find((e) => e.id === vinculandoId)?.nome}: marque as empresas do mesmo grupo. O relatório mensal
+              do grupo vai num e-mail só.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-4 grid gap-2">
+            {empresas
+              .filter((e) => e.id !== vinculandoId)
+              .map((e) => (
+                // Estado React enviado por fetch/JSON — nao passa por
+                // FormData, entao aqui e o `<Checkbox>` direto: um campo
+                // oculto seria um campo sem dono. Nao ha selecao em massa
+                // neste bloco (cada vinculo e independente), logo nao existe
+                // estado indeterminado a tratar — o `toggleVinculo` ignora o
+                // valor recebido e alterna a partir do Set.
+                <label key={e.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
+                  <Checkbox
+                    checked={vinculacaoIds.has(e.id)}
+                    onCheckedChange={() => toggleVinculo(e.id)}
+                    aria-label={`Vincular ${e.nome}`}
+                  />
+                  {e.nome}
+                </label>
+              ))}
+          </div>
+          <div className="mt-auto flex items-center justify-end gap-2 pt-6">
+            <Button type="button" variant="outline" onClick={() => setVinculandoId(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={saveVinculos} loading={savingVinculo}>
+              Salvar vínculos
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

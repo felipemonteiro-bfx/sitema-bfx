@@ -368,6 +368,7 @@ model EmpresaParceira {
   vinculos      EmpresaVinculo[] @relation("empresa_origem")
   vinculadaPor  EmpresaVinculo[] @relation("empresa_destino")
   relatoriosEnviados RelatorioEnvioLog[]
+  emailsEnviados EmailEnvio[]
   contratosConsignados ContratoConsignado[]
 
   @@map("empresas_parceiras")
@@ -617,4 +618,44 @@ model WhatsAppMensagem {
   @@index([status, criadoEm])
   @@index([telefone, direcao, criadoEm])
   @@map("whatsapp_mensagens")
+}
+
+/// Histórico de todo e-mail enviado pelo sistema (termo, consolidado semanal, relatório mensal, aviso
+/// de venda), com o corpo e os anexos como foram enviados. Anexo fica no banco, não no MinIO: o bucket
+/// é de leitura pública e o termo tem CPF e assinatura.
+model EmailEnvio {
+  id         Int      @id @default(autoincrement())
+  tipo       String                                  // termo | semanal | mensal | venda
+  origem     String   @default("automatico")         // automatico | manual
+  empresaId  Int?     @map("empresa_id")
+  vendaId    Int?     @map("venda_id")
+  remetente  String
+  para       String                                  // e-mails separados por ", "
+  cc         String?
+  assunto    String
+  corpoHtml  String   @map("corpo_html")
+  status     String                                  // enviado | falhou
+  erro       String?
+  enviadoEm  DateTime @default(now()) @map("enviado_em")
+
+  empresa EmpresaParceira? @relation(fields: [empresaId], references: [id], onDelete: SetNull)
+  anexos  EmailEnvioAnexo[]
+
+  @@index([empresaId, enviadoEm])
+  @@index([enviadoEm])
+  @@map("email_envios")
+}
+
+model EmailEnvioAnexo {
+  id          Int    @id @default(autoincrement())
+  envioId     Int    @map("envio_id")
+  nome        String
+  contentType String @map("content_type")
+  tamanho     Int
+  conteudo    Bytes
+
+  envio EmailEnvio @relation(fields: [envioId], references: [id], onDelete: Cascade)
+
+  @@index([envioId])
+  @@map("email_envio_anexos")
 }
