@@ -16,6 +16,7 @@ import ProdutosTabClient from "@/components/produtos-tab-client";
 import ClientesTabClient from "@/components/clientes-tab-client";
 import FornecedoresTabClient from "@/components/fornecedores-tab-client";
 import EmpresasTabClient from "@/components/empresas-tab-client";
+import type { RegraEmpresaLinha } from "@/components/regras-empresa-section";
 import { LinkCatalogoButton } from "@/components/link-catalogo-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
@@ -498,6 +499,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     // Table not yet migrated, use raw without vinculos
   }
 
+  // Regras por período (spec 2026-09-30 §3.1). A edição da empresa abre num painel no cliente,
+  // sem navegar, então as regras de todas as empresas vão junto (a tabela é pequena).
+  const regrasPorEmpresa: Record<number, RegraEmpresaLinha[]> = {};
+  try {
+    const regras = await prisma.regraEmpresa.findMany({
+      orderBy: [{ empresaParceiraId: "asc" }, { vigenteDe: "asc" }],
+      select: { id: true, empresaParceiraId: true, vigenteDe: true, vigenteAte: true, diaCorte: true, diaVencimento: true, diaPix: true, repassePct: true, cobrancaViaBfx: true },
+    });
+    for (const { empresaParceiraId, ...r } of regras) (regrasPorEmpresa[empresaParceiraId] ??= []).push(r);
+  } catch {
+    // Tabela regras_empresa ainda nao migrada: a secao aparece vazia.
+  }
+
   const fornecedores = await prisma.fornecedor.findMany({
     where: sp.q_fornecedores ? {
       deletedAt: null,
@@ -612,6 +626,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <EmpresasTabClient
                 empresas={empresas}
                 editEmpresaData={editEmpresaData}
+                regrasPorEmpresa={regrasPorEmpresa}
                 searchQuery={sp.q_empresas}
                 searchParams={spPlain}
                 onAddAction={addEmpresa}

@@ -32,6 +32,8 @@ import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { diaEfetivoRelatorioMensal } from "@/lib/relatorio-mensal-config";
 import { normalizarEmailsCopia } from "@/lib/email-copia";
+import { Separator } from "@/components/ui/separator";
+import { RegrasEmpresaSection, type RegraEmpresaLinha } from "@/components/regras-empresa-section";
 
 type EmpresaListItem = {
   id: number;
@@ -50,6 +52,8 @@ type EmpresaListItem = {
 interface Props {
   empresas: EmpresaListItem[];
   editEmpresaData?: EmpresaListItem | null;
+  /** Regras por período de cada empresa, pelo id (spec 2026-09-30 §3.1). */
+  regrasPorEmpresa?: Record<number, RegraEmpresaLinha[]>;
   searchQuery?: string;
   searchParams: Record<string, string | undefined>;
   onAddAction: (formData: FormData) => Promise<void>;
@@ -108,6 +112,7 @@ function emailCopiaInvalido(formData: FormData): string | null {
 export default function EmpresasTabClient({
   empresas,
   editEmpresaData,
+  regrasPorEmpresa = {},
   searchQuery,
   searchParams: sp,
   onAddAction,
@@ -447,7 +452,7 @@ export default function EmpresasTabClient({
       </Card>
 
       <Sheet open={!!editingEmpresa} onOpenChange={(open) => !open && setEditingEmpresa(null)}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
+        <SheetContent className="overflow-y-auto sm:max-w-2xl">
           <SheetHeader>
             <SheetTitle>Editar empresa</SheetTitle>
             <SheetDescription>{editingEmpresa?.nome}</SheetDescription>
@@ -483,6 +488,12 @@ export default function EmpresasTabClient({
                 <Button type="submit" loading={submittingUpdate}>Salvar alterações</Button>
               </div>
             </form>
+          )}
+          {editingEmpresa && (
+            <>
+              <Separator className="my-6" />
+              <RegrasEmpresaSection empresaParceiraId={editingEmpresa.id} regras={regrasPorEmpresa[editingEmpresa.id] ?? []} />
+            </>
           )}
         </SheetContent>
       </Sheet>
