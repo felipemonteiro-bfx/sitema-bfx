@@ -90,9 +90,10 @@ describe("updateVenda — preserva a baixa das parcelas (2026-09-16)", () => {
     expect(porNumero.get(3)).toMatchObject({ paga: false, origemPagamento: null, asaasPaymentId: null, baixaPor: null });
   });
 
-  it("numero de parcela repetido no payload nao duplica o id da cobranca (unico no banco)", async () => {
+  it("numero de parcela repetido no payload e recusado sem apagar a parcela paga (unico no banco)", async () => {
     // Sem isto o createMany lancava P2002 depois do deleteMany, o catch engolia e a venda
-    // ficava sem nenhuma linha de parcela — pagas inclusive.
+    // ficava sem nenhuma linha de parcela — pagas inclusive. Desde 2026-09-30 (unique
+    // venda/numero_parcela) o payload com numero repetido e recusado antes de qualquer escrita.
     dbMock.parcelaVencimento.findMany.mockResolvedValue([
       { ...linhaExistente(1, false), paga: true, origemPagamento: "asaas", asaasPaymentId: "pay_1", baixaPor: null },
       linhaExistente(2, false),
@@ -108,10 +109,11 @@ describe("updateVenda — preserva a baixa das parcelas (2026-09-16)", () => {
       ]),
     );
 
-    await updateVenda(fd);
+    const r = await updateVenda(fd);
 
-    const recriadas = dbMock.parcelaVencimento.createMany.mock.calls[0][0].data as { asaasPaymentId: string | null }[];
-    expect(recriadas.filter((p) => p.asaasPaymentId === "pay_1")).toHaveLength(1);
+    expect(r).toEqual({ success: false, error: "Parcela 1 aparece mais de uma vez. Revise as datas de vencimento." });
+    expect(dbMock.parcelaVencimento.deleteMany).not.toHaveBeenCalled();
+    expect(dbMock.parcelaVencimento.createMany).not.toHaveBeenCalled();
   });
 });
 

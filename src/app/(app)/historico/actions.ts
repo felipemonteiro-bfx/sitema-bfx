@@ -15,7 +15,7 @@ import {
 import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
 import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { requireSessionOrThrow } from "@/lib/guards";
-import { parcelaUnicaDaFolha, valorParcelaAposEdicao } from "@/lib/parcelas";
+import { numerosDeParcelaRepetidos, parcelaUnicaDaFolha, valorParcelaAposEdicao } from "@/lib/parcelas";
 import { flagDaVenda } from "@/lib/lote-antecipacao";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
@@ -234,6 +234,17 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     );
 
     if (parcelasForm.length > 0) {
+      // Numero de parcela repetido (spec 2026-09-30 §3.2): com a unique
+      // (venda_id, numero_parcela) o createMany falharia depois do deleteMany e a venda
+      // ficaria sem linhas. Recusa aqui, antes de qualquer escrita.
+      const repetidos = numerosDeParcelaRepetidos(parcelasForm);
+      if (repetidos.length > 0) {
+        return {
+          success: false,
+          error: `Parcela ${repetidos.join(", ")} aparece mais de uma vez. Revise as datas de vencimento.`,
+        };
+      }
+
       // T-ddr-01: nunca apagar em silencio uma parcela ja marcada como paga. O
       // payload vem do cliente (hidden parcelasVencimento) — o servidor confia nele
       // para apagar e recriar todas as linhas de parcelas_vencimento, entao a guarda

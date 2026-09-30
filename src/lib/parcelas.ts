@@ -88,3 +88,18 @@ export function parcelaUnicaDaFolha(input: {
   if (!input.emFolha || !(centavos > 0) || Number.isNaN(input.dataVenda.getTime())) return [];
   return [{ numeroParcela: 1, dataVencimento: calcularPrimeiroVencimento(input.dataVenda, input.regra), valorParcela: centavos / 100 }];
 }
+
+/**
+ * Números de parcela que aparecem mais de uma vez no payload da edição de venda, ordenados e sem
+ * repetição. Com a unique `(venda_id, numero_parcela)` (spec 2026-09-30 §3.2), gravar esse
+ * payload falharia depois de apagar as linhas antigas; a edição recusa antes de escrever.
+ */
+export function numerosDeParcelaRepetidos(parcelas: { numeroParcela: number }[]): number[] {
+  const vistos = new Set<number>();
+  const repetidos = new Set<number>();
+  for (const p of parcelas) {
+    if (vistos.has(p.numeroParcela)) repetidos.add(p.numeroParcela);
+    vistos.add(p.numeroParcela);
+  }
+  return [...repetidos].sort((a, b) => a - b);
+}
