@@ -9,6 +9,9 @@ const dbMock = {
   itemVenda: { deleteMany: vi.fn(), createMany: vi.fn() },
   parcelaVencimento: { findMany: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn() },
   despesa: { create: vi.fn() },
+  // Lidos por `regraDoClienteNaData` (regra da empresa do cliente, 2026-09-30).
+  cliente: { findUnique: vi.fn() },
+  regraEmpresa: { findMany: vi.fn() },
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/audit", () => ({ createAuditLog: vi.fn() }));
@@ -222,5 +225,79 @@ describe("updateVenda — 1x fora da folha", () => {
     await updateVenda(formUmaVez(FORMA_PAGAMENTO.PIX));
     expect(dbMock.parcelaVencimento.deleteMany).not.toHaveBeenCalled();
     expect(dbMock.parcelaVencimento.createMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateVenda — 1x em folha com regra da empresa (2026-09-30)", () => {
+  // Empresa com corte 25 / vencimento 15. Antes, a edição chamava `parcelaUnicaDaFolha` sem regra
+  // e, como a linha é apagada e recriada a cada save, o vencimento voltava para o dia 10.
+  const regra2515 = {
+    id: 1,
+    empresaParceiraId: 3,
+    vigenteDe: new Date("2026-01-01T00:00:00.000Z"),
+    vigenteAte: null,
+    diaCorte: 25,
+    diaVencimento: 15,
+    diaPix: 15,
+    repassePct: null,
+    repasseBase: null,
+    cobrancaViaBfx: false,
+  };
+  const vendaGravada = {
+    clienteId: 42,
+    dataVenda: new Date("2026-09-22T00:00:00.000Z"),
+    formaPagamento: FORMA_PAGAMENTO.DESCONTO_FOLHA,
+    descontoEmFolha: true,
+    boleto: false,
+    parcelas: 1,
+    valorFrete: 0,
+    desconto: 0,
+    valorVenda: 150,
+    quantidade: 1,
+    custoProduto: 100,
+    produtoNome: "Produto X",
+    itens: [{ subtotal: 150 }],
+  };
+  const form = () => {
+    const fd = formUmaVez();
+    fd.set("data", "2026-09-22");
+    return fd;
+  };
+
+  beforeEach(() => {
+    dbMock.venda.findUnique.mockResolvedValue(vendaGravada);
+    dbMock.cliente.findUnique.mockResolvedValue({ empresaParceiraId: 3 });
+    dbMock.regraEmpresa.findMany.mockResolvedValue([regra2515]);
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      linha(1, { valorParcela: 150, dataVencimento: new Date("2026-10-15T00:00:00.000Z") }),
+    ]);
+  });
+
+  it("salvar sem alterar nada mantém o vencimento gravado (save idempotente)", async () => {
+    const r = await updateVenda(form());
+    expect(r).toMatchObject({ success: true });
+    expect(criadas()[0]).toMatchObject({ numeroParcela: 1, dataVencimento: new Date("2026-10-15T00:00:00.000Z") });
+  });
+
+  it("vencimento gravado à mão sobrevive ao save sem mudança de data nem de forma", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      linha(1, { valorParcela: 150, dataVencimento: new Date("2026-10-20T00:00:00.000Z") }),
+    ]);
+    await updateVenda(form());
+    expect(criadas()[0]).toMatchObject({ dataVencimento: new Date("2026-10-20T00:00:00.000Z") });
+  });
+
+  it("mudou a data da venda: o vencimento sai da regra da empresa na nova data", async () => {
+    const fd = form();
+    fd.set("data", "2026-09-26");
+    await updateVenda(fd);
+    expect(criadas()[0]).toMatchObject({ dataVencimento: new Date("2026-11-15T00:00:00.000Z") });
+  });
+
+  it("virou folha agora (antes era PIX, sem linha): o vencimento sai da regra da empresa", async () => {
+    dbMock.venda.findUnique.mockResolvedValue({ ...vendaGravada, formaPagamento: FORMA_PAGAMENTO.PIX, descontoEmFolha: false });
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
+    await updateVenda(form());
+    expect(criadas()[0]).toMatchObject({ dataVencimento: new Date("2026-10-15T00:00:00.000Z") });
   });
 });

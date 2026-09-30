@@ -16,6 +16,8 @@ import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecip
 import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { requireSessionOrThrow } from "@/lib/guards";
 import { numerosDeParcelaRepetidos, parcelaUnicaDaFolha, valorParcelaAposEdicao } from "@/lib/parcelas";
+import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
+import type { RegraVencimento } from "@/lib/regra-empresa";
 import { flagDaVenda } from "@/lib/lote-antecipacao";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
@@ -90,6 +92,11 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   // Venda como está gravada: base do "mudou ou não" do valorParcela e dos dados de
   // produto quando o form não os traz.
   let vendaAntes: {
+    clienteId?: number | null;
+    dataVenda?: Date | null;
+    formaPagamento?: string | null;
+    descontoEmFolha?: boolean;
+    boleto?: boolean;
     parcelas: number | null;
     valorFrete: number | null;
     desconto: number | null;
@@ -103,6 +110,11 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     vendaAntes = await prisma.venda.findUnique({
       where: { id },
       select: {
+        clienteId: true,
+        dataVenda: true,
+        formaPagamento: true,
+        descontoEmFolha: true,
+        boleto: true,
         parcelas: true,
         valorFrete: true,
         desconto: true,
@@ -307,19 +319,45 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     // `parcelaUnicaDaFolha`: em folha, a parcela 1 recriada com o vencimento e o total
     // atuais; fora da folha, nenhuma. Com o total desconhecido nao da para gerar: nao mexe.
     const totalConhecido = itens.length > 0 || formData.has("valor") || legadoDoBanco != null;
-    const linhasUnicas =
-      parcelasForm.length === 0 && parcelasNum === 1 && totalConhecido
-        ? parcelaUnicaDaFolha({ emFolha: formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA, dataVenda: new Date(data), total })
-            // Parcela paga ou antecipada mantem o vencimento e o valor gravados: a linha e o
-            // registro do que a Prudent pagou. Aplicado aqui, e nao na hora de gravar, para a
-            // taxa de antecipacao sair da MESMA lista que vai para o banco.
-            .map((p) => {
-              const existente = pagasMap.get(p.numeroParcela);
-              return existente && (existente.paga || existente.antecipada)
-                ? { ...p, dataVencimento: existente.dataVencimento, valorParcela: existente.valorParcela }
-                : p;
-            })
-        : null;
+    const geraLinhasUnicas = parcelasForm.length === 0 && parcelasNum === 1 && totalConhecido;
+    const emFolha = formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA;
+    // Save sem mudar a data da venda nem a forma de pagamento nao reescreve o vencimento gravado
+    // da parcela 1 (2026-09-30): a linha e apagada e recriada a cada save, e regenerar aqui
+    // trocaria em silencio o vencimento que a venda rapida gravou pela regra da empresa (ou que
+    // alguem ajustou a mao). So quando a data ou a forma mudam o vencimento sai de novo da regra
+    // da empresa do cliente na data da venda.
+    const formaAntes = vendaAntes
+      ? isFormaPagamento(vendaAntes.formaPagamento)
+        ? vendaAntes.formaPagamento
+        : formaFromLegacyFlags({
+            descontoEmFolha: Boolean(vendaAntes.descontoEmFolha),
+            boleto: Boolean(vendaAntes.boleto),
+            parcelas: vendaAntes.parcelas ?? 1,
+          })
+      : null;
+    const mesmaDataVenda =
+      vendaAntes?.dataVenda instanceof Date &&
+      !Number.isNaN(new Date(data).getTime()) &&
+      vendaAntes.dataVenda.toISOString().slice(0, 10) === new Date(data).toISOString().slice(0, 10);
+    const vencimentoGravado = pagasMap.get(1)?.dataVencimento;
+    const manterVencimentoGravado = mesmaDataVenda && formaAntes === formaPagamento && vencimentoGravado != null;
+    let regraUnica: RegraVencimento | undefined;
+    if (geraLinhasUnicas && emFolha && !manterVencimentoGravado && vendaAntes?.clienteId) {
+      regraUnica = await regraDoClienteNaData(vendaAntes.clienteId, new Date(data));
+    }
+    const linhasUnicas = geraLinhasUnicas
+      ? parcelaUnicaDaFolha({ emFolha, dataVenda: new Date(data), total, regra: regraUnica })
+          // Parcela paga ou antecipada mantem o vencimento e o valor gravados: a linha e o
+          // registro do que a Prudent pagou. Aplicado aqui, e nao na hora de gravar, para a
+          // taxa de antecipacao sair da MESMA lista que vai para o banco.
+          .map((p) => {
+            const existente = pagasMap.get(p.numeroParcela);
+            if (existente && (existente.paga || existente.antecipada)) {
+              return { ...p, dataVencimento: existente.dataVencimento, valorParcela: existente.valorParcela };
+            }
+            return manterVencimentoGravado && existente ? { ...p, dataVencimento: existente.dataVencimento } : p;
+          })
+      : null;
     if (linhasUnicas) {
       // So recusa a parcela travada que SUMIRIA (virou outra forma de pagamento, ou sobrava linha
       // de um parcelamento maior). A parcela 1 que fica e preservada mais abaixo.
