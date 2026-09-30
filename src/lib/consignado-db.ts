@@ -204,7 +204,8 @@ export async function aplicarImportacaoConsignado(plano: PlanoImportacaoConsigna
   };
 }
 
-export async function payloadLimiteCliente(clienteId: number) {
+/** `data`: data da venda, que escolhe a regra vigente da empresa (default hoje). */
+export async function payloadLimiteCliente(clienteId: number, data: Date = new Date()) {
   const cliente = await prisma.cliente.findUnique({
     where: { id: clienteId },
     select: { renda: true, nome: true, empresaParceiraId: true },
@@ -212,9 +213,9 @@ export async function payloadLimiteCliente(clienteId: number) {
   if (!cliente) return null;
   const vendas = await prisma.venda.findMany({ where: { clienteId } });
   const consignado = await calcularConsignado(clienteId);
-  // Corte e vencimento da regra da empresa vigente hoje (spec 2026-09-30 §3.1): a lista de
-  // parcelas do formulário da venda rápida nasce por eles.
-  const regra = await regraDaEmpresaNaData(cliente.empresaParceiraId, new Date());
+  // Corte e vencimento da regra da empresa vigente na data da venda (spec 2026-09-30 §3.1): a
+  // lista de parcelas do formulário da venda rápida nasce por eles.
+  const regra = await regraDaEmpresaNaData(cliente.empresaParceiraId, data);
   return {
     ...montarPayloadLimite({
       nome: cliente.nome,

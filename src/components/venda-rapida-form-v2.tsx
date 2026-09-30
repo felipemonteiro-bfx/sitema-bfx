@@ -35,6 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
 import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
+import { parseDataIsoUtc } from "@/lib/data-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
@@ -323,14 +324,22 @@ export default function VendaRapidaFormV2({
       });
   }, []);
 
-  // Consulta de Limite ao selecionar cliente
+  // Consulta de Limite ao selecionar cliente e ao mudar a data da venda: a regra de vencimento
+  // que vem no payload é a vigente na data da venda, não a de hoje.
+  const clienteDoLimiteRef = useRef<number | null>(null);
   useEffect(() => {
     // Sem isto, durante o fetch a tela (e a regra de vencimento das parcelas) seguia com o
-    // limite do cliente anterior. `ativo` descarta a resposta que chega depois de trocar de novo.
-    setLimiteData(null);
+    // limite do cliente anterior. Mudar só a data mantém o limite do mesmo cliente na tela até a
+    // resposta chegar. `ativo` descarta a resposta que chega depois de trocar de novo.
+    const clienteAtual = selectedCliente?.id ?? null;
+    if (clienteDoLimiteRef.current !== clienteAtual) {
+      clienteDoLimiteRef.current = clienteAtual;
+      setLimiteData(null);
+    }
     let ativo = true;
     if (selectedCliente) {
-      fetch(`/api/clientes/${selectedCliente.id}/limite`)
+      const dataQs = parseDataIsoUtc(dataVenda) ? `?data=${encodeURIComponent(dataVenda)}` : "";
+      fetch(`/api/clientes/${selectedCliente.id}/limite${dataQs}`)
         .then(async (res) => {
           // Endpoint autenticado: em 401 o corpo e `{error:...}`, que antes so virava
           // `setLimiteData(null)` — o vendedor perdia o limite de credito da tela sem
@@ -355,7 +364,7 @@ export default function VendaRapidaFormV2({
       ativo = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedClienteId]);
+  }, [selectedClienteId, dataVenda]);
 
   // Cálculos totais
   const subtotalProdutos = produtos.reduce((sum, p) => sum + p.subtotal, 0);

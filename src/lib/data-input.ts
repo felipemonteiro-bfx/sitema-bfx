@@ -14,6 +14,18 @@ export function parseDataISO(valor?: string | null): Date | undefined {
 }
 
 /**
+ * Converte "AAAA-MM-DD" em Date à meia-noite UTC, a mesma convenção de `new Date("AAAA-MM-DD")`
+ * com que a venda grava `dataVenda`. Recusa outro formato e data que não existe no calendário
+ * (2026-02-30), que `Date.UTC` rolaria em silêncio para o mês seguinte. Inválida vira undefined.
+ */
+export function parseDataIsoUtc(valor?: string | null): Date | undefined {
+  if (!valor || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return undefined;
+  const [ano, mes, dia] = valor.split("-").map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  return data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia ? data : undefined;
+}
+
+/**
  * Qual data o campo deve exibir agora.
  *
  * O bug que isto corrige: o <DateInput> guardava a data em useState com

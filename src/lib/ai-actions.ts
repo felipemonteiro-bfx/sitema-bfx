@@ -929,8 +929,13 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         if (erroValidacaoIa) { result = { erro: erroValidacaoIa }; break; }
 
         // Limite de crédito é sempre recalculado no servidor, igual ao fluxo manual, com o
-        // corte da regra da empresa do cliente (spec 2026-09-30 §7).
-        const regraIa = await regraDoClienteNaData(Number(parsedParams.clienteId), new Date());
+        // corte da regra da empresa do cliente vigente na data da venda (spec 2026-09-30 §7),
+        // a mesma `new Date(dataVenda)` gravada abaixo. Data inválida cai em hoje.
+        const dataVendaIa = new Date(parsedParams.dataVenda);
+        const regraIa = await regraDoClienteNaData(
+          Number(parsedParams.clienteId),
+          Number.isNaN(dataVendaIa.getTime()) ? new Date() : dataVendaIa,
+        );
         const creditoIa = await checkCredito(Number(parsedParams.clienteId), valorParcelaIa, regraIa.diaCorte);
         const excedeuLimiteIa = creditoIa.ok ? 0 : 1;
 
