@@ -19,6 +19,14 @@ describe("calcularPrimeiroVencimento com regra", () => {
   it("dia 28 em fevereiro não pula de mês", () => {
     expect(iso(calcularPrimeiroVencimento(d("2027-01-10"), { diaCorte: 20, diaVencimento: 28 }))).toBe("2027-02-28");
   });
+  it("venda no dia 31 com corte 20 / vencimento 28: fevereiro fica em 28/02 e março não pula", () => {
+    // 31 > corte 20: dois meses à frente. Somar meses a partir do dia 31 transbordaria (31/02 →
+    // 03/03); a regra monta a data com o dia de vencimento, então cai em 28/03.
+    expect(iso(calcularPrimeiroVencimento(d("2027-01-31"), { diaCorte: 20, diaVencimento: 28 }))).toBe("2027-03-28");
+  });
+  it("venda no dia 31 pelo padrão (corte 20 / dia 10)", () => {
+    expect(iso(calcularPrimeiroVencimento(d("2026-10-31")))).toBe("2026-12-10");
+  });
   it("virada de ano", () => {
     expect(iso(calcularPrimeiroVencimento(d("2026-12-22"), { diaCorte: 20, diaVencimento: 15 }))).toBe("2027-02-15");
   });
