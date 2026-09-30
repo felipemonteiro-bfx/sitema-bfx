@@ -36,6 +36,9 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
   // essa condicao verdadeira e regenerava tudo, descartando a edicao e reescrevendo
   // as datas de vencimento ja escolhidas — o bug relatado em 2026-08-27.
   const totalAnterior = useRef<number | null>(null);
+  // Última regra aplicada à lista: quando a regra da empresa chega depois (fetch do limite) ou
+  // muda com o cliente, a lista ainda intocada é refeita pela regra nova.
+  const regraAplicada = useRef<RegraVencimento | undefined>(undefined);
   useEffect(() => {
     if (disableAutoInit) return;
     const { parcelas: proximas, valorTotalObservado } = sincronizarParcelasAuto({
@@ -48,7 +51,9 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
       // e vale tambem para data corrompida, que faria o effect lancar.
       dataVenda: parseDataISO(dataVenda) ? dataVenda : dataParaHidden(new Date()),
       regra,
+      regraAnterior: regraAplicada.current,
     });
+    regraAplicada.current = regra;
     // Nunca `= valorTotal` direto: quando a sincronizacao pula sem olhar o total, o
     // anterior tem que continuar valendo, senao a mudanca de total e engolida.
     totalAnterior.current = valorTotalObservado;

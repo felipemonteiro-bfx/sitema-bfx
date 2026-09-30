@@ -325,6 +325,10 @@ export default function VendaRapidaFormV2({
 
   // Consulta de Limite ao selecionar cliente
   useEffect(() => {
+    // Sem isto, durante o fetch a tela (e a regra de vencimento das parcelas) seguia com o
+    // limite do cliente anterior. `ativo` descarta a resposta que chega depois de trocar de novo.
+    setLimiteData(null);
+    let ativo = true;
     if (selectedCliente) {
       fetch(`/api/clientes/${selectedCliente.id}/limite`)
         .then(async (res) => {
@@ -339,13 +343,17 @@ export default function VendaRapidaFormV2({
           return res.json();
         })
         .then((data) => {
+          if (!ativo) return;
           if (data?.margemTotal !== undefined) setLimiteData(data);
           else setLimiteData(null);
         })
-        .catch(() => setLimiteData(null));
-    } else {
-      setLimiteData(null);
+        .catch(() => {
+          if (ativo) setLimiteData(null);
+        });
     }
+    return () => {
+      ativo = false;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClienteId]);
 

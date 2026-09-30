@@ -16,7 +16,7 @@
  * `.split("-")`, monta com `Date.UTC` e formata de volta com `.toISOString().slice(0, 10)`.
  */
 import { calcularPrimeiroVencimento } from "@/lib/utils";
-import type { RegraVencimento } from "@/lib/regra-empresa";
+import { REGRA_PADRAO, type RegraVencimento } from "@/lib/regra-empresa";
 
 export type ParcelaAjuste = {
   numeroParcela: number;
@@ -162,6 +162,12 @@ export function ajustarParcelas(input: {
   };
 }
 
+function mesmaRegra(a?: RegraVencimento, b?: RegraVencimento): boolean {
+  const x = a ?? REGRA_PADRAO;
+  const y = b ?? REGRA_PADRAO;
+  return x.diaCorte === y.diaCorte && x.diaVencimento === y.diaVencimento;
+}
+
 /**
  * Decide o que a auto-init de `parcelas-vencimento-form.tsx` deve fazer a cada
  * render. `parcelas: null` significa "nada a fazer" — o componente so chama
@@ -196,8 +202,13 @@ export function sincronizarParcelasAuto(input: {
   dataVenda?: string;
   /** Corte e dia de vencimento da empresa do cliente; sem ela, corte 20 / dia 10. */
   regra?: RegraVencimento;
+  /**
+   * Regra usada no render anterior (`undefined` = padrão 20/10). Só é considerada quando a chave
+   * vem no input: o formulário da venda rápida a passa sempre; quem não passa não re-sincroniza.
+   */
+  regraAnterior?: RegraVencimento;
 }): { parcelas: ParcelaAjuste[] | null; valorTotalObservado: number | null } {
-  const { parcelas, numeroParcelas, valorTotal, valorTotalAnterior, dataVenda, regra } = input;
+  const { parcelas, numeroParcelas, valorTotal, valorTotalAnterior, dataVenda, regra, regraAnterior } = input;
   const pular = { parcelas: null, valorTotalObservado: valorTotalAnterior };
 
   // Pagamento unico: o card nem aparece e nao existe lista a manter.
@@ -215,6 +226,24 @@ export function sincronizarParcelasAuto(input: {
       parcelas: ajustarParcelas({ parcelas, numeroParcelas, valorTotal, dataVenda, regra }).parcelas,
       valorTotalObservado: valorTotal,
     };
+  }
+
+  // A regra da empresa chega por fetch depois que a lista já foi gerada com o padrão (ou a de
+  // outro cliente). Se a lista ainda é exatamente a que a regra anterior geraria, ninguém mexeu
+  // nas datas: troca pelas da regra nova, mantendo os valores. Se alguma data difere, é escolha
+  // do usuário e fica (2026-09-30).
+  if ("regraAnterior" in input && dataVenda && !mesmaRegra(regra, regraAnterior)) {
+    const geradasAntes = ajustarParcelas({ parcelas: [], numeroParcelas, valorTotal, dataVenda, regra: regraAnterior }).parcelas;
+    const intocada = geradasAntes.every((p, i) => p.dataVencimento === parcelas[i]?.dataVencimento);
+    if (intocada) {
+      const geradasAgora = ajustarParcelas({ parcelas: [], numeroParcelas, valorTotal, dataVenda, regra }).parcelas;
+      const novas = parcelas.map((p, i) => ({ ...p, dataVencimento: geradasAgora[i].dataVencimento }));
+      const totalMudou = valorTotalAnterior !== null && valorTotalAnterior !== valorTotal;
+      return {
+        parcelas: totalMudou ? redistribuirValores(novas, valorTotal) : novas,
+        valorTotalObservado: valorTotal,
+      };
+    }
   }
 
   if (valorTotalAnterior !== null && valorTotalAnterior !== valorTotal) {

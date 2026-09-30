@@ -56,3 +56,50 @@ describe("formulário da venda rápida pela regra", () => {
     expect(parcelas?.map((p) => p.dataVencimento)).toEqual(["2026-10-15", "2026-11-15"]);
   });
 });
+
+describe("sincronizarParcelasAuto quando a regra chega depois da lista (2026-09-30)", () => {
+  // O limite (com a regra) chega por fetch depois que o formulário já gerou a lista com o padrão.
+  // Só o tamanho da lista disparava a regeneração, então a regra da empresa era ignorada.
+  const gerar = (regra?: { diaCorte: number; diaVencimento: number }) =>
+    ajustarParcelas({ parcelas: [], numeroParcelas: 3, valorTotal: 300, dataVenda: "2026-09-10", regra }).parcelas;
+  const sync = (
+    parcelas: ReturnType<typeof gerar>,
+    regra: { diaCorte: number; diaVencimento: number } | undefined,
+    regraAnterior: { diaCorte: number; diaVencimento: number } | undefined,
+  ) =>
+    sincronizarParcelasAuto({
+      parcelas,
+      numeroParcelas: 3,
+      valorTotal: 300,
+      valorTotalAnterior: 300,
+      dataVenda: "2026-09-10",
+      regra,
+      regraAnterior,
+    });
+
+  it("lista gerada sem regra e chega a regra 20/15: re-sincroniza para o dia 15 mantendo os valores", () => {
+    // Valor ajustado à mão não é edição de data: a troca pela regra nova mantém os valores.
+    const antes = gerar().map((p, i) => ({ ...p, valorParcela: i === 0 ? 90 : 105 }));
+    const { parcelas } = sync(antes, { diaCorte: 20, diaVencimento: 15 }, undefined);
+    expect(parcelas?.map((p) => p.dataVencimento)).toEqual(["2026-10-15", "2026-11-15", "2026-12-15"]);
+    expect(parcelas?.map((p) => p.valorParcela)).toEqual(antes.map((p) => p.valorParcela));
+  });
+
+  it("com uma data editada pelo usuário: preserva a lista", () => {
+    const antes = gerar();
+    antes[1] = { ...antes[1], dataVencimento: "2026-11-20" };
+    const { parcelas } = sync(antes, { diaCorte: 20, diaVencimento: 15 }, undefined);
+    expect(parcelas).toBeNull();
+  });
+
+  it("troca de regra A para B (outro cliente): re-sincroniza pela B", () => {
+    const antes = gerar({ diaCorte: 20, diaVencimento: 15 });
+    const { parcelas } = sync(antes, { diaCorte: 25, diaVencimento: 5 }, { diaCorte: 20, diaVencimento: 15 });
+    expect(parcelas?.map((p) => p.dataVencimento)).toEqual(["2026-10-05", "2026-11-05", "2026-12-05"]);
+  });
+
+  it("regra igual à anterior: não mexe", () => {
+    const antes = gerar({ diaCorte: 20, diaVencimento: 15 });
+    expect(sync(antes, { diaCorte: 20, diaVencimento: 15 }, { diaCorte: 20, diaVencimento: 15 }).parcelas).toBeNull();
+  });
+});
