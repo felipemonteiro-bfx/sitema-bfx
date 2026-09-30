@@ -51,15 +51,22 @@ export function maskCep(val?: string | null) {
 }
 
 /**
- * Calcula o primeiro vencimento do boleto/parcela:
- * - Compra até dia 20 → dia 10 do próximo mês
- * - Compra após dia 20 → dia 10 do mês subsequente (dois meses à frente)
+ * Calcula o primeiro vencimento do boleto/parcela pela regra da empresa do cliente
+ * (`RegraEmpresa`, spec 2026-09-30 §3.1); default corte 20 / dia 10, o comportamento anterior:
+ * - Compra até o dia de corte → dia de vencimento do próximo mês
+ * - Compra após o dia de corte → dia de vencimento do mês subsequente (dois meses à frente)
+ *
+ * Tipo inline para `utils.ts` não depender de `@/lib/regra-empresa`. Os dias da regra vão de
+ * 1 a 28, então o `Date.UTC` nunca transborda para o mês seguinte.
  */
-export function calcularPrimeiroVencimento(dataCompra: Date): Date {
+export function calcularPrimeiroVencimento(
+  dataCompra: Date,
+  regra: { diaCorte: number; diaVencimento: number } = { diaCorte: 20, diaVencimento: 10 }
+): Date {
   // Use UTC methods to avoid timezone offset affecting the day-of-month check
   const dia = dataCompra.getUTCDate();
-  const mesesAFrente = dia <= 20 ? 1 : 2;
-  return new Date(Date.UTC(dataCompra.getUTCFullYear(), dataCompra.getUTCMonth() + mesesAFrente, 10));
+  const mesesAFrente = dia <= regra.diaCorte ? 1 : 2;
+  return new Date(Date.UTC(dataCompra.getUTCFullYear(), dataCompra.getUTCMonth() + mesesAFrente, regra.diaVencimento));
 }
 
 export function sugerirNcm(nome?: string | null) {

@@ -1,4 +1,5 @@
 import { calcularPrimeiroVencimento } from "@/lib/utils";
+import type { RegraVencimento } from "@/lib/regra-empresa";
 
 export const VALOR_PARCELA_MIN = 200; // parcela mínima (configurável)
 export const VALOR_PARCELA_MAX = 475; // parcela máxima / teto (configurável)
@@ -42,8 +43,9 @@ export function valorParcelaAposEdicao(input: {
 /**
  * As linhas de `parcelas_vencimento` que a venda rápida grava. Puro, para a regra ser testável
  * (a action importa Asaas, WhatsApp e e-mail e não roda em teste). Datas informadas no formulário
- * mandam; sem elas, parcelada gera uma por mês no dia 10 em UTC com o valor truncado que o
- * cabeçalho também grava, e 1x cai em `parcelaUnicaDaFolha`.
+ * mandam; sem elas, parcelada gera uma por mês no dia de vencimento da regra da empresa (default
+ * dia 10, corte 20) em UTC com o valor truncado que o cabeçalho também grava, e 1x cai em
+ * `parcelaUnicaDaFolha`.
  */
 export function parcelasDaVendaRapida(input: {
   informadas?: { numeroParcela: number; dataVencimento: string | Date; valorParcela: number }[];
@@ -51,8 +53,9 @@ export function parcelasDaVendaRapida(input: {
   dataVenda: Date;
   total: number;
   emFolha: boolean;
+  regra?: RegraVencimento;
 }): { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] {
-  const { informadas, parcelas, dataVenda, total, emFolha } = input;
+  const { informadas, parcelas, dataVenda, total, emFolha, regra } = input;
   if (informadas && informadas.length > 0) {
     return informadas.map((p) => ({
       numeroParcela: p.numeroParcela,
@@ -61,25 +64,27 @@ export function parcelasDaVendaRapida(input: {
     }));
   }
   if (parcelas > 1) {
-    const primeiro = calcularPrimeiroVencimento(dataVenda);
+    const primeiro = calcularPrimeiroVencimento(dataVenda, regra);
+    const diaVencimento = regra?.diaVencimento ?? 10;
     const valorParcela = Math.trunc((total / parcelas) * 100) / 100;
     return Array.from({ length: parcelas }, (_, i) => ({
       numeroParcela: i + 1,
       // UTC como o resto da regra (`calcularPrimeiroVencimento`, a planilha da folha e a
       // migração): com o construtor local, um servidor a leste do meridiano gravaria dia 9.
-      dataVencimento: new Date(Date.UTC(primeiro.getUTCFullYear(), primeiro.getUTCMonth() + i, 10)),
+      dataVencimento: new Date(Date.UTC(primeiro.getUTCFullYear(), primeiro.getUTCMonth() + i, diaVencimento)),
       valorParcela,
     }));
   }
-  return parcelaUnicaDaFolha({ emFolha, dataVenda, total });
+  return parcelaUnicaDaFolha({ emFolha, dataVenda, total, regra });
 }
 
 export function parcelaUnicaDaFolha(input: {
   emFolha: boolean;
   dataVenda: Date;
   total: number;
+  regra?: RegraVencimento;
 }): { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] {
   const centavos = Math.round(input.total * 100);
   if (!input.emFolha || !(centavos > 0) || Number.isNaN(input.dataVenda.getTime())) return [];
-  return [{ numeroParcela: 1, dataVencimento: calcularPrimeiroVencimento(input.dataVenda), valorParcela: centavos / 100 }];
+  return [{ numeroParcela: 1, dataVencimento: calcularPrimeiroVencimento(input.dataVenda, input.regra), valorParcela: centavos / 100 }];
 }

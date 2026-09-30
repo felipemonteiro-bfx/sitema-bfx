@@ -16,6 +16,7 @@
  * `.split("-")`, monta com `Date.UTC` e formata de volta com `.toISOString().slice(0, 10)`.
  */
 import { calcularPrimeiroVencimento } from "@/lib/utils";
+import type { RegraVencimento } from "@/lib/regra-empresa";
 
 export type ParcelaAjuste = {
   numeroParcela: number;
@@ -91,8 +92,8 @@ function dataVendaParaDate(dataVenda?: string): Date {
  *
  * - Se alguma `parcelasPagas` for maior que `numeroParcelas`, o alvo real vira essa
  *   maior parcela paga e `minimoPorPagas` reporta o clamp (D-01).
- * - Lista vazia: gera `alvo` linhas a partir de `calcularPrimeiroVencimento(dataVenda)`,
- *   dia 10, cadencia mensal — mesma regra da auto-init de `parcelas-vencimento-form.tsx`,
+ * - Lista vazia: gera `alvo` linhas a partir de `calcularPrimeiroVencimento(dataVenda, regra)`,
+ *   no dia de vencimento da regra da empresa (default dia 10), cadencia mensal — mesma regra da auto-init de `parcelas-vencimento-form.tsx`,
  *   para nao regredir a venda antiga sem linhas gravadas.
  * - Alvo menor que a lista atual: corta do fim, preservando as datas das que restam.
  * - Alvo maior: mantem as existentes intactas e acrescenta as faltantes, cada uma um
@@ -106,8 +107,9 @@ export function ajustarParcelas(input: {
   valorTotal: number;
   dataVenda?: string;
   parcelasPagas?: number[];
+  regra?: RegraVencimento;
 }): { parcelas: ParcelaAjuste[]; minimoPorPagas: number | null } {
-  const { parcelas, numeroParcelas, valorTotal, dataVenda, parcelasPagas } = input;
+  const { parcelas, numeroParcelas, valorTotal, dataVenda, parcelasPagas, regra } = input;
 
   let alvo = numeroParcelas;
   let minimoPorPagas: number | null = null;
@@ -122,13 +124,13 @@ export function ajustarParcelas(input: {
   let resultado: ParcelaAjuste[];
 
   if (parcelas.length === 0) {
-    const primeiroVencimento = calcularPrimeiroVencimento(dataVendaParaDate(dataVenda));
+    const primeiroVencimento = calcularPrimeiroVencimento(dataVendaParaDate(dataVenda), regra);
     resultado = Array.from({ length: alvo }).map((_, i) => ({
       numeroParcela: i + 1,
       dataVencimento: formatarDataUtc(
         primeiroVencimento.getUTCFullYear(),
         primeiroVencimento.getUTCMonth() + i,
-        10,
+        regra?.diaVencimento ?? 10,
       ),
       valorParcela: 0,
     }));
