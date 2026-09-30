@@ -9,6 +9,7 @@ import { formatBRL } from "@/lib/utils";
 import { DateInput } from "@/components/ui/date-input";
 import { dataParaHidden, parseDataISO } from "@/lib/data-input";
 import { sincronizarParcelasAuto } from "@/lib/parcelas-ajuste";
+import type { RegraVencimento } from "@/lib/regra-empresa";
 
 interface Parcela {
   numeroParcela: number;
@@ -21,11 +22,12 @@ interface Props {
   valorTotal: number;
   parcelas: Parcela[];
   onChange: (parcelas: Parcela[]) => void;
-  dataVenda?: string; // YYYY-MM-DD — usada para calcular vencimento pela regra do dia 20
+  dataVenda?: string; // YYYY-MM-DD — usada para calcular o vencimento pela regra (corte/dia)
   disableAutoInit?: boolean; // Em modo de edição com parcelas existentes, evita reinicializar
+  regra?: RegraVencimento; // Regra da empresa do cliente; sem ela, corte 20 / dia 10
 }
 
-export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit = false }: Props) {
+export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit = false, regra }: Props) {
   // Sincronizacao automatica da lista. A REGRA VIVE EM `sincronizarParcelasAuto`,
   // modulo puro e testado — aqui fica so o efeito colateral.
   //
@@ -45,12 +47,13 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
       // relogio de quem chama. No formulario o fallback e hoje, data local do browser —
       // e vale tambem para data corrompida, que faria o effect lancar.
       dataVenda: parseDataISO(dataVenda) ? dataVenda : dataParaHidden(new Date()),
+      regra,
     });
     // Nunca `= valorTotal` direto: quando a sincronizacao pula sem olhar o total, o
     // anterior tem que continuar valendo, senao a mudanca de total e engolida.
     totalAnterior.current = valorTotalObservado;
     if (proximas) onChange(proximas);
-  }, [numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit]);
+  }, [numeroParcelas, valorTotal, parcelas, onChange, dataVenda, disableAutoInit, regra]);
 
   const handleDataChange = (index: number, newData: string) => {
     const novasParcelas = [...parcelas];

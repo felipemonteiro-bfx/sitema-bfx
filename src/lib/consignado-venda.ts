@@ -63,6 +63,8 @@ export type LimiteClientePayload = {
   faixaConsignado?: string | null;
   margemFolhaTotal?: number;
   margemFolhaDisponivel?: number;
+  /** Corte e dia de vencimento da regra da empresa do cliente vigente hoje (spec 2026-09-30 §3.1). */
+  regraVencimento?: { diaCorte: number; diaVencimento: number };
 };
 
 export type EstadoCardLimite = {

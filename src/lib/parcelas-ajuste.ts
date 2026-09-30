@@ -194,8 +194,10 @@ export function sincronizarParcelasAuto(input: {
   /** Total do render anterior. `null` no primeiro render — sem "mudanca" a detectar. */
   valorTotalAnterior: number | null;
   dataVenda?: string;
+  /** Corte e dia de vencimento da empresa do cliente; sem ela, corte 20 / dia 10. */
+  regra?: RegraVencimento;
 }): { parcelas: ParcelaAjuste[] | null; valorTotalObservado: number | null } {
-  const { parcelas, numeroParcelas, valorTotal, valorTotalAnterior, dataVenda } = input;
+  const { parcelas, numeroParcelas, valorTotal, valorTotalAnterior, dataVenda, regra } = input;
   const pular = { parcelas: null, valorTotalObservado: valorTotalAnterior };
 
   // Pagamento unico: o card nem aparece e nao existe lista a manter.
@@ -210,7 +212,7 @@ export function sincronizarParcelasAuto(input: {
 
   if (parcelas.length !== numeroParcelas) {
     return {
-      parcelas: ajustarParcelas({ parcelas, numeroParcelas, valorTotal, dataVenda }).parcelas,
+      parcelas: ajustarParcelas({ parcelas, numeroParcelas, valorTotal, dataVenda, regra }).parcelas,
       valorTotalObservado: valorTotal,
     };
   }

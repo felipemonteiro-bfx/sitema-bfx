@@ -1,7 +1,12 @@
 import { prisma } from "@/lib/db";
 import { addMonths } from "date-fns";
 
-export async function checkCredito(clienteId: number, parcNova: number) {
+/**
+ * Limite de crédito do cliente (teto = min(renda × 30%, R$ 475)). `diaCorte` é o da regra da
+ * empresa do cliente (spec 2026-09-30 §7): venda até o corte começa a descontar no mês seguinte,
+ * depois dele dois meses à frente. Default 20, o comportamento anterior.
+ */
+export async function checkCredito(clienteId: number, parcNova: number, diaCorte = 20) {
   const cli = await prisma.cliente.findUnique({ where: { id: clienteId } });
   if (!cli || !cli.renda) {
     return { ok: true, disp: 0, tomado: 0, teto: 0 };
@@ -15,7 +20,7 @@ export async function checkCredito(clienteId: number, parcNova: number) {
   for (const v of vendas) {
     const dv = v.dataVenda;
     const dia = dv.getDate();
-    const inicio = addMonths(new Date(dv.getFullYear(), dv.getMonth(), 1), dia <= 20 ? 1 : 2);
+    const inicio = addMonths(new Date(dv.getFullYear(), dv.getMonth(), 1), dia <= diaCorte ? 1 : 2);
     const fim = addMonths(inicio, v.parcelas || 0);
     if (inicio <= mesAtual && mesAtual < fim) {
       tomado += v.valorParcela || 0;

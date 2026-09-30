@@ -19,6 +19,7 @@ import {
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { parcelasDaVendaRapida } from "@/lib/parcelas";
+import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { signReciboId } from "@/lib/recibo-url";
@@ -251,12 +252,16 @@ export async function criarVendaV2(
     // calculo do custo de antecipacao logo abaixo E a criacao das linhas
     // dentro da transacao. Duas fontes divergentes fariam o numero da venda
     // discordar do que a tela da Prudent mostra para a mesma venda.
+    // Corte e dia de vencimento vêm da regra da empresa do cliente vigente na data da venda
+    // (spec 2026-09-30 §3.1); cliente sem empresa parceira usa o padrão (corte 20, dia 10).
+    const regra = await regraDoClienteNaData(clienteId, new Date(dataStr));
     const parcelasParaGravar = parcelasDaVendaRapida({
       informadas: parcelasValidadas,
       parcelas,
       dataVenda: new Date(dataStr),
       total: totalVenda,
       emFolha: formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA,
+      regra,
     });
 
     // Custo de antecipacao Prudent (QK-LGJ-01): toda venda em desconto em
@@ -275,7 +280,7 @@ export async function criarVendaV2(
 
     // Limite de crédito é sempre recalculado no servidor — o valor de "excedeuLimite"
     // vindo do client é só um aviso de UX e nunca é usado para gravar no banco.
-    const credito = await checkCredito(clienteId, valorParcela);
+    const credito = await checkCredito(clienteId, valorParcela, regra.diaCorte);
     const consignado = await calcularConsignado(clienteId);
     const confirmouLimiteConsignado = checkboxLigado(formData.get("confirmouLimiteConsignado"));
     const decisaoFolha = decidirConfirmacaoConsignado({
@@ -470,8 +475,8 @@ export async function criarVendaV2(
           if (parcelasValidadas && parcelasValidadas.length > 0) {
             firstDueDate = parcelasValidadas[0].dataVencimento.slice(0, 10);
           } else {
-            // Regra: até dia 20 → dia 10 do próximo mês; após dia 20 → mês subsequente
-            const d = calcularPrimeiroVencimento(new Date(dataStr));
+            // Regra da empresa do cliente: até o corte → próximo mês; depois → mês subsequente
+            const d = calcularPrimeiroVencimento(new Date(dataStr), regra);
             firstDueDate = d.toISOString().slice(0, 10);
           }
           const payment = await createBoletoPayment({

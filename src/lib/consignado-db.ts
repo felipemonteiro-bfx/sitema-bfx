@@ -8,6 +8,7 @@ import {
 } from "@/lib/consignado";
 import type { PlanoImportacaoConsignado } from "@/lib/consignado-import";
 import type { LinhaConsignado } from "@/lib/consignado-parse";
+import { regraDaEmpresaNaData } from "@/lib/regra-empresa-db";
 
 export async function calcularConsignado(
   clienteId: number,
@@ -206,15 +207,21 @@ export async function aplicarImportacaoConsignado(plano: PlanoImportacaoConsigna
 export async function payloadLimiteCliente(clienteId: number) {
   const cliente = await prisma.cliente.findUnique({
     where: { id: clienteId },
-    select: { renda: true, nome: true },
+    select: { renda: true, nome: true, empresaParceiraId: true },
   });
   if (!cliente) return null;
   const vendas = await prisma.venda.findMany({ where: { clienteId } });
   const consignado = await calcularConsignado(clienteId);
-  return montarPayloadLimite({
-    nome: cliente.nome,
-    renda: cliente.renda,
-    vendas,
-    consignado,
-  });
+  // Corte e vencimento da regra da empresa vigente hoje (spec 2026-09-30 §3.1): a lista de
+  // parcelas do formulário da venda rápida nasce por eles.
+  const regra = await regraDaEmpresaNaData(cliente.empresaParceiraId, new Date());
+  return {
+    ...montarPayloadLimite({
+      nome: cliente.nome,
+      renda: cliente.renda,
+      vendas,
+      consignado,
+    }),
+    regraVencimento: { diaCorte: regra.diaCorte, diaVencimento: regra.diaVencimento },
+  };
 }

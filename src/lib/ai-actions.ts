@@ -26,6 +26,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
+import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
 import { hashSenha } from "@/lib/senha";
 import { validarForcaMinima } from "@/lib/senha-politica";
@@ -927,8 +928,10 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         }]);
         if (erroValidacaoIa) { result = { erro: erroValidacaoIa }; break; }
 
-        // Limite de crédito é sempre recalculado no servidor, igual ao fluxo manual.
-        const creditoIa = await checkCredito(Number(parsedParams.clienteId), valorParcelaIa);
+        // Limite de crédito é sempre recalculado no servidor, igual ao fluxo manual, com o
+        // corte da regra da empresa do cliente (spec 2026-09-30 §7).
+        const regraIa = await regraDoClienteNaData(Number(parsedParams.clienteId), new Date());
+        const creditoIa = await checkCredito(Number(parsedParams.clienteId), valorParcelaIa, regraIa.diaCorte);
         const excedeuLimiteIa = creditoIa.ok ? 0 : 1;
 
         // Forma canonica derivada (a IA nao tem campo de forma de pagamento por enquanto).

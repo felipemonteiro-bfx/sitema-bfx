@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { parcelasDaVendaRapida, parcelaUnicaDaFolha } from "@/lib/parcelas";
-import { ajustarParcelas } from "@/lib/parcelas-ajuste";
+import { ajustarParcelas, sincronizarParcelasAuto } from "@/lib/parcelas-ajuste";
 
 const d = (s: string) => new Date(`${s}T00:00:00.000Z`);
 const iso = (x: Date) => x.toISOString().slice(0, 10);
@@ -40,5 +40,19 @@ describe("parcelas geradas pela regra", () => {
   it("ajustarParcelas gera do zero no dia da regra", () => {
     const { parcelas } = ajustarParcelas({ parcelas: [], numeroParcelas: 2, valorTotal: 200, dataVenda: "2026-09-10", regra: { diaCorte: 20, diaVencimento: 15 } });
     expect(parcelas.map((p) => p.dataVencimento)).toEqual(["2026-10-15", "2026-11-15"]);
+  });
+});
+
+describe("formulário da venda rápida pela regra", () => {
+  it("sincronizarParcelasAuto gera a lista do zero no dia da regra", () => {
+    const { parcelas } = sincronizarParcelasAuto({
+      parcelas: [],
+      numeroParcelas: 2,
+      valorTotal: 200,
+      valorTotalAnterior: null,
+      dataVenda: "2026-09-10",
+      regra: { diaCorte: 20, diaVencimento: 15 },
+    });
+    expect(parcelas?.map((p) => p.dataVencimento)).toEqual(["2026-10-15", "2026-11-15"]);
   });
 });

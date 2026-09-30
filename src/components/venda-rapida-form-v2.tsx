@@ -1294,6 +1294,7 @@ export default function VendaRapidaFormV2({
         parcelas={parcelasVencimento}
         onChange={setParcelasVencimento}
         dataVenda={dataVenda}
+        regra={limiteData?.regraVencimento}
       />
 
       {/* Seção 7: Resumo Financeiro */}
