@@ -18,7 +18,7 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
-import { parcelasDaVendaRapida } from "@/lib/parcelas";
+import { numerosDeParcelaRepetidos, parcelasDaVendaRapida } from "@/lib/parcelas";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
@@ -194,6 +194,15 @@ export async function criarVendaV2(
 
     const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
     const descontoManual = parsed.data.desconto ?? 0;
+
+    // Numero de parcela repetido (spec 2026-09-30 §3.2): com a unique (venda_id, numero_parcela)
+    // o createMany falharia dentro da transacao. Recusa aqui, antes de qualquer escrita.
+    const parcelasRepetidas = numerosDeParcelaRepetidos(parcelasValidadas ?? []);
+    if (parcelasRepetidas.length > 0) {
+      const motivo = `Parcela ${parcelasRepetidas.join(", ")} aparece mais de uma vez.`;
+      registrarRejeicaoVenda({ ...contextoRejeicao, motivo, vendedor, clienteId });
+      return errorResponse(motivo);
+    }
 
     // Fidelidade: resgate de pontos vira desconto na venda (limitado ao saldo do cliente).
     const pontosResgatarPedido = parsed.data.pontosResgatar ?? 0;

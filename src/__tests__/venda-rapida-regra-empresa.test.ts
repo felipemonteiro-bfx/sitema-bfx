@@ -90,3 +90,22 @@ describe("criarVendaV2 pela regra da empresa", () => {
     expect(asaasMock.createBoletoPayment).toHaveBeenCalledWith(expect.objectContaining({ dueDate: "2026-11-15" }), expect.anything());
   });
 });
+
+describe("criarVendaV2 com número de parcela repetido (2026-09-30)", () => {
+  // Com a unique (venda_id, numero_parcela) o createMany falharia dentro da transação, depois de
+  // a venda e o boleto já terem sido montados. Recusa antes, com a mesma mensagem da edição.
+  it("recusa antes da transação e diz qual parcela repete", async () => {
+    const fd = formVenda("DESCONTO_FOLHA");
+    fd.set(
+      "parcelasVencimento",
+      JSON.stringify([
+        { numeroParcela: 1, dataVencimento: "2026-10-10", valorParcela: 100 },
+        { numeroParcela: 1, dataVencimento: "2026-11-10", valorParcela: 100 },
+        { numeroParcela: 3, dataVencimento: "2026-12-10", valorParcela: 100 },
+      ]),
+    );
+    const r = await criarVendaV2(fd);
+    expect(r).toMatchObject({ success: false, error: "Parcela 1 aparece mais de uma vez." });
+    expect(dbMock.$transaction).not.toHaveBeenCalled();
+  });
+});
