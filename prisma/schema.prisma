@@ -251,6 +251,7 @@ model ParcelaVencimento {
   antecipacaoLote AnticipacaoBatch? @relation(fields: [antecipacaoLoteId], references: [id], onDelete: SetNull)
 
   @@map("parcelas_vencimento")
+  @@unique([vendaId, numeroParcela])
   @@index([vendaId])
   @@index([dataVencimento])
   @@index([antecipacaoLoteId])
@@ -370,8 +371,33 @@ model EmpresaParceira {
   relatoriosEnviados RelatorioEnvioLog[]
   emailsEnviados EmailEnvio[]
   contratosConsignados ContratoConsignado[]
+  regras        RegraEmpresa[]
 
   @@map("empresas_parceiras")
+}
+
+/// Regras por empresa conveniada e período (spec 2026-09-30 §3.1): corte, vencimento das
+/// parcelas, dia do Pix do fechamento, repasse e a chave do fluxo novo de cobrança. Vigências de
+/// uma empresa não se sobrepõem (validado no save). Sem regra vigente vale `REGRA_PADRAO`.
+model RegraEmpresa {
+  id                Int       @id @default(autoincrement())
+  empresaParceiraId Int       @map("empresa_parceira_id")
+  vigenteDe         DateTime  @map("vigente_de") // inclusivo, data pura em UTC
+  vigenteAte        DateTime? @map("vigente_ate") // exclusivo; nulo = aberta
+  diaCorte          Int       @default(20) @map("dia_corte")
+  diaVencimento     Int       @default(10) @map("dia_vencimento")
+  diaPix            Int       @default(15) @map("dia_pix")
+  repassePct        Float?    @map("repasse_pct")
+  repasseBase       String?   @map("repasse_base") // "venda"
+  cobrancaViaBfx    Boolean   @default(false) @map("cobranca_via_bfx")
+  observacao        String?
+  criadaEm          DateTime  @default(now()) @map("criada_em")
+  criadaPor         String?   @map("criada_por")
+
+  empresaParceira EmpresaParceira @relation(fields: [empresaParceiraId], references: [id], onDelete: Cascade)
+
+  @@index([empresaParceiraId, vigenteDe])
+  @@map("regras_empresa")
 }
 
 model ContratoConsignado {
