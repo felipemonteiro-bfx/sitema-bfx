@@ -65,6 +65,8 @@ export type LimiteClientePayload = {
   margemFolhaDisponivel?: number;
   /** Corte e dia de vencimento da regra da empresa do cliente vigente hoje (spec 2026-09-30 §3.1). */
   regraVencimento?: { diaCorte: number; diaVencimento: number };
+  /** % de repasse à empresa da mesma regra; `null` = sem repasse (spec 2026-09-30 §7). */
+  repassePct?: number | null;
 };
 
 export type EstadoCardLimite = {

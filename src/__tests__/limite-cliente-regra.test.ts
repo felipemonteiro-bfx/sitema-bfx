@@ -35,6 +35,19 @@ describe("payloadLimiteCliente", () => {
     await payloadLimiteCliente(5, dataVenda);
     expect(regraDbMock.regraDaEmpresaNaData).toHaveBeenCalledWith(7, dataVenda);
   });
+
+  it("leva o repasse da regra vigente, sem consultar a regra duas vezes", async () => {
+    regraDbMock.regraDaEmpresaNaData.mockResolvedValue({ ...REGRA_PADRAO, repassePct: 7, repasseBase: "venda" });
+    const p = await payloadLimiteCliente(5);
+    expect(p?.repassePct).toBe(7);
+    expect(regraDbMock.regraDaEmpresaNaData).toHaveBeenCalledTimes(1);
+  });
+
+  it("sem repasse na regra, repassePct é null", async () => {
+    regraDbMock.regraDaEmpresaNaData.mockResolvedValue({ ...REGRA_PADRAO });
+    const p = await payloadLimiteCliente(5);
+    expect(p?.repassePct).toBeNull();
+  });
 });
 
 describe("GET /api/clientes/[id]/limite?data=", () => {

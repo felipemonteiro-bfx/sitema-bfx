@@ -224,5 +224,7 @@ export async function payloadLimiteCliente(clienteId: number, data: Date = new D
       consignado,
     }),
     regraVencimento: { diaCorte: regra.diaCorte, diaVencimento: regra.diaVencimento },
+    // Repasse à empresa da mesma regra, para o resumo da venda rápida estimar (spec §7).
+    repassePct: regra.repassePct ?? null,
   };
 }
