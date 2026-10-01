@@ -257,8 +257,13 @@ model ParcelaVencimento {
   confirmacaoPor    String?   @map("confirmacao_por")
   confirmacaoMotivo String?   @map("confirmacao_motivo")
 
+  // Boleto da Prudent que cobra esta parcela antecipada (2026-09-30, Fase 4). Nasce na conclusão
+  // do lote; Restrict: boleto não some com parcela ligada.
+  boletoPrudentId   Int?      @map("boleto_prudent_id")
+
   venda           Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
   antecipacaoLote AnticipacaoBatch? @relation(fields: [antecipacaoLoteId], references: [id], onDelete: SetNull)
+  boletoPrudent   BoletoPrudent?    @relation(fields: [boletoPrudentId], references: [id], onDelete: Restrict)
 
   @@map("parcelas_vencimento")
   @@unique([vendaId, numeroParcela])
@@ -266,6 +271,7 @@ model ParcelaVencimento {
   @@index([dataVencimento])
   @@index([antecipacaoLoteId])
   @@index([confirmacaoRh])
+  @@index([boletoPrudentId])
 }
 
 model Config {
@@ -316,6 +322,8 @@ model Config {
   smtpPass                 String? @map("smtp_pass")
   smtpFrom                 String? @map("smtp_from")
   adminEmail               String? @map("admin_email")
+  // Recebe os alertas de obrigação da Prudent (2026-09-30, Fase 4). Sem ele, só notificação.
+  emailFinanceiro          String? @map("email_financeiro")
   // Uber Direct (cotação de frete): client_id/client_secret via OAuth client_credentials —
   // nunca um token estático (a Uber não tem refresh token; guardar o token expira em ~30
   // dias sem aviso). O sistema troca por access_token sob demanda (src/lib/uber-auth.ts) e
@@ -635,8 +643,86 @@ model AnticipacaoBatch {
   comprovanteKey         String?   @map("comprovante_key")
 
   parcelas          ParcelaVencimento[]
+  boletos           BoletoPrudent[]
 
   @@map("antecipacao_batches")
+}
+
+/// Arquivo privado do financeiro (PDF do boleto Prudent, comprovante de pagamento), em bytes no
+/// banco como `Documento`: o bucket MinIO só serve chaves públicas. Servido por
+/// `/api/arquivos/[id]` só para admin.
+model ArquivoFinanceiro {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  contentType String   @map("content_type")
+  tamanho     Int
+  sha256      String   @map("sha256")
+  conteudo    Bytes
+  criadoEm    DateTime @default(now()) @map("criado_em")
+  criadoPor   String?  @map("criado_por")
+
+  boletosPdf  BoletoPrudent[]   @relation("boleto_pdf")
+  pagamentos  BoletoPagamento[] @relation("pagamento_comprovante")
+
+  @@index([sha256])
+  @@map("arquivos_financeiros")
+}
+
+/// Boleto da Prudent por lote × vencimento (spec 2026-09-30 §3.4). Nasce em `concluirLote`
+/// aguardando o documento. Um boleto vivo por (lote, vencimento): índice parcial na migração
+/// `20260930140000_boletos_prudent`, fora do schema (o Prisma não representa índice parcial).
+model BoletoPrudent {
+  id                       Int       @id @default(autoincrement())
+  loteId                   Int       @map("lote_id")
+  empresaParceiraId        Int?      @map("empresa_parceira_id")
+  vencimento               DateTime
+  valorEsperado            Float     @map("valor_esperado")
+  valorDocumento           Float?    @map("valor_documento")
+  vencimentoDocumento      DateTime? @map("vencimento_documento")
+  linhaDigitavel           String?   @unique @map("linha_digitavel")
+  pdfArquivoId             Int?      @map("pdf_arquivo_id")
+  // "empresa" (a Prudent cobra a empresa) | "bfx" (a BFX paga)
+  direcionamento           String    @default("empresa")
+  // aguardando_documento | a_pagar | pago_parcial | pago | substituido | cancelado
+  status                   String    @default("aguardando_documento")
+  divergenciaJustificativa String?   @map("divergencia_justificativa")
+  substituiId              Int?      @unique @map("substitui_id")
+  criadoEm                 DateTime  @default(now()) @map("criado_em")
+  atualizadoEm             DateTime  @updatedAt @map("atualizado_em")
+
+  lote        AnticipacaoBatch   @relation(fields: [loteId], references: [id], onDelete: Restrict)
+  pdf         ArquivoFinanceiro? @relation("boleto_pdf", fields: [pdfArquivoId], references: [id], onDelete: SetNull)
+  substitui   BoletoPrudent?     @relation("substituicao", fields: [substituiId], references: [id], onDelete: Restrict)
+  substituto  BoletoPrudent?     @relation("substituicao")
+  parcelas    ParcelaVencimento[]
+  pagamentos  BoletoPagamento[]
+
+  @@index([vencimento])
+  @@index([loteId])
+  @@map("boletos_prudent")
+}
+
+/// Pagamento de um boleto Prudent pela BFX (spec §3.5). Estorno marca `estornadoEm`; nada some.
+/// `comprovanteHash` único impede usar o mesmo comprovante duas vezes.
+model BoletoPagamento {
+  id                   Int       @id @default(autoincrement())
+  boletoId             Int       @map("boleto_id")
+  dataPagamento        DateTime  @map("data_pagamento")
+  valorPrincipal       Float     @map("valor_principal")
+  valorEncargos        Float     @default(0) @map("valor_encargos")
+  comprovanteArquivoId Int?      @map("comprovante_arquivo_id")
+  comprovanteHash      String?   @unique @map("comprovante_hash")
+  autenticacao         String?
+  registradoPor        String?   @map("registrado_por")
+  criadoEm             DateTime  @default(now()) @map("criado_em")
+  estornadoEm          DateTime? @map("estornado_em")
+  estornadoPor         String?   @map("estornado_por")
+
+  boleto      BoletoPrudent      @relation(fields: [boletoId], references: [id], onDelete: Restrict)
+  comprovante ArquivoFinanceiro? @relation("pagamento_comprovante", fields: [comprovanteArquivoId], references: [id], onDelete: SetNull)
+
+  @@index([boletoId])
+  @@map("boletos_prudent_pagamentos")
 }
 
 /// Registro unificado de mensagens WhatsApp (entrada e saída).
