@@ -21,8 +21,27 @@ import { PageHeader } from "@/components/page-header";
 import { WebhookAsaasCard } from "@/components/webhook-asaas-card";
 import { formatarUltimoAviso, mascararToken, statusWebhookAsaas, urlWebhookAsaas } from "@/lib/webhook-asaas-token";
 import { headers } from "next/headers";
+import { normalizarEmailFinanceiro } from "@/lib/alertas-obrigacoes";
 
-type Search = { tab?: string };
+type Search = { tab?: string; error?: string };
+
+/**
+ * E-mail do financeiro (2026-09-30, Fase 4): recebe os alertas de obrigação da Prudent que pedem
+ * e-mail (o "Pix não entrou", Fase 6). Vazio apaga; sem ele, só a notificação interna.
+ */
+async function saveEmailFinanceiro(formData: FormData) {
+  "use server";
+  await requireAdminOrThrow();
+  const r = normalizarEmailFinanceiro(formData.get("emailFinanceiro"));
+  if (!r.ok) redirect("/configuracoes?tab=email&error=email_financeiro_invalido");
+  const cfg = await prisma.config.findFirst();
+  if (cfg) {
+    await prisma.config.update({ where: { id: cfg.id }, data: { emailFinanceiro: r.valor } });
+  } else {
+    await prisma.config.create({ data: { emailFinanceiro: r.valor } });
+  }
+  revalidarConfig();
+}
 
 async function saveAviso(formData: FormData) {
   "use server";
@@ -820,6 +839,43 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </CardContent>
               </Card>
               </div>
+            ),
+          },
+          {
+            value: "email",
+            label: "E-mail",
+            content: (
+              <Card>
+                <CardHeader>
+                  <CardTitle>E-mail do financeiro</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Recebe os alertas de obrigações da Prudent que vão por e-mail. Sem ele, os alertas ficam só nas
+                    notificações dos administradores.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveEmailFinanceiro} className="space-y-3">
+                    <div className="space-y-1">
+                      <Label htmlFor="emailFinanceiro">E-mail</Label>
+                      <Input
+                        id="emailFinanceiro"
+                        name="emailFinanceiro"
+                        type="email"
+                        autoComplete="email"
+                        defaultValue={cfg?.emailFinanceiro ?? ""}
+                        placeholder="financeiro@empresa.com.br"
+                        aria-describedby={sp.error === "email_financeiro_invalido" ? "emailFinanceiro-erro" : undefined}
+                      />
+                      {sp.error === "email_financeiro_invalido" && (
+                        <p id="emailFinanceiro-erro" className="text-sm text-error-text">
+                          E-mail do financeiro inválido. Confira o endereço.
+                        </p>
+                      )}
+                    </div>
+                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                  </form>
+                </CardContent>
+              </Card>
             ),
           },
           {

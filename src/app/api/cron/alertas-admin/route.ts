@@ -2,12 +2,15 @@ import { NextResponse } from "next/server";
 import { autorizarCron } from "@/lib/segredo";
 import { prisma } from "@/lib/db";
 import { logCron, logCronError } from "@/lib/logger";
+import { hojeDataPura } from "@/lib/data-pura";
+import { PREFIXO_BOLETO, STATUS_ALERTAVEIS, alertasDeBoletos } from "@/lib/alertas-obrigacoes";
 
 /**
  * GET /api/cron/alertas-admin
  *
  * Cria notificacoes internas (in-app) para todos os usuarios admin sobre pendencias
- * operacionais: parcelas vencidas, assinaturas pendentes ha muito tempo e estoque baixo.
+ * operacionais: parcelas vencidas, assinaturas pendentes ha muito tempo, estoque baixo e, desde
+ * a Fase 4 (2026-09-30), boletos Prudent que a BFX paga vencendo ou sem documento.
  *
  * Idempotencia: nao recria um alerta do mesmo tipo se ja existe um nao-lido criado
  * nas ultimas 20h (evita spam a cada execucao).
@@ -59,6 +62,25 @@ export async function GET(req: Request) {
       where: { qtdEstoque: { lte: estoqueMinimo } },
     });
 
+    // 4. Boletos Prudent que a BFX paga (Fase 4). "Hoje" e a data pura em Manaus, como o
+    // vencimento gravado; o servidor em UTC viraria o dia as 20h.
+    const boletos = await prisma.boletoPrudent.findMany({
+      where: { direcionamento: "bfx", status: { in: STATUS_ALERTAVEIS } },
+      select: {
+        status: true,
+        direcionamento: true,
+        vencimento: true,
+        vencimentoDocumento: true,
+        valorEsperado: true,
+        valorDocumento: true,
+        pagamentos: { select: { valorPrincipal: true, estornadoEm: true } },
+      },
+    });
+    const alertasBoletos = alertasDeBoletos(boletos, new Date(`${hojeDataPura()}T00:00:00.000Z`));
+    const contagemBoleto = (prefixo: string) => alertasBoletos.find((a) => a.prefixo === prefixo)?.contagem ?? 0;
+    const boletosVencendo = contagemBoleto(PREFIXO_BOLETO.vencendo);
+    const boletosSemDocumento = contagemBoleto(PREFIXO_BOLETO.semDocumento);
+
     const alertas: { prefixo: string; mensagem: string; link: string; contagem: number }[] = [];
     if (parcelasVencidas > 0) {
       alertas.push({
@@ -84,6 +106,8 @@ export async function GET(req: Request) {
         contagem: estoqueBaixo,
       });
     }
+
+    alertas.push(...alertasBoletos);
 
     // Janela de idempotencia (20h)
     const janela = new Date();
@@ -113,13 +137,15 @@ export async function GET(req: Request) {
       parcelasVencidas,
       assinaturasPendentes,
       estoqueBaixo,
+      boletosVencendo,
+      boletosSemDocumento,
       notificacoesCriadas: criadas,
     });
 
     return NextResponse.json({
       ok: true,
       admins: admins.length,
-      alertas: { parcelasVencidas, assinaturasPendentes, estoqueBaixo },
+      alertas: { parcelasVencidas, assinaturasPendentes, estoqueBaixo, boletosVencendo, boletosSemDocumento },
       notificacoesCriadas: criadas,
     });
   } catch (error) {
