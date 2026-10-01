@@ -49,6 +49,8 @@ export type PixDemonstrativo = {
   qrPng?: Uint8Array;
   vencimento?: Date;
   identificacao?: string;
+  /** Valor da cobrança (o saldo, quando parte já foi recebida); sem ele, o valor final. */
+  valor?: number;
 };
 
 export type FechamentoPdfInput = DemonstrativoDados & {
@@ -297,7 +299,7 @@ export async function gerarFechamentoPdf(input: FechamentoPdfInput): Promise<Buf
     if (qr) page.drawImage(qr, { x: MARGIN, y: topo - QR, width: QR, height: QR });
     let ty = topo - 10;
     texto("Valor", textoX, ty, 9, fontBold, AZUL);
-    texto(formatBRL(dados.totalFinal), textoX + 40, ty, 9, fontBold, CINZA_TEXTO);
+    texto(formatBRL(pix.valor ?? dados.totalFinal), textoX + 40, ty, 9, fontBold, CINZA_TEXTO);
     ty -= 16;
     texto("Pix copia e cola:", textoX, ty, 9, fontBold, AZUL);
     ty -= 12;

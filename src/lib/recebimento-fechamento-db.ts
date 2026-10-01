@@ -398,3 +398,13 @@ export async function estornarRecebimento(e: { recebimentoId: number; usuario: s
   });
   if (recalculo) await avisarAdmins(alertasDoRecalculo(recalculo, "estorno"));
 }
+
+/** Recalcula fora de um recebimento (depois do envio, quando o já recebido cobre a versão nova). */
+export async function recalcularEAvisar(fechamentoId: number): Promise<Recalculo | null> {
+  const r = await prisma.$transaction(async (tx) => {
+    await travar(tx, fechamentoId);
+    return recalcularFechamento(tx, fechamentoId);
+  });
+  if (r) await avisarAdmins(alertasDoRecalculo(r, "recebimento"));
+  return r;
+}

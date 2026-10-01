@@ -411,7 +411,9 @@ export async function getOrCreateCustomerEmpresa(
   const cnpj = onlyNumbers(empresa.cnpj);
   if (cnpj.length !== 14) throw new Error("Cadastre o CNPJ da empresa para gerar o Pix.");
 
-  const body: Record<string, string> = { name: empresa.nome, cpfCnpj: cnpj };
+  // `notificationDisabled`: a BFX manda o próprio demonstrativo com o Pix; o RH não deve receber
+  // também os e-mails/SMS de cobrança do Asaas.
+  const body: Record<string, string | boolean> = { name: empresa.nome, cpfCnpj: cnpj, notificationDisabled: true };
   const email = empresa.emailRh?.trim();
   if (email) body.email = email;
 

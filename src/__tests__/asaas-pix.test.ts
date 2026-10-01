@@ -156,7 +156,8 @@ describe("getOrCreateCustomerEmpresa", () => {
     expect(id).toBe("cus_novo");
     expect(chamadas[0].url).toBe("https://asaas.test/v3/customers");
     expect(chamadas[0].method).toBe("POST");
-    expect(chamadas[0].body).toEqual({ name: "Prefeitura X", cpfCnpj: "12345678000190", email: "rh@x.gov.br" });
+    // notificationDisabled: a BFX manda o próprio demonstrativo; o RH não recebe e-mail de cobrança do Asaas.
+    expect(chamadas[0].body).toEqual({ name: "Prefeitura X", cpfCnpj: "12345678000190", email: "rh@x.gov.br", notificationDisabled: true });
     expect(update).toHaveBeenCalledWith({ where: { id: 7 }, data: { asaasCustomerId: "cus_novo" } });
   });
 
@@ -164,7 +165,7 @@ describe("getOrCreateCustomerEmpresa", () => {
     const chamadas = mockFetch([{ corpo: { id: "cus_novo" } }]);
     const { prisma } = prismaFake();
     await getOrCreateCustomerEmpresa({ ...empresa, emailRh: "  " }, prisma, config);
-    expect(chamadas[0].body).toEqual({ name: "Prefeitura X", cpfCnpj: "12345678000190" });
+    expect(chamadas[0].body).toEqual({ name: "Prefeitura X", cpfCnpj: "12345678000190", notificationDisabled: true });
   });
 
   it("duplicata → busca pelo CNPJ e reaproveita o cliente existente", async () => {

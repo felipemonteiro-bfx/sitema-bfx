@@ -1,6 +1,8 @@
 // Envio do demonstrativo ao RH (Fase 5): exige fechamento conferido e e-mail do RH, gera o PDF da
-// versão atual (sem Pix nesta fase), manda PDF + XLSX, registra no histórico (tipo "fechamento") e
-// só depois marca enviado. Ver docs/superpowers/specs/2026-09-30-fechamento-pix-prudent-design.md §5.2.
+// versão atual, manda PDF + XLSX, registra no histórico (tipo "fechamento") e só depois marca
+// enviado. Fase 6: antes, encerra as cobranças das versões anteriores e gera o Pix do saldo no
+// Asaas (mockado) — copia-e-cola no corpo e o QR em anexo.
+// Ver docs/superpowers/specs/2026-09-30-fechamento-pix-prudent-design.md §5.2.
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const dbMock = {
@@ -14,6 +16,26 @@ vi.mock("@/lib/email", () => emailMock);
 const regraMock = { regrasDaEmpresa: vi.fn() };
 vi.mock("@/lib/regra-empresa-db", () => regraMock);
 const fechDbMock = { marcarEnviado: vi.fn(), reivindicarEnvio: vi.fn(), desfazerReivindicacao: vi.fn() };
+const asaasMock = { getOrCreateCustomerEmpresa: vi.fn() };
+vi.mock("@/lib/asaas", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/lib/asaas")>();
+  return { ...real, ...asaasMock };
+});
+const cobrancaMock = { encerrarCobrancasAnteriores: vi.fn(), garantirCobrancaPix: vi.fn() };
+vi.mock("@/lib/cobranca-fechamento-db", () => cobrancaMock);
+const recMock = { recalcularEAvisar: vi.fn() };
+vi.mock("@/lib/recebimento-fechamento-db", () => recMock);
+const pdfSpy = vi.fn();
+vi.mock("@/lib/fechamento-pdf", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@/lib/fechamento-pdf")>();
+  return {
+    ...real,
+    gerarFechamentoPdf: (input: Parameters<typeof real.gerarFechamentoPdf>[0]) => {
+      pdfSpy(input);
+      return real.gerarFechamentoPdf(input);
+    },
+  };
+});
 vi.mock("@/lib/fechamento-db", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/lib/fechamento-db")>();
   return { ...real, ...fechDbMock };
@@ -23,6 +45,21 @@ const { enviarFechamento, htmlEmailFechamento } = await import("@/lib/fechamento
 const { ROTULO_TIPO_EMAIL } = await import("@/lib/email-tipos");
 
 const XLSX = Buffer.from("PK\u0003\u0004fake");
+// PNG 1×1 válido: o PDF embute o QR.
+const QR = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "base64"
+);
+const COPIA_E_COLA = "00020101021226820014br.gov.bcb.pix2560qrpix.bradesco.com.br/qr/v2/cobv/abc5204000053039865406450.005802BR6304ABCD";
+const PIX = {
+  cobrancaId: 8,
+  asaasPaymentId: "pay_v2",
+  copiaECola: COPIA_E_COLA,
+  qrPng: new Uint8Array(QR),
+  valor: 450,
+  vencimento: new Date("2026-10-15T00:00:00Z"),
+  identificacao: "FEC-7-2026-10-v2",
+};
 
 function fechamento(extra: Record<string, unknown> = {}) {
   return {
@@ -38,6 +75,7 @@ function fechamento(extra: Record<string, unknown> = {}) {
       cnpj: "12.345.678/0001-90",
       emailRh: " rh@amazonfive.com.br ",
       emailCopia: "financeiro@amazonfive.com.br",
+      asaasCustomerId: "cus_9",
     },
     versoes: [
       {
@@ -68,7 +106,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   dbMock.fechamento.findUnique.mockResolvedValue(fechamento());
   dbMock.arquivoFinanceiro.create.mockResolvedValue({ id: 55 });
-  dbMock.config.findFirst.mockResolvedValue({ logoPath: null });
+  dbMock.config.findFirst.mockResolvedValue({ logoPath: null, asaasApiKey: "k", asaasEnv: null });
+  asaasMock.getOrCreateCustomerEmpresa.mockResolvedValue("cus_9");
+  cobrancaMock.encerrarCobrancasAnteriores.mockResolvedValue(undefined);
+  cobrancaMock.garantirCobrancaPix.mockResolvedValue({ pix: PIX, recebido: 0, saldo: 450 });
+  recMock.recalcularEAvisar.mockResolvedValue(null);
   emailMock.sendEmail.mockResolvedValue(undefined);
   fechDbMock.marcarEnviado.mockResolvedValue(undefined);
   fechDbMock.reivindicarEnvio.mockResolvedValue(undefined);
@@ -87,6 +129,115 @@ describe("tipo de e-mail", () => {
   });
 });
 
+describe("enviarFechamento — Pix (Fase 6)", () => {
+  it("gera o Pix pelo saldo e o põe no PDF e no e-mail: copia-e-cola numa linha só, QR em anexo", async () => {
+    await enviarFechamento({ fechamentoId: 11, versao: 2, usuario: "andre" });
+
+    expect(asaasMock.getOrCreateCustomerEmpresa).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 7, cnpj: "12.345.678/0001-90", asaasCustomerId: "cus_9" }),
+      expect.anything(),
+      { baseUrl: expect.any(String), apiKey: "k" }
+    );
+    expect(cobrancaMock.encerrarCobrancasAnteriores).toHaveBeenCalledWith({ fechamentoId: 11, versaoId: 900, config: expect.anything() });
+    expect(cobrancaMock.garantirCobrancaPix).toHaveBeenCalledWith(
+      expect.objectContaining({ fechamentoId: 11, versaoId: 900, versao: 2, empresaId: 7, customerId: "cus_9", totalFinal: 450, diaPix: 15, competencia: "2026-10" })
+    );
+    // anteriores encerradas antes de reivindicar; a cobrança nova só depois (um envio só cria)
+    const ordem = (f: { mock: { invocationCallOrder: number[] } }) => f.mock.invocationCallOrder[0];
+    expect(ordem(cobrancaMock.encerrarCobrancasAnteriores)).toBeLessThan(ordem(fechDbMock.reivindicarEnvio));
+    expect(ordem(fechDbMock.reivindicarEnvio)).toBeLessThan(ordem(cobrancaMock.garantirCobrancaPix));
+    expect(ordem(cobrancaMock.garantirCobrancaPix)).toBeLessThan(ordem(emailMock.sendEmail));
+
+    expect(pdfSpy.mock.calls[0][0].pix).toEqual({
+      copiaECola: COPIA_E_COLA,
+      qrPng: PIX.qrPng,
+      vencimento: PIX.vencimento,
+      identificacao: "FEC-7-2026-10-v2",
+      valor: 450,
+    });
+
+    const email = emailMock.sendEmail.mock.calls[0][0];
+    const png = email.attachments.find((a: { filename: string }) => a.filename === "pix-2026-10.png");
+    expect(png.contentType).toBe("image/png");
+    expect(Buffer.from(png.content).equals(QR)).toBe(true);
+    const html: string = email.html;
+    // o copia-e-cola inteiro, contíguo, num bloco monoespaçado que não quebra
+    const bloco = html.split("\n").find((l) => l.includes(COPIA_E_COLA)) ?? "";
+    expect(bloco).toContain("monospace");
+    expect(bloco).toContain("white-space:nowrap");
+    expect(bloco).not.toContain("<br");
+    expect(html).toContain("Vencimento do Pix: 15/10/2026");
+    expect(html).toContain("FEC-7-2026-10-v2");
+    expect(recMock.recalcularEAvisar).toHaveBeenCalledWith(11);
+    expect(ordem(recMock.recalcularEAvisar)).toBeGreaterThan(ordem(fechDbMock.marcarEnviado));
+  });
+
+  it("copia-e-cola com quebra de linha vira uma linha só no e-mail", () => {
+    const html = htmlEmailFechamento({
+      empresa: "X",
+      competencia: "2026-10",
+      versao: 1,
+      totalFinal: 10,
+      vencimentoPix: new Date("2026-10-15T00:00:00Z"),
+      anexos: [],
+      pix: { copiaECola: "0002\r\n0101\u2028FIM", valor: 10, identificacao: "FEC-1-2026-10-v1" },
+      recebido: 0,
+    });
+    expect(html).toContain("00020101FIM");
+  });
+
+  it("já recebido parte: o e-mail mostra o recebido e o valor do Pix (saldo)", async () => {
+    cobrancaMock.garantirCobrancaPix.mockResolvedValue({ pix: { ...PIX, valor: 300 }, recebido: 150, saldo: 300 });
+    await enviarFechamento({ fechamentoId: 11, versao: 2, usuario: null });
+    const html: string = emailMock.sendEmail.mock.calls[0][0].html;
+    expect(html).toMatch(/Já recebido[^<]*<\/p>\s*<p[^>]*>R\$\s?150,00/);
+    expect(html).toMatch(/Valor do Pix[^<]*<\/p>\s*<p[^>]*>R\$\s?300,00/);
+  });
+
+  it("saldo zero: sem cobrança, sem anexo do QR, e-mail diz que não há o que pagar", async () => {
+    cobrancaMock.garantirCobrancaPix.mockResolvedValue({ pix: null, recebido: 450, saldo: 0 });
+    await enviarFechamento({ fechamentoId: 11, versao: 2, usuario: null });
+    const email = emailMock.sendEmail.mock.calls[0][0];
+    expect(email.attachments).toHaveLength(2);
+    expect(email.html).toContain("Nada a pagar");
+    expect(pdfSpy.mock.calls[0][0].pix).toBeNull();
+  });
+
+  it("Asaas sem configuração → erro antes de qualquer gravação ou chamada", async () => {
+    dbMock.config.findFirst.mockResolvedValue({ logoPath: null, asaasApiKey: null, asaasEnv: null });
+    await expect(enviarFechamento({ fechamentoId: 11, versao: 2, usuario: null })).rejects.toThrow(
+      "Configure o Asaas em Configurações para gerar o Pix."
+    );
+    expect(asaasMock.getOrCreateCustomerEmpresa).not.toHaveBeenCalled();
+    expect(cobrancaMock.encerrarCobrancasAnteriores).not.toHaveBeenCalled();
+    expect(fechDbMock.reivindicarEnvio).not.toHaveBeenCalled();
+    expect(emailMock.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("empresa sem CNPJ → recusa antes de criar nada", async () => {
+    const f = fechamento();
+    dbMock.fechamento.findUnique.mockResolvedValue({ ...f, empresaParceira: { ...f.empresaParceira, cnpj: null, asaasCustomerId: null } });
+    await expect(enviarFechamento({ fechamentoId: 11, versao: 2, usuario: null })).rejects.toThrow("Cadastre o CNPJ da empresa para gerar o Pix.");
+    expect(asaasMock.getOrCreateCustomerEmpresa).not.toHaveBeenCalled();
+    expect(cobrancaMock.encerrarCobrancasAnteriores).not.toHaveBeenCalled();
+    expect(fechDbMock.reivindicarEnvio).not.toHaveBeenCalled();
+  });
+
+  it("falha ao gerar o Pix → volta a conferido, nenhum e-mail", async () => {
+    cobrancaMock.garantirCobrancaPix.mockRejectedValue(new Error("[invalid_customer] Cliente inválido"));
+    await expect(enviarFechamento({ fechamentoId: 11, versao: 2, usuario: null })).rejects.toThrow(/Pix.*Cliente inválido.*conferido/);
+    expect(fechDbMock.desfazerReivindicacao).toHaveBeenCalledWith({ fechamentoId: 11, versao: 2 });
+    expect(emailMock.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("falha ao encerrar a cobrança anterior (pagaram no meio) → nada reivindicado, nada enviado", async () => {
+    cobrancaMock.encerrarCobrancasAnteriores.mockRejectedValue(new Error("[invalid_action] recebida"));
+    await expect(enviarFechamento({ fechamentoId: 11, versao: 2, usuario: null })).rejects.toThrow(/cobrança anterior/);
+    expect(fechDbMock.reivindicarEnvio).not.toHaveBeenCalled();
+    expect(emailMock.sendEmail).not.toHaveBeenCalled();
+  });
+});
+
 describe("enviarFechamento", () => {
   it("manda PDF + XLSX ao RH com cópia, registra no histórico e só então marca enviado", async () => {
     const r = await enviarFechamento({ fechamentoId: 11, versao: 2, usuario: "andre" });
@@ -100,6 +251,7 @@ describe("enviarFechamento", () => {
     expect(email.attachments.map((a: { filename: string; contentType: string }) => [a.filename, a.contentType])).toEqual([
       ["demonstrativo-amazon-five-ltda-2026-10-v2.pdf", "application/pdf"],
       ["demonstrativo-amazon-five-ltda-2026-10-v2.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+      ["pix-2026-10.png", "image/png"],
     ]);
     const pdf = email.attachments[0].content as Buffer;
     expect(Buffer.from(pdf).subarray(0, 4).toString()).toBe("%PDF");
@@ -134,7 +286,10 @@ describe("enviarFechamento", () => {
       totalFinal: 1234.5,
       vencimentoPix: new Date("2026-10-15T00:00:00Z"),
       anexos: ["a<b>.pdf"],
+      pix: { copiaECola: "abc<i>", valor: 1234.5, identificacao: "FEC-1-2026-10-v1" },
+      recebido: 0,
     });
+    expect(html).toContain("abc&lt;i&gt;");
     expect(html).not.toContain("<script>");
     expect(html).toContain("a&lt;b&gt;.pdf");
     expect(html).toMatch(/R\$\s?1\.234,50/);
