@@ -180,7 +180,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
                                 <AlertDialogDescription>
                                   {p.origemPagamento === "asaas"
                                     ? `A parcela ${rotulo} foi quitada por boleto pago no Asaas${p.dataPagamento ? ` em ${formatarDataPura(p.dataPagamento)}` : ""}. Se a cobrança continuar paga lá, a baixa volta na conferência diária.`
-                                    : `A parcela ${rotulo} foi antecipada na Prudent. Desfazer deixa a parcela em aberto aqui, mas não desfaz a antecipação.`}
+                                    : `A parcela ${rotulo} foi antecipada na Prudent. Desfazer deixa a parcela em aberto e fora da antecipação: ela volta à fila da Prudent. Use quando a antecipação não aconteceu (lote concluído por engano).`}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

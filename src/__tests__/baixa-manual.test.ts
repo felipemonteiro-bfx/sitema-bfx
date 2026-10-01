@@ -5,7 +5,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const dbMock = {
-  parcelaVencimento: { findUnique: vi.fn(), updateMany: vi.fn() },
+  parcelaVencimento: { findUnique: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() },
+  venda: { update: vi.fn() },
 };
 const guardsMock = { requireAdminOrThrow: vi.fn() };
 const auditMock = { createAuditLog: vi.fn() };
@@ -28,6 +29,8 @@ beforeEach(() => {
   guardsMock.requireAdminOrThrow.mockResolvedValue({ id: 1, username: "andre", role: "admin", nomeExibicao: "André" });
   dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 1 });
   dbMock.parcelaVencimento.findUnique.mockResolvedValue({ id: 5, vendaId: 7, paga: true, origemPagamento: "manual" });
+  dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
+  dbMock.venda.update.mockResolvedValue({});
 });
 
 describe("darBaixaParcela", () => {
@@ -171,6 +174,35 @@ describe("desfazerBaixaParcela", () => {
       boletoPrudentId: null,
       fechamentoId: null,
     });
+  });
+
+  // Revisão de 30/09: depois de "Cancelar boleto" (lote concluído por engano), desfazer a baixa da
+  // Prudent desfaz a antecipação de verdade — senão a parcela fica antecipada, sem boleto e sem
+  // ninguém que a cobre (fora da fila e bloqueada no fechamento).
+  it("baixa da Prudent sem boleto: desfazer tira a parcela da antecipação e recalcula o flag da venda", async () => {
+    dbMock.parcelaVencimento.findUnique.mockResolvedValue({
+      id: 5,
+      vendaId: 7,
+      paga: true,
+      origemPagamento: "prudent",
+      boletoPrudentId: null,
+    });
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      { antecipada: false, antecipacaoLoteId: null },
+      { antecipada: true, antecipacaoLoteId: 3 },
+    ]);
+    expect((await desfazerBaixaParcela(form({ parcelaId: "5", confirmar: "1" }))).success).toBe(true);
+    expect(dbMock.parcelaVencimento.updateMany.mock.calls[0][0].data).toEqual({
+      paga: false,
+      dataPagamento: null,
+      origemPagamento: null,
+      asaasPaymentId: null,
+      baixaPor: null,
+      antecipada: false,
+      antecipacaoLoteId: null,
+    });
+    // uma antecipada e outra não: flag "algumas" (3)
+    expect(dbMock.venda.update).toHaveBeenCalledWith({ where: { id: 7 }, data: { antecipada: 3 } });
   });
 
   // Fase 5 (spec §5.1): só o fechamento liquida (e desfaz) parcela reservada.

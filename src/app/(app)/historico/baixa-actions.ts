@@ -6,6 +6,7 @@ import { createAuditLog } from "@/lib/audit";
 import { revalidarVenda } from "@/lib/revalidacao";
 import { hojeDataPura } from "@/lib/data-pura";
 import { mensagemParcelaNoFechamento } from "@/lib/fechamento";
+import { flagDaVenda } from "@/lib/lote-antecipacao";
 
 type Resultado = { success: boolean; error?: string; count?: number };
 
@@ -170,9 +171,31 @@ export async function desfazerBaixaParcela(formData: FormData): Promise<Resultad
       ...(viaPrudent ? { boletoPrudentId: null } : {}),
       fechamentoId: null,
     },
-    data: { paga: false, dataPagamento: null, origemPagamento: null, asaasPaymentId: null, baixaPor: null },
+    data: {
+      paga: false,
+      dataPagamento: null,
+      origemPagamento: null,
+      asaasPaymentId: null,
+      baixaPor: null,
+      // Baixa da Prudent (sem boleto — ou com o boleto cancelado em /obrigacoes): desfazer é desfazer
+      // a antecipação. Sem isto a parcela ficava antecipada e sem boleto: fora da fila da Prudent,
+      // bloqueada no fechamento e sem ninguém que a cobrasse (revisão de 30/09).
+      ...(viaPrudent ? { antecipada: false, antecipacaoLoteId: null } : {}),
+    },
   });
   if (count === 0) return { success: false, error: "A baixa mudou enquanto você confirmava. Recarregue e tente de novo." };
+
+  if (viaPrudent) {
+    // Mesma regra do lote (`flagDaVenda`): a venda volta à fila com o flag certo.
+    const parcelas = await prisma.parcelaVencimento.findMany({
+      where: { vendaId: parcela.vendaId },
+      select: { antecipada: true, antecipacaoLoteId: true },
+    });
+    await prisma.venda.update({
+      where: { id: parcela.vendaId },
+      data: { antecipada: flagDaVenda(parcelas.map((p) => ({ antecipada: p.antecipada, emAndamento: p.antecipacaoLoteId != null }))) },
+    });
+  }
 
   await createAuditLog("parcela:baixa-desfeita", {
     parcelaId,
