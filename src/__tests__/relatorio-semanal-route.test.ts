@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { empresaFindMany, vendaFindMany, sendWeeklyReport } = vi.hoisted(() => ({
+const { empresaFindMany, vendaFindMany, sendWeeklyReport, parcelaUpdateMany } = vi.hoisted(() => ({
   empresaFindMany: vi.fn(),
   vendaFindMany: vi.fn(),
   sendWeeklyReport: vi.fn(),
+  parcelaUpdateMany: vi.fn(),
 }));
 
 vi.mock("@/lib/segredo", () => ({ autorizarCron: () => true }));
@@ -12,6 +13,7 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     empresaParceira: { findMany: empresaFindMany },
     venda: { findMany: vendaFindMany },
+    parcelaVencimento: { updateMany: parcelaUpdateMany },
   },
 }));
 
@@ -23,6 +25,7 @@ describe("cron do consolidado semanal", () => {
     ]);
     vendaFindMany.mockResolvedValue([]);
     sendWeeklyReport.mockResolvedValue(undefined);
+    parcelaUpdateMany.mockResolvedValue({ count: 0 });
   });
 
   it("busca o acumulado do mês, filtra vendas ativas e envia somente ao emailRh", async () => {
@@ -61,5 +64,48 @@ describe("cron do consolidado semanal", () => {
       ["fin@prudent.test"],
       7
     );
+  });
+
+  // Fase 3 (2026-09-30): o consolidado é o acumulado do mês, então a mesma venda sai em várias
+  // sextas. `enviadaRhEm` guarda a primeira — o `where` só pega parcela ainda sem data.
+  it("depois do envio marca as parcelas das vendas do e-mail como enviadas ao RH", async () => {
+    vendaFindMany.mockResolvedValue([{ id: 10 }, { id: 11 }]);
+    const { GET } = await import("@/app/api/cron/relatorio-semanal/route");
+    await GET(new Request("http://local/api/cron/relatorio-semanal"));
+
+    expect(parcelaUpdateMany).toHaveBeenCalledTimes(1);
+    expect(parcelaUpdateMany).toHaveBeenCalledWith({
+      where: { vendaId: { in: [10, 11] }, enviadaRhEm: null },
+      data: { enviadaRhEm: expect.any(Date) },
+    });
+    expect(sendWeeklyReport.mock.invocationCallOrder[0]).toBeLessThan(parcelaUpdateMany.mock.invocationCallOrder[0]);
+  });
+
+  it("não marca nada quando o envio falha", async () => {
+    vendaFindMany.mockResolvedValue([{ id: 10 }]);
+    sendWeeklyReport.mockRejectedValue(new Error("SMTP não configurado"));
+    const { GET } = await import("@/app/api/cron/relatorio-semanal/route");
+    await GET(new Request("http://local/api/cron/relatorio-semanal"));
+
+    expect(parcelaUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("não chama o banco quando o e-mail saiu sem vendas", async () => {
+    const { GET } = await import("@/app/api/cron/relatorio-semanal/route");
+    await GET(new Request("http://local/api/cron/relatorio-semanal"));
+
+    expect(sendWeeklyReport).toHaveBeenCalled();
+    expect(parcelaUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it("falha ao marcar não desfaz a contagem do e-mail enviado", async () => {
+    vendaFindMany.mockResolvedValue([{ id: 10 }]);
+    parcelaUpdateMany.mockRejectedValue(new Error("P1001"));
+    const { GET } = await import("@/app/api/cron/relatorio-semanal/route");
+    const response = await GET(new Request("http://local/api/cron/relatorio-semanal"));
+    const corpo = await response.json();
+
+    expect(corpo.enviados).toBe(1);
+    expect(corpo.erros).toEqual([expect.stringContaining("Empresa")]);
   });
 });

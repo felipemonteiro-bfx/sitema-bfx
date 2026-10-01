@@ -67,6 +67,23 @@ export async function GET(req: Request) {
       } catch (err) {
         console.error(`[relatorio-semanal] Erro ao enviar para ${empresa.nome}:`, err);
         erros.push(`${empresa.nome}: ${err instanceof Error ? err.message : String(err)}`);
+        continue;
+      }
+
+      // Fase 3 (2026-09-30): as parcelas das vendas que foram no e-mail ficam marcadas como
+      // enviadas ao RH. O consolidado é acumulado do mês — a mesma venda sai em várias sextas —,
+      // então só a primeira data fica (`enviadaRhEm: null` no where). Falha aqui não desfaz o
+      // e-mail que já saiu: entra nos erros e a próxima sexta marca de novo.
+      if (vendas.length > 0) {
+        try {
+          await prisma.parcelaVencimento.updateMany({
+            where: { vendaId: { in: vendas.map((v) => v.id) }, enviadaRhEm: null },
+            data: { enviadaRhEm: new Date() },
+          });
+        } catch (err) {
+          console.error(`[relatorio-semanal] Erro ao marcar envio ao RH de ${empresa.nome}:`, err);
+          erros.push(`${empresa.nome}: e-mail enviado, mas a marcação de envio ao RH falhou`);
+        }
       }
     }
 
