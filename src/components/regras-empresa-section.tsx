@@ -173,12 +173,14 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label htmlFor={campo("de")}>Início</Label>
+            <Label htmlFor={campo("de")}>
+              Início <span className="font-normal text-muted-foreground">dia 1º</span>
+            </Label>
             <Input id={campo("de")} name="vigenteDe" type="date" required defaultValue={isoDe(inicial?.vigenteDe ?? null)} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={campo("ate")}>
-              Fim <span className="font-normal text-muted-foreground">opcional</span>
+              Fim <span className="font-normal text-muted-foreground">opcional · dia 1º, não incluso</span>
             </Label>
             <Input id={campo("ate")} name="vigenteAte" type="date" defaultValue={isoDe(inicial?.vigenteAte ?? null)} />
           </div>

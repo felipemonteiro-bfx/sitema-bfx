@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { REGRA_PADRAO, regraVigente, vigenciasSobrepostas, validarRegra, type RegraComVigencia } from "@/lib/regra-empresa";
+import {
+  REGRA_PADRAO,
+  cobrancaMudaEm,
+  regraVigente,
+  vigenciasSobrepostas,
+  validarRegra,
+  type RegraComVigencia,
+} from "@/lib/regra-empresa";
 
 const d = (s: string) => new Date(`${s}T00:00:00.000Z`);
 const base = { diaCorte: 20, diaVencimento: 10, diaPix: 15, repassePct: null, repasseBase: null, cobrancaViaBfx: false } as const;
@@ -78,6 +85,30 @@ describe("validarRegra", () => {
   it("cobrancaViaBfx 'on' liga", () => {
     const r = validarRegra({ ...ok, cobrancaViaBfx: "on" });
     expect(r.ok && r.valor.cobrancaViaBfx).toBe(true);
+  });
+  // M2 (30/09): o fechamento e o boleto olham a regra do dia 1º da competência — vigência no meio
+  // do mês faria as duas pontas discordarem.
+  it("vigência começa e termina no dia 1º", () => {
+    expect(validarRegra({ ...ok, vigenteDe: "2026-10-15" })).toEqual({
+      ok: false,
+      erro: "A vigência começa no dia 1º de um mês (o fechamento é mensal).",
+    });
+    expect(validarRegra({ ...ok, vigenteAte: "2027-01-15" })).toEqual({
+      ok: false,
+      erro: "O fim da vigência é o dia 1º do mês seguinte ao último mês da regra.",
+    });
+    expect(validarRegra({ ...ok, vigenteAte: "2027-01-01" }).ok).toBe(true);
+  });
+  it("cobrancaMudaEm compara a cobrança via BFX do dia 1º do mês, antes e depois", () => {
+    const bfx = { ...base, cobrancaViaBfx: true, vigenteDe: d("2026-10-01"), vigenteAte: null };
+    const ate = { ...bfx, vigenteAte: d("2026-12-01") };
+    expect(cobrancaMudaEm([bfx], [ate], d("2026-11-20"))).toBe(false);
+    expect(cobrancaMudaEm([bfx], [ate], d("2026-12-10"))).toBe(true);
+    expect(cobrancaMudaEm([], [bfx], d("2026-10-31"))).toBe(true);
+    expect(cobrancaMudaEm([], [bfx], d("2026-09-30"))).toBe(false);
+    // regra antiga no meio do mês: vale a do dia 1º
+    const meio = { ...bfx, vigenteDe: d("2026-10-15") };
+    expect(cobrancaMudaEm([meio], [], d("2026-10-20"))).toBe(false);
   });
   it("data inválida é recusada", () => {
     expect(validarRegra({ ...ok, vigenteDe: "31/10/2026" })).toEqual({ ok: false, erro: "Início da vigência inválido." });

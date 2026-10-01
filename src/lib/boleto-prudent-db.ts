@@ -4,7 +4,7 @@
  */
 import type { prisma } from "@/lib/db";
 import { DIRECIONAMENTO, STATUS_BOLETO, agruparParcelasPorVencimento } from "@/lib/boleto-prudent";
-import { regraVigente } from "@/lib/regra-empresa";
+import { inicioDoMes, regraVigente } from "@/lib/regra-empresa";
 import { regrasDaEmpresa } from "@/lib/regra-empresa-db";
 
 export type TxBoleto = Pick<typeof prisma, "boletoPrudent" | "parcelaVencimento">;
@@ -12,7 +12,8 @@ export type TxBoleto = Pick<typeof prisma, "boletoPrudent" | "parcelaVencimento"
 /**
  * Cria os boletos esperados de um lote que acabou de ser concluído: um por dia de vencimento das
  * parcelas, aguardando o documento da Prudent. O direcionamento sai da regra vigente da empresa
- * na data do vencimento (`cobrancaViaBfx` → "bfx"); lote sem empresa fica "empresa".
+ * no dia 1º do mês do vencimento — a mesma data que o fechamento da competência usa
+ * (`cobrancaViaBfx` → "bfx"); lote sem empresa fica "empresa".
  *
  * Roda dentro da transação de `concluirLote`. A ligação exige `boletoPrudentId: null`: parcela
  * que já tem boleto aborta a conclusão em vez de trocar de boleto em silêncio.
@@ -28,7 +29,7 @@ export async function criarBoletosDoLote(
 
   const ids: number[] = [];
   for (const g of grupos) {
-    const viaBfx = lote.empresaParceiraId != null && regraVigente(regras, g.vencimento).cobrancaViaBfx;
+    const viaBfx = lote.empresaParceiraId != null && regraVigente(regras, inicioDoMes(g.vencimento)).cobrancaViaBfx;
     const boleto = await tx.boletoPrudent.create({
       data: {
         loteId: lote.id,

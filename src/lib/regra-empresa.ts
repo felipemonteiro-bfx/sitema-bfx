@@ -42,6 +42,21 @@ export function regraVigente(regras: RegraComVigencia[], data: Date): RegraEmpre
   };
 }
 
+/** 1º dia do mês (UTC) da data: a regra do fechamento e do boleto é a desse dia. */
+export function inicioDoMes(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+}
+
+/**
+ * A cobrança via BFX do mês da data muda entre o conjunto de regras de antes e o de depois? Olha o
+ * dia 1º do mês — a mesma data que o fechamento (`regraDaCompetencia`) e o direcionamento do boleto
+ * usam.
+ */
+export function cobrancaMudaEm(antes: RegraComVigencia[], depois: RegraComVigencia[], data: Date): boolean {
+  const dia1 = inicioDoMes(data);
+  return regraVigente(antes, dia1).cobrancaViaBfx !== regraVigente(depois, dia1).cobrancaViaBfx;
+}
+
 export function vigenciasSobrepostas(
   regras: Pick<RegraComVigencia, "id" | "vigenteDe" | "vigenteAte">[]
 ): [number, number] | null {
@@ -79,6 +94,12 @@ export function validarRegra(
   const ateTxt = String(input.vigenteAte ?? "").trim();
   const vigenteAte = ateTxt ? dataPura(ateTxt) : null;
   if (ateTxt && !vigenteAte) return { ok: false, erro: "Fim da vigência inválido." };
+  // O fechamento é mensal e lê a regra do dia 1º da competência: vigência no meio do mês faria o
+  // boleto (pelo vencimento) e o fechamento (pelo dia 1º) discordarem de quem cobra a parcela.
+  if (vigenteDe.getUTCDate() !== 1) return { ok: false, erro: "A vigência começa no dia 1º de um mês (o fechamento é mensal)." };
+  if (vigenteAte && vigenteAte.getUTCDate() !== 1) {
+    return { ok: false, erro: "O fim da vigência é o dia 1º do mês seguinte ao último mês da regra." };
+  }
   if (vigenteAte && vigenteAte.getTime() <= vigenteDe.getTime()) {
     return { ok: false, erro: "O fim da vigência deve ser depois do início." };
   }
