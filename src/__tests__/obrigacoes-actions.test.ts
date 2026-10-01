@@ -568,6 +568,19 @@ describe("cancelarBoleto", () => {
     });
   });
 
+  it("parcela em versão já enviada de fechamento reaberto com Pix ativo ou recebimento → recusa", async () => {
+    dbMock.parcelaVencimento.findMany.mockImplementation(async (a: { select?: Record<string, unknown> }) =>
+      a.select && "vendaId" in a.select ? [{ vendaId: 240, numeroParcela: 3 }] : []
+    );
+    dbMock.fechamentoLinha.findMany.mockResolvedValue([
+      { vendaId: 240, numeroParcela: 3, versao: { fechamento: { id: 11, competencia: "2026-10" } } },
+    ]);
+    const r = await cancelarBoleto(10, "Prudent cancelou");
+    expect(r.ok).toBe(false);
+    expect((r as { erro: string }).erro).toMatch(/^Parcela V240-3 deste boleto está no demonstrativo de outubro de 2026 já enviado ao RH/);
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
+  });
+
   it("boleto mudou no meio (count 0) → erro", async () => {
     dbMock.boletoPrudent.updateMany.mockResolvedValue({ count: 0 });
     expect(await cancelarBoleto(10, "Prudent cancelou")).toEqual({ ok: false, erro: "O boleto mudou enquanto você cancelava. Recarregue." });

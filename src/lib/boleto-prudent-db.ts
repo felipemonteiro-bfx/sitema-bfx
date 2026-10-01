@@ -6,6 +6,7 @@ import type { prisma } from "@/lib/db";
 import { DIRECIONAMENTO, STATUS_BOLETO, agruparParcelasPorVencimento } from "@/lib/boleto-prudent";
 import { inicioDoMes, regraVigente } from "@/lib/regra-empresa";
 import { ROTULO_STATUS_FECHAMENTO, STATUS_FECHAMENTO, rotuloCompetencia } from "@/lib/fechamento";
+import { parcelasComPixEmJogo } from "@/lib/fechamento-pix-em-jogo";
 import { regrasDaEmpresa } from "@/lib/regra-empresa-db";
 
 export type TxBoleto = Pick<typeof prisma, "boletoPrudent" | "parcelaVencimento">;
@@ -59,7 +60,7 @@ export class ErroCancelamentoBoleto extends Error {}
 
 const MOTIVO_MINIMO = 5;
 
-export type TxCancelarBoleto = Pick<typeof prisma, "boletoPrudent" | "parcelaVencimento" | "fechamento">;
+export type TxCancelarBoleto = Pick<typeof prisma, "boletoPrudent" | "parcelaVencimento" | "fechamento" | "fechamentoLinha">;
 
 /** Motivo do cancelamento (vai para o audit): 5 caracteres ou mais. */
 export function validarMotivoCancelamento(motivo: unknown): { ok: true; valor: string } | { ok: false; erro: string } {
@@ -109,6 +110,21 @@ export async function cancelarBoletoPrudent(
     throw new ErroCancelamentoBoleto(
       `Parcela V${travada.vendaId}-${travada.numeroParcela} deste boleto está no fechamento de ` +
         `${rotuloCompetencia(travada.fechamento.competencia)} (${status}). Reabra o fechamento antes de cancelar o boleto.`
+    );
+  }
+
+  // Reaberto depois de enviado, com Pix ativo ou recebimento (mesma trava do "devolver à empresa"):
+  // sem boleto a parcela sai do demonstrativo que o RH já recebeu (ou pagou).
+  const doBoleto = await tx.parcelaVencimento.findMany({
+    where: { boletoPrudentId: b.id },
+    select: { vendaId: true, numeroParcela: true },
+  });
+  const [presa] = await parcelasComPixEmJogo(tx, doBoleto);
+  if (presa) {
+    throw new ErroCancelamentoBoleto(
+      `Parcela V${presa.vendaId}-${presa.numeroParcela} deste boleto está no demonstrativo de ` +
+        `${rotuloCompetencia(presa.competencia)} já enviado ao RH, e o fechamento tem Pix ativo ou recebimento ` +
+        "confirmado. Resolva o recebimento no fechamento antes de cancelar o boleto."
     );
   }
 
