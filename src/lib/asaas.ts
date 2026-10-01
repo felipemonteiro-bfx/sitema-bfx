@@ -317,3 +317,109 @@ export async function createBoletoPayment(
   if (!res.id) throw new Error("Resposta Asaas sem id da cobrança.");
   return { id: res.id, bankSlipUrl };
 }
+
+// ---------------------------------------------------------------------------
+// Pix do fechamento mensal (spec 2026-09-30 §3.6 e §5.2): cobrança PIX, QR Code,
+// cancelamento e o cliente Asaas da empresa conveniada (pelo CNPJ).
+// ---------------------------------------------------------------------------
+
+export type CreatePixParams = {
+  customerId: string;
+  value: number;
+  dueDate: string; // YYYY-MM-DD
+  description: string;
+  externalReference: string;
+};
+
+/** Cria uma cobrança tipo PIX no Asaas. */
+export async function createPixPayment(
+  p: CreatePixParams,
+  config: AsaasConfig
+): Promise<{ id: string; status: string }> {
+  const res = await asaasFetch<{ id?: string; status?: string }>(config, "/v3/payments", {
+    method: "POST",
+    body: {
+      customer: p.customerId,
+      billingType: "PIX",
+      value: p.value,
+      dueDate: p.dueDate,
+      description: p.description,
+      externalReference: p.externalReference,
+    },
+  });
+  if (!res.id) throw new Error("Resposta Asaas sem id da cobrança.");
+  return { id: res.id, status: res.status ?? "" };
+}
+
+/** QR Code da cobrança PIX: `payload` é o copia-e-cola; `encodedImage` é o PNG em base64. */
+export async function getPixQrCode(
+  config: AsaasConfig,
+  paymentId: string
+): Promise<{ payload: string; encodedImage: string; expirationDate?: string | null }> {
+  const res = await asaasFetch<{ payload?: string; encodedImage?: string; expirationDate?: string | null }>(
+    config,
+    `/v3/payments/${encodeURIComponent(paymentId)}/pixQrCode`
+  );
+  if (!res.payload || !res.encodedImage) throw new Error("Resposta Asaas sem o QR Code do Pix.");
+  return { payload: res.payload, encodedImage: res.encodedImage, expirationDate: res.expirationDate ?? null };
+}
+
+/**
+ * Remove a cobrança no Asaas. Não confere o status antes: quem chama deve buscar a cobrança
+ * (`getPayment`) e só cancelar se não estiver paga.
+ */
+export async function cancelPayment(config: AsaasConfig, paymentId: string): Promise<void> {
+  await asaasFetch<unknown>(config, `/v3/payments/${encodeURIComponent(paymentId)}`, { method: "DELETE" });
+}
+
+/** Empresa conveniada com os campos usados para criar/identificar o cliente no Asaas. */
+export type EmpresaForAsaas = {
+  id: number;
+  nome: string;
+  cnpj: string | null;
+  emailRh: string | null;
+  asaasCustomerId: string | null;
+};
+
+/**
+ * ID do cliente Asaas **da empresa** (não do colaborador). Exige CNPJ com 14 dígitos. Se o
+ * Asaas recusar por duplicata, busca o cliente pelo CNPJ e reaproveita, como `getOrCreateCustomer`.
+ * Grava `EmpresaParceira.asaasCustomerId`.
+ */
+export async function getOrCreateCustomerEmpresa(
+  empresa: EmpresaForAsaas,
+  prisma: {
+    empresaParceira: {
+      update: (args: { where: { id: number }; data: { asaasCustomerId: string } }) => Promise<unknown>;
+    };
+  },
+  config: AsaasConfig
+): Promise<string> {
+  if (empresa.asaasCustomerId) return empresa.asaasCustomerId;
+
+  const cnpj = onlyNumbers(empresa.cnpj);
+  if (cnpj.length !== 14) throw new Error("Cadastre o CNPJ da empresa para gerar o Pix.");
+
+  const body: Record<string, string> = { name: empresa.nome, cpfCnpj: cnpj };
+  const email = empresa.emailRh?.trim();
+  if (email) body.email = email;
+
+  let customerId: string;
+  try {
+    const created = await asaasFetch<AsaasCustomerResponse>(config, "/v3/customers", { method: "POST", body });
+    if (!created.id) throw new Error("Resposta Asaas sem id do cliente.");
+    customerId = created.id;
+  } catch (err) {
+    if (!isAsaasDuplicateError(err)) throw err;
+    const list = await asaasFetch<AsaasCustomersListResponse>(
+      config,
+      `/v3/customers?cpfCnpj=${encodeURIComponent(cnpj)}`
+    );
+    const first = list.data?.[0];
+    if (!first?.id) throw err;
+    customerId = first.id;
+  }
+
+  await prisma.empresaParceira.update({ where: { id: empresa.id }, data: { asaasCustomerId: customerId } });
+  return customerId;
+}
