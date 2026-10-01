@@ -5,7 +5,8 @@ import { parseAsString, useQueryState } from "nuqs";
 
 export type QueryTabItem = {
   value: string;
-  label: string;
+  /** Texto ou nó (ex.: rótulo com contador). */
+  label: React.ReactNode;
   content: React.ReactNode;
 };
 

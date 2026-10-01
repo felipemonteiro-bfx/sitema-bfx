@@ -64,3 +64,80 @@ export function validarMotivo(motivo: unknown): { ok: true; valor: string } | { 
   }
   return { ok: true, valor: texto.slice(0, MOTIVO_MAX) };
 }
+
+export interface LinhaAguardandoRh {
+  id: number;
+  vendaId: number;
+  numeroParcela: number;
+  /** Quantas parcelas a venda tem; nulo cai no número da parcela. */
+  totalParcelas: number | null;
+  dataVencimento: Date;
+  valorParcela: number;
+  enviadaRhEm: Date | null;
+  colaborador: string | null;
+  matricula: string | null;
+  empresa: string;
+}
+
+export interface TituloAguardandoRh {
+  id: number;
+  /** `V{vendaId}-{n}/{total}`, o identificador legível do título. */
+  titulo: string;
+  colaborador: string | null;
+  matricula: string | null;
+  /** Data pura YYYY-MM-DD. */
+  vencimento: string;
+  valor: number;
+}
+
+export interface GrupoAguardandoRh {
+  chave: string;
+  empresa: string;
+  /** Dia (Manaus, YYYY-MM-DD) do primeiro envio ao RH; nulo = ainda não enviado. */
+  enviadaEm: string | null;
+  titulos: TituloAguardandoRh[];
+  total: number;
+}
+
+/** Dia civil de Manaus de um instante (o envio sai às sextas, à noite em UTC). */
+function diaEmManaus(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Manaus" }).format(d);
+}
+
+/**
+ * A aba "Aguardando RH": títulos agrupados por empresa e dia de envio do consolidado. Ordem dos
+ * grupos: enviados do mais recente ao mais antigo, depois os ainda não enviados; empresa em ordem
+ * alfabética no empate. Dentro do grupo, a ordem de entrada. Totais em centavos inteiros.
+ */
+export function agruparAguardandoRh(linhas: LinhaAguardandoRh[]): GrupoAguardandoRh[] {
+  const grupos = new Map<string, GrupoAguardandoRh & { centavos: number }>();
+  for (const l of linhas) {
+    const enviadaEm = l.enviadaRhEm ? diaEmManaus(l.enviadaRhEm) : null;
+    const chave = `${l.empresa}|${enviadaEm ?? "-"}`;
+    let g = grupos.get(chave);
+    if (!g) {
+      g = { chave, empresa: l.empresa, enviadaEm, titulos: [], total: 0, centavos: 0 };
+      grupos.set(chave, g);
+    }
+    const centavos = Math.round(l.valorParcela * 100);
+    g.centavos += centavos;
+    g.titulos.push({
+      id: l.id,
+      titulo: `V${l.vendaId}-${l.numeroParcela}/${l.totalParcelas ?? l.numeroParcela}`,
+      colaborador: l.colaborador,
+      matricula: l.matricula,
+      vencimento: l.dataVencimento.toISOString().slice(0, 10),
+      valor: centavos / 100,
+    });
+  }
+  return [...grupos.values()]
+    .map(({ centavos, ...g }) => ({ ...g, total: centavos / 100 }))
+    .sort((a, b) => {
+      if (a.enviadaEm !== b.enviadaEm) {
+        if (a.enviadaEm === null) return 1;
+        if (b.enviadaEm === null) return -1;
+        return a.enviadaEm < b.enviadaEm ? 1 : -1;
+      }
+      return a.empresa.localeCompare(b.empresa, "pt-BR");
+    });
+}

@@ -11,6 +11,7 @@ import {
   podeConfirmar,
   podeRecusar,
   validarMotivo,
+  agruparAguardandoRh,
 } from "@/lib/confirmacao-rh";
 
 describe("estadoConfirmacao", () => {
@@ -87,5 +88,51 @@ describe("validarMotivo", () => {
   it("corta motivo enorme em 500 caracteres", () => {
     const r = validarMotivo("x".repeat(800));
     expect(r).toEqual({ ok: true, valor: "x".repeat(500) });
+  });
+});
+
+describe("agruparAguardandoRh", () => {
+  const linha = (id: number, extra: Record<string, unknown> = {}) => ({
+    id,
+    vendaId: 240,
+    numeroParcela: 1,
+    totalParcelas: 4,
+    dataVencimento: new Date("2026-10-10T00:00:00.000Z"),
+    valorParcela: 300,
+    enviadaRhEm: new Date("2026-09-26T15:00:00.000Z") as Date | null,
+    colaborador: "MARIA",
+    matricula: "123",
+    empresa: "AMAZON FIVE",
+    ...extra,
+  });
+
+  it("agrupa por empresa e dia de envio (Manaus), com título, contagem e total em centavos", () => {
+    const grupos = agruparAguardandoRh([
+      linha(1),
+      linha(2, { numeroParcela: 2, valorParcela: 0.1 }),
+      linha(3, { valorParcela: 0.2, enviadaRhEm: new Date("2026-09-27T01:00:00.000Z") }), // 26/09 21h em Manaus
+      linha(4, { empresa: "OUTRA", enviadaRhEm: null }),
+    ]);
+    expect(grupos).toHaveLength(2);
+    const amazon = grupos.find((g) => g.empresa === "AMAZON FIVE")!;
+    expect(amazon.enviadaEm).toBe("2026-09-26");
+    expect(amazon.titulos.map((t) => t.titulo)).toEqual(["V240-1/4", "V240-2/4", "V240-1/4"]);
+    expect(amazon.total).toBe(300.3);
+    const outra = grupos.find((g) => g.empresa === "OUTRA")!;
+    expect(outra.enviadaEm).toBeNull();
+  });
+
+  it("não enviados ao RH vêm por último; enviados do mais recente ao mais antigo", () => {
+    const grupos = agruparAguardandoRh([
+      linha(1, { enviadaRhEm: null }),
+      linha(2, { enviadaRhEm: new Date("2026-09-19T15:00:00.000Z") }),
+      linha(3, { enviadaRhEm: new Date("2026-09-26T15:00:00.000Z") }),
+    ]);
+    expect(grupos.map((g) => g.enviadaEm)).toEqual(["2026-09-26", "2026-09-19", null]);
+  });
+
+  it("título sem total cai no número da parcela", () => {
+    const [g] = agruparAguardandoRh([linha(1, { totalParcelas: null, numeroParcela: 3 })]);
+    expect(g.titulos[0].titulo).toBe("V240-3/3");
   });
 });

@@ -19,7 +19,9 @@ import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 import { PageHeader } from "@/components/page-header";
 import { hojeDataPura } from "@/lib/data-pura";
-import { estadoConfirmacao } from "@/lib/confirmacao-rh";
+import { agruparAguardandoRh, estadoConfirmacao } from "@/lib/confirmacao-rh";
+import AguardandoRhClient from "@/components/aguardando-rh-client";
+import { QueryTabs } from "@/components/query-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -311,6 +313,42 @@ export default async function Page() {
         ? mesesEmAberto(v.parcelasVencimento.map((p) => ({ ...p, emAndamento: p.antecipacaoLoteId != null })))
         : null,
   }));
+  // Aba "Aguardando RH" (2026-09-30): títulos sem resposta do RH, ainda fora de qualquer lote.
+  const aguardandoRh = await prisma.parcelaVencimento.findMany({
+    where: { confirmacaoRh: null, antecipada: false, antecipacaoLoteId: null, venda: WHERE_VENDA_ANTECIPAVEL },
+    orderBy: [{ vendaId: "asc" }, { numeroParcela: "asc" }],
+    select: {
+      id: true,
+      vendaId: true,
+      numeroParcela: true,
+      dataVencimento: true,
+      valorParcela: true,
+      enviadaRhEm: true,
+      venda: {
+        select: {
+          parcelas: true,
+          cliente: {
+            select: { nome: true, matricula: true, empresa: true, empresaParceira: { select: { nome: true } } },
+          },
+        },
+      },
+    },
+  });
+  const gruposAguardandoRh = agruparAguardandoRh(
+    aguardandoRh.map((p) => ({
+      id: p.id,
+      vendaId: p.vendaId,
+      numeroParcela: p.numeroParcela,
+      totalParcelas: p.venda.parcelas ?? null,
+      dataVencimento: p.dataVencimento,
+      valorParcela: p.valorParcela,
+      enviadaRhEm: p.enviadaRhEm,
+      colaborador: p.venda.cliente?.nome ?? null,
+      matricula: p.venda.cliente?.matricula ?? null,
+      empresa: p.venda.cliente?.empresaParceira?.nome || p.venda.cliente?.empresa?.trim() || "Sem empresa",
+    }))
+  );
+
   const contagens = contagensDaFila(vendasFormatadas.map((v) => ({ empresa: v.empresaConveniada, status: v.status })));
   const valoresPorMes = Object.fromEntries(resumoMeses.map((m) => [m.mes, m.aAntecipar.valor]));
 
@@ -321,8 +359,31 @@ export default async function Page() {
         description="Veja o que já foi antecipado de cada comprador e o que falta, e selecione as vendas para antecipar com a taxa Smart."
         breadcrumbs={[{ label: "Antecipação Prudent" }]}
       />
-      {/* O resumo por comprador e a fila de vendas compartilham o filtro "Ver na
-          fila", entao os dois cards sao desenhados dentro do AntecipacaoClient. */}
+      {/* Abas (2026-09-30, artboard "Aguardando RH e lote por parcela"): o RH confirma antes de a
+          parcela chegar à fila. Com título esperando, a tela abre nessa aba. */}
+      <QueryTabs
+        defaultTab={aguardandoRh.length > 0 ? "aguardando-rh" : "fila"}
+        tabs={[
+          {
+            value: "aguardando-rh",
+            label: (
+              <span className="inline-flex items-center gap-2">
+                Aguardando RH
+                {aguardandoRh.length > 0 && (
+                  <span className="min-w-6 rounded-full bg-warning px-1.5 text-xs font-bold tabular-nums text-warning-foreground">
+                    {aguardandoRh.length}
+                  </span>
+                )}
+              </span>
+            ),
+            content: <AguardandoRhClient grupos={gruposAguardandoRh} />,
+          },
+          {
+            value: "fila",
+            label: "Fila",
+            content: (
+      // O resumo por comprador e a fila de vendas compartilham o filtro "Ver na
+      // fila", entao os dois cards sao desenhados dentro do AntecipacaoClient.
       <AntecipacaoClient
         vendasIniciais={vendasFormatadas}
         onSubmit={antecipar}
@@ -334,7 +395,15 @@ export default async function Page() {
         valoresPorMes={valoresPorMes}
         hoje={hoje}
       />
-      <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} hoje={hoje} />
+            ),
+          },
+          {
+            value: "historico",
+            label: "Histórico",
+            content: <HistoricoAntecipacoes batches={batchesFormatados} semLote={antecipacoesSemLote} hoje={hoje} />,
+          },
+        ]}
+      />
     </div>
   );
 }
