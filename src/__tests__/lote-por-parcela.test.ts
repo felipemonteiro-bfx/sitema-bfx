@@ -58,6 +58,14 @@ describe("resolverParcelasDoLote", () => {
     });
   });
 
+  // Revisão (2026-09-30): o card (`titulosDeVenda`) já descartava parcela paga; o lote e o CSV
+  // não — parcela quitada por boleto ia à Prudent sem aparecer no total da tela.
+  it("parcela já paga não entra no envio, como no card", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
+    await resolverParcelasDoLote(dbMock as never, { vendaIds: [10], periodo: null, excluirParcelaIds: [] });
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).toMatchObject({ paga: false });
+  });
+
   it("sem exclusão não põe filtro de id", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
     await resolverParcelasDoLote(dbMock as never, { vendaIds: [10], periodo: null, excluirParcelaIds: [] });
@@ -107,6 +115,16 @@ describe("abrirLote", () => {
       valorTotal: 900,
     });
     expect(data.valorLiquidoSolicitado).toBeLessThan(900);
+  });
+
+  it("empresa parceira sai só das vendas que têm parcela no lote", async () => {
+    dbMock.venda.findMany.mockResolvedValue([
+      { id: 9, dataVenda: new Date("2026-09-05T00:00:00.000Z"), cliente: { empresa: "A", empresaParceiraId: 7 } },
+      { id: 10, dataVenda: new Date("2026-09-05T00:00:00.000Z"), cliente: { empresa: "A", empresaParceiraId: 3 } },
+    ]);
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10, "2026-10-10")]);
+    await abrirLote({ vendaIds: [9, 10], periodo: null });
+    expect(dbMock.anticipacaoBatch.create.mock.calls[0][0].data.empresaParceiraId).toBe(3);
   });
 
   it("cliente sem empresa parceira → empresaParceiraId nulo", async () => {

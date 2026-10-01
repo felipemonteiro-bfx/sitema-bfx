@@ -88,7 +88,9 @@ function whereParcelasLivres(
     antecipacaoLoteId: null,
     venda: WHERE_VENDA_ANTECIPAVEL,
     ...(periodo ? { dataVencimento: { gte: periodo.inicio, lte: periodo.fim } } : {}),
-    ...(opcoes.exigirConfirmacao ? { confirmacaoRh: CONFIRMACAO.confirmada } : {}),
+    // No envio, parcela já paga (boleto, baixa manual) também fica de fora — o card da seleção
+    // (`titulosDeVenda`) já a descartava. `registrarLoteConcluido` mantém o recorte de antes.
+    ...(opcoes.exigirConfirmacao ? { confirmacaoRh: CONFIRMACAO.confirmada, paga: false } : {}),
     ...(excluir.length > 0 ? { id: { notIn: excluir } } : {}),
   };
 }
@@ -167,7 +169,12 @@ function valoresDoEnvio(vendas: VendaDoLote[], parcelas: ParcelaDoLote[]) {
     );
   }
   const liquido = calcularAntecipacao(titulos, TAXA_MENSAL_PADRAO).valorLiquido;
-  const empresaParceiraId = vendas.map((v) => v.cliente?.empresaParceiraId).find((id) => id != null) ?? null;
+  // Só das vendas que de fato têm parcela no lote: `validarUmaEmpresa` compara pelo texto.
+  const empresaParceiraId =
+    vendas
+      .filter((v) => parcelas.some((p) => p.vendaId === v.id))
+      .map((v) => v.cliente?.empresaParceiraId)
+      .find((id) => id != null) ?? null;
   const hoje = new Date(`${hojeDataPura()}T00:00:00.000Z`);
   return {
     empresaParceiraId,
