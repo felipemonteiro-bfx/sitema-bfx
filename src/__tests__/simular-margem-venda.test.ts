@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { simularMargemVenda, parcelasParaSimulacao } from "@/lib/simular-margem-venda";
-import { parcelaUnicaDaFolha } from "@/lib/parcelas";
+import { parcelaUnicaDaFolha, parcelasDaVendaRapida } from "@/lib/parcelas";
+import { custoAntecipacaoVenda } from "@/lib/antecipacao-custo";
 import { calcularAntecipacao, titulosDeVenda, TAXA_MENSAL_PADRAO } from "@/lib/antecipacao";
 
 type Input = Parameters<typeof simularMargemVenda>[0];
@@ -177,5 +178,37 @@ describe("parcelasParaSimulacao", () => {
 
   it("Nx: a lista do formulario", () => {
     expect(parcelasParaSimulacao({ numParcelas: 4, informadas: PARCELAS_4X, emFolha: true, dataVenda: "2026-01-01", total: 1000, regra })).toBe(PARCELAS_4X);
+  });
+});
+
+describe("cenario 'todas' x o que criarVendaV2 grava", () => {
+  // O painel diz que a coluna "Todas" e a que o lucro gravado considera: a taxa tem que bater
+  // com `custoAntecipacaoVenda` sobre as mesmas parcelas que o servidor grava.
+  const regra = { diaCorte: 20, diaVencimento: 10 };
+
+  it("4x em folha com a lista do formulario", () => {
+    const s = simularMargemVenda(base());
+    const gravada = custoAntecipacaoVenda({
+      formaPagamento: "DESCONTO_FOLHA",
+      dataVenda: "2026-01-01",
+      valorVenda: 1000,
+      parcelas: 4,
+      parcelas_detalhes: parcelasDaVendaRapida({ informadas: PARCELAS_4X, parcelas: 4, dataVenda: new Date("2026-01-01"), total: 1000, emFolha: true, regra }),
+    });
+    expect(s.cenarios.find((c) => c.chave === "todas")!.taxa).toBe(gravada);
+  });
+
+  it("1x em folha: parcela unica pela regra", () => {
+    const parcelas = parcelasParaSimulacao({ numParcelas: 1, informadas: [], emFolha: true, dataVenda: "2026-09-25", total: 400, regra });
+    const s = simularMargemVenda(base({ dataVenda: "2026-09-25", subtotalProdutos: 400, parcelas, numParcelas: 1 }));
+    const gravada = custoAntecipacaoVenda({
+      formaPagamento: "DESCONTO_FOLHA",
+      dataVenda: "2026-09-25",
+      valorVenda: 400,
+      parcelas: 1,
+      parcelas_detalhes: parcelasDaVendaRapida({ parcelas: 1, dataVenda: new Date("2026-09-25"), total: 400, emFolha: true, regra }),
+    });
+    expect(gravada).toBeGreaterThan(0);
+    expect(s.cenarios.find((c) => c.chave === "todas")!.taxa).toBe(gravada);
   });
 });
