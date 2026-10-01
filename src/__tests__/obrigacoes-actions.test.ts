@@ -308,7 +308,9 @@ describe("estornarPagamentoBoleto", () => {
     expect(r).toEqual({ ok: true });
     expect(dbMock.boletoPagamento.updateMany).toHaveBeenCalledWith({
       where: { id: 50, estornadoEm: null },
-      data: { estornadoEm: expect.any(Date), estornadoPor: "André" },
+      // o hash sai do pagamento estornado: o mesmo comprovante pode ir no registro corrigido
+      // (o arquivo continua ligado por comprovanteArquivoId e guarda o proprio sha256)
+      data: { estornadoEm: expect.any(Date), estornadoPor: "André", comprovanteHash: null },
     });
     expect(dbMock.boletoPrudent.updateMany).toHaveBeenCalledWith({
       where: { id: 10, status: "pago", atualizadoEm: ATUALIZADO },

@@ -43,6 +43,7 @@ import {
 import { formatBRL } from "@/lib/utils";
 import { decodificarLinhaDigitavel } from "@/lib/linha-digitavel";
 import { divergencia } from "@/lib/boleto-prudent";
+import { arquivoGrandeDemais } from "@/lib/arquivo-limite";
 import type { AbaBoleto, TomSituacao } from "@/lib/obrigacoes-agenda";
 import {
   anexarDocumentoBoleto,
@@ -95,6 +96,23 @@ const ddmm = (s: string) => s.slice(5).split("-").reverse().join("/");
 const dataPura = (s: string) => new Date(`${s}T00:00:00.000Z`);
 const vivo = (l: LinhaBoleto) => l.status !== "substituido" && l.status !== "cancelado";
 const daBfx = (l: LinhaBoleto) => l.direcionamento === "bfx";
+
+/** Falha de rede ou corpo recusado pelo Next (arquivo grande demais) não chega como `erro`. */
+const ERRO_ENVIO = "Não foi possível enviar. Confira a conexão e o tamanho do arquivo (até 10 MB).";
+
+/** Confere o tamanho antes de enviar e chama a action; erro de rede vira toast, não tela quebrada. */
+async function enviarComArquivo(
+  fd: FormData,
+  action: (fd: FormData) => Promise<{ ok: true } | { ok: false; erro: string }>
+): Promise<{ ok: true } | { ok: false; erro: string }> {
+  const grande = arquivoGrandeDemais(fd);
+  if (grande) return { ok: false, erro: grande };
+  try {
+    return await action(fd);
+  } catch {
+    return { ok: false, erro: ERRO_ENVIO };
+  }
+}
 
 type Dialogo =
   | { tipo: "anexar"; linha: LinhaBoleto }
@@ -340,7 +358,7 @@ function DialogoDocumento({ linha, substituir, onClose }: { linha: LinhaBoleto; 
     const fd = new FormData(e.currentTarget);
     fd.set("boletoId", String(linha.id));
     iniciar(async () => {
-      const r = await (substituir ? substituirBoleto(fd) : anexarDocumentoBoleto(fd));
+      const r = await enviarComArquivo(fd, substituir ? substituirBoleto : anexarDocumentoBoleto);
       if (!r.ok) {
         toast.error(r.erro);
         return;
@@ -467,7 +485,7 @@ function DialogoPagamento({ linha, hoje, onClose }: { linha: LinhaBoleto; hoje: 
     const fd = new FormData(e.currentTarget);
     fd.set("boletoId", String(linha.id));
     iniciar(async () => {
-      const r = await registrarPagamentoBoleto(fd);
+      const r = await enviarComArquivo(fd, registrarPagamentoBoleto);
       if (!r.ok) {
         toast.error(r.erro);
         return;
@@ -539,7 +557,12 @@ function DialogoEstorno({ linha, pagamentoId, onClose }: { linha: LinhaBoleto; p
   const confirmar = (e: React.MouseEvent) => {
     e.preventDefault();
     iniciar(async () => {
-      const r = await estornarPagamentoBoleto(pagamentoId);
+      let r: Awaited<ReturnType<typeof estornarPagamentoBoleto>>;
+      try {
+        r = await estornarPagamentoBoleto(pagamentoId);
+      } catch {
+        r = { ok: false, erro: "Não foi possível estornar. Confira a conexão e tente de novo." };
+      }
       if (!r.ok) {
         toast.error(r.erro);
         return;

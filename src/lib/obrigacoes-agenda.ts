@@ -28,8 +28,12 @@ const ddmm = (d: Date) => d.toISOString().slice(5, 10).split("-").reverse().join
 
 const morto = (status: string) => status === STATUS_BOLETO.substituido || status === STATUS_BOLETO.cancelado;
 
-/** Substituído e cancelado só aparecem em "Todos" (aba `historico`). */
-export function abaDoBoleto(b: Pick<BoletoAgenda, "status">): AbaBoleto {
+/**
+ * Substituído, cancelado e boleto que a empresa paga só aparecem em "Todos" (aba `historico`):
+ * as outras abas são as ações da BFX.
+ */
+export function abaDoBoleto(b: Pick<BoletoAgenda, "status" | "direcionamento">): AbaBoleto {
+  if (b.direcionamento !== DIRECIONAMENTO.bfx) return "historico";
   if (b.status === STATUS_BOLETO.aguardandoDocumento) return "sem_boleto";
   if (b.status === STATUS_BOLETO.aPagar || b.status === STATUS_BOLETO.pagoParcial) return "a_pagar";
   if (b.status === STATUS_BOLETO.pago) return "pagos";

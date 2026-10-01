@@ -12,7 +12,9 @@ import type { prisma } from "@/lib/db";
 import { sanitizarNomeArquivo } from "@/lib/storage-policy";
 import { detectarTipoImagem } from "@/lib/upload-imagem";
 
-export const TAMANHO_MAXIMO_ARQUIVO = 10 * 1024 * 1024;
+import { TAMANHO_MAXIMO_ARQUIVO } from "@/lib/arquivo-limite";
+
+export { TAMANHO_MAXIMO_ARQUIVO };
 const TAMANHO_MAXIMO_NOME = 80;
 
 export type MimeArquivoFinanceiro = "application/pdf" | "image/png" | "image/jpeg";

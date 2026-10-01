@@ -341,7 +341,9 @@ export async function estornarPagamentoBoleto(pagamentoId: number): Promise<Resp
       const agora = new Date();
       const { count: estornados } = await tx.boletoPagamento.updateMany({
         where: { id: pagamentoId, estornadoEm: null },
-        data: { estornadoEm: agora, estornadoPor: usuarioDe(sessao) },
+        // O hash sai do pagamento estornado para o mesmo comprovante valer no registro corrigido;
+        // o arquivo continua ligado por `comprovanteArquivoId` e guarda o próprio sha256.
+        data: { estornadoEm: agora, estornadoPor: usuarioDe(sessao), comprovanteHash: null },
       });
       if (estornados === 0) throw new ErroBoleto("Este pagamento já foi estornado.");
 

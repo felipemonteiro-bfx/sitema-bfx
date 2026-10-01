@@ -39,6 +39,13 @@ describe("abaDoBoleto", () => {
   });
 });
 
+describe("abaDoBoleto — boleto que a empresa paga", () => {
+  // achado da revisao: sem acao possivel na tela, ele ficava preso em "Sem boleto" para sempre
+  it.each(["aguardando_documento", "a_pagar", "pago"])("%s da empresa so aparece em Todos", (status) => {
+    expect(abaDoBoleto(boleto({ status, direcionamento: "empresa" }))).toBe("historico");
+  });
+});
+
 describe("situacaoDoBoleto", () => {
   it("sem documento", () => {
     expect(situacaoDoBoleto(boleto({ status: "aguardando_documento" }), HOJE)).toEqual({ rotulo: "sem boleto", tom: "warning" });
