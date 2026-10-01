@@ -163,6 +163,16 @@ describe("montarPlanilhaFolha — o que a folha desconta", () => {
     expect(linhas[0].valor).toBe(305);
   });
 
+  // M4 (30/09): a empresa pagou a parcela no Pix do fechamento e desconta do colaborador na folha.
+  it("parcela paga pela empresa no Pix do fechamento entra: a folha continua descontando", () => {
+    const { linhas } = montarPlanilhaFolha(
+      [venda({}, [p("2026-09-10", 305, { paga: true, origemPagamento: "pix_fechamento" })])],
+      { competencia: AGOSTO }
+    );
+    expect(linhas).toHaveLength(1);
+    expect(linhas[0].valor).toBe(305);
+  });
+
   it("parcela quitada pelo cliente (Asaas ou baixa manual) fica fora", () => {
     const { linhas } = montarPlanilhaFolha(
       [

@@ -84,8 +84,13 @@ export function normalizarCompetencia(valor: unknown): string | null {
  * antecipada na Prudent (a Prudent pagou a BFX, o funcionário continua pagando).
  * Mesma regra de `situacaoParaCliente`.
  */
+/**
+ * A folha desconta do colaborador a parcela em aberto e a que a BFX recebeu de terceiro: da Prudent
+ * (antecipada) ou da empresa no Pix do fechamento (`pix_fechamento`). Só a quitada pelo próprio
+ * colaborador (Asaas, baixa manual) sai.
+ */
 function folhaDesconta(parcela: ParcelaParaFolha): boolean {
-  return !parcela.paga || parcela.origemPagamento === "prudent";
+  return !parcela.paga || parcela.origemPagamento === "prudent" || parcela.origemPagamento === "pix_fechamento";
 }
 
 function diaDoVencimento(data: Date | string): string {
