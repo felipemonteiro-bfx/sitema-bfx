@@ -9,6 +9,7 @@ const dbMock = {
   boletoPagamento: { findUnique: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   parcelaVencimento: { updateMany: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
   fechamentoLinha: { findMany: vi.fn() },
+  fechamento: { updateMany: vi.fn() },
   arquivoFinanceiro: { create: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
 };
@@ -26,6 +27,7 @@ const {
   estornarPagamentoBoleto,
   substituirBoleto,
   alterarDirecionamento,
+  cancelarBoleto,
 } = await import("@/app/(app)/obrigacoes/actions");
 
 const dia = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
@@ -80,6 +82,7 @@ beforeEach(() => {
   dbMock.parcelaVencimento.findFirst.mockResolvedValue(null);
   dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
   dbMock.fechamentoLinha.findMany.mockResolvedValue([]);
+  dbMock.fechamento.updateMany.mockImplementation(async (a: { where?: { id?: { in?: number[] } } }) => ({ count: a?.where?.id?.in?.length ?? 0 }));
   dbMock.arquivoFinanceiro.create.mockResolvedValue({ id: 77, sha256: "x" });
 });
 
@@ -90,6 +93,7 @@ describe("guarda de admin antes de tudo", () => {
     ["estornarPagamentoBoleto", () => estornarPagamentoBoleto(50)],
     ["substituirBoleto", () => substituirBoleto(form({ boletoId: "10" }))],
     ["alterarDirecionamento", () => alterarDirecionamento(10, "bfx")],
+    ["cancelarBoleto", () => cancelarBoleto(10, "Prudent cancelou o lote")],
   ])("%s", async (_nome, chamar) => {
     guardsMock.requireAdminOrThrow.mockRejectedValue(new Error("Acesso negado."));
     await expect(chamar()).rejects.toThrow("Acesso negado.");
@@ -485,5 +489,88 @@ describe("alterarDirecionamento", () => {
       ok: false,
       erro: "Boleto não encontrado, já com esse direcionamento ou fora de uso.",
     });
+  });
+});
+
+// M3 (30/09): cancelar boleto vivo sem pagamento e sem parcela em fechamento conferido; as parcelas
+// ficam sem boleto — e aí a antecipação pode ser desfeita pela baixa (lote concluído por engano).
+describe("cancelarBoleto", () => {
+  it("cancela com o estado lido no where, solta as parcelas e audita com o motivo", async () => {
+    dbMock.boletoPrudent.findUnique.mockResolvedValue(boleto({ status: "a_pagar" }));
+    const r = await cancelarBoleto(10, "  Lote concluído por engano ");
+    expect(r).toEqual({ ok: true });
+    expect(dbMock.$transaction).toHaveBeenCalled();
+    expect(dbMock.boletoPrudent.updateMany).toHaveBeenCalledWith({
+      where: { id: 10, status: "a_pagar", atualizadoEm: ATUALIZADO },
+      data: { status: "cancelado", atualizadoEm: expect.any(Date) },
+    });
+    expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
+      where: { boletoPrudentId: 10 },
+      data: { boletoPrudentId: null },
+    });
+    // trava o boleto antes de olhar os fechamentos (o conferir trava os mesmos boletos)
+    expect(dbMock.boletoPrudent.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      dbMock.parcelaVencimento.findFirst.mock.invocationCallOrder[0]
+    );
+    expect(auditMock.createAuditLog).toHaveBeenCalledWith("obrigacoes:cancelar", {
+      boletoId: 10,
+      motivo: "Lote concluído por engano",
+      parcelas: 2,
+      fechamentosDesatualizados: [],
+    });
+    expect(cacheMock.revalidatePath).toHaveBeenCalledWith("/obrigacoes");
+  });
+
+  it("motivo curto → erro, nada gravado", async () => {
+    expect(await cancelarBoleto(10, " ok ")).toEqual({ ok: false, erro: "Escreva o motivo do cancelamento (5 caracteres ou mais)." });
+    expect(dbMock.boletoPrudent.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("boleto com pagamento não estornado → recusa", async () => {
+    dbMock.boletoPrudent.findUnique.mockResolvedValue(
+      boleto({ status: "pago", pagamentos: [{ valorPrincipal: 300, estornadoEm: null }] })
+    );
+    expect(await cancelarBoleto(10, "Prudent cancelou")).toEqual({
+      ok: false,
+      erro: "Boleto com pagamento registrado não pode ser cancelado. Estorne o pagamento antes.",
+    });
+    expect(dbMock.boletoPrudent.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("boleto já substituído ou cancelado → recusa", async () => {
+    dbMock.boletoPrudent.findUnique.mockResolvedValue(boleto({ status: "substituido" }));
+    expect(await cancelarBoleto(10, "Prudent cancelou")).toEqual({ ok: false, erro: "Este boleto já foi substituído ou cancelado." });
+  });
+
+  it("parcela em fechamento conferido ou posterior → recusa (a transação desfaz)", async () => {
+    dbMock.parcelaVencimento.findFirst.mockResolvedValue({
+      vendaId: 240,
+      numeroParcela: 3,
+      fechamento: { status: "enviado", competencia: "2026-10" },
+    });
+    expect(await cancelarBoleto(10, "Prudent cancelou")).toEqual({
+      ok: false,
+      erro: "Parcela V240-3 deste boleto está no fechamento de outubro de 2026 (Enviado ao RH). Reabra o fechamento antes de cancelar o boleto.",
+    });
+    expect(dbMock.parcelaVencimento.findFirst.mock.calls[0][0].where).toEqual({
+      boletoPrudentId: 10,
+      fechamento: { status: { not: "em_preparacao" } },
+    });
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
+  });
+
+  it("parcela reservada em fechamento em preparação → o fechamento fica desatualizado", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([{ fechamentoId: 11 }, { fechamentoId: 11 }]);
+    expect(await cancelarBoleto(10, "Prudent cancelou")).toEqual({ ok: true });
+    expect(dbMock.fechamento.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: [11] }, status: "em_preparacao" },
+      data: { desatualizado: true },
+    });
+  });
+
+  it("boleto mudou no meio (count 0) → erro", async () => {
+    dbMock.boletoPrudent.updateMany.mockResolvedValue({ count: 0 });
+    expect(await cancelarBoleto(10, "Prudent cancelou")).toEqual({ ok: false, erro: "O boleto mudou enquanto você cancelava. Recarregue." });
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
   });
 });

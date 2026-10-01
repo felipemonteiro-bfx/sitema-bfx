@@ -47,6 +47,7 @@ import { arquivoGrandeDemais } from "@/lib/arquivo-limite";
 import type { AbaBoleto, TomSituacao } from "@/lib/obrigacoes-agenda";
 import {
   anexarDocumentoBoleto,
+  cancelarBoleto,
   estornarPagamentoBoleto,
   registrarPagamentoBoleto,
   substituirBoleto,
@@ -119,6 +120,7 @@ type Dialogo =
   | { tipo: "substituir"; linha: LinhaBoleto }
   | { tipo: "pagar"; linha: LinhaBoleto }
   | { tipo: "estornar"; linha: LinhaBoleto; pagamentoId: number }
+  | { tipo: "cancelar"; linha: LinhaBoleto }
   | null;
 
 export default function ObrigacoesClient({ linhas, hoje }: { linhas: LinhaBoleto[]; hoje: string }) {
@@ -193,6 +195,9 @@ export default function ObrigacoesClient({ linhas, hoje }: { linhas: LinhaBoleto
       {dialogo?.tipo === "estornar" && (
         <DialogoEstorno linha={dialogo.linha} pagamentoId={dialogo.pagamentoId} onClose={() => setDialogo(null)} />
       )}
+      {dialogo?.tipo === "cancelar" && (
+        <DialogoCancelar key={dialogo.linha.id} linha={dialogo.linha} onClose={() => setDialogo(null)} />
+      )}
     </Card>
   );
 }
@@ -231,7 +236,10 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
   const podeAnexar = vivo(l) && l.status === "aguardando_documento";
   const podePagar = vivo(l) && daBfx(l) && (l.status === "a_pagar" || l.status === "pago_parcial");
   const podeSubstituir = vivo(l) && l.status !== "aguardando_documento" && pagamentosVivos.length === 0;
-  const temMenu = daBfx(l) && (l.pdfArquivoId != null || podeSubstituir || pagamentosVivos.length > 0);
+  // Cancelar: qualquer boleto vivo sem pagamento vivo (inclusive o que a empresa paga — lote
+  // concluído por engano). A trava do fechamento conferido é do servidor.
+  const podeCancelar = vivo(l) && pagamentosVivos.length === 0;
+  const temMenu = (daBfx(l) && (l.pdfArquivoId != null || podeSubstituir || pagamentosVivos.length > 0)) || podeCancelar;
 
   return (
     <TableRow className={vivo(l) ? undefined : "text-muted-foreground"}>
@@ -311,6 +319,17 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
                     Estornar pagamento de {ddmm(p.data)}
                   </DropdownMenuItem>
                 ))}
+                {podeCancelar && (
+                  <>
+                    {(l.pdfArquivoId != null || podeSubstituir) && daBfx(l) && <DropdownMenuSeparator />}
+                    <DropdownMenuItem
+                      className="text-error-text focus:text-error-text"
+                      onSelect={() => onAcao({ tipo: "cancelar", linha: l })}
+                    >
+                      Cancelar boleto
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -592,6 +611,70 @@ function DialogoEstorno({ linha, pagamentoId, onClose }: { linha: LinhaBoleto; p
           <AlertDialogCancel disabled={pendente}>Voltar</AlertDialogCancel>
           <AlertDialogAction onClick={confirmar} disabled={pendente}>
             {pendente ? "Estornando…" : "Estornar"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function DialogoCancelar({ linha, onClose }: { linha: LinhaBoleto; onClose: () => void }) {
+  const router = useRouter();
+  const [pendente, iniciar] = useTransition();
+  const [motivo, setMotivo] = useState("");
+  const motivoOk = motivo.trim().length >= 5;
+
+  const confirmar = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!motivoOk) return;
+    iniciar(async () => {
+      let r: Awaited<ReturnType<typeof cancelarBoleto>>;
+      try {
+        r = await cancelarBoleto(linha.id, motivo);
+      } catch {
+        r = { ok: false, erro: "Não foi possível cancelar. Confira a conexão e tente de novo." };
+      }
+      if (!r.ok) {
+        toast.error(r.erro);
+        return;
+      }
+      toast.success(`Boleto #${linha.id} cancelado.`);
+      onClose();
+      router.refresh();
+    });
+  };
+
+  return (
+    <AlertDialog open onOpenChange={(aberto) => !aberto && !pendente && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Cancelar o boleto #{linha.id}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Use quando a Prudent cancelou o boleto ou o lote #{linha.loteId} foi concluído por engano. O boleto fica no
+            histórico como cancelado e as {linha.parcelas} parcelas ficam sem boleto. Depois disso, a antecipação delas pode
+            ser desfeita pela baixa da parcela, na ficha da venda.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="space-y-1.5">
+          <Label htmlFor={`motivo-cancelar-${linha.id}`}>Motivo</Label>
+          <Textarea
+            id={`motivo-cancelar-${linha.id}`}
+            value={motivo}
+            onChange={(ev) => setMotivo(ev.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="Ex.: lote concluído por engano; a Prudent não antecipou."
+          />
+          <p className="text-xs text-muted-foreground">Pelo menos 5 caracteres. Fica no registro de auditoria.</p>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pendente}>Voltar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={confirmar}
+            disabled={pendente || !motivoOk}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {pendente ? "Cancelando…" : "Cancelar boleto"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -12,6 +12,7 @@ import { prisma } from "@/lib/db";
 import { ROTULO_STATUS_FECHAMENTO, STATUS_FECHAMENTO, rotuloCompetencia } from "@/lib/fechamento";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { parcelasComPixEmJogo } from "@/lib/fechamento-pix-em-jogo";
+import { ErroCancelamentoBoleto, cancelarBoletoPrudent, validarMotivoCancelamento } from "@/lib/boleto-prudent-db";
 import { createAuditLog } from "@/lib/audit";
 import { hojeDataPura } from "@/lib/data-pura";
 import { dataPuraOuNula } from "@/lib/lote-antecipacao";
@@ -65,7 +66,7 @@ function arquivoEnviado(valor: FormDataEntryValue | null): File | null {
 }
 
 function erroDe(e: unknown, mensagemConflito: string): Resp {
-  if (e instanceof ErroBoleto) return { ok: false, erro: e.message };
+  if (e instanceof ErroBoleto || e instanceof ErroCancelamentoBoleto) return { ok: false, erro: e.message };
   if ((e as { code?: string } | null)?.code === "P2002") return { ok: false, erro: mensagemConflito };
   console.error("[obrigacoes]", e);
   return { ok: false, erro: "Não foi possível salvar. Tente de novo." };
@@ -502,6 +503,35 @@ export async function alterarDirecionamento(boletoId: number, destino: "empresa"
   }
 
   await createAuditLog("obrigacoes:direcionamento", { boletoId: id, destino });
+  revalidatePath(ROTA);
+  return { ok: true };
+}
+
+/**
+ * Cancelar boleto (ajuste de 30/09): a Prudent cancelou o boleto, ou o lote foi concluído por engano.
+ * Só boleto vivo, sem pagamento vivo e sem parcela em fechamento conferido ou posterior; as parcelas
+ * ficam sem boleto e a antecipação pode ser desfeita pela baixa. Motivo obrigatório, no audit.
+ */
+export async function cancelarBoleto(boletoId: number, motivo: string): Promise<Resp> {
+  await requireAdminOrThrow();
+  const id = idPositivo(boletoId);
+  if (!id) return { ok: false, erro: "Boleto não encontrado." };
+  const m = validarMotivoCancelamento(motivo);
+  if (!m.ok) return m;
+
+  let r: Awaited<ReturnType<typeof cancelarBoletoPrudent>>;
+  try {
+    r = await prisma.$transaction((tx) => cancelarBoletoPrudent(tx, id));
+  } catch (e) {
+    return erroDe(e, "O boleto mudou enquanto você cancelava. Recarregue.");
+  }
+
+  await createAuditLog("obrigacoes:cancelar", {
+    boletoId: id,
+    motivo: m.valor,
+    parcelas: r.parcelas,
+    fechamentosDesatualizados: r.fechamentosDesatualizados,
+  });
   revalidatePath(ROTA);
   return { ok: true };
 }

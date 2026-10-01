@@ -5,6 +5,7 @@
 import type { prisma } from "@/lib/db";
 import { DIRECIONAMENTO, STATUS_BOLETO, agruparParcelasPorVencimento } from "@/lib/boleto-prudent";
 import { inicioDoMes, regraVigente } from "@/lib/regra-empresa";
+import { ROTULO_STATUS_FECHAMENTO, STATUS_FECHAMENTO, rotuloCompetencia } from "@/lib/fechamento";
 import { regrasDaEmpresa } from "@/lib/regra-empresa-db";
 
 export type TxBoleto = Pick<typeof prisma, "boletoPrudent" | "parcelaVencimento">;
@@ -51,4 +52,86 @@ export async function criarBoletosDoLote(
     ids.push(boleto.id);
   }
   return ids;
+}
+
+/** Recusa do cancelamento com mensagem para o usuário (lançada dentro da transação para desfazê-la). */
+export class ErroCancelamentoBoleto extends Error {}
+
+const MOTIVO_MINIMO = 5;
+
+export type TxCancelarBoleto = Pick<typeof prisma, "boletoPrudent" | "parcelaVencimento" | "fechamento">;
+
+/** Motivo do cancelamento (vai para o audit): 5 caracteres ou mais. */
+export function validarMotivoCancelamento(motivo: unknown): { ok: true; valor: string } | { ok: false; erro: string } {
+  const texto = typeof motivo === "string" ? motivo.trim() : "";
+  if (texto.length < MOTIVO_MINIMO) {
+    return { ok: false, erro: `Escreva o motivo do cancelamento (${MOTIVO_MINIMO} caracteres ou mais).` };
+  }
+  return { ok: true, valor: texto.slice(0, 500) };
+}
+
+/**
+ * Cancela um boleto vivo (ajuste de 30/09): a Prudent cancelou o boleto, ou o lote foi concluído por
+ * engano. Só sem pagamento vivo e sem parcela em fechamento conferido ou posterior. Rodar dentro de
+ * uma transação: o boleto é travado primeiro (status e `atualizadoEm` lidos no where — o conferir
+ * trava os mesmos boletos, então um espera o outro), depois os fechamentos são conferidos, os em
+ * preparação ficam desatualizados e as parcelas ficam sem boleto (a antecipação pode então ser
+ * desfeita pela baixa).
+ */
+export async function cancelarBoletoPrudent(
+  tx: TxCancelarBoleto,
+  boletoId: number
+): Promise<{ parcelas: number; fechamentosDesatualizados: number[] }> {
+  const b = await tx.boletoPrudent.findUnique({
+    where: { id: boletoId },
+    select: { id: true, status: true, atualizadoEm: true, pagamentos: { select: { estornadoEm: true } } },
+  });
+  if (!b) throw new ErroCancelamentoBoleto("Boleto não encontrado.");
+  if (b.status === STATUS_BOLETO.substituido || b.status === STATUS_BOLETO.cancelado) {
+    throw new ErroCancelamentoBoleto("Este boleto já foi substituído ou cancelado.");
+  }
+  if (b.pagamentos.some((p) => p.estornadoEm == null)) {
+    throw new ErroCancelamentoBoleto("Boleto com pagamento registrado não pode ser cancelado. Estorne o pagamento antes.");
+  }
+
+  const { count } = await tx.boletoPrudent.updateMany({
+    where: { id: b.id, status: b.status, atualizadoEm: b.atualizadoEm },
+    data: { status: STATUS_BOLETO.cancelado, atualizadoEm: new Date() },
+  });
+  if (count === 0) throw new ErroCancelamentoBoleto("O boleto mudou enquanto você cancelava. Recarregue.");
+
+  const travada = await tx.parcelaVencimento.findFirst({
+    where: { boletoPrudentId: b.id, fechamento: { status: { not: STATUS_FECHAMENTO.emPreparacao } } },
+    select: { vendaId: true, numeroParcela: true, fechamento: { select: { status: true, competencia: true } } },
+  });
+  if (travada?.fechamento) {
+    const status = ROTULO_STATUS_FECHAMENTO[travada.fechamento.status] ?? travada.fechamento.status;
+    throw new ErroCancelamentoBoleto(
+      `Parcela V${travada.vendaId}-${travada.numeroParcela} deste boleto está no fechamento de ` +
+        `${rotuloCompetencia(travada.fechamento.competencia)} (${status}). Reabra o fechamento antes de cancelar o boleto.`
+    );
+  }
+
+  // Reservada em preparação: sem boleto, a antecipada deixa de ser elegível — o fechamento pede
+  // "Atualizar parcelas" (e a conferência em paralelo, que exige não desatualizado, é derrubada).
+  const reservadas = await tx.parcelaVencimento.findMany({
+    where: { boletoPrudentId: b.id, fechamentoId: { not: null } },
+    select: { fechamentoId: true },
+  });
+  const fechamentos = [...new Set(reservadas.map((p) => p.fechamentoId).filter((id): id is number => id != null))];
+  if (fechamentos.length > 0) {
+    const marcados = await tx.fechamento.updateMany({
+      where: { id: { in: fechamentos }, status: STATUS_FECHAMENTO.emPreparacao },
+      data: { desatualizado: true },
+    });
+    if (marcados.count !== fechamentos.length) {
+      throw new ErroCancelamentoBoleto("O fechamento destas parcelas mudou enquanto você cancelava. Recarregue.");
+    }
+  }
+
+  const soltas = await tx.parcelaVencimento.updateMany({
+    where: { boletoPrudentId: b.id },
+    data: { boletoPrudentId: null },
+  });
+  return { parcelas: soltas.count, fechamentosDesatualizados: fechamentos };
 }
