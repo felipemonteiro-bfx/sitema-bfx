@@ -143,4 +143,10 @@ describe("entradaDaProjecao", () => {
       { data: d("2026-10-04"), valor: 480 },
     ]);
   });
+
+  it("Pix esperado dos fechamentos (Fase 6) entra como veio", () => {
+    const pix = [{ data: d("2026-10-15"), valor: 600 }];
+    const e = entradaDaProjecao({ hoje: HOJE, boletos: [], lotesEmAndamento: [], pixEsperados: pix });
+    expect(e.pixEsperados).toEqual(pix);
+  });
 });

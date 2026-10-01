@@ -17,6 +17,7 @@ import {
 import { SELECT_PARCELA, diaDaCompetencia, paraRegra, pertence, type ParcelaLida } from "@/lib/fechamento-db";
 import { regraVigente, type RegraComVigencia } from "@/lib/regra-empresa";
 import { regrasDaEmpresa } from "@/lib/regra-empresa-db";
+import type { FechamentoPix } from "@/lib/pix-fechamento";
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -375,5 +376,68 @@ export async function lerGradeFechamento(hoje: Date): Promise<GradeFechamento> {
         parcelas: soma?._count._all ?? 0,
       };
     }),
+  });
+}
+
+/**
+ * Fechamentos aguardando o Pix (enviado ou pago em parte), com o que a agenda precisa: valor final
+ * da versão atual, recebimentos confirmados, dia do Pix (regra da competência, ou o vencimento da
+ * cobrança ativa quando é depois) e os boletos das parcelas reservadas. Usado pelo cron de alertas
+ * e pela projeção de caixa de /obrigacoes.
+ */
+export async function lerFechamentosComPix(): Promise<FechamentoPix[]> {
+  const fechamentos = await prisma.fechamento.findMany({
+    where: { status: { in: [STATUS_FECHAMENTO.enviado, STATUS_FECHAMENTO.pagoParcial] } },
+    select: {
+      id: true,
+      competencia: true,
+      status: true,
+      versaoAtual: true,
+      empresaParceiraId: true,
+      empresaParceira: { select: { nome: true } },
+      versoes: { orderBy: { numero: "desc" }, take: 1, select: { numero: true, totalFinal: true } },
+      recebimentos: { where: { status: "confirmado" }, select: { valor: true, status: true } },
+      cobrancas: { where: { status: "ativa" }, select: { vencimento: true } },
+      parcelas: {
+        where: { boletoPrudentId: { not: null } },
+        select: {
+          boletoPrudent: {
+            select: {
+              id: true,
+              status: true,
+              direcionamento: true,
+              valorEsperado: true,
+              valorDocumento: true,
+              pagamentos: { select: { valorPrincipal: true, estornadoEm: true } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ competencia: "asc" }, { id: "asc" }],
+  });
+  if (fechamentos.length === 0) return [];
+  const regras = await prisma.regraEmpresa.findMany({
+    where: { empresaParceiraId: { in: [...new Set(fechamentos.map((f) => f.empresaParceiraId))] } },
+    orderBy: { vigenteDe: "asc" },
+  });
+  return fechamentos.map((f) => {
+    const daEmpresa: RegraComVigencia[] = regras
+      .filter((r) => r.empresaParceiraId === f.empresaParceiraId)
+      .map((r) => ({ ...r, repasseBase: r.repasseBase === "venda" ? "venda" : null }));
+    const regra = regraVigente(daEmpresa, intervaloCompetencia(f.competencia).inicio);
+    const diaPix = diaDaCompetencia(f.competencia, regra.diaPix);
+    const cobranca = f.cobrancas[0]?.vencimento ?? null;
+    const versao = f.versoes[0];
+    return {
+      id: f.id,
+      empresa: f.empresaParceira.nome,
+      competencia: f.competencia,
+      status: f.status,
+      totalFinal: versao && versao.numero === f.versaoAtual ? versao.totalFinal : null,
+      recebimentos: f.recebimentos,
+      dataPix: cobranca && cobranca.getTime() > diaPix.getTime() ? cobranca : diaPix,
+      boletos: f.parcelas.flatMap((p) => (p.boletoPrudent ? [p.boletoPrudent] : [])),
+    };
   });
 }

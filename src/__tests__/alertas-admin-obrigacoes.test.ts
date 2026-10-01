@@ -97,6 +97,8 @@ const dbMock = {
   produto: { count: vi.fn() },
   boletoPrudent: { findMany: vi.fn() },
   notificacao: { findFirst: vi.fn(), create: vi.fn() },
+  // Pix do fechamento (Fase 6): nenhum aguardando nestes testes.
+  fechamento: { findMany: vi.fn(async () => []) },
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/segredo", () => ({ autorizarCron: () => true }));

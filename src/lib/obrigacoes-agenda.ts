@@ -88,6 +88,8 @@ export function entradaDaProjecao(entrada: {
     valorLiquidoSolicitado: number | null;
     dataDepositoPrevista: Date | null;
   }[];
+  /** Saldo de cada fechamento aguardando o Pix, no dia do Pix (Fase 6, `pixEsperados`). */
+  pixEsperados?: { data: Date; valor: number }[];
 }): Parameters<typeof projetarCaixa>[0] {
   const boletos = entrada.boletos
     .filter((b) => !morto(b.status) && b.direcionamento === DIRECIONAMENTO.bfx)
@@ -97,5 +99,5 @@ export function entradaDaProjecao(entrada: {
     const valor = l.valorAprovado ?? l.valorLiquidoSolicitado;
     return l.dataDepositoPrevista && valor != null ? [{ data: l.dataDepositoPrevista, valor }] : [];
   });
-  return { hoje: entrada.hoje, dias: DIAS_PROJECAO, boletos, pixEsperados: [], depositosPrevistos };
+  return { hoje: entrada.hoje, dias: DIAS_PROJECAO, boletos, pixEsperados: entrada.pixEsperados ?? [], depositosPrevistos };
 }

@@ -4,13 +4,17 @@ import { prisma } from "@/lib/db";
 import { logCron, logCronError } from "@/lib/logger";
 import { hojeDataPura } from "@/lib/data-pura";
 import { PREFIXO_BOLETO, STATUS_ALERTAVEIS, alertasDeBoletos } from "@/lib/alertas-obrigacoes";
+import { alertaPixAtrasado, emailPixAtrasado, pixAtrasados } from "@/lib/pix-fechamento";
+import { lerFechamentosComPix } from "@/lib/fechamento-leitura";
+import { sendEmail } from "@/lib/email";
 
 /**
  * GET /api/cron/alertas-admin
  *
  * Cria notificacoes internas (in-app) para todos os usuarios admin sobre pendencias
  * operacionais: parcelas vencidas, assinaturas pendentes ha muito tempo, estoque baixo e, desde
- * a Fase 4 (2026-09-30), boletos Prudent que a BFX paga vencendo ou sem documento.
+ * a Fase 4 (2026-09-30), boletos Prudent que a BFX paga vencendo ou sem documento e, desde a Fase 6,
+ * o Pix do fechamento que não entrou no dia (um alerta por fechamento, com e-mail ao financeiro).
  *
  * Idempotencia: nao recria um alerta do mesmo tipo se ja existe um nao-lido criado
  * nas ultimas 20h (evita spam a cada execucao).
@@ -113,6 +117,31 @@ export async function GET(req: Request) {
     const janela = new Date();
     janela.setHours(janela.getHours() - 20);
 
+    // 5. Pix do fechamento que nao entrou (Fase 6). Um alerta por fechamento (o prefixo leva o id).
+    // O e-mail ao financeiro sai uma vez a cada 20h por fechamento: a checagem olha qualquer
+    // notificacao com o prefixo na janela, lida ou nao.
+    const pix = pixAtrasados(await lerFechamentosComPix(), new Date(`${hojeDataPura()}T00:00:00.000Z`));
+    if (pix.length > 0) {
+      const cfg = await prisma.config.findFirst({ select: { emailFinanceiro: true } });
+      const emailFinanceiro = cfg?.emailFinanceiro?.trim() || null;
+      for (const p of pix) {
+        const alerta = alertaPixAtrasado(p);
+        if (emailFinanceiro) {
+          const jaAvisado = await prisma.notificacao.findFirst({
+            where: { mensagem: { startsWith: alerta.prefixo }, criadoEm: { gte: janela } },
+            select: { id: true },
+          });
+          if (!jaAvisado) {
+            const email = emailPixAtrasado(p, process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ?? "");
+            await sendEmail({ to: emailFinanceiro, subject: email.subject, html: email.html }).catch((e) =>
+              logCronError("alertas-admin", "email_pix_atrasado", e)
+            );
+          }
+        }
+        alertas.push({ ...alerta, contagem: 1 });
+      }
+    }
+
     let criadas = 0;
     for (const alerta of alertas) {
       for (const admin of admins) {
@@ -139,13 +168,14 @@ export async function GET(req: Request) {
       estoqueBaixo,
       boletosVencendo,
       boletosSemDocumento,
+      pixAtrasados: pix.length,
       notificacoesCriadas: criadas,
     });
 
     return NextResponse.json({
       ok: true,
       admins: admins.length,
-      alertas: { parcelasVencidas, assinaturasPendentes, estoqueBaixo, boletosVencendo, boletosSemDocumento },
+      alertas: { parcelasVencidas, assinaturasPendentes, estoqueBaixo, boletosVencendo, boletosSemDocumento, pixAtrasados: pix.length },
       notificacoesCriadas: criadas,
     });
   } catch (error) {

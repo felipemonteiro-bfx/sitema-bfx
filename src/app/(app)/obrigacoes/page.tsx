@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { CalendarClock, Landmark, TrendingUp } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { PageHeader } from "@/components/page-header";
+import { Alert } from "@/components/ui/alert";
 import { CardStats } from "@/components/ui/card";
 import ObrigacoesClient, { type LinhaBoleto } from "@/components/obrigacoes-client";
 import ObrigacoesGrafico from "@/components/obrigacoes-grafico";
@@ -19,6 +21,8 @@ import {
   situacaoDoBoleto,
   vencimentoEfetivo,
 } from "@/lib/obrigacoes-agenda";
+import { lerFechamentosComPix } from "@/lib/fechamento-leitura";
+import { pixAtrasados, pixEsperados } from "@/lib/pix-fechamento";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +38,7 @@ export default async function Page() {
   const hojeIso = hojeDataPura();
   const hoje = new Date(`${hojeIso}T00:00:00.000Z`);
 
-  const [boletos, lotesEmAndamento] = await Promise.all([
+  const [boletos, lotesEmAndamento, fechamentosPix] = await Promise.all([
     prisma.boletoPrudent.findMany({
       orderBy: [{ vencimento: "asc" }, { id: "asc" }],
       select: {
@@ -70,6 +74,8 @@ export default async function Page() {
       where: { status: STATUS_LOTE.emAndamento },
       select: { valorAprovado: true, valorLiquidoSolicitado: true, dataDepositoPrevista: true },
     }),
+    // Fase 6: o saldo de cada fechamento aguardando o Pix entra no caixa no dia do Pix.
+    lerFechamentosComPix(),
   ]);
 
   const empresaIds = [...new Set(boletos.map((b) => b.empresaParceiraId).filter((id): id is number => id != null))];
@@ -96,7 +102,10 @@ export default async function Page() {
     return { ...b, dataPix };
   });
 
-  const projecao = projetarCaixa(entradaDaProjecao({ hoje, boletos: agenda, lotesEmAndamento }));
+  const projecao = projetarCaixa(
+    entradaDaProjecao({ hoje, boletos: agenda, lotesEmAndamento, pixEsperados: pixEsperados(fechamentosPix) })
+  );
+  const atrasados = pixAtrasados(fechamentosPix, hoje);
 
   const linhas: LinhaBoleto[] = agenda.map((b) => ({
     id: b.id,
@@ -135,6 +144,7 @@ export default async function Page() {
       agenda
         .filter((b) => b.direcionamento === "bfx" && b.dataPix)
         .map((b) => iso(b.dataPix as Date))
+        .concat(fechamentosPix.map((f) => iso(f.dataPix)))
         .filter((d) => d >= hojeIso && d <= fimIso)
     ),
   ].sort();
@@ -148,6 +158,21 @@ export default async function Page() {
         description="Boletos da Prudent que a BFX paga, e o caixa dos próximos 60 dias"
         breadcrumbs={[{ label: "Obrigações" }]}
       />
+
+      {atrasados.map((p) => (
+        <Alert key={p.fechamentoId} variant="error" showIcon>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <p className="min-w-0 flex-1">
+              <strong className="font-semibold">O Pix de {p.empresa} não entrou</strong> e o dia {ddmm(iso(p.dataPix))} passou
+              {" "}— faltam {formatBRL(p.saldo)}.
+              {p.boletosBfx > 0 ? ` A BFX cobre ${formatBRL(p.boletosBfx)} em boletos com capital próprio.` : ""}
+            </p>
+            <Link href={`/fechamento/${p.fechamentoId}`} className="shrink-0 font-semibold underline underline-offset-4">
+              Abrir fechamento
+            </Link>
+          </div>
+        </Alert>
+      ))}
 
       <div className="grid gap-3 md:grid-cols-3">
         <CardStats
