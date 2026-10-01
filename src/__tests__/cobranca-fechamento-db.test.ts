@@ -327,6 +327,24 @@ describe("ajustarCobrancaAoSaldo (depois de recebimento, estorno ou webhook)", (
       expect.objectContaining({ data: expect.objectContaining({ fechamentoId: 11, versaoId: 900, valor: 400, status: "ativa" }) })
     );
     expect(r.acao).toBe("recriada");
+    // O RH tem o QR antigo (cancelado): os admins e a tela são avisados do Pix novo.
+    expect(avisarMock.avisarAdmins).toHaveBeenCalledTimes(1);
+    expect(avisarMock.avisarAdmins.mock.calls[0][0][0].mensagem).toMatch(/^\[Alerta\] Novo Pix do fechamento: Amazon Five — outubro de 2026/);
+    expect(r.aviso).toMatch(/envie o novo Pix ao RH/i);
+  });
+
+  it("corrida com outro ajuste (P2002 na cobrança nova) → tenta de novo uma vez com o saldo relido", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago_parcial" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 200, status: "confirmado" }]);
+    dbMock.cobrancaFechamento.create
+      .mockRejectedValueOnce(Object.assign(new Error("unique"), { code: "P2002" }))
+      .mockResolvedValue({ id: 9 });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const r = await ajustarCobrancaAoSaldo(11);
+    log.mockRestore();
+    expect(asaasMock.createPixPayment).toHaveBeenCalledTimes(2);
+    expect(r.acao).toBe("recriada");
+    expect(avisarMock.avisarAdmins.mock.calls.every((c) => !/não foi atualizado/.test(c[0][0].mensagem))).toBe(true);
   });
 
   it("a cobrança ativa já é do saldo → nada (idempotente)", async () => {

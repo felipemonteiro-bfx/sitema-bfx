@@ -15,8 +15,10 @@
  *   próximo envio encerra de novo).
  * - `ajustarCobrancaAoSaldo`: depois de um recálculo que muda o saldo (recebimento confirmado,
  *   estorno, webhook, sincronização). Pago → encerra a ativa. Saldo > 0 → a ativa precisa ser da
- *   versão enviada e do valor do saldo; senão encerra e cria outra (`garantirCobrancaPix`). Sem
- *   Asaas configurado ou com falha → aviso à tela e aos admins; nunca lança.
+ *   versão enviada e do valor do saldo; senão encerra e cria outra (`garantirCobrancaPix`) e avisa
+ *   os admins para mandar o Pix novo ao RH. Falha (inclusive corrida com outro ajuste no índice de
+ *   uma ativa por fechamento) → uma nova tentativa; sem Asaas ou falhando de novo → aviso à tela e
+ *   aos admins; nunca lança.
  *
  * As chamadas ao Asaas ficam sempre fora das transações do banco.
  *
@@ -308,74 +310,15 @@ const STATUS_AJUSTAVEL: string[] = [STATUS_FECHAMENTO.enviado, STATUS_FECHAMENTO
  */
 export async function ajustarCobrancaAoSaldo(fechamentoId: number, config?: AsaasConfig | null): Promise<AjusteCobranca> {
   try {
-    const f = await prisma.fechamento.findUnique({
-      where: { id: fechamentoId },
-      select: {
-        id: true,
-        status: true,
-        competencia: true,
-        versaoAtual: true,
-        empresaParceira: { select: { id: true, nome: true, cnpj: true, asaasCustomerId: true, emailRh: true } },
-        versoes: { orderBy: { numero: "desc" }, take: 1, select: { id: true, numero: true, totalFinal: true, enviadaEm: true } },
-      },
-    });
-    const versao = f?.versoes[0];
-    // Reaberto ou envio em andamento: o reabrir e o envio cuidam da cobrança.
-    if (!f || !STATUS_AJUSTAVEL.includes(f.status) || !versao || versao.numero !== f.versaoAtual || !versao.enviadaEm) {
-      return { acao: "nada", aviso: null };
-    }
-    const ativas = await prisma.cobrancaFechamento.findMany({
-      where: { fechamentoId, status: STATUS_COBRANCA.ativa },
-      select: SELECT_ATIVA,
-      orderBy: { id: "asc" },
-    });
-    const { saldo } = await saldoAtual(fechamentoId, versao.totalFinal);
-    if (saldo <= 0 && ativas.length === 0) return { acao: "nada", aviso: null };
-    if (
-      saldo > 0 &&
-      ativas.length === 1 &&
-      ativas[0].versaoId === versao.id &&
-      centavos(ativas[0].valor) === centavos(saldo)
-    ) {
-      return { acao: "nada", aviso: null };
-    }
-
-    const quem = `${f.empresaParceira.nome} — ${rotuloCompetencia(f.competencia)}`;
-    const cfg = config === undefined ? await configAsaas() : config;
-    if (!cfg) {
-      const oQue =
-        saldo > 0
-          ? `o Pix não acompanha o saldo de ${formatBRL(saldo)}`
-          : "o Pix antigo continua ativo, mas o fechamento já está pago";
-      await avisarAdmins([
-        { mensagem: `[Alerta] Asaas não configurado: ${oQue} (${quem}). Cobre o saldo ou cancele o Pix à mão.`, link: link(fechamentoId) },
-      ]);
-      return { acao: "sem_asaas", aviso: `Asaas não configurado: ${oQue}. Os admins foram avisados.` };
-    }
-
-    if (saldo <= 0) {
-      for (const c of ativas) await encerrar(c, cfg);
-      return { acao: "encerrada", aviso: null };
-    }
-
-    // Saldo > 0: a de outra versão sai; a da versão enviada com outro valor é trocada pelo saldo.
-    await encerrarCobrancasAnteriores({ fechamentoId, versaoId: versao.id, config: cfg });
-    const customerId = await getOrCreateCustomerEmpresa(f.empresaParceira, prisma, cfg);
-    const regra = regraVigente(await regrasDaEmpresa(f.empresaParceira.id), intervaloCompetencia(f.competencia).inicio);
-    const r = await garantirCobrancaPix({
-      fechamentoId,
-      versaoId: versao.id,
-      versao: versao.numero,
-      empresaId: f.empresaParceira.id,
-      empresaNome: f.empresaParceira.nome,
-      competencia: f.competencia,
-      customerId,
-      totalFinal: versao.totalFinal,
-      diaPix: regra.diaPix,
-      config: cfg,
-      hoje: hojeDataPura(),
-    });
-    return { acao: r.pix ? "recriada" : "encerrada", aviso: null };
+    return await ajustarUmaVez(fechamentoId, config);
+  } catch (primeiro) {
+    // Dois ajustes do mesmo fechamento ao mesmo tempo (confirmar + webhook, duas abas): o segundo
+    // bate no índice de uma cobrança ativa por fechamento (P2002 → `garantirCobrancaPix` cancela a
+    // sua e lança). Uma nova tentativa relê o saldo e a cobrança que o outro criou.
+    console.error(`[cobranca-fechamento] ajuste do fechamento ${fechamentoId} falhou; tentando de novo:`, primeiro);
+  }
+  try {
+    return await ajustarUmaVez(fechamentoId, config);
   } catch (erro) {
     console.error(`[cobranca-fechamento] falha ao ajustar a cobrança do fechamento ${fechamentoId} ao saldo:`, erro);
     await avisarAdmins([
@@ -386,4 +329,89 @@ export async function ajustarCobrancaAoSaldo(fechamentoId: number, config?: Asaa
     ]);
     return { acao: "falhou", aviso: "O recebimento foi gravado, mas o Pix no Asaas não foi atualizado. Os admins foram avisados." };
   }
+}
+
+async function ajustarUmaVez(fechamentoId: number, config?: AsaasConfig | null): Promise<AjusteCobranca> {
+  const f = await prisma.fechamento.findUnique({
+    where: { id: fechamentoId },
+    select: {
+      id: true,
+      status: true,
+      competencia: true,
+      versaoAtual: true,
+      empresaParceira: { select: { id: true, nome: true, cnpj: true, asaasCustomerId: true, emailRh: true } },
+      versoes: { orderBy: { numero: "desc" }, take: 1, select: { id: true, numero: true, totalFinal: true, enviadaEm: true } },
+    },
+  });
+  const versao = f?.versoes[0];
+  // Reaberto ou envio em andamento: o reabrir e o envio cuidam da cobrança.
+  if (!f || !STATUS_AJUSTAVEL.includes(f.status) || !versao || versao.numero !== f.versaoAtual || !versao.enviadaEm) {
+    return { acao: "nada", aviso: null };
+  }
+  const ativas = await prisma.cobrancaFechamento.findMany({
+    where: { fechamentoId, status: STATUS_COBRANCA.ativa },
+    select: SELECT_ATIVA,
+    orderBy: { id: "asc" },
+  });
+  const { saldo } = await saldoAtual(fechamentoId, versao.totalFinal);
+  if (saldo <= 0 && ativas.length === 0) return { acao: "nada", aviso: null };
+  if (
+    saldo > 0 &&
+    ativas.length === 1 &&
+    ativas[0].versaoId === versao.id &&
+    centavos(ativas[0].valor) === centavos(saldo)
+  ) {
+    return { acao: "nada", aviso: null };
+  }
+
+  const quem = `${f.empresaParceira.nome} — ${rotuloCompetencia(f.competencia)}`;
+  const cfg = config === undefined ? await configAsaas() : config;
+  if (!cfg) {
+    const oQue =
+      saldo > 0
+        ? `o Pix não acompanha o saldo de ${formatBRL(saldo)}`
+        : "o Pix antigo continua ativo, mas o fechamento já está pago";
+    await avisarAdmins([
+      { mensagem: `[Alerta] Asaas não configurado: ${oQue} (${quem}). Cobre o saldo ou cancele o Pix à mão.`, link: link(fechamentoId) },
+    ]);
+    return { acao: "sem_asaas", aviso: `Asaas não configurado: ${oQue}. Os admins foram avisados.` };
+  }
+
+  if (saldo <= 0) {
+    for (const c of ativas) await encerrar(c, cfg);
+    return { acao: "encerrada", aviso: null };
+  }
+
+  // Saldo > 0: a de outra versão sai; a da versão enviada com outro valor é trocada pelo saldo.
+  await encerrarCobrancasAnteriores({ fechamentoId, versaoId: versao.id, config: cfg });
+  const customerId = await getOrCreateCustomerEmpresa(f.empresaParceira, prisma, cfg);
+  const regra = regraVigente(await regrasDaEmpresa(f.empresaParceira.id), intervaloCompetencia(f.competencia).inicio);
+  const r = await garantirCobrancaPix({
+    fechamentoId,
+    versaoId: versao.id,
+    versao: versao.numero,
+    empresaId: f.empresaParceira.id,
+    empresaNome: f.empresaParceira.nome,
+    competencia: f.competencia,
+    customerId,
+    totalFinal: versao.totalFinal,
+    diaPix: regra.diaPix,
+    config: cfg,
+    hoje: hojeDataPura(),
+  });
+  if (!r.pix) return { acao: "encerrada", aviso: null };
+  // O RH tem o QR do e-mail, que acabou de ser cancelado: o Pix novo não sai sozinho (sem
+  // reenvio automático do demonstrativo) — os admins e a tela são avisados para mandá-lo.
+  await avisarAdmins([
+    {
+      mensagem:
+        `[Alerta] Novo Pix do fechamento: ${quem}. O saldo mudou para ${formatBRL(r.pix.valor)} e o Pix enviado ao RH ` +
+        "foi trocado. Mande ao RH o copia e cola novo (na tela do fechamento).",
+      link: link(fechamentoId),
+    },
+  ]);
+  return {
+    acao: "recriada",
+    aviso: `O Pix foi trocado por um de ${formatBRL(r.pix.valor)}: envie o novo Pix ao RH (o do e-mail foi cancelado).`,
+  };
 }
