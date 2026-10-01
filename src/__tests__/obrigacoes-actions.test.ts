@@ -426,7 +426,7 @@ describe("alterarDirecionamento", () => {
 
   // Fase 5 (spec §3.4): bfx → empresa só se nenhuma parcela do boleto estiver em fechamento
   // conferido ou posterior — senão a empresa pagaria a parcela à Prudent e no Pix.
-  it("bfx → empresa com parcela em fechamento conferido: recusa sem gravar", async () => {
+  it("bfx → empresa com parcela em fechamento conferido: recusa e desfaz (transação)", async () => {
     dbMock.parcelaVencimento.findFirst.mockResolvedValue({
       vendaId: 240,
       numeroParcela: 3,
@@ -441,20 +441,21 @@ describe("alterarDirecionamento", () => {
       boletoPrudentId: 10,
       fechamento: { status: { not: "em_preparacao" } },
     });
-    expect(dbMock.boletoPrudent.updateMany).not.toHaveBeenCalled();
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
   });
 
-  it("bfx → empresa: a trava também vai no where (fechamento conferido no meio)", async () => {
+  // Revisão: o boleto é travado (update) ANTES de olhar os fechamentos, na mesma transação — o
+  // conferir trava os mesmos boletos, então um dos dois espera o outro e vê o estado novo.
+  it("bfx → empresa: trava o boleto antes de conferir os fechamentos, numa transação", async () => {
     expect(await alterarDirecionamento(10, "empresa")).toEqual({ ok: true });
+    expect(dbMock.$transaction).toHaveBeenCalled();
     expect(dbMock.boletoPrudent.updateMany).toHaveBeenCalledWith({
-      where: {
-        id: 10,
-        status: { notIn: ["substituido", "cancelado"] },
-        direcionamento: { not: "empresa" },
-        parcelas: { none: { fechamento: { status: { not: "em_preparacao" } } } },
-      },
+      where: { id: 10, status: { notIn: ["substituido", "cancelado"] }, direcionamento: { not: "empresa" } },
       data: { direcionamento: "empresa" },
     });
+    expect(dbMock.boletoPrudent.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      dbMock.parcelaVencimento.findFirst.mock.invocationCallOrder[0]
+    );
   });
 
   it("destino invalido e recusado; nada mudou → erro", async () => {

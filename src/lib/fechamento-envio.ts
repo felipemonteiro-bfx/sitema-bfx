@@ -1,8 +1,9 @@
 /**
  * Envio do demonstrativo ao RH (Fase 5). Só de fechamento conferido: gera o PDF da versão atual
  * (sem Pix — o bloco entra na Fase 6), manda PDF + XLSX ao `emailRh` com Cc `emailCopia`, registra
- * no histórico de e-mails (tipo "fechamento") e só depois de enviado guarda o PDF e marca o
- * fechamento como enviado. Falha no SMTP não grava nada: o fechamento continua conferido.
+ * no histórico de e-mails (tipo "fechamento"). Antes do SMTP o fechamento é reivindicado
+ * (conferido → enviado, com a versão no where); se o e-mail falha, volta a conferido. Depois do
+ * e-mail, o PDF fica guardado na versão.
  *
  * Ver docs/superpowers/specs/2026-09-30-fechamento-pix-prudent-design.md §5.2 e §5.4.
  */
@@ -13,7 +14,13 @@ import { escaparHtml } from "@/lib/html";
 import { formatarDataPura } from "@/lib/data-pura";
 import { formatBRL } from "@/lib/utils";
 import { STATUS_FECHAMENTO, intervaloCompetencia, rotuloCompetencia } from "@/lib/fechamento";
-import { marcarEnviado, montarDemonstrativo, nomeArquivoDemonstrativo } from "@/lib/fechamento-db";
+import {
+  desfazerReivindicacao,
+  marcarEnviado,
+  montarDemonstrativo,
+  nomeArquivoDemonstrativo,
+  reivindicarEnvio,
+} from "@/lib/fechamento-db";
 import { gerarFechamentoPdf } from "@/lib/fechamento-pdf";
 import { sha256Hex } from "@/lib/arquivo-financeiro";
 import { regraVigente } from "@/lib/regra-empresa";
@@ -50,7 +57,7 @@ export function htmlEmailFechamento(e: {
 </body></html>`;
 }
 
-export async function enviarFechamento(e: { fechamentoId: number; usuario: string | null }): Promise<{ versao: number; para: string }> {
+export async function enviarFechamento(e: { fechamentoId: number; versao: number; usuario: string | null }): Promise<{ versao: number; para: string }> {
   if (enviando.has(e.fechamentoId)) throw new Error("Envio deste fechamento já em andamento. Aguarde.");
   enviando.add(e.fechamentoId);
   try {
@@ -60,7 +67,7 @@ export async function enviarFechamento(e: { fechamentoId: number; usuario: strin
   }
 }
 
-async function enviar(e: { fechamentoId: number; usuario: string | null }): Promise<{ versao: number; para: string }> {
+async function enviar(e: { fechamentoId: number; versao: number; usuario: string | null }): Promise<{ versao: number; para: string }> {
   const f = await prisma.fechamento.findUnique({
     where: { id: e.fechamentoId },
     select: {
@@ -102,6 +109,10 @@ async function enviar(e: { fechamentoId: number; usuario: string | null }): Prom
   });
   if (!f) throw new Error("Fechamento não encontrado.");
   if (f.status !== STATUS_FECHAMENTO.conferido) throw new Error("Só um fechamento conferido pode ser enviado ao RH.");
+  // A versão que a tela mostrou ao confirmar: se outra aba reabriu e conferiu de novo, não envia a outra.
+  if (f.versaoAtual !== e.versao) {
+    throw new Error(`O fechamento está na versão ${f.versaoAtual}, não na ${e.versao}. Recarregue antes de enviar.`);
+  }
 
   const empresa = f.empresaParceira;
   const emailRh = empresa.emailRh?.trim();
@@ -134,24 +145,34 @@ async function enviar(e: { fechamentoId: number; usuario: string | null }): Prom
   const xlsx = Buffer.from(versao.xlsx.conteudo);
 
   const cc = emailsCopia(empresa.emailCopia, emailRh);
-  await sendEmail({
-    to: emailRh,
-    ...(cc.length > 0 ? { cc } : {}),
-    subject: `Demonstrativo BFX — ${rotuloCompetencia(f.competencia)} — ${empresa.nome}`,
-    html: htmlEmailFechamento({
-      empresa: empresa.nome,
-      competencia: f.competencia,
-      versao: versao.numero,
-      totalFinal: versao.totalFinal,
-      vencimentoPix: dados.vencimentoPix,
-      anexos: [nomePdf, versao.xlsx.nome],
-    }),
-    attachments: [
-      { filename: nomePdf, contentType: "application/pdf", content: pdf },
-      { filename: versao.xlsx.nome, contentType: XLSX_MIME, content: xlsx },
-    ],
-    registro: { tipo: "fechamento", empresaId: empresa.id, origem: "manual" },
-  });
+  await reivindicarEnvio({ fechamentoId: f.id, versao: versao.numero });
+  try {
+    await sendEmail({
+      to: emailRh,
+      ...(cc.length > 0 ? { cc } : {}),
+      subject: `Demonstrativo BFX — ${rotuloCompetencia(f.competencia)} — ${empresa.nome}`,
+      html: htmlEmailFechamento({
+        empresa: empresa.nome,
+        competencia: f.competencia,
+        versao: versao.numero,
+        totalFinal: versao.totalFinal,
+        vencimentoPix: dados.vencimentoPix,
+        anexos: [nomePdf, versao.xlsx.nome],
+      }),
+      attachments: [
+        { filename: nomePdf, contentType: "application/pdf", content: pdf },
+        { filename: versao.xlsx.nome, contentType: XLSX_MIME, content: xlsx },
+      ],
+      registro: { tipo: "fechamento", empresaId: empresa.id, origem: "manual" },
+    });
+  } catch (erro) {
+    console.error("[fechamento-envio] falha no e-mail:", erro);
+    await desfazerReivindicacao({ fechamentoId: f.id, versao: versao.numero }).catch((x) =>
+      console.error("[fechamento-envio] não voltou a conferido depois da falha no e-mail:", x)
+    );
+    // O detalhe (host, resposta do servidor) fica no histórico de e-mails, não na tela.
+    throw new Error("O e-mail não saiu. O motivo ficou no histórico de e-mails; o fechamento continua conferido.");
+  }
 
   const arquivo = await prisma.arquivoFinanceiro.create({
     data: {

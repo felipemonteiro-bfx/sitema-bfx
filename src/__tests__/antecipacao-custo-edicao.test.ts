@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Mocks — mesmo padrao de fornecedores-post-route.test.ts: objeto local de
 // mock, nunca importar `prisma`/`audit`/`email` reais no teste.
 const dbMock = {
+  // Fase 5: a edição/exclusão grava numa transação, com as parcelas travadas (FOR UPDATE).
+  $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
+  $queryRaw: vi.fn(async () => []),
   usuario: { findFirst: vi.fn() },
   // findUnique sem valor = venda anterior desconhecida: valorParcela nao e tocado (fora do escopo deste teste).
   venda: { update: vi.fn(), findUnique: vi.fn() },

@@ -9,7 +9,8 @@
  * - `conferirFechamento`: revalida as reservas, congela a versão N+1 (foto das linhas, totais,
  *   ajustes) e gera o XLSX.
  * - `reabrirFechamento`: volta a preparação; a próxima conferência gera a versão seguinte.
- * - `marcarEnviado`: chamado por `@/lib/fechamento-envio` depois do e-mail.
+ * - `reivindicarEnvio` / `desfazerReivindicacao` / `marcarEnviado`: o envio em `@/lib/fechamento-envio`
+ *   (conferido → enviado antes do SMTP; volta se o e-mail falha; grava o PDF na versão depois).
  *
  * Ver docs/superpowers/specs/2026-09-30-fechamento-pix-prudent-design.md §3.6 e §5.
  */
@@ -346,7 +347,6 @@ export async function conferirFechamento(e: { fechamentoId: number; usuario: str
       desatualizado: true,
       responsavel: true,
       empresaParceira: { select: { id: true, nome: true, cnpj: true } },
-      ajustes: { select: { id: true, valor: true, justificativa: true, removidoEm: true }, orderBy: { id: "asc" } },
     },
   });
   if (!fechamento) throw new Error("Fechamento não encontrado.");
@@ -381,8 +381,23 @@ export async function conferirFechamento(e: { fechamentoId: number; usuario: str
       if (!pertence(p, fechamento.empresaParceiraId, inicio, fim)) throw new Error(ERRO_PARCELAS_MUDARAM);
       if (!elegibilidadeFechamento(paraRegra(p), fechamento.id).ok) throw new Error(ERRO_PARCELAS_MUDARAM);
     }
+    // Boletos das antecipadas: o update no-op com `direcionamento: "bfx"` no where trava as linhas até
+    // o commit. Um "devolver à empresa" em paralelo espera, ou já passou e derruba o count.
+    const boletoIds = [...new Set(parcelas.map((p) => p.boletoPrudentId).filter((id): id is number => id != null))];
+    if (boletoIds.length > 0) {
+      const travados = await tx.boletoPrudent.updateMany({
+        where: { id: { in: boletoIds }, direcionamento: "bfx" },
+        data: { direcionamento: "bfx" },
+      });
+      if (travados.count !== boletoIds.length) throw new Error(ERRO_PARCELAS_MUDARAM);
+    }
 
-    const ajustes = fechamento.ajustes.filter((a) => a.removidoEm === null);
+    // Ajustes lidos depois da trava: um ajuste gravado (ou removido) entre o clique e aqui conta.
+    const ajustes = await tx.fechamentoAjuste.findMany({
+      where: { fechamentoId: fechamento.id, removidoEm: null },
+      select: { id: true, valor: true, justificativa: true },
+      orderBy: { id: "asc" },
+    });
     const linhas = parcelas.map((p) => ({
       parcelaId: p.id,
       vendaId: p.vendaId,
@@ -396,7 +411,7 @@ export async function conferirFechamento(e: { fechamentoId: number; usuario: str
       antecipada: p.antecipada,
       boletoPrudentId: p.boletoPrudentId,
     }));
-    const totais = totaisFechamento(linhas, ajustes);
+    const totais = totaisFechamento(linhas, ajustes.map((a) => ({ valor: a.valor, removidoEm: null })));
     if (totais.totalFinal <= 0) throw new Error("O valor final do demonstrativo precisa ser maior que zero.");
 
     const ajustesFoto = ajustes.map((a) => ({ valor: a.valor, justificativa: a.justificativa }));
@@ -456,21 +471,35 @@ export async function reabrirFechamento(e: { fechamentoId: number }): Promise<vo
   if (r.count !== 1) throw new Error(ERRO_MUDOU);
 }
 
+/**
+ * Reivindica o envio antes do SMTP: conferido → enviado, com a versão no where. Duas abas (ou dois
+ * pods) não mandam dois e-mails; o segundo recebe erro. Falha no SMTP → `desfazerReivindicacao`.
+ */
+export async function reivindicarEnvio(e: { fechamentoId: number; versao: number }): Promise<void> {
+  const r = await prisma.fechamento.updateMany({
+    where: { id: e.fechamentoId, status: STATUS_FECHAMENTO.conferido, versaoAtual: e.versao },
+    data: { status: STATUS_FECHAMENTO.enviado },
+  });
+  if (r.count !== 1) throw new Error(ERRO_MUDOU);
+}
+
+/** O e-mail não saiu: volta a conferido, se ainda é aquela versão marcada como enviada. */
+export async function desfazerReivindicacao(e: { fechamentoId: number; versao: number }): Promise<void> {
+  await prisma.fechamento.updateMany({
+    where: { id: e.fechamentoId, status: STATUS_FECHAMENTO.enviado, versaoAtual: e.versao },
+    data: { status: STATUS_FECHAMENTO.conferido },
+  });
+}
+
+/** Depois do e-mail: grava na versão o PDF enviado, quando e quem. */
 export async function marcarEnviado(e: {
   fechamentoId: number;
   versao: number;
   pdfArquivoId: number;
   usuario: string | null;
 }): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    const r = await tx.fechamento.updateMany({
-      where: { id: e.fechamentoId, status: STATUS_FECHAMENTO.conferido, versaoAtual: e.versao },
-      data: { status: STATUS_FECHAMENTO.enviado },
-    });
-    if (r.count !== 1) throw new Error(ERRO_MUDOU);
-    await tx.fechamentoVersao.updateMany({
-      where: { fechamentoId: e.fechamentoId, numero: e.versao },
-      data: { pdfArquivoId: e.pdfArquivoId, enviadaEm: new Date(), enviadaPor: e.usuario },
-    });
+  await prisma.fechamentoVersao.updateMany({
+    where: { fechamentoId: e.fechamentoId, numero: e.versao },
+    data: { pdfArquivoId: e.pdfArquivoId, enviadaEm: new Date(), enviadaPor: e.usuario },
   });
 }

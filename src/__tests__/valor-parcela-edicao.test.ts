@@ -51,6 +51,9 @@ describe("valorParcelaAposEdicao", () => {
 
 // updateVenda de ponta a ponta, com o mesmo padrao de mocks de historico-edicao-preserva-antecipada.test.ts.
 const dbMock = {
+  // Fase 5: a edição/exclusão grava numa transação, com as parcelas travadas (FOR UPDATE).
+  $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
+  $queryRaw: vi.fn(async () => []),
   usuario: { findFirst: vi.fn() },
   venda: { update: vi.fn(), findUnique: vi.fn() },
   itemVenda: { deleteMany: vi.fn(), createMany: vi.fn() },

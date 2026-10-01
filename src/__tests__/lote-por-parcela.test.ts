@@ -136,6 +136,7 @@ describe("abrirLote", () => {
     expect(dbMock.parcelaVencimento.updateMany.mock.calls[0][0].where).toEqual({
       id: { in: [1] },
       antecipacaoLoteId: null,
+      fechamentoId: null, // Fase 5: reservada num fechamento fica fora do lote
       confirmacaoRh: "confirmada",
       paga: false,
     });

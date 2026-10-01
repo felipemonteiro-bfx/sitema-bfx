@@ -40,7 +40,7 @@ describe("guarda de admin", () => {
     ["removerAjusteFechamento", () => a.removerAjusteFechamento(3)],
     ["conferirFechamentoAction", () => a.conferirFechamentoAction(11)],
     ["reabrirFechamentoAction", () => a.reabrirFechamentoAction(11)],
-    ["enviarFechamentoAction", () => a.enviarFechamentoAction(11)],
+    ["enviarFechamentoAction", () => a.enviarFechamentoAction(11, 1)],
   ])("%s", async (_n, chamar) => {
     guardsMock.requireAdminOrThrow.mockRejectedValue(new Error("Acesso negado."));
     await expect(chamar()).rejects.toThrow("Acesso negado.");
@@ -66,6 +66,13 @@ describe("resultado", () => {
     const r = await a.reabrirFechamentoAction(11);
     expect(r).toEqual({ ok: false, erro: "Não foi possível gravar. Recarregue e tente de novo." });
     expect(auditMock.createAuditLog).not.toHaveBeenCalled();
+  });
+
+  // Revisão: erro do Prisma sem `code` (inicialização, validação) também não vaza host/consulta.
+  it("erro de classe do Prisma sem code não vaza", async () => {
+    class PrismaClientInitializationError extends Error {}
+    libMock.reabrirFechamento.mockRejectedValue(new PrismaClientInitializationError("Can't reach database server at db.interno:5432"));
+    expect(await a.reabrirFechamentoAction(11)).toEqual({ ok: false, erro: "Não foi possível gravar. Recarregue e tente de novo." });
   });
 
   it("id inválido é recusado sem chamar a lib", async () => {

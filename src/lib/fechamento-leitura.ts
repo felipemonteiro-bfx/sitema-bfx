@@ -65,6 +65,8 @@ export type DetalheFechamento = {
   bloqueadas: BloqueadaDetalhe[];
   /** Elegíveis do mês ainda sem reserva: "Atualizar parcelas" as traz. */
   novasElegiveis: number;
+  /** Reservadas que saíram do mês ou ficaram inelegíveis: "Atualizar parcelas" as solta. */
+  reservasInvalidas: number;
   /** Em preparação, os ajustes vivos (com id, removíveis); fora dela, os da foto da versão (sem id). */
   ajustes: { id: number | null; valor: number; justificativa: string }[];
   totalBruto: number;
@@ -82,19 +84,26 @@ type ParcelaComMotivo = ParcelaLida & { confirmacaoMotivo: string | null };
 export function classificarParcelas(
   parcelas: ParcelaComMotivo[],
   fechamento: { id: number; empresaParceiraId: number; competencia: string }
-): { reservadas: ParcelaComMotivo[]; bloqueadas: BloqueadaDetalhe[]; novasElegiveis: number } {
+): { reservadas: ParcelaComMotivo[]; bloqueadas: BloqueadaDetalhe[]; novasElegiveis: number; reservasInvalidas: number } {
   const { inicio, fim } = intervaloCompetencia(fechamento.competencia);
   const reservadas: ParcelaComMotivo[] = [];
   const bloqueadas: BloqueadaDetalhe[] = [];
   let novasElegiveis = 0;
+  let reservasInvalidas = 0;
   for (const p of parcelas) {
-    if (p.fechamentoId === fechamento.id) reservadas.push(p);
-    if (!pertence(p, fechamento.empresaParceiraId, inicio, fim)) continue;
-    const r = elegibilidadeFechamento(paraRegra(p), fechamento.id);
-    if (r.ok) {
-      if (p.fechamentoId !== fechamento.id) novasElegiveis++;
+    const minha = p.fechamentoId === fechamento.id;
+    if (!pertence(p, fechamento.empresaParceiraId, inicio, fim)) {
+      if (minha) reservasInvalidas++;
       continue;
     }
+    const r = elegibilidadeFechamento(paraRegra(p), fechamento.id);
+    if (r.ok) {
+      if (minha) reservadas.push(p);
+      else novasElegiveis++;
+      continue;
+    }
+    // Reservada que ficou inelegível: sai das linhas (o conferir recusaria) e aparece só bloqueada.
+    if (minha) reservasInvalidas++;
     const rotulo =
       r.motivo === "recusada_rh" && p.confirmacaoMotivo
         ? `${ROTULO_MOTIVO.recusada_rh} — ${p.confirmacaoMotivo}`
@@ -107,7 +116,7 @@ export function classificarParcelas(
       valor: p.valorParcela,
     });
   }
-  return { reservadas, bloqueadas, novasElegiveis };
+  return { reservadas, bloqueadas, novasElegiveis, reservasInvalidas };
 }
 
 export async function lerDetalheFechamento(id: number): Promise<DetalheFechamento | null> {
@@ -159,7 +168,7 @@ export async function lerDetalheFechamento(id: number): Promise<DetalheFechament
     select: { ...SELECT_PARCELA, confirmacaoMotivo: true },
     orderBy: [{ dataVencimento: "asc" }, { vendaId: "asc" }, { numeroParcela: "asc" }],
   })) as ParcelaComMotivo[];
-  const { reservadas, bloqueadas, novasElegiveis } = classificarParcelas(parcelas, f);
+  const { reservadas, bloqueadas, novasElegiveis, reservasInvalidas } = classificarParcelas(parcelas, f);
 
   // Fora de preparação, o que vale é a foto da versão conferida, não as reservas de agora.
   const versaoAtual = f.versoes.find((v) => v.numero === f.versaoAtual) ?? null;
@@ -223,6 +232,7 @@ export async function lerDetalheFechamento(id: number): Promise<DetalheFechament
     linhas,
     bloqueadas,
     novasElegiveis,
+    reservasInvalidas,
     ajustes: usarVersao
       ? (JSON.parse(versaoAtual.ajustesJson) as { valor: number; justificativa: string }[]).map((a) => ({ id: null, ...a }))
       : f.ajustes.map((a) => ({ id: a.id, valor: a.valor, justificativa: a.justificativa })),
@@ -258,8 +268,8 @@ export type GradeFechamento = {
 
 /**
  * Monta a grade empresa × competência. Pura. Empresas: as que têm alguma regra com cobrança via
- * BFX (ou algum fechamento). Competências: o mês de `hoje` e os dois seguintes, mais as que já têm
- * fechamento.
+ * BFX (ou algum fechamento). Competências: o mês anterior a `hoje`, o de `hoje` e os dois
+ * seguintes, mais as que já têm fechamento.
  */
 export function montarGrade(e: {
   hoje: Date;
@@ -277,7 +287,9 @@ export function montarGrade(e: {
   }[];
 }): GradeFechamento {
   const atual = competenciaDe(e.hoje);
-  const proximas = [atual, competenciaSeguinte(atual), competenciaSeguinte(competenciaSeguinte(atual))];
+  // O mês anterior também: o fechamento esquecido ainda pode ser gerado no começo do mês seguinte.
+  const anterior = competenciaDe(new Date(Date.UTC(e.hoje.getUTCFullYear(), e.hoje.getUTCMonth() - 1, 1)));
+  const proximas = [anterior, atual, competenciaSeguinte(atual), competenciaSeguinte(competenciaSeguinte(atual))];
   const competencias = [...new Set([...proximas, ...e.fechamentos.map((f) => f.competencia)])].sort();
 
   const regrasPorEmpresa = new Map<number, RegraComVigencia[]>();

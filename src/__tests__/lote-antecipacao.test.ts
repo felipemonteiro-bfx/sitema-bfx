@@ -71,7 +71,7 @@ describe("abrirLote — o envio à Prudent", () => {
     expect(updates).toHaveLength(1);
     // O `antecipacaoLoteId: null` no where é a trava contra dois envios simultâneos.
     expect(updates[0]).toEqual({
-      where: { id: { in: [1, 2, 3] }, antecipacaoLoteId: null, confirmacaoRh: "confirmada", paga: false },
+      where: { id: { in: [1, 2, 3] }, antecipacaoLoteId: null, fechamentoId: null, confirmacaoRh: "confirmada", paga: false },
       data: { antecipacaoLoteId: 42 },
     });
     // Só o `data` conta: o `where` do vínculo filtra `paga: false` desde a Fase 3 (gate repetido).
@@ -112,6 +112,26 @@ describe("abrirLote — o envio à Prudent", () => {
       antecipada: false,
       antecipacaoLoteId: null,
     });
+  });
+});
+
+// Fase 5 (revisão): parcela reservada num fechamento não entra em lote — nem no envio, nem no
+// registro de antecipação feita fora do sistema (que a marcaria antecipada sem boleto: a Prudent
+// cobraria a empresa e o Pix do demonstrativo cobraria de novo).
+describe("reserva do fechamento", () => {
+  it("envio e registro só pegam parcela sem fechamentoId, na leitura e no vínculo", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10)]);
+    await abrirLote({ vendaIds: [10], periodo: null });
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).toMatchObject({ fechamentoId: null });
+    expect(dbMock.parcelaVencimento.updateMany.mock.calls[0][0].where).toMatchObject({ fechamentoId: null });
+
+    vi.clearAllMocks();
+    dbMock.anticipacaoBatch.create.mockResolvedValue({ id: 43 });
+    dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 1 });
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10)]);
+    await registrarLoteConcluido({ vendaIds: [10], periodo: null, dataRetorno: "2026-09-01", usuario: "andre" });
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).toMatchObject({ fechamentoId: null });
+    expect(dbMock.parcelaVencimento.updateMany.mock.calls[0][0].where).toMatchObject({ fechamentoId: null });
   });
 });
 

@@ -459,35 +459,32 @@ export async function alterarDirecionamento(boletoId: number, destino: "empresa"
   if (!id) return { ok: false, erro };
 
   // Fase 5 (spec §3.4): devolver à empresa um boleto com parcela em fechamento conferido ou
-  // posterior faria a empresa pagar a parcela duas vezes (Prudent e Pix). A leitura dá a
-  // mensagem; a mesma condição no where vale contra a conferência em paralelo.
-  const emFechamentoTravado = { fechamento: { status: { not: STATUS_FECHAMENTO.emPreparacao } } };
-  if (destino === DIRECIONAMENTO.empresa) {
-    const travada = await prisma.parcelaVencimento.findFirst({
-      where: { boletoPrudentId: id, ...emFechamentoTravado },
-      select: { vendaId: true, numeroParcela: true, fechamento: { select: { status: true, competencia: true } } },
-    });
-    if (travada?.fechamento) {
-      const status = ROTULO_STATUS_FECHAMENTO[travada.fechamento.status] ?? travada.fechamento.status;
-      return {
-        ok: false,
-        erro:
+  // posterior faria a empresa pagar a parcela duas vezes (Prudent e Pix). Numa transação, o boleto
+  // é travado (update) antes de olhar os fechamentos: o conferir trava os mesmos boletos, então um
+  // espera o outro e a leitura seguinte já vê o status novo.
+  try {
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.boletoPrudent.updateMany({
+        where: { id, status: { notIn: MORTO }, direcionamento: { not: destino } },
+        data: { direcionamento: destino },
+      });
+      if (count === 0) throw new ErroBoleto(erro);
+      if (destino !== DIRECIONAMENTO.empresa) return;
+      const travada = await tx.parcelaVencimento.findFirst({
+        where: { boletoPrudentId: id, fechamento: { status: { not: STATUS_FECHAMENTO.emPreparacao } } },
+        select: { vendaId: true, numeroParcela: true, fechamento: { select: { status: true, competencia: true } } },
+      });
+      if (travada?.fechamento) {
+        const status = ROTULO_STATUS_FECHAMENTO[travada.fechamento.status] ?? travada.fechamento.status;
+        throw new ErroBoleto(
           `Parcela deste boleto está no fechamento de ${rotuloCompetencia(travada.fechamento.competencia)} (${status}). ` +
-          "Reabra o fechamento antes de devolver o boleto à empresa.",
-      };
-    }
+            "Reabra o fechamento antes de devolver o boleto à empresa."
+        );
+      }
+    });
+  } catch (e) {
+    return erroDe(e, erro);
   }
-
-  const { count } = await prisma.boletoPrudent.updateMany({
-    where: {
-      id,
-      status: { notIn: MORTO },
-      direcionamento: { not: destino },
-      ...(destino === DIRECIONAMENTO.empresa ? { parcelas: { none: emFechamentoTravado } } : {}),
-    },
-    data: { direcionamento: destino },
-  });
-  if (count === 0) return { ok: false, erro };
 
   await createAuditLog("obrigacoes:direcionamento", { boletoId: id, destino });
   revalidatePath(ROTA);

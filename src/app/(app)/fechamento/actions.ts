@@ -30,12 +30,17 @@ function idPositivo(valor: unknown): number | null {
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-/** Erro das libs vira mensagem; erro do Prisma (tem `code`) não vaza detalhe interno. */
+/**
+ * Erro das libs vira mensagem; erro do Prisma (com `code`, ou de classe `PrismaClient*`, como o de
+ * inicialização sem `code`) não vaza host nem consulta — vai para o log.
+ */
 function mensagem(e: unknown): string {
-  if (e && typeof e === "object" && "code" in e) {
-    return (e as { code?: string }).code === "P2002"
-      ? "Outra operação está gerando este fechamento. Recarregue."
-      : "Não foi possível gravar. Recarregue e tente de novo.";
+  const doPrisma =
+    (e && typeof e === "object" && "code" in e) || (e instanceof Error && e.constructor.name.startsWith("PrismaClient"));
+  if (doPrisma) {
+    if ((e as { code?: string }).code === "P2002") return "Outra operação está gerando este fechamento. Recarregue.";
+    console.error("[fechamento]", e);
+    return "Não foi possível gravar. Recarregue e tente de novo.";
   }
   return e instanceof Error && e.message ? e.message : "Não foi possível concluir. Tente de novo.";
 }
@@ -137,12 +142,16 @@ export async function reabrirFechamentoAction(fechamentoId: number): Promise<Res
   }
 }
 
-export async function enviarFechamentoAction(fechamentoId: number): Promise<Resp<{ versao: number; para: string }>> {
+export async function enviarFechamentoAction(
+  fechamentoId: number,
+  versao: number
+): Promise<Resp<{ versao: number; para: string }>> {
   const sessao = await requireAdminOrThrow();
   const id = idPositivo(fechamentoId);
-  if (!id) return { ok: false, erro: "Fechamento inválido." };
+  const numero = idPositivo(versao);
+  if (!id || !numero) return { ok: false, erro: "Fechamento inválido." };
   try {
-    const r = await enviarFechamento({ fechamentoId: id, usuario: usuarioDe(sessao) });
+    const r = await enviarFechamento({ fechamentoId: id, versao: numero, usuario: usuarioDe(sessao) });
     await createAuditLog("fechamento:enviar", { fechamentoId: id, versao: r.versao, para: r.para });
     revalidar(id);
     return { ok: true, versao: r.versao, para: r.para };

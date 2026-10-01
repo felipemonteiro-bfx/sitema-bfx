@@ -33,7 +33,10 @@ describe("classificarParcelas", () => {
       ],
       F
     );
-    expect(r.reservadas.map((p) => p.id)).toEqual([1, 5]);
+    // Revisão: a reservada que saiu do mês (ou ficou inelegível) não aparece como linha do
+    // demonstrativo; conta como reserva inválida (a tela pede para atualizar).
+    expect(r.reservadas.map((p) => p.id)).toEqual([1]);
+    expect(r.reservasInvalidas).toBe(1);
     expect(r.novasElegiveis).toBe(1);
     expect(r.bloqueadas).toEqual([
       { parcelaId: 3, identificador: "V240-3/4", motivo: "recusada_rh", rotulo: "Recusada pelo RH — desligado", valor: 300 },
@@ -48,7 +51,7 @@ describe("montarGrade", () => {
     diaPix: 15, repassePct: null, repasseBase: null, cobrancaViaBfx,
   });
 
-  it("competências: o mês atual e os dois seguintes, mais as dos fechamentos; virada de ano", () => {
+  it("competências: o mês anterior, o atual e os dois seguintes, mais as dos fechamentos; virada de ano", () => {
     expect(competenciaSeguinte("2026-12")).toBe("2027-01");
     const g = montarGrade({
       hoje: new Date("2026-11-20T12:00:00Z"),
@@ -56,7 +59,7 @@ describe("montarGrade", () => {
       regras: [regra(7, true)],
       fechamentos: [{ id: 1, empresaParceiraId: 7, competencia: "2026-09", status: "enviado", desatualizado: false, totalVersao: 450, totalReservado: 999, parcelas: 2 }],
     });
-    expect(g.competencias).toEqual(["2026-09", "2026-11", "2026-12", "2027-01"]);
+    expect(g.competencias).toEqual(["2026-09", "2026-10", "2026-11", "2026-12", "2027-01"]);
     expect(g.empresas[0].celulas["2026-09"]).toEqual({ tipo: "fechamento", id: 1, status: "enviado", total: 450, parcelas: 2, desatualizado: false });
     expect(g.empresas[0].celulas["2026-11"]).toEqual({ tipo: "gerar" });
   });

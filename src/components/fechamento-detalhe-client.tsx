@@ -138,7 +138,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
             onClick={() =>
               executar(() => conferirFechamentoAction(d.id), `Versão ${d.versaoAtual + 1} conferida e congelada.`)
             }
-            disabled={pendente || d.linhas.length === 0 || d.desatualizado}
+            disabled={pendente || d.linhas.length === 0 || d.desatualizado || d.reservasInvalidas > 0}
           >
             Conferir e gerar versão
           </Button>
@@ -214,17 +214,17 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
         </div>
       </dl>
 
-      {editavel && d.desatualizado && (
+      {editavel && (d.desatualizado || d.reservasInvalidas > 0) && (
         <Alert variant="warning" showIcon>
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
-            <span>Parcelas mudaram desde a geração (venda editada ou excluída). Atualize antes de conferir.</span>
+            <span>Parcelas mudaram desde a geração. Atualize antes de conferir.</span>
             <Button size="sm" variant="outline" onClick={atualizar} disabled={pendente}>
               Atualizar parcelas
             </Button>
           </AlertDescription>
         </Alert>
       )}
-      {editavel && !d.desatualizado && d.novasElegiveis > 0 && (
+      {editavel && !d.desatualizado && d.reservasInvalidas === 0 && d.novasElegiveis > 0 && (
         <Alert variant="info" showIcon>
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>
@@ -466,7 +466,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                 ev.preventDefault();
                 if (confirmacao === "enviar") {
                   executar(
-                    () => enviarFechamentoAction(d.id),
+                    () => enviarFechamentoAction(d.id, d.versaoAtual),
                     `Demonstrativo enviado a ${d.empresa.emailRh}.`,
                     () => setConfirmacao(null)
                   );

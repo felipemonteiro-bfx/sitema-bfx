@@ -6,7 +6,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const dbMock = {
   fechamento: { upsert: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
   parcelaVencimento: { findMany: vi.fn(), updateMany: vi.fn() },
-  fechamentoAjuste: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
+  fechamentoAjuste: { create: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() },
+  boletoPrudent: { updateMany: vi.fn() },
   fechamentoVersao: { create: vi.fn(), updateMany: vi.fn() },
   arquivoFinanceiro: { create: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
@@ -22,6 +23,8 @@ const {
   conferirFechamento,
   reabrirFechamento,
   marcarEnviado,
+  reivindicarEnvio,
+  desfazerReivindicacao,
 } = await import("@/lib/fechamento-db");
 
 const REGRA_BFX = {
@@ -88,6 +91,10 @@ beforeEach(() => {
     count: args?.where?.id?.in?.length ?? 0,
   }));
   dbMock.fechamentoAjuste.updateMany.mockResolvedValue({ count: 1 });
+  dbMock.fechamentoAjuste.findMany.mockResolvedValue([]);
+  dbMock.boletoPrudent.updateMany.mockImplementation(async (args: { where?: { id?: { in?: number[] } } }) => ({
+    count: args?.where?.id?.in?.length ?? 0,
+  }));
   dbMock.fechamentoVersao.create.mockResolvedValue({ id: 900 });
   dbMock.fechamentoVersao.updateMany.mockResolvedValue({ count: 1 });
   dbMock.arquivoFinanceiro.create.mockResolvedValue({ id: 77 });
@@ -280,9 +287,7 @@ describe("conferirFechamento", () => {
   ];
 
   it("cria a versão 1 com a foto das linhas, totais, ajustes e o XLSX; status conferido", async () => {
-    dbMock.fechamento.findUnique.mockResolvedValue(
-      fechamentoEmPreparacao({ ajustes: [{ id: 1, valor: -50, justificativa: "Desconto combinado", removidoEm: null }] })
-    );
+    dbMock.fechamentoAjuste.findMany.mockResolvedValue([{ id: 1, valor: -50, justificativa: "Desconto combinado" }]);
     dbMock.parcelaVencimento.findMany.mockResolvedValue(reservadas());
 
     const r = await conferirFechamento({ fechamentoId: 11, usuario: "andre" });
@@ -361,9 +366,7 @@ describe("conferirFechamento", () => {
   });
 
   it("valor final ≤ 0 → erro", async () => {
-    dbMock.fechamento.findUnique.mockResolvedValue(
-      fechamentoEmPreparacao({ ajustes: [{ id: 1, valor: -500, justificativa: "Estorno integral", removidoEm: null }] })
-    );
+    dbMock.fechamentoAjuste.findMany.mockResolvedValue([{ id: 1, valor: -500, justificativa: "Estorno integral" }]);
     dbMock.parcelaVencimento.findMany.mockResolvedValue(reservadas());
     await expect(conferirFechamento({ fechamentoId: 11, usuario: null })).rejects.toThrow(
       "O valor final do demonstrativo precisa ser maior que zero."
@@ -371,15 +374,42 @@ describe("conferirFechamento", () => {
     expect(dbMock.fechamentoVersao.create).not.toHaveBeenCalled();
   });
 
-  it("ajuste removido não entra na versão", async () => {
+  // Revisão: os ajustes são lidos DENTRO da transação, depois da trava — um ajuste gravado (ou
+  // removido) entre o clique e a trava entra (ou sai) da versão, nunca fica de fora em silêncio.
+  it("lê os ajustes vivos dentro da transação, depois da trava", async () => {
     dbMock.fechamento.findUnique.mockResolvedValue(
-      fechamentoEmPreparacao({ ajustes: [{ id: 1, valor: -50, justificativa: "Desconto", removidoEm: new Date() }] })
+      fechamentoEmPreparacao({ ajustes: [{ id: 1, valor: -50, justificativa: "Desconto", removidoEm: null }] })
     );
+    dbMock.fechamentoAjuste.findMany.mockResolvedValue([{ id: 2, valor: 10, justificativa: "Frete combinado" }]);
     dbMock.parcelaVencimento.findMany.mockResolvedValue(reservadas());
     await conferirFechamento({ fechamentoId: 11, usuario: null });
+    expect(dbMock.fechamentoAjuste.findMany.mock.calls[0][0].where).toEqual({ fechamentoId: 11, removidoEm: null });
+    expect(dbMock.fechamentoAjuste.findMany.mock.invocationCallOrder[0]).toBeGreaterThan(
+      dbMock.fechamento.updateMany.mock.invocationCallOrder[0]
+    );
     const v = dbMock.fechamentoVersao.create.mock.calls[0][0].data;
-    expect(v.totalFinal).toBe(500);
-    expect(JSON.parse(v.ajustesJson)).toEqual([]);
+    expect(v.totalFinal).toBe(510);
+    expect(JSON.parse(v.ajustesJson)).toEqual([{ valor: 10, justificativa: "Frete combinado" }]);
+  });
+
+  // Revisão: o conferir trava os boletos das antecipadas com direcionamento "bfx" no where — um
+  // "devolver à empresa" em paralelo derruba a conferência em vez de passar no meio dela.
+  it("trava os boletos das antecipadas; boleto que voltou à empresa no meio → erro", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue(reservadas());
+    await conferirFechamento({ fechamentoId: 11, usuario: null });
+    expect(dbMock.boletoPrudent.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: [9] }, direcionamento: "bfx" },
+      data: { direcionamento: "bfx" },
+    });
+
+    vi.clearAllMocks();
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEmPreparacao());
+    dbMock.fechamento.updateMany.mockResolvedValue({ count: 1 });
+    dbMock.fechamentoAjuste.findMany.mockResolvedValue([]);
+    dbMock.parcelaVencimento.findMany.mockResolvedValue(reservadas());
+    dbMock.boletoPrudent.updateMany.mockResolvedValue({ count: 0 });
+    await expect(conferirFechamento({ fechamentoId: 11, usuario: null })).rejects.toThrow(/Parcelas mudaram/);
+    expect(dbMock.fechamentoVersao.create).not.toHaveBeenCalled();
   });
 
   it("já conferido → erro; clique duplo (count 0) → erro", async () => {
@@ -409,21 +439,31 @@ describe("reabrir e marcar enviado", () => {
     expect(dbMock.fechamento.updateMany).not.toHaveBeenCalled();
   });
 
-  it("marca enviado só de conferido na versão atual e grava o PDF na versão", async () => {
-    await marcarEnviado({ fechamentoId: 11, versao: 2, pdfArquivoId: 55, usuario: "andre" });
+  // Revisão: o envio "reivindica" o fechamento (conferido → enviado, versão no where) ANTES do SMTP;
+  // duas abas ou dois pods não mandam dois e-mails, e falha no SMTP devolve a conferido.
+  it("reivindica o envio só de conferido na versão esperada", async () => {
+    await reivindicarEnvio({ fechamentoId: 11, versao: 2 });
     expect(dbMock.fechamento.updateMany).toHaveBeenCalledWith({
       where: { id: 11, status: "conferido", versaoAtual: 2 },
       data: { status: "enviado" },
     });
+    dbMock.fechamento.updateMany.mockResolvedValue({ count: 0 });
+    await expect(reivindicarEnvio({ fechamentoId: 11, versao: 2 })).rejects.toThrow(/Recarregue/);
+  });
+
+  it("desfazer a reivindicação volta a conferido só se ainda é aquela versão enviada", async () => {
+    await desfazerReivindicacao({ fechamentoId: 11, versao: 2 });
+    expect(dbMock.fechamento.updateMany).toHaveBeenCalledWith({
+      where: { id: 11, status: "enviado", versaoAtual: 2 },
+      data: { status: "conferido" },
+    });
+  });
+
+  it("marcar enviado grava o PDF, quando e quem na versão", async () => {
+    await marcarEnviado({ fechamentoId: 11, versao: 2, pdfArquivoId: 55, usuario: "andre" });
     const upd = dbMock.fechamentoVersao.updateMany.mock.calls[0][0];
     expect(upd.where).toEqual({ fechamentoId: 11, numero: 2 });
     expect(upd.data).toMatchObject({ pdfArquivoId: 55, enviadaPor: "andre" });
     expect(upd.data.enviadaEm).toBeInstanceOf(Date);
-  });
-
-  it("marcar enviado fora de conferido → erro, versão intacta", async () => {
-    dbMock.fechamento.updateMany.mockResolvedValue({ count: 0 });
-    await expect(marcarEnviado({ fechamentoId: 11, versao: 2, pdfArquivoId: 55, usuario: null })).rejects.toThrow();
-    expect(dbMock.fechamentoVersao.updateMany).not.toHaveBeenCalled();
   });
 });

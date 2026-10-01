@@ -10,6 +10,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const dbMock = {
+  // Fase 5: a edição/exclusão grava numa transação, com as parcelas travadas (FOR UPDATE).
+  $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
+  $queryRaw: vi.fn(async () => []),
   usuario: { findFirst: vi.fn() },
   venda: { update: vi.fn(), findUnique: vi.fn() },
   itemVenda: { deleteMany: vi.fn(), createMany: vi.fn() },
@@ -206,5 +209,58 @@ describe("parcela com boleto Prudent", () => {
     const parcelas = PARCELAS_FORM.map((p) => (p.numeroParcela === 3 ? { ...p, valorParcela: 320 } : p));
     expect(await updateVenda(formVenda(parcelas))).toEqual({ success: true });
     expect(recriada(1)).toMatchObject({ boletoPrudentId: 30, antecipada: true });
+  });
+});
+
+// Revisão: a avaliação da reserva, a marca de desatualizado e a regravação das parcelas acontecem
+// numa transação, com as parcelas da venda travadas (FOR UPDATE) e relidas dentro dela.
+describe("concorrência com o fechamento", () => {
+  it("reserva feita entre a leitura e a gravação é preservada (releitura com as parcelas travadas)", async () => {
+    dbMock.parcelaVencimento.findMany
+      .mockResolvedValueOnce([existente(1), existente(2), existente(3)])
+      .mockResolvedValueOnce([reservada("em_preparacao"), existente(2), existente(3)]);
+
+    expect(await updateVenda(formVenda())).toEqual({ success: true });
+
+    expect(dbMock.$transaction).toHaveBeenCalled();
+    expect(dbMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      dbMock.parcelaVencimento.findMany.mock.invocationCallOrder[1]
+    );
+    expect(recriada(1)).toMatchObject({ fechamentoId: 11 });
+  });
+
+  it("fechamento conferido entre a leitura e a gravação → recusa sem gravar a venda", async () => {
+    dbMock.parcelaVencimento.findMany
+      .mockResolvedValueOnce([reservada("em_preparacao"), existente(2), existente(3)])
+      .mockResolvedValueOnce([reservada("conferido"), existente(2), existente(3)]);
+    const parcelas = PARCELAS_FORM.map((p) => (p.numeroParcela === 1 ? { ...p, valorParcela: 350 } : p));
+
+    const r = await updateVenda(formVenda(parcelas));
+
+    expect(r).toEqual({
+      success: false,
+      error: "Parcela V10-1/3 está no fechamento de outubro de 2026 (Conferido). Reabra o fechamento e retire-a antes.",
+    });
+    expect(dbMock.venda.update).not.toHaveBeenCalled();
+    expect(dbMock.parcelaVencimento.deleteMany).not.toHaveBeenCalled();
+    expect(dbMock.fechamento.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("a venda, os itens e as parcelas gravam na mesma transação", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([existente(1), existente(2), existente(3)]);
+    let dentro = false;
+    dbMock.$transaction.mockImplementationOnce(async (fn: (tx: unknown) => unknown) => {
+      dentro = true;
+      try {
+        return await fn(dbMock);
+      } finally {
+        dentro = false;
+      }
+    });
+    const ordem: string[] = [];
+    dbMock.venda.update.mockImplementation(async () => (ordem.push(`venda:${dentro}`), { clienteId: 3 }));
+    dbMock.parcelaVencimento.createMany.mockImplementation(async () => (ordem.push(`parcelas:${dentro}`), { count: 3 }));
+    await updateVenda(formVenda());
+    expect(ordem).toEqual(["venda:true", "parcelas:true"]);
   });
 });

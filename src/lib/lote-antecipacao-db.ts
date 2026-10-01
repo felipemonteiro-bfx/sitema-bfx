@@ -60,7 +60,8 @@ async function ligarParcelas(
   whereExtra: Record<string, unknown> = {}
 ) {
   const { count } = await tx.parcelaVencimento.updateMany({
-    where: { id: { in: ids }, antecipacaoLoteId: null, ...whereExtra },
+    // `fechamentoId: null` (Fase 5): parcela reservada num fechamento no meio do caminho fica fora.
+    where: { id: { in: ids }, antecipacaoLoteId: null, fechamentoId: null, ...whereExtra },
     data: { antecipacaoLoteId: loteId, ...extra },
   });
   if (count !== ids.length) {
@@ -93,6 +94,9 @@ function whereParcelasLivres(
     vendaId: { in: vendaIds },
     antecipada: false,
     antecipacaoLoteId: null,
+    // Reservada num fechamento (Fase 5) só é cobrada pelo fechamento: antecipar agora (ou registrar
+    // antecipação feita fora, sem boleto) faria a Prudent cobrar a empresa e o Pix cobrar de novo.
+    fechamentoId: null,
     venda: WHERE_VENDA_ANTECIPAVEL,
     ...(periodo ? { dataVencimento: { gte: periodo.inicio, lte: periodo.fim } } : {}),
     // No envio, parcela já paga (boleto, baixa manual) também fica de fora — o card da seleção

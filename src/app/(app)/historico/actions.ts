@@ -31,6 +31,9 @@ import { z } from "zod";
 import { produtoItemSchema } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 
+/** Recusa com mensagem para o usuário, lançada dentro da transação para desfazê-la. */
+class ErroEdicao extends Error {}
+
 // Toda action daqui precisa da própria guarda: o matcher do middleware cobre só /api
 // e o layout roda depois da action, então nenhum dos dois protege.
 
@@ -436,20 +439,13 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           : limparParcelasSemPayload
             ? []
             : null;
-    const reserva = avaliarEdicaoDeParcelas(id, parcelasExistentes, novasParcelas);
-    if (!reserva.ok) return { success: false, error: reserva.erro };
-    if (reserva.fechamentosDesatualizados.length > 0) {
-      // O status no where trava contra a conferência em paralelo: conferido no meio → recusa.
-      const { count } = await prisma.fechamento.updateMany({
-        where: { id: { in: reserva.fechamentosDesatualizados }, status: STATUS_FECHAMENTO.emPreparacao },
-        data: { desatualizado: true },
-      });
-      if (count !== reserva.fechamentosDesatualizados.length) {
-        return { success: false, error: "O fechamento mudou enquanto você editava. Recarregue e tente de novo." };
-      }
-    }
+    // Pré-checagem (recusa cedo, sem abrir transação); a que vale é refeita dentro da transação,
+    // com as parcelas travadas.
+    const reservaLida = avaliarEdicaoDeParcelas(id, parcelasExistentes, novasParcelas);
+    if (!reservaLida.ok) return { success: false, error: reservaLida.erro };
+    let reservaPreservada = reservaLida.reservaPreservada;
     const camposDoFechamento = (numeroParcela: number, existente: ReturnType<typeof pagasMap.get>) => ({
-      fechamentoId: reserva.reservaPreservada.get(numeroParcela) ?? null,
+      fechamentoId: reservaPreservada.get(numeroParcela) ?? null,
       liquidadaEm: existente?.liquidadaEm ?? null,
     });
 
@@ -514,39 +510,77 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       depois: { parcelas: parcelasNum, total: totalConhecido ? total : null },
     });
 
-    const vendaAtualizada = await prisma.venda.update({
-      where: { id },
-      data: {
-        ...(novoStatusAntecipacao !== undefined ? { antecipada: novoStatusAntecipacao } : {}),
-        ...(novoValorParcela !== undefined ? { valorParcela: novoValorParcela } : {}),
-        dataVenda: new Date(data),
-        vendedor: vendedorTexto,
-        vendedorId: vendedorUser?.id ?? undefined,
-        produtoNome: itens.length > 0 ? (itens[0].produtoNome || "") : produtoLegado,
-        quantidade: itens.length > 0 ? itens.reduce((s, i) => s + i.quantidade, 0) : quantidadeLegado,
-        valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,
-        valorFrete: frete,
-        custoEnvio: envio,
-        // Quem edita a venda esta digitando o frete a mao: a procedencia volta a ser
-        // "manual". Sem isto a fonte ficaria congelada em "uber_final" e uma recaptura
-        // posterior sobrescreveria a correcao humana achando que so reconcilia.
-        custoEnvioFonte: "manual",
-        parcelas: parcelasNum,
-        temNota,
-        taxaNota,
-        desconto,
-        lucroLiquido: lucroFinal,
-        taxaFinanceiraValor: taxaAntecipacao,
-        descontoEmFolha,
-        boleto,
-        formaPagamento,
-      },
-      select: { clienteId: true },
+    const reescreveParcelas =
+      parcelasForm.length > 0 ||
+      Boolean(linhasUnicas && (linhasUnicas.length > 0 || parcelasExistentes.length > 0)) ||
+      limparParcelasSemPayload;
+
+    // Venda, itens e parcelas numa transação só (2026-09-30, Fase 5): antes, falha nas parcelas
+    // deixava o cabeçalho gravado e as linhas antigas. Quando as parcelas são reescritas, elas são
+    // travadas (FOR UPDATE) e relidas: a reserva e o status do fechamento que valem são os de agora,
+    // não os da leitura do topo — "Atualizar parcelas" e "Conferir" em paralelo esperam ou derrubam.
+    const vendaAtualizada = await prisma.$transaction(async (tx) => {
+      if (reescreveParcelas) {
+        await tx.$queryRaw`SELECT id FROM parcelas_vencimento WHERE venda_id = ${id} FOR UPDATE`;
+        const frescas = await tx.parcelaVencimento.findMany({
+          where: { vendaId: id },
+          select: {
+            numeroParcela: true,
+            dataVencimento: true,
+            valorParcela: true,
+            boletoPrudentId: true,
+            fechamentoId: true,
+            fechamento: { select: { id: true, status: true, competencia: true } },
+          },
+        });
+        const reserva = avaliarEdicaoDeParcelas(id, frescas, novasParcelas);
+        if (!reserva.ok) throw new ErroEdicao(reserva.erro);
+        if (reserva.fechamentosDesatualizados.length > 0) {
+          // O status no where trava contra a conferência em paralelo: conferido no meio → recusa.
+          const { count } = await tx.fechamento.updateMany({
+            where: { id: { in: reserva.fechamentosDesatualizados }, status: STATUS_FECHAMENTO.emPreparacao },
+            data: { desatualizado: true },
+          });
+          if (count !== reserva.fechamentosDesatualizados.length) {
+            throw new ErroEdicao("O fechamento mudou enquanto você editava. Recarregue e tente de novo.");
+          }
+        }
+        reservaPreservada = reserva.reservaPreservada;
+      }
+
+      const vendaAtualizada = await tx.venda.update({
+        where: { id },
+        data: {
+          ...(novoStatusAntecipacao !== undefined ? { antecipada: novoStatusAntecipacao } : {}),
+          ...(novoValorParcela !== undefined ? { valorParcela: novoValorParcela } : {}),
+          dataVenda: new Date(data),
+          vendedor: vendedorTexto,
+          vendedorId: vendedorUser?.id ?? undefined,
+          produtoNome: itens.length > 0 ? (itens[0].produtoNome || "") : produtoLegado,
+          quantidade: itens.length > 0 ? itens.reduce((s, i) => s + i.quantidade, 0) : quantidadeLegado,
+          valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,
+          valorFrete: frete,
+          custoEnvio: envio,
+          // Quem edita a venda esta digitando o frete a mao: a procedencia volta a ser
+          // "manual". Sem isto a fonte ficaria congelada em "uber_final" e uma recaptura
+          // posterior sobrescreveria a correcao humana achando que so reconcilia.
+          custoEnvioFonte: "manual",
+          parcelas: parcelasNum,
+          temNota,
+          taxaNota,
+          desconto,
+          lucroLiquido: lucroFinal,
+          taxaFinanceiraValor: taxaAntecipacao,
+          descontoEmFolha,
+          boleto,
+          formaPagamento,
+        },
+        select: { clienteId: true },
     });
 
     if (itens.length > 0) {
-      await prisma.itemVenda.deleteMany({ where: { vendaId: id } });
-      await prisma.itemVenda.createMany({
+      await tx.itemVenda.deleteMany({ where: { vendaId: id } });
+      await tx.itemVenda.createMany({
         data: itens.map((item) => ({
           vendaId: id,
           produtoNome: item.produtoNome,
@@ -558,15 +592,16 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       });
     }
 
+    // Sem o try/catch de "a tabela pode não existir": dentro da transação, falha aqui desfaz a venda.
     if (parcelasForm.length > 0) {
-      try {
+      {
         // Reaproveita o `pagasMap` montado a partir da leitura hoisted no topo do
         // try — nao reler aqui evita que as duas fontes discordem entre si.
-        await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
+        await tx.parcelaVencimento.deleteMany({ where: { vendaId: id } });
         // asaas_payment_id é único: número de parcela repetido no payload copiaria o mesmo id para
         // duas linhas, o createMany lançaria P2002 depois do deleteMany e a venda perderia as linhas.
         const cobrancasUsadas = new Set<string>();
-        await prisma.parcelaVencimento.createMany({
+        await tx.parcelaVencimento.createMany({
           data: parcelasForm.map((p) => {
             const existente = pagasMap.get(p.numeroParcela);
             // A cobrança do Asaas quita UMA parcela: na linha repetida a baixa dela não é copiada
@@ -599,17 +634,15 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
             };
           }),
         });
-      } catch {
-        // Tabela parcelas_vencimento pode não existir em produção antiga
       }
     } else if (linhasUnicas && (linhasUnicas.length > 0 || parcelasExistentes.length > 0)) {
       // 1x: ja foi verificado acima que nenhuma linha descartada esta paga ou antecipada. A
       // parcela mantida leva a baixa e a antecipacao que tinha — e, se estiver travada, tambem o
       // vencimento e o valor gravados: a linha antecipada e o registro do que a Prudent pagou.
-      try {
-        await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
+      {
+        await tx.parcelaVencimento.deleteMany({ where: { vendaId: id } });
         if (linhasUnicas.length > 0) {
-          await prisma.parcelaVencimento.createMany({
+          await tx.parcelaVencimento.createMany({
             data: linhasUnicas.map((p) => {
               const existente = pagasMap.get(p.numeroParcela);
               return {
@@ -631,25 +664,22 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
             }),
           });
         }
-      } catch {
-        // Tabela parcelas_vencimento pode não existir em produção antiga
       }
     } else if (limparParcelasSemPayload) {
       // A venda virou pagamento unico (CR-01). Ja foi verificado acima que
       // nenhuma linha esta paga, entao apagar aqui e' seguro e e' o que impede
       // o cabecalho (`parcelas: 1`) de divergir das linhas antigas.
-      try {
-        await prisma.parcelaVencimento.deleteMany({ where: { vendaId: id } });
-      } catch {
-        // Tabela parcelas_vencimento pode não existir em produção antiga
-      }
+      await tx.parcelaVencimento.deleteMany({ where: { vendaId: id } });
     }
+    return vendaAtualizada;
+    });
 
     await createAuditLog("venda:update", { vendaId: id, subtotal, lucro: lucroFinal });
     await recalcularConsignadoSeguro(vendaAtualizada.clienteId);
     revalidarVenda();
     return { success: true };
   } catch (err) {
+    if (err instanceof ErroEdicao) return { success: false, error: err.message };
     console.error("Erro ao atualizar venda:", err);
     return { success: false, error: "Erro ao salvar alterações. Tente novamente." };
   }
@@ -700,53 +730,58 @@ export async function deleteVenda(formData: FormData): Promise<{ success: boolea
     const venda = await prisma.venda.findUnique({ where: { id }, select: { clienteId: true } });
 
     // Fechamento mensal e boleto Prudent (2026-09-30, Fase 5): parcela com boleto, ou em
-    // fechamento conferido/enviado, segura a venda. Em preparação, o fechamento fica desatualizado
-    // antes de apagar — o status no where trava contra a conferência em paralelo.
-    const parcelas = await prisma.parcelaVencimento.findMany({
-      where: { vendaId: id },
-      select: {
-        numeroParcela: true,
-        dataVencimento: true,
-        valorParcela: true,
-        boletoPrudentId: true,
-        fechamentoId: true,
-        fechamento: { select: { id: true, status: true, competencia: true } },
-      },
-    });
-    const reserva = avaliarExclusaoDeVenda(id, parcelas);
-    if (!reserva.ok) return { success: false, error: reserva.erro };
-    if (reserva.fechamentosDesatualizados.length > 0) {
-      const { count } = await prisma.fechamento.updateMany({
-        where: { id: { in: reserva.fechamentosDesatualizados }, status: STATUS_FECHAMENTO.emPreparacao },
-        data: { desatualizado: true },
+    // fechamento conferido/enviado, segura a venda. Tudo numa transação, com as parcelas travadas
+    // (FOR UPDATE) e lidas depois da trava: reserva ou conferência em paralelo esperam ou derrubam.
+    // Em preparação, o fechamento fica desatualizado — o status no where trava a conferência.
+    await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM parcelas_vencimento WHERE venda_id = ${id} FOR UPDATE`;
+      const parcelas = await tx.parcelaVencimento.findMany({
+        where: { vendaId: id },
+        select: {
+          numeroParcela: true,
+          dataVencimento: true,
+          valorParcela: true,
+          boletoPrudentId: true,
+          fechamentoId: true,
+          fechamento: { select: { id: true, status: true, competencia: true } },
+        },
       });
-      if (count !== reserva.fechamentosDesatualizados.length) {
-        return { success: false, error: "O fechamento mudou enquanto você excluía. Recarregue e tente de novo." };
+      const reserva = avaliarExclusaoDeVenda(id, parcelas);
+      if (!reserva.ok) throw new ErroEdicao(reserva.erro);
+      if (reserva.fechamentosDesatualizados.length > 0) {
+        const { count } = await tx.fechamento.updateMany({
+          where: { id: { in: reserva.fechamentosDesatualizados }, status: STATUS_FECHAMENTO.emPreparacao },
+          data: { desatualizado: true },
+        });
+        if (count !== reserva.fechamentosDesatualizados.length) {
+          throw new ErroEdicao("O fechamento mudou enquanto você excluía. Recarregue e tente de novo.");
+        }
       }
-    }
 
-    // Restaurar estoque antes de deletar
-    const itens = await prisma.itemVenda.findMany({
-      where: { vendaId: id },
-      select: { produtoNome: true, quantidade: true },
-    });
-    for (const item of itens) {
-      await prisma.produto.updateMany({
-        where: { nome: item.produtoNome },
-        data: { qtdEstoque: { increment: item.quantidade } },
+      // Restaurar estoque antes de deletar
+      const itens = await tx.itemVenda.findMany({
+        where: { vendaId: id },
+        select: { produtoNome: true, quantidade: true },
       });
-    }
+      for (const item of itens) {
+        await tx.produto.updateMany({
+          where: { nome: item.produtoNome },
+          data: { qtdEstoque: { increment: item.quantidade } },
+        });
+      }
 
-    // Deletar registros relacionados que têm ON DELETE RESTRICT
-    await prisma.assinatura.deleteMany({ where: { vendaId: id } });
-    await prisma.documento.deleteMany({ where: { vendaId: id } });
+      // Deletar registros relacionados que têm ON DELETE RESTRICT
+      await tx.assinatura.deleteMany({ where: { vendaId: id } });
+      await tx.documento.deleteMany({ where: { vendaId: id } });
 
-    await prisma.venda.delete({ where: { id } });
+      await tx.venda.delete({ where: { id } });
+    });
     await createAuditLog("venda:delete", { vendaId: id });
     await recalcularConsignadoSeguro(venda?.clienteId);
     revalidarVenda();
     return { success: true };
   } catch (err) {
+    if (err instanceof ErroEdicao) return { success: false, error: err.message };
     console.error("Erro ao excluir venda:", err);
     throw new Error("Erro ao excluir venda. Tente novamente.");
   }

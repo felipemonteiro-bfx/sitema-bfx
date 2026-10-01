@@ -4,6 +4,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const dbMock = {
+  // Fase 5: a edição/exclusão grava numa transação, com as parcelas travadas (FOR UPDATE).
+  $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
+  $queryRaw: vi.fn(async () => []),
   venda: { findUnique: vi.fn(), delete: vi.fn() },
   itemVenda: { findMany: vi.fn() },
   produto: { updateMany: vi.fn() },
@@ -99,5 +102,17 @@ describe("deleteVenda × reserva", () => {
     const r = await deleteVenda(formId(10));
     expect(r.success).toBe(false);
     expect(dbMock.venda.delete).not.toHaveBeenCalled();
+  });
+
+  it("relê as parcelas travadas dentro da transação, antes de devolver estoque e apagar", async () => {
+    dbMock.itemVenda.findMany.mockResolvedValue([{ produtoNome: "TV", quantidade: 1 }]);
+    await deleteVenda(formId(10));
+    expect(dbMock.$transaction).toHaveBeenCalled();
+    expect(dbMock.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      dbMock.parcelaVencimento.findMany.mock.invocationCallOrder[0]
+    );
+    expect(dbMock.parcelaVencimento.findMany.mock.invocationCallOrder[0]).toBeLessThan(
+      dbMock.produto.updateMany.mock.invocationCallOrder[0]
+    );
   });
 });

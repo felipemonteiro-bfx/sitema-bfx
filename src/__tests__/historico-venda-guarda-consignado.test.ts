@@ -6,6 +6,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const dbMock = {
+  // Fase 5: a edição/exclusão grava numa transação, com as parcelas travadas (FOR UPDATE).
+  $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
+  $queryRaw: vi.fn(async () => []),
   venda: { findUnique: vi.fn(), delete: vi.fn(), update: vi.fn() },
   itemVenda: { findMany: vi.fn() },
   produto: { updateMany: vi.fn() },
