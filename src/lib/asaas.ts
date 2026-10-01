@@ -431,6 +431,11 @@ export async function getOrCreateCustomerEmpresa(
     const first = list.data?.[0];
     if (!first?.id) throw err;
     customerId = first.id;
+    // O cliente já existia (cadastro de outra origem): desliga as notificações dele também.
+    await asaasFetch<unknown>(config, `/v3/customers/${pathIdCobranca(customerId)}`, {
+      method: "POST",
+      body: { notificationDisabled: true },
+    });
   }
 
   await prisma.empresaParceira.update({ where: { id: empresa.id }, data: { asaasCustomerId: customerId } });

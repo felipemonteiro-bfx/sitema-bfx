@@ -22,7 +22,7 @@ vi.mock("@/lib/recebimento-fechamento-db", async (importOriginal) => {
   return { ...real, ...recMock };
 });
 
-const { encerrarCobrancasAnteriores, garantirCobrancaPix } = await import("@/lib/cobranca-fechamento-db");
+const { encerrarCobrancasAnteriores, garantirCobrancaPix, sincronizarCobrancasAtivas } = await import("@/lib/cobranca-fechamento-db");
 
 const CONFIG = { baseUrl: "https://asaas.test", apiKey: "k" };
 const QR_PNG_B64 = Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString("base64");
@@ -74,6 +74,8 @@ describe("encerrarCobrancasAnteriores", () => {
     expect(asaasMock.cancelPayment).not.toHaveBeenCalled();
     expect(recMock.processarPagamentoFechamento).toHaveBeenCalledWith(pago, null);
     expect(dbMock.cobrancaFechamento.updateMany).not.toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: "cancelada" }) }));
+    // mesmo se o processamento ignorar (ex.: sem valor), a cobrança paga não fica ativa travando o próximo envio
+    expect(dbMock.cobrancaFechamento.updateMany).toHaveBeenCalledWith({ where: { id: 4, status: "ativa" }, data: { status: "paga" } });
   });
 
   it("já removida no Asaas (tentativa anterior) → só marca cancelada, sem DELETE", async () => {
@@ -193,5 +195,24 @@ describe("garantirCobrancaPix", () => {
     dbMock.cobrancaFechamento.create.mockRejectedValue(Object.assign(new Error("unique"), { code: "P2002" }));
     await expect(garantirCobrancaPix(base)).rejects.toThrow(/Recarregue/);
     expect(asaasMock.cancelPayment).toHaveBeenCalledWith(CONFIG, "pay_v2");
+  });
+});
+
+describe("sincronizarCobrancasAtivas (webhook perdido)", () => {
+  it("consulta cada cobrança ativa no Asaas e processa as pagas ou estornadas; erro numa não para as outras", async () => {
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa({ id: 4, asaasPaymentId: "pay_a" }), ativa({ id: 5, asaasPaymentId: "pay_b" }), ativa({ id: 6, asaasPaymentId: "pay_c" })]);
+    asaasMock.getPayment.mockImplementation(async (_c: unknown, id: string) => {
+      if (id === "pay_a") return { id, status: "RECEIVED", value: 600 };
+      if (id === "pay_b") throw new Error("timeout");
+      return { id, status: "PENDING" };
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const r = await sincronizarCobrancasAtivas(CONFIG);
+    log.mockRestore();
+    expect(dbMock.cobrancaFechamento.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { status: "ativa" } }));
+    expect(recMock.processarPagamentoFechamento).toHaveBeenCalledTimes(1);
+    expect(recMock.processarPagamentoFechamento).toHaveBeenCalledWith({ id: "pay_a", status: "RECEIVED", value: 600 }, null);
+    expect(asaasMock.cancelPayment).not.toHaveBeenCalled();
+    expect(r).toEqual({ cobrancas: 3, processadas: 1, erros: 1 });
   });
 });

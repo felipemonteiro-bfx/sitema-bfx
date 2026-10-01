@@ -127,6 +127,8 @@ const emailMock = { sendEmail: vi.fn() };
 vi.mock("@/lib/email", () => emailMock);
 const leituraMock = { lerFechamentosComPix: vi.fn() };
 vi.mock("@/lib/fechamento-leitura", () => leituraMock);
+const syncMock = { sincronizarCobrancasAtivas: vi.fn() };
+vi.mock("@/lib/cobranca-fechamento-db", () => syncMock);
 
 describe("GET /api/cron/alertas-admin — Pix do fechamento", () => {
   beforeEach(() => {
@@ -140,7 +142,8 @@ describe("GET /api/cron/alertas-admin — Pix do fechamento", () => {
     dbMock.produto.count.mockResolvedValue(0);
     dbMock.boletoPrudent.findMany.mockResolvedValue([]);
     dbMock.notificacao.findFirst.mockResolvedValue(null);
-    dbMock.config.findFirst.mockResolvedValue({ emailFinanceiro: "financeiro@bfxshop.com.br" });
+    dbMock.config.findFirst.mockResolvedValue({ emailFinanceiro: "financeiro@bfxshop.com.br", asaasApiKey: "k", asaasEnv: null });
+    syncMock.sincronizarCobrancasAtivas.mockResolvedValue({ cobrancas: 0, processadas: 0, erros: 0 });
     emailMock.sendEmail.mockResolvedValue(undefined);
     leituraMock.lerFechamentosComPix.mockResolvedValue([fechamento({ empresa: "Amazon <Five>" })]);
   });
@@ -161,6 +164,27 @@ describe("GET /api/cron/alertas-admin — Pix do fechamento", () => {
     expect(email.html).not.toContain("<Five>");
     expect(email.html).toMatch(/R\$\s300,00/);
     expect((await r.json()).alertas).toMatchObject({ pixAtrasados: 1 });
+  });
+
+  it("antes de alertar, confere no Asaas as cobranças ativas (webhook perdido); sem Asaas configurado, pula", async () => {
+    const { GET } = await import("@/app/api/cron/alertas-admin/route");
+    await GET(new Request("http://x/api/cron/alertas-admin"));
+    expect(syncMock.sincronizarCobrancasAtivas).toHaveBeenCalledWith({ baseUrl: expect.any(String), apiKey: "k" });
+    expect(syncMock.sincronizarCobrancasAtivas.mock.invocationCallOrder[0]).toBeLessThan(leituraMock.lerFechamentosComPix.mock.invocationCallOrder[0]);
+    vi.clearAllMocks();
+    dbMock.config.findFirst.mockResolvedValue({ emailFinanceiro: null, asaasApiKey: null });
+    leituraMock.lerFechamentosComPix.mockResolvedValue([]);
+    dbMock.usuario.findMany.mockResolvedValue([{ id: 1 }]);
+    await GET(new Request("http://x/api/cron/alertas-admin"));
+    expect(syncMock.sincronizarCobrancasAtivas).not.toHaveBeenCalled();
+  });
+
+  it("falha na sincronização não derruba os alertas", async () => {
+    syncMock.sincronizarCobrancasAtivas.mockRejectedValue(new Error("db"));
+    const { GET } = await import("@/app/api/cron/alertas-admin/route");
+    const r = await GET(new Request("http://x/api/cron/alertas-admin"));
+    expect(r.status).toBe(200);
+    expect(dbMock.notificacao.create).toHaveBeenCalledTimes(2);
   });
 
   it("já avisado nas últimas 20h (mesmo lido) → nem notificação nem e-mail de novo", async () => {

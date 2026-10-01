@@ -485,10 +485,13 @@ export async function reivindicarEnvio(e: { fechamentoId: number; versao: number
 
 /** O e-mail não saiu: volta a conferido, se ainda é aquela versão marcada como enviada. */
 export async function desfazerReivindicacao(e: { fechamentoId: number; versao: number }): Promise<void> {
-  await prisma.fechamento.updateMany({
+  const r = await prisma.fechamento.updateMany({
     where: { id: e.fechamentoId, status: STATUS_FECHAMENTO.enviado, versaoAtual: e.versao },
     data: { status: STATUS_FECHAMENTO.conferido },
   });
+  if (r.count !== 1) {
+    console.error(`[fechamento] envio desfeito, mas o fechamento ${e.fechamentoId} não estava mais enviado na versão ${e.versao}.`);
+  }
 }
 
 /** Depois do e-mail: grava na versão o PDF enviado, quando e quem. */

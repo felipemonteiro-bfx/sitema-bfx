@@ -31,7 +31,7 @@ const d = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 type Rec = { id?: number; valor: number; status: string; dataRecebimento: Date };
 
 /** Estado "do banco" que os mocks leem. */
-let fechamento: { id: number; status: string; versaoAtual: number; competencia: string; totalFinal: number };
+let fechamento: { id: number; status: string; versaoAtual: number; competencia: string; totalFinal: number; enviada?: boolean };
 let recebimentos: Rec[];
 
 function fechamentoLido() {
@@ -41,7 +41,9 @@ function fechamentoLido() {
     versaoAtual: fechamento.versaoAtual,
     competencia: fechamento.competencia,
     empresaParceira: { nome: "Amazon Five" },
-    versoes: [{ numero: fechamento.versaoAtual, totalFinal: fechamento.totalFinal }],
+    versoes: [
+      { numero: fechamento.versaoAtual, totalFinal: fechamento.totalFinal, enviadaEm: fechamento.enviada === false ? null : new Date() },
+    ],
   };
 }
 
@@ -267,6 +269,15 @@ describe("processarPagamentoFechamento — estorno", () => {
 describe("recalcularFechamento", () => {
   it("valor final ≤ 0 não liquida nem muda o status (não inventa data)", async () => {
     fechamento.totalFinal = 0;
+    const r = await recalcularFechamento(dbMock as never, 11);
+    expect(r?.mudou).toBe(false);
+    expect(fechamento.status).toBe("enviado");
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("versão atual ainda não enviada (envio em andamento) → o dinheiro conta, mas o status não muda", async () => {
+    fechamento.enviada = false;
+    recebimentos = [{ valor: 600, status: "confirmado", dataRecebimento: d("2026-10-10") }];
     const r = await recalcularFechamento(dbMock as never, 11);
     expect(r?.mudou).toBe(false);
     expect(fechamento.status).toBe("enviado");

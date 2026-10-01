@@ -176,10 +176,22 @@ describe("getOrCreateCustomerEmpresa", () => {
     const { prisma, update } = prismaFake();
     const id = await getOrCreateCustomerEmpresa(empresa, prisma, config);
     expect(id).toBe("cus_antigo");
-    expect(chamadas).toHaveLength(2);
+    expect(chamadas).toHaveLength(3);
     expect(chamadas[1].method).toBe("GET");
     expect(chamadas[1].url).toBe("https://asaas.test/v3/customers?cpfCnpj=12345678000190");
     expect(update).toHaveBeenCalledWith({ where: { id: 7 }, data: { asaasCustomerId: "cus_antigo" } });
+  });
+
+  it("duplicata reaproveitada → desliga as notificações do Asaas nesse cliente também", async () => {
+    const chamadas = mockFetch([
+      { status: 400, corpo: { errors: [{ code: "invalid_cpfCnpj", description: "CPF/CNPJ já cadastrado" }] } },
+      { corpo: { data: [{ id: "cus_antigo", cpfCnpj: "12345678000190" }] } },
+      { corpo: { id: "cus_antigo", notificationDisabled: true } },
+    ]);
+    const { prisma } = prismaFake();
+    await getOrCreateCustomerEmpresa(empresa, prisma, config);
+    expect(chamadas).toHaveLength(3);
+    expect(chamadas[2]).toMatchObject({ url: "https://asaas.test/v3/customers/cus_antigo", method: "POST", body: { notificationDisabled: true } });
   });
 
   it("duplicata sem cliente na busca → propaga o erro original", async () => {

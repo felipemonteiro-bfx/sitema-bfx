@@ -50,7 +50,15 @@ async function encerrar(c: CobrancaAtiva, config: AsaasConfig): Promise<void> {
   if (ASAAS_PAGO.has(p.status) || ASAAS_ESTORNO.has(p.status)) {
     // Dinheiro entrou (ou entrou e voltou): o processamento do webhook registra e marca a cobrança.
     await processarPagamentoFechamento(p, null);
-    if (ASAAS_PAGO.has(p.status)) return;
+    if (ASAAS_PAGO.has(p.status)) {
+      // O processamento já marca paga; aqui de novo para o caso de ele ignorar o pagamento (ex.:
+      // sem valor): cobrança paga não pode ficar ativa travando o próximo envio.
+      await prisma.cobrancaFechamento.updateMany({
+        where: { id: c.id, status: STATUS_COBRANCA.ativa },
+        data: { status: STATUS_COBRANCA.paga },
+      });
+      return;
+    }
   } else if (!p.deleted) {
     await cancelPayment(config, c.asaasPaymentId);
   }
@@ -191,4 +199,31 @@ export async function garantirCobrancaPix(e: {
     e.config
   );
   return { pix, recebido, saldo };
+}
+
+/**
+ * Rede de segurança do webhook (que responde 200 mesmo quando falha e não é reenviado): consulta no
+ * Asaas cada cobrança ativa e processa as pagas ou estornadas, pela mesma função idempotente do
+ * webhook. Pendente ou vencida fica como está (nada é cancelado aqui). Erro numa cobrança não para
+ * as outras. Chamada pelo cron de alertas antes do alerta "Pix não entrou".
+ */
+export async function sincronizarCobrancasAtivas(config: AsaasConfig): Promise<{ cobrancas: number; processadas: number; erros: number }> {
+  const ativas = await prisma.cobrancaFechamento.findMany({
+    where: { status: STATUS_COBRANCA.ativa },
+    select: { id: true, asaasPaymentId: true },
+    orderBy: { id: "asc" },
+  });
+  const r = { cobrancas: ativas.length, processadas: 0, erros: 0 };
+  for (const c of ativas) {
+    try {
+      const p = await getPayment(config, c.asaasPaymentId);
+      if (!ASAAS_PAGO.has(p.status) && !ASAAS_ESTORNO.has(p.status)) continue;
+      await processarPagamentoFechamento(p, null);
+      r.processadas += 1;
+    } catch (e) {
+      r.erros += 1;
+      console.error(`[cobranca-fechamento] falha ao sincronizar a cobrança ${c.asaasPaymentId}:`, e);
+    }
+  }
+  return r;
 }

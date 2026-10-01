@@ -8,7 +8,7 @@
  * - Manual em dois passos: `registrarRecebimentoManual` (pendente) → `confirmarRecebimento`. Só
  *   `confirmado` conta; anexar comprovante nunca confirma.
  * - `recalcularFechamento`: a situação pelos recebimentos confirmados contra o valor final da
- *   versão atual → enviado / pago_parcial / pago. Entrou em `pago`: liquida as parcelas reservadas
+ *   versão atual (já enviada ao RH) → enviado / pago_parcial / pago. Entrou em `pago`: liquida as parcelas reservadas
  *   (`liquidadaEm`); as não antecipadas ganham também `paga`, origem `pix_fechamento`. Saiu de
  *   `pago`: desfaz. Só mexe no status de fechamento já enviado; reaberto, o dinheiro fica
  *   registrado e o próximo envio cobra só o saldo.
@@ -93,7 +93,7 @@ export async function recalcularFechamento(tx: Tx, fechamentoId: number): Promis
       versaoAtual: true,
       competencia: true,
       empresaParceira: { select: { nome: true } },
-      versoes: { orderBy: { numero: "desc" }, take: 1, select: { numero: true, totalFinal: true } },
+      versoes: { orderBy: { numero: "desc" }, take: 1, select: { numero: true, totalFinal: true, enviadaEm: true } },
     },
   });
   if (!f) return null;
@@ -103,6 +103,10 @@ export async function recalcularFechamento(tx: Tx, fechamentoId: number): Promis
   });
   const versao = f.versoes[0];
   const totalFinal = versao && versao.numero === f.versaoAtual ? versao.totalFinal : null;
+  // Envio em andamento (reivindicado, e-mail ainda não saiu): a versão não chegou ao RH. O status
+  // só muda depois do envio (`recalcularEAvisar` após `marcarEnviado`); se o e-mail falhar, o
+  // desfazer encontra o fechamento como deixou.
+  const enviada = versao != null && versao.numero === f.versaoAtual && versao.enviadaEm != null;
   const base = {
     fechamentoId,
     empresa: f.empresaParceira.nome,
@@ -115,7 +119,7 @@ export async function recalcularFechamento(tx: Tx, fechamentoId: number): Promis
   };
   // Sem versão enviada valendo (reaberto, em preparação) ou valor final ≤ 0 (o conferir já recusa):
   // o dinheiro fica registrado, mas não há status a mudar nem data de liquidação a inventar.
-  if (totalFinal === null || totalFinal <= 0 || !STATUS_COM_RECEBIMENTO.includes(f.status)) {
+  if (totalFinal === null || totalFinal <= 0 || !enviada || !STATUS_COM_RECEBIMENTO.includes(f.status)) {
     const sit = situacaoRecebimento(Math.max(totalFinal ?? 0, 0), recebimentos);
     return { ...base, recebido: sit.recebido, saldo: totalFinal && totalFinal > 0 ? sit.saldo : 0, excedente: totalFinal && totalFinal > 0 ? sit.excedente : 0 };
   }

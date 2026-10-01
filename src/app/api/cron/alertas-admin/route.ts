@@ -7,6 +7,8 @@ import { PREFIXO_BOLETO, STATUS_ALERTAVEIS, alertasDeBoletos } from "@/lib/alert
 import { alertaPixAtrasado, emailPixAtrasado, pixAtrasados } from "@/lib/pix-fechamento";
 import { lerFechamentosComPix } from "@/lib/fechamento-leitura";
 import { sendEmail } from "@/lib/email";
+import { getAsaasConfig } from "@/lib/asaas";
+import { sincronizarCobrancasAtivas } from "@/lib/cobranca-fechamento-db";
 
 /**
  * GET /api/cron/alertas-admin
@@ -120,9 +122,15 @@ export async function GET(req: Request) {
     // 5. Pix do fechamento que nao entrou (Fase 6). Um alerta por fechamento (o prefixo leva o id).
     // O e-mail ao financeiro sai uma vez a cada 20h por fechamento: a checagem olha qualquer
     // notificacao com o prefixo na janela, lida ou nao.
+    // Antes, confere no Asaas as cobranças ativas: um webhook que falhou (e respondeu 200) não é
+    // reenviado, e o alerta sairia para um Pix que já entrou.
+    const cfg = await prisma.config.findFirst({ select: { emailFinanceiro: true, asaasApiKey: true, asaasEnv: true } });
+    const asaas = getAsaasConfig(cfg ?? undefined);
+    if (asaas) {
+      await sincronizarCobrancasAtivas(asaas).catch((e) => logCronError("alertas-admin", "sincronizar_cobrancas_pix", e));
+    }
     const pix = pixAtrasados(await lerFechamentosComPix(), new Date(`${hojeDataPura()}T00:00:00.000Z`));
     if (pix.length > 0) {
-      const cfg = await prisma.config.findFirst({ select: { emailFinanceiro: true } });
       const emailFinanceiro = cfg?.emailFinanceiro?.trim() || null;
       for (const p of pix) {
         const alerta = alertaPixAtrasado(p);
