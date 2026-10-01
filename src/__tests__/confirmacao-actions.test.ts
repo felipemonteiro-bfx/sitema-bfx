@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const dbMock = {
   parcelaVencimento: { findMany: vi.fn(), updateMany: vi.fn() },
+  fechamento: { updateMany: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
 };
 const guardsMock = { requireAdminOrThrow: vi.fn() };
@@ -27,6 +28,18 @@ beforeEach(() => {
     { id: 5, confirmacaoRh: null, antecipada: false, antecipacaoLoteId: null },
     { id: 6, confirmacaoRh: null, antecipada: false, antecipacaoLoteId: null },
   ]);
+  dbMock.fechamento.updateMany.mockImplementation(async (a: { where?: { id?: { in?: number[] } } }) => ({ count: a?.where?.id?.in?.length ?? 0 }));
+});
+
+const noFechamento = (id: number, status: string) => ({
+  id,
+  vendaId: 240,
+  numeroParcela: id,
+  confirmacaoRh: "confirmada",
+  antecipada: false,
+  antecipacaoLoteId: null,
+  fechamentoId: 11,
+  fechamento: { id: 11, status, competencia: "2026-10" },
 });
 
 describe("confirmarParcelasRh", () => {
@@ -125,10 +138,19 @@ describe("recusarParcelasRh", () => {
     expect(r).toEqual({ ok: true, recusadas: 2 });
     expect(dbMock.parcelaVencimento.findMany).toHaveBeenCalledWith({
       where: { id: { in: [5, 6] } },
-      select: { id: true, confirmacaoRh: true, antecipada: true, antecipacaoLoteId: true },
+      select: {
+        id: true,
+        vendaId: true,
+        numeroParcela: true,
+        confirmacaoRh: true,
+        antecipada: true,
+        antecipacaoLoteId: true,
+        fechamentoId: true,
+        fechamento: { select: { id: true, status: true, competencia: true } },
+      },
     });
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: [5, 6] }, antecipada: false, antecipacaoLoteId: null },
+      where: { id: { in: [5, 6] }, antecipada: false, antecipacaoLoteId: null, fechamentoId: null },
       data: {
         confirmacaoRh: "recusada",
         confirmacaoOrigem: "rh",
@@ -144,5 +166,52 @@ describe("recusarParcelasRh", () => {
       alteradas: 2,
     });
     expect(cacheMock.revalidatePath).toHaveBeenCalledWith("/prudent");
+  });
+
+  // M1: a recusa do RH não pode tirar parcela de demonstrativo já conferido sem reabrir; em
+  // preparação, solta a reserva e o fechamento pede "Atualizar parcelas".
+  it("parcela em fechamento conferido ou posterior → erro e zero escrita", async () => {
+    for (const status of ["conferido", "enviado", "pago_parcial", "pago"]) {
+      dbMock.parcelaVencimento.findMany.mockResolvedValue([noFechamento(5, status)]);
+      const r = await recusarParcelasRh([5], "Colaborador desligado");
+      expect(r.ok).toBe(false);
+      expect((r as { erro: string }).erro).toMatch(/^A parcela V240-5 está no fechamento de outubro de 2026 .*Reabra o fechamento/);
+    }
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+    expect(dbMock.fechamento.updateMany).not.toHaveBeenCalled();
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
+  });
+
+  it("parcela em fechamento em preparação → solta a reserva e marca o fechamento desatualizado antes", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      noFechamento(5, "em_preparacao"),
+      { id: 6, vendaId: 241, numeroParcela: 1, confirmacaoRh: null, antecipada: false, antecipacaoLoteId: null, fechamentoId: null, fechamento: null },
+    ]);
+    const r = await recusarParcelasRh([5, 6], "Colaborador desligado");
+    expect(r).toEqual({ ok: true, recusadas: 2 });
+    expect(dbMock.fechamento.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: [11] }, status: "em_preparacao" },
+      data: { desatualizado: true },
+    });
+    const recusa = dbMock.parcelaVencimento.updateMany.mock.calls[0][0];
+    expect(recusa.where).toEqual({
+      id: { in: [5, 6] },
+      antecipada: false,
+      antecipacaoLoteId: null,
+      OR: [{ fechamentoId: null }, { fechamentoId: { in: [11] } }],
+    });
+    expect(recusa.data).toMatchObject({ confirmacaoRh: "recusada", fechamentoId: null });
+    expect(dbMock.fechamento.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      dbMock.parcelaVencimento.updateMany.mock.invocationCallOrder[0]
+    );
+  });
+
+  it("o fechamento foi conferido no meio (count 0) → erro e nada recusado", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([noFechamento(5, "em_preparacao")]);
+    dbMock.fechamento.updateMany.mockResolvedValue({ count: 0 });
+    const r = await recusarParcelasRh([5], "Colaborador desligado");
+    expect(r).toEqual({ ok: false, erro: "O fechamento desta parcela mudou enquanto você recusava. Recarregue." });
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
   });
 });
