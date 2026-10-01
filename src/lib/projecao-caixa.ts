@@ -8,7 +8,14 @@
  *
  * `acumulado` = Σ saídas − Σ entradas até o dia, com piso 0: é só o que falta. O piso é aplicado
  * no valor exibido, não no saldo corrido — uma entrada anterior continua cobrindo saída posterior.
- * Contas em centavos inteiros.
+ * Contas em centavos inteiros. Valor não numérico (NaN, infinito) é descartado; `dias` inválido
+ * vira 0 (só hoje).
+ *
+ * `hoje` é lido pelo dia UTC: a tela passa a data pura do dia em Manaus,
+ * `new Date(hojeDataPura() + "T00:00:00.000Z")` — `new Date()` cru vira o dia seguinte às 20h.
+ *
+ * Decisão em aberto (spec §6 não define): Pix esperado ou depósito previsto cuja data já passou
+ * entra hoje, como os boletos vencidos. Um Pix atrasado reduz o pico desde o primeiro dia.
  */
 
 export type Movimento = { data: Date; valor: number; tipo: "boleto" | "pix" | "deposito"; ref?: string };
@@ -39,7 +46,8 @@ export function projetarCaixa(entrada: {
   depositosPrevistos: { data: Date; valor: number }[];
 }): ProjecaoCaixa {
   const inicio = diaUtc(entrada.hoje);
-  const fim = inicio + Math.max(0, Math.floor(entrada.dias)) * DIA_MS;
+  const dias = Number.isFinite(entrada.dias) ? Math.max(0, Math.floor(entrada.dias)) : 0;
+  const fim = inicio + dias * DIA_MS;
   const efetivo = (d: Date) => Math.max(diaUtc(d), inicio);
 
   const movimentos: Movimento[] = [];
@@ -50,6 +58,7 @@ export function projetarCaixa(entrada: {
   let vencidos = 0;
 
   for (const b of entrada.boletos) {
+    if (!Number.isFinite(b.saldo)) continue;
     const saldo = centavos(b.saldo);
     if (saldo <= 0) continue;
     const venc = diaUtc(b.vencimento);
@@ -65,9 +74,11 @@ export function projetarCaixa(entrada: {
     }
   }
   for (const p of entrada.pixEsperados) {
+    if (!Number.isFinite(p.valor)) continue;
     movimentos.push({ data: p.data, valor: -centavos(p.valor), tipo: "pix" });
   }
   for (const dep of entrada.depositosPrevistos) {
+    if (!Number.isFinite(dep.valor)) continue;
     movimentos.push({ data: dep.data, valor: -centavos(dep.valor), tipo: "deposito" });
   }
 

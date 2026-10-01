@@ -116,6 +116,11 @@ describe("saldoDoBoleto", () => {
     expect(saldoDoBoleto(b, [...pagamentos])).toBe(saldo);
   });
 
+  it("falta de ate 1 centavo e saldo zero (mesma tolerancia do status pago)", () => {
+    expect(saldoDoBoleto(b, [pg(999.99)])).toBe(0);
+    expect(saldoDoBoleto(b, [pg(999.98)])).toBe(0.02);
+  });
+
   it("nunca fica negativo", () => {
     expect(saldoDoBoleto(b, [pg(1000.01)])).toBe(0);
   });
@@ -163,6 +168,13 @@ describe("validarNovoPagamento", () => {
     expect(validarNovoPagamento({ ...b, status }, [], 100)).toEqual({
       ok: false,
       erro: "Boleto substituído ou cancelado não recebe pagamento.",
+    });
+  });
+
+  it("recusa boleto ja pago, mesmo dentro da tolerancia", () => {
+    expect(validarNovoPagamento({ ...b, status: "pago" }, [pg(999.99)], 0.01)).toEqual({
+      ok: false,
+      erro: "Este boleto já está pago.",
     });
   });
 

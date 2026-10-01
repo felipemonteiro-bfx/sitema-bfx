@@ -177,4 +177,20 @@ describe("projetarCaixa", () => {
     expect(noDia(r, "2026-10-01")).toBe(0);
     expect(noDia(r, "2026-10-03")).toBe(300);
   });
+
+  it("valores nao numericos sao descartados e dias invalido vira so hoje", () => {
+    const r = projetarCaixa(
+      entrada({
+        dias: Number.NaN,
+        boletos: [
+          { vencimento: d("2026-10-01"), saldo: Number.NaN, dataPix: null },
+          { vencimento: d("2026-10-01"), saldo: 100, dataPix: null },
+        ],
+        depositosPrevistos: [{ data: d("2026-10-01"), valor: Number.POSITIVE_INFINITY }],
+      }),
+    );
+    expect(r.serie).toEqual([{ data: "2026-10-01", acumulado: 100 }]);
+    expect(r.depoisDoPix).toBe(100);
+    expect(r.boletosDepoisDoPix).toBe(1);
+  });
 });

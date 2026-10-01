@@ -137,6 +137,12 @@ describe("decodificarLinhaDigitavel — bancario", () => {
     });
   });
 
+  it("le o valor com os 10 digitos significativos", () => {
+    const linha = linhaBancariaDeCodigoBarras(codigoBancario("1500", "1234567890"));
+    const r = decodificarLinhaDigitavel(linha, ref);
+    expect(r.ok && r.valor).toBe(12345678.9);
+  });
+
   it("aceita a linha formatada com pontos e espacos", () => {
     const codigo = codigoBancario("1500", "0000010000");
     const l = linhaBancariaDeCodigoBarras(codigo);
@@ -247,6 +253,11 @@ describe("decodificarLinhaDigitavel — arrecadacao (48 digitos)", () => {
     expect(Number(linha[11])).toBe(modulo11Arrecadacao(codigo.slice(0, 11)));
     const r = decodificarLinhaDigitavel(linha);
     expect(r.ok && r.valor).toBe(999.9);
+  });
+
+  it("le o valor com os 11 digitos significativos", () => {
+    const r = decodificarLinhaDigitavel(linhaArrecadacaoDeCodigoBarras(codigoArrecadacao("6", "12345678901")));
+    expect(r.ok && r.valor).toBe(123456789.01);
   });
 
   it("identificadores 7 e 9 (valor de referencia) devolvem valor null", () => {

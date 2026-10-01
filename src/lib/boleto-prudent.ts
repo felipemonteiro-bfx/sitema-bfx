@@ -62,8 +62,10 @@ function centavosPagos(pagamentos: Pagamento[]): number {
     .reduce((soma, p) => soma + centavos(p.valorPrincipal), 0);
 }
 
+/** O que falta pagar. Falta de até 1 centavo conta como quitado, igual a `statusPorPagamentos`. */
 export function saldoDoBoleto(b: BoletoValor, pagamentos: Pagamento[]): number {
-  return Math.max(0, centavos(valorDoBoleto(b)) - centavosPagos(pagamentos)) / 100;
+  const falta = centavos(valorDoBoleto(b)) - centavosPagos(pagamentos);
+  return falta > TOLERANCIA_CENTAVOS ? falta / 100 : 0;
 }
 
 /**
@@ -94,6 +96,9 @@ export function validarNovoPagamento(
   }
   if (b.status === STATUS_BOLETO.aguardandoDocumento) {
     return { ok: false, erro: "Anexe o boleto antes de registrar o pagamento." };
+  }
+  if (b.status === STATUS_BOLETO.pago) {
+    return { ok: false, erro: "Este boleto já está pago." };
   }
   if (!Number.isFinite(novoPrincipal) || centavos(novoPrincipal) <= 0) {
     return { ok: false, erro: "Informe um valor principal maior que zero." };
