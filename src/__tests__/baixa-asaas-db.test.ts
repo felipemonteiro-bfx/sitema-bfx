@@ -6,6 +6,9 @@ const dbMock = {
   parcelaVencimento: { findMany: vi.fn(), updateMany: vi.fn() },
   venda: { findMany: vi.fn() },
   config: { findFirst: vi.fn(), updateMany: vi.fn() },
+  fechamento: { findUnique: vi.fn() },
+  usuario: { findMany: vi.fn() },
+  notificacao: { findFirst: vi.fn(), createMany: vi.fn() },
 };
 const asaasMock = {
   getAsaasConfig: vi.fn((): { baseUrl: string; apiKey: string } | null => ({ baseUrl: "https://api.asaas.com", apiKey: "k" })),
@@ -48,6 +51,10 @@ beforeEach(() => {
   dbMock.parcelaVencimento.findMany.mockResolvedValue([PARCELA_ABERTA]);
   dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 1 });
   dbMock.config.findFirst.mockResolvedValue({ asaasApiKey: "k", asaasEnv: "production", asaasWebhookToken: "token-certo-123456" });
+  dbMock.fechamento.findUnique.mockResolvedValue({ id: 11, competencia: "2026-10", empresaParceira: { nome: "AMAZON FIVE" } });
+  dbMock.usuario.findMany.mockResolvedValue([{ id: 1 }, { id: 2 }]);
+  dbMock.notificacao.findFirst.mockResolvedValue(null);
+  dbMock.notificacao.createMany.mockResolvedValue({ count: 2 });
   fechamentoMock.ehCobrancaDeFechamento.mockResolvedValue(false);
   fechamentoMock.processarPagamentoFechamento.mockResolvedValue({ acao: "registrado", fechamentoId: 11 });
 });
@@ -74,11 +81,40 @@ describe("aplicarPagamentoAsaas", () => {
     );
   });
 
-  it("parcela reservada num fechamento: ignora sem gravar", async () => {
+  it("cobrança paga em parcela reservada num fechamento: não baixa e avisa os admins", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([{ ...PARCELA_ABERTA, fechamentoId: 11 }]);
     const r = await aplicarPagamentoAsaas(PAGAMENTO);
+    expect(r).toEqual({ acao: "alertar_reservada", parcelaId: 100, fechamentoId: 11, asaasPaymentId: "pay_abc" });
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+    expect(dbMock.notificacao.createMany).toHaveBeenCalledTimes(1);
+    const dados = dbMock.notificacao.createMany.mock.calls[0][0].data;
+    expect(dados.map((d: { usuarioId: number }) => d.usuarioId)).toEqual([1, 2]);
+    expect(dados[0].mensagem).toMatch(/^\[Alerta\] Pagamento Asaas em parcela reservada no fechamento/);
+    expect(dados[0].mensagem).toContain("pay_abc");
+    expect(dados[0].mensagem).toContain("AMAZON FIVE");
+    expect(dados[0].mensagem).toContain("outubro de 2026");
+    expect(dados[0].link).toBe("/fechamento/11");
+    expect(auditMock.createAuditLog).toHaveBeenCalledWith(
+      "parcela:asaas-em-fechamento",
+      expect.objectContaining({ parcelaId: 100, fechamentoId: 11, asaasPaymentId: "pay_abc" }),
+    );
+  });
+
+  it("mesma cobrança de novo (webhook repetido, sincronização diária): não avisa outra vez", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([{ ...PARCELA_ABERTA, fechamentoId: 11 }]);
+    dbMock.notificacao.findFirst.mockResolvedValue({ id: 5 });
+    await aplicarPagamentoAsaas(PAGAMENTO);
+    expect(dbMock.notificacao.findFirst.mock.calls[0][0].where.mensagem.startsWith).toContain("pay_abc");
+    expect(dbMock.notificacao.createMany).not.toHaveBeenCalled();
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
+  });
+
+  it("parcela reservada e cobrança não paga: ignora sem gravar nem avisar", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([{ ...PARCELA_ABERTA, fechamentoId: 11 }]);
+    const r = await aplicarPagamentoAsaas({ ...PAGAMENTO, status: "PENDING" });
     expect(r).toEqual({ acao: "ignorar", motivo: "reservada_no_fechamento" });
     expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+    expect(dbMock.notificacao.createMany).not.toHaveBeenCalled();
     expect(auditMock.createAuditLog).not.toHaveBeenCalled();
   });
 

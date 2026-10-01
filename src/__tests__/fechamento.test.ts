@@ -19,6 +19,7 @@ import {
 const ELEGIVEL: ParcelaParaFechamento = {
   id: 1,
   vendaStatus: "ativa",
+  vendaEmFolha: true,
   liquidadaEm: null,
   fechamentoId: null,
   confirmacaoRh: "confirmada",
@@ -125,6 +126,7 @@ describe("elegibilidadeFechamento", () => {
   const casos: [string, Partial<ParcelaParaFechamento>, number | null, MotivoBloqueio][] = [
     ["venda cancelada", { vendaStatus: "cancelada" }, 10, "venda_inativa"],
     ["venda estornada", { vendaStatus: "estornada" }, 10, "venda_inativa"],
+    ["venda que não é desconto em folha (Pix, cartão, boleto)", { vendaEmFolha: false }, 10, "forma_nao_folha"],
     ["já liquidada", { liquidadaEm: new Date("2026-10-15T00:00:00Z") }, 10, "ja_liquidada"],
     ["em outro fechamento", { fechamentoId: 99 }, 10, "em_outro_fechamento"],
     ["reservada e fechamento ainda sem id", { fechamentoId: 99 }, null, "em_outro_fechamento"],
@@ -144,6 +146,7 @@ describe("elegibilidadeFechamento", () => {
     const tudoErrado: ParcelaParaFechamento = {
       id: 2,
       vendaStatus: "cancelada",
+      vendaEmFolha: false,
       liquidadaEm: new Date("2026-10-15T00:00:00Z"),
       fechamentoId: 99,
       confirmacaoRh: "recusada",
@@ -158,6 +161,7 @@ describe("elegibilidadeFechamento", () => {
     let p = { ...tudoErrado };
     const corrigir: Record<MotivoBloqueio, Partial<ParcelaParaFechamento>> = {
       venda_inativa: { vendaStatus: "ativa" },
+      forma_nao_folha: { vendaEmFolha: true },
       ja_liquidada: { liquidadaEm: null },
       em_outro_fechamento: { fechamentoId: null },
       recusada_rh: { confirmacaoRh: "confirmada" },
@@ -174,6 +178,7 @@ describe("elegibilidadeFechamento", () => {
     }
     expect(ordem).toEqual([
       "venda_inativa",
+      "forma_nao_folha",
       "ja_liquidada",
       "em_outro_fechamento",
       "recusada_rh",
@@ -187,6 +192,7 @@ describe("elegibilidadeFechamento", () => {
   it("todo motivo tem rótulo", () => {
     expect(ROTULO_MOTIVO).toEqual({
       venda_inativa: "Venda cancelada ou estornada",
+      forma_nao_folha: "Venda não é desconto em folha",
       ja_liquidada: "Já paga no fechamento",
       em_outro_fechamento: "Em outro fechamento",
       recusada_rh: "Recusada pelo RH",

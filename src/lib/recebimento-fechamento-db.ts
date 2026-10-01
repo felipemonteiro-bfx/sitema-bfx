@@ -23,6 +23,7 @@ import { lerReferenciaExterna, situacaoRecebimento } from "@/lib/recebimento-fec
 import { hojeDataPura } from "@/lib/data-pura";
 import { prepararArquivoFinanceiro, salvarArquivoFinanceiro } from "@/lib/arquivo-financeiro";
 import { formatBRL } from "@/lib/utils";
+import { avisarAdmins } from "@/lib/avisar-admins";
 
 export const STATUS_RECEBIMENTO = { pendente: "pendente", confirmado: "confirmado", estornado: "estornado" } as const;
 export const STATUS_COBRANCA = { ativa: "ativa", cancelada: "cancelada", paga: "paga" } as const;
@@ -185,20 +186,6 @@ export function alertasDoRecalculo(r: Recalculo, motivo: MotivoAlerta): { mensag
     });
   }
   return alertas;
-}
-
-/** Notifica todos os admins. Falha aqui não desfaz o recebimento: só vai para o log. */
-async function avisarAdmins(alertas: { mensagem: string; link: string }[]): Promise<void> {
-  if (alertas.length === 0) return;
-  try {
-    const admins = await prisma.usuario.findMany({ where: { role: "admin" }, select: { id: true } });
-    if (admins.length === 0) return;
-    await prisma.notificacao.createMany({
-      data: alertas.flatMap((a) => admins.map((u) => ({ mensagem: a.mensagem, link: a.link, usuarioId: u.id }))),
-    });
-  } catch (e) {
-    console.error("[recebimento-fechamento] falha ao notificar os admins:", e);
-  }
 }
 
 /** A cobrança do Asaas é de um fechamento? Referência `FEC-…` ou cobrança gravada. */

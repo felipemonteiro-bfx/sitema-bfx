@@ -14,7 +14,14 @@ import {
   totaisFechamento,
   type MotivoBloqueio,
 } from "@/lib/fechamento";
-import { SELECT_PARCELA, diaDaCompetencia, paraRegra, pertence, type ParcelaLida } from "@/lib/fechamento-db";
+import {
+  SELECT_PARCELA,
+  diaDaCompetencia,
+  paraRegra,
+  pertence,
+  whereParcelasDoFechamento,
+  type ParcelaLida,
+} from "@/lib/fechamento-db";
 import { regraVigente, type RegraComVigencia } from "@/lib/regra-empresa";
 import { regrasDaEmpresa } from "@/lib/regra-empresa-db";
 import type { FechamentoPix } from "@/lib/pix-fechamento";
@@ -285,12 +292,7 @@ export async function lerDetalheFechamento(id: number): Promise<DetalheFechament
   const { inicio, fim } = intervaloCompetencia(f.competencia);
   const regra = regraVigente(await regrasDaEmpresa(f.empresaParceiraId), inicio);
   const parcelas = (await prisma.parcelaVencimento.findMany({
-    where: {
-      OR: [
-        { dataVencimento: { gte: inicio, lt: fim }, venda: { cliente: { empresaParceiraId: f.empresaParceiraId } } },
-        { fechamentoId: f.id },
-      ],
-    },
+    where: whereParcelasDoFechamento(f.empresaParceiraId, inicio, fim, f.id),
     select: { ...SELECT_PARCELA, confirmacaoMotivo: true },
     orderBy: [{ dataVencimento: "asc" }, { vendaId: "asc" }, { numeroParcela: "asc" }],
   })) as ParcelaComMotivo[];

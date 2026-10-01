@@ -16,7 +16,7 @@ function parcela(id: number, extra: Record<string, unknown> = {}) {
     paga: false, antecipada: false, liquidadaEm: null, fechamentoId: null as number | null,
     confirmacaoRh: "confirmada" as string | null, confirmacaoMotivo: null as string | null,
     antecipacaoLoteId: null, boletoPrudentId: null, antecipacaoLote: null, boletoPrudent: null,
-    venda: { id: 240, status: "ativa", cliente: { nome: "ANA", matricula: null, empresaParceiraId: 7 }, _count: { parcelasVencimento: 4 }, ...venda },
+    venda: { id: 240, status: "ativa", formaPagamento: "DESCONTO_FOLHA", descontoEmFolha: true, cliente: { nome: "ANA", matricula: null, empresaParceiraId: 7 }, _count: { parcelasVencimento: 4 }, ...venda },
     ...resto,
   };
 }

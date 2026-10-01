@@ -36,6 +36,8 @@ export type ParcelaParaBaixa = {
 export type DecisaoBaixaAsaas =
   | { acao: "baixar"; parcelaId: number; asaasPaymentId: string; dataPagamento: string | null }
   | { acao: "desfazer"; parcelaId: number }
+  /** Cobrança paga em parcela reservada no fechamento: não baixa (o fechamento liquida), avisa os admins. */
+  | { acao: "alertar_reservada"; parcelaId: number; fechamentoId: number; asaasPaymentId: string }
   | { acao: "ignorar"; motivo: string };
 
 const STATUS_PAGO = new Set(["RECEIVED", "CONFIRMED", "RECEIVED_IN_CASH", "DUNNING_RECEIVED"]);
@@ -70,12 +72,18 @@ export function decidirBaixaAsaas(pagamento: PagamentoAsaas, parcelas: ParcelaPa
   if (candidatas.length > 1) return { acao: "ignorar", motivo: "parcela_ambigua" };
   const parcela = candidatas[0];
   if (parcela.vendaStatus !== "ativa") return { acao: "ignorar", motivo: "venda_inativa" };
-  if (parcela.fechamentoId != null) return { acao: "ignorar", motivo: "reservada_no_fechamento" };
+  const pago = STATUS_PAGO.has(pagamento.status) && !pagamento.deleted;
+  if (parcela.fechamentoId != null) {
+    // O cliente pagou o boleto de uma parcela que a empresa vai pagar no Pix do fechamento: dinheiro
+    // em dobro. Não baixa (só o fechamento liquida parcela reservada), mas não pode ficar em silêncio.
+    return pago
+      ? { acao: "alertar_reservada", parcelaId: parcela.id, fechamentoId: parcela.fechamentoId, asaasPaymentId: pagamento.id }
+      : { acao: "ignorar", motivo: "reservada_no_fechamento" };
+  }
 
   const baixadaPorOutraOrigem = parcela.paga && parcela.origemPagamento !== "asaas";
   const baixadaPorEstaCobranca =
     parcela.paga && parcela.origemPagamento === "asaas" && parcela.asaasPaymentId === pagamento.id;
-  const pago = STATUS_PAGO.has(pagamento.status) && !pagamento.deleted;
 
   if (baixadaPorOutraOrigem) return { acao: "ignorar", motivo: "baixada_por_outra_origem" };
 

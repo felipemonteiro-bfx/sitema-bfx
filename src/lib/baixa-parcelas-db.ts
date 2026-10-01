@@ -3,6 +3,46 @@ import { createAuditLog } from "@/lib/audit";
 import { getAsaasConfig, getPayment, listPaymentsDaVenda, type AsaasConfig } from "@/lib/asaas";
 import { decidirBaixaAsaas, type DecisaoBaixaAsaas, type PagamentoAsaas } from "@/lib/baixa-parcelas";
 import { hojeDataPura } from "@/lib/data-pura";
+import { avisarAdmins } from "@/lib/avisar-admins";
+import { identificadorParcela, rotuloCompetencia } from "@/lib/fechamento";
+
+export const PREFIXO_ASAAS_EM_FECHAMENTO = "[Alerta] Pagamento Asaas em parcela reservada no fechamento";
+
+/**
+ * Cobrança Asaas paga numa parcela reservada no fechamento: a empresa vai pagar a mesma parcela no
+ * Pix. Avisa os admins uma vez por cobrança (o prefixo leva o id do pagamento) e audita.
+ */
+async function alertarPagamentoEmFechamento(
+  d: { parcelaId: number; fechamentoId: number; asaasPaymentId: string },
+  parcela: { vendaId: number; numeroParcela: number },
+  totalParcelas: number,
+  status: string,
+): Promise<void> {
+  const f = await prisma.fechamento.findUnique({
+    where: { id: d.fechamentoId },
+    select: { id: true, competencia: true, empresaParceira: { select: { nome: true } } },
+  });
+  const prefixo = `${PREFIXO_ASAAS_EM_FECHAMENTO} (cobrança ${d.asaasPaymentId})`;
+  const quem = f ? `${f.empresaParceira.nome} — ${rotuloCompetencia(f.competencia)}` : `fechamento #${d.fechamentoId}`;
+  const avisados = await avisarAdmins([
+    {
+      prefixo,
+      mensagem:
+        `${prefixo}: parcela ${identificadorParcela(parcela.vendaId, parcela.numeroParcela, totalParcelas)} do ${quem}. ` +
+        "O boleto foi pago, mas a parcela está no Pix da empresa: confira antes de cobrar de novo (retire-a do fechamento ou devolva o valor).",
+      link: `/fechamento/${d.fechamentoId}`,
+    },
+  ]);
+  // Webhook repetido e sincronização diária passam aqui de novo: audita só o primeiro aviso.
+  if (avisados === 0) return;
+  await createAuditLog("parcela:asaas-em-fechamento", {
+    parcelaId: d.parcelaId,
+    vendaId: parcela.vendaId,
+    fechamentoId: d.fechamentoId,
+    asaasPaymentId: d.asaasPaymentId,
+    status,
+  });
+}
 
 /** "YYYY-MM-DD" do Asaas (ou hoje em Manaus) como data pura à meia-noite UTC, igual ao vencimento. */
 function dataPuraParaDate(valor: string | null): Date {
@@ -37,7 +77,10 @@ export async function aplicarPagamentoAsaas(pagamento: PagamentoAsaas): Promise<
     linhas.map((l) => ({ ...l, vendaStatus: l.venda.status })),
   );
 
-  if (decisao.acao === "baixar") {
+  if (decisao.acao === "alertar_reservada") {
+    const parcela = linhas.find((l) => l.id === decisao.parcelaId);
+    if (parcela) await alertarPagamentoEmFechamento(decisao, parcela, linhas.length, pagamento.status);
+  } else if (decisao.acao === "baixar") {
     const { count } = await prisma.parcelaVencimento.updateMany({
       // `fechamentoId: null`: a reserva feita entre a leitura e a gravação vence (Fase 5).
       where: { id: decisao.parcelaId, paga: false, fechamentoId: null },

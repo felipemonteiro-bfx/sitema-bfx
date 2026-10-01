@@ -59,6 +59,8 @@ function parcela(id: number, extra: Record<string, unknown> = {}) {
     venda: {
       id: 240,
       status: "ativa",
+      formaPagamento: "DESCONTO_FOLHA" as string | null,
+      descontoEmFolha: true as boolean | null,
       cliente: { nome: "ANA SOUZA", matricula: "0042", empresaParceiraId: 7 },
       _count: { parcelasVencimento: 4 },
       ...vendaExtra,
@@ -162,11 +164,43 @@ describe("gerarOuAtualizarFechamento", () => {
     });
   });
 
-  it("reserva de não antecipada exige paga: false no where (baixa concorrente)", async () => {
+  it("reserva de não antecipada exige paga: false e antecipacaoLoteId: null no where (baixa ou lote concorrente)", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1)]);
     await gerarOuAtualizarFechamento({ empresaParceiraId: 7, competencia: "2026-10", usuario: null });
     const reserva = dbMock.parcelaVencimento.updateMany.mock.calls.map((c) => c[0]).find((a) => a.data.fechamentoId === 11);
-    expect(reserva.where.OR).toEqual([{ antecipada: true }, { paga: false }]);
+    // Não antecipada com lote é lote em andamento (concluir marca antecipada; cancelar solta o lote):
+    // um lote aberto entre a leitura e a reserva derruba o count.
+    expect(reserva.where.OR).toEqual([{ antecipada: true }, { paga: false, antecipacaoLoteId: null }]);
+  });
+
+  it("busca só vendas em desconto em folha (mesma regra da fila), sem filtrar o status da venda", async () => {
+    await gerarOuAtualizarFechamento({ empresaParceiraId: 7, competencia: "2026-10", usuario: null });
+    const where = dbMock.parcelaVencimento.findMany.mock.calls[0][0].where;
+    expect(where.OR[0].venda).toEqual({
+      cliente: { empresaParceiraId: 7 },
+      OR: [{ formaPagamento: "DESCONTO_FOLHA" }, { formaPagamento: null, descontoEmFolha: true }],
+    });
+    // A cancelada continua aparecendo bloqueada como "venda inativa".
+    expect(JSON.stringify(where)).not.toContain("cancelada");
+  });
+
+  it("parcela reservada de venda que deixou de ser desconto em folha é solta e aparece bloqueada", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      parcela(1, { fechamentoId: 11, venda: { formaPagamento: "PIX", descontoEmFolha: false } }),
+      parcela(2, { venda: { formaPagamento: null, descontoEmFolha: false } }),
+      parcela(3, { venda: { formaPagamento: null, descontoEmFolha: true } }),
+    ]);
+    const r = await gerarOuAtualizarFechamento({ empresaParceiraId: 7, competencia: "2026-10", usuario: null });
+    const chamadas = dbMock.parcelaVencimento.updateMany.mock.calls.map((c) => c[0]);
+    expect(chamadas.find((a) => a.data.fechamentoId === null)).toEqual({
+      where: { id: { in: [1] }, fechamentoId: 11 },
+      data: { fechamentoId: null },
+    });
+    expect(chamadas.find((a) => a.data.fechamentoId === 11)?.where.id).toEqual({ in: [3] });
+    expect(r.bloqueadas).toEqual([
+      { parcelaId: 1, motivo: "forma_nao_folha" },
+      { parcelaId: 2, motivo: "forma_nao_folha" },
+    ]);
   });
 
   it("corrida: outra operação pegou parcela (count menor) → erro e a transação desfaz", async () => {

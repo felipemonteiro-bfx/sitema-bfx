@@ -35,6 +35,7 @@ import { sha256Hex } from "@/lib/arquivo-financeiro";
 import { regraVigente, type RegraEmpresaDados } from "@/lib/regra-empresa";
 import { regrasDaEmpresa } from "@/lib/regra-empresa-db";
 import { XLSX_MIME } from "@/lib/relatorio-mensal-xlsx";
+import { WHERE_VENDA_ANTECIPAVEL, vendaEhAntecipavel } from "@/lib/antecipacao";
 
 const ERRO_CORRIDA = "Outra operação pegou parcelas deste fechamento. Recarregue.";
 const ERRO_MUDOU = "Outra operação mudou este fechamento. Recarregue.";
@@ -61,6 +62,8 @@ export const SELECT_PARCELA = {
     select: {
       id: true,
       status: true,
+      formaPagamento: true,
+      descontoEmFolha: true,
       cliente: { select: { nome: true, matricula: true, empresaParceiraId: true } },
       _count: { select: { parcelasVencimento: true } },
     },
@@ -85,6 +88,8 @@ export type ParcelaLida = {
   venda: {
     id: number;
     status: string;
+    formaPagamento: string | null;
+    descontoEmFolha: boolean | null;
     cliente: { nome: string; matricula: string | null; empresaParceiraId: number | null } | null;
     _count: { parcelasVencimento: number };
   };
@@ -94,6 +99,8 @@ export function paraRegra(p: ParcelaLida): ParcelaParaFechamento {
   return {
     id: p.id,
     vendaStatus: p.venda.status,
+    // Sem o status: cancelada/estornada já sai como "venda inativa".
+    vendaEmFolha: vendaEhAntecipavel({ formaPagamento: p.venda.formaPagamento, descontoEmFolha: p.venda.descontoEmFolha }),
     liquidadaEm: p.liquidadaEm,
     fechamentoId: p.fechamentoId,
     confirmacaoRh: p.confirmacaoRh,
@@ -103,6 +110,23 @@ export function paraRegra(p: ParcelaLida): ParcelaParaFechamento {
     loteStatus: p.antecipacaoLote?.status ?? null,
     boletoDirecionamento: p.boletoPrudent?.direcionamento ?? null,
     empresaParceiraId: p.venda.cliente?.empresaParceiraId ?? null,
+  };
+}
+
+/**
+ * Busca do fechamento: parcelas da empresa que vencem na competência, só de venda em desconto em
+ * folha (a forma de `WHERE_VENDA_ANTECIPAVEL`, a mesma da fila da Prudent; o status não é filtrado,
+ * a cancelada aparece bloqueada), mais as já reservadas neste fechamento (para soltar as que saíram).
+ */
+export function whereParcelasDoFechamento(empresaParceiraId: number, inicio: Date, fim: Date, fechamentoId: number) {
+  return {
+    OR: [
+      {
+        dataVencimento: { gte: inicio, lt: fim },
+        venda: { cliente: { empresaParceiraId }, OR: WHERE_VENDA_ANTECIPAVEL.OR },
+      },
+      { fechamentoId },
+    ],
   };
 }
 
@@ -172,12 +196,7 @@ export async function gerarOuAtualizarFechamento(e: {
     if (trava.count !== 1) throw new Error(ERRO_MUDOU);
 
     const parcelas = (await tx.parcelaVencimento.findMany({
-      where: {
-        OR: [
-          { dataVencimento: { gte: inicio, lt: fim }, venda: { cliente: { empresaParceiraId: e.empresaParceiraId } } },
-          { fechamentoId: fechamento.id },
-        ],
-      },
+      where: whereParcelasDoFechamento(e.empresaParceiraId, inicio, fim, fechamento.id),
       select: SELECT_PARCELA,
       orderBy: [{ vendaId: "asc" }, { numeroParcela: "asc" }],
     })) as ParcelaLida[];
@@ -210,14 +229,16 @@ export async function gerarOuAtualizarFechamento(e: {
       });
     }
     if (reservar.length > 0) {
-      // `fechamentoId: null` + `liquidadaEm: null` + (antecipada ou não paga): a parcela continua
-      // como foi lida — outro fechamento, baixa ou liquidação no meio derruba o count.
+      // `fechamentoId: null` + `liquidadaEm: null` + (antecipada, ou não paga e sem lote): a parcela
+      // continua como foi lida — outro fechamento, baixa, liquidação ou lote aberto no meio derruba o
+      // count. Não antecipada com lote é sempre lote em andamento (concluir marca `antecipada`;
+      // cancelar solta o lote); a antecipada mantém o lote concluído e continua reservável.
       const r = await tx.parcelaVencimento.updateMany({
         where: {
           id: { in: reservar },
           fechamentoId: null,
           liquidadaEm: null,
-          OR: [{ antecipada: true }, { paga: false }],
+          OR: [{ antecipada: true }, { paga: false, antecipacaoLoteId: null }],
         },
         data: { fechamentoId: fechamento.id },
       });

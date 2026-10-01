@@ -99,8 +99,25 @@ describe("decidirBaixaAsaas — nao mexe", () => {
   });
 
   // Fase 5 (spec §5.1): parcela reservada num fechamento só é liquidada pelo fechamento.
-  it("parcela reservada num fechamento: ignora, paga ou estornada", () => {
+  it("parcela reservada num fechamento: cobrança paga não baixa, pede alerta aos admins", () => {
     expect(decidirBaixaAsaas(pagamento(), [parcela({ fechamentoId: 11 })])).toEqual({
+      acao: "alertar_reservada",
+      parcelaId: 100,
+      fechamentoId: 11,
+      asaasPaymentId: "pay_abc",
+    });
+    expect(decidirBaixaAsaas(pagamento({ status: "CONFIRMED" }), [parcela({ fechamentoId: 11 })])).toMatchObject({
+      acao: "alertar_reservada",
+    });
+    // Cobrança apagada no Asaas não é dinheiro: só ignora.
+    expect(decidirBaixaAsaas(pagamento({ deleted: true }), [parcela({ fechamentoId: 11 })])).toEqual({
+      acao: "ignorar",
+      motivo: "reservada_no_fechamento",
+    });
+  });
+
+  it("parcela reservada num fechamento: estornada ou pendente, ignora", () => {
+    expect(decidirBaixaAsaas(pagamento({ status: "PENDING" }), [parcela({ fechamentoId: 11 })])).toEqual({
       acao: "ignorar",
       motivo: "reservada_no_fechamento",
     });

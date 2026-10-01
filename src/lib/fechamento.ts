@@ -67,6 +67,8 @@ export function identificadorParcela(vendaId: number, numero: number, total: num
 export type ParcelaParaFechamento = {
   id: number;
   vendaStatus: string;
+  /** A venda é desconto em folha (`vendaEhAntecipavel` sem olhar o status)? Só ela entra no Pix. */
+  vendaEmFolha: boolean;
   liquidadaEm: Date | null;
   fechamentoId: number | null;
   confirmacaoRh: string | null;
@@ -80,6 +82,7 @@ export type ParcelaParaFechamento = {
 
 export type MotivoBloqueio =
   | "venda_inativa"
+  | "forma_nao_folha"
   | "ja_liquidada"
   | "em_outro_fechamento"
   | "recusada_rh"
@@ -90,6 +93,7 @@ export type MotivoBloqueio =
 
 export const ROTULO_MOTIVO: Record<MotivoBloqueio, string> = {
   venda_inativa: "Venda cancelada ou estornada",
+  forma_nao_folha: "Venda não é desconto em folha",
   ja_liquidada: "Já paga no fechamento",
   em_outro_fechamento: "Em outro fechamento",
   recusada_rh: "Recusada pelo RH",
@@ -108,6 +112,8 @@ export function elegibilidadeFechamento(
   fechamentoId: number | null
 ): { ok: true } | { ok: false; motivo: MotivoBloqueio } {
   if (p.vendaStatus !== "ativa") return { ok: false, motivo: "venda_inativa" };
+  // Pix, cartão ou boleto: o cliente paga direto; cobrar no Pix da empresa seria cobrar duas vezes.
+  if (!p.vendaEmFolha) return { ok: false, motivo: "forma_nao_folha" };
   if (p.liquidadaEm !== null) return { ok: false, motivo: "ja_liquidada" };
   if (p.fechamentoId !== null && p.fechamentoId !== fechamentoId) return { ok: false, motivo: "em_outro_fechamento" };
   if (p.confirmacaoRh === "recusada") return { ok: false, motivo: "recusada_rh" };
