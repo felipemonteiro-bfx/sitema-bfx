@@ -246,6 +246,16 @@ model ParcelaVencimento {
   antecipacaoLoteId Int?   @map("antecipacao_lote_id")
   asaasPaymentId  String?  @unique @map("asaas_payment_id") // cobrança do Asaas que quitou a parcela
   baixaPor        String?  @map("baixa_por") // usuário da baixa manual
+  // Confirmação do RH (2026-09-30, Fase 3). `enviadaRhEm` é a primeira vez que a parcela saiu no
+  // consolidado semanal. `confirmacaoRh` nulo = aguardando; "confirmada" | "recusada".
+  // `confirmacaoOrigem`: "rh" (registrada pela BFX) | "legado" (parcela anterior à Fase 3).
+  // Só parcela confirmada entra na fila da Prudent.
+  enviadaRhEm       DateTime? @map("enviada_rh_em")
+  confirmacaoRh     String?   @map("confirmacao_rh")
+  confirmacaoOrigem String?   @map("confirmacao_origem")
+  confirmacaoEm     DateTime? @map("confirmacao_em")
+  confirmacaoPor    String?   @map("confirmacao_por")
+  confirmacaoMotivo String?   @map("confirmacao_motivo")
 
   venda           Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
   antecipacaoLote AnticipacaoBatch? @relation(fields: [antecipacaoLoteId], references: [id], onDelete: SetNull)
@@ -255,6 +265,7 @@ model ParcelaVencimento {
   @@index([vendaId])
   @@index([dataVencimento])
   @@index([antecipacaoLoteId])
+  @@index([confirmacaoRh])
 }
 
 model Config {
@@ -613,6 +624,15 @@ model AnticipacaoBatch {
   concluidaEm       DateTime? @map("concluida_em")
   concluidaPor      String?   @map("concluida_por")
   observacao        String?
+  // Valores do lote (2026-09-30, Fase 3). Sem FK para a empresa: lote antigo não tem.
+  empresaParceiraId      Int?      @map("empresa_parceira_id")
+  taxaMensal             Float?    @map("taxa_mensal")
+  valorLiquidoSolicitado Float?    @map("valor_liquido_solicitado")
+  valorAprovado          Float?    @map("valor_aprovado")
+  valorDepositado        Float?    @map("valor_depositado")
+  dataDepositoPrevista   DateTime? @map("data_deposito_prevista")
+  dataDeposito           DateTime? @map("data_deposito")
+  comprovanteKey         String?   @map("comprovante_key")
 
   parcelas          ParcelaVencimento[]
 
