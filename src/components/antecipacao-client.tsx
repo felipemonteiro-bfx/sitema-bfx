@@ -56,7 +56,44 @@ interface Venda {
 }
 
 /** Resposta do envio à Prudent (`antecipar` em prudent/page.tsx). */
-type RespostaAntecipar = { ok: true; parcelas: number } | { ok: false; erro: string };
+type RespostaAntecipar = { ok: true; parcelas: number; loteId: number } | { ok: false; erro: string };
+
+/**
+ * Baixa o CSV da Prudent a partir do lote já gravado: o arquivo lista exatamente as parcelas do
+ * lote. Devolve false se falhar (o lote continua aberto; a tela oferece tentar de novo).
+ */
+async function baixarCsvDoLote(loteId: number): Promise<boolean> {
+  try {
+    const resposta = await fetch(`/api/relatorios/antecipacao?loteId=${loteId}`);
+    if (!resposta.ok) return false;
+    const blob = await resposta.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio-financeira-lote-${loteId}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function avisarCsvFalhou(loteId: number) {
+  toast.error(`Lote #${loteId} aberto, mas o arquivo da Prudent não baixou.`, {
+    duration: Infinity,
+    action: {
+      label: 'Baixar de novo',
+      onClick: () => {
+        void baixarCsvDoLote(loteId).then((ok) => {
+          if (!ok) avisarCsvFalhou(loteId);
+        });
+      },
+    },
+  });
+}
 
 interface Props {
   vendasIniciais: Venda[];
@@ -310,44 +347,19 @@ export default function AntecipacaoClient({
 
     setIsProcessing(true);
     try {
-      // 1. Gerar e baixar o relatório para a financeira.
-      // O CSV agora so lista parcelas com `antecipada = false`, entao ele tem de
-      // ser lido ANTES da gravacao. O `setTimeout` de 1s que existia aqui nao era
-      // barreira nenhuma: se a requisicao chegasse depois do updateMany, a
-      // financeira recebia um arquivo vazio.
-      const idsParam = selectedIds.join(',');
-      const xlsxParams = new URLSearchParams({ ids: idsParam });
-      if (periodoInicio) xlsxParams.set('mesInicio', periodoInicio);
-      if (periodoFim) xlsxParams.set('mesFim', periodoFim);
-      // A mesma exclusão vai ao CSV e ao lote: os dois listam as mesmas parcelas.
-      if (excluidas.length > 0) xlsxParams.set('excluir', excluidas.join(','));
-
-      const resposta = await fetch(`/api/relatorios/antecipacao?${xlsxParams.toString()}`);
-      if (!resposta.ok) {
-        toast.error("Não foi possível gerar o relatório da financeira. A antecipação não foi executada.");
-        return;
-      }
-      const blob = await resposta.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `relatorio-financeira-${Date.now()}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-
-      // 2. Executar a antecipação no banco
+      // 1. Abrir o lote no banco. 2. Baixar o arquivo da Prudent a partir do lote gravado
+      // (30/09): antes o CSV era gerado da seleção ANTES de gravar, e uma recusa do RH, outra aba
+      // ou parcela desmarcada no meio fazia o arquivo divergir do lote.
       selectedIds.forEach(id => formData.append('id', id.toString()));
       excluidas.forEach(id => formData.append('excluir', id.toString()));
       if (periodoInicio) formData.append('mesInicio', periodoInicio);
       if (periodoFim) formData.append('mesFim', periodoFim);
       const r = await onSubmit(formData);
       if (!r.ok) {
-        // O CSV já foi baixado (ele é lido antes de gravar): sem lote, o arquivo não vale.
-        toast.error(`${r.erro} O lote não foi aberto — descarte o arquivo baixado.`);
+        toast.error(`${r.erro} O lote não foi aberto.`);
         return;
       }
+      if (!(await baixarCsvDoLote(r.loteId))) avisarCsvFalhou(r.loteId);
       toast.success(`Lote enviado à Prudent: ${r.parcelas} ${r.parcelas === 1 ? 'parcela' : 'parcelas'}.`);
       setSelectedIds([]);
       setExcluidas([]);

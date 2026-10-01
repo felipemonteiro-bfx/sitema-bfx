@@ -13,37 +13,54 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Somente administradores geram o relatório de antecipação." }, { status: 403 });
   }
   const { searchParams } = new URL(request.url);
-  const idsStr = searchParams.get("ids");
 
-  if (!idsStr) {
-    return NextResponse.json({ error: "Nenhum ID fornecido" }, { status: 400 });
+  // Desde 30/09 a fila baixa o arquivo DEPOIS de abrir o lote, pelo id dele: o arquivo lista
+  // exatamente as parcelas gravadas no lote (recusa do RH ou outra aba no meio não fazem divergir).
+  const loteTxt = searchParams.get("loteId");
+  let ids: number[];
+  let idsDoLote: number[];
+  if (loteTxt !== null) {
+    const loteId = Number(loteTxt);
+    if (!Number.isInteger(loteId) || loteId <= 0) {
+      return NextResponse.json({ error: "Lote inválido" }, { status: 400 });
+    }
+    const doLote = await prisma.parcelaVencimento.findMany({
+      where: { antecipacaoLoteId: loteId },
+      select: { id: true, vendaId: true },
+    });
+    if (doLote.length === 0) return NextResponse.json({ error: "Lote sem parcelas" }, { status: 404 });
+    ids = [...new Set(doLote.map((p) => p.vendaId))];
+    idsDoLote = doLote.map((p) => p.id);
+  } else {
+    const idsStr = searchParams.get("ids");
+    if (!idsStr) {
+      return NextResponse.json({ error: "Nenhum ID fornecido" }, { status: 400 });
+    }
+    // Descartar lixo, como fazem as outras duas rotas: `?ids=abc` viraria `in: [NaN]`.
+    ids = idsStr.split(",").map(Number).filter((n) => !isNaN(n));
+    if (ids.length === 0) {
+      return NextResponse.json({ error: "IDs inválidos" }, { status: 400 });
+    }
+
+    // Este CSV e o que vai para a financeira, e precisa descrever o mesmo lote que a
+    // server action grava: so parcelas ainda nao antecipadas, dentro do periodo
+    // pedido, de vendas em desconto em folha. Antes ele somava a venda inteira e
+    // ignorava o periodo, entao divergia do valor mostrado na tela.
+    const periodo = parsePeriodoMesAno(searchParams.get("mesInicio"), searchParams.get("mesFim"));
+    // Parcelas desmarcadas na fila (2026-09-30): `excluir=1,2,3`, o mesmo que a action recebe.
+    const excluirParcelaIds = idsValidos((searchParams.get("excluir") ?? "").split(",").filter(Boolean));
+    try {
+      // Mesma função que `abrirLote` usa para gravar o lote: só parcela confirmada pelo RH, livre,
+      // no período e fora da exclusão.
+      const parcelasDoLote = await resolverParcelasDoLote(prisma, { vendaIds: ids, periodo, excluirParcelaIds });
+      idsDoLote = parcelasDoLote.map((p) => p.id);
+    } catch (error) {
+      console.error("Erro ao gerar relatório de antecipação:", error);
+      return NextResponse.json({ error: "Erro ao gerar relatório." }, { status: 500 });
+    }
   }
-
-  // Descartar lixo, como fazem as outras duas rotas: `?ids=abc` viraria `in: [NaN]`.
-  const ids = idsStr.split(",").map(Number).filter((n) => !isNaN(n));
-
-  if (ids.length === 0) {
-    return NextResponse.json({ error: "IDs inválidos" }, { status: 400 });
-  }
-
-  // Este CSV e o que vai para a financeira, e precisa descrever o mesmo lote que a
-  // server action grava: so parcelas ainda nao antecipadas, dentro do periodo
-  // pedido, de vendas em desconto em folha. Antes ele somava a venda inteira e
-  // ignorava o periodo, entao divergia do valor mostrado na tela.
-  const periodo = parsePeriodoMesAno(
-    searchParams.get("mesInicio"),
-    searchParams.get("mesFim")
-  );
-
-  // Parcelas desmarcadas na fila (2026-09-30): `excluir=1,2,3`, o mesmo que a action recebe.
-  const excluirParcelaIds = idsValidos((searchParams.get("excluir") ?? "").split(",").filter(Boolean));
 
   try {
-    // Mesma função que `abrirLote` usa para gravar o lote: só parcela confirmada pelo RH, livre,
-    // no período e fora da exclusão. Assim o arquivo e o lote listam as mesmas parcelas.
-    const parcelasDoLote = await resolverParcelasDoLote(prisma, { vendaIds: ids, periodo, excluirParcelaIds });
-    const idsDoLote = parcelasDoLote.map((p) => p.id);
-
     const vendas = await prisma.venda.findMany({
       where: { id: { in: ids }, ...WHERE_VENDA_ANTECIPAVEL },
       include: {

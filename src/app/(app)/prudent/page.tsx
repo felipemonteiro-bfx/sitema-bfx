@@ -25,7 +25,7 @@ import { QueryTabs } from "@/components/query-tabs";
 
 export const dynamic = "force-dynamic";
 
-type RespostaAntecipar = { ok: true; parcelas: number } | { ok: false; erro: string };
+type RespostaAntecipar = { ok: true; parcelas: number; loteId: number } | { ok: false; erro: string };
 
 async function antecipar(formData: FormData): Promise<RespostaAntecipar> {
   "use server";
@@ -58,7 +58,7 @@ async function antecipar(formData: FormData): Promise<RespostaAntecipar> {
   if (!lote) return { ok: false, erro: "Nenhuma parcela confirmada na seleção." };
 
   revalidarVenda();
-  return { ok: true, parcelas: lote.parcelas };
+  return { ok: true, parcelas: lote.parcelas, loteId: lote.loteId };
 }
 
 export default async function Page() {
