@@ -28,6 +28,7 @@ export async function aplicarPagamentoAsaas(pagamento: PagamentoAsaas): Promise<
       paga: true,
       origemPagamento: true,
       asaasPaymentId: true,
+      fechamentoId: true,
       venda: { select: { status: true } },
     },
   });
@@ -38,7 +39,8 @@ export async function aplicarPagamentoAsaas(pagamento: PagamentoAsaas): Promise<
 
   if (decisao.acao === "baixar") {
     const { count } = await prisma.parcelaVencimento.updateMany({
-      where: { id: decisao.parcelaId, paga: false },
+      // `fechamentoId: null`: a reserva feita entre a leitura e a gravação vence (Fase 5).
+      where: { id: decisao.parcelaId, paga: false, fechamentoId: null },
       data: {
         paga: true,
         dataPagamento: dataPuraParaDate(decisao.dataPagamento),
@@ -58,7 +60,7 @@ export async function aplicarPagamentoAsaas(pagamento: PagamentoAsaas): Promise<
     }
   } else if (decisao.acao === "desfazer") {
     const { count } = await prisma.parcelaVencimento.updateMany({
-      where: { id: decisao.parcelaId, paga: true, origemPagamento: "asaas", asaasPaymentId: pagamento.id },
+      where: { id: decisao.parcelaId, paga: true, origemPagamento: "asaas", asaasPaymentId: pagamento.id, fechamentoId: null },
       data: { paga: false, dataPagamento: null, origemPagamento: null, asaasPaymentId: null, baixaPor: null },
     });
     if (count > 0) {

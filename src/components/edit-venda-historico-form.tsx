@@ -70,7 +70,7 @@ type Props = {
   recebimento?: { parcelas: ParcelaRecebimento[]; hoje: string; podeDarBaixa: boolean };
   vendedores: { nomeExibicao: string | null; username: string }[];
   updateAction: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
-  deleteAction: (formData: FormData) => Promise<void>;
+  deleteAction: (formData: FormData) => Promise<{ success: boolean; error?: string } | void>;
   gerarBoletoAction: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
 };
 

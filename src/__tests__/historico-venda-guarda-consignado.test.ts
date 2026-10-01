@@ -11,6 +11,7 @@ const dbMock = {
   produto: { updateMany: vi.fn() },
   assinatura: { deleteMany: vi.fn() },
   documento: { deleteMany: vi.fn() },
+  parcelaVencimento: { findMany: vi.fn(async () => []) },
 };
 const guardsMock = { requireSessionOrThrow: vi.fn(), requireAdminOrThrow: vi.fn() };
 const consignadoMock = { recalcularConsignadoSeguro: vi.fn() };

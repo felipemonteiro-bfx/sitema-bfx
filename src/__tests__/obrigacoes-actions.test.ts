@@ -7,7 +7,7 @@ import { linhaBancariaDeCodigoBarras, modulo11Bancario } from "@/lib/linha-digit
 const dbMock = {
   boletoPrudent: { findUnique: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn(), create: vi.fn() },
   boletoPagamento: { findUnique: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
-  parcelaVencimento: { updateMany: vi.fn() },
+  parcelaVencimento: { updateMany: vi.fn(), findFirst: vi.fn() },
   arquivoFinanceiro: { create: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
 };
@@ -76,6 +76,7 @@ beforeEach(() => {
   dbMock.boletoPagamento.create.mockResolvedValue({ id: 50 });
   dbMock.boletoPagamento.updateMany.mockResolvedValue({ count: 1 });
   dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 2 });
+  dbMock.parcelaVencimento.findFirst.mockResolvedValue(null);
   dbMock.arquivoFinanceiro.create.mockResolvedValue({ id: 77, sha256: "x" });
 });
 
@@ -421,6 +422,39 @@ describe("alterarDirecionamento", () => {
       "obrigacoes:direcionamento",
       expect.objectContaining({ boletoId: 10, destino: "bfx" })
     );
+  });
+
+  // Fase 5 (spec §3.4): bfx → empresa só se nenhuma parcela do boleto estiver em fechamento
+  // conferido ou posterior — senão a empresa pagaria a parcela à Prudent e no Pix.
+  it("bfx → empresa com parcela em fechamento conferido: recusa sem gravar", async () => {
+    dbMock.parcelaVencimento.findFirst.mockResolvedValue({
+      vendaId: 240,
+      numeroParcela: 3,
+      fechamento: { status: "conferido", competencia: "2026-10" },
+    });
+    const r = await alterarDirecionamento(10, "empresa");
+    expect(r).toEqual({
+      ok: false,
+      erro: "Parcela deste boleto está no fechamento de outubro de 2026 (Conferido). Reabra o fechamento antes de devolver o boleto à empresa.",
+    });
+    expect(dbMock.parcelaVencimento.findFirst.mock.calls[0][0].where).toEqual({
+      boletoPrudentId: 10,
+      fechamento: { status: { not: "em_preparacao" } },
+    });
+    expect(dbMock.boletoPrudent.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("bfx → empresa: a trava também vai no where (fechamento conferido no meio)", async () => {
+    expect(await alterarDirecionamento(10, "empresa")).toEqual({ ok: true });
+    expect(dbMock.boletoPrudent.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 10,
+        status: { notIn: ["substituido", "cancelado"] },
+        direcionamento: { not: "empresa" },
+        parcelas: { none: { fechamento: { status: { not: "em_preparacao" } } } },
+      },
+      data: { direcionamento: "empresa" },
+    });
   });
 
   it("destino invalido e recusado; nada mudou → erro", async () => {

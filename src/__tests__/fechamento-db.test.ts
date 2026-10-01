@@ -288,9 +288,10 @@ describe("conferirFechamento", () => {
     const r = await conferirFechamento({ fechamentoId: 11, usuario: "andre" });
 
     expect(r).toEqual({ versao: 1 });
-    // trava: status e versão atual no where
+    // trava: status, versão atual e "não desatualizado" no where — a edição de venda que soltou
+    // reserva no meio marca desatualizado e derruba a conferência
     expect(dbMock.fechamento.updateMany).toHaveBeenCalledWith({
-      where: { id: 11, status: "em_preparacao", versaoAtual: 0 },
+      where: { id: 11, status: "em_preparacao", versaoAtual: 0, desatualizado: false },
       data: { status: "conferido", versaoAtual: 1, desatualizado: false },
     });
     const arq = dbMock.arquivoFinanceiro.create.mock.calls[0][0].data;

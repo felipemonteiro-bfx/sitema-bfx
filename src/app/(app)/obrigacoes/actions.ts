@@ -9,6 +9,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { ROTULO_STATUS_FECHAMENTO, STATUS_FECHAMENTO, rotuloCompetencia } from "@/lib/fechamento";
 import { requireAdminOrThrow } from "@/lib/guards";
 import { createAuditLog } from "@/lib/audit";
 import { hojeDataPura } from "@/lib/data-pura";
@@ -457,8 +458,33 @@ export async function alterarDirecionamento(boletoId: number, destino: "empresa"
   const erro = "Boleto não encontrado, já com esse direcionamento ou fora de uso.";
   if (!id) return { ok: false, erro };
 
+  // Fase 5 (spec §3.4): devolver à empresa um boleto com parcela em fechamento conferido ou
+  // posterior faria a empresa pagar a parcela duas vezes (Prudent e Pix). A leitura dá a
+  // mensagem; a mesma condição no where vale contra a conferência em paralelo.
+  const emFechamentoTravado = { fechamento: { status: { not: STATUS_FECHAMENTO.emPreparacao } } };
+  if (destino === DIRECIONAMENTO.empresa) {
+    const travada = await prisma.parcelaVencimento.findFirst({
+      where: { boletoPrudentId: id, ...emFechamentoTravado },
+      select: { vendaId: true, numeroParcela: true, fechamento: { select: { status: true, competencia: true } } },
+    });
+    if (travada?.fechamento) {
+      const status = ROTULO_STATUS_FECHAMENTO[travada.fechamento.status] ?? travada.fechamento.status;
+      return {
+        ok: false,
+        erro:
+          `Parcela deste boleto está no fechamento de ${rotuloCompetencia(travada.fechamento.competencia)} (${status}). ` +
+          "Reabra o fechamento antes de devolver o boleto à empresa.",
+      };
+    }
+  }
+
   const { count } = await prisma.boletoPrudent.updateMany({
-    where: { id, status: { notIn: MORTO }, direcionamento: { not: destino } },
+    where: {
+      id,
+      status: { notIn: MORTO },
+      direcionamento: { not: destino },
+      ...(destino === DIRECIONAMENTO.empresa ? { parcelas: { none: emFechamentoTravado } } : {}),
+    },
     data: { direcionamento: destino },
   });
   if (count === 0) return { ok: false, erro };

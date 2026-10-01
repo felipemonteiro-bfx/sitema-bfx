@@ -18,7 +18,7 @@ import { useState } from "react";
 
 interface Props {
   vendaId: number;
-  deleteAction: (formData: FormData) => Promise<void>;
+  deleteAction: (formData: FormData) => Promise<{ success: boolean; error?: string } | void>;
 }
 
 export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
@@ -29,7 +29,12 @@ export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
     try {
       const formData = new FormData();
       formData.append('id', vendaId.toString());
-      await deleteAction(formData);
+      const r = await deleteAction(formData);
+      // Recusa com motivo (fechamento conferido, boleto Prudent): a venda continua lá.
+      if (r && !r.success) {
+        toast.error(r.error ?? "Erro ao excluir venda. Tente novamente.");
+        return;
+      }
       toast.success("Venda excluida com sucesso.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";

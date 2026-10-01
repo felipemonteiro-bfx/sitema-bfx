@@ -29,6 +29,8 @@ export type ParcelaParaBaixa = {
   origemPagamento: string | null;
   asaasPaymentId: string | null;
   vendaStatus: string;
+  /** Reserva do fechamento mensal (Fase 5): parcela reservada só é liquidada pelo fechamento. */
+  fechamentoId: number | null;
 };
 
 export type DecisaoBaixaAsaas =
@@ -68,6 +70,7 @@ export function decidirBaixaAsaas(pagamento: PagamentoAsaas, parcelas: ParcelaPa
   if (candidatas.length > 1) return { acao: "ignorar", motivo: "parcela_ambigua" };
   const parcela = candidatas[0];
   if (parcela.vendaStatus !== "ativa") return { acao: "ignorar", motivo: "venda_inativa" };
+  if (parcela.fechamentoId != null) return { acao: "ignorar", motivo: "reservada_no_fechamento" };
 
   const baixadaPorOutraOrigem = parcela.paga && parcela.origemPagamento !== "asaas";
   const baixadaPorEstaCobranca =

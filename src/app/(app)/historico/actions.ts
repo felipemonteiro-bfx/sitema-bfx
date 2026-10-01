@@ -19,6 +19,13 @@ import { numerosDeParcelaRepetidos, parcelaUnicaDaFolha, valorParcelaAposEdicao 
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import type { RegraVencimento } from "@/lib/regra-empresa";
 import { flagDaVenda } from "@/lib/lote-antecipacao";
+import { STATUS_FECHAMENTO } from "@/lib/fechamento";
+import {
+  avaliarEdicaoDeParcelas,
+  avaliarExclusaoDeVenda,
+  type FechamentoDaParcela,
+  type ParcelaNova,
+} from "@/lib/fechamento-reserva";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
 import { produtoItemSchema } from "@/lib/validations/venda";
@@ -212,6 +219,10 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       confirmacaoMotivo?: string | null;
       /** Boleto Prudent da parcela antecipada (2026-09-30, Fase 4). */
       boletoPrudentId?: number | null;
+      /** Reserva e liquidação do fechamento mensal (2026-09-30, Fase 5). */
+      fechamentoId?: number | null;
+      liquidadaEm?: Date | null;
+      fechamento?: FechamentoDaParcela | null;
     };
     let parcelasExistentes: ParcelaExistente[] = [];
     // Ligado quando a venda vira pagamento unico sem payload de parcelas (CR-01).
@@ -237,6 +248,9 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           confirmacaoPor: true,
           confirmacaoMotivo: true,
           boletoPrudentId: true,
+          fechamentoId: true,
+          liquidadaEm: true,
+          fechamento: { select: { id: true, status: true, competencia: true } },
         },
       });
     } catch {
@@ -264,6 +278,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           confirmacaoPor: p.confirmacaoPor ?? null,
           confirmacaoMotivo: p.confirmacaoMotivo ?? null,
           boletoPrudentId: p.boletoPrudentId ?? null,
+          liquidadaEm: p.liquidadaEm ?? null,
         },
       ])
     );
@@ -404,6 +419,39 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         };
       }
     }
+
+    // Fechamento mensal e boleto Prudent (2026-09-30, Fase 5; spec §3.2), antes de qualquer
+    // escrita: parcela com boleto não muda valor/vencimento; parcela em fechamento conferido (ou
+    // posterior) não muda nem some; em preparação, a que muda solta a reserva e o fechamento fica
+    // desatualizado. `null` = a edição não mexe nas linhas.
+    const novasParcelas: ParcelaNova[] | null =
+      parcelasForm.length > 0
+        ? parcelasForm.map((p) => ({
+            numeroParcela: p.numeroParcela,
+            dataVencimento: new Date(p.dataVencimento),
+            valorParcela: Number(p.valorParcela),
+          }))
+        : linhasUnicas && (linhasUnicas.length > 0 || parcelasExistentes.length > 0)
+          ? linhasUnicas
+          : limparParcelasSemPayload
+            ? []
+            : null;
+    const reserva = avaliarEdicaoDeParcelas(id, parcelasExistentes, novasParcelas);
+    if (!reserva.ok) return { success: false, error: reserva.erro };
+    if (reserva.fechamentosDesatualizados.length > 0) {
+      // O status no where trava contra a conferência em paralelo: conferido no meio → recusa.
+      const { count } = await prisma.fechamento.updateMany({
+        where: { id: { in: reserva.fechamentosDesatualizados }, status: STATUS_FECHAMENTO.emPreparacao },
+        data: { desatualizado: true },
+      });
+      if (count !== reserva.fechamentosDesatualizados.length) {
+        return { success: false, error: "O fechamento mudou enquanto você editava. Recarregue e tente de novo." };
+      }
+    }
+    const camposDoFechamento = (numeroParcela: number, existente: ReturnType<typeof pagasMap.get>) => ({
+      fechamentoId: reserva.reservaPreservada.get(numeroParcela) ?? null,
+      liquidadaEm: existente?.liquidadaEm ?? null,
+    });
 
     const vendedorTexto = String(formData.get("vendedor") || "");
     const vendedorUser = vendedorTexto ? await prisma.usuario.findFirst({
@@ -547,6 +595,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
               // O boleto Prudent acompanha a antecipação: sem ele o boleto ficava sem parcela.
               boletoPrudentId: existente?.boletoPrudentId ?? null,
               ...camposDoRh(existente),
+              ...camposDoFechamento(p.numeroParcela, existente),
             };
           }),
         });
@@ -577,6 +626,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
                 baixaPor: existente?.baixaPor ?? null,
                 boletoPrudentId: existente?.boletoPrudentId ?? null,
                 ...camposDoRh(existente),
+                ...camposDoFechamento(p.numeroParcela, existente),
               };
             }),
           });
@@ -640,14 +690,40 @@ export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: bo
   }
 }
 
-export async function deleteVenda(formData: FormData): Promise<void> {
+export async function deleteVenda(formData: FormData): Promise<{ success: boolean; error?: string }> {
   await requireSessionOrThrow();
   const id = Number(formData.get("id") || 0);
-  if (!id) return;
+  if (!id) return { success: false, error: "Venda inválida." };
 
   try {
     // O cliente sai da venda junto com ela: guardar antes para recalcular a faixa depois.
     const venda = await prisma.venda.findUnique({ where: { id }, select: { clienteId: true } });
+
+    // Fechamento mensal e boleto Prudent (2026-09-30, Fase 5): parcela com boleto, ou em
+    // fechamento conferido/enviado, segura a venda. Em preparação, o fechamento fica desatualizado
+    // antes de apagar — o status no where trava contra a conferência em paralelo.
+    const parcelas = await prisma.parcelaVencimento.findMany({
+      where: { vendaId: id },
+      select: {
+        numeroParcela: true,
+        dataVencimento: true,
+        valorParcela: true,
+        boletoPrudentId: true,
+        fechamentoId: true,
+        fechamento: { select: { id: true, status: true, competencia: true } },
+      },
+    });
+    const reserva = avaliarExclusaoDeVenda(id, parcelas);
+    if (!reserva.ok) return { success: false, error: reserva.erro };
+    if (reserva.fechamentosDesatualizados.length > 0) {
+      const { count } = await prisma.fechamento.updateMany({
+        where: { id: { in: reserva.fechamentosDesatualizados }, status: STATUS_FECHAMENTO.emPreparacao },
+        data: { desatualizado: true },
+      });
+      if (count !== reserva.fechamentosDesatualizados.length) {
+        return { success: false, error: "O fechamento mudou enquanto você excluía. Recarregue e tente de novo." };
+      }
+    }
 
     // Restaurar estoque antes de deletar
     const itens = await prisma.itemVenda.findMany({
@@ -669,6 +745,7 @@ export async function deleteVenda(formData: FormData): Promise<void> {
     await createAuditLog("venda:delete", { vendaId: id });
     await recalcularConsignadoSeguro(venda?.clienteId);
     revalidarVenda();
+    return { success: true };
   } catch (err) {
     console.error("Erro ao excluir venda:", err);
     throw new Error("Erro ao excluir venda. Tente novamente.");

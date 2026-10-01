@@ -5,6 +5,7 @@ import { requireAdminOrThrow } from "@/lib/guards";
 import { createAuditLog } from "@/lib/audit";
 import { revalidarVenda } from "@/lib/revalidacao";
 import { hojeDataPura } from "@/lib/data-pura";
+import { mensagemParcelaNoFechamento } from "@/lib/fechamento";
 
 type Resultado = { success: boolean; error?: string; count?: number };
 
@@ -35,8 +36,9 @@ export async function darBaixaParcela(formData: FormData): Promise<Resultado> {
 
   // Parcela num lote enviado à Prudent tem dono: a baixa dela é a conclusão do lote, no histórico.
   // Sem esta recusa ela terminaria "antecipada" com origem "manual", mentindo sobre quem pagou.
+  // Fase 5: parcela reservada num fechamento só é liquidada por ele (`fechamentoId: null`).
   const { count } = await prisma.parcelaVencimento.updateMany({
-    where: { id: parcelaId, paga: false, antecipacaoLoteId: null },
+    where: { id: parcelaId, paga: false, antecipacaoLoteId: null, fechamentoId: null },
     data: {
       paga: true,
       dataPagamento: new Date(`${data}T00:00:00.000Z`),
@@ -45,7 +47,14 @@ export async function darBaixaParcela(formData: FormData): Promise<Resultado> {
       baixaPor: sessao.nomeExibicao || sessao.username,
     },
   });
-  if (count === 0) return { success: false, error: "Parcela não encontrada ou já paga." };
+  if (count === 0) {
+    const reservada = await prisma.parcelaVencimento.findUnique({
+      where: { id: parcelaId },
+      select: { id: true, fechamento: { select: { competencia: true } } },
+    });
+    if (reservada?.fechamento) return { success: false, error: mensagemParcelaNoFechamento(reservada.fechamento.competencia) };
+    return { success: false, error: "Parcela não encontrada ou já paga." };
+  }
 
   await createAuditLog("parcela:baixa", { parcelaId, origem: "manual", dataPagamento: data });
   revalidarVenda();
@@ -81,9 +90,9 @@ export async function darBaixaParcelas(formData: FormData): Promise<Resultado> {
   if (data > hoje) return { success: false, error: "Data de pagamento não pode ser no futuro." };
 
   // `antecipacaoLoteId: null`, como na baixa individual: parcela em lote aberto na Prudent tem a
-  // baixa feita pela conclusão do lote.
+  // baixa feita pela conclusão do lote. `fechamentoId: null`: a reservada, pelo fechamento.
   const { count } = await prisma.parcelaVencimento.updateMany({
-    where: { id: { in: parcelaIds }, paga: false, antecipacaoLoteId: null },
+    where: { id: { in: parcelaIds }, paga: false, antecipacaoLoteId: null, fechamentoId: null },
     data: {
       paga: true,
       dataPagamento: new Date(`${data}T00:00:00.000Z`),
@@ -115,9 +124,25 @@ export async function desfazerBaixaParcela(formData: FormData): Promise<Resultad
 
   const parcela = await prisma.parcelaVencimento.findUnique({
     where: { id: parcelaId },
-    select: { id: true, vendaId: true, paga: true, origemPagamento: true, boletoPrudentId: true },
+    select: {
+      id: true,
+      vendaId: true,
+      paga: true,
+      origemPagamento: true,
+      boletoPrudentId: true,
+      fechamentoId: true,
+      fechamento: { select: { competencia: true } },
+    },
   });
   if (!parcela || !parcela.paga) return { success: false, error: "Parcela não encontrada ou não está paga." };
+
+  // Fase 5: parcela reservada num fechamento só tem o recebimento mexido pelo fechamento.
+  if (parcela.fechamentoId != null) {
+    const erro = parcela.fechamento
+      ? mensagemParcelaNoFechamento(parcela.fechamento.competencia)
+      : "Parcela reservada num fechamento; o recebimento é pelo fechamento.";
+    return { success: false, error: erro };
+  }
 
   // A Prudent já emitiu o boleto desta parcela (Fase 4): desfazer a antecipação aqui deixaria o
   // boleto cobrando uma parcela que o sistema diz estar em aberto.
@@ -143,6 +168,7 @@ export async function desfazerBaixaParcela(formData: FormData): Promise<Resultad
       paga: true,
       origemPagamento: parcela.origemPagamento,
       ...(viaPrudent ? { boletoPrudentId: null } : {}),
+      fechamentoId: null,
     },
     data: { paga: false, dataPagamento: null, origemPagamento: null, asaasPaymentId: null, baixaPor: null },
   });

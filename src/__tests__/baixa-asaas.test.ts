@@ -41,6 +41,7 @@ function parcela(over: Partial<ParcelaParaBaixa> = {}): ParcelaParaBaixa {
     origemPagamento: null,
     asaasPaymentId: null,
     vendaStatus: "ativa",
+    fechamentoId: null,
     ...over,
   };
 }
@@ -94,6 +95,19 @@ describe("decidirBaixaAsaas — nao mexe", () => {
     expect(decidirBaixaAsaas(pagamento({ installmentNumber: null }), [parcela({ numeroParcela: 1 })])).toEqual({
       acao: "ignorar",
       motivo: "sem_numero_parcela",
+    });
+  });
+
+  // Fase 5 (spec §5.1): parcela reservada num fechamento só é liquidada pelo fechamento.
+  it("parcela reservada num fechamento: ignora, paga ou estornada", () => {
+    expect(decidirBaixaAsaas(pagamento(), [parcela({ fechamentoId: 11 })])).toEqual({
+      acao: "ignorar",
+      motivo: "reservada_no_fechamento",
+    });
+    const baixada = parcela({ fechamentoId: 11, paga: true, origemPagamento: "asaas", asaasPaymentId: "pay_abc" });
+    expect(decidirBaixaAsaas(pagamento({ status: "REFUNDED" }), [baixada])).toEqual({
+      acao: "ignorar",
+      motivo: "reservada_no_fechamento",
     });
   });
 

@@ -209,3 +209,8 @@ export type DemonstrativoDados = {
   totalAjustes: number;
   totalFinal: number;
 };
+
+/** Recusa dos outros fluxos (baixa, desfazer baixa) para parcela reservada num fechamento. */
+export function mensagemParcelaNoFechamento(competencia: string): string {
+  return `Parcela no fechamento de ${rotuloCompetencia(competencia)}; o recebimento é pelo fechamento.`;
+}

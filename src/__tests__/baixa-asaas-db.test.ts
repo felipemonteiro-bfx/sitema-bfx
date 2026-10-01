@@ -28,6 +28,7 @@ const PARCELA_ABERTA = {
   paga: false,
   origemPagamento: null,
   asaasPaymentId: null,
+  fechamentoId: null,
   venda: { status: "ativa" },
 };
 const PAGAMENTO = {
@@ -52,7 +53,8 @@ describe("aplicarPagamentoAsaas", () => {
 
     expect(r.acao).toBe("baixar");
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
-      where: { id: 100, paga: false },
+      // Fase 5: `fechamentoId: null` — a reserva feita entre a leitura e a gravação vence.
+      where: { id: 100, paga: false, fechamentoId: null },
       data: {
         paga: true,
         dataPagamento: new Date("2026-09-10T00:00:00.000Z"),
@@ -65,6 +67,14 @@ describe("aplicarPagamentoAsaas", () => {
       "parcela:baixa",
       expect.objectContaining({ parcelaId: 100, vendaId: 7, origem: "asaas", asaasPaymentId: "pay_abc" }),
     );
+  });
+
+  it("parcela reservada num fechamento: ignora sem gravar", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([{ ...PARCELA_ABERTA, fechamentoId: 11 }]);
+    const r = await aplicarPagamentoAsaas(PAGAMENTO);
+    expect(r).toEqual({ acao: "ignorar", motivo: "reservada_no_fechamento" });
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
   });
 
   it("se outro processo gravou antes (count 0), nao registra audit de novo", async () => {
@@ -84,7 +94,7 @@ describe("aplicarPagamentoAsaas", () => {
 
     expect(r.acao).toBe("desfazer");
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
-      where: { id: 100, paga: true, origemPagamento: "asaas", asaasPaymentId: "pay_abc" },
+      where: { id: 100, paga: true, origemPagamento: "asaas", asaasPaymentId: "pay_abc", fechamentoId: null },
       data: { paga: false, dataPagamento: null, origemPagamento: null, asaasPaymentId: null, baixaPor: null },
     });
   });

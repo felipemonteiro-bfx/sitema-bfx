@@ -44,7 +44,8 @@ describe("darBaixaParcela", () => {
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
       // `antecipacaoLoteId: null`: parcela em lote enviado à Prudent não aceita baixa manual — a
       // baixa dela é a conclusão do lote, no histórico (2026-09-17).
-      where: { id: 5, paga: false, antecipacaoLoteId: null },
+      // Fase 5: `fechamentoId: null` — parcela reservada num fechamento só é baixada por ele.
+      where: { id: 5, paga: false, antecipacaoLoteId: null, fechamentoId: null },
       data: {
         paga: true,
         dataPagamento: new Date("2026-09-15T00:00:00.000Z"),
@@ -60,6 +61,17 @@ describe("darBaixaParcela", () => {
     dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 0 });
     const r = await darBaixaParcela(form({ parcelaId: "5", dataPagamento: "2026-09-15" }));
     expect(r.success).toBe(false);
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
+  });
+
+  it("parcela reservada num fechamento: recusa dizendo qual fechamento", async () => {
+    dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 0 });
+    dbMock.parcelaVencimento.findUnique.mockResolvedValue({ id: 5, fechamento: { competencia: "2026-10" } });
+    const r = await darBaixaParcela(form({ parcelaId: "5", dataPagamento: "2026-09-15" }));
+    expect(r).toEqual({
+      success: false,
+      error: "Parcela no fechamento de outubro de 2026; o recebimento é pelo fechamento.",
+    });
     expect(auditMock.createAuditLog).not.toHaveBeenCalled();
   });
 
@@ -79,7 +91,7 @@ describe("darBaixaParcelas", () => {
     expect(r).toEqual({ success: true, count: 2 });
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
       // Fase 4: parcela em lote aberto na Prudent fica de fora, igual à baixa individual.
-      where: { id: { in: [5, 9] }, paga: false, antecipacaoLoteId: null },
+      where: { id: { in: [5, 9] }, paga: false, antecipacaoLoteId: null, fechamentoId: null },
       data: {
         paga: true,
         dataPagamento: new Date("2026-09-15T00:00:00.000Z"),
@@ -107,7 +119,7 @@ describe("desfazerBaixaParcela", () => {
     expect(r).toEqual({ success: true });
     // A origem lida entra no where: se o Asaas trocou a baixa no meio, nada e desfeito sem confirmacao.
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
-      where: { id: 5, paga: true, origemPagamento: "manual" },
+      where: { id: 5, paga: true, origemPagamento: "manual", fechamentoId: null },
       data: { paga: false, dataPagamento: null, origemPagamento: null, asaasPaymentId: null, baixaPor: null },
     });
   });
@@ -157,7 +169,27 @@ describe("desfazerBaixaParcela", () => {
       paga: true,
       origemPagamento: "prudent",
       boletoPrudentId: null,
+      fechamentoId: null,
     });
+  });
+
+  // Fase 5 (spec §5.1): só o fechamento liquida (e desfaz) parcela reservada.
+  it("parcela reservada num fechamento: recusa, mesmo confirmada", async () => {
+    dbMock.parcelaVencimento.findUnique.mockResolvedValue({
+      id: 5,
+      vendaId: 7,
+      paga: true,
+      origemPagamento: "manual",
+      boletoPrudentId: null,
+      fechamentoId: 11,
+      fechamento: { competencia: "2026-10" },
+    });
+    const r = await desfazerBaixaParcela(form({ parcelaId: "5", confirmar: "1" }));
+    expect(r).toEqual({
+      success: false,
+      error: "Parcela no fechamento de outubro de 2026; o recebimento é pelo fechamento.",
+    });
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
   });
 
   it("baixa do Asaas em parcela com boleto Prudent continua podendo ser desfeita", async () => {

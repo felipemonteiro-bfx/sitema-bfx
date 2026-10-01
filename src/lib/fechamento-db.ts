@@ -360,7 +360,13 @@ export async function conferirFechamento(e: { fechamentoId: number; usuario: str
   await prisma.$transaction(async (tx) => {
     // Trava primeiro: status + versão no where. Clique duplo ou ajuste em paralelo esperam a linha.
     const trava = await tx.fechamento.updateMany({
-      where: { id: fechamento.id, status: STATUS_FECHAMENTO.emPreparacao, versaoAtual: fechamento.versaoAtual },
+      where: {
+        id: fechamento.id,
+        status: STATUS_FECHAMENTO.emPreparacao,
+        versaoAtual: fechamento.versaoAtual,
+        // Edição/exclusão de venda que soltou reserva no meio marca desatualizado (historico/actions).
+        desatualizado: false,
+      },
       data: { status: STATUS_FECHAMENTO.conferido, versaoAtual: numero, desatualizado: false },
     });
     if (trava.count !== 1) throw new Error(ERRO_MUDOU);
