@@ -20,6 +20,7 @@ const adminMenu = [
   { href: "/financeiro", label: "Financeiro & DRE" },
   { href: "/boletos", label: "Boletos" },
   { href: "/prudent", label: "Prudent (Antecipação)" },
+  { href: "/obrigacoes", label: "Obrigações" },
   { href: "/inteligencia", label: "BFX Intelligence", isNew: true },
   { href: "/crm", label: "CRM", isNew: true },
   { href: "/relatorios", label: "Relatórios" },
