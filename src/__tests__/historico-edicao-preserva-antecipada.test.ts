@@ -277,3 +277,38 @@ describe("updateVenda — preserva o envio ao RH e a confirmação", () => {
     });
   });
 });
+
+// Fase 4 (2026-09-30, spec §3.2): o boleto Prudent da parcela antecipada também sobrevive à
+// recriação. Sem isto a edição deixava o boleto sem parcela e a trava do desfazer-baixa caía.
+describe("updateVenda — preserva o boleto Prudent da parcela", () => {
+  it("parcela antecipada com boleto mantém o boleto; parcela nova nasce sem", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      { ...linhaExistente(1, true), paga: true, origemPagamento: "prudent", boletoPrudentId: 30 },
+      { ...linhaExistente(2, false), boletoPrudentId: null },
+    ]);
+    await updateVenda(formVenda()); // 3 parcelas: a 3 é nova
+    const recriadas = dbMock.parcelaVencimento.createMany.mock.calls[0][0].data as Record<string, unknown>[];
+    const porNumero = new Map(recriadas.map((p) => [p.numeroParcela, p]));
+    expect(porNumero.get(1)?.boletoPrudentId).toBe(30);
+    expect(porNumero.get(2)?.boletoPrudentId).toBeNull();
+    expect(porNumero.get(3)?.boletoPrudentId).toBeNull();
+  });
+
+  it("venda de parcela única também preserva", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      { ...linhaExistente(1, true), paga: true, origemPagamento: "prudent", boletoPrudentId: 31 },
+    ]);
+    const fd = formVenda();
+    fd.set("parcelas", "1");
+    fd.delete("parcelasVencimento");
+    await updateVenda(fd);
+    const recriadas = dbMock.parcelaVencimento.createMany.mock.calls[0][0].data as Record<string, unknown>[];
+    expect(recriadas[0]?.boletoPrudentId).toBe(31);
+  });
+
+  it("a leitura das parcelas existentes traz o boleto", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
+    await updateVenda(formVenda());
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].select).toMatchObject({ boletoPrudentId: true });
+  });
+});

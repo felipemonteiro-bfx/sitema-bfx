@@ -80,8 +80,10 @@ export async function darBaixaParcelas(formData: FormData): Promise<Resultado> {
   if (!data) return { success: false, error: "Data de pagamento inválida." };
   if (data > hoje) return { success: false, error: "Data de pagamento não pode ser no futuro." };
 
+  // `antecipacaoLoteId: null`, como na baixa individual: parcela em lote aberto na Prudent tem a
+  // baixa feita pela conclusão do lote.
   const { count } = await prisma.parcelaVencimento.updateMany({
-    where: { id: { in: parcelaIds }, paga: false },
+    where: { id: { in: parcelaIds }, paga: false, antecipacaoLoteId: null },
     data: {
       paga: true,
       dataPagamento: new Date(`${data}T00:00:00.000Z`),
@@ -113,11 +115,18 @@ export async function desfazerBaixaParcela(formData: FormData): Promise<Resultad
 
   const parcela = await prisma.parcelaVencimento.findUnique({
     where: { id: parcelaId },
-    select: { id: true, vendaId: true, paga: true, origemPagamento: true },
+    select: { id: true, vendaId: true, paga: true, origemPagamento: true, boletoPrudentId: true },
   });
   if (!parcela || !parcela.paga) return { success: false, error: "Parcela não encontrada ou não está paga." };
 
-  const automatica = parcela.origemPagamento === "asaas" || parcela.origemPagamento === "prudent";
+  // A Prudent já emitiu o boleto desta parcela (Fase 4): desfazer a antecipação aqui deixaria o
+  // boleto cobrando uma parcela que o sistema diz estar em aberto.
+  const viaPrudent = parcela.origemPagamento === "prudent";
+  if (viaPrudent && parcela.boletoPrudentId != null) {
+    return { success: false, error: "Esta parcela tem boleto da Prudent; a antecipação não pode ser desfeita por aqui." };
+  }
+
+  const automatica = parcela.origemPagamento === "asaas" || viaPrudent;
   if (automatica && formData.get("confirmar") !== "1") {
     return {
       success: false,
@@ -126,9 +135,15 @@ export async function desfazerBaixaParcela(formData: FormData): Promise<Resultad
   }
 
   // A origem lida entra no where: se a baixa mudou de origem entre a leitura e aqui (ex.: o
-  // webhook do Asaas), nada é desfeito sem a confirmação correspondente.
+  // webhook do Asaas), nada é desfeito sem a confirmação correspondente. Na baixa da Prudent, o
+  // boleto também entra: um boleto criado no meio do caminho cancela o desfazer.
   const { count } = await prisma.parcelaVencimento.updateMany({
-    where: { id: parcelaId, paga: true, origemPagamento: parcela.origemPagamento },
+    where: {
+      id: parcelaId,
+      paga: true,
+      origemPagamento: parcela.origemPagamento,
+      ...(viaPrudent ? { boletoPrudentId: null } : {}),
+    },
     data: { paga: false, dataPagamento: null, origemPagamento: null, asaasPaymentId: null, baixaPor: null },
   });
   if (count === 0) return { success: false, error: "A baixa mudou enquanto você confirmava. Recarregue e tente de novo." };

@@ -210,6 +210,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       confirmacaoEm?: Date | null;
       confirmacaoPor?: string | null;
       confirmacaoMotivo?: string | null;
+      /** Boleto Prudent da parcela antecipada (2026-09-30, Fase 4). */
+      boletoPrudentId?: number | null;
     };
     let parcelasExistentes: ParcelaExistente[] = [];
     // Ligado quando a venda vira pagamento unico sem payload de parcelas (CR-01).
@@ -234,6 +236,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           confirmacaoEm: true,
           confirmacaoPor: true,
           confirmacaoMotivo: true,
+          boletoPrudentId: true,
         },
       });
     } catch {
@@ -260,6 +263,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           confirmacaoEm: p.confirmacaoEm ?? null,
           confirmacaoPor: p.confirmacaoPor ?? null,
           confirmacaoMotivo: p.confirmacaoMotivo ?? null,
+          boletoPrudentId: p.boletoPrudentId ?? null,
         },
       ])
     );
@@ -540,6 +544,8 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
               origemPagamento: baixa?.origemPagamento ?? null,
               asaasPaymentId: baixa?.asaasPaymentId ?? null,
               baixaPor: baixa?.baixaPor ?? null,
+              // O boleto Prudent acompanha a antecipação: sem ele o boleto ficava sem parcela.
+              boletoPrudentId: existente?.boletoPrudentId ?? null,
               ...camposDoRh(existente),
             };
           }),
@@ -569,6 +575,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
                 origemPagamento: existente?.origemPagamento ?? null,
                 asaasPaymentId: existente?.asaasPaymentId ?? null,
                 baixaPor: existente?.baixaPor ?? null,
+                boletoPrudentId: existente?.boletoPrudentId ?? null,
                 ...camposDoRh(existente),
               };
             }),

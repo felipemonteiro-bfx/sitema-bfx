@@ -78,7 +78,8 @@ describe("darBaixaParcelas", () => {
 
     expect(r).toEqual({ success: true, count: 2 });
     expect(dbMock.parcelaVencimento.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: [5, 9] }, paga: false },
+      // Fase 4: parcela em lote aberto na Prudent fica de fora, igual à baixa individual.
+      where: { id: { in: [5, 9] }, paga: false, antecipacaoLoteId: null },
       data: {
         paga: true,
         dataPagamento: new Date("2026-09-15T00:00:00.000Z"),
@@ -121,6 +122,53 @@ describe("desfazerBaixaParcela", () => {
       const com = await desfazerBaixaParcela(form({ parcelaId: "5", confirmar: "1" }));
       expect(com.success).toBe(true);
     }
+  });
+
+  // Fase 4 (spec §3.4): a Prudent já emitiu o boleto desta parcela; desfazer a antecipação aqui
+  // deixaria o boleto cobrando uma parcela que o sistema diz estar em aberto.
+  it("baixa da Prudent em parcela com boleto Prudent e recusada, mesmo confirmada", async () => {
+    dbMock.parcelaVencimento.findUnique.mockResolvedValue({
+      id: 5,
+      vendaId: 7,
+      paga: true,
+      origemPagamento: "prudent",
+      boletoPrudentId: 30,
+    });
+    const r = await desfazerBaixaParcela(form({ parcelaId: "5", confirmar: "1" }));
+    expect(r).toEqual({
+      success: false,
+      error: "Esta parcela tem boleto da Prudent; a antecipação não pode ser desfeita por aqui.",
+    });
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
+  });
+
+  it("baixa da Prudent sem boleto: o boleto nao pode surgir entre a leitura e a gravacao", async () => {
+    dbMock.parcelaVencimento.findUnique.mockResolvedValue({
+      id: 5,
+      vendaId: 7,
+      paga: true,
+      origemPagamento: "prudent",
+      boletoPrudentId: null,
+    });
+    await desfazerBaixaParcela(form({ parcelaId: "5", confirmar: "1" }));
+    expect(dbMock.parcelaVencimento.updateMany.mock.calls[0][0].where).toEqual({
+      id: 5,
+      paga: true,
+      origemPagamento: "prudent",
+      boletoPrudentId: null,
+    });
+  });
+
+  it("baixa do Asaas em parcela com boleto Prudent continua podendo ser desfeita", async () => {
+    dbMock.parcelaVencimento.findUnique.mockResolvedValue({
+      id: 5,
+      vendaId: 7,
+      paga: true,
+      origemPagamento: "asaas",
+      boletoPrudentId: 30,
+    });
+    expect((await desfazerBaixaParcela(form({ parcelaId: "5", confirmar: "1" }))).success).toBe(true);
   });
 });
 
