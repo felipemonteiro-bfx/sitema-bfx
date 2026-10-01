@@ -215,3 +215,65 @@ describe("updateVenda — preserva o flag antecipada das parcelas", () => {
     expect(recriadas.find((p) => p.numeroParcela === 3)?.antecipada).toBe(false);
   });
 });
+
+// Fase 3 (2026-09-30): a confirmação do RH e o envio no consolidado também sobrevivem à
+// recriação das linhas. Sem isto, cada edição de venda devolvia parcelas confirmadas para
+// "Aguardando RH" e tirava da fila da Prudent o que já estava liberado.
+describe("updateVenda — preserva o envio ao RH e a confirmação", () => {
+  const rh = {
+    enviadaRhEm: new Date("2026-09-26T22:00:00.000Z"),
+    confirmacaoRh: "confirmada",
+    confirmacaoOrigem: "rh",
+    confirmacaoEm: new Date("2026-09-29T14:00:00.000Z"),
+    confirmacaoPor: "André",
+    confirmacaoMotivo: null,
+  };
+
+  it("editar sem mudar as parcelas mantém confirmação e envio; parcela acrescentada nasce aguardando", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      { ...linhaExistente(1, false), ...rh },
+      { ...linhaExistente(2, false), ...rh, confirmacaoRh: "recusada", confirmacaoMotivo: "Colaborador desligado" },
+    ]);
+
+    await updateVenda(formVenda()); // 3 parcelas: a 3 é nova
+
+    const recriadas = dbMock.parcelaVencimento.createMany.mock.calls[0][0].data as Record<string, unknown>[];
+    const porNumero = new Map(recriadas.map((p) => [p.numeroParcela, p]));
+    expect(porNumero.get(1)).toMatchObject(rh);
+    expect(porNumero.get(2)).toMatchObject({ ...rh, confirmacaoRh: "recusada", confirmacaoMotivo: "Colaborador desligado" });
+    expect(porNumero.get(3)).toMatchObject({
+      enviadaRhEm: null,
+      confirmacaoRh: null,
+      confirmacaoOrigem: null,
+      confirmacaoEm: null,
+      confirmacaoPor: null,
+      confirmacaoMotivo: null,
+    });
+  });
+
+  it("venda de parcela única (linha gerada no servidor) também preserva", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([{ ...linhaExistente(1, false), ...rh, confirmacaoOrigem: "legado" }]);
+    const fd = formVenda();
+    fd.set("parcelas", "1");
+    fd.delete("parcelasVencimento");
+
+    await updateVenda(fd);
+
+    const recriadas = dbMock.parcelaVencimento.createMany.mock.calls[0][0].data as Record<string, unknown>[];
+    expect(recriadas).toHaveLength(1);
+    expect(recriadas[0]).toMatchObject({ ...rh, confirmacaoOrigem: "legado" });
+  });
+
+  it("a leitura das parcelas existentes traz os campos do RH", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
+    await updateVenda(formVenda());
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].select).toMatchObject({
+      enviadaRhEm: true,
+      confirmacaoRh: true,
+      confirmacaoOrigem: true,
+      confirmacaoEm: true,
+      confirmacaoPor: true,
+      confirmacaoMotivo: true,
+    });
+  });
+});

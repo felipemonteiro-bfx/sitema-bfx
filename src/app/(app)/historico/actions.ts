@@ -203,6 +203,13 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       baixaPor?: string | null;
       /** Lote enviado à Prudent esperando retorno (2026-09-17). */
       antecipacaoLoteId?: number | null;
+      /** Envio ao RH e confirmação (2026-09-30, Fase 3). */
+      enviadaRhEm?: Date | null;
+      confirmacaoRh?: string | null;
+      confirmacaoOrigem?: string | null;
+      confirmacaoEm?: Date | null;
+      confirmacaoPor?: string | null;
+      confirmacaoMotivo?: string | null;
     };
     let parcelasExistentes: ParcelaExistente[] = [];
     // Ligado quando a venda vira pagamento unico sem payload de parcelas (CR-01).
@@ -221,6 +228,12 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           asaasPaymentId: true,
           baixaPor: true,
           antecipacaoLoteId: true,
+          enviadaRhEm: true,
+          confirmacaoRh: true,
+          confirmacaoOrigem: true,
+          confirmacaoEm: true,
+          confirmacaoPor: true,
+          confirmacaoMotivo: true,
         },
       });
     } catch {
@@ -241,9 +254,25 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           asaasPaymentId: p.asaasPaymentId ?? null,
           baixaPor: p.baixaPor ?? null,
           antecipacaoLoteId: p.antecipacaoLoteId ?? null,
+          enviadaRhEm: p.enviadaRhEm ?? null,
+          confirmacaoRh: p.confirmacaoRh ?? null,
+          confirmacaoOrigem: p.confirmacaoOrigem ?? null,
+          confirmacaoEm: p.confirmacaoEm ?? null,
+          confirmacaoPor: p.confirmacaoPor ?? null,
+          confirmacaoMotivo: p.confirmacaoMotivo ?? null,
         },
       ])
     );
+    // Envio ao RH e confirmação (2026-09-30) sobrevivem à recriação, pelo número da parcela.
+    // Parcela nova, sem par, nasce nula: aguardando o RH.
+    const camposDoRh = (existente: ReturnType<typeof pagasMap.get>) => ({
+      enviadaRhEm: existente?.enviadaRhEm ?? null,
+      confirmacaoRh: existente?.confirmacaoRh ?? null,
+      confirmacaoOrigem: existente?.confirmacaoOrigem ?? null,
+      confirmacaoEm: existente?.confirmacaoEm ?? null,
+      confirmacaoPor: existente?.confirmacaoPor ?? null,
+      confirmacaoMotivo: existente?.confirmacaoMotivo ?? null,
+    });
 
     if (parcelasForm.length > 0) {
       // Numero de parcela repetido (spec 2026-09-30 §3.2): com a unique
@@ -511,6 +540,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
               origemPagamento: baixa?.origemPagamento ?? null,
               asaasPaymentId: baixa?.asaasPaymentId ?? null,
               baixaPor: baixa?.baixaPor ?? null,
+              ...camposDoRh(existente),
             };
           }),
         });
@@ -539,6 +569,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
                 origemPagamento: existente?.origemPagamento ?? null,
                 asaasPaymentId: existente?.asaasPaymentId ?? null,
                 baixaPor: existente?.baixaPor ?? null,
+                ...camposDoRh(existente),
               };
             }),
           });
