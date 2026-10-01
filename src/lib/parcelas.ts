@@ -1,5 +1,6 @@
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import type { RegraVencimento } from "@/lib/regra-empresa";
+import { parseDataIsoUtc } from "@/lib/data-input";
 
 export const VALOR_PARCELA_MIN = 200; // parcela mínima (configurável)
 export const VALOR_PARCELA_MAX = 475; // parcela máxima / teto (configurável)
@@ -54,8 +55,10 @@ export function parcelasDaVendaRapida(input: {
   total: number;
   emFolha: boolean;
   regra?: RegraVencimento;
+  /** Data do desconto escolhida no form da venda em 1x (2026-10-01), já validada. */
+  dataDescontoUnica?: Date;
 }): { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] {
-  const { informadas, parcelas, dataVenda, total, emFolha, regra } = input;
+  const { informadas, parcelas, dataVenda, total, emFolha, regra, dataDescontoUnica } = input;
   if (informadas && informadas.length > 0) {
     return informadas.map((p) => ({
       numeroParcela: p.numeroParcela,
@@ -75,18 +78,47 @@ export function parcelasDaVendaRapida(input: {
       valorParcela,
     }));
   }
-  return parcelaUnicaDaFolha({ emFolha, dataVenda, total, regra });
+  return parcelaUnicaDaFolha({ emFolha, dataVenda, total, regra, dataInformada: dataDescontoUnica });
 }
 
+/**
+ * `dataInformada` (2026-10-01): a data do desconto escolhida no form em 1x, no lugar da regra. O
+ * valor continua sendo o total calculado aqui, nunca um valor vindo do cliente. Quem chama valida
+ * a data antes (`validarDataDescontoUnica`).
+ */
 export function parcelaUnicaDaFolha(input: {
   emFolha: boolean;
   dataVenda: Date;
   total: number;
   regra?: RegraVencimento;
+  dataInformada?: Date;
 }): { numeroParcela: number; dataVencimento: Date; valorParcela: number }[] {
   const centavos = Math.round(input.total * 100);
   if (!input.emFolha || !(centavos > 0) || Number.isNaN(input.dataVenda.getTime())) return [];
-  return [{ numeroParcela: 1, dataVencimento: calcularPrimeiroVencimento(input.dataVenda, input.regra), valorParcela: centavos / 100 }];
+  const dataVencimento =
+    input.dataInformada && !Number.isNaN(input.dataInformada.getTime())
+      ? input.dataInformada
+      : calcularPrimeiroVencimento(input.dataVenda, input.regra);
+  return [{ numeroParcela: 1, dataVencimento, valorParcela: centavos / 100 }];
+}
+
+export const MENSAGEM_DATA_DESCONTO_FORA = "Data do desconto deve ficar entre a data da venda e 12 meses depois.";
+
+/**
+ * Data do desconto da venda 1x em folha (2026-10-01): "AAAA-MM-DD" que existe no calendário, não
+ * anterior ao dia da venda e no máximo 12 meses depois dele (mesmo dia do mês, um ano à frente).
+ * Comparação por dia em UTC, a convenção de `dataVenda`.
+ */
+export function validarDataDescontoUnica(
+  valor: string,
+  dataVenda: Date
+): { ok: true; data: Date } | { ok: false; erro: string } {
+  const data = parseDataIsoUtc(valor.trim());
+  if (!data || Number.isNaN(dataVenda.getTime())) return { ok: false, erro: MENSAGEM_DATA_DESCONTO_FORA };
+  const inicio = Date.UTC(dataVenda.getUTCFullYear(), dataVenda.getUTCMonth(), dataVenda.getUTCDate());
+  const fim = Date.UTC(dataVenda.getUTCFullYear() + 1, dataVenda.getUTCMonth(), dataVenda.getUTCDate());
+  if (data.getTime() < inicio || data.getTime() > fim) return { ok: false, erro: MENSAGEM_DATA_DESCONTO_FORA };
+  return { ok: true, data };
 }
 
 /**

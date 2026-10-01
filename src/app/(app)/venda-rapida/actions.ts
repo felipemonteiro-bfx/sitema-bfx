@@ -18,7 +18,7 @@ import {
   createBoletoPayment,
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
-import { numerosDeParcelaRepetidos, parcelasDaVendaRapida } from "@/lib/parcelas";
+import { numerosDeParcelaRepetidos, parcelasDaVendaRapida, validarDataDescontoUnica } from "@/lib/parcelas";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
@@ -248,6 +248,24 @@ export async function criarVendaV2(
     // Sincroniza os flags legados a partir da forma canonica para integracoes antigas.
     const { descontoEmFolha, boleto } = legacyFlagsFromForma(formaPagamento);
 
+    // Data do desconto da venda 1x em folha (2026-10-01): so vale nesse caso — em outra forma ou
+    // parcelada o campo e ignorado. Validada aqui, antes de qualquer escrita; ausente = regra.
+    const dataDescontoRaw = String(formData.get("dataDescontoUnica") ?? "").trim();
+    let dataDescontoUnica: Date | undefined;
+    if (
+      dataDescontoRaw &&
+      formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA &&
+      parcelas <= 1 &&
+      !(parcelasValidadas && parcelasValidadas.length > 0)
+    ) {
+      const validada = validarDataDescontoUnica(dataDescontoRaw, new Date(dataStr));
+      if (!validada.ok) {
+        registrarRejeicaoVenda({ ...contextoRejeicao, motivo: validada.erro, vendedor, clienteId });
+        return errorResponse(validada.erro);
+      }
+      dataDescontoUnica = validada.data;
+    }
+
     // Cálculos totais
     const subtotalProdutos = produtosValidados.reduce((sum, p) => sum + p.subtotal, 0);
     const totalVenda = subtotalProdutos + frete - desconto;
@@ -271,6 +289,7 @@ export async function criarVendaV2(
       total: totalVenda,
       emFolha: formaPagamento === FORMA_PAGAMENTO.DESCONTO_FOLHA,
       regra,
+      dataDescontoUnica,
     });
 
     // Custo de antecipacao Prudent (QK-LGJ-01): toda venda em desconto em

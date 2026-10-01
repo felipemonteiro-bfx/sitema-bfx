@@ -16,6 +16,7 @@ import {
 } from "@/lib/antecipacao";
 import { FORMA_PAGAMENTO } from "@/lib/forma-pagamento";
 import { parcelaUnicaDaFolha } from "@/lib/parcelas";
+import { parseDataIsoUtc } from "@/lib/data-input";
 import type { RegraVencimento } from "@/lib/regra-empresa";
 
 export type CenarioAntecipacao = {
@@ -157,6 +158,8 @@ export function parcelasParaSimulacao(input: {
   dataVenda: string;
   total: number;
   regra?: RegraVencimento;
+  /** Data do desconto escolhida em 1x (YYYY-MM-DD, 2026-10-01); inválida ou ausente = regra. */
+  dataDescontoUnica?: string | null;
 }): ParcelaSimulada[] {
   if (input.numParcelas > 1) return input.informadas;
   return parcelaUnicaDaFolha({
@@ -164,6 +167,7 @@ export function parcelasParaSimulacao(input: {
     dataVenda: new Date(`${input.dataVenda}T00:00:00.000Z`),
     total: input.total,
     regra: input.regra,
+    dataInformada: parseDataIsoUtc(input.dataDescontoUnica),
   }).map((p) => ({
     numeroParcela: p.numeroParcela,
     dataVencimento: p.dataVencimento.toISOString().slice(0, 10),

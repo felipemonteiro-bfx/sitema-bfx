@@ -15,7 +15,7 @@ import {
 import { custoAntecipacaoVenda, lucroLiquidoComAntecipacao } from "@/lib/antecipacao-custo";
 import { recalcularConsignadoSeguro } from "@/lib/consignado-db";
 import { requireSessionOrThrow } from "@/lib/guards";
-import { numerosDeParcelaRepetidos, parcelaUnicaDaFolha, valorParcelaAposEdicao } from "@/lib/parcelas";
+import { numerosDeParcelaRepetidos, parcelaUnicaDaFolha, validarDataDescontoUnica, valorParcelaAposEdicao } from "@/lib/parcelas";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import type { RegraVencimento } from "@/lib/regra-empresa";
 import { flagDaVenda } from "@/lib/lote-antecipacao";
@@ -410,21 +410,49 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       vendaAntes.dataVenda.toISOString().slice(0, 10) === new Date(data).toISOString().slice(0, 10);
     const vencimentoGravado = pagasMap.get(1)?.dataVencimento;
     const manterVencimentoGravado = mesmaDataVenda && formaAntes === formaPagamento && vencimentoGravado != null;
+
+    // Data do desconto escolhida no form (2026-10-01; so em 1x em folha, senao e ignorada). Igual a
+    // gravada com a mesma data de venda = save sem mudanca: mantem, sem validar (venda antiga pode
+    // ter vencimento fora do intervalo). Nova (ou a data da venda mudou): validada contra a data da
+    // venda, e a mudanca passa pelas travas de boleto Prudent e fechamento logo abaixo.
+    const dataDescontoRaw = String(formData.get("dataDescontoUnica") ?? "").trim();
+    const vencimentoGravadoDia = vencimentoGravado ? vencimentoGravado.toISOString().slice(0, 10) : null;
+    let dataDescontoInformada: Date | undefined;
+    let dataDescontoMudou = false;
+    if (geraLinhasUnicas && emFolha && dataDescontoRaw) {
+      if (mesmaDataVenda && vencimentoGravado && dataDescontoRaw === vencimentoGravadoDia) {
+        dataDescontoInformada = vencimentoGravado;
+      } else {
+        const validada = validarDataDescontoUnica(dataDescontoRaw, new Date(data));
+        if (!validada.ok) return { success: false, error: validada.erro };
+        dataDescontoInformada = validada.data;
+        dataDescontoMudou = dataDescontoRaw !== vencimentoGravadoDia;
+      }
+    }
+
     let regraUnica: RegraVencimento | undefined;
-    if (geraLinhasUnicas && emFolha && !manterVencimentoGravado && vendaAntes?.clienteId) {
+    if (geraLinhasUnicas && emFolha && !manterVencimentoGravado && !dataDescontoInformada && vendaAntes?.clienteId) {
       regraUnica = await regraDoClienteNaData(vendaAntes.clienteId, new Date(data));
     }
     const linhasUnicas = geraLinhasUnicas
-      ? parcelaUnicaDaFolha({ emFolha, dataVenda: new Date(data), total, regra: regraUnica })
+      ? parcelaUnicaDaFolha({ emFolha, dataVenda: new Date(data), total, regra: regraUnica, dataInformada: dataDescontoInformada })
           // Parcela paga ou antecipada mantem o vencimento e o valor gravados: a linha e o
           // registro do que a Prudent pagou. Aplicado aqui, e nao na hora de gravar, para a
-          // taxa de antecipacao sair da MESMA lista que vai para o banco.
+          // taxa de antecipacao sair da MESMA lista que vai para o banco. A data do desconto
+          // mudada a mao fica na lista para as travas abaixo a recusarem (boleto, fechamento,
+          // paga/antecipada) — nunca e trocada em silencio pela gravada.
           .map((p) => {
             const existente = pagasMap.get(p.numeroParcela);
             if (existente && (existente.paga || existente.antecipada)) {
-              return { ...p, dataVencimento: existente.dataVencimento, valorParcela: existente.valorParcela };
+              return {
+                ...p,
+                dataVencimento: dataDescontoMudou ? p.dataVencimento : existente.dataVencimento,
+                valorParcela: existente.valorParcela,
+              };
             }
-            return manterVencimentoGravado && existente ? { ...p, dataVencimento: existente.dataVencimento } : p;
+            return manterVencimentoGravado && existente && !dataDescontoInformada
+              ? { ...p, dataVencimento: existente.dataVencimento }
+              : p;
           })
       : null;
     if (linhasUnicas) {
@@ -461,6 +489,18 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     // com as parcelas travadas.
     const reservaLida = avaliarEdicaoDeParcelas(id, parcelasExistentes, novasParcelas);
     if (!reservaLida.ok) return { success: false, error: reservaLida.erro };
+    // Data do desconto mudada numa parcela paga, antecipada ou num lote da Prudent (sem boleto nem
+    // fechamento, que ja recusaram acima): a linha e o registro do que foi pago/vendido.
+    const unicaTravada = dataDescontoMudou ? parcelasExistentes.find((p) => p.numeroParcela === 1 && travada(p)) : undefined;
+    if (unicaTravada) {
+      return {
+        success: false,
+        error:
+          unicaTravada.paga || unicaTravada.antecipada
+            ? "A parcela 1 já está paga ou antecipada: a data do desconto não pode mudar."
+            : "A parcela 1 está num lote enviado à Prudent: a data do desconto não pode mudar.",
+      };
+    }
     let reservaPreservada = reservaLida.reservaPreservada;
     const camposDoFechamento = (numeroParcela: number, existente: ReturnType<typeof pagasMap.get>) => ({
       fechamentoId: reservaPreservada.get(numeroParcela) ?? null,
