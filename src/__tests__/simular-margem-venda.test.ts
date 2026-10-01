@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { simularMargemVenda } from "@/lib/simular-margem-venda";
+import { simularMargemVenda, parcelasParaSimulacao } from "@/lib/simular-margem-venda";
+import { parcelaUnicaDaFolha } from "@/lib/parcelas";
 import { calcularAntecipacao, titulosDeVenda, TAXA_MENSAL_PADRAO } from "@/lib/antecipacao";
 
 type Input = Parameters<typeof simularMargemVenda>[0];
@@ -140,5 +141,41 @@ describe("simularMargemVenda", () => {
     expect(todas.taxa).toBe(0);
     expect(todas.dinheiroJa).toBe(1000);
     expect(Number.isNaN(todas.lucro)).toBe(false);
+  });
+
+  it("data de vencimento ilegivel nao conta como parcela informada", () => {
+    const s = simularMargemVenda(
+      base({
+        parcelas: [
+          { numeroParcela: 1, dataVencimento: "", valorParcela: 500 },
+          { numeroParcela: 2, dataVencimento: "", valorParcela: 500 },
+        ],
+        numParcelas: 2,
+      })
+    );
+    expect(s.semParcelas).toBe(true);
+  });
+});
+
+describe("parcelasParaSimulacao", () => {
+  // Em 1x o formulario nao mostra datas e a lista fica vazia (ou velha, de quando era Nx);
+  // o servidor grava a parcela unica da folha pela regra. A simulacao precisa da mesma.
+  const regra = { diaCorte: 20, diaVencimento: 10 };
+
+  it("folha 1x: a parcela unica que o servidor grava, ignorando a lista do formulario", () => {
+    const velha = PARCELAS_4X.slice(0, 3);
+    const r = parcelasParaSimulacao({ numParcelas: 1, informadas: velha, emFolha: true, dataVenda: "2026-09-30", total: 400, regra });
+    const [esperada] = parcelaUnicaDaFolha({ emFolha: true, dataVenda: new Date("2026-09-30T00:00:00.000Z"), total: 400, regra });
+    expect(r).toEqual([{ numeroParcela: 1, dataVencimento: esperada.dataVencimento.toISOString().slice(0, 10), valorParcela: 400 }]);
+    const s = simularMargemVenda(base({ dataVenda: "2026-09-30", subtotalProdutos: 400, parcelas: r, numParcelas: 1 }));
+    expect(s.cenarios.find((c) => c.chave === "todas")!.taxa).toBeGreaterThan(0);
+  });
+
+  it("fora de folha em 1x: lista vazia", () => {
+    expect(parcelasParaSimulacao({ numParcelas: 1, informadas: PARCELAS_4X, emFolha: false, dataVenda: "2026-09-30", total: 400, regra })).toEqual([]);
+  });
+
+  it("Nx: a lista do formulario", () => {
+    expect(parcelasParaSimulacao({ numParcelas: 4, informadas: PARCELAS_4X, emFolha: true, dataVenda: "2026-01-01", total: 1000, regra })).toBe(PARCELAS_4X);
   });
 });

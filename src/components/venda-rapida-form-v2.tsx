@@ -43,7 +43,7 @@ import { CurrencyInput } from "@/components/currency-input";
 import { Badge } from "@/components/ui/badge";
 import { CadastrarClienteRapidoDialog } from "@/components/cadastrar-cliente-rapido-dialog";
 import { ResumoVendaPanel } from "@/components/resumo-venda-panel";
-import { simularMargemVenda } from "@/lib/simular-margem-venda";
+import { parcelasParaSimulacao, simularMargemVenda } from "@/lib/simular-margem-venda";
 import type { ActionResponse } from "@/lib/action-response";
 import {
   decidirConfirmacaoConsignado,
@@ -417,7 +417,14 @@ export default function VendaRapidaFormV2({
     temNota,
     taxaNotaPct: numTaxaNota,
     comissaoPct,
-    parcelas: parcelasVencimento,
+    parcelas: parcelasParaSimulacao({
+      numParcelas,
+      informadas: parcelasVencimento,
+      emFolha: descontoEmFolha,
+      dataVenda,
+      total: totalVenda,
+      regra: limiteData?.regraVencimento,
+    }),
     numParcelas,
     repassePct: limiteData?.repassePct ?? null,
     disponivelAntes: cardLimite?.disponivel ?? null,

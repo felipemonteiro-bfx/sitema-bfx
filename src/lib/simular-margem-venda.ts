@@ -15,6 +15,8 @@ import {
   vendaEhAntecipavel,
 } from "@/lib/antecipacao";
 import { FORMA_PAGAMENTO } from "@/lib/forma-pagamento";
+import { parcelaUnicaDaFolha } from "@/lib/parcelas";
+import type { RegraVencimento } from "@/lib/regra-empresa";
 
 export type CenarioAntecipacao = {
   chave: "nenhuma" | "menosUltima" | "todas";
@@ -86,7 +88,10 @@ export function simularMargemVenda(input: EntradaSimulacaoMargem): SimulacaoMarg
       ? null
       : { antes: centavos(input.disponivelAntes), depois: centavos(input.disponivelAntes - valorParcela) };
 
-  const semParcelas = input.parcelas.length === 0;
+  // Data ilegível (campo apagado) não é parcela informada: `titulosDeVenda` a descartaria e a
+  // taxa sairia zerada sem o aviso.
+  const parcelas = input.parcelas.filter((p) => !Number.isNaN(new Date(p.dataVencimento).getTime()));
+  const semParcelas = parcelas.length === 0;
   const cenarios: CenarioAntecipacao[] = [];
 
   if (!vendaEhAntecipavel({ formaPagamento: input.formaPagamento })) {
@@ -113,13 +118,13 @@ export function simularMargemVenda(input: EntradaSimulacaoMargem): SimulacaoMarg
     };
 
     cenarios.push({ chave: "nenhuma", rotulo: "Nenhuma", taxa: 0, dinheiroJa: 0, lucro: centavos(base) });
-    const n = input.parcelas.length;
+    const n = parcelas.length;
     if (n >= 2) {
-      const ultima = Math.max(...input.parcelas.map((p) => p.numeroParcela));
-      const semUltima = input.parcelas.filter((p) => p.numeroParcela !== ultima);
+      const ultima = Math.max(...parcelas.map((p) => p.numeroParcela));
+      const semUltima = parcelas.filter((p) => p.numeroParcela !== ultima);
       cenarios.push(cenario("menosUltima", `${n - 1} de ${n}`, semUltima));
     }
-    cenarios.push(cenario("todas", "Todas", input.parcelas));
+    cenarios.push(cenario("todas", "Todas", parcelas));
   }
 
   return {
@@ -137,4 +142,31 @@ export function simularMargemVenda(input: EntradaSimulacaoMargem): SimulacaoMarg
     cenarios,
     semParcelas,
   };
+}
+
+/**
+ * Parcelas que a simulação deve usar. Em 1x o formulário não mostra datas e a lista dele fica
+ * vazia, ou velha de quando a venda era Nx (o formulário só a envia com mais de uma parcela).
+ * O servidor grava, nesse caso, a parcela única da folha pela regra — a simulação usa a mesma.
+ */
+export function parcelasParaSimulacao(input: {
+  numParcelas: number;
+  informadas: ParcelaSimulada[];
+  emFolha: boolean;
+  /** YYYY-MM-DD */
+  dataVenda: string;
+  total: number;
+  regra?: RegraVencimento;
+}): ParcelaSimulada[] {
+  if (input.numParcelas > 1) return input.informadas;
+  return parcelaUnicaDaFolha({
+    emFolha: input.emFolha,
+    dataVenda: new Date(`${input.dataVenda}T00:00:00.000Z`),
+    total: input.total,
+    regra: input.regra,
+  }).map((p) => ({
+    numeroParcela: p.numeroParcela,
+    dataVencimento: p.dataVencimento.toISOString().slice(0, 10),
+    valorParcela: p.valorParcela,
+  }));
 }

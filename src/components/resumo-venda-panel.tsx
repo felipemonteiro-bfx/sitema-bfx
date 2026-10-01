@@ -48,6 +48,7 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
             <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 tabular-nums">
               <span className="text-sm text-muted-foreground valor-sensivel">{formatBRL(limite.antes)}</span>
               <ArrowRight className="h-4 w-4 self-center text-muted-foreground" aria-hidden="true" />
+              <span className="sr-only">depois desta venda:</span>
               <span
                 className={cn(
                   "text-xl font-extrabold valor-sensivel",
