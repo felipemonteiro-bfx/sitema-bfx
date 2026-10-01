@@ -233,6 +233,8 @@ export async function registrarAntecipacaoConcluidaAction(entrada: {
   mesInicio?: string;
   mesFim?: string;
   dataRetorno: string;
+  /** Parcelas desmarcadas na fila (2026-09-30). */
+  excluirParcelaIds?: number[];
 }): Promise<RespostaLote> {
   const sessao = await requireAdminOrThrow();
   const ids = idsValidos(entrada?.ids ?? []);
@@ -247,6 +249,7 @@ export async function registrarAntecipacaoConcluidaAction(entrada: {
       periodo,
       dataRetorno: entrada.dataRetorno,
       usuario: sessao.nomeExibicao ?? sessao.username ?? null,
+      excluirParcelaIds: Array.isArray(entrada.excluirParcelaIds) ? idsValidos(entrada.excluirParcelaIds) : [],
     });
     if (!r) return { ok: false, erro: "Nenhuma parcela elegível na seleção." };
     revalidarVenda();

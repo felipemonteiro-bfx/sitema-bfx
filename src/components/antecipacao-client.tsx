@@ -344,7 +344,8 @@ export default function AntecipacaoClient({
       if (periodoFim) formData.append('mesFim', periodoFim);
       const r = await onSubmit(formData);
       if (!r.ok) {
-        toast.error(r.erro);
+        // O CSV já foi baixado (ele é lido antes de gravar): sem lote, o arquivo não vale.
+        toast.error(`${r.erro} O lote não foi aberto — descarte o arquivo baixado.`);
         return;
       }
       toast.success(`Lote enviado à Prudent: ${r.parcelas} ${r.parcelas === 1 ? 'parcela' : 'parcelas'}.`);
@@ -367,6 +368,7 @@ export default function AntecipacaoClient({
         mesInicio: periodoInicio || undefined,
         mesFim: periodoFim || undefined,
         dataRetorno: dataRegistro,
+        excluirParcelaIds: excluidas,
       });
       if (!r.ok) {
         toast.error(r.erro);

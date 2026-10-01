@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const dbMock = {
   parcelaVencimento: { findMany: vi.fn(), updateMany: vi.fn() },
+  $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
 };
 const guardsMock = { requireAdminOrThrow: vi.fn() };
 const auditMock = { createAuditLog: vi.fn() };
@@ -107,6 +108,15 @@ describe("recusarParcelasRh", () => {
     const r = await recusarParcelasRh([5], "Colaborador desligado");
     expect(r.ok).toBe(false);
     expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+  });
+
+  // Revisão: um lote que pega parte das parcelas entre a leitura e a escrita não pode deixar a
+  // recusa pela metade com "ok".
+  it("se o banco recusou menos que o lido, desfaz e devolve erro", async () => {
+    dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 1 });
+    const r = await recusarParcelasRh([5, 6], "Colaborador desligado");
+    expect(r).toEqual({ ok: false, erro: "A parcela já está na Prudent; cancele o lote antes." });
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
   });
 
   it("recusa com motivo, origem rh, data e usuário; o where repete a trava contra lote", async () => {

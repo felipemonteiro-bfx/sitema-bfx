@@ -12,6 +12,10 @@ import { idsValidos } from "@/lib/ids-validos";
 import { CONFIRMACAO, ORIGEM_CONFIRMACAO, podeRecusar, validarMotivo } from "@/lib/confirmacao-rh";
 
 const SEM_SELECAO = "Nenhum título selecionado.";
+const ERRO_NA_PRUDENT = "A parcela já está na Prudent; cancele o lote antes.";
+
+/** Desfaz a transação da recusa quando parte das parcelas foi para um lote no meio do caminho. */
+class RecusaParcial extends Error {}
 
 function ids(entrada: unknown): number[] {
   return Array.isArray(entrada) ? idsValidos(entrada) : [];
@@ -51,27 +55,35 @@ export async function recusarParcelasRh(
   const m = validarMotivo(motivo);
   if (!m.ok) return m;
 
-  // Tudo ou nada: se uma parcela já foi à Prudent, nenhuma é recusada.
-  const parcelas = await prisma.parcelaVencimento.findMany({
-    where: { id: { in: lista } },
-    select: { id: true, confirmacaoRh: true, antecipada: true, antecipacaoLoteId: true },
+  // Tudo ou nada: se uma parcela já foi à Prudent, nenhuma é recusada. Numa transação, porque um
+  // lote aberto entre a leitura e a escrita faria a recusa sair pela metade.
+  const r = await prisma.$transaction(async (tx) => {
+    const parcelas = await tx.parcelaVencimento.findMany({
+      where: { id: { in: lista } },
+      select: { id: true, confirmacaoRh: true, antecipada: true, antecipacaoLoteId: true },
+    });
+    for (const p of parcelas) {
+      const pode = podeRecusar(p);
+      if (!pode.ok) return pode;
+    }
+    // O where repete a trava; se o count não fechar, alguma foi para um lote no meio do caminho.
+    const { count } = await tx.parcelaVencimento.updateMany({
+      where: { id: { in: lista }, antecipada: false, antecipacaoLoteId: null },
+      data: {
+        confirmacaoRh: CONFIRMACAO.recusada,
+        confirmacaoOrigem: ORIGEM_CONFIRMACAO.rh,
+        confirmacaoEm: new Date(),
+        confirmacaoPor: sessao.nomeExibicao ?? sessao.username ?? null,
+        confirmacaoMotivo: m.valor,
+      },
+    });
+    if (count !== parcelas.length) throw new RecusaParcial();
+    return { ok: true as const, count };
+  }).catch((e) => {
+    if (e instanceof RecusaParcial) return { ok: false as const, erro: ERRO_NA_PRUDENT };
+    throw e;
   });
-  for (const p of parcelas) {
-    const pode = podeRecusar(p);
-    if (!pode.ok) return pode;
-  }
-
-  // O where repete a trava: um lote aberto entre a leitura e a escrita não leva parcela recusada.
-  const r = await prisma.parcelaVencimento.updateMany({
-    where: { id: { in: lista }, antecipada: false, antecipacaoLoteId: null },
-    data: {
-      confirmacaoRh: CONFIRMACAO.recusada,
-      confirmacaoOrigem: ORIGEM_CONFIRMACAO.rh,
-      confirmacaoEm: new Date(),
-      confirmacaoPor: sessao.nomeExibicao ?? sessao.username ?? null,
-      confirmacaoMotivo: m.valor,
-    },
-  });
+  if (!r.ok) return r;
 
   await createAuditLog("prudent:confirmacao-rh", { acao: "recusar", ids: lista, motivo: m.valor, alteradas: r.count });
   revalidatePath("/prudent");

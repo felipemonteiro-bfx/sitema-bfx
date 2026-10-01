@@ -127,6 +127,18 @@ describe("abrirLote", () => {
     expect(dbMock.anticipacaoBatch.create.mock.calls[0][0].data.empresaParceiraId).toBe(3);
   });
 
+  // Revisão: entre a leitura e o vínculo, uma recusa do RH não pode deixar a parcela entrar.
+  it("o vínculo ao lote repete o gate no where", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10, "2026-10-10")]);
+    await abrirLote({ vendaIds: [10], periodo: null });
+    expect(dbMock.parcelaVencimento.updateMany.mock.calls[0][0].where).toEqual({
+      id: { in: [1] },
+      antecipacaoLoteId: null,
+      confirmacaoRh: "confirmada",
+      paga: false,
+    });
+  });
+
   it("cliente sem empresa parceira → empresaParceiraId nulo", async () => {
     dbMock.venda.findMany.mockResolvedValue([
       { id: 10, dataVenda: new Date("2026-09-05T00:00:00.000Z"), cliente: { empresa: "X", empresaParceiraId: null } },
@@ -142,6 +154,25 @@ describe("registrarLoteConcluido", () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10, "2026-10-10")]);
     await registrarLoteConcluido({ vendaIds: [10], periodo: null, dataRetorno: "2026-09-01", usuario: "andre" });
     expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).not.toHaveProperty("confirmacaoRh");
+  });
+
+  it("respeita as parcelas desmarcadas na fila", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10, "2026-10-10")]);
+    await registrarLoteConcluido({
+      vendaIds: [10],
+      periodo: null,
+      dataRetorno: "2026-09-01",
+      usuario: "andre",
+      excluirParcelaIds: [2, 3],
+    });
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).toMatchObject({ id: { notIn: [2, 3] } });
+  });
+
+  it("a action repassa a exclusão", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10, "2026-10-10")]);
+    const { registrarAntecipacaoConcluidaAction } = await import("@/app/(app)/prudent/actions");
+    await registrarAntecipacaoConcluidaAction({ ids: [10], dataRetorno: "2026-09-01", excluirParcelaIds: [4] });
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).toMatchObject({ id: { notIn: [4] } });
   });
 });
 

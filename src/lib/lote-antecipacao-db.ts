@@ -51,9 +51,15 @@ const OPCOES_TRANSACAO = { timeout: 30_000, maxWait: 10_000 } as const;
  * lista (read committed), então sem este filtro o segundo roubaria as parcelas do primeiro e
  * deixaria um lote sem nenhuma.
  */
-async function ligarParcelas(tx: Tx, ids: number[], loteId: number, extra: Record<string, unknown> = {}) {
+async function ligarParcelas(
+  tx: Tx,
+  ids: number[],
+  loteId: number,
+  extra: Record<string, unknown> = {},
+  whereExtra: Record<string, unknown> = {}
+) {
   const { count } = await tx.parcelaVencimento.updateMany({
-    where: { id: { in: ids }, antecipacaoLoteId: null },
+    where: { id: { in: ids }, antecipacaoLoteId: null, ...whereExtra },
     data: { antecipacaoLoteId: loteId, ...extra },
   });
   if (count !== ids.length) {
@@ -262,7 +268,9 @@ export async function abrirLote(entrada: {
       usuario: null,
       valores: valoresDoEnvio(vendas, parcelas),
     });
-    await ligarParcelas(tx, parcelas.map((p) => p.id), lote.id);
+    // O gate repetido no vínculo: uma recusa do RH entre a leitura e aqui faz o count não fechar
+    // e o lote inteiro aborta, em vez de levar a parcela recusada.
+    await ligarParcelas(tx, parcelas.map((p) => p.id), lote.id, {}, { confirmacaoRh: CONFIRMACAO.confirmada, paga: false });
     await recalcularFlags(tx, parcelas.map((p) => p.vendaId));
 
     return {
@@ -366,6 +374,8 @@ export async function registrarLoteConcluido(entrada: {
   dataRetorno: string;
   usuario: string | null;
   origem?: string;
+  /** Parcelas desmarcadas na fila (2026-09-30). */
+  excluirParcelaIds?: number[];
 }): Promise<ResultadoLote | null> {
   const data = dataPuraOuNula(entrada.dataRetorno);
   if (!data) throw new Error("Data da antecipação inválida.");
@@ -373,7 +383,10 @@ export async function registrarLoteConcluido(entrada: {
   return prisma.$transaction(async (tx) => {
     await validarUmaEmpresa(tx, entrada.vendaIds);
     const parcelas = await tx.parcelaVencimento.findMany({
-      where: whereParcelasLivres(entrada.vendaIds, entrada.periodo, { exigirConfirmacao: false }),
+      where: whereParcelasLivres(entrada.vendaIds, entrada.periodo, {
+        exigirConfirmacao: false,
+        excluirParcelaIds: entrada.excluirParcelaIds ?? [],
+      }),
       select: SELECT_PARCELA_DO_LOTE,
     });
     if (parcelas.length === 0) return null;

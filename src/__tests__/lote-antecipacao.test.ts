@@ -63,8 +63,12 @@ describe("abrirLote — o envio à Prudent", () => {
     const updates = dbMock.parcelaVencimento.updateMany.mock.calls.map((c) => c[0]);
     expect(updates).toHaveLength(1);
     // O `antecipacaoLoteId: null` no where é a trava contra dois envios simultâneos.
-    expect(updates[0]).toEqual({ where: { id: { in: [1, 2, 3] }, antecipacaoLoteId: null }, data: { antecipacaoLoteId: 42 } });
-    const gravado = JSON.stringify(dbMock.parcelaVencimento.updateMany.mock.calls);
+    expect(updates[0]).toEqual({
+      where: { id: { in: [1, 2, 3] }, antecipacaoLoteId: null, confirmacaoRh: "confirmada", paga: false },
+      data: { antecipacaoLoteId: 42 },
+    });
+    // Só o `data` conta: o `where` do vínculo filtra `paga: false` desde a Fase 3 (gate repetido).
+    const gravado = JSON.stringify(dbMock.parcelaVencimento.updateMany.mock.calls.map((c) => c[0].data));
     expect(gravado).not.toContain("paga");
     expect(gravado).not.toContain("antecipada");
   });

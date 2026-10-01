@@ -127,11 +127,13 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
 
   return (
     <div className="space-y-6">
-      {grupos.map((g) => {
+      {grupos.map((g, indice) => {
         const sel = selecaoDoGrupo(g);
         const valorSel = sel.reduce((s, t) => s + Math.round(t.valor * 100), 0) / 100;
         const todos = sel.length === g.titulos.length;
-        const tituloId = `rh-${g.chave}`;
+        // Índice e não a chave: a chave tem o nome da empresa, com espaços, e o aria-labelledby
+        // leria cada palavra como um id.
+        const tituloId = `aguardando-rh-grupo-${indice}`;
         return (
           <Card key={g.chave} role="region" className="overflow-hidden" aria-labelledby={tituloId}>
             <div className="px-5 py-4">
