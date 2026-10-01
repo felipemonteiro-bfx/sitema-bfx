@@ -62,7 +62,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const vendas = await prisma.venda.findMany({
-      where: { id: { in: ids }, ...WHERE_VENDA_ANTECIPAVEL },
+      // Por lote: as vendas das parcelas gravadas, mesmo que mudem depois (o arquivo descreve o lote).
+      where: loteTxt !== null ? { id: { in: ids } } : { id: { in: ids }, ...WHERE_VENDA_ANTECIPAVEL },
       include: {
         cliente: {
           select: {

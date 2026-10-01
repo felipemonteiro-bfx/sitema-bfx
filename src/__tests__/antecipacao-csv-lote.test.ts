@@ -46,7 +46,8 @@ describe("GET /api/relatorios/antecipacao?loteId=", () => {
     });
     expect(loteMock.resolverParcelasDoLote).not.toHaveBeenCalled();
     const arg = dbMock.venda.findMany.mock.calls[0][0];
-    expect(arg.where.id).toEqual({ in: [10, 11] });
+    // Venda cancelada depois de abrir o lote continua no arquivo: ele descreve o lote, não a fila.
+    expect(arg.where).toEqual({ id: { in: [10, 11] } });
     expect(arg.include.parcelasVencimento.where).toEqual({ id: { in: [1, 2, 3] } });
     expect(await r.text()).toContain("200.00");
   });
