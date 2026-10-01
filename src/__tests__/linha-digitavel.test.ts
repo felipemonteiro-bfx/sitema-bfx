@@ -305,10 +305,70 @@ describe("decodificarLinhaDigitavel — arrecadacao (48 digitos)", () => {
 });
 
 describe("decodificarLinhaDigitavel — tamanho", () => {
-  it.each(["", "123", "0".repeat(44), "0".repeat(46), "0".repeat(49)])("recusa %s", (entrada) => {
+  it.each(["", "123", "0".repeat(43), "0".repeat(45), "0".repeat(46), "0".repeat(49)])("recusa %s", (entrada) => {
     expect(decodificarLinhaDigitavel(entrada)).toEqual({
       ok: false,
-      erro: "Linha digitável deve ter 47 (boleto) ou 48 (convênio) dígitos.",
+      erro: "Linha digitável deve ter 47 (boleto) ou 48 (convênio) dígitos, ou o código de barras 44.",
+    });
+  });
+});
+
+// Decisao do orquestrador (2026-09-30): o leitor de codigo de barras devolve os 44 digitos do
+// codigo, nao a linha. Comeca com 8 -> arrecadacao; senao bancario. A resposta traz a linha
+// montada (47 ou 48), que e o que se grava.
+describe("decodificarLinhaDigitavel — codigo de barras (44 digitos)", () => {
+  const ref = dataPura("2026-09-30");
+
+  it("bancario: valida o DV geral e devolve a linha de 47 montada", () => {
+    const codigo = codigoBancario("1585", "0000123456");
+    const r = decodificarLinhaDigitavel(codigo, ref);
+    expect(r).toEqual(decodificarLinhaDigitavel(linhaBancariaDeCodigoBarras(codigo), ref));
+    expect(r).toMatchObject({ ok: true, tipo: "bancario", codigoBarras: codigo, valor: 1234.56 });
+    if (r.ok) expect(r.linha).toHaveLength(47);
+  });
+
+  it("bancario com DV geral errado e recusado", () => {
+    const codigo = codigoBancario("1585", "0000123456");
+    const errado = codigo.slice(0, 4) + (codigo[4] === "1" ? "2" : "1") + codigo.slice(5);
+    expect(errado).not.toBe(codigo);
+    expect(decodificarLinhaDigitavel(errado, ref)).toEqual({ ok: false, erro: "Dígito verificador geral não confere." });
+  });
+
+  it("44 zeros e bancario com DV geral invalido", () => {
+    expect(decodificarLinhaDigitavel("0".repeat(44))).toEqual({ ok: false, erro: "Dígito verificador geral não confere." });
+  });
+
+  it("aceita o codigo com espacos", () => {
+    const codigo = codigoBancario("1585", "0000123456");
+    const r = decodificarLinhaDigitavel(`${codigo.slice(0, 20)} ${codigo.slice(20)}`, ref);
+    expect(r).toMatchObject({ ok: true, codigoBarras: codigo });
+  });
+
+  function codigoArrecadacao(idValor: "6" | "8", valor11 = "00000012345", resto = "12345678901234567890123456789") {
+    const semDv = "8" + "1" + idValor + valor11 + resto;
+    const dv = idValor === "6" ? modulo10(semDv) : modulo11Arrecadacao(semDv);
+    return semDv.slice(0, 3) + String(dv) + semDv.slice(3);
+  }
+
+  it.each(["6", "8"] as const)("arrecadacao (identificador %s): devolve a linha de 48 montada", (id) => {
+    const codigo = codigoArrecadacao(id);
+    const r = decodificarLinhaDigitavel(codigo);
+    expect(r).toEqual(decodificarLinhaDigitavel(linhaArrecadacaoDeCodigoBarras(codigo)));
+    expect(r).toMatchObject({ ok: true, tipo: "arrecadacao", codigoBarras: codigo, valor: 123.45, vencimento: null });
+    if (r.ok) expect(r.linha).toHaveLength(48);
+  });
+
+  it("arrecadacao com DV geral errado e recusada", () => {
+    const codigo = codigoArrecadacao("6");
+    const errado = codigo.slice(0, 3) + String((Number(codigo[3]) + 1) % 10) + codigo.slice(4);
+    expect(decodificarLinhaDigitavel(errado)).toEqual({ ok: false, erro: "Dígito verificador geral não confere." });
+  });
+
+  it("arrecadacao com identificador de valor fora de 6-9 e recusada", () => {
+    const codigo = "815" + "0".repeat(41);
+    expect(decodificarLinhaDigitavel(codigo)).toEqual({
+      ok: false,
+      erro: "Identificador de valor do convênio inválido (3º dígito deve ser 6, 7, 8 ou 9).",
     });
   });
 });

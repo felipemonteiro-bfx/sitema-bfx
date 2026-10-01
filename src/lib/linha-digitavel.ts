@@ -13,6 +13,10 @@
  * cada um seguido do seu DV. O 3º dígito (identificador de valor) escolhe o módulo dos DVs:
  * 6 ou 7 → módulo 10; 8 ou 9 → módulo 11. Com 6 ou 8 o valor é efetivo (posições 5–15 do código
  * de barras); com 7 ou 9 é valor de referência e não é lido. Convênio não traz vencimento.
+ *
+ * Código de barras (44 dígitos, o que o leitor devolve): começa com 8 → arrecadação; senão
+ * bancário. O DV geral é conferido e a linha (47 ou 48) é montada a partir do código — é ela que
+ * volta em `linha` e que se grava.
  */
 
 export type LinhaDecodificada =
@@ -21,6 +25,7 @@ export type LinhaDecodificada =
   | { ok: false; erro: string };
 
 const DIA_MS = 86_400_000;
+const ERRO_DV_GERAL = "Dígito verificador geral não confere.";
 /** Base original do fator de vencimento: fator 0 = 07/10/1997. */
 const BASE_FATOR_ANTIGA = Date.UTC(1997, 9, 7);
 /** Reinício do fator (fator 1000) depois de esgotar 9999 em 21/02/2025. */
@@ -141,7 +146,7 @@ function decodificarBancaria(linha: string, referencia: Date): LinhaDecodificada
   const codigoBarras = codigoBarrasDeLinhaBancaria(linha);
   const semDv = codigoBarras.slice(0, 4) + codigoBarras.slice(5);
   if (modulo11Bancario(semDv) !== Number(codigoBarras[4])) {
-    return { ok: false, erro: "Dígito verificador geral não confere." };
+    return { ok: false, erro: ERRO_DV_GERAL };
   }
   const centavos = Number(codigoBarras.slice(9, 19));
   return {
@@ -187,9 +192,26 @@ function decodificarArrecadacao(linha: string): LinhaDecodificada {
   };
 }
 
+/** Código de barras lido por leitor: confere o DV geral e decodifica a linha montada. */
+function decodificarCodigoBarras(codigo: string, referencia: Date): LinhaDecodificada {
+  if (codigo[0] === "8") {
+    const dv = moduloArrecadacao(codigo[2]);
+    if (!dv) {
+      return { ok: false, erro: "Identificador de valor do convênio inválido (3º dígito deve ser 6, 7, 8 ou 9)." };
+    }
+    if (dv(codigo.slice(0, 3) + codigo.slice(4)) !== Number(codigo[3])) return { ok: false, erro: ERRO_DV_GERAL };
+    return decodificarArrecadacao(linhaArrecadacaoDeCodigoBarras(codigo));
+  }
+  if (modulo11Bancario(codigo.slice(0, 4) + codigo.slice(5)) !== Number(codigo[4])) {
+    return { ok: false, erro: ERRO_DV_GERAL };
+  }
+  return decodificarBancaria(linhaBancariaDeCodigoBarras(codigo), referencia);
+}
+
 export function decodificarLinhaDigitavel(entrada: string, referencia: Date = new Date()): LinhaDecodificada {
   const linha = somenteDigitos(entrada);
   if (linha.length === 47) return decodificarBancaria(linha, referencia);
   if (linha.length === 48) return decodificarArrecadacao(linha);
-  return { ok: false, erro: "Linha digitável deve ter 47 (boleto) ou 48 (convênio) dígitos." };
+  if (linha.length === 44) return decodificarCodigoBarras(linha, referencia);
+  return { ok: false, erro: "Linha digitável deve ter 47 (boleto) ou 48 (convênio) dígitos, ou o código de barras 44." };
 }
