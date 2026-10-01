@@ -3,7 +3,9 @@
  *
  * - saídas: saldo dos boletos vivos não pagos, no vencimento;
  * - entradas: Pix esperado dos fechamentos e depósito previsto dos lotes em andamento;
- * - o que já venceu (saída ou entrada) e não aconteceu entra no dia de hoje;
+ * - boleto vencido e não pago entra no dia de hoje;
+ * - entrada com data já passada NÃO conta: é justamente o dinheiro que não chegou, e contar com
+ *   ela esconderia o buraco (decisão de 2026-09-30). Quando chegar, vira caixa e sai da lista;
  * - o que cai depois do horizonte fica fora da série e dos cartões.
  *
  * `acumulado` = Σ saídas − Σ entradas até o dia, com piso 0: é só o que falta. O piso é aplicado
@@ -13,9 +15,6 @@
  *
  * `hoje` é lido pelo dia UTC: a tela passa a data pura do dia em Manaus,
  * `new Date(hojeDataPura() + "T00:00:00.000Z")` — `new Date()` cru vira o dia seguinte às 20h.
- *
- * Decisão em aberto (spec §6 não define): Pix esperado ou depósito previsto cuja data já passou
- * entra hoje, como os boletos vencidos. Um Pix atrasado reduz o pico desde o primeiro dia.
  */
 
 export type Movimento = { data: Date; valor: number; tipo: "boleto" | "pix" | "deposito"; ref?: string };
@@ -74,11 +73,11 @@ export function projetarCaixa(entrada: {
     }
   }
   for (const p of entrada.pixEsperados) {
-    if (!Number.isFinite(p.valor)) continue;
+    if (!Number.isFinite(p.valor) || diaUtc(p.data) < inicio) continue;
     movimentos.push({ data: p.data, valor: -centavos(p.valor), tipo: "pix" });
   }
   for (const dep of entrada.depositosPrevistos) {
-    if (!Number.isFinite(dep.valor)) continue;
+    if (!Number.isFinite(dep.valor) || diaUtc(dep.data) < inicio) continue;
     movimentos.push({ data: dep.data, valor: -centavos(dep.valor), tipo: "deposito" });
   }
 

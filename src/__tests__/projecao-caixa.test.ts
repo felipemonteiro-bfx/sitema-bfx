@@ -166,7 +166,9 @@ describe("projetarCaixa", () => {
     expect(r.serie.map((p) => p.data)).toEqual(["2026-10-01", "2026-10-02", "2026-10-03"]);
   });
 
-  it("Pix esperado ou deposito ja vencido entra hoje", () => {
+  // Decisao do orquestrador (2026-09-30): entrada com data ja passada e justamente o dinheiro que
+  // nao chegou — contar com ela esconderia o buraco. Boleto vencido continua entrando hoje.
+  it("Pix esperado ou deposito com data ja passada nao conta", () => {
     const r = projetarCaixa(
       entrada({
         boletos: [{ vencimento: d("2026-10-03"), saldo: 800, dataPix: null }],
@@ -175,6 +177,18 @@ describe("projetarCaixa", () => {
       }),
     );
     expect(noDia(r, "2026-10-01")).toBe(0);
+    expect(noDia(r, "2026-10-03")).toBe(800);
+    expect(r.pico).toEqual({ valor: 800, data: "2026-10-03" });
+  });
+
+  it("entrada com data de hoje conta", () => {
+    const r = projetarCaixa(
+      entrada({
+        boletos: [{ vencimento: d("2026-10-03"), saldo: 800, dataPix: null }],
+        depositosPrevistos: [{ data: d("2026-10-01"), valor: 300 }],
+        pixEsperados: [{ data: d("2026-10-01"), valor: 200 }],
+      }),
+    );
     expect(noDia(r, "2026-10-03")).toBe(300);
   });
 
