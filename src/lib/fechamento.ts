@@ -169,3 +169,26 @@ export function podeReabrir(status: string): boolean {
     status === STATUS_FECHAMENTO.pagoParcial
   );
 }
+
+/** O que o demonstrativo (PDF e XLSX) mostra de uma versão conferida. */
+export type DemonstrativoDados = {
+  empresa: { nome: string; cnpj: string | null };
+  competencia: string;
+  versao: number;
+  diaCorte: number;
+  vencimentoPix: Date;
+  responsavel: string | null;
+  linhas: {
+    identificador: string;
+    colaborador: string;
+    matricula: string | null;
+    valor: number;
+    vencimento: Date;
+    lote: number | null;
+    situacao: string;
+  }[];
+  ajustes: { valor: number; justificativa: string }[];
+  totalBruto: number;
+  totalAjustes: number;
+  totalFinal: number;
+};

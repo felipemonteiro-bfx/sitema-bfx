@@ -1,0 +1,288 @@
+/**
+ * Demonstrativo do fechamento em PDF (Fase 5), no padrão de `relatorio-mensal-pdf.ts`: pdf-lib,
+ * A4, Helvetica higienizada por `fontePdfSegura`, logo opcional, tabela paginada com o cabeçalho
+ * repetido. Depois da tabela: totais, ajustes com justificativa e, quando houver, o bloco
+ * "Pague com Pix" (QR, copia-e-cola, vencimento e identificação — preenchido na Fase 6).
+ */
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
+import { fontePdfSegura } from "@/lib/pdf-texto";
+import { embedLogoNoPdf } from "@/lib/logo-loader";
+import { formatBRL } from "@/lib/utils";
+import { formatarDataPura } from "@/lib/data-pura";
+import { rotuloCompetencia, type DemonstrativoDados } from "@/lib/fechamento";
+
+const AZUL = rgb(0.07, 0.13, 0.31);
+const CINZA_TEXTO = rgb(0.2, 0.2, 0.22);
+const CINZA_SUAVE = rgb(0.45, 0.46, 0.5);
+const CINZA_LINHA = rgb(0.8, 0.82, 0.86);
+const FUNDO_RESUMO = rgb(0.95, 0.96, 0.98);
+
+const PAGE_W = 595.28; // A4
+const PAGE_H = 841.89;
+const MARGIN = 40;
+const CONTEUDO_W = PAGE_W - 2 * MARGIN;
+const ROW_H = 18;
+const RODAPE = MARGIN + 20;
+const QR = 120;
+
+type Col = { label: string; x: number; width: number; align?: "left" | "right" };
+
+// Larguras somam 515 = PAGE_W - 2*MARGIN
+const COLS: Col[] = [
+  { label: "Venda", x: MARGIN, width: 62 },
+  { label: "Colaborador", x: MARGIN + 62, width: 128 },
+  { label: "Matrícula", x: MARGIN + 190, width: 54 },
+  { label: "Vencimento", x: MARGIN + 244, width: 58 },
+  { label: "Lote", x: MARGIN + 302, width: 34 },
+  { label: "Situação", x: MARGIN + 336, width: 114 },
+  { label: "Valor", x: MARGIN + 450, width: 65, align: "right" },
+];
+
+export type PixDemonstrativo = {
+  copiaECola: string;
+  qrPng?: Uint8Array;
+  vencimento?: Date;
+  identificacao?: string;
+};
+
+export type FechamentoPdfInput = DemonstrativoDados & {
+  pix?: PixDemonstrativo | null;
+  logoPath?: string | null;
+};
+
+function truncar(text: string, font: PDFFont, size: number, maxWidth: number): string {
+  if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
+  let t = text;
+  while (t.length > 1 && font.widthOfTextAtSize(t + "…", size) > maxWidth) t = t.slice(0, -1);
+  return t + "…";
+}
+
+/** Quebra por caractere — para o copia-e-cola, que não tem espaços. */
+function quebrarCaracteres(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  const linhas: string[] = [];
+  let atual = "";
+  for (const c of Array.from(text)) {
+    if (atual && font.widthOfTextAtSize(atual + c, size) > maxWidth) {
+      linhas.push(atual);
+      atual = c;
+    } else {
+      atual += c;
+    }
+  }
+  if (atual) linhas.push(atual);
+  return linhas;
+}
+
+/** Quebra por palavra; palavra maior que a largura cai na quebra por caractere. */
+function quebrarPalavras(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  const linhas: string[] = [];
+  let atual = "";
+  for (const palavra of text.split(/\s+/).filter(Boolean)) {
+    const tentativa = atual ? `${atual} ${palavra}` : palavra;
+    if (font.widthOfTextAtSize(tentativa, size) <= maxWidth) {
+      atual = tentativa;
+      continue;
+    }
+    if (atual) linhas.push(atual);
+    if (font.widthOfTextAtSize(palavra, size) <= maxWidth) {
+      atual = palavra;
+    } else {
+      const pedacos = quebrarCaracteres(palavra, font, size, maxWidth);
+      atual = pedacos.pop() ?? "";
+      linhas.push(...pedacos);
+    }
+  }
+  if (atual) linhas.push(atual);
+  return linhas.length ? linhas : [""];
+}
+
+export async function gerarFechamentoPdf(input: FechamentoPdfInput): Promise<Buffer> {
+  const { pix, logoPath, ...dados } = input;
+  const pdf = await PDFDocument.create();
+  const font = fontePdfSegura(await pdf.embedFont(StandardFonts.Helvetica));
+  const fontBold = fontePdfSegura(await pdf.embedFont(StandardFonts.HelveticaBold));
+  const fontMono = fontePdfSegura(await pdf.embedFont(StandardFonts.Courier));
+
+  let logo: PDFImage | null = null;
+  if (logoPath) logo = await embedLogoNoPdf(pdf, logoPath);
+
+  let qr: PDFImage | null = null;
+  if (pix?.qrPng && pix.qrPng.length > 0) {
+    try {
+      qr = await pdf.embedPng(pix.qrPng);
+    } catch {
+      qr = null; // QR ilegível: o copia-e-cola continua servindo.
+    }
+  }
+
+  const competencia = rotuloCompetencia(dados.competencia);
+  let page: PDFPage = pdf.addPage([PAGE_W, PAGE_H]);
+  let y = PAGE_H - MARGIN;
+
+  const texto = (t: string, x: number, yy: number, size: number, f: PDFFont = font, color = CINZA_TEXTO) =>
+    page.drawText(t, { x, y: yy, size, font: f, color });
+
+  const novaPagina = () => {
+    page = pdf.addPage([PAGE_W, PAGE_H]);
+    y = PAGE_H - MARGIN;
+    texto(truncar(`${dados.empresa.nome} — ${competencia} — versão ${dados.versao} (continuação)`, font, 8.5, CONTEUDO_W), MARGIN, y - 10, 8.5, font, CINZA_SUAVE);
+    y -= 22;
+  };
+
+  /** Garante `altura` livre acima do rodapé; senão abre página nova. */
+  const garantir = (altura: number) => {
+    if (y - altura < RODAPE) novaPagina();
+  };
+
+  const linhaTabela = (valores: string[], cabecalho: boolean) => {
+    const size = 8.5;
+    if (cabecalho) {
+      page.drawRectangle({ x: MARGIN, y: y - ROW_H, width: CONTEUDO_W, height: ROW_H, color: AZUL });
+    }
+    const f = cabecalho ? fontBold : font;
+    const cor = cabecalho ? rgb(1, 1, 1) : CINZA_TEXTO;
+    COLS.forEach((col, i) => {
+      const cell = truncar(valores[i] ?? "", f, size, col.width - 8);
+      const x = col.align === "right" ? col.x + col.width - f.widthOfTextAtSize(cell, size) - 4 : col.x + 4;
+      page.drawText(cell, { x, y: y - ROW_H + 5.5, size, font: f, color: cor });
+    });
+    if (!cabecalho) {
+      page.drawLine({ start: { x: MARGIN, y: y - ROW_H }, end: { x: PAGE_W - MARGIN, y: y - ROW_H }, thickness: 0.4, color: CINZA_LINHA });
+    }
+    y -= ROW_H;
+  };
+
+  // Cabeçalho
+  let tituloX = MARGIN;
+  if (logo) {
+    const h = 40;
+    const w = (logo.width / logo.height) * h;
+    page.drawImage(logo, { x: MARGIN, y: y - h, width: w, height: h });
+    tituloX = MARGIN + w + 12;
+  }
+  texto("Demonstrativo mensal", tituloX, y - 14, 16, fontBold, AZUL);
+  texto(truncar(dados.empresa.nome, font, 11, PAGE_W - MARGIN - tituloX), tituloX, y - 32, 11);
+  y -= 56;
+
+  const meta: [string, string][] = [
+    ["CNPJ", dados.empresa.cnpj ?? "—"],
+    ["Competência", competencia],
+    ["Versão", String(dados.versao)],
+    ["Dia de corte", `dia ${dados.diaCorte}`],
+    ["Vencimento do Pix", formatarDataPura(dados.vencimentoPix)],
+    ["Responsável", dados.responsavel ?? "—"],
+  ];
+  const metaH = 3 * 14 + 12;
+  page.drawRectangle({ x: MARGIN, y: y - metaH, width: CONTEUDO_W, height: metaH, color: FUNDO_RESUMO });
+  meta.forEach(([rotulo, valor], i) => {
+    const coluna = i % 2;
+    const linha = Math.floor(i / 2);
+    const x = MARGIN + 8 + coluna * (CONTEUDO_W / 2);
+    const yy = y - 16 - linha * 14;
+    texto(`${rotulo}:`, x, yy, 9, fontBold, AZUL);
+    texto(truncar(valor, font, 9, CONTEUDO_W / 2 - 100), x + 92, yy, 9);
+  });
+  y -= metaH + 16;
+
+  // Tabela
+  const cabecalho = COLS.map((c) => c.label);
+  linhaTabela(cabecalho, true);
+  if (dados.linhas.length === 0) {
+    texto("Nenhuma parcela neste demonstrativo.", MARGIN + 4, y - ROW_H + 5.5, 8.5, font, CINZA_SUAVE);
+    y -= ROW_H;
+  }
+  for (const l of dados.linhas) {
+    if (y - ROW_H < RODAPE) {
+      novaPagina();
+      linhaTabela(cabecalho, true);
+    }
+    linhaTabela(
+      [
+        l.identificador,
+        l.colaborador,
+        l.matricula ?? "—",
+        formatarDataPura(l.vencimento),
+        l.lote === null ? "—" : String(l.lote),
+        l.situacao,
+        formatBRL(l.valor),
+      ],
+      false
+    );
+  }
+  y -= 14;
+
+  // Totais e ajustes
+  const xValor = PAGE_W - MARGIN;
+  const linhaTotal = (rotulo: string, valor: number, size = 9.5, f: PDFFont = fontBold) => {
+    garantir(size + 8);
+    const v = formatBRL(valor);
+    texto(rotulo, MARGIN + 270, y - size, size, f, AZUL);
+    texto(v, xValor - f.widthOfTextAtSize(v, size), y - size, size, f, AZUL);
+    y -= size + 8;
+  };
+
+  linhaTotal("Total bruto", dados.totalBruto);
+  if (dados.ajustes.length > 0) {
+    garantir(22);
+    texto("Ajustes", MARGIN, y - 10, 10, fontBold, AZUL);
+    y -= 18;
+    for (const a of dados.ajustes) {
+      const linhas = quebrarPalavras(a.justificativa, font, 8.5, 380);
+      garantir(linhas.length * 11 + 4);
+      const v = formatBRL(a.valor);
+      texto(v, xValor - font.widthOfTextAtSize(v, 8.5), y - 9, 8.5);
+      linhas.forEach((t, i) => texto(t, MARGIN + 8, y - 9 - i * 11, 8.5));
+      y -= linhas.length * 11 + 4;
+    }
+    linhaTotal("Total de ajustes", dados.totalAjustes);
+  }
+  garantir(30);
+  page.drawLine({ start: { x: MARGIN + 270, y: y - 2 }, end: { x: xValor, y: y - 2 }, thickness: 0.8, color: AZUL });
+  y -= 6;
+  linhaTotal("Valor final", dados.totalFinal, 13);
+
+  // Pague com Pix
+  if (pix) {
+    const textoX = qr ? MARGIN + QR + 16 : MARGIN;
+    const textoW = PAGE_W - MARGIN - textoX;
+    const codigo = quebrarCaracteres(pix.copiaECola.trim(), fontMono, 8, textoW);
+    const vencimento = pix.vencimento ?? dados.vencimentoPix;
+    const extras: string[] = [`Vencimento: ${formatarDataPura(vencimento)}`];
+    if (pix.identificacao) extras.push(`Identificação: ${pix.identificacao}`);
+    const textoH = 16 + 12 + codigo.length * 10 + 8 + extras.length * 12;
+    const blocoH = Math.max(qr ? QR : 0, textoH) + 30;
+
+    y -= 12;
+    garantir(blocoH);
+    texto("Pague com Pix", MARGIN, y - 13, 13, fontBold, AZUL);
+    y -= 24;
+    const topo = y;
+    if (qr) page.drawImage(qr, { x: MARGIN, y: topo - QR, width: QR, height: QR });
+    let ty = topo - 10;
+    texto("Valor", textoX, ty, 9, fontBold, AZUL);
+    texto(formatBRL(dados.totalFinal), textoX + 40, ty, 9, fontBold, CINZA_TEXTO);
+    ty -= 16;
+    texto("Pix copia e cola:", textoX, ty, 9, fontBold, AZUL);
+    ty -= 12;
+    for (const t of codigo) {
+      texto(t, textoX, ty, 8, fontMono);
+      ty -= 10;
+    }
+    ty -= 8;
+    for (const t of extras) {
+      texto(truncar(t, font, 9, textoW), textoX, ty, 9);
+      ty -= 12;
+    }
+    y = Math.min(ty, qr ? topo - QR : ty) - 6;
+  }
+
+  // Rodapé com paginação
+  const paginas = pdf.getPages();
+  paginas.forEach((p, i) => {
+    p.drawText("Gerado pelo Sistema BFX", { x: MARGIN, y: MARGIN - 10, size: 7.5, font, color: rgb(0.6, 0.6, 0.62) });
+    const num = `Página ${i + 1} de ${paginas.length}`;
+    p.drawText(num, { x: PAGE_W - MARGIN - font.widthOfTextAtSize(num, 7.5), y: MARGIN - 10, size: 7.5, font, color: rgb(0.6, 0.6, 0.62) });
+  });
+
+  return Buffer.from(await pdf.save());
+}
