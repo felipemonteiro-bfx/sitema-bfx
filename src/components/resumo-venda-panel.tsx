@@ -34,7 +34,6 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
     { rotulo: "Envio", valor: custos.envio },
     { rotulo: custos.nota > 0 && taxaNotaPct ? `Nota fiscal (${pct(taxaNotaPct)})` : "Nota fiscal", valor: custos.nota },
     { rotulo: comissaoPct ? `Comissão (${pct(comissaoPct)})` : "Comissão", valor: custos.comissao },
-    { rotulo: "Desconto", valor: custos.desconto },
   ];
 
   return (
@@ -119,6 +118,14 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
               </div>
             )}
           </dl>
+          {/* O desconto já saiu do total da venda: na lista acima ele seria descontado duas vezes por
+              quem somasse os custos. Assim, total − custos listados = lucro sem antecipação. */}
+          {custos.desconto > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Desconto de <span className="tabular-nums valor-sensivel">{formatBRL(custos.desconto)}</span> já
+              abatido do total da venda.
+            </p>
+          )}
         </section>
       </div>
 
