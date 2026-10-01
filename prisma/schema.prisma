@@ -261,9 +261,16 @@ model ParcelaVencimento {
   // do lote; Restrict: boleto não some com parcela ligada.
   boletoPrudentId   Int?      @map("boleto_prudent_id")
 
-  venda           Venda    @relation(fields: [vendaId], references: [id], onDelete: Cascade)
-  antecipacaoLote AnticipacaoBatch? @relation(fields: [antecipacaoLoteId], references: [id], onDelete: SetNull)
-  boletoPrudent   BoletoPrudent?    @relation(fields: [boletoPrudentId], references: [id], onDelete: Restrict)
+  // Fechamento mensal (2026-09-30, Fase 5). `fechamentoId` é a reserva: parcela reservada só é
+  // cobrada/baixada pelo fechamento. `liquidadaEm` = a empresa pagou esta parcela no fechamento.
+  fechamentoId      Int?      @map("fechamento_id")
+  liquidadaEm       DateTime? @map("liquidada_em")
+
+  venda            Venda             @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  antecipacaoLote  AnticipacaoBatch? @relation(fields: [antecipacaoLoteId], references: [id], onDelete: SetNull)
+  boletoPrudent    BoletoPrudent?    @relation(fields: [boletoPrudentId], references: [id], onDelete: Restrict)
+  fechamento       Fechamento?       @relation(fields: [fechamentoId], references: [id], onDelete: SetNull)
+  linhasFechamento FechamentoLinha[]
 
   @@map("parcelas_vencimento")
   @@unique([vendaId, numeroParcela])
@@ -272,6 +279,7 @@ model ParcelaVencimento {
   @@index([antecipacaoLoteId])
   @@index([confirmacaoRh])
   @@index([boletoPrudentId])
+  @@index([fechamentoId])
 }
 
 model Config {
@@ -391,6 +399,7 @@ model EmpresaParceira {
   emailsEnviados EmailEnvio[]
   contratosConsignados ContratoConsignado[]
   regras        RegraEmpresa[]
+  fechamentos   Fechamento[]
 
   @@map("empresas_parceiras")
 }
@@ -661,8 +670,10 @@ model ArquivoFinanceiro {
   criadoEm    DateTime @default(now()) @map("criado_em")
   criadoPor   String?  @map("criado_por")
 
-  boletosPdf  BoletoPrudent[]   @relation("boleto_pdf")
-  pagamentos  BoletoPagamento[] @relation("pagamento_comprovante")
+  boletosPdf      BoletoPrudent[]    @relation("boleto_pdf")
+  pagamentos      BoletoPagamento[]  @relation("pagamento_comprovante")
+  fechamentosXlsx FechamentoVersao[] @relation("fechamento_xlsx")
+  fechamentosPdf  FechamentoVersao[] @relation("fechamento_pdf")
 
   @@index([sha256])
   @@map("arquivos_financeiros")
@@ -723,6 +734,95 @@ model BoletoPagamento {
 
   @@index([boletoId])
   @@map("boletos_prudent_pagamentos")
+}
+
+/// Fechamento mensal de uma empresa numa competência (mês de vencimento) — spec 2026-09-30 §3.6.
+/// em_preparacao → conferido → enviado (Fase 5) → pago_parcial | pago (Fase 6). As parcelas
+/// reservadas apontam para cá por `ParcelaVencimento.fechamentoId`. `desatualizado` = alguma
+/// reserva saiu por edição/exclusão de venda depois da geração.
+model Fechamento {
+  id                Int      @id @default(autoincrement())
+  empresaParceiraId Int      @map("empresa_parceira_id")
+  competencia       String // "AAAA-MM"
+  status            String   @default("em_preparacao")
+  responsavel       String?
+  versaoAtual       Int      @default(0) @map("versao_atual")
+  desatualizado     Boolean  @default(false)
+  criadoEm          DateTime @default(now()) @map("criado_em")
+  atualizadoEm      DateTime @updatedAt @map("atualizado_em")
+
+  empresaParceira EmpresaParceira     @relation(fields: [empresaParceiraId], references: [id], onDelete: Restrict)
+  versoes         FechamentoVersao[]
+  ajustes         FechamentoAjuste[]
+  parcelas        ParcelaVencimento[]
+
+  @@unique([empresaParceiraId, competencia])
+  @@map("fechamentos")
+}
+
+/// Versão conferida do fechamento: foto das linhas, totais, ajustes e os arquivos gerados.
+model FechamentoVersao {
+  id            Int       @id @default(autoincrement())
+  fechamentoId  Int       @map("fechamento_id")
+  numero        Int
+  totalBruto    Float     @map("total_bruto")
+  totalAjustes  Float     @map("total_ajustes")
+  totalFinal    Float     @map("total_final")
+  ajustesJson   String    @map("ajustes_json")
+  xlsxArquivoId Int?      @map("xlsx_arquivo_id")
+  pdfArquivoId  Int?      @map("pdf_arquivo_id")
+  criadaEm      DateTime  @default(now()) @map("criada_em")
+  criadaPor     String?   @map("criada_por")
+  enviadaEm     DateTime? @map("enviada_em")
+  enviadaPor    String?   @map("enviada_por")
+
+  fechamento Fechamento         @relation(fields: [fechamentoId], references: [id], onDelete: Cascade)
+  xlsx       ArquivoFinanceiro? @relation("fechamento_xlsx", fields: [xlsxArquivoId], references: [id], onDelete: SetNull)
+  pdf        ArquivoFinanceiro? @relation("fechamento_pdf", fields: [pdfArquivoId], references: [id], onDelete: SetNull)
+  linhas     FechamentoLinha[]
+
+  @@unique([fechamentoId, numero])
+  @@map("fechamento_versoes")
+}
+
+/// Linha (foto) de uma versão. `parcelaId` SetNull: a edição de venda apaga e recria parcelas.
+model FechamentoLinha {
+  id              Int      @id @default(autoincrement())
+  versaoId        Int      @map("versao_id")
+  parcelaId       Int?     @map("parcela_id")
+  vendaId         Int      @map("venda_id")
+  numeroParcela   Int      @map("numero_parcela")
+  totalParcelas   Int      @map("total_parcelas")
+  clienteNome     String   @map("cliente_nome")
+  matricula       String?
+  valor           Float
+  vencimento      DateTime
+  loteId          Int?     @map("lote_id")
+  antecipada      Boolean
+  boletoPrudentId Int?     @map("boleto_prudent_id")
+
+  versao  FechamentoVersao   @relation(fields: [versaoId], references: [id], onDelete: Cascade)
+  parcela ParcelaVencimento? @relation(fields: [parcelaId], references: [id], onDelete: SetNull)
+
+  @@index([versaoId])
+  @@index([parcelaId])
+  @@map("fechamento_linhas")
+}
+
+/// Ajuste manual (±) do fechamento, com justificativa. Remoção é lógica (`removidoEm`).
+model FechamentoAjuste {
+  id            Int       @id @default(autoincrement())
+  fechamentoId  Int       @map("fechamento_id")
+  valor         Float
+  justificativa String
+  criadoPor     String?   @map("criado_por")
+  criadoEm      DateTime  @default(now()) @map("criado_em")
+  removidoEm    DateTime? @map("removido_em")
+
+  fechamento Fechamento @relation(fields: [fechamentoId], references: [id], onDelete: Cascade)
+
+  @@index([fechamentoId])
+  @@map("fechamento_ajustes")
 }
 
 /// Registro unificado de mensagens WhatsApp (entrada e saída).
