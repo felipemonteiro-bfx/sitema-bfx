@@ -5,8 +5,9 @@ import { getSession } from "@/lib/session";
 /**
  * GET /api/arquivos/[id]
  *
- * Arquivo privado do financeiro (PDF do boleto Prudent, comprovante de pagamento). Admin-only. O
- * tipo foi conferido pelos bytes no upload (só PDF, PNG e JPEG), por isso pode abrir inline.
+ * Arquivo privado do financeiro (PDF do boleto Prudent, comprovante de pagamento, demonstrativo
+ * do fechamento em PDF e XLSX). Admin-only. O tipo do upload foi conferido pelos bytes (só PDF, PNG
+ * e JPEG); os demonstrativos são gerados pelo sistema. Abre inline com CSP sandbox e nosniff.
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -34,6 +35,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       "Content-Type": arquivo.contentType,
       "Content-Disposition": `inline; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(arquivo.nome)}`,
       "X-Content-Type-Options": "nosniff",
+      // Aberto inline, o arquivo fica numa origem opaca, sem script: nada roda com a sessão do app.
+      "Content-Security-Policy": "sandbox",
       "Cache-Control": "private, no-store",
     },
   });

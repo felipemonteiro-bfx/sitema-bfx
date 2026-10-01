@@ -132,6 +132,8 @@ describe("GET /api/arquivos/[id]", () => {
     expect(r.headers.get("Content-Disposition")).toMatch(/^inline; filename="boleto-lote-3.pdf"/);
     expect(r.headers.get("Cache-Control")).toContain("no-store");
     expect(r.headers.get("X-Content-Type-Options")).toBe("nosniff");
+    // Fase 5: o arquivo nunca roda script na origem do app, mesmo aberto inline.
+    expect(r.headers.get("Content-Security-Policy")).toBe("sandbox");
     expect(new Uint8Array(await r.arrayBuffer())).toEqual(PDF);
   });
 });

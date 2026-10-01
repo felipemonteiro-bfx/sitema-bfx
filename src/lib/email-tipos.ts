@@ -1,14 +1,15 @@
 /** Tipos e rótulos do histórico de e-mails — módulo puro, usado também no client. */
-export type TipoEmail = "termo" | "semanal" | "mensal" | "venda";
+export type TipoEmail = "termo" | "semanal" | "mensal" | "venda" | "fechamento";
 export type OrigemEmail = "automatico" | "manual";
 
-export const TIPOS_EMAIL: TipoEmail[] = ["termo", "semanal", "mensal", "venda"];
+export const TIPOS_EMAIL: TipoEmail[] = ["termo", "semanal", "mensal", "venda", "fechamento"];
 
 export const ROTULO_TIPO_EMAIL: Record<TipoEmail, string> = {
   termo: "Termo assinado",
   semanal: "Consolidado semanal",
   mensal: "Relatório mensal",
   venda: "Aviso de venda",
+  fechamento: "Demonstrativo mensal",
 };
 
 export function rotuloTipoEmail(tipo: string): string {
