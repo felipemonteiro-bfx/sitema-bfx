@@ -168,9 +168,13 @@ describe("gerarOuAtualizarFechamento", () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1)]);
     await gerarOuAtualizarFechamento({ empresaParceiraId: 7, competencia: "2026-10", usuario: null });
     const reserva = dbMock.parcelaVencimento.updateMany.mock.calls.map((c) => c[0]).find((a) => a.data.fechamentoId === 11);
-    // Não antecipada com lote é lote em andamento (concluir marca antecipada; cancelar solta o lote):
-    // um lote aberto entre a leitura e a reserva derruba o count.
-    expect(reserva.where.OR).toEqual([{ antecipada: true }, { paga: false, antecipacaoLoteId: null }]);
+    // Não antecipada: sem lote, ou com lote que não está em andamento (legado: lote concluído ou
+    // cancelado sem soltar a parcela) — a mesma regra de `elegibilidadeFechamento`. Um lote aberto
+    // entre a leitura e a reserva derruba o count.
+    expect(reserva.where.OR).toEqual([
+      { antecipada: true },
+      { paga: false, OR: [{ antecipacaoLoteId: null }, { antecipacaoLote: { status: { not: "em_andamento" } } }] },
+    ]);
   });
 
   it("busca só vendas em desconto em folha (mesma regra da fila), sem filtrar o status da venda", async () => {

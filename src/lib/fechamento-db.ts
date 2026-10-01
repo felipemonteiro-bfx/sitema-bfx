@@ -229,16 +229,23 @@ export async function gerarOuAtualizarFechamento(e: {
       });
     }
     if (reservar.length > 0) {
-      // `fechamentoId: null` + `liquidadaEm: null` + (antecipada, ou não paga e sem lote): a parcela
-      // continua como foi lida — outro fechamento, baixa, liquidação ou lote aberto no meio derruba o
-      // count. Não antecipada com lote é sempre lote em andamento (concluir marca `antecipada`;
-      // cancelar solta o lote); a antecipada mantém o lote concluído e continua reservável.
+      // `fechamentoId: null` + `liquidadaEm: null` + (antecipada, ou não paga e fora de lote em
+      // andamento — a mesma regra de `elegibilidadeFechamento`; o legado tem parcela não antecipada
+      // ligada a lote concluído ou cancelado): a parcela continua como foi lida — outro fechamento,
+      // baixa, liquidação ou lote aberto no meio derruba o count (o lote novo não está no snapshot
+      // da subconsulta, então não conta como "fora de andamento").
       const r = await tx.parcelaVencimento.updateMany({
         where: {
           id: { in: reservar },
           fechamentoId: null,
           liquidadaEm: null,
-          OR: [{ antecipada: true }, { paga: false, antecipacaoLoteId: null }],
+          OR: [
+            { antecipada: true },
+            {
+              paga: false,
+              OR: [{ antecipacaoLoteId: null }, { antecipacaoLote: { status: { not: "em_andamento" } } }],
+            },
+          ],
         },
         data: { fechamentoId: fechamento.id },
       });
