@@ -345,3 +345,34 @@ push. Migrações testadas num Postgres local aplicando todas as anteriores.
 Conciliação por extrato (OFX); leitura automática do PDF do boleto; repasse pago à parte e
 repasse abatido automaticamente no Pix; mudança no DRE; confirmação do RH por link público;
 fechamento por grupo econômico; alerta por WhatsApp.
+
+## 11. Ajustes pós-implementação (30/09)
+
+Saídos da revisão final da feature. O que vale é o código; esta seção registra onde ele difere do
+texto acima.
+
+- **`retificacao` não foi implementado.** Em vez de levar o fechamento a um status que só sai com
+  nova versão, a edição/exclusão de venda e a recusa do RH que tocariam parcela em fechamento
+  conferido ou posterior são **recusadas** ("reabra o fechamento e retire-a antes"). O efeito é o
+  mesmo — a parcela só sai na versão N+1 — sem um sexto status, sem alerta próprio e sem estado
+  que trave o envio. O status e o alerta "fechamento em retificação" de §5.2 e §6 ficam fora.
+- **Vigência no dia 1º.** `vigenteDe` e `vigenteAte` de `RegraEmpresa` só aceitam o dia 1º. O
+  fechamento e o direcionamento do boleto Prudent leem a regra do **dia 1º da competência** (antes o
+  boleto lia a do dia do vencimento). Salvar ou excluir regra que troque a cobrança via BFX de um
+  mês com boleto BFX vivo ou fechamento conferido ou posterior da empresa é recusado.
+- **Forma que não é desconto em folha fica fora.** Novo motivo de bloqueio `forma_nao_folha`
+  ("Venda não é desconto em folha"); a busca do fechamento usa a forma de `WHERE_VENDA_ANTECIPAVEL`
+  (a da fila da Prudent), sem filtrar o status. Cobrança Asaas paga em parcela reservada não baixa a
+  parcela e gera alerta aos admins, uma vez por cobrança.
+- **Reabrir encerra o Pix.** Reabrir (depois de gravar o status, fora da transação) encerra a
+  cobrança ativa: paga vira recebimento, senão é cancelada no Asaas; falha vira aviso e alerta.
+  Depois de recebimento confirmado, estorno ou webhook, a cobrança acompanha o saldo: pago → o Pix
+  que sobrou é cancelado; saldo restante → novo Pix pelo saldo (sem Asaas: alerta). Parcela de
+  versão já enviada, com Pix ativo ou recebimento confirmado no fechamento, não perde a reserva por
+  edição/exclusão de venda nem tem o boleto devolvido à empresa.
+- **Cancelar boleto.** Ação de admin em `/obrigacoes`: boleto vivo, sem pagamento vivo e sem parcela
+  em fechamento conferido ou posterior → `cancelado`, parcelas sem boleto, motivo no audit. Depois
+  disso a antecipação pode ser desfeita pela baixa (lote concluído por engano).
+- Menores: reserva exige `antecipacaoLoteId: null` na parcela não antecipada; recusa do RH respeita o
+  fechamento; parcela `pix_fechamento` conta como descontada em folha e aparece como "Pago no
+  fechamento" sem "Desfazer"; o CSV da Prudent é baixado do lote já gravado (`?loteId=`).
