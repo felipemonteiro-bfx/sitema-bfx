@@ -19,14 +19,19 @@ import AntecipacaoClient from "@/components/antecipacao-client";
 import HistoricoAntecipacoes from "@/components/historico-antecipacoes";
 import { PageHeader } from "@/components/page-header";
 import { hojeDataPura } from "@/lib/data-pura";
+import { estadoConfirmacao } from "@/lib/confirmacao-rh";
 
 export const dynamic = "force-dynamic";
 
-async function antecipar(formData: FormData) {
+type RespostaAntecipar = { ok: true; parcelas: number } | { ok: false; erro: string };
+
+async function antecipar(formData: FormData): Promise<RespostaAntecipar> {
   "use server";
   await requireAdminOrThrow();
   const ids = idsValidos(formData.getAll("id"));
-  if (!ids.length) return;
+  if (!ids.length) return { ok: false, erro: "Nenhuma venda selecionada." };
+  // Parcelas desmarcadas na fila (2026-09-30): o lote vai sem elas, como o CSV.
+  const excluirParcelaIds = idsValidos(formData.getAll("excluir"));
 
   // Range de datas para filtrar parcelas. O parse mora no lib porque a tela, esta
   // action e os relatorios precisam concordar — antes cada um fazia o seu, e um
@@ -35,13 +40,23 @@ async function antecipar(formData: FormData) {
 
   // Periodo pedido mas ilegivel: abortar em vez de antecipar tudo. Sem esta guarda
   // um "13/2025" digitado errado viraria um lote com todas as parcelas em aberto.
-  if ((formData.get("mesInicio") || formData.get("mesFim")) && !periodo) return;
+  if ((formData.get("mesInicio") || formData.get("mesFim")) && !periodo) return { ok: false, erro: "Período inválido." };
 
   // 2026-09-17: o envio abre um lote EM ANDAMENTO. Nada de `paga` nem `antecipada` aqui — isso
   // é o retorno da Prudent, confirmado no histórico (`concluirLoteAction`).
-  await abrirLote({ vendaIds: ids, periodo });
+  // 2026-09-30: `null` = nenhuma parcela confirmada pelo RH na seleção (ou todas desmarcadas).
+  // Antes o `null` era ignorado e a tela limpava a seleção como se o lote tivesse saído.
+  let lote;
+  try {
+    lote = await abrirLote({ vendaIds: ids, periodo, excluirParcelaIds });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "";
+    return { ok: false, erro: msg && msg.length < 160 ? msg : "Não foi possível abrir o lote." };
+  }
+  if (!lote) return { ok: false, erro: "Nenhuma parcela confirmada na seleção." };
 
   revalidarVenda();
+  return { ok: true, parcelas: lote.parcelas };
 }
 
 export default async function Page() {
@@ -76,6 +91,8 @@ export default async function Page() {
           antecipacaoLoteId: true,
           paga: true,
           origemPagamento: true,
+          confirmacaoRh: true,
+          confirmacaoOrigem: true,
         },
       },
     },
@@ -256,7 +273,11 @@ export default async function Page() {
     clienteId: v.clienteId,
     clienteNome: v.cliente?.nome ?? null,
     empresa: v.cliente?.empresa ?? null,
-    parcelas_detalhes: v.parcelasVencimento.map((p) => ({ ...p, emAndamento: p.antecipacaoLoteId != null })),
+    parcelas_detalhes: v.parcelasVencimento.map((p) => ({
+      ...p,
+      emAndamento: p.antecipacaoLoteId != null,
+      confirmacao: estadoConfirmacao(p),
+    })),
   });
   const vendasParaResumo = todasVendas.map(paraResumo);
   const resumoCompradores = resumirAntecipacaoPorComprador(vendasParaResumo, hoje);

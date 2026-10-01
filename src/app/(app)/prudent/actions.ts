@@ -16,6 +16,7 @@ import { cancelarLote, concluirLote, registrarLoteConcluido } from "@/lib/lote-a
 import { revalidarVenda } from "@/lib/revalidacao";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { idsValidos } from "@/lib/ids-validos";
+import { CONFIRMACAO } from "@/lib/confirmacao-rh";
 
 /** Teto de ids por chamada: a fila inteira tem poucas centenas de vendas. */
 const LIMITE_IDS = 1000;
@@ -35,12 +36,15 @@ export async function calcularSelecaoAction(entrada: {
   ids: number[];
   mesInicio?: string;
   mesFim?: string;
+  /** Parcelas desmarcadas na fila (2026-09-30): o card mostra o lote sem elas. */
+  excluirParcelaIds?: number[];
 }): Promise<RespostaSelecao> {
   await requireAdminOrThrow();
 
   const ids = Array.isArray(entrada?.ids)
     ? [...new Set(entrada.ids.filter((id) => Number.isInteger(id) && id > 0))].slice(0, LIMITE_IDS)
     : [];
+  const excluir = new Set(Array.isArray(entrada?.excluirParcelaIds) ? idsValidos(entrada.excluirParcelaIds) : []);
   const mesInicio = typeof entrada?.mesInicio === "string" ? entrada.mesInicio : "";
   const mesFim = typeof entrada?.mesFim === "string" ? entrada.mesFim : "";
   const periodo = parsePeriodoMesAno(mesInicio, mesFim);
@@ -61,17 +65,36 @@ export async function calcularSelecaoAction(entrada: {
       parcelas: true,
       itens: { select: { subtotal: true } },
       parcelasVencimento: {
-        select: { numeroParcela: true, dataVencimento: true, valorParcela: true, antecipada: true, paga: true },
+        select: {
+          id: true,
+          numeroParcela: true,
+          dataVencimento: true,
+          valorParcela: true,
+          antecipada: true,
+          paga: true,
+          antecipacaoLoteId: true,
+          confirmacaoRh: true,
+        },
       },
     },
   });
 
+  // Mesmo recorte de `resolverParcelasDoLote`: fora de lote, confirmada pelo RH e não desmarcada.
   const resultado = calcularSelecao(
     vendas.map((v) => ({
       dataVenda: v.dataVenda,
       valorVenda: valorTotalVenda(v),
       parcelas: v.parcelas,
-      parcelas_detalhes: v.parcelasVencimento,
+      parcelas_detalhes: v.parcelasVencimento.map((p) => ({
+        numeroParcela: p.numeroParcela,
+        dataVencimento: p.dataVencimento,
+        valorParcela: p.valorParcela,
+        antecipada: p.antecipada,
+        paga: p.paga,
+        emAndamento: p.antecipacaoLoteId != null,
+        bloqueadaRh: p.confirmacaoRh !== CONFIRMACAO.confirmada,
+        excluida: excluir.has(p.id),
+      })),
     })),
     periodo,
     hoje

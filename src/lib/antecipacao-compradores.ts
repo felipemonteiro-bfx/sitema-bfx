@@ -25,6 +25,8 @@
  * Manaus. Valores somados em centavos inteiros.
  */
 
+import type { EstadoConfirmacao } from "@/lib/confirmacao-rh";
+
 export interface ParcelaParaResumo {
   id?: number;
   numeroParcela?: number;
@@ -35,6 +37,8 @@ export interface ParcelaParaResumo {
   emAndamento?: boolean | null;
   paga?: boolean | null;
   origemPagamento?: string | null;
+  /** Estado da confirmação do RH (2026-09-30): a fila só deixa marcar parcela confirmada. */
+  confirmacao?: EstadoConfirmacao;
 }
 
 export type SituacaoParcela = "antecipada" | "paga" | "em_andamento" | "a_antecipar" | "vencida";
@@ -46,6 +50,7 @@ export interface ParcelaDetalhada {
   valor: number;
   situacao: SituacaoParcela;
   origemPagamento?: string | null;
+  confirmacao?: EstadoConfirmacao;
 }
 
 export interface ParcelasDaVenda {
@@ -110,7 +115,7 @@ export function parcelasDaVenda(venda: VendaParaResumo & { dataVenda: string | D
       } else {
         contagem.vencidas += 1;
       }
-      return { id: p.id, numero: p.numeroParcela ?? i + 1, vencimento: dataDoDia(dia), valor: c / 100, situacao: situacaoFinal, origemPagamento: p.origemPagamento };
+      return { id: p.id, numero: p.numeroParcela ?? i + 1, vencimento: dataDoDia(dia), valor: c / 100, situacao: situacaoFinal, origemPagamento: p.origemPagamento, confirmacao: p.confirmacao };
     });
 
   return {

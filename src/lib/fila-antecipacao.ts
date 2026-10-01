@@ -101,7 +101,7 @@ export function calcularSelecao(
       continue;
     }
     for (const p of parcelas) {
-      if (p.antecipada || p.emAndamento || p.paga) continue;
+      if (p.antecipada || p.emAndamento || p.paga || p.bloqueadaRh || p.excluida) continue;
       const d = paraData(p.dataVencimento);
       if (!d) continue;
       if (periodo && (d < periodo.inicio || d > periodo.fim)) continue;

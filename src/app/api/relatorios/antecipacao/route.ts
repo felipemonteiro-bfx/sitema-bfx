@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/guards";
 import { celulaCsv } from "@/lib/csv";
 import { produtosTexto } from "@/lib/venda-utils";
 import { WHERE_VENDA_ANTECIPAVEL, parsePeriodoMesAno } from "@/lib/antecipacao";
+import { resolverParcelasDoLote } from "@/lib/lote-antecipacao-db";
+import { idsValidos } from "@/lib/ids-validos";
 
 export async function GET(request: NextRequest) {
   // Só admin (a fila /prudent é só admin): o arquivo leva CPF, e-mail e valores do lote.
@@ -33,7 +35,15 @@ export async function GET(request: NextRequest) {
     searchParams.get("mesFim")
   );
 
+  // Parcelas desmarcadas na fila (2026-09-30): `excluir=1,2,3`, o mesmo que a action recebe.
+  const excluirParcelaIds = idsValidos((searchParams.get("excluir") ?? "").split(",").filter(Boolean));
+
   try {
+    // Mesma função que `abrirLote` usa para gravar o lote: só parcela confirmada pelo RH, livre,
+    // no período e fora da exclusão. Assim o arquivo e o lote listam as mesmas parcelas.
+    const parcelasDoLote = await resolverParcelasDoLote(prisma, { vendaIds: ids, periodo, excluirParcelaIds });
+    const idsDoLote = parcelasDoLote.map((p) => p.id);
+
     const vendas = await prisma.venda.findMany({
       where: { id: { in: ids }, ...WHERE_VENDA_ANTECIPAVEL },
       include: {
@@ -48,12 +58,7 @@ export async function GET(request: NextRequest) {
         },
         itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
         parcelasVencimento: {
-          where: {
-            antecipada: false,
-      // Parcela já num lote na Prudent não volta para outro arquivo (2026-09-17).
-      antecipacaoLoteId: null,
-            ...(periodo ? { dataVencimento: { gte: periodo.inicio, lte: periodo.fim } } : {}),
-          },
+          where: { id: { in: idsDoLote } },
           select: { valorParcela: true },
         },
       },

@@ -86,6 +86,10 @@ export interface ParcelaParaAntecipacao {
   /** Já está num lote enviado à Prudent, esperando retorno (2026-09-17). */
   emAndamento?: boolean | null;
   paga?: boolean | null;
+  /** Ainda não confirmada pelo RH (ou recusada): fora da fila da Prudent (2026-09-30). */
+  bloqueadaRh?: boolean | null;
+  /** Desmarcada na fila — a venda vai ao lote sem esta parcela (2026-09-30). */
+  excluida?: boolean | null;
 }
 
 export interface VendaParaAntecipacao {
@@ -141,8 +145,10 @@ export function titulosDeVenda(
 
   if (detalhes && detalhes.length > 0) {
     return detalhes
-      // Parcela antecipada ou já num lote em andamento não entra em lote novo.
-      .filter((p) => !p.antecipada && !p.emAndamento && !p.paga)
+      // Parcela antecipada ou já num lote em andamento não entra em lote novo; nem a que o RH
+      // ainda não confirmou, nem a desmarcada na fila. Filtrar aqui, e não tirar a parcela da
+      // lista, evita cair na estimativa de venda legada quando todas ficam de fora.
+      .filter((p) => !p.antecipada && !p.emAndamento && !p.paga && !p.bloqueadaRh && !p.excluida)
       .filter((p) => {
         const venc = p.dataVencimento instanceof Date ? p.dataVencimento : new Date(p.dataVencimento);
         // Data ilegível é descartada com ou sem período: entrar como prazo 0

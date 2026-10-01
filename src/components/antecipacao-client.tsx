@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
+import { Check, ChevronDown, FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DateInput } from "@/components/ui/date-input";
@@ -32,6 +32,7 @@ import type { ContagensFila, ResultadoSelecao } from "@/lib/fila-antecipacao";
 import { algumMesNoIntervalo } from "@/lib/periodo-meses";
 import { formatarDataPura } from "@/lib/data-pura";
 import { calcularSelecaoAction } from "@/app/(app)/prudent/actions";
+import { ParcelasLoteFila } from "@/components/parcelas-lote-fila";
 
 interface Venda {
   id: number;
@@ -54,9 +55,12 @@ interface Venda {
   mesesEmAberto: string[] | null;
 }
 
+/** Resposta do envio à Prudent (`antecipar` em prudent/page.tsx). */
+type RespostaAntecipar = { ok: true; parcelas: number } | { ok: false; erro: string };
+
 interface Props {
   vendasIniciais: Venda[];
-  onSubmit: (formData: FormData) => Promise<void>;
+  onSubmit: (formData: FormData) => Promise<RespostaAntecipar>;
   vencimentosPorEmpresa: Record<string, number>;
   empresasDisponiveis: string[];
   resumoCompradores: ResumoAntecipacaoCompradores;
@@ -116,6 +120,10 @@ export default function AntecipacaoClient({
 }: Props) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  // Lote por parcela (2026-09-30): parcelas desmarcadas das vendas selecionadas e a venda
+  // aberta para escolher parcelas.
+  const [excluidas, setExcluidas] = useState<number[]>([]);
+  const [expandidas, setExpandidas] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   // "Registrar já concluída": antecipação que a Prudent comprou antes de o sistema saber.
   const [registroAberto, setRegistroAberto] = useState(false);
@@ -173,6 +181,7 @@ export default function AntecipacaoClient({
           ids: selectedIds,
           mesInicio: periodoInicio || undefined,
           mesFim: periodoFim || undefined,
+          excluirParcelaIds: excluidas,
         });
         if (pedido !== pedidoAtual.current) return;
         if (resposta.ok) {
@@ -192,7 +201,7 @@ export default function AntecipacaoClient({
       }
     }, ESPERA_CALCULO_MS);
     return () => clearTimeout(espera);
-  }, [selectedIds, periodoInicio, periodoFim, tentativa]);
+  }, [selectedIds, excluidas, periodoInicio, periodoFim, tentativa]);
 
   // Filtrar vendas: so comparacao com o que o servidor mandou, nenhum calculo.
   const vendasFiltradas = vendasIniciais.filter((v) => {
@@ -211,10 +220,29 @@ export default function AntecipacaoClient({
     (id) => !vendasFiltradas.some((v) => v.id === id)
   ).length;
 
+  // Desmarcar a venda esquece as parcelas desmarcadas dela: marcar de novo volta com todas.
+  const esquecerExclusoes = (vendaIds: number[]) => {
+    const ids = new Set(
+      vendasIniciais
+        .filter((v) => vendaIds.includes(v.id))
+        .flatMap((v) => v.parcelasInfo.lista.map((p) => p.id).filter((pid): pid is number => pid !== undefined))
+    );
+    setExcluidas((prev) => prev.filter((pid) => !ids.has(pid)));
+  };
+
+  const toggleParcela = (parcelaId: number) => {
+    setExcluidas((prev) => (prev.includes(parcelaId) ? prev.filter((i) => i !== parcelaId) : [...prev, parcelaId]));
+  };
+
+  const toggleExpandida = (vendaId: number) => {
+    setExpandidas((prev) => (prev.includes(vendaId) ? prev.filter((i) => i !== vendaId) : [...prev, vendaId]));
+  };
+
   const toggleSelect = (id: number, isTotalmenteAntecipado: boolean) => {
     if (isTotalmenteAntecipado) return;
     const venda = vendasIniciais.find((item) => item.id === id);
     if (!venda) return;
+    if (selectedIds.includes(id)) esquecerExclusoes([id]);
     setSelectedIds((prev) => {
       if (prev.includes(id)) return prev.filter((i) => i !== id);
       const empresaSelecionada = prev
@@ -247,6 +275,7 @@ export default function AntecipacaoClient({
     });
     const allSelected = idsDaEmpresa.length > 0 && idsDaEmpresa.every(id => selectedIds.includes(id));
     if (allSelected) {
+      esquecerExclusoes(idsDaEmpresa);
       setSelectedIds(prev => prev.filter(id => !idsDaEmpresa.includes(id)));
     } else {
       setSelectedIds(prev => [...new Set([...prev, ...idsDaEmpresa])]);
@@ -268,7 +297,7 @@ export default function AntecipacaoClient({
     // A action nao encontra parcela elegivel e retorna em silencio: sem este aviso
     // o usuario clica, nada acontece e a tela nao explica por que.
     if (calculo.parcelas === 0) {
-      toast.error("Nenhuma parcela elegível na seleção — todas já foram antecipadas ou estão fora do período.");
+      toast.error("Nenhuma parcela confirmada na seleção — confira as que aguardam o RH, as desmarcadas e o período.");
       return;
     }
     // Nenhum titulo vem de parcela cadastrada (so venda legada, com prazo
@@ -290,6 +319,8 @@ export default function AntecipacaoClient({
       const xlsxParams = new URLSearchParams({ ids: idsParam });
       if (periodoInicio) xlsxParams.set('mesInicio', periodoInicio);
       if (periodoFim) xlsxParams.set('mesFim', periodoFim);
+      // A mesma exclusão vai ao CSV e ao lote: os dois listam as mesmas parcelas.
+      if (excluidas.length > 0) xlsxParams.set('excluir', excluidas.join(','));
 
       const resposta = await fetch(`/api/relatorios/antecipacao?${xlsxParams.toString()}`);
       if (!resposta.ok) {
@@ -308,10 +339,17 @@ export default function AntecipacaoClient({
 
       // 2. Executar a antecipação no banco
       selectedIds.forEach(id => formData.append('id', id.toString()));
+      excluidas.forEach(id => formData.append('excluir', id.toString()));
       if (periodoInicio) formData.append('mesInicio', periodoInicio);
       if (periodoFim) formData.append('mesFim', periodoFim);
-      await onSubmit(formData);
+      const r = await onSubmit(formData);
+      if (!r.ok) {
+        toast.error(r.erro);
+        return;
+      }
+      toast.success(`Lote enviado à Prudent: ${r.parcelas} ${r.parcelas === 1 ? 'parcela' : 'parcelas'}.`);
       setSelectedIds([]);
+      setExcluidas([]);
     } catch (error) {
       console.error("Erro na antecipação:", error);
       toast.error("Ocorreu um erro ao processar a antecipação.");
@@ -344,6 +382,7 @@ export default function AntecipacaoClient({
       );
       setRegistroAberto(false);
       setSelectedIds([]);
+      setExcluidas([]);
       router.refresh();
     } catch {
       toast.error('Não foi possível registrar a antecipação.');
@@ -500,12 +539,15 @@ export default function AntecipacaoClient({
                 <LegendaParcelas />
               </span>
             </TableHead>
+            <TableHead className="w-10">
+              <span className="sr-only">Escolher parcelas</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {vendasFiltradas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                 Nenhuma venda encontrada com os filtros aplicados.
               </TableCell>
             </TableRow>
@@ -515,9 +557,11 @@ export default function AntecipacaoClient({
               const isSelected = selectedIds.includes(v.id);
               const variosProdutos = v.produtos.linhas.length > 1;
               const produtoUnico = v.produtos.linhas[0]?.produtoNome ?? v.produtoNome ?? '';
+              const expandida = expandidas.includes(v.id);
+              const temParcelaAberta = v.parcelasInfo.lista.some((p) => p.situacao === 'a_antecipar' || p.situacao === 'vencida');
               return (
+                <Fragment key={v.id}>
                 <TableRow
-                  key={v.id}
                   className={`transition-all duration-200 ${
                     isTotalmenteAntecipado
                       ? 'bg-success-bg opacity-70 cursor-default'
@@ -587,7 +631,49 @@ export default function AntecipacaoClient({
                       </span>
                     )}
                   </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    {temParcelaAberta && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="iconSm"
+                        aria-expanded={expandida}
+                        aria-controls={`parcelas-lote-${v.id}`}
+                        aria-label={`${expandida ? 'Fechar' : 'Escolher'} parcelas da venda V${v.id}`}
+                        onClick={() => toggleExpandida(v.id)}
+                      >
+                        <ChevronDown className={`h-4 w-4 transition-transform ${expandida ? 'rotate-180' : ''}`} />
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
+                {expandida && temParcelaAberta && (
+                  <TableRow id={`parcelas-lote-${v.id}`} className="hover:bg-transparent">
+                    <TableCell colSpan={9} className="bg-muted/30 px-4 py-4">
+                      <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span className="text-sm font-bold text-foreground">
+                          V{v.id} · {v.clienteNome || '—'}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {isSelected
+                            ? 'escolha as parcelas que vão para a Prudent'
+                            : 'marque a venda para escolher as parcelas'}
+                        </span>
+                      </div>
+                      <ParcelasLoteFila
+                        vendaId={v.id}
+                        parcelas={v.parcelasInfo}
+                        vendaSelecionada={isSelected}
+                        excluidas={excluidas}
+                        onToggle={toggleParcela}
+                        periodoInicio={periodoInicio}
+                        periodoFim={periodoFim}
+                        desabilitado={isProcessing}
+                      />
+                    </TableCell>
+                  </TableRow>
+                )}
+                </Fragment>
               );
             })
           )}
@@ -623,7 +709,7 @@ export default function AntecipacaoClient({
             )}
             {!calculando && calculo && selectedIds.length > 0 && calculo.parcelas === 0 && (
               <div className="text-xs font-semibold text-warning-text mt-1">
-                Nenhuma parcela elegível — já antecipadas ou fora do período.
+                Nenhuma parcela confirmada na seleção.
               </div>
             )}
             {vencidasNaSelecao > 0 && (
@@ -726,7 +812,7 @@ export default function AntecipacaoClient({
                 Processando...
               </>
             ) : (
-              `Enviar ${selectedIds.length} ${selectedIds.length === 1 ? 'item' : 'itens'} à Prudent`
+              `Enviar ${parcelasSelecionadas} ${parcelasSelecionadas === 1 ? 'parcela' : 'parcelas'} à Prudent`
             )}
           </Button>
         </div>
