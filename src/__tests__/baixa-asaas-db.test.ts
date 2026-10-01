@@ -13,10 +13,13 @@ const asaasMock = {
   listPaymentsDaVenda: vi.fn(),
 };
 const auditMock = { createAuditLog: vi.fn() };
+// Desvio do fechamento (Fase 6): mockado aqui; as regras estão em recebimento-fechamento-db.test.ts.
+const fechamentoMock = { ehCobrancaDeFechamento: vi.fn(), processarPagamentoFechamento: vi.fn() };
 
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/asaas", () => asaasMock);
 vi.mock("@/lib/audit", () => auditMock);
+vi.mock("@/lib/recebimento-fechamento-db", () => fechamentoMock);
 
 const { aplicarPagamentoAsaas, sincronizarBaixasAsaas } = await import("@/lib/baixa-parcelas-db");
 const { POST } = await import("@/app/api/webhooks/asaas/route");
@@ -45,6 +48,8 @@ beforeEach(() => {
   dbMock.parcelaVencimento.findMany.mockResolvedValue([PARCELA_ABERTA]);
   dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 1 });
   dbMock.config.findFirst.mockResolvedValue({ asaasApiKey: "k", asaasEnv: "production", asaasWebhookToken: "token-certo-123456" });
+  fechamentoMock.ehCobrancaDeFechamento.mockResolvedValue(false);
+  fechamentoMock.processarPagamentoFechamento.mockResolvedValue({ acao: "registrado", fechamentoId: 11 });
 });
 
 describe("aplicarPagamentoAsaas", () => {
@@ -159,6 +164,41 @@ describe("POST /api/webhooks/asaas", () => {
     expect(r.status).toBe(200);
     expect(await r.json()).toMatchObject({ ok: false });
     expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("cobranca de fechamento: desvia para o fechamento e nao toca nas parcelas", async () => {
+    const pix = { id: "pay_fec", status: "RECEIVED", value: 600, externalReference: "FEC-7-2026-10-v1" };
+    asaasMock.getPayment.mockResolvedValue(pix);
+    fechamentoMock.ehCobrancaDeFechamento.mockResolvedValue(true);
+
+    const r = await POST(requisicao("token-certo-123456", { event: "PAYMENT_RECEIVED", payment: { id: "pay_fec" } }));
+
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ ok: true, evento: "PAYMENT_RECEIVED", fechamento: { acao: "registrado" } });
+    expect(fechamentoMock.processarPagamentoFechamento).toHaveBeenCalledWith(pix, "PAYMENT_RECEIVED");
+    expect(dbMock.parcelaVencimento.findMany).not.toHaveBeenCalled();
+    expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("falha ao processar o fechamento responde 200 com ok false e loga", async () => {
+    asaasMock.getPayment.mockResolvedValue({ id: "pay_fec", status: "RECEIVED", externalReference: "FEC-7-2026-10-v1" });
+    fechamentoMock.ehCobrancaDeFechamento.mockResolvedValue(true);
+    fechamentoMock.processarPagamentoFechamento.mockRejectedValue(new Error("deadlock"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const r = await POST(requisicao("token-certo-123456", { event: "PAYMENT_RECEIVED", payment: { id: "pay_fec" } }));
+
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ ok: false });
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
+  });
+
+  it("token errado nao chega ao desvio do fechamento", async () => {
+    const r = await POST(requisicao("token-errado-000000", { event: "PAYMENT_RECEIVED", payment: { id: "pay_fec" } }));
+    expect(r.status).toBe(401);
+    expect(fechamentoMock.ehCobrancaDeFechamento).not.toHaveBeenCalled();
+    expect(fechamentoMock.processarPagamentoFechamento).not.toHaveBeenCalled();
   });
 
   it("evento sem cobranca e ignorado com 200", async () => {

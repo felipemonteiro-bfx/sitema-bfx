@@ -126,6 +126,8 @@ export async function listAllPayments(
 export type AsaasPagamentoDetalhe = {
   id: string;
   status: string;
+  /** Valor bruto da cobrança (o que o pagador pagou) — o recebimento do fechamento usa. */
+  value?: number | null;
   externalReference?: string | null;
   installment?: string | null;
   installmentNumber?: number | null;
