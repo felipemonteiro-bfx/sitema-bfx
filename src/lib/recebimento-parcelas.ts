@@ -20,6 +20,8 @@ export type LinhaRecebimento = {
   origemDetalhe: string | null;
   /** Baixa automática (Asaas ou Prudent) só é desfeita com confirmação. */
   desfazerPedeConfirmacao: boolean;
+  /** A tela oferece "Desfazer"? Parcela paga no Pix do fechamento só é desfeita pelo fechamento. */
+  podeDesfazer: boolean;
 };
 
 const DIA_MS = 86_400_000;
@@ -38,17 +40,21 @@ export function linhaRecebimento(p: ParcelaRecebimento, hoje: string): LinhaRece
     const [titulo, detalhe] =
       p.origemPagamento === "prudent"
         ? ["Prudent", data ? `Antecipada em ${data}` : "Antecipada"]
-        : p.origemPagamento === "asaas"
-          ? ["Asaas", data ? `Boleto pago em ${data}` : "Boleto pago"]
-          : p.origemPagamento === "manual"
-            ? ["Manual", [data, p.baixaPor ? `por ${p.baixaPor}` : null].filter(Boolean).join(" · ") || null]
-            : ["Baixa", data];
+        : p.origemPagamento === "pix_fechamento"
+          ? ["Pago no fechamento", data ? `Pix da empresa em ${data}` : "Pix da empresa"]
+          : p.origemPagamento === "asaas"
+            ? ["Asaas", data ? `Boleto pago em ${data}` : "Boleto pago"]
+            : p.origemPagamento === "manual"
+              ? ["Manual", [data, p.baixaPor ? `por ${p.baixaPor}` : null].filter(Boolean).join(" · ") || null]
+              : ["Baixa", data];
     return {
       situacao: "paga",
       diasAtraso: 0,
       origemTitulo: titulo,
       origemDetalhe: detalhe,
       desfazerPedeConfirmacao: p.origemPagamento === "asaas" || p.origemPagamento === "prudent",
+      // O recebimento é do fechamento: desfazer é estornar o recebimento lá.
+      podeDesfazer: p.origemPagamento !== "pix_fechamento",
     };
   }
   const atraso = diasEntre(p.dataVencimento, hoje);
@@ -58,6 +64,7 @@ export function linhaRecebimento(p: ParcelaRecebimento, hoje: string): LinhaRece
     origemTitulo: null,
     origemDetalhe: null,
     desfazerPedeConfirmacao: false,
+    podeDesfazer: false,
   };
 }
 

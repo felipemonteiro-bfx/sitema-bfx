@@ -43,6 +43,7 @@ describe("linhaRecebimento", () => {
       origemTitulo: "Prudent",
       origemDetalhe: "Antecipada",
       desfazerPedeConfirmacao: true,
+      podeDesfazer: true,
     });
   });
 
@@ -56,6 +57,22 @@ describe("linhaRecebimento", () => {
         HOJE,
       ),
     ).toMatchObject({ origemTitulo: "Manual", origemDetalhe: "12/11/2026 · por André", desfazerPedeConfirmacao: false });
+  });
+
+  // B4 (30/09): liquidada pelo Pix do fechamento — só o fechamento desfaz (estorno do recebimento).
+  it("Pix do fechamento: rotulo proprio e sem desfazer", () => {
+    expect(
+      linhaRecebimento(parcela({ paga: true, origemPagamento: "pix_fechamento", dataPagamento: "2026-10-15" }), HOJE),
+    ).toEqual({
+      situacao: "paga",
+      diasAtraso: 0,
+      origemTitulo: "Pago no fechamento",
+      origemDetalhe: "Pix da empresa em 15/10/2026",
+      desfazerPedeConfirmacao: false,
+      podeDesfazer: false,
+    });
+    expect(linhaRecebimento(parcela({ paga: true, origemPagamento: "manual" }), HOJE).podeDesfazer).toBe(true);
+    expect(linhaRecebimento(parcela({}), HOJE).podeDesfazer).toBe(false);
   });
 
   it("vencida conta os dias de atraso; vence hoje ainda esta em aberto", () => {

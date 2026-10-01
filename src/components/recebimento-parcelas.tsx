@@ -165,7 +165,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
                           >
                             {aberta ? "Cancelar" : "Dar baixa"}
                           </Button>
-                        ) : linha.desfazerPedeConfirmacao ? (
+                        ) : !linha.podeDesfazer ? null : linha.desfazerPedeConfirmacao ? (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button type="button" variant="ghost" size="sm" disabled={emAndamento} aria-label={`Desfazer baixa da parcela ${rotulo}`}>
