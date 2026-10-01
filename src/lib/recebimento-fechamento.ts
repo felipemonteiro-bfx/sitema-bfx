@@ -68,14 +68,19 @@ export function situacaoRecebimento(
   return { recebido: recebidoC / 100, saldo, excedente, status };
 }
 
-/** Número, "1500.50" (campo numérico) ou "1.500,50" (pt-BR). Ilegível vira NaN. */
-function lerValor(valor: unknown): number {
+// pt-BR: "1500,5", "1.500,50", "1.234.567,89" — vírgula decimal, ponto só como milhar.
+const VALOR_PT_BR = /^(\d{1,3}(\.\d{3})+|\d+),\d{1,2}$/;
+// Campo numérico: "1500", "1500.5", "1500.50". "1.500" (milhar ou 1,5?) é ambíguo e cai fora.
+const VALOR_PONTO = /^\d+(\.\d{1,2})?$/;
+
+/** Número ou texto num dos dois formatos acima; qualquer outra coisa é ilegível (null). */
+function lerValor(valor: unknown): number | null {
   if (typeof valor === "number") return valor;
-  if (typeof valor !== "string") return Number.NaN;
-  const limpo = valor.replace(/[R$\s]/g, "");
-  if (!limpo) return Number.NaN;
-  const normalizado = limpo.includes(",") ? limpo.replace(/\./g, "").replace(",", ".") : limpo;
-  return Number(normalizado);
+  if (typeof valor !== "string") return null;
+  const limpo = valor.trim().replace(/^R\$\s*/, "");
+  if (VALOR_PT_BR.test(limpo)) return Number(limpo.replace(/\./g, "").replace(",", "."));
+  if (VALOR_PONTO.test(limpo)) return Number(limpo);
+  return null;
 }
 
 /** Date válida ou "AAAA-MM-DD" → data pura (meia-noite UTC). */
@@ -95,7 +100,10 @@ export function validarRecebimentoManual(
   agora: Date = new Date(),
 ): { ok: true; valor: number; data: Date } | { ok: false; erro: string } {
   const valor = lerValor(input.valor);
-  if (!Number.isFinite(valor) || centavos(valor) <= 0) {
+  if (valor == null && typeof input.valor === "string") {
+    return { ok: false, erro: "Valor inválido. Use vírgula para os centavos (ex.: 1.500,00)." };
+  }
+  if (valor == null || !Number.isFinite(valor) || centavos(valor) <= 0) {
     return { ok: false, erro: "Informe um valor recebido maior que zero." };
   }
   const data = lerData(input.data);

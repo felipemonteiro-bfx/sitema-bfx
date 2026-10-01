@@ -331,7 +331,16 @@ export type CreatePixParams = {
   externalReference: string;
 };
 
-/** Cria uma cobrança tipo PIX no Asaas. */
+/**
+ * Id de cobrança vai no path da URL: só letras, dígitos, `_` e `-` (ex.: "pay_080225913252").
+ * Barra, ponto e espaço mudariam o recurso chamado (`..` sobe um nível).
+ */
+function pathIdCobranca(id: string): string {
+  if (!/^[\w-]+$/.test(id)) throw new Error("Id de cobrança Asaas inválido.");
+  return id;
+}
+
+/** Cria uma cobrança tipo PIX no Asaas. O valor vai arredondado a centavos. */
 export async function createPixPayment(
   p: CreatePixParams,
   config: AsaasConfig
@@ -341,7 +350,7 @@ export async function createPixPayment(
     body: {
       customer: p.customerId,
       billingType: "PIX",
-      value: p.value,
+      value: Math.round(p.value * 100) / 100,
       dueDate: p.dueDate,
       description: p.description,
       externalReference: p.externalReference,
@@ -358,7 +367,7 @@ export async function getPixQrCode(
 ): Promise<{ payload: string; encodedImage: string; expirationDate?: string | null }> {
   const res = await asaasFetch<{ payload?: string; encodedImage?: string; expirationDate?: string | null }>(
     config,
-    `/v3/payments/${encodeURIComponent(paymentId)}/pixQrCode`
+    `/v3/payments/${pathIdCobranca(paymentId)}/pixQrCode`
   );
   if (!res.payload || !res.encodedImage) throw new Error("Resposta Asaas sem o QR Code do Pix.");
   return { payload: res.payload, encodedImage: res.encodedImage, expirationDate: res.expirationDate ?? null };
@@ -369,7 +378,7 @@ export async function getPixQrCode(
  * (`getPayment`) e só cancelar se não estiver paga.
  */
 export async function cancelPayment(config: AsaasConfig, paymentId: string): Promise<void> {
-  await asaasFetch<unknown>(config, `/v3/payments/${encodeURIComponent(paymentId)}`, { method: "DELETE" });
+  await asaasFetch<unknown>(config, `/v3/payments/${pathIdCobranca(paymentId)}`, { method: "DELETE" });
 }
 
 /** Empresa conveniada com os campos usados para criar/identificar o cliente no Asaas. */

@@ -18,6 +18,7 @@ const boleto = (id: number, parcelaIds: number[], valorEsperado: number, extra: 
   status: "a_pagar",
   valorEsperado,
   valorDocumento: null,
+  direcionamento: "bfx",
   parcelaIds,
   ...extra,
 });
@@ -28,7 +29,7 @@ describe("conciliarBoletosComDemonstrativo", () => {
       [linha(1, 100), linha(2, 150.5), linha(3, 80, { antecipada: false })],
       [boleto(10, [1, 2], 250.5, { valorDocumento: 250.5 })],
     );
-    expect(r).toEqual({ somaLinhasAntecipadas: 250.5, somaBoletos: 250.5, diferenca: 0, divergencias: [] });
+    expect(r).toEqual({ somaLinhasAntecipadas: 250.5, somaBoletos: 250.5, diferenca: 0, divergencias: [], boletosLigados: [10] });
   });
 
   it("sem antecipadas e sem boletos", () => {
@@ -37,6 +38,7 @@ describe("conciliarBoletosComDemonstrativo", () => {
       somaBoletos: 0,
       diferenca: 0,
       divergencias: [],
+      boletosLigados: [],
     });
   });
 
@@ -55,7 +57,20 @@ describe("conciliarBoletosComDemonstrativo", () => {
         boleto(12, [1], 100, { status: "cancelado" }),
       ],
     );
-    expect(r).toEqual({ somaLinhasAntecipadas: 200, somaBoletos: 200, diferenca: 0, divergencias: [] });
+    expect(r).toEqual({ somaLinhasAntecipadas: 200, somaBoletos: 200, diferenca: 0, divergencias: [], boletosLigados: [11] });
+  });
+
+  it("boleto direcionado à empresa não entra na conciliação", () => {
+    const r = conciliarBoletosComDemonstrativo(
+      [linha(1, 100)],
+      [boleto(10, [1], 100), boleto(11, [7, 8], 300, { direcionamento: "empresa" })],
+    );
+    expect(r).toEqual({ somaLinhasAntecipadas: 100, somaBoletos: 100, diferenca: 0, divergencias: [], boletosLigados: [10] });
+  });
+
+  it("parcela coberta só por boleto à empresa = antecipada sem boleto", () => {
+    const r = conciliarBoletosComDemonstrativo([linha(1, 100)], [boleto(11, [1], 100, { direcionamento: "empresa" })]);
+    expect(r.divergencias).toEqual([{ tipo: "antecipada_sem_boleto", identificador: "V1-1/1", valor: 100 }]);
   });
 
   it("parcela só coberta por boleto cancelado = antecipada sem boleto", () => {
@@ -108,7 +123,15 @@ describe("conciliarBoletosComDemonstrativo", () => {
       [linha(null, 100, { boletoPrudentId: 10, identificador: "V3-1/2" }), linha(2, 100)],
       [boleto(10, [99, 2], 200)],
     );
-    expect(r).toEqual({ somaLinhasAntecipadas: 200, somaBoletos: 200, diferenca: 0, divergencias: [] });
+    expect(r).toEqual({ somaLinhasAntecipadas: 200, somaBoletos: 200, diferenca: 0, divergencias: [], boletosLigados: [10] });
+  });
+
+  it("linha casada pela foto não responde por parcela que está no demonstrativo como não antecipada", () => {
+    const r = conciliarBoletosComDemonstrativo(
+      [linha(null, 100, { boletoPrudentId: 10 }), linha(2, 80, { antecipada: false, identificador: "V5-2/2" })],
+      [boleto(10, [2], 180)],
+    );
+    expect(r.divergencias).toEqual([{ tipo: "boleto_com_parcela_fora", boletoId: 10, identificador: "V5-2/2", valor: 80 }]);
   });
 
   it("linha sem parcela e sem boleto vivo = antecipada sem boleto", () => {
@@ -121,7 +144,18 @@ describe("conciliarBoletosComDemonstrativo", () => {
 
   it("soma em centavos", () => {
     const r = conciliarBoletosComDemonstrativo([linha(1, 0.1), linha(2, 0.2)], [boleto(10, [1, 2], 0.3)]);
-    expect(r).toEqual({ somaLinhasAntecipadas: 0.3, somaBoletos: 0.3, diferenca: 0, divergencias: [] });
+    expect(r).toEqual({ somaLinhasAntecipadas: 0.3, somaBoletos: 0.3, diferenca: 0, divergencias: [], boletosLigados: [10] });
+  });
+});
+
+describe("boletosLigados → estadoFinal", () => {
+  it("depois de substituir o boleto, conta o substituto e não o original", () => {
+    // A foto da linha ainda aponta para o boleto 10 (substituído); a parcela foi para o 11.
+    const boletos = [boleto(10, [], 100, { status: "substituido" }), boleto(11, [1], 100, { status: "a_pagar" })];
+    const r = conciliarBoletosComDemonstrativo([linha(1, 100, { boletoPrudentId: 10 })], boletos);
+    expect(r.boletosLigados).toEqual([11]);
+    const ligados = boletos.filter((b) => r.boletosLigados.includes(b.id));
+    expect(estadoFinal({ status: "pago" }, ligados, r.divergencias)).toEqual({ conciliado: false, concluido: false });
   });
 });
 
@@ -138,7 +172,8 @@ describe("estadoFinal", () => {
     ["pago, boletos pagos, sem divergência", "pago", [pago, pago], [], { conciliado: true, concluido: true }],
     ["pago, sem antecipadas", "pago", [], [], { conciliado: true, concluido: true }],
     ["pago, boletos pagos, com divergência", "pago", [pago], [div], { conciliado: true, concluido: false }],
-    ["substituído e cancelado não travam", "pago", [pago, { status: "substituido" }, { status: "cancelado" }], [], { conciliado: true, concluido: true }],
+    // Quem chama passa `boletosLigados` da conciliação; um substituído na lista falha fechado.
+    ["boleto substituído na lista trava", "pago", [{ status: "substituido" }], [], { conciliado: false, concluido: false }],
     [
       "antecipada sem boleto impede conciliar",
       "pago",

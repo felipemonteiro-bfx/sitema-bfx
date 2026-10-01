@@ -49,6 +49,12 @@ describe("createPixPayment", () => {
     });
   });
 
+  it("arredonda o valor a centavos (saldo calculado em ponto flutuante)", async () => {
+    const chamadas = mockFetch([{ corpo: { id: "pay_1", status: "PENDING" } }]);
+    await createPixPayment({ customerId: "c", value: 1000 - 999.9, dueDate: "2026-10-15", description: "x", externalReference: "FEC-1-2026-10-v1" }, config);
+    expect((chamadas[0].body as { value: number }).value).toBe(0.1);
+  });
+
   it("propaga o erro do Asaas", async () => {
     mockFetch([{ status: 400, corpo: { errors: [{ code: "invalid_value", description: "Valor inválido" }] } }]);
     await expect(
@@ -73,11 +79,16 @@ describe("getPixQrCode", () => {
     expect(chamadas[0].method).toBe("GET");
   });
 
-  it("codifica o id na URL", async () => {
-    const chamadas = mockFetch([{ corpo: { payload: "p", encodedImage: "i" } }]);
-    const r = await getPixQrCode(config, "pay/../x");
-    expect(chamadas[0].url).toBe("https://asaas.test/v3/payments/pay%2F..%2Fx/pixQrCode");
+  it("sem expirationDate devolve null", async () => {
+    mockFetch([{ corpo: { payload: "p", encodedImage: "i" } }]);
+    const r = await getPixQrCode(config, "pay_1");
     expect(r.expirationDate).toBeNull();
+  });
+
+  it.each(["pay/../x", "..", ".", "", "pay 1"])("id inválido %j → erro sem chamar a API", async (id) => {
+    const chamadas = mockFetch([{ corpo: { payload: "p", encodedImage: "i" } }]);
+    await expect(getPixQrCode(config, id)).rejects.toThrow("Id de cobrança Asaas inválido.");
+    expect(chamadas).toHaveLength(0);
   });
 
   it("recusa resposta sem copia-e-cola ou sem imagem", async () => {
@@ -92,6 +103,12 @@ describe("cancelPayment", () => {
     await expect(cancelPayment(config, "pay_1")).resolves.toBeUndefined();
     expect(chamadas[0].url).toBe("https://asaas.test/v3/payments/pay_1");
     expect(chamadas[0].method).toBe("DELETE");
+  });
+
+  it.each(["..", "pay/x"])("id inválido %j → erro sem chamar a API", async (id) => {
+    const chamadas = mockFetch([{ corpo: {} }]);
+    await expect(cancelPayment(config, id)).rejects.toThrow("Id de cobrança Asaas inválido.");
+    expect(chamadas).toHaveLength(0);
   });
 
   it("propaga o erro do Asaas", async () => {

@@ -101,14 +101,39 @@ describe("validarRecebimentoManual", () => {
     ["meio centavo arredonda para zero", 0.004],
     ["NaN", Number.NaN],
     ["infinito", Number.POSITIVE_INFINITY],
-    ["texto vazio", ""],
-    ["texto ilegível", "abc"],
-    ["texto negativo", "-5"],
     ["nulo", null],
     ["objeto", {}],
   ])("valor inválido: %s", (_rotulo, valor) => {
     const r = validarRecebimentoManual({ valor, data: "2026-10-15" }, agora);
     expect(r).toEqual({ ok: false, erro: "Informe um valor recebido maior que zero." });
+  });
+
+  it.each([
+    ["vazio", ""],
+    ["ilegível", "abc"],
+    ["negativo", "-5"],
+    ["milhar sem centavos (ambíguo)", "1.500"],
+    ["milhar com ponto e centavos com ponto", "1,500.50"],
+    ["três casas decimais", "1500.505"],
+    ["hexadecimal", "0x10"],
+    ["notação científica", "1e3"],
+    ["grupo de milhar errado", "15.00,00"],
+  ])("texto de valor ilegível: %s", (_rotulo, valor) => {
+    expect(validarRecebimentoManual({ valor, data: "2026-10-15" }, agora)).toEqual({
+      ok: false,
+      erro: "Valor inválido. Use vírgula para os centavos (ex.: 1.500,00).",
+    });
+  });
+
+  it.each([
+    ["milhar pt-BR sem centavos", "1.500,00", 1500],
+    ["milhões", "1.234.567,89", 1234567.89],
+    ["inteiro", "1500", 1500],
+    ["texto zero", "0,00", null],
+  ])("texto %s", (_rotulo, valor, esperado) => {
+    const r = validarRecebimentoManual({ valor, data: "2026-10-15" }, agora);
+    if (esperado == null) expect(r).toEqual({ ok: false, erro: "Informe um valor recebido maior que zero." });
+    else expect(r).toEqual({ ok: true, valor: esperado, data: new Date("2026-10-15T00:00:00.000Z") });
   });
 
   it("aceita Date e normaliza para data pura", () => {
