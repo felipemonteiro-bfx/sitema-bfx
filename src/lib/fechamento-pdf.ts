@@ -25,18 +25,24 @@ const ROW_H = 18;
 const RODAPE = MARGIN + 20;
 const QR = 120;
 
-type Col = { label: string; x: number; width: number; align?: "left" | "right" };
+/**
+ * `quebra`: o texto ocupa até 2 linhas (colaborador — o RH confere por ele — e situação).
+ * `encolhe`: em vez de truncar, a fonte diminui até caber (matrícula).
+ */
+type Col = { label: string; x: number; width: number; align?: "left" | "right"; quebra?: boolean; encolhe?: boolean };
 
 // Larguras somam 515 = PAGE_W - 2*MARGIN
 const COLS: Col[] = [
-  { label: "Venda", x: MARGIN, width: 62 },
-  { label: "Colaborador", x: MARGIN + 62, width: 128 },
-  { label: "Matrícula", x: MARGIN + 190, width: 54 },
-  { label: "Vencimento", x: MARGIN + 244, width: 58 },
-  { label: "Lote", x: MARGIN + 302, width: 34 },
-  { label: "Situação", x: MARGIN + 336, width: 114 },
+  { label: "Venda", x: MARGIN, width: 58 },
+  { label: "Colaborador", x: MARGIN + 58, width: 150, quebra: true },
+  { label: "Matrícula", x: MARGIN + 208, width: 54, encolhe: true },
+  { label: "Vencimento", x: MARGIN + 262, width: 56 },
+  { label: "Lote", x: MARGIN + 318, width: 30 },
+  { label: "Situação", x: MARGIN + 348, width: 102, quebra: true },
   { label: "Valor", x: MARGIN + 450, width: 65, align: "right" },
 ];
+const TAMANHO_CELULA = 8.5;
+const ENTRELINHA_CELULA = 9.5;
 
 export type PixDemonstrativo = {
   copiaECola: string;
@@ -50,7 +56,13 @@ export type FechamentoPdfInput = DemonstrativoDados & {
   logoPath?: string | null;
 };
 
-function truncar(text: string, font: PDFFont, size: number, maxWidth: number): string {
+/** Uma linha só: `drawText` quebra em \n, \r e U+2028 e sobrepõe a linha de baixo. */
+function umaLinha(text: string): string {
+  return text.split(/\s+/).join(" ").trim();
+}
+
+function truncar(bruto: string, font: PDFFont, size: number, maxWidth: number): string {
+  const text = umaLinha(bruto);
   if (font.widthOfTextAtSize(text, size) <= maxWidth) return text;
   let t = text;
   while (t.length > 1 && font.widthOfTextAtSize(t + "…", size) > maxWidth) t = t.slice(0, -1);
@@ -77,7 +89,7 @@ function quebrarCaracteres(text: string, font: PDFFont, size: number, maxWidth: 
 function quebrarPalavras(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
   const linhas: string[] = [];
   let atual = "";
-  for (const palavra of text.split(/\s+/).filter(Boolean)) {
+  for (const palavra of umaLinha(text).split(" ").filter(Boolean)) {
     const tentativa = atual ? `${atual} ${palavra}` : palavra;
     if (font.widthOfTextAtSize(tentativa, size) <= maxWidth) {
       atual = tentativa;
@@ -134,22 +146,40 @@ export async function gerarFechamentoPdf(input: FechamentoPdfInput): Promise<Buf
     if (y - altura < RODAPE) novaPagina();
   };
 
+  /** Linhas de texto de cada célula: até 2 nas colunas com `quebra`, a 2ª truncada se preciso. */
+  const celulas = (valores: string[], f: PDFFont): string[][] =>
+    COLS.map((col, i) => {
+      const valor = valores[i] ?? "";
+      const largura = col.width - 8;
+      if (!col.quebra) return [col.encolhe ? umaLinha(valor) : truncar(valor, f, TAMANHO_CELULA, largura)];
+      const linhas = quebrarPalavras(valor, f, TAMANHO_CELULA, largura);
+      if (linhas.length <= 2) return linhas;
+      return [linhas[0]!, truncar(linhas.slice(1).join(" "), f, TAMANHO_CELULA, largura)];
+    });
+
+  const alturaLinha = (linhas: string[][]) => ROW_H + (Math.max(...linhas.map((l) => l.length)) - 1) * ENTRELINHA_CELULA;
+
   const linhaTabela = (valores: string[], cabecalho: boolean) => {
-    const size = 8.5;
-    if (cabecalho) {
-      page.drawRectangle({ x: MARGIN, y: y - ROW_H, width: CONTEUDO_W, height: ROW_H, color: AZUL });
-    }
     const f = cabecalho ? fontBold : font;
     const cor = cabecalho ? rgb(1, 1, 1) : CINZA_TEXTO;
+    const linhas = celulas(valores, f);
+    const h = alturaLinha(linhas);
+    if (cabecalho) {
+      page.drawRectangle({ x: MARGIN, y: y - h, width: CONTEUDO_W, height: h, color: AZUL });
+    }
     COLS.forEach((col, i) => {
-      const cell = truncar(valores[i] ?? "", f, size, col.width - 8);
-      const x = col.align === "right" ? col.x + col.width - f.widthOfTextAtSize(cell, size) - 4 : col.x + 4;
-      page.drawText(cell, { x, y: y - ROW_H + 5.5, size, font: f, color: cor });
+      linhas[i]!.forEach((cell, j) => {
+        let size = TAMANHO_CELULA;
+        // Matrícula nunca é truncada: a fonte encolhe até caber (mínimo 5pt).
+        if (col.encolhe) while (size > 5 && f.widthOfTextAtSize(cell, size) > col.width - 8) size -= 0.5;
+        const x = col.align === "right" ? col.x + col.width - f.widthOfTextAtSize(cell, size) - 4 : col.x + 4;
+        page.drawText(cell, { x, y: y - 12.5 - j * ENTRELINHA_CELULA, size, font: f, color: cor });
+      });
     });
     if (!cabecalho) {
-      page.drawLine({ start: { x: MARGIN, y: y - ROW_H }, end: { x: PAGE_W - MARGIN, y: y - ROW_H }, thickness: 0.4, color: CINZA_LINHA });
+      page.drawLine({ start: { x: MARGIN, y: y - h }, end: { x: PAGE_W - MARGIN, y: y - h }, thickness: 0.4, color: CINZA_LINHA });
     }
-    y -= ROW_H;
+    y -= h;
   };
 
   // Cabeçalho
@@ -192,22 +222,20 @@ export async function gerarFechamentoPdf(input: FechamentoPdfInput): Promise<Buf
     y -= ROW_H;
   }
   for (const l of dados.linhas) {
-    if (y - ROW_H < RODAPE) {
+    const valores = [
+      l.identificador,
+      l.colaborador,
+      l.matricula ?? "—",
+      formatarDataPura(l.vencimento),
+      l.lote === null ? "—" : String(l.lote),
+      l.situacao,
+      formatBRL(l.valor),
+    ];
+    if (y - alturaLinha(celulas(valores, font)) < RODAPE) {
       novaPagina();
       linhaTabela(cabecalho, true);
     }
-    linhaTabela(
-      [
-        l.identificador,
-        l.colaborador,
-        l.matricula ?? "—",
-        formatarDataPura(l.vencimento),
-        l.lote === null ? "—" : String(l.lote),
-        l.situacao,
-        formatBRL(l.valor),
-      ],
-      false
-    );
+    linhaTabela(valores, false);
   }
   y -= 14;
 
@@ -223,16 +251,23 @@ export async function gerarFechamentoPdf(input: FechamentoPdfInput): Promise<Buf
 
   linhaTotal("Total bruto", dados.totalBruto);
   if (dados.ajustes.length > 0) {
-    garantir(22);
+    const primeiro = quebrarPalavras(dados.ajustes[0]!.justificativa, font, 8.5, 380).length;
+    // O título não fica sozinho no fim da página: vai junto com o 1º ajuste (até 3 linhas dele).
+    garantir(18 + Math.min(primeiro, 3) * 11 + 4);
     texto("Ajustes", MARGIN, y - 10, 10, fontBold, AZUL);
     y -= 18;
     for (const a of dados.ajustes) {
       const linhas = quebrarPalavras(a.justificativa, font, 8.5, 380);
-      garantir(linhas.length * 11 + 4);
+      // Ajuste de até 3 linhas não se parte entre páginas; um maior pagina linha a linha.
+      garantir(Math.min(linhas.length, 3) * 11 + 4);
       const v = formatBRL(a.valor);
       texto(v, xValor - font.widthOfTextAtSize(v, 8.5), y - 9, 8.5);
-      linhas.forEach((t, i) => texto(t, MARGIN + 8, y - 9 - i * 11, 8.5));
-      y -= linhas.length * 11 + 4;
+      for (const t of linhas) {
+        garantir(11);
+        texto(t, MARGIN + 8, y - 9, 8.5);
+        y -= 11;
+      }
+      y -= 4;
     }
     linhaTotal("Total de ajustes", dados.totalAjustes);
   }
@@ -245,7 +280,9 @@ export async function gerarFechamentoPdf(input: FechamentoPdfInput): Promise<Buf
   if (pix) {
     const textoX = qr ? MARGIN + QR + 16 : MARGIN;
     const textoW = PAGE_W - MARGIN - textoX;
-    const codigo = quebrarCaracteres(pix.copiaECola.trim(), fontMono, 8, textoW);
+    // Espaço interno do payload é significativo (nome do recebedor): só some o que quebraria a linha.
+    const payload = Array.from(pix.copiaECola.trim()).filter((c) => !"\r\n\u2028\u2029".includes(c)).join("");
+    const codigo = quebrarCaracteres(payload, fontMono, 8, textoW);
     const vencimento = pix.vencimento ?? dados.vencimentoPix;
     const extras: string[] = [`Vencimento: ${formatarDataPura(vencimento)}`];
     if (pix.identificacao) extras.push(`Identificação: ${pix.identificacao}`);

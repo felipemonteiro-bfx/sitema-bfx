@@ -247,3 +247,40 @@ describe("validarAjuste", () => {
     if (!r.ok) expect(r.erro).toMatch(/justificativa/i);
   });
 });
+
+describe("revisão: entradas inválidas", () => {
+  it("justificativa acima de 500 caracteres é recusada", () => {
+    const r = validarAjuste(10, "a".repeat(501));
+    expect(r).toMatchObject({ ok: false });
+    if (!r.ok) expect(r.erro).toMatch(/justificativa/i);
+    expect(validarAjuste(10, "a".repeat(500))).toMatchObject({ ok: true });
+  });
+
+  it("aceita o formato brasileiro com milhar", () => {
+    expect(validarAjuste("1.234,56", "Ajuste xx")).toMatchObject({ ok: true, valor: 1234.56 });
+    expect(validarAjuste("-1.234", "Ajuste xx")).toMatchObject({ ok: true, valor: -1234 });
+    expect(validarAjuste("12.5", "Ajuste xx")).toMatchObject({ ok: true, valor: 12.5 });
+  });
+
+  it.each(["0x10", "1e3", "1,2,3", "--5", "R$ 10", "10,123"])("recusa valor em texto %j", (v) => {
+    expect(validarAjuste(v, "Ajuste xx")).toMatchObject({ ok: false });
+  });
+
+  it("recusa valor absurdo", () => {
+    expect(validarAjuste(1e300, "Ajuste xx")).toMatchObject({ ok: false });
+  });
+
+  it("competência com ano fora de 19xx/20xx é recusada", () => {
+    expect(() => intervaloCompetencia("0099-05")).toThrow(/compet[eê]ncia/i);
+    expect(() => rotuloCompetencia("0099-05")).toThrow(/compet[eê]ncia/i);
+  });
+
+  it("competenciaDe recusa data inválida", () => {
+    expect(() => competenciaDe(new Date("x"))).toThrow();
+  });
+
+  it("totaisFechamento recusa valor não finito", () => {
+    expect(() => totaisFechamento([{ valor: Number.NaN }], [])).toThrow();
+    expect(() => totaisFechamento([], [{ valor: Number.POSITIVE_INFINITY, removidoEm: null }])).toThrow();
+  });
+});

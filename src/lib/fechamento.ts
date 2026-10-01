@@ -28,7 +28,7 @@ const MESES = [
   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
 ];
 
-const FORMATO_COMPETENCIA = /^\d{4}-(0[1-9]|1[0-2])$/;
+const FORMATO_COMPETENCIA = /^(19|20)\d{2}-(0[1-9]|1[0-2])$/;
 
 function partesCompetencia(c: string): { ano: number; mes: number } {
   if (typeof c !== "string" || !FORMATO_COMPETENCIA.test(c)) {
@@ -39,6 +39,7 @@ function partesCompetencia(c: string): { ano: number; mes: number } {
 
 /** Mês (UTC) de uma data pura → "AAAA-MM". */
 export function competenciaDe(d: Date): string {
+  if (Number.isNaN(d.getTime())) throw new Error("Data inválida para a competência.");
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -120,6 +121,7 @@ export function elegibilidadeFechamento(
 
 /** Valor em centavos inteiros, arredondando metade para longe do zero (10,005 → 1001). */
 function centavos(valor: number): number {
+  if (!Number.isFinite(valor)) throw new Error(`Valor inválido: ${valor}.`);
   const abs = Math.round(Number((Math.abs(valor) * 100).toFixed(6)));
   return valor < 0 ? -abs : abs;
 }
@@ -135,23 +137,38 @@ export function totaisFechamento(
 }
 
 const JUSTIFICATIVA_MINIMA = 5;
+const JUSTIFICATIVA_MAXIMA = 500;
+/** Teto de sanidade: um ajuste nunca chega perto disso; acima é erro de digitação. */
+const AJUSTE_MAXIMO = 1_000_000;
 
-/** Ajuste manual: valor ≠ 0 (em centavos) e finito; justificativa com pelo menos 5 caracteres. */
+/** "1.234,56" | "-1234,5" | "12.5" | "10" → número; qualquer outra coisa → NaN. */
+function numeroDeTexto(texto: string): number {
+  const t = texto.trim();
+  if (/^-?\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(t)) return Number(t.split(".").join("").split(",").join("."));
+  if (/^-?\d+([.,]\d{1,2})?$/.test(t)) return Number(t.split(",").join("."));
+  return Number.NaN;
+}
+
+/** Ajuste manual: valor ≠ 0 (em centavos), finito e até 1 milhão; justificativa de 5 a 500 caracteres. */
 export function validarAjuste(
   valor: unknown,
   justificativa: unknown
 ): { ok: true; valor: number; justificativa: string } | { ok: false; erro: string } {
   let numero = Number.NaN;
   if (typeof valor === "number") numero = valor;
-  else if (typeof valor === "string" && valor.trim() !== "") numero = Number(valor.trim().split(",").join("."));
+  else if (typeof valor === "string") numero = numeroDeTexto(valor);
 
-  if (!Number.isFinite(numero)) return { ok: false, erro: "Informe o valor do ajuste." };
+  if (!Number.isFinite(numero)) return { ok: false, erro: "Informe o valor do ajuste (ex.: 1.234,56 ou -50,00)." };
+  if (Math.abs(numero) > AJUSTE_MAXIMO) return { ok: false, erro: "Valor do ajuste fora do razoável." };
   const emCentavos = centavos(numero);
   if (emCentavos === 0) return { ok: false, erro: "O valor do ajuste não pode ser zero." };
 
   const texto = typeof justificativa === "string" ? justificativa.trim() : "";
   if (texto.length < JUSTIFICATIVA_MINIMA) {
     return { ok: false, erro: `A justificativa precisa de pelo menos ${JUSTIFICATIVA_MINIMA} caracteres.` };
+  }
+  if (texto.length > JUSTIFICATIVA_MAXIMA) {
+    return { ok: false, erro: `A justificativa pode ter no máximo ${JUSTIFICATIVA_MAXIMA} caracteres.` };
   }
   return { ok: true, valor: emCentavos / 100, justificativa: texto };
 }

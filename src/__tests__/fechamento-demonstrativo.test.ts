@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { PDFDocument, PDFName, PDFPage, PDFRawStream } from "pdf-lib";
 import type { DemonstrativoDados } from "@/lib/fechamento";
 import { gerarFechamentoXlsx } from "@/lib/fechamento-xlsx";
 import { gerarFechamentoPdf } from "@/lib/fechamento-pdf";
@@ -161,5 +161,82 @@ describe("gerarFechamentoPdf", () => {
     const d = { ...dados(0), ajustes: [], totalBruto: 0, totalAjustes: 0, totalFinal: 0, responsavel: null, empresa: { nome: "Y", cnpj: null } };
     const doc = await PDFDocument.load(await gerarFechamentoPdf(d));
     expect(doc.getPageCount()).toBe(1);
+  });
+});
+
+describe("gerarFechamentoPdf — o que é desenhado", () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  type Texto = { texto: string; y: number; pagina: PDFPage };
+  function espionar() {
+    const textos: Texto[] = [];
+    const imagens: { width?: number; height?: number }[] = [];
+    vi.spyOn(PDFPage.prototype, "drawText").mockImplementation(function (this: PDFPage, texto, opcoes) {
+      textos.push({ texto, y: opcoes?.y ?? 0, pagina: this });
+    });
+    vi.spyOn(PDFPage.prototype, "drawImage").mockImplementation(function (_img, opcoes) {
+      imagens.push({ width: opcoes?.width, height: opcoes?.height });
+    });
+    return { textos, imagens };
+  }
+
+  it("com Pix: desenha o título, o QR em 120pt, o copia-e-cola inteiro, vencimento e identificação", async () => {
+    const { textos, imagens } = espionar();
+    await gerarFechamentoPdf({
+      ...dados(),
+      pix: { copiaECola: COPIA_E_COLA, qrPng: new Uint8Array(PNG_1X1), identificacao: "FEC-7-2026-10-v2" },
+    });
+    const todos = textos.map((t) => t.texto);
+    expect(todos).toContain("Pague com Pix");
+    expect(imagens).toEqual([{ width: 120, height: 120 }]);
+    const inicio = todos.findIndex((t) => t === "Pix copia e cola:");
+    const codigo = todos.slice(inicio + 1).filter((t) => !t.startsWith("Vencimento") && !t.startsWith("Identifica"));
+    expect(codigo.join("").startsWith(COPIA_E_COLA)).toBe(true);
+    expect(todos).toContain("Vencimento: 15/10/2026");
+    expect(todos).toContain("Identificação: FEC-7-2026-10-v2");
+  });
+
+  it("sem Pix: nada de bloco nem imagem", async () => {
+    const { textos, imagens } = espionar();
+    await gerarFechamentoPdf({ ...dados(), pix: null });
+    expect(textos.map((t) => t.texto)).not.toContain("Pague com Pix");
+    expect(imagens).toEqual([]);
+  });
+
+  it("120 linhas: o cabeçalho da tabela se repete em cada página", async () => {
+    const { textos } = espionar();
+    const doc = await PDFDocument.load(await gerarFechamentoPdf(dados(120)));
+    const paginasComCabecalho = new Set(textos.filter((t) => t.texto === "Colaborador").map((t) => t.pagina));
+    expect(paginasComCabecalho.size).toBe(doc.getPageCount());
+    expect(doc.getPageCount()).toBeGreaterThan(1);
+  });
+
+  it("nome completo do colaborador e matrícula longa não são truncados", async () => {
+    const { textos } = espionar();
+    const d = dados(1);
+    d.linhas[0] = { ...d.linhas[0]!, colaborador: "MARIA DAS GRAÇAS DOS SANTOS OLIVEIRA", matricula: "1234567890" };
+    await gerarFechamentoPdf(d);
+    const todos = textos.map((t) => t.texto);
+    expect(todos.join(" ")).toContain("MARIA DAS GRAÇAS DOS SANTOS OLIVEIRA");
+    expect(todos).toContain("1234567890");
+    expect(todos.some((t) => t.includes("MARIA") && t.endsWith("…"))).toBe(false);
+  });
+
+  it("quebra de linha no texto não chega ao drawText", async () => {
+    const { textos } = espionar();
+    const d = dados(1);
+    d.empresa = { nome: "Linha1\nLinha2", cnpj: null };
+    d.linhas[0] = { ...d.linhas[0]!, colaborador: "Ana\r\nMaria", situacao: "a\u2028b" };
+    d.ajustes = [{ valor: 1, justificativa: "uma\nduas linhas" }];
+    await gerarFechamentoPdf(d);
+    expect(textos.filter((t) => /[\n\r\u2028]/.test(t.texto))).toEqual([]);
+  });
+
+  it("justificativa enorme pagina linha a linha: nenhum texto fora da página", async () => {
+    const { textos } = espionar();
+    const d = dados(30);
+    d.ajustes = [{ valor: 1, justificativa: "palavra ".repeat(4000) }];
+    await gerarFechamentoPdf(d);
+    expect(Math.min(...textos.map((t) => t.y))).toBeGreaterThanOrEqual(20);
   });
 });
