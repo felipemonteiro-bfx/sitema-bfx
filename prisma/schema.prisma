@@ -391,6 +391,8 @@ model EmpresaParceira {
   /// Em cópia (Cc) de todo e-mail ao RH: termo, consolidado semanal e relatório mensal.
   emailCopia    String? @map("email_copia")
   diaRelatorioMensal Int? @map("dia_relatorio_mensal")
+  /// Cliente Asaas da empresa (pelo CNPJ) — paga o Pix do fechamento (Fase 6). Não é o do colaborador.
+  asaasCustomerId String? @map("asaas_customer_id")
 
   clientes      Cliente[]
   vinculos      EmpresaVinculo[] @relation("empresa_origem")
@@ -674,6 +676,7 @@ model ArquivoFinanceiro {
   pagamentos      BoletoPagamento[]  @relation("pagamento_comprovante")
   fechamentosXlsx FechamentoVersao[] @relation("fechamento_xlsx")
   fechamentosPdf  FechamentoVersao[] @relation("fechamento_pdf")
+  recebimentosComprovante RecebimentoFechamento[] @relation("recebimento_comprovante")
 
   @@index([sha256])
   @@map("arquivos_financeiros")
@@ -755,6 +758,8 @@ model Fechamento {
   versoes         FechamentoVersao[]
   ajustes         FechamentoAjuste[]
   parcelas        ParcelaVencimento[]
+  cobrancas       CobrancaFechamento[]
+  recebimentos    RecebimentoFechamento[]
 
   @@unique([empresaParceiraId, competencia])
   @@map("fechamentos")
@@ -780,6 +785,7 @@ model FechamentoVersao {
   xlsx       ArquivoFinanceiro? @relation("fechamento_xlsx", fields: [xlsxArquivoId], references: [id], onDelete: SetNull)
   pdf        ArquivoFinanceiro? @relation("fechamento_pdf", fields: [pdfArquivoId], references: [id], onDelete: SetNull)
   linhas     FechamentoLinha[]
+  cobrancas  CobrancaFechamento[]
 
   @@unique([fechamentoId, numero])
   @@map("fechamento_versoes")
@@ -823,6 +829,65 @@ model FechamentoAjuste {
 
   @@index([fechamentoId])
   @@map("fechamento_ajustes")
+}
+
+/// Cobrança Pix do Asaas de uma versão enviada do fechamento (Fase 6, spec §3.6). Uma cobrança
+/// `ativa` por fechamento: índice único parcial na migração `20260930160000_cobranca_recebimento_fechamento`,
+/// fora do schema. Ao enviar a versão N+1, a ativa anterior é cancelada no Asaas (se não foi paga).
+/// `externalReference` = "FEC-{empresaId}-{AAAA-MM}-v{N}".
+model CobrancaFechamento {
+  id                Int       @id @default(autoincrement())
+  fechamentoId      Int       @map("fechamento_id")
+  versaoId          Int       @map("versao_id")
+  asaasPaymentId    String    @unique @map("asaas_payment_id")
+  externalReference String    @map("external_reference")
+  valor             Float
+  vencimento        DateTime
+  // ativa | cancelada | paga
+  status            String    @default("ativa")
+  pixCopiaECola     String?   @map("pix_copia_e_cola")
+  qrCodePng         Bytes?    @map("qr_code_png")
+  criadaEm          DateTime  @default(now()) @map("criada_em")
+  canceladaEm       DateTime? @map("cancelada_em")
+
+  fechamento   Fechamento              @relation(fields: [fechamentoId], references: [id], onDelete: Restrict)
+  versao       FechamentoVersao        @relation(fields: [versaoId], references: [id], onDelete: Restrict)
+  recebimentos RecebimentoFechamento[]
+
+  @@index([fechamentoId])
+  @@index([versaoId])
+  @@map("cobrancas_fechamento")
+}
+
+/// Dinheiro que entrou para um fechamento (o recebimento é do fechamento, não da versão). Do Asaas
+/// (webhook; único por `asaasPaymentId`) ou manual em dois passos (pendente → confirmado). Só
+/// `confirmado` conta. Estorno marca `estornado`; nada some.
+model RecebimentoFechamento {
+  id                   Int       @id @default(autoincrement())
+  fechamentoId         Int       @map("fechamento_id")
+  cobrancaId           Int?      @map("cobranca_id")
+  // asaas | manual
+  origem               String
+  valor                Float
+  dataRecebimento      DateTime  @map("data_recebimento")
+  asaasPaymentId       String?   @unique @map("asaas_payment_id")
+  endToEndId           String?   @map("end_to_end_id")
+  comprovanteArquivoId Int?      @map("comprovante_arquivo_id")
+  // pendente | confirmado | estornado
+  status               String
+  registradoPor        String?   @map("registrado_por")
+  confirmadoPor        String?   @map("confirmado_por")
+  confirmadoEm         DateTime? @map("confirmado_em")
+  estornadoEm          DateTime? @map("estornado_em")
+  criadoEm             DateTime  @default(now()) @map("criado_em")
+
+  fechamento  Fechamento          @relation(fields: [fechamentoId], references: [id], onDelete: Restrict)
+  cobranca    CobrancaFechamento? @relation(fields: [cobrancaId], references: [id], onDelete: Restrict)
+  comprovante ArquivoFinanceiro?  @relation("recebimento_comprovante", fields: [comprovanteArquivoId], references: [id], onDelete: SetNull)
+
+  @@index([fechamentoId])
+  @@index([cobrancaId])
+  @@map("recebimentos_fechamento")
 }
 
 /// Registro unificado de mensagens WhatsApp (entrada e saída).
