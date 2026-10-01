@@ -371,8 +371,13 @@ texto acima.
   versão já enviada, com Pix ativo ou recebimento confirmado no fechamento, não perde a reserva por
   edição/exclusão de venda nem tem o boleto devolvido à empresa.
 - **Cancelar boleto.** Ação de admin em `/obrigacoes`: boleto vivo, sem pagamento vivo e sem parcela
-  em fechamento conferido ou posterior → `cancelado`, parcelas sem boleto, motivo no audit. Depois
-  disso a antecipação pode ser desfeita pela baixa (lote concluído por engano).
+  em fechamento conferido ou posterior (nem com Pix em jogo) → `cancelado`, parcelas sem boleto,
+  motivo no audit. Depois disso a antecipação pode ser desfeita pela baixa (lote concluído por
+  engano): desfazer a baixa da Prudent agora zera também `antecipada` e o lote da parcela, e a
+  venda volta à fila com o flag recalculado.
+- **Pix trocado avisa.** Quando o ajuste ao saldo cria um Pix novo, o do e-mail do RH foi cancelado:
+  não há reenvio automático do demonstrativo; os admins recebem alerta e a tela avisa para mandar o
+  copia e cola novo.
 - Menores: reserva exige `antecipacaoLoteId: null` na parcela não antecipada; recusa do RH respeita o
   fechamento; parcela `pix_fechamento` conta como descontada em folha e aparece como "Pago no
   fechamento" sem "Desfazer"; o CSV da Prudent é baixado do lote já gravado (`?loteId=`).
