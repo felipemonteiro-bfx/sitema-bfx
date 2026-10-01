@@ -37,6 +37,7 @@ import { formatarDataPura } from "@/lib/data-pura";
 import { linkHistoricoEmails } from "@/lib/email-tipos";
 import { podeEditar, podeReabrir, rotuloCompetencia, validarAjuste } from "@/lib/fechamento";
 import type { DetalheFechamento } from "@/lib/fechamento-leitura";
+import { ConciliacaoFechamento, PixDoFechamento } from "@/components/fechamento-pix";
 import {
   adicionarAjusteFechamento,
   atualizarParcelas,
@@ -52,11 +53,11 @@ const dataIso = (iso: string) => formatarDataPura(`${iso.slice(0, 10)}T00:00:00.
 const dataHora = (iso: string) => new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Manaus" }).format(new Date(iso));
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
-/** Etapas do stepper; "Conciliado" é derivado e só chega na Fase 6. */
+/** Etapas do stepper; "Conciliado" é derivado (Pix pago e boletos das linhas pagos). */
 const ETAPAS = [
   { rotulo: "Em preparação", detalhe: "editando linhas e ajustes" },
   { rotulo: "Conferido", detalhe: "versão congelada" },
-  { rotulo: "Enviado ao RH", detalhe: "PDF e planilha por e-mail" },
+  { rotulo: "Enviado ao RH", detalhe: "com Pix do Asaas" },
   { rotulo: "Pago", detalhe: "parcial ou total" },
   { rotulo: "Conciliado", detalhe: "Pix, parcelas e boletos" },
 ] as const;
@@ -88,7 +89,8 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
 
   const editavel = podeEditar(d.status);
   const competencia = rotuloCompetencia(d.competencia);
-  const etapa = ETAPA_DO_STATUS[d.status] ?? 0;
+  const etapa = d.conciliacao?.conciliado ? 4 : (ETAPA_DO_STATUS[d.status] ?? 0);
+  const concluido = d.conciliacao?.concluido ?? false;
   const versaoAtual = d.versoes.find((v) => v.numero === d.versaoAtual) ?? null;
   const enviadas = d.versoes.filter((v) => v.enviadaEm);
 
@@ -176,8 +178,15 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                 aria-hidden="true"
                 className={`h-1 rounded-full ${atual ? "bg-primary" : feita ? "bg-primary/50" : "bg-muted"}`}
               />
-              <span className={`text-xs font-semibold sm:text-sm ${atual ? "text-foreground" : "text-muted-foreground"}`}>
+              <span
+                className={`flex flex-wrap items-center gap-1.5 text-xs font-semibold sm:text-sm ${atual ? "text-foreground" : "text-muted-foreground"}`}
+              >
                 {e.rotulo}
+                {i === 4 && concluido && (
+                  <Badge variant="success" className="whitespace-nowrap">
+                    Concluído
+                  </Badge>
+                )}
               </span>
               <span className="hidden text-xs text-muted-foreground sm:block">{e.detalhe}</span>
             </li>
@@ -380,11 +389,14 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                 </span>
               </div>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Ao enviar, o RH recebe o PDF e a planilha desta versão. O Pix copia-e-cola entra quando a cobrança pelo
-                Asaas for ligada. Corrigir depois gera a versão seguinte.
+                Ao enviar, o RH recebe o PDF, a planilha e o Pix copia-e-cola com QR Code, identificado por empresa e
+                competência. Corrigir depois gera a versão seguinte e cancela a cobrança anterior.
               </p>
+              <PixDoFechamento fechamentoId={d.id} pix={d.pix} />
             </section>
           </Card>
+
+          {d.conciliacao && <ConciliacaoFechamento c={d.conciliacao} />}
 
           {d.versoes.length > 0 && (
             <Card className="p-5">
@@ -444,7 +456,10 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
               <AlertDialogTitle>Enviar a versão {d.versaoAtual} ao RH?</AlertDialogTitle>
               <AlertDialogDescription>
                 {d.empresa.emailRh
-                  ? `Vai para ${d.empresa.emailRh}, com o PDF e a planilha. Valor final ${formatBRL(versaoAtual?.totalFinal ?? d.totalFinal)}, Pix vence em ${dataIso(d.vencimentoPix)}.`
+                  ? `Vai para ${d.empresa.emailRh}, com o PDF, a planilha e o Pix gerado agora no Asaas. Valor final ${formatBRL(versaoAtual?.totalFinal ?? d.totalFinal)}` +
+                    (d.pix.recebido > 0 ? `, já recebido ${formatBRL(d.pix.recebido)} (o Pix sai pelo saldo)` : "") +
+                    `, Pix vence em ${dataIso(d.vencimentoPix)}.` +
+                    (d.pix.cobranca ? " A cobrança anterior é cancelada no Asaas se não estiver paga." : "")
                   : "A empresa não tem e-mail do RH cadastrado: cadastre em Cadastros › Empresas antes de enviar."}
               </AlertDialogDescription>
             </AlertDialogHeader>

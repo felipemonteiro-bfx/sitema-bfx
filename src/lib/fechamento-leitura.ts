@@ -18,6 +18,9 @@ import { SELECT_PARCELA, diaDaCompetencia, paraRegra, pertence, type ParcelaLida
 import { regraVigente, type RegraComVigencia } from "@/lib/regra-empresa";
 import { regrasDaEmpresa } from "@/lib/regra-empresa-db";
 import type { FechamentoPix } from "@/lib/pix-fechamento";
+import { conciliarBoletosComDemonstrativo, estadoFinal, type Divergencia } from "@/lib/conciliacao-fechamento";
+import { situacaoRecebimento } from "@/lib/recebimento-fechamento";
+import { formatBRL } from "@/lib/utils";
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -74,7 +77,124 @@ export type DetalheFechamento = {
   totalAjustes: number;
   totalFinal: number;
   versoes: VersaoDetalhe[];
+  /** Cobrança Pix ativa e recebimentos (Fase 6). */
+  pix: PixDetalhe;
+  /** Conciliação boletos Prudent × demonstrativo da versão atual; null sem versão conferida. */
+  conciliacao: ConciliacaoDetalhe | null;
 };
+
+export type RecebimentoDetalhe = {
+  id: number;
+  origem: string;
+  valor: number;
+  data: string;
+  status: string;
+  comprovanteArquivoId: number | null;
+  registradoPor: string | null;
+  confirmadoPor: string | null;
+};
+
+export type PixDetalhe = {
+  cobranca: {
+    asaasPaymentId: string;
+    copiaECola: string | null;
+    qrDataUrl: string | null;
+    valor: number;
+    vencimento: string;
+    identificacao: string;
+    link: string;
+  } | null;
+  recebido: number;
+  saldo: number;
+  excedente: number;
+  recebimentos: RecebimentoDetalhe[];
+  /** Recebimento manual só depois de alguma versão ter ido ao RH. */
+  podeRegistrar: boolean;
+};
+
+export type ConciliacaoDetalhe = {
+  somaLinhasAntecipadas: number;
+  somaBoletos: number;
+  diferenca: number;
+  divergencias: { chave: string; texto: string }[];
+  conciliado: boolean;
+  concluido: boolean;
+};
+
+/** Fatura pública da cobrança no Asaas ("pay_080225913252" → ".../i/080225913252"). */
+export function linkCobrancaAsaas(asaasPaymentId: string, asaasEnv: string | null | undefined): string {
+  const base = asaasEnv?.toLowerCase() === "production" ? "https://www.asaas.com" : "https://sandbox.asaas.com";
+  return `${base}/i/${encodeURIComponent(asaasPaymentId.replace(/^pay_/, ""))}`;
+}
+
+function textoDivergencia(d: Divergencia): string {
+  switch (d.tipo) {
+    case "antecipada_sem_boleto":
+      return `${d.identificador}: antecipada sem boleto Prudent que a BFX pague (${formatBRL(d.valor)}).`;
+    case "boleto_valor_diferente":
+      return `Boleto #${d.boletoId}: valor do documento ${formatBRL(d.documento)}, parcelas somam ${formatBRL(d.esperado)}.`;
+    case "boleto_com_parcela_fora":
+      return `Boleto #${d.boletoId}: cobre parcela fora do demonstrativo (${d.identificador}), ${formatBRL(d.valor)}.`;
+  }
+}
+
+/** Conciliação + estado final, com as divergências em texto. Pura. */
+export function montarConciliacao(
+  linhas: Parameters<typeof conciliarBoletosComDemonstrativo>[0],
+  boletos: Parameters<typeof conciliarBoletosComDemonstrativo>[1],
+  status: string
+): ConciliacaoDetalhe {
+  const c = conciliarBoletosComDemonstrativo(linhas, boletos);
+  const ligados = new Set(c.boletosLigados);
+  const final = estadoFinal({ status }, boletos.filter((b) => ligados.has(b.id)), c.divergencias);
+  return {
+    somaLinhasAntecipadas: c.somaLinhasAntecipadas,
+    somaBoletos: c.somaBoletos,
+    diferenca: c.diferenca,
+    divergencias: c.divergencias.map((d, i) => ({ chave: `${d.tipo}-${i}`, texto: textoDivergencia(d) })),
+    ...final,
+  };
+}
+
+/**
+ * Lê a versão atual (linhas da foto) e os boletos da empresa com vencimento na competência,
+ * mais os que a foto aponta, e concilia. null sem versão conferida.
+ */
+export async function lerConciliacao(f: {
+  id: number;
+  empresaParceiraId: number;
+  competencia: string;
+  status: string;
+  versaoAtual: number;
+}): Promise<ConciliacaoDetalhe | null> {
+  if (f.versaoAtual < 1) return null;
+  const linhas = await prisma.fechamentoLinha.findMany({
+    where: { versao: { fechamentoId: f.id, numero: f.versaoAtual } },
+    select: { vendaId: true, numeroParcela: true, totalParcelas: true, parcelaId: true, antecipada: true, boletoPrudentId: true, valor: true },
+  });
+  const { inicio, fim } = intervaloCompetencia(f.competencia);
+  const daFoto = [...new Set(linhas.map((l) => l.boletoPrudentId).filter((id): id is number => id != null))];
+  const boletos = await prisma.boletoPrudent.findMany({
+    where: {
+      OR: [
+        { empresaParceiraId: f.empresaParceiraId, vencimento: { gte: inicio, lt: fim } },
+        ...(daFoto.length > 0 ? [{ id: { in: daFoto } }] : []),
+      ],
+    },
+    select: { id: true, status: true, valorEsperado: true, valorDocumento: true, direcionamento: true, parcelas: { select: { id: true } } },
+  });
+  return montarConciliacao(
+    linhas.map((l) => ({
+      identificador: identificadorParcela(l.vendaId, l.numeroParcela, l.totalParcelas),
+      parcelaId: l.parcelaId,
+      antecipada: l.antecipada,
+      boletoPrudentId: l.boletoPrudentId,
+      valor: l.valor,
+    })),
+    boletos.map((b) => ({ ...b, parcelaIds: b.parcelas.map((p) => p.id) })),
+    f.status
+  );
+}
 
 type ParcelaComMotivo = ParcelaLida & { confirmacaoMotivo: string | null };
 
@@ -219,7 +339,64 @@ export async function lerDetalheFechamento(id: number): Promise<DetalheFechament
     );
   }
 
+  const [cobrancaAtiva, recebimentos, cfg, conciliacao] = await Promise.all([
+    prisma.cobrancaFechamento.findFirst({
+      where: { fechamentoId: f.id, status: "ativa" },
+      select: { asaasPaymentId: true, pixCopiaECola: true, qrCodePng: true, valor: true, vencimento: true, externalReference: true },
+    }),
+    prisma.recebimentoFechamento.findMany({
+      where: { fechamentoId: f.id },
+      orderBy: [{ dataRecebimento: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        origem: true,
+        valor: true,
+        dataRecebimento: true,
+        status: true,
+        comprovanteArquivoId: true,
+        registradoPor: true,
+        confirmadoPor: true,
+      },
+    }),
+    prisma.config.findFirst({ select: { asaasEnv: true } }),
+    lerConciliacao(f),
+  ]);
+  const totalVersao = versaoAtual?.totalFinal ?? 0;
+  const situacao = situacaoRecebimento(Math.max(totalVersao, 0), recebimentos);
+  const pix: PixDetalhe = {
+    cobranca: cobrancaAtiva
+      ? {
+          asaasPaymentId: cobrancaAtiva.asaasPaymentId,
+          copiaECola: cobrancaAtiva.pixCopiaECola,
+          qrDataUrl:
+            cobrancaAtiva.qrCodePng && cobrancaAtiva.qrCodePng.length > 0
+              ? `data:image/png;base64,${Buffer.from(cobrancaAtiva.qrCodePng).toString("base64")}`
+              : null,
+          valor: cobrancaAtiva.valor,
+          vencimento: iso(cobrancaAtiva.vencimento),
+          identificacao: cobrancaAtiva.externalReference,
+          link: linkCobrancaAsaas(cobrancaAtiva.asaasPaymentId, cfg?.asaasEnv),
+        }
+      : null,
+    recebido: situacao.recebido,
+    saldo: totalVersao > 0 ? situacao.saldo : 0,
+    excedente: totalVersao > 0 ? situacao.excedente : 0,
+    recebimentos: recebimentos.map((r) => ({
+      id: r.id,
+      origem: r.origem,
+      valor: r.valor,
+      data: iso(r.dataRecebimento),
+      status: r.status,
+      comprovanteArquivoId: r.comprovanteArquivoId,
+      registradoPor: r.registradoPor,
+      confirmadoPor: r.confirmadoPor,
+    })),
+    podeRegistrar: f.versoes.some((v) => v.enviadaEm != null),
+  };
+
   return {
+    pix,
+    conciliacao,
     id: f.id,
     empresa: f.empresaParceira,
     competencia: f.competencia,
@@ -258,7 +435,16 @@ export function competenciaSeguinte(c: string): string {
 }
 
 export type CelulaGrade =
-  | { tipo: "fechamento"; id: number; status: string; total: number; parcelas: number; desatualizado: boolean }
+  | {
+      tipo: "fechamento";
+      id: number;
+      status: string;
+      total: number;
+      parcelas: number;
+      desatualizado: boolean;
+      /** Estado final derivado (Fase 6): só para fechamento pago. */
+      final: "conciliado" | "concluido" | null;
+    }
   | { tipo: "gerar" }
   | { tipo: "desligada" };
 
@@ -285,6 +471,7 @@ export function montarGrade(e: {
     totalVersao: number | null;
     totalReservado: number;
     parcelas: number;
+    final?: "conciliado" | "concluido" | null;
   }[];
 }): GradeFechamento {
   const atual = competenciaDe(e.hoje);
@@ -316,6 +503,7 @@ export function montarGrade(e: {
             total: f.status === STATUS_FECHAMENTO.emPreparacao || f.totalVersao === null ? f.totalReservado : f.totalVersao,
             parcelas: f.parcelas,
             desatualizado: f.desatualizado,
+            final: f.final ?? null,
           };
           continue;
         }
@@ -358,6 +546,12 @@ export async function lerGradeFechamento(hoje: Date): Promise<GradeFechamento> {
       : Promise.resolve([]),
   ]);
   const somaPorFechamento = new Map(somas.map((s) => [s.fechamentoId, s]));
+  // Conciliado/concluído só existe para fechamento pago: concilia só esses.
+  const finais = new Map<number, "conciliado" | "concluido" | null>();
+  for (const f of fechamentos.filter((x) => x.status === STATUS_FECHAMENTO.pago)) {
+    const c = await lerConciliacao(f);
+    finais.set(f.id, c?.concluido ? "concluido" : c?.conciliado ? "conciliado" : null);
+  }
   return montarGrade({
     hoje,
     empresas,
@@ -374,6 +568,7 @@ export async function lerGradeFechamento(hoje: Date): Promise<GradeFechamento> {
         totalVersao: versao && versao.numero === f.versaoAtual ? versao.totalFinal : null,
         totalReservado: totaisFechamento([{ valor: soma?._sum.valorParcela ?? 0 }], f.ajustes).totalFinal,
         parcelas: soma?._count._all ?? 0,
+        final: finais.get(f.id) ?? null,
       };
     }),
   });

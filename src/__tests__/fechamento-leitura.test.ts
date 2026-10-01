@@ -5,7 +5,9 @@ import { describe, it, expect, vi } from "vitest";
 vi.mock("@/lib/db", () => ({ prisma: {} }));
 vi.mock("@/lib/regra-empresa-db", () => ({ regrasDaEmpresa: vi.fn() }));
 
-const { classificarParcelas, montarGrade, competenciaSeguinte } = await import("@/lib/fechamento-leitura");
+const { classificarParcelas, montarGrade, competenciaSeguinte, montarConciliacao, linkCobrancaAsaas } = await import(
+  "@/lib/fechamento-leitura"
+);
 
 function parcela(id: number, extra: Record<string, unknown> = {}) {
   const { venda, ...resto } = extra as { venda?: Record<string, unknown> };
@@ -60,7 +62,7 @@ describe("montarGrade", () => {
       fechamentos: [{ id: 1, empresaParceiraId: 7, competencia: "2026-09", status: "enviado", desatualizado: false, totalVersao: 450, totalReservado: 999, parcelas: 2 }],
     });
     expect(g.competencias).toEqual(["2026-09", "2026-10", "2026-11", "2026-12", "2027-01"]);
-    expect(g.empresas[0].celulas["2026-09"]).toEqual({ tipo: "fechamento", id: 1, status: "enviado", total: 450, parcelas: 2, desatualizado: false });
+    expect(g.empresas[0].celulas["2026-09"]).toEqual({ tipo: "fechamento", id: 1, status: "enviado", total: 450, parcelas: 2, desatualizado: false, final: null });
     expect(g.empresas[0].celulas["2026-11"]).toEqual({ tipo: "gerar" });
   });
 
@@ -88,5 +90,69 @@ describe("montarGrade", () => {
     });
     expect(g.empresas[0].celulas["2026-10"]).toMatchObject({ total: 600, desatualizado: true });
     expect(g.empresas[0].celulas["2026-11"]).toMatchObject({ total: 450 });
+  });
+});
+
+describe("montarGrade — conciliado e concluído (Fase 6)", () => {
+  const regra = (empresaParceiraId: number, cobrancaViaBfx: boolean) => ({
+    empresaParceiraId, vigenteDe: new Date("2026-01-01T00:00:00Z"), vigenteAte: null, diaCorte: 20, diaVencimento: 10,
+    diaPix: 15, repassePct: null, repasseBase: null, cobrancaViaBfx,
+  });
+  it("a célula leva o estado final do fechamento", () => {
+    const g = montarGrade({
+      hoje: new Date("2026-10-05T12:00:00Z"),
+      empresas: [{ id: 7, nome: "A" }],
+      regras: [regra(7, true)],
+      fechamentos: [
+        { id: 1, empresaParceiraId: 7, competencia: "2026-10", status: "pago", desatualizado: false, totalVersao: 600, totalReservado: 600, parcelas: 2, final: "concluido" },
+        { id: 2, empresaParceiraId: 7, competencia: "2026-11", status: "pago", desatualizado: false, totalVersao: 450, totalReservado: 450, parcelas: 2, final: "conciliado" },
+        { id: 3, empresaParceiraId: 7, competencia: "2026-12", status: "enviado", desatualizado: false, totalVersao: 450, totalReservado: 450, parcelas: 2 },
+      ],
+    });
+    expect(g.empresas[0].celulas["2026-10"]).toMatchObject({ final: "concluido" });
+    expect(g.empresas[0].celulas["2026-11"]).toMatchObject({ final: "conciliado" });
+    expect(g.empresas[0].celulas["2026-12"]).toMatchObject({ final: null });
+  });
+});
+
+describe("montarConciliacao (Fase 6)", () => {
+  const linha = (extra: Record<string, unknown> = {}) => ({
+    identificador: "V240-1/2", parcelaId: 80, antecipada: true, boletoPrudentId: 1, valor: 300, ...extra,
+  });
+  const boleto = (extra: Record<string, unknown> = {}) => ({
+    id: 1, status: "pago", valorEsperado: 300, valorDocumento: null, direcionamento: "bfx", parcelaIds: [80], ...extra,
+  });
+
+  it("pago, boletos pagos e sem divergência → conciliado e concluído", () => {
+    const c = montarConciliacao([linha(), linha({ identificador: "V240-2/2", parcelaId: 81, antecipada: false, boletoPrudentId: null })], [boleto()], "pago");
+    expect(c).toMatchObject({ somaLinhasAntecipadas: 300, somaBoletos: 300, diferenca: 0, divergencias: [], conciliado: true, concluido: true });
+  });
+
+  it("boleto ainda a pagar → nem conciliado", () => {
+    expect(montarConciliacao([linha()], [boleto({ status: "a_pagar" })], "pago")).toMatchObject({ conciliado: false, concluido: false });
+  });
+
+  it("fechamento não pago → nem conciliado", () => {
+    expect(montarConciliacao([linha()], [boleto()], "pago_parcial")).toMatchObject({ conciliado: false });
+  });
+
+  it("divergências viram texto legível", () => {
+    const c = montarConciliacao(
+      [linha({ parcelaId: 90, boletoPrudentId: null, identificador: "V250-1/1" }), linha()],
+      [boleto({ valorDocumento: 310 }), boleto({ id: 2, parcelaIds: [99] })],
+      "pago"
+    );
+    const textos = c.divergencias.map((d) => d.texto);
+    expect(textos).toContainEqual(expect.stringMatching(/^V250-1\/1: antecipada sem boleto Prudent/));
+    expect(textos).toContainEqual(expect.stringMatching(/^Boleto #1: valor do documento R\$\s310,00, parcelas somam R\$\s300,00/));
+    expect(textos).toContainEqual(expect.stringMatching(/^Boleto #2: cobre parcela fora do demonstrativo/));
+    expect(c.concluido).toBe(false);
+  });
+});
+
+describe("linkCobrancaAsaas", () => {
+  it("fatura pública: sem o prefixo pay_, no ambiente certo", () => {
+    expect(linkCobrancaAsaas("pay_080225913252", "production")).toBe("https://www.asaas.com/i/080225913252");
+    expect(linkCobrancaAsaas("pay_080225913252", null)).toBe("https://sandbox.asaas.com/i/080225913252");
   });
 });

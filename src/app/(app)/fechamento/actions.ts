@@ -16,6 +16,9 @@ import {
   removerAjuste,
 } from "@/lib/fechamento-db";
 import { enviarFechamento } from "@/lib/fechamento-envio";
+import { confirmarRecebimento, estornarRecebimento, registrarRecebimentoManual } from "@/lib/recebimento-fechamento-db";
+import { validarRecebimentoManual } from "@/lib/recebimento-fechamento";
+import { arquivoGrandeDemais } from "@/lib/arquivo-limite";
 
 type Resp<T = object> = ({ ok: true } & T) | { ok: false; erro: string };
 
@@ -155,6 +158,63 @@ export async function enviarFechamentoAction(
     await createAuditLog("fechamento:enviar", { fechamentoId: id, versao: r.versao, para: r.para });
     revalidar(id);
     return { ok: true, versao: r.versao, para: r.para };
+  } catch (e) {
+    return { ok: false, erro: mensagem(e) };
+  }
+}
+
+/** Recebimentos mudam o status e o caixa: a grade, o detalhe e as obrigações. */
+function revalidarRecebimento() {
+  revalidatePath(ROTA, "layout");
+  revalidatePath("/obrigacoes");
+}
+
+/** Passo 1 de 2 do recebimento manual (fica pendente). FormData: fechamentoId, valor, data, comprovante?. */
+export async function registrarRecebimentoManualAction(fd: FormData): Promise<Resp> {
+  const sessao = await requireAdminOrThrow();
+  const id = idPositivo(fd.get("fechamentoId"));
+  if (!id) return { ok: false, erro: "Fechamento inválido." };
+  const grande = arquivoGrandeDemais(fd);
+  if (grande) return { ok: false, erro: grande };
+  const v = validarRecebimentoManual({ valor: fd.get("valor"), data: fd.get("data") });
+  if (!v.ok) return { ok: false, erro: v.erro };
+  const arquivo = fd.get("comprovante");
+  const comprovante = arquivo instanceof File && arquivo.size > 0 ? arquivo : null;
+  try {
+    const r = await registrarRecebimentoManual({ fechamentoId: id, valor: v.valor, data: v.data, comprovante, usuario: usuarioDe(sessao) });
+    await createAuditLog("fechamento:recebimento-manual", { fechamentoId: id, recebimentoId: r.recebimentoId, valor: v.valor });
+    revalidarRecebimento();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: mensagem(e) };
+  }
+}
+
+/** Passo 2 de 2: quem conferiu o extrato confirma — conta no saldo e pode liquidar. */
+export async function confirmarRecebimentoAction(recebimentoId: number): Promise<Resp> {
+  const sessao = await requireAdminOrThrow();
+  const id = idPositivo(recebimentoId);
+  if (!id) return { ok: false, erro: "Recebimento inválido." };
+  try {
+    await confirmarRecebimento({ recebimentoId: id, usuario: usuarioDe(sessao) });
+    await createAuditLog("fechamento:recebimento-confirmado", { recebimentoId: id });
+    revalidarRecebimento();
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: mensagem(e) };
+  }
+}
+
+/** Estorno do recebimento manual (o do Asaas chega pelo webhook). */
+export async function estornarRecebimentoAction(recebimentoId: number): Promise<Resp> {
+  const sessao = await requireAdminOrThrow();
+  const id = idPositivo(recebimentoId);
+  if (!id) return { ok: false, erro: "Recebimento inválido." };
+  try {
+    await estornarRecebimento({ recebimentoId: id, usuario: usuarioDe(sessao) });
+    await createAuditLog("fechamento:recebimento-estornado", { recebimentoId: id, por: usuarioDe(sessao) });
+    revalidarRecebimento();
+    return { ok: true };
   } catch (e) {
     return { ok: false, erro: mensagem(e) };
   }

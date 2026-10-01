@@ -79,8 +79,15 @@ export default async function Page() {
                               href={`/fechamento/${cel.id}`}
                               className="flex min-w-32 flex-col gap-1 rounded-md py-1 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                              <Badge variant={VARIANTE_STATUS[cel.status] ?? "outline"} className="w-fit whitespace-nowrap">
-                                {ROTULO_STATUS_FECHAMENTO[cel.status] ?? cel.status}
+                              <Badge
+                                variant={cel.final === "concluido" ? "success" : cel.final === "conciliado" ? "info" : (VARIANTE_STATUS[cel.status] ?? "outline")}
+                                className="w-fit whitespace-nowrap"
+                              >
+                                {cel.final === "concluido"
+                                  ? "Concluído"
+                                  : cel.final === "conciliado"
+                                    ? "Conciliado"
+                                    : (ROTULO_STATUS_FECHAMENTO[cel.status] ?? cel.status)}
                               </Badge>
                               <span className="valor-sensivel font-semibold tabular-nums">{formatBRL(cel.total)}</span>
                               <span className="text-xs text-muted-foreground">
