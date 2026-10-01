@@ -223,6 +223,7 @@ export default async function Page() {
       origem: b.origem,
       concluidaEm: b.concluidaEm,
       concluidaPor: b.concluidaPor,
+      valorLiquidoSolicitado: b.valorLiquidoSolicitado,
       empresa,
       vendas: vendasDoGrupo,
     }));

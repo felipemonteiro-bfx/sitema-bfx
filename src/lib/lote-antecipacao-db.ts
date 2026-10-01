@@ -267,14 +267,32 @@ export async function abrirLote(entrada: {
   }, OPCOES_TRANSACAO);
 }
 
-/** O retorno da Prudent chegou: as parcelas do lote viram antecipadas e quitadas. */
+/** Valor opcional do retorno: nulo se ausente; erro se negativo ou não numérico; 2 casas. */
+function valorDoRetorno(valor: number | null | undefined, nome: string): number | null {
+  if (valor === null || valor === undefined) return null;
+  if (typeof valor !== "number" || !Number.isFinite(valor) || valor < 0) throw new Error(`${nome} inválido.`);
+  return Math.round(valor * 100) / 100;
+}
+
+/**
+ * O retorno da Prudent chegou: as parcelas do lote viram antecipadas e quitadas. Desde
+ * 2026-09-30 o lote guarda também quanto a Prudent aprovou, quanto caiu na conta e quando — a
+ * data do depósito vale a do retorno quando não vem.
+ */
 export async function concluirLote(entrada: {
   loteId: number;
   dataRetorno: string;
   usuario: string | null;
+  valorAprovado?: number | null;
+  valorDepositado?: number | null;
+  dataDeposito?: string | null;
 }): Promise<ResultadoLote> {
   const data = dataPuraOuNula(entrada.dataRetorno);
   if (!data) throw new Error("Data do retorno inválida.");
+  const valorAprovado = valorDoRetorno(entrada.valorAprovado, "Valor aprovado");
+  const valorDepositado = valorDoRetorno(entrada.valorDepositado, "Valor depositado");
+  const dataDeposito = entrada.dataDeposito ? dataPuraOuNula(entrada.dataDeposito) : data;
+  if (!dataDeposito) throw new Error("Data do depósito inválida.");
 
   return prisma.$transaction(async (tx) => {
     // O status entra no `where` do update: dois cliques ao mesmo tempo, só um fecha o lote.
@@ -282,6 +300,9 @@ export async function concluirLote(entrada: {
       status: STATUS_LOTE.concluido,
       concluidaEm: data,
       concluidaPor: entrada.usuario,
+      valorAprovado,
+      valorDepositado,
+      dataDeposito,
     });
 
     const parcelas = await tx.parcelaVencimento.findMany({

@@ -179,14 +179,30 @@ function erroDoLote(e: unknown): RespostaLote {
  * O retorno da Prudent chegou (2026-09-17): as parcelas do lote viram antecipadas e quitadas na
  * data informada. Guarda própria — é gravação de dinheiro.
  */
-export async function concluirLoteAction(entrada: { loteId: number; dataRetorno: string }): Promise<RespostaLote> {
+export async function concluirLoteAction(entrada: {
+  loteId: number;
+  dataRetorno: string;
+  /** Opcionais (2026-09-30): o que a Prudent aprovou e o que caiu na conta. */
+  valorAprovado?: number | null;
+  valorDepositado?: number | null;
+  dataDeposito?: string | null;
+}): Promise<RespostaLote> {
   const sessao = await requireAdminOrThrow();
   if (!Number.isInteger(entrada?.loteId) || entrada.loteId <= 0) return { ok: false, erro: "Lote inválido." };
+  const valorValido = (v: unknown) => v === null || v === undefined || (typeof v === "number" && Number.isFinite(v) && v >= 0);
+  if (!valorValido(entrada.valorAprovado)) return { ok: false, erro: "Valor aprovado inválido." };
+  if (!valorValido(entrada.valorDepositado)) return { ok: false, erro: "Valor depositado inválido." };
+  if (entrada.dataDeposito != null && typeof entrada.dataDeposito !== "string") {
+    return { ok: false, erro: "Data do depósito inválida." };
+  }
   try {
     const r = await concluirLote({
       loteId: entrada.loteId,
       dataRetorno: entrada.dataRetorno,
       usuario: sessao.nomeExibicao ?? sessao.username ?? null,
+      valorAprovado: entrada.valorAprovado ?? null,
+      valorDepositado: entrada.valorDepositado ?? null,
+      dataDeposito: entrada.dataDeposito || null,
     });
     revalidarVenda();
     return { ok: true, parcelas: r.parcelas, vendas: r.vendas, valor: r.valor };

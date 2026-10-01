@@ -15,6 +15,7 @@ const dbMock = {
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 const guardsMock = { requireAdmin: vi.fn(async () => true), requireAdminOrThrow: vi.fn(async () => ({ id: 1, username: "andre" })) };
 vi.mock("@/lib/guards", () => guardsMock);
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { abrirLote, registrarLoteConcluido, resolverParcelasDoLote } = await import("@/lib/lote-antecipacao-db");
 
@@ -214,5 +215,33 @@ describe("calcularSelecaoAction com exclusão", () => {
     const { calcularSelecaoAction } = await import("@/app/(app)/prudent/actions");
     const r = await calcularSelecaoAction({ ids: [10] });
     expect(r.ok && r.resultado.parcelas).toBe(2);
+  });
+});
+
+describe("concluirLoteAction com os valores", () => {
+  it("valor negativo é recusado antes do banco", async () => {
+    const { concluirLoteAction } = await import("@/app/(app)/prudent/actions");
+    const r = await concluirLoteAction({ loteId: 42, dataRetorno: "2026-09-20", valorDepositado: -5 });
+    expect(r).toEqual({ ok: false, erro: "Valor depositado inválido." });
+    expect(dbMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("repassa aprovado, depositado e data do depósito", async () => {
+    dbMock.anticipacaoBatch.updateMany.mockResolvedValue({ count: 1 });
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10, "2026-10-10")]);
+    const { concluirLoteAction } = await import("@/app/(app)/prudent/actions");
+    const r = await concluirLoteAction({
+      loteId: 42,
+      dataRetorno: "2026-09-20",
+      valorAprovado: 280,
+      valorDepositado: 279.9,
+      dataDeposito: "2026-09-22",
+    });
+    expect(r.ok).toBe(true);
+    expect(dbMock.anticipacaoBatch.updateMany.mock.calls[0][0].data).toMatchObject({
+      valorAprovado: 280,
+      valorDepositado: 279.9,
+      dataDeposito: new Date("2026-09-22T00:00:00.000Z"),
+    });
   });
 });

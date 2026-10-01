@@ -148,6 +148,52 @@ describe("concluirLote — o retorno chegou", () => {
     await expect(concluirLote({ loteId: 42, dataRetorno: "20/09/2026", usuario: "andre" })).rejects.toThrow(/data/i);
     expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
   });
+
+  // Fase 3 (2026-09-30): o retorno registra quanto a Prudent aprovou e quanto caiu na conta.
+  it("grava aprovado, depositado e data do depósito no mesmo fechamento do lote", async () => {
+    await concluirLote({
+      loteId: 42,
+      dataRetorno: "2026-09-20",
+      usuario: "andre",
+      valorAprovado: 1234.567,
+      valorDepositado: 1200.5,
+      dataDeposito: "2026-09-21",
+    });
+    expect(dbMock.anticipacaoBatch.updateMany.mock.calls[0][0]).toMatchObject({
+      where: { id: 42, status: STATUS_LOTE.emAndamento },
+      data: {
+        status: STATUS_LOTE.concluido,
+        valorAprovado: 1234.57,
+        valorDepositado: 1200.5,
+        dataDeposito: new Date("2026-09-21T00:00:00.000Z"),
+      },
+    });
+  });
+
+  it("sem data do depósito, vale a data do retorno; sem valores, continua funcionando", async () => {
+    await concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre" });
+    const data = dbMock.anticipacaoBatch.updateMany.mock.calls[0][0].data;
+    expect(data.dataDeposito).toEqual(new Date("2026-09-20T00:00:00.000Z"));
+    expect(data.valorAprovado).toBeNull();
+    expect(data.valorDepositado).toBeNull();
+  });
+
+  it("valor negativo ou não numérico é recusado, sem gravar nada", async () => {
+    await expect(
+      concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre", valorDepositado: -1 })
+    ).rejects.toThrow(/valor/i);
+    await expect(
+      concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre", valorAprovado: Number.NaN })
+    ).rejects.toThrow(/valor/i);
+    expect(dbMock.anticipacaoBatch.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("data do depósito ilegível é recusada", async () => {
+    await expect(
+      concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre", dataDeposito: "21/09/2026" })
+    ).rejects.toThrow(/data/i);
+    expect(dbMock.anticipacaoBatch.updateMany).not.toHaveBeenCalled();
+  });
 });
 
 describe("cancelarLote — a Prudent recusou", () => {

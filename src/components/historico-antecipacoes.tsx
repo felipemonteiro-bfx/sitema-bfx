@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DateInput } from '@/components/ui/date-input';
 import { Label } from '@/components/ui/label';
+import { CurrencyInput } from '@/components/currency-input';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,8 @@ interface Batch {
   origem: string;
   concluidaEm: Date | string | null;
   concluidaPor: string | null;
+  /** Líquido calculado no envio (2026-09-30); nulo em lote anterior à Fase 3. */
+  valorLiquidoSolicitado?: number | null;
   vendas: { id: number; clienteNome: string | null; empresa: string | null; produtos: string; valorTotal: number; parcelas: number }[];
 }
 
@@ -74,6 +77,10 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
   const [concluindo, setConcluindo] = useState<Batch | null>(null);
   const [cancelando, setCancelando] = useState<Batch | null>(null);
   const [dataRetorno, setDataRetorno] = useState(hoje);
+  // Retorno da Prudent (2026-09-30): opcionais; 0 no campo = não informado.
+  const [valorAprovado, setValorAprovado] = useState(0);
+  const [valorDepositado, setValorDepositado] = useState(0);
+  const [dataDeposito, setDataDeposito] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [pagina, setPagina] = useState(1);
   const [paginaSemLote, setPaginaSemLote] = useState(1);
@@ -98,7 +105,13 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
     if (!concluindo) return;
     setSalvando(true);
     try {
-      const r = await concluirLoteAction({ loteId: concluindo.id, dataRetorno });
+      const r = await concluirLoteAction({
+        loteId: concluindo.id,
+        dataRetorno,
+        valorAprovado: valorAprovado > 0 ? valorAprovado : null,
+        valorDepositado: valorDepositado > 0 ? valorDepositado : null,
+        dataDeposito: dataDeposito || null,
+      });
       if (!r.ok) {
         toast.error(r.erro);
         return;
@@ -229,6 +242,9 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                         onClick={(e) => {
                           e.preventDefault();
                           setDataRetorno(hoje);
+                          setValorAprovado(0);
+                          setValorDepositado(0);
+                          setDataDeposito('');
                           setConcluindo(b);
                         }}
                       >
@@ -400,6 +416,40 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
             <Label htmlFor="data-retorno-lote">Data do retorno</Label>
             <DateInput id="data-retorno-lote" value={dataRetorno} onChange={setDataRetorno} max={hoje} />
           </div>
+          {/* Valores do retorno (2026-09-30): opcionais, para a conciliação do depósito. */}
+          {concluindo?.valorLiquidoSolicitado != null && (
+            <p className="text-sm text-muted-foreground">
+              Líquido solicitado no envio:{' '}
+              <span className="font-semibold tabular-nums text-foreground valor-sensivel">
+                {formatBRL(concluindo.valorLiquidoSolicitado)}
+              </span>
+            </p>
+          )}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="valor-aprovado-lote">Valor aprovado pela Prudent</Label>
+              <CurrencyInput id="valor-aprovado-lote" value={valorAprovado} onChange={setValorAprovado} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="valor-depositado-lote">Depósito recebido</Label>
+              <CurrencyInput id="valor-depositado-lote" value={valorDepositado} onChange={setValorDepositado} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="data-deposito-lote">Data do depósito</Label>
+            <DateInput id="data-deposito-lote" value={dataDeposito || dataRetorno} onChange={setDataDeposito} max={hoje} />
+          </div>
+          {concluindo?.valorLiquidoSolicitado != null &&
+            valorDepositado > 0 &&
+            Math.abs(valorDepositado - concluindo.valorLiquidoSolicitado) > 1 && (
+              <p role="status" className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+                O depósito difere do líquido solicitado em{' '}
+                <span className="font-semibold tabular-nums valor-sensivel">
+                  {formatBRL(Math.abs(valorDepositado - concluindo.valorLiquidoSolicitado))}
+                </span>
+                . Confira antes de concluir.
+              </p>
+            )}
           <p className="rounded-lg bg-info-bg px-3 py-2 text-sm text-info-text">
             Recebeu só uma parte? Conclua o lote e depois desfaça a baixa das parcelas que não vieram, na ficha da venda.
           </p>
