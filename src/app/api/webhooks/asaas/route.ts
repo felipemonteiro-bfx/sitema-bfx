@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { aplicarPagamentoAsaas, configAsaasAtual, registrarAvisoWebhookAsaas } from "@/lib/baixa-parcelas-db";
 import { getPayment } from "@/lib/asaas";
 import { ehCobrancaDeFechamento, processarPagamentoFechamento } from "@/lib/recebimento-fechamento-db";
+import { ajustarCobrancaAoSaldo } from "@/lib/cobranca-fechamento-db";
 import { segredoIgual } from "@/lib/segredo";
 
 export const runtime = "nodejs";
@@ -41,6 +42,11 @@ export async function POST(req: Request) {
     const pagamento = await getPayment(asaas, paymentId);
     if (await ehCobrancaDeFechamento(pagamento)) {
       const fechamento = await processarPagamentoFechamento(pagamento, evento);
+      // O saldo mudou (pagamento novo, reativado ou estornado): a cobrança ativa acompanha — pago
+      // encerra o Pix que sobrou; saldo restante ganha Pix pelo valor certo. Não lança.
+      if (fechamento.fechamentoId != null && ["registrado", "reativado", "estornado"].includes(fechamento.acao)) {
+        await ajustarCobrancaAoSaldo(fechamento.fechamentoId, asaas);
+      }
       return NextResponse.json({ ok: true, evento, fechamento });
     }
     const decisao = await aplicarPagamentoAsaas(pagamento);

@@ -7,6 +7,8 @@ const dbMock = {
   cobrancaFechamento: { findMany: vi.fn(), updateMany: vi.fn(), create: vi.fn(), update: vi.fn() },
   recebimentoFechamento: { findMany: vi.fn() },
   empresaParceira: { update: vi.fn() },
+  fechamento: { findUnique: vi.fn() },
+  config: { findFirst: vi.fn() },
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 const asaasMock = {
@@ -14,15 +16,27 @@ const asaasMock = {
   cancelPayment: vi.fn(),
   createPixPayment: vi.fn(),
   getPixQrCode: vi.fn(),
+  getAsaasConfig: vi.fn(),
+  getOrCreateCustomerEmpresa: vi.fn(),
 };
 vi.mock("@/lib/asaas", () => asaasMock);
+const avisarMock = { avisarAdmins: vi.fn() };
+vi.mock("@/lib/avisar-admins", () => avisarMock);
+const regraMock = { regrasDaEmpresa: vi.fn() };
+vi.mock("@/lib/regra-empresa-db", () => regraMock);
 const recMock = { processarPagamentoFechamento: vi.fn() };
 vi.mock("@/lib/recebimento-fechamento-db", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/lib/recebimento-fechamento-db")>();
   return { ...real, ...recMock };
 });
 
-const { encerrarCobrancasAnteriores, garantirCobrancaPix, sincronizarCobrancasAtivas } = await import("@/lib/cobranca-fechamento-db");
+const {
+  encerrarCobrancasAnteriores,
+  garantirCobrancaPix,
+  sincronizarCobrancasAtivas,
+  encerrarCobrancasDoFechamento,
+  ajustarCobrancaAoSaldo,
+} = await import("@/lib/cobranca-fechamento-db");
 
 const CONFIG = { baseUrl: "https://asaas.test", apiKey: "k" };
 const QR_PNG_B64 = Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString("base64");
@@ -51,7 +65,26 @@ beforeEach(() => {
   asaasMock.createPixPayment.mockResolvedValue({ id: "pay_v2", status: "PENDING" });
   asaasMock.getPixQrCode.mockResolvedValue({ payload: "000201PIXV2", encodedImage: QR_PNG_B64 });
   recMock.processarPagamentoFechamento.mockResolvedValue({ acao: "registrado" });
+  asaasMock.getAsaasConfig.mockReturnValue(CONFIG);
+  asaasMock.getOrCreateCustomerEmpresa.mockResolvedValue("cus_9");
+  avisarMock.avisarAdmins.mockResolvedValue(1);
+  regraMock.regrasDaEmpresa.mockResolvedValue([]);
+  dbMock.config.findFirst.mockResolvedValue({ asaasApiKey: "k", asaasEnv: "sandbox" });
+  dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado());
 });
+
+/** Fechamento da competência 2026-10, versão 1 (id 900) enviada, valor final 600. */
+function fechamentoEnviado(extra: Record<string, unknown> = {}) {
+  return {
+    id: 11,
+    status: "enviado",
+    competencia: "2026-10",
+    versaoAtual: 1,
+    empresaParceira: { id: 7, nome: "Amazon Five", cnpj: "12345678000190", asaasCustomerId: "cus_9", emailRh: "rh@a.com" },
+    versoes: [{ id: 900, numero: 1, totalFinal: 600, enviadaEm: new Date("2026-10-02T12:00:00Z") }],
+    ...extra,
+  };
+}
 
 describe("encerrarCobrancasAnteriores", () => {
   it("cobrança de versão anterior não paga → cancela no Asaas e marca cancelada com o status no where", async () => {
@@ -214,5 +247,155 @@ describe("sincronizarCobrancasAtivas (webhook perdido)", () => {
     expect(recMock.processarPagamentoFechamento).toHaveBeenCalledWith({ id: "pay_a", status: "RECEIVED", value: 600 }, null);
     expect(asaasMock.cancelPayment).not.toHaveBeenCalled();
     expect(r).toEqual({ cobrancas: 3, processadas: 1, erros: 1 });
+  });
+});
+
+describe("encerrarCobrancasDoFechamento (reabrir)", () => {
+  it("cancela no Asaas a cobrança ativa de qualquer versão e marca cancelada", async () => {
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa()]);
+    const r = await encerrarCobrancasDoFechamento(11);
+    expect(dbMock.cobrancaFechamento.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { fechamentoId: 11, status: "ativa" } }));
+    expect(asaasMock.cancelPayment).toHaveBeenCalledWith(CONFIG, "pay_v1");
+    expect(dbMock.cobrancaFechamento.updateMany).toHaveBeenCalledWith({
+      where: { id: 4, status: "ativa" },
+      data: { status: "cancelada", canceladaEm: expect.any(Date) },
+    });
+    expect(r).toEqual({ encerradas: 1, aviso: null });
+  });
+
+  it("a cobrança já foi paga → registra o recebimento em vez de cancelar", async () => {
+    const pago = { id: "pay_v1", status: "RECEIVED", value: 600 };
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa()]);
+    asaasMock.getPayment.mockResolvedValue(pago);
+    await encerrarCobrancasDoFechamento(11);
+    expect(asaasMock.cancelPayment).not.toHaveBeenCalled();
+    expect(recMock.processarPagamentoFechamento).toHaveBeenCalledWith(pago, null);
+  });
+
+  it("sem cobrança ativa → nada a fazer, sem chamar o Asaas", async () => {
+    const r = await encerrarCobrancasDoFechamento(11);
+    expect(asaasMock.getPayment).not.toHaveBeenCalled();
+    expect(r).toEqual({ encerradas: 0, aviso: null });
+  });
+
+  it("Asaas sem configuração → não cancela, avisa a tela e os admins", async () => {
+    asaasMock.getAsaasConfig.mockReturnValue(null);
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa()]);
+    const r = await encerrarCobrancasDoFechamento(11);
+    expect(asaasMock.cancelPayment).not.toHaveBeenCalled();
+    expect(r.aviso).toMatch(/Pix/);
+    expect(avisarMock.avisarAdmins).toHaveBeenCalledTimes(1);
+  });
+
+  it("Asaas falhou → não lança: avisa a tela e os admins (o próximo envio encerra)", async () => {
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa()]);
+    asaasMock.cancelPayment.mockRejectedValue(new Error("timeout"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const r = await encerrarCobrancasDoFechamento(11);
+    log.mockRestore();
+    expect(r.encerradas).toBe(0);
+    expect(r.aviso).toMatch(/Pix/);
+    expect(avisarMock.avisarAdmins).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("ajustarCobrancaAoSaldo (depois de recebimento, estorno ou webhook)", () => {
+  it("TED manual confirmado cobriu tudo (pago) → o Pix antigo é cancelado no Asaas, nenhum novo", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 600, status: "confirmado" }]);
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa({ versaoId: 900 })]);
+    const r = await ajustarCobrancaAoSaldo(11);
+    expect(asaasMock.cancelPayment).toHaveBeenCalledWith(CONFIG, "pay_v1");
+    expect(dbMock.cobrancaFechamento.updateMany).toHaveBeenCalledWith({
+      where: { id: 4, status: "ativa" },
+      data: { status: "cancelada", canceladaEm: expect.any(Date) },
+    });
+    expect(asaasMock.createPixPayment).not.toHaveBeenCalled();
+    expect(r.acao).toBe("encerrada");
+  });
+
+  it("parcial manual (pago_parcial) → encerra o Pix de 600 e cria outro pelo saldo de 400", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago_parcial" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 200, status: "confirmado" }]);
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa({ versaoId: 900 })]);
+    const r = await ajustarCobrancaAoSaldo(11);
+    expect(asaasMock.cancelPayment).toHaveBeenCalledWith(CONFIG, "pay_v1");
+    expect(asaasMock.createPixPayment).toHaveBeenCalledTimes(1);
+    expect(asaasMock.createPixPayment.mock.calls[0][0]).toMatchObject({ customerId: "cus_9", value: 400, externalReference: "FEC-7-2026-10-v1" });
+    expect(asaasMock.cancelPayment.mock.invocationCallOrder[0]).toBeLessThan(asaasMock.createPixPayment.mock.invocationCallOrder[0]);
+    expect(dbMock.cobrancaFechamento.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ fechamentoId: 11, versaoId: 900, valor: 400, status: "ativa" }) })
+    );
+    expect(r.acao).toBe("recriada");
+  });
+
+  it("a cobrança ativa já é do saldo → nada (idempotente)", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago_parcial" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 200, status: "confirmado" }]);
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa({ versaoId: 900, valor: 400 })]);
+    const r = await ajustarCobrancaAoSaldo(11);
+    expect(asaasMock.getPayment).not.toHaveBeenCalled();
+    expect(asaasMock.createPixPayment).not.toHaveBeenCalled();
+    expect(r.acao).toBe("nada");
+  });
+
+  it("estorno de TED deixou saldo e não há cobrança ativa → cria o Pix pelo saldo", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "enviado" }));
+    const r = await ajustarCobrancaAoSaldo(11);
+    expect(asaasMock.createPixPayment.mock.calls[0][0].value).toBe(600);
+    expect(r.acao).toBe("recriada");
+  });
+
+  it("pago e sem cobrança ativa → nada", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 600, status: "confirmado" }]);
+    expect((await ajustarCobrancaAoSaldo(11)).acao).toBe("nada");
+    expect(asaasMock.getPayment).not.toHaveBeenCalled();
+  });
+
+  it("fechamento reaberto (em preparação) ou versão atual não enviada → nada (o reabrir e o envio cuidam)", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "em_preparacao" }));
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa({ versaoId: 900 })]);
+    expect((await ajustarCobrancaAoSaldo(11)).acao).toBe("nada");
+    dbMock.fechamento.findUnique.mockResolvedValue(
+      fechamentoEnviado({ versoes: [{ id: 900, numero: 1, totalFinal: 600, enviadaEm: null }] })
+    );
+    expect((await ajustarCobrancaAoSaldo(11)).acao).toBe("nada");
+    expect(asaasMock.cancelPayment).not.toHaveBeenCalled();
+    expect(asaasMock.createPixPayment).not.toHaveBeenCalled();
+  });
+
+  it("Asaas sem configuração → não mexe, avisa a tela e os admins", async () => {
+    asaasMock.getAsaasConfig.mockReturnValue(null);
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago_parcial" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 200, status: "confirmado" }]);
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa({ versaoId: 900 })]);
+    const r = await ajustarCobrancaAoSaldo(11);
+    expect(r.acao).toBe("sem_asaas");
+    expect(r.aviso).toMatch(/Asaas/);
+    expect(avisarMock.avisarAdmins).toHaveBeenCalledTimes(1);
+    expect(avisarMock.avisarAdmins.mock.calls[0][0][0].mensagem).toMatch(/^\[Alerta\]/);
+  });
+
+  it("Asaas falhou → não lança; avisa a tela e os admins", async () => {
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 600, status: "confirmado" }]);
+    dbMock.cobrancaFechamento.findMany.mockResolvedValue([ativa({ versaoId: 900 })]);
+    asaasMock.getPayment.mockRejectedValue(new Error("timeout"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    const r = await ajustarCobrancaAoSaldo(11);
+    log.mockRestore();
+    expect(r.acao).toBe("falhou");
+    expect(avisarMock.avisarAdmins).toHaveBeenCalledTimes(1);
+  });
+
+  it("a sincronização diária ajusta o fechamento depois de processar um pagamento", async () => {
+    dbMock.cobrancaFechamento.findMany.mockResolvedValueOnce([ativa({ id: 4, asaasPaymentId: "pay_a" })]);
+    asaasMock.getPayment.mockResolvedValue({ id: "pay_a", status: "RECEIVED", value: 600 });
+    recMock.processarPagamentoFechamento.mockResolvedValue({ acao: "registrado", fechamentoId: 11 });
+    dbMock.fechamento.findUnique.mockResolvedValue(fechamentoEnviado({ status: "pago" }));
+    dbMock.recebimentoFechamento.findMany.mockResolvedValue([{ valor: 600, status: "confirmado" }]);
+    await sincronizarCobrancasAtivas(CONFIG);
+    expect(dbMock.fechamento.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 11 } }));
   });
 });

@@ -95,7 +95,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
   const enviadas = d.versoes.filter((v) => v.enviadaEm);
 
   const executar = (
-    fn: () => Promise<{ ok: true } | { ok: false; erro: string }>,
+    fn: () => Promise<{ ok: true; aviso?: string } | { ok: false; erro: string }>,
     sucesso: string,
     depois?: () => void
   ) =>
@@ -106,6 +106,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
         return;
       }
       toast.success(sucesso);
+      if ("aviso" in r && r.aviso) toast.warning(r.aviso);
       depois?.();
       router.refresh();
     });
@@ -470,7 +471,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
               <AlertDialogTitle>Reabrir para corrigir?</AlertDialogTitle>
               <AlertDialogDescription>
                 {enviadas.some((v) => v.numero === d.versaoAtual)
-                  ? `O RH já recebeu a versão ${d.versaoAtual}. Ela continua no histórico; depois de corrigir, confira e envie a versão ${d.versaoAtual + 1}.`
+                  ? `O RH já recebeu a versão ${d.versaoAtual}. Ela continua no histórico, e o Pix dela é cancelado no Asaas agora (se já foi pago, entra como recebimento). Depois de corrigir, confira e envie a versão ${d.versaoAtual + 1}.`
                   : `A versão ${d.versaoAtual} continua no histórico; a próxima conferência gera a versão ${d.versaoAtual + 1}.`}
               </AlertDialogDescription>
             </AlertDialogHeader>

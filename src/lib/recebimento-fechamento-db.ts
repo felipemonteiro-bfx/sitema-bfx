@@ -344,8 +344,11 @@ export async function registrarRecebimentoManual(e: {
   });
 }
 
-/** Passo 2 de 2: quem conferiu o extrato confirma — aí conta e pode liquidar. */
-export async function confirmarRecebimento(e: { recebimentoId: number; usuario: string | null }): Promise<void> {
+/**
+ * Passo 2 de 2: quem conferiu o extrato confirma — aí conta e pode liquidar. Devolve o fechamento:
+ * o chamador ajusta a cobrança Pix ao saldo novo (`ajustarCobrancaAoSaldo`, fora da transação).
+ */
+export async function confirmarRecebimento(e: { recebimentoId: number; usuario: string | null }): Promise<{ fechamentoId: number }> {
   const recalculo = await prisma.$transaction(async (tx) => {
     const rec = await tx.recebimentoFechamento.findUnique({
       where: { id: e.recebimentoId },
@@ -359,16 +362,17 @@ export async function confirmarRecebimento(e: { recebimentoId: number; usuario: 
       data: { status: STATUS_RECEBIMENTO.confirmado, confirmadoPor: e.usuario, confirmadoEm: new Date() },
     });
     if (r.count !== 1) throw new Error(ERRO_MUDOU);
-    return recalcularFechamento(tx, rec.fechamentoId);
+    return { fechamentoId: rec.fechamentoId, rec: await recalcularFechamento(tx, rec.fechamentoId) };
   });
-  if (recalculo) await avisarAdmins(alertasDoRecalculo(recalculo, "recebimento"));
+  if (recalculo.rec) await avisarAdmins(alertasDoRecalculo(recalculo.rec, "recebimento"));
+  return { fechamentoId: recalculo.fechamentoId };
 }
 
 /**
  * Estorno pela tela: só do recebimento manual (pendente = descartar; confirmado = deixa de contar
  * e, se tinha liquidado, desfaz). O do Asaas é estornado pelo próprio Asaas (webhook).
  */
-export async function estornarRecebimento(e: { recebimentoId: number; usuario: string | null }): Promise<void> {
+export async function estornarRecebimento(e: { recebimentoId: number; usuario: string | null }): Promise<{ fechamentoId: number | null }> {
   const recalculo = await prisma.$transaction(async (tx) => {
     const rec = await tx.recebimentoFechamento.findUnique({
       where: { id: e.recebimentoId },
@@ -388,6 +392,8 @@ export async function estornarRecebimento(e: { recebimentoId: number; usuario: s
     return rec.status === STATUS_RECEBIMENTO.confirmado ? recalcularFechamento(tx, rec.fechamentoId) : null;
   });
   if (recalculo) await avisarAdmins(alertasDoRecalculo(recalculo, "estorno"));
+  // Pendente descartado não contava: o saldo não mudou, nada a ajustar na cobrança.
+  return { fechamentoId: recalculo ? recalculo.fechamentoId : null };
 }
 
 /** Recalcula fora de um recebimento (depois do envio, quando o já recebido cobre a versão nova). */

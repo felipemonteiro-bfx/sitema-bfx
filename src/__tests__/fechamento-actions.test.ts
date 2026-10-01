@@ -24,6 +24,8 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/fechamento-db", () => libMock);
 vi.mock("@/lib/fechamento-envio", () => envioMock);
 vi.mock("@/lib/recebimento-fechamento-db", () => recMock);
+const cobrancaMock = { encerrarCobrancasDoFechamento: vi.fn(), ajustarCobrancaAoSaldo: vi.fn() };
+vi.mock("@/lib/cobranca-fechamento-db", () => cobrancaMock);
 
 const a = await import("@/app/(app)/fechamento/actions");
 
@@ -39,6 +41,10 @@ beforeEach(() => {
   guardsMock.requireAdminOrThrow.mockResolvedValue({ id: 1, username: "andre", role: "admin", nomeExibicao: "André" });
   dbMock.fechamento.findUnique.mockResolvedValue({ empresaParceiraId: 7, competencia: "2026-10" });
   libMock.gerarOuAtualizarFechamento.mockResolvedValue({ fechamentoId: 11, reservadas: 2, liberadas: 0, bloqueadas: [] });
+  cobrancaMock.encerrarCobrancasDoFechamento.mockResolvedValue({ encerradas: 0, aviso: null });
+  cobrancaMock.ajustarCobrancaAoSaldo.mockResolvedValue({ acao: "nada", aviso: null });
+  recMock.confirmarRecebimento.mockResolvedValue({ fechamentoId: 11 });
+  recMock.estornarRecebimento.mockResolvedValue({ fechamentoId: 11 });
 });
 
 describe("guarda de admin", () => {
@@ -56,7 +62,13 @@ describe("guarda de admin", () => {
   ])("%s", async (_n, chamar) => {
     guardsMock.requireAdminOrThrow.mockRejectedValue(new Error("Acesso negado."));
     await expect(chamar()).rejects.toThrow("Acesso negado.");
-    for (const fn of [...Object.values(libMock), ...Object.values(recMock), envioMock.enviarFechamento, dbMock.fechamento.findUnique]) {
+    for (const fn of [
+      ...Object.values(libMock),
+      ...Object.values(recMock),
+      ...Object.values(cobrancaMock),
+      envioMock.enviarFechamento,
+      dbMock.fechamento.findUnique,
+    ]) {
       expect(fn).not.toHaveBeenCalled();
     }
   });
@@ -113,12 +125,57 @@ describe("recebimentos (Fase 6)", () => {
   });
 
   it("confirmar e estornar passam quem fez e auditam; erro da lib vira mensagem", async () => {
-    recMock.confirmarRecebimento.mockResolvedValue(undefined);
     expect(await a.confirmarRecebimentoAction(5)).toEqual({ ok: true });
     expect(recMock.confirmarRecebimento).toHaveBeenCalledWith({ recebimentoId: 5, usuario: "André" });
     expect(auditMock.createAuditLog).toHaveBeenCalledWith("fechamento:recebimento-confirmado", { recebimentoId: 5 });
     recMock.estornarRecebimento.mockRejectedValue(new Error("Recebimento do Pix do Asaas não é estornado aqui."));
     expect(await a.estornarRecebimentoAction(5)).toEqual({ ok: false, erro: "Recebimento do Pix do Asaas não é estornado aqui." });
     expect(await a.confirmarRecebimentoAction(0)).toEqual({ ok: false, erro: "Recebimento inválido." });
+  });
+});
+
+describe("cobrança Pix acompanha o fechamento (A2/A3)", () => {
+  it("reabrir: grava o status e só depois encerra a cobrança ativa no Asaas", async () => {
+    libMock.reabrirFechamento.mockResolvedValue(undefined);
+    cobrancaMock.encerrarCobrancasDoFechamento.mockResolvedValue({ encerradas: 1, aviso: null });
+    expect(await a.reabrirFechamentoAction(11)).toEqual({ ok: true });
+    expect(cobrancaMock.encerrarCobrancasDoFechamento).toHaveBeenCalledWith(11);
+    expect(libMock.reabrirFechamento.mock.invocationCallOrder[0]).toBeLessThan(
+      cobrancaMock.encerrarCobrancasDoFechamento.mock.invocationCallOrder[0]
+    );
+    expect(auditMock.createAuditLog).toHaveBeenCalledWith("fechamento:reabrir", { fechamentoId: 11, cobrancasEncerradas: 1 });
+  });
+
+  it("reabrir recusado → não toca no Asaas", async () => {
+    libMock.reabrirFechamento.mockRejectedValue(new Error("Um fechamento pago não pode ser reaberto."));
+    expect(await a.reabrirFechamentoAction(11)).toEqual({ ok: false, erro: "Um fechamento pago não pode ser reaberto." });
+    expect(cobrancaMock.encerrarCobrancasDoFechamento).not.toHaveBeenCalled();
+  });
+
+  it("reabrir com Pix que não foi cancelado → reabre e devolve o aviso", async () => {
+    libMock.reabrirFechamento.mockResolvedValue(undefined);
+    cobrancaMock.encerrarCobrancasDoFechamento.mockResolvedValue({ encerradas: 0, aviso: "O Pix ativo deste fechamento não foi cancelado." });
+    expect(await a.reabrirFechamentoAction(11)).toEqual({ ok: true, aviso: "O Pix ativo deste fechamento não foi cancelado." });
+  });
+
+  it("TED manual confirmado → ajusta a cobrança ao saldo do fechamento (cancela o Pix antigo)", async () => {
+    cobrancaMock.ajustarCobrancaAoSaldo.mockResolvedValue({ acao: "encerrada", aviso: null });
+    expect(await a.confirmarRecebimentoAction(5)).toEqual({ ok: true });
+    expect(cobrancaMock.ajustarCobrancaAoSaldo).toHaveBeenCalledWith(11);
+    expect(recMock.confirmarRecebimento.mock.invocationCallOrder[0]).toBeLessThan(
+      cobrancaMock.ajustarCobrancaAoSaldo.mock.invocationCallOrder[0]
+    );
+  });
+
+  it("estorno de recebimento manual confirmado → ajusta a cobrança; aviso do ajuste chega à tela", async () => {
+    cobrancaMock.ajustarCobrancaAoSaldo.mockResolvedValue({ acao: "sem_asaas", aviso: "Asaas não configurado." });
+    expect(await a.estornarRecebimentoAction(5)).toEqual({ ok: true, aviso: "Asaas não configurado." });
+    expect(cobrancaMock.ajustarCobrancaAoSaldo).toHaveBeenCalledWith(11);
+  });
+
+  it("estorno de recebimento pendente (descarte) não muda o saldo → não ajusta", async () => {
+    recMock.estornarRecebimento.mockResolvedValue({ fechamentoId: null });
+    expect(await a.estornarRecebimentoAction(5)).toEqual({ ok: true });
+    expect(cobrancaMock.ajustarCobrancaAoSaldo).not.toHaveBeenCalled();
   });
 });

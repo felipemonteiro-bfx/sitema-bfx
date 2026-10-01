@@ -23,6 +23,8 @@ vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/asaas", () => asaasMock);
 vi.mock("@/lib/audit", () => auditMock);
 vi.mock("@/lib/recebimento-fechamento-db", () => fechamentoMock);
+const cobrancaMock = { ajustarCobrancaAoSaldo: vi.fn() };
+vi.mock("@/lib/cobranca-fechamento-db", () => cobrancaMock);
 
 const { aplicarPagamentoAsaas, sincronizarBaixasAsaas } = await import("@/lib/baixa-parcelas-db");
 const { POST } = await import("@/app/api/webhooks/asaas/route");
@@ -212,8 +214,20 @@ describe("POST /api/webhooks/asaas", () => {
     expect(r.status).toBe(200);
     expect(await r.json()).toMatchObject({ ok: true, evento: "PAYMENT_RECEIVED", fechamento: { acao: "registrado" } });
     expect(fechamentoMock.processarPagamentoFechamento).toHaveBeenCalledWith(pix, "PAYMENT_RECEIVED");
+    // o saldo mudou: a cobrança ativa acompanha (pago → encerra; parcial → recria pelo saldo)
+    expect(cobrancaMock.ajustarCobrancaAoSaldo).toHaveBeenCalledWith(11, expect.objectContaining({ apiKey: "k" }));
     expect(dbMock.parcelaVencimento.findMany).not.toHaveBeenCalled();
     expect(dbMock.parcelaVencimento.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("evento repetido (ja registrado) ou ignorado nao mexe na cobranca", async () => {
+    asaasMock.getPayment.mockResolvedValue({ id: "pay_fec", status: "RECEIVED", value: 600, externalReference: "FEC-7-2026-10-v1" });
+    fechamentoMock.ehCobrancaDeFechamento.mockResolvedValue(true);
+    fechamentoMock.processarPagamentoFechamento.mockResolvedValue({ acao: "ja_registrado", fechamentoId: 11 });
+    await POST(requisicao("token-certo-123456", { event: "PAYMENT_RECEIVED", payment: { id: "pay_fec" } }));
+    fechamentoMock.processarPagamentoFechamento.mockResolvedValue({ acao: "ignorado", motivo: "status_PENDING" });
+    await POST(requisicao("token-certo-123456", { event: "PAYMENT_CREATED", payment: { id: "pay_fec" } }));
+    expect(cobrancaMock.ajustarCobrancaAoSaldo).not.toHaveBeenCalled();
   });
 
   it("falha ao processar o fechamento responde 200 com ok false e loga", async () => {

@@ -52,7 +52,7 @@ const STATUS_RECEBIMENTO: Record<string, { rotulo: string; variante: "warning" |
   estornado: { rotulo: "estornado", variante: "outline" },
 };
 
-async function chamar(fn: () => Promise<{ ok: true } | { ok: false; erro: string }>) {
+async function chamar(fn: () => Promise<{ ok: true; aviso?: string } | { ok: false; erro: string }>) {
   try {
     return await fn();
   } catch {
@@ -67,7 +67,7 @@ export function PixDoFechamento({ fechamentoId, pix }: { fechamentoId: number; p
   const [registrar, setRegistrar] = useState(false);
   const [estornar, setEstornar] = useState<RecebimentoDetalhe | null>(null);
 
-  const executar = (fn: () => Promise<{ ok: true } | { ok: false; erro: string }>, sucesso: string, depois?: () => void) =>
+  const executar = (fn: () => Promise<{ ok: true; aviso?: string } | { ok: false; erro: string }>, sucesso: string, depois?: () => void) =>
     iniciar(async () => {
       const r = await chamar(fn);
       if (!r.ok) {
@@ -75,6 +75,7 @@ export function PixDoFechamento({ fechamentoId, pix }: { fechamentoId: number; p
         return;
       }
       toast.success(sucesso);
+      if ("aviso" in r && r.aviso) toast.warning(r.aviso);
       depois?.();
       router.refresh();
     });

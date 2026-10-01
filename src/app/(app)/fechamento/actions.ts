@@ -19,8 +19,14 @@ import { enviarFechamento } from "@/lib/fechamento-envio";
 import { confirmarRecebimento, estornarRecebimento, registrarRecebimentoManual } from "@/lib/recebimento-fechamento-db";
 import { validarRecebimentoManual } from "@/lib/recebimento-fechamento";
 import { arquivoGrandeDemais } from "@/lib/arquivo-limite";
+import { ajustarCobrancaAoSaldo, encerrarCobrancasDoFechamento } from "@/lib/cobranca-fechamento-db";
 
-type Resp<T = object> = ({ ok: true } & T) | { ok: false; erro: string };
+/** `aviso`: deu certo, mas algo no Asaas ficou para trás (a tela mostra; os admins foram avisados). */
+type Resp<T = object> = ({ ok: true; aviso?: string } & T) | { ok: false; erro: string };
+
+function comAviso(aviso: string | null): { ok: true; aviso?: string } {
+  return aviso ? { ok: true, aviso } : { ok: true };
+}
 
 const ROTA = "/fechamento";
 
@@ -137,9 +143,12 @@ export async function reabrirFechamentoAction(fechamentoId: number): Promise<Res
   if (!id) return { ok: false, erro: "Fechamento inválido." };
   try {
     await reabrirFechamento({ fechamentoId: id });
-    await createAuditLog("fechamento:reabrir", { fechamentoId: id });
+    // Depois do status (fora da transação): o Pix enviado ao RH deixa de valer — paga vira
+    // recebimento, senão é cancelada no Asaas. Falha não desfaz o reabrir: vira aviso.
+    const { encerradas, aviso } = await encerrarCobrancasDoFechamento(id);
+    await createAuditLog("fechamento:reabrir", { fechamentoId: id, cobrancasEncerradas: encerradas });
     revalidar(id);
-    return { ok: true };
+    return comAviso(aviso);
   } catch (e) {
     return { ok: false, erro: mensagem(e) };
   }
@@ -196,10 +205,12 @@ export async function confirmarRecebimentoAction(recebimentoId: number): Promise
   const id = idPositivo(recebimentoId);
   if (!id) return { ok: false, erro: "Recebimento inválido." };
   try {
-    await confirmarRecebimento({ recebimentoId: id, usuario: usuarioDe(sessao) });
+    const { fechamentoId } = await confirmarRecebimento({ recebimentoId: id, usuario: usuarioDe(sessao) });
     await createAuditLog("fechamento:recebimento-confirmado", { recebimentoId: id });
+    // Pago → o Pix antigo é cancelado; parcial → outro Pix pelo saldo.
+    const { aviso } = await ajustarCobrancaAoSaldo(fechamentoId);
     revalidarRecebimento();
-    return { ok: true };
+    return comAviso(aviso);
   } catch (e) {
     return { ok: false, erro: mensagem(e) };
   }
@@ -211,10 +222,11 @@ export async function estornarRecebimentoAction(recebimentoId: number): Promise<
   const id = idPositivo(recebimentoId);
   if (!id) return { ok: false, erro: "Recebimento inválido." };
   try {
-    await estornarRecebimento({ recebimentoId: id, usuario: usuarioDe(sessao) });
+    const { fechamentoId } = await estornarRecebimento({ recebimentoId: id, usuario: usuarioDe(sessao) });
     await createAuditLog("fechamento:recebimento-estornado", { recebimentoId: id, por: usuarioDe(sessao) });
+    const { aviso } = fechamentoId != null ? await ajustarCobrancaAoSaldo(fechamentoId) : { aviso: null };
     revalidarRecebimento();
-    return { ok: true };
+    return comAviso(aviso);
   } catch (e) {
     return { ok: false, erro: mensagem(e) };
   }
