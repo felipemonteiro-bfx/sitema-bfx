@@ -8,7 +8,9 @@ import { TAXA_MENSAL_PADRAO, calcularAntecipacao, titulosDeVenda } from "@/lib/a
 
 const dbMock = {
   parcelaVencimento: { findMany: vi.fn(), updateMany: vi.fn() },
-  anticipacaoBatch: { create: vi.fn(), updateMany: vi.fn() },
+  anticipacaoBatch: { create: vi.fn(), updateMany: vi.fn(), findUnique: vi.fn() },
+  // a conclusão cria os boletos Prudent esperados (Fase 4)
+  boletoPrudent: { create: vi.fn(async () => ({ id: 900 })) },
   venda: { update: vi.fn(), findMany: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
 };

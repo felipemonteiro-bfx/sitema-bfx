@@ -17,6 +17,7 @@ import {
   titulosDeVenda,
   type TituloComPrazo,
 } from "@/lib/antecipacao";
+import { criarBoletosDoLote } from "@/lib/boleto-prudent-db";
 import { CONFIRMACAO } from "@/lib/confirmacao-rh";
 import { hojeDataPura } from "@/lib/data-pura";
 import { ORIGEM_LOTE, STATUS_LOTE, dataPuraOuNula, flagDaVenda, periodoDoLote } from "@/lib/lote-antecipacao";
@@ -41,7 +42,7 @@ export interface ResultadoLote {
   valor: number;
 }
 
-type Tx = Pick<typeof prisma, "parcelaVencimento" | "anticipacaoBatch" | "venda">;
+type Tx = Pick<typeof prisma, "parcelaVencimento" | "anticipacaoBatch" | "venda" | "boletoPrudent">;
 
 /** Transação com folga: o recálculo do flag anda venda a venda e o lote pode ter centenas. */
 const OPCOES_TRANSACAO = { timeout: 30_000, maxWait: 10_000 } as const;
@@ -292,7 +293,8 @@ function valorDoRetorno(valor: number | null | undefined, nome: string): number 
 /**
  * O retorno da Prudent chegou: as parcelas do lote viram antecipadas e quitadas. Desde
  * 2026-09-30 o lote guarda também quanto a Prudent aprovou, quanto caiu na conta e quando — a
- * data do depósito vale a do retorno quando não vem.
+ * data do depósito vale a do retorno quando não vem. Na Fase 4 a conclusão cria também os boletos
+ * Prudent esperados, um por vencimento (`criarBoletosDoLote`), na mesma transação.
  */
 export async function concluirLote(entrada: {
   loteId: number;
@@ -335,6 +337,11 @@ export async function concluirLote(entrada: {
       where: { antecipacaoLoteId: entrada.loteId, paga: false },
       data: { paga: true, dataPagamento: data, origemPagamento: "prudent" },
     });
+    const lote = await tx.anticipacaoBatch.findUnique({
+      where: { id: entrada.loteId },
+      select: { id: true, empresaParceiraId: true },
+    });
+    await criarBoletosDoLote(tx, { id: entrada.loteId, empresaParceiraId: lote?.empresaParceiraId ?? null }, parcelas);
     await recalcularFlags(tx, parcelas.map((p) => p.vendaId));
 
     return {

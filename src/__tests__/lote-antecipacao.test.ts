@@ -7,10 +7,13 @@ import { flagDaVenda, STATUS_LOTE, ORIGEM_LOTE } from "@/lib/lote-antecipacao";
 const dbMock = {
   parcelaVencimento: { findMany: vi.fn(), updateMany: vi.fn() },
   anticipacaoBatch: { create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findUnique: vi.fn() },
+  boletoPrudent: { create: vi.fn(), findMany: vi.fn() },
   venda: { update: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
+const regraMock = { regrasDaEmpresa: vi.fn() };
+vi.mock("@/lib/regra-empresa-db", () => regraMock);
 
 const { abrirLote, concluirLote, cancelarLote, registrarLoteConcluido } = await import("@/lib/lote-antecipacao-db");
 
@@ -32,6 +35,10 @@ beforeEach(() => {
     count: args?.where?.id?.in?.length ?? 1,
   }));
   dbMock.anticipacaoBatch.updateMany.mockResolvedValue({ count: 1 });
+  dbMock.anticipacaoBatch.findUnique.mockResolvedValue({ id: 42, empresaParceiraId: null });
+  let proximoBoleto = 500;
+  dbMock.boletoPrudent.create.mockImplementation(async () => ({ id: proximoBoleto++ }));
+  regraMock.regrasDaEmpresa.mockResolvedValue([]);
 });
 
 describe("flagDaVenda", () => {
@@ -112,8 +119,8 @@ describe("concluirLote — o retorno chegou", () => {
   beforeEach(() => {
     dbMock.anticipacaoBatch.updateMany.mockResolvedValue({ count: 1 });
     dbMock.parcelaVencimento.findMany.mockResolvedValue([
-      parcela(1, 10, { antecipacaoLoteId: 42 }),
-      parcela(2, 10, { antecipacaoLoteId: 42 }),
+      parcela(1, 10, { antecipacaoLoteId: 42, dataVencimento: new Date("2026-10-10T00:00:00.000Z") }),
+      parcela(2, 10, { antecipacaoLoteId: 42, dataVencimento: new Date("2026-11-10T00:00:00.000Z") }),
     ]);
   });
 
@@ -197,6 +204,95 @@ describe("concluirLote — o retorno chegou", () => {
       concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre", dataDeposito: "21/09/2026" })
     ).rejects.toThrow(/data/i);
     expect(dbMock.anticipacaoBatch.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+// Fase 4 (2026-09-30, spec §3.4): a conclusão cria os boletos Prudent esperados, um por
+// vencimento, na mesma transação.
+describe("concluirLote — boletos Prudent esperados", () => {
+  const venc = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+  const regraBfx = (de: string, ate: string | null) => ({
+    vigenteDe: venc(de),
+    vigenteAte: ate ? venc(ate) : null,
+    diaCorte: 20,
+    diaVencimento: 10,
+    diaPix: 15,
+    repassePct: null,
+    repasseBase: null,
+    cobrancaViaBfx: true,
+  });
+
+  beforeEach(() => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      parcela(1, 10, { antecipacaoLoteId: 42, valorParcela: 100.1, dataVencimento: venc("2026-10-10") }),
+      parcela(2, 11, { antecipacaoLoteId: 42, valorParcela: 200.2, dataVencimento: venc("2026-10-10") }),
+      parcela(3, 10, { antecipacaoLoteId: 42, valorParcela: 300, dataVencimento: venc("2026-11-10") }),
+    ]);
+  });
+
+  it("3 parcelas em 2 datas → 2 boletos aguardando documento, com as somas em centavos", async () => {
+    await concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre" });
+    const criados = dbMock.boletoPrudent.create.mock.calls.map((c) => c[0].data);
+    expect(criados).toEqual([
+      expect.objectContaining({
+        loteId: 42,
+        empresaParceiraId: null,
+        vencimento: venc("2026-10-10"),
+        valorEsperado: 300.3,
+        status: "aguardando_documento",
+        direcionamento: "empresa",
+      }),
+      expect.objectContaining({ loteId: 42, vencimento: venc("2026-11-10"), valorEsperado: 300 }),
+    ]);
+    // cada boleto liga as suas parcelas, e só as que ainda não têm boleto
+    const ligacoes = dbMock.parcelaVencimento.updateMany.mock.calls
+      .map((c) => c[0])
+      .filter((a) => "boletoPrudentId" in (a.data ?? {}));
+    expect(ligacoes).toEqual([
+      { where: { id: { in: [1, 2] }, boletoPrudentId: null }, data: { boletoPrudentId: 500 } },
+      { where: { id: { in: [3] }, boletoPrudentId: null }, data: { boletoPrudentId: 501 } },
+    ]);
+  });
+
+  it("os boletos nascem depois de marcar antecipada e paga, na mesma transação", async () => {
+    await concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre" });
+    const ordemPaga = dbMock.parcelaVencimento.updateMany.mock.invocationCallOrder[1];
+    expect(dbMock.boletoPrudent.create.mock.invocationCallOrder[0]).toBeGreaterThan(ordemPaga);
+    expect(dbMock.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("empresa com cobrança via BFX vigente no vencimento → direcionamento bfx", async () => {
+    dbMock.anticipacaoBatch.findUnique.mockResolvedValue({ id: 42, empresaParceiraId: 7 });
+    // a regra só vale a partir de novembro: outubro fica com a empresa
+    regraMock.regrasDaEmpresa.mockResolvedValue([regraBfx("2026-11-01", null)]);
+    await concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre" });
+    expect(regraMock.regrasDaEmpresa).toHaveBeenCalledWith(7);
+    const criados = dbMock.boletoPrudent.create.mock.calls.map((c) => c[0].data);
+    expect(criados.map((b) => [b.empresaParceiraId, b.direcionamento])).toEqual([
+      [7, "empresa"],
+      [7, "bfx"],
+    ]);
+  });
+
+  it("lote sem empresa parceira → direcionamento empresa, sem consultar regras", async () => {
+    dbMock.anticipacaoBatch.findUnique.mockResolvedValue({ id: 42, empresaParceiraId: null });
+    await concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre" });
+    expect(regraMock.regrasDaEmpresa).not.toHaveBeenCalled();
+    expect(dbMock.boletoPrudent.create.mock.calls.every((c) => c[0].data.direcionamento === "empresa")).toBe(true);
+  });
+
+  it("parcela que ganhou boleto no meio do caminho aborta a conclusão", async () => {
+    dbMock.parcelaVencimento.updateMany.mockImplementation(async (args: { data?: Record<string, unknown> }) => ({
+      count: args?.data && "boletoPrudentId" in args.data ? 0 : 1,
+    }));
+    await expect(concluirLote({ loteId: 42, dataRetorno: "2026-09-20", usuario: "andre" })).rejects.toThrow(/boleto/i);
+  });
+
+  it("cancelar e registrar lote já concluído não criam boleto", async () => {
+    await cancelarLote({ loteId: 42 });
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1, 10, { dataVencimento: venc("2026-10-10") })]);
+    await registrarLoteConcluido({ vendaIds: [10], periodo: null, dataRetorno: "2026-09-20", usuario: "andre" });
+    expect(dbMock.boletoPrudent.create).not.toHaveBeenCalled();
   });
 });
 
