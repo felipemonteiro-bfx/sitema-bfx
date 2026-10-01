@@ -23,9 +23,12 @@ import { STATUS_FECHAMENTO } from "@/lib/fechamento";
 import {
   avaliarEdicaoDeParcelas,
   avaliarExclusaoDeVenda,
+  reservasEmPreparacao,
   type FechamentoDaParcela,
+  type ParcelaGravada,
   type ParcelaNova,
 } from "@/lib/fechamento-reserva";
+import { chavePixEmJogo, parcelasComPixEmJogo } from "@/lib/fechamento-pix-em-jogo";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
 import { produtoItemSchema } from "@/lib/validations/venda";
@@ -33,6 +36,21 @@ import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 
 /** Recusa com mensagem para o usuário, lançada dentro da transação para desfazê-la. */
 class ErroEdicao extends Error {}
+
+/**
+ * Das parcelas reservadas em fechamento em preparação (as que a edição/exclusão pode soltar), as que
+ * estão numa versão já enviada ao RH de fechamento com Pix ativo ou recebimento confirmado (30/09).
+ */
+async function pixEmJogoDaVenda(
+  tx: Parameters<typeof parcelasComPixEmJogo>[0],
+  vendaId: number,
+  gravadas: ParcelaGravada[]
+): Promise<Set<string>> {
+  const { chaves, fechamentoIds } = reservasEmPreparacao(vendaId, gravadas);
+  if (chaves.length === 0) return new Set();
+  const presas = await parcelasComPixEmJogo(tx, chaves, fechamentoIds);
+  return new Set(presas.map((p) => chavePixEmJogo(p.fechamentoId, p.numeroParcela)));
+}
 
 // Toda action daqui precisa da própria guarda: o matcher do middleware cobre só /api
 // e o layout roda depois da action, então nenhum dos dois protege.
@@ -533,7 +551,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
             fechamento: { select: { id: true, status: true, competencia: true } },
           },
         });
-        const reserva = avaliarEdicaoDeParcelas(id, frescas, novasParcelas);
+        const reserva = avaliarEdicaoDeParcelas(id, frescas, novasParcelas, await pixEmJogoDaVenda(tx, id, frescas));
         if (!reserva.ok) throw new ErroEdicao(reserva.erro);
         if (reserva.fechamentosDesatualizados.length > 0) {
           // O status no where trava contra a conferência em paralelo: conferido no meio → recusa.
@@ -746,7 +764,7 @@ export async function deleteVenda(formData: FormData): Promise<{ success: boolea
           fechamento: { select: { id: true, status: true, competencia: true } },
         },
       });
-      const reserva = avaliarExclusaoDeVenda(id, parcelas);
+      const reserva = avaliarExclusaoDeVenda(id, parcelas, await pixEmJogoDaVenda(tx, id, parcelas));
       if (!reserva.ok) throw new ErroEdicao(reserva.erro);
       if (reserva.fechamentosDesatualizados.length > 0) {
         const { count } = await tx.fechamento.updateMany({

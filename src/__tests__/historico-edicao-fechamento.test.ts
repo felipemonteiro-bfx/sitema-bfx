@@ -18,6 +18,7 @@ const dbMock = {
   itemVenda: { deleteMany: vi.fn(), createMany: vi.fn() },
   parcelaVencimento: { findMany: vi.fn(), deleteMany: vi.fn(), createMany: vi.fn() },
   fechamento: { updateMany: vi.fn() },
+  fechamentoLinha: { findMany: vi.fn() },
   despesa: { create: vi.fn() },
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
@@ -82,6 +83,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   dbMock.usuario.findFirst.mockResolvedValue({ id: 1 });
   dbMock.venda.update.mockResolvedValue({ clienteId: 3 });
+  dbMock.fechamentoLinha.findMany.mockResolvedValue([]);
   dbMock.fechamento.updateMany.mockImplementation(async (args: { where?: { id?: { in?: number[] } } }) => ({
     count: args?.where?.id?.in?.length ?? 0,
   }));
@@ -184,6 +186,44 @@ describe("fechamento em preparação", () => {
     expect(r).toEqual({ success: false, error: "O fechamento mudou enquanto você editava. Recarregue e tente de novo." });
     expect(dbMock.venda.update).not.toHaveBeenCalled();
     expect(dbMock.parcelaVencimento.deleteMany).not.toHaveBeenCalled();
+  });
+});
+
+// A2: reaberto (em preparação) depois de enviado, com Pix ativo ou recebimento confirmado — soltar a
+// reserva deixaria o RH pagando (ou já tendo pago) uma parcela que sai do fechamento.
+describe("fechamento reaberto com Pix em jogo", () => {
+  it("parcela de versão já enviada, com Pix ativo ou recebimento → mudar é recusado, nada gravado", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([reservada("em_preparacao"), existente(2), existente(3)]);
+    dbMock.fechamentoLinha.findMany.mockResolvedValue([{ vendaId: 10, numeroParcela: 1, versao: { fechamento: { id: 11, competencia: "2026-10" } } }]);
+    const parcelas = PARCELAS_FORM.map((p) => (p.numeroParcela === 1 ? { ...p, valorParcela: 350 } : p));
+
+    const r = await updateVenda(formVenda(parcelas));
+
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/V10-1\/3 está no demonstrativo de outubro de 2026 já enviado ao RH/);
+    const where = dbMock.fechamentoLinha.findMany.mock.calls[0][0].where;
+    expect(where.versao).toEqual({
+      enviadaEm: { not: null },
+      fechamentoId: { in: [11] },
+      fechamento: { OR: [{ cobrancas: { some: { status: "ativa" } } }, { recebimentos: { some: { status: "confirmado" } } }] },
+    });
+    expect(dbMock.fechamento.updateMany).not.toHaveBeenCalled();
+    expect(dbMock.venda.update).not.toHaveBeenCalled();
+    expect(dbMock.parcelaVencimento.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("sem Pix ativo nem recebimento (nada na consulta) → solta a reserva como antes", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([reservada("em_preparacao"), existente(2), existente(3)]);
+    const parcelas = PARCELAS_FORM.map((p) => (p.numeroParcela === 1 ? { ...p, valorParcela: 350 } : p));
+    expect(await updateVenda(formVenda(parcelas))).toEqual({ success: true });
+    expect(recriada(1)).toMatchObject({ fechamentoId: null });
+  });
+
+  it("save sem mudar a parcela não consulta nem recusa", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([reservada("em_preparacao"), existente(2), existente(3)]);
+    dbMock.fechamentoLinha.findMany.mockResolvedValue([{ vendaId: 10, numeroParcela: 1, versao: { fechamento: { id: 11, competencia: "2026-10" } } }]);
+    expect(await updateVenda(formVenda())).toEqual({ success: true });
+    expect(recriada(1)).toMatchObject({ fechamentoId: 11 });
   });
 });
 

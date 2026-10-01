@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { ROTULO_STATUS_FECHAMENTO, STATUS_FECHAMENTO, rotuloCompetencia } from "@/lib/fechamento";
 import { requireAdminOrThrow } from "@/lib/guards";
+import { parcelasComPixEmJogo } from "@/lib/fechamento-pix-em-jogo";
 import { createAuditLog } from "@/lib/audit";
 import { hojeDataPura } from "@/lib/data-pura";
 import { dataPuraOuNula } from "@/lib/lote-antecipacao";
@@ -479,6 +480,20 @@ export async function alterarDirecionamento(boletoId: number, destino: "empresa"
         throw new ErroBoleto(
           `Parcela deste boleto está no fechamento de ${rotuloCompetencia(travada.fechamento.competencia)} (${status}). ` +
             "Reabra o fechamento antes de devolver o boleto à empresa."
+        );
+      }
+      // Reaberto depois de enviado, com Pix ativo ou recebimento: a empresa já recebeu (ou pagou)
+      // a parcela no demonstrativo; devolver o boleto a ela a cobraria de novo pela Prudent.
+      const doBoleto = await tx.parcelaVencimento.findMany({
+        where: { boletoPrudentId: id },
+        select: { vendaId: true, numeroParcela: true },
+      });
+      const [presa] = await parcelasComPixEmJogo(tx, doBoleto);
+      if (presa) {
+        throw new ErroBoleto(
+          `Parcela V${presa.vendaId}-${presa.numeroParcela} deste boleto está no demonstrativo de ` +
+            `${rotuloCompetencia(presa.competencia)} já enviado ao RH, e o fechamento tem Pix ativo ou recebimento ` +
+            "confirmado. Devolver o boleto à empresa a faria pagar duas vezes."
         );
       }
     });

@@ -8,6 +8,9 @@
  *   mudar a quantidade de parcelas da venda é recusado. Sem mudança, a reserva é preservada.
  * - Fechamento em preparação: a parcela que mudou (ou a venda que mudou de quantidade) perde a
  *   reserva e o fechamento é marcado desatualizado; sem mudança, a reserva é preservada.
+ * - Exceção (30/09): fechamento reaberto em que a parcela está numa versão já enviada ao RH e há Pix
+ *   ativo ou recebimento confirmado (`pixEmJogo`, chaves de `chavePixEmJogo`) → soltar a reserva é
+ *   recusado.
  */
 import {
   ROTULO_STATUS_FECHAMENTO,
@@ -15,6 +18,7 @@ import {
   identificadorParcela,
   rotuloCompetencia,
 } from "@/lib/fechamento";
+import { chavePixEmJogo, mensagemPixEmJogo } from "@/lib/fechamento-pix-em-jogo";
 
 export type FechamentoDaParcela = { id: number; status: string; competencia: string };
 
@@ -69,7 +73,12 @@ export function mensagemParcelaTravadaNoFechamento(
  * `novas` = as linhas que a edição vai gravar no lugar das atuais; `null` = a edição não mexe nas
  * parcelas (nada a avaliar, tudo preservado).
  */
-export function avaliarEdicaoDeParcelas(vendaId: number, gravadas: ParcelaGravada[], novas: ParcelaNova[] | null): AvaliacaoEdicao {
+export function avaliarEdicaoDeParcelas(
+  vendaId: number,
+  gravadas: ParcelaGravada[],
+  novas: ParcelaNova[] | null,
+  pixEmJogo: ReadonlySet<string> = new Set()
+): AvaliacaoEdicao {
   const reservaPreservada = new Map<number, number>();
   if (novas === null) {
     for (const p of gravadas) if (p.fechamentoId != null) reservaPreservada.set(p.numeroParcela, p.fechamentoId);
@@ -94,6 +103,9 @@ export function avaliarEdicaoDeParcelas(vendaId: number, gravadas: ParcelaGravad
       }
       reservaPreservada.set(p.numeroParcela, p.fechamentoId);
     } else if (mudouEsta || quantidadeMudou) {
+      if (pixEmJogo.has(chavePixEmJogo(f.id, p.numeroParcela))) {
+        return { ok: false, erro: mensagemPixEmJogo(vendaId, p.numeroParcela, gravadas.length, f.competencia) };
+      }
       desatualizados.add(f.id);
     } else {
       reservaPreservada.set(p.numeroParcela, p.fechamentoId);
@@ -108,7 +120,8 @@ export function avaliarEdicaoDeParcelas(vendaId: number, gravadas: ParcelaGravad
  */
 export function avaliarExclusaoDeVenda(
   vendaId: number,
-  gravadas: ParcelaGravada[]
+  gravadas: ParcelaGravada[],
+  pixEmJogo: ReadonlySet<string> = new Set()
 ): { ok: false; erro: string } | { ok: true; fechamentosDesatualizados: number[] } {
   const desatualizados = new Set<number>();
   for (const p of gravadas) {
@@ -120,7 +133,22 @@ export function avaliarExclusaoDeVenda(
     if (f.status !== STATUS_FECHAMENTO.emPreparacao) {
       return { ok: false, erro: mensagemParcelaTravadaNoFechamento(vendaId, p, gravadas.length, f) };
     }
+    if (pixEmJogo.has(chavePixEmJogo(f.id, p.numeroParcela))) {
+      return { ok: false, erro: mensagemPixEmJogo(vendaId, p.numeroParcela, gravadas.length, f.competencia) };
+    }
     desatualizados.add(f.id);
   }
   return { ok: true, fechamentosDesatualizados: [...desatualizados] };
+}
+
+/** Parcelas reservadas em fechamento em preparação: as que a edição/exclusão pode soltar. */
+export function reservasEmPreparacao(
+  vendaId: number,
+  gravadas: ParcelaGravada[]
+): { chaves: { vendaId: number; numeroParcela: number }[]; fechamentoIds: number[] } {
+  const em = gravadas.filter((p) => p.fechamentoId != null && p.fechamento?.status === STATUS_FECHAMENTO.emPreparacao);
+  return {
+    chaves: em.map((p) => ({ vendaId, numeroParcela: p.numeroParcela })),
+    fechamentoIds: [...new Set(em.map((p) => p.fechamento!.id))],
+  };
 }

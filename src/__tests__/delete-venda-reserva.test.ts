@@ -14,6 +14,7 @@ const dbMock = {
   documento: { deleteMany: vi.fn() },
   parcelaVencimento: { findMany: vi.fn() },
   fechamento: { updateMany: vi.fn() },
+  fechamentoLinha: { findMany: vi.fn() },
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/guards", () => ({ requireSessionOrThrow: vi.fn(async () => ({ id: 1, username: "andre", role: "admin" })) }));
@@ -47,6 +48,7 @@ beforeEach(() => {
   dbMock.venda.delete.mockResolvedValue({});
   dbMock.parcelaVencimento.findMany.mockResolvedValue([parcela(1), parcela(2)]);
   dbMock.fechamento.updateMany.mockResolvedValue({ count: 1 });
+  dbMock.fechamentoLinha.findMany.mockResolvedValue([]);
 });
 
 describe("deleteVenda × reserva", () => {
@@ -92,6 +94,18 @@ describe("deleteVenda × reserva", () => {
     expect(dbMock.fechamento.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       dbMock.venda.delete.mock.invocationCallOrder[0]
     );
+  });
+
+  it("reaberto com parcela em versão enviada e Pix ativo ou recebimento → recusado, nada apagado", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([
+      parcela(1, { fechamentoId: 11, fechamento: { id: 11, status: "em_preparacao", competencia: "2026-10" } }),
+    ]);
+    dbMock.fechamentoLinha.findMany.mockResolvedValue([{ vendaId: 10, numeroParcela: 1, versao: { fechamento: { id: 11, competencia: "2026-10" } } }]);
+    const r = await deleteVenda(formId(10));
+    expect(r.success).toBe(false);
+    expect(r.error).toMatch(/V10-1\/1 está no demonstrativo de outubro de 2026 já enviado ao RH/);
+    expect(dbMock.fechamento.updateMany).not.toHaveBeenCalled();
+    expect(dbMock.venda.delete).not.toHaveBeenCalled();
   });
 
   it("o fechamento foi conferido no meio (count 0) → recusado", async () => {

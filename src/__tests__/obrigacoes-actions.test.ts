@@ -7,7 +7,8 @@ import { linhaBancariaDeCodigoBarras, modulo11Bancario } from "@/lib/linha-digit
 const dbMock = {
   boletoPrudent: { findUnique: vi.fn(), findFirst: vi.fn(), updateMany: vi.fn(), create: vi.fn() },
   boletoPagamento: { findUnique: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
-  parcelaVencimento: { updateMany: vi.fn(), findFirst: vi.fn() },
+  parcelaVencimento: { updateMany: vi.fn(), findFirst: vi.fn(), findMany: vi.fn() },
+  fechamentoLinha: { findMany: vi.fn() },
   arquivoFinanceiro: { create: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(dbMock)),
 };
@@ -77,6 +78,8 @@ beforeEach(() => {
   dbMock.boletoPagamento.updateMany.mockResolvedValue({ count: 1 });
   dbMock.parcelaVencimento.updateMany.mockResolvedValue({ count: 2 });
   dbMock.parcelaVencimento.findFirst.mockResolvedValue(null);
+  dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
+  dbMock.fechamentoLinha.findMany.mockResolvedValue([]);
   dbMock.arquivoFinanceiro.create.mockResolvedValue({ id: 77, sha256: "x" });
 });
 
@@ -456,6 +459,23 @@ describe("alterarDirecionamento", () => {
     expect(dbMock.boletoPrudent.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
       dbMock.parcelaVencimento.findFirst.mock.invocationCallOrder[0]
     );
+  });
+
+  it("bfx → empresa com parcela em versão já enviada de fechamento reaberto com Pix ativo ou recebimento: recusa", async () => {
+    dbMock.parcelaVencimento.findFirst.mockResolvedValue(null);
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([{ vendaId: 240, numeroParcela: 3 }]);
+    dbMock.fechamentoLinha.findMany.mockResolvedValue([
+      { vendaId: 240, numeroParcela: 3, versao: { fechamento: { id: 11, competencia: "2026-10" } } },
+    ]);
+    const r = await alterarDirecionamento(10, "empresa");
+    expect(r).toEqual({
+      ok: false,
+      erro:
+        "Parcela V240-3 deste boleto está no demonstrativo de outubro de 2026 já enviado ao RH, e o fechamento tem Pix ativo " +
+        "ou recebimento confirmado. Devolver o boleto à empresa a faria pagar duas vezes.",
+    });
+    expect(dbMock.parcelaVencimento.findMany.mock.calls[0][0].where).toEqual({ boletoPrudentId: 10 });
+    expect(auditMock.createAuditLog).not.toHaveBeenCalled();
   });
 
   it("destino invalido e recusado; nada mudou → erro", async () => {
