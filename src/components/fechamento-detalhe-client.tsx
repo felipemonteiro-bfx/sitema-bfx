@@ -383,7 +383,9 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                 </ul>
               )}
               <div className="flex items-baseline justify-between gap-3 border-t pt-3">
-                <span className="font-semibold">A pagar em {ddmm(d.vencimentoPix)}</span>
+                <span className="font-semibold">
+                  {d.status === "pago" ? "Valor final · pago" : `A pagar em ${ddmm(d.vencimentoPix)}`}
+                </span>
                 <span className="text-3xl font-bold tabular-nums text-success-text">
                   <span className="valor-sensivel">{formatBRL(d.totalFinal)}</span>
                 </span>

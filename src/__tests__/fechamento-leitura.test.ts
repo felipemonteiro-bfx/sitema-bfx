@@ -45,6 +45,21 @@ describe("classificarParcelas", () => {
       { parcelaId: 4, identificador: "V240-4/4", motivo: "em_outro_fechamento", rotulo: "Em outro fechamento", valor: 300 },
     ]);
   });
+
+  it("liquidada por este fechamento (Fase 6) continua dele, não vira bloqueada", () => {
+    const liquidada = new Date("2026-10-14T00:00:00Z");
+    const r = classificarParcelas(
+      [
+        parcela(1, { fechamentoId: 11, liquidadaEm: liquidada, paga: true }),
+        parcela(2, { fechamentoId: 11, liquidadaEm: liquidada, antecipada: true, paga: true, boletoPrudent: { direcionamento: "bfx" } }),
+        parcela(3, { liquidadaEm: liquidada }), // liquidada por outro fechamento: bloqueada
+      ],
+      F
+    );
+    expect(r.reservadas.map((p) => p.id)).toEqual([1, 2]);
+    expect(r.reservasInvalidas).toBe(0);
+    expect(r.bloqueadas.map((b) => [b.parcelaId, b.motivo])).toEqual([[3, "ja_liquidada"]]);
+  });
 });
 
 describe("montarGrade", () => {

@@ -116,19 +116,25 @@ export function PixDoFechamento({ fechamentoId, pix }: { fechamentoId: number; p
             {pix.recebimentos.map((r) => {
               const st = STATUS_RECEBIMENTO[r.status] ?? { rotulo: r.status, variante: "outline" as const };
               return (
-                <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2 first:pt-0 last:pb-0">
-                  <span className="tabular-nums text-muted-foreground">{dataIso(r.data)}</span>
-                  <span>{r.origem === "asaas" ? "Pix do Asaas" : "Manual"}</span>
-                  <Badge variant={st.variante} className="whitespace-nowrap">
-                    {st.rotulo}
-                  </Badge>
-                  <span
-                    className={`valor-sensivel ml-auto tabular-nums ${r.status === "estornado" ? "text-muted-foreground line-through" : "font-semibold"}`}
-                  >
-                    {formatBRL(r.valor)}
+                <li key={r.id} className="flex flex-col gap-1 py-2 first:pt-0 last:pb-0">
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium">{r.origem === "asaas" ? "Pix do Asaas" : "Manual"}</span>
+                    <Badge variant={st.variante} className="whitespace-nowrap">
+                      {st.rotulo}
+                    </Badge>
+                    <span
+                      className={`valor-sensivel ml-auto whitespace-nowrap tabular-nums ${r.status === "estornado" ? "text-muted-foreground line-through" : "font-semibold"}`}
+                    >
+                      {formatBRL(r.valor)}
+                    </span>
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    recebido em {dataIso(r.data)}
+                    {r.origem === "manual" && r.registradoPor ? ` · registrado por ${r.registradoPor}` : ""}
+                    {r.origem === "manual" && r.status === "confirmado" && r.confirmadoPor ? ` · confirmado por ${r.confirmadoPor}` : ""}
                   </span>
                   {(r.comprovanteArquivoId != null || r.origem === "manual") && r.status !== "estornado" && (
-                    <span className="flex w-full flex-wrap justify-end gap-1">
+                    <span className="flex flex-wrap justify-end gap-1">
                       {r.comprovanteArquivoId != null && (
                         <Button variant="ghost" size="sm" asChild>
                           <a href={`/api/arquivos/${r.comprovanteArquivoId}`} target="_blank" rel="noopener noreferrer">
@@ -152,11 +158,6 @@ export function PixDoFechamento({ fechamentoId, pix }: { fechamentoId: number; p
                           Estornar
                         </Button>
                       )}
-                    </span>
-                  )}
-                  {r.origem === "manual" && r.status === "confirmado" && r.confirmadoPor && (
-                    <span className="w-full text-xs text-muted-foreground">
-                      registrado por {r.registradoPor ?? "—"}, confirmado por {r.confirmadoPor}
                     </span>
                   )}
                 </li>
@@ -252,10 +253,6 @@ function CobrancaAtiva({ cobranca }: { cobranca: NonNullable<PixDetalhe["cobranc
           </dd>
           <dt className="text-muted-foreground">Vence</dt>
           <dd className="text-right">{dataIso(cobranca.vencimento)}</dd>
-          <dt className="text-muted-foreground">Identificação</dt>
-          <dd className="truncate text-right" title={cobranca.identificacao}>
-            {cobranca.identificacao}
-          </dd>
         </dl>
       </div>
       {cobranca.copiaECola ? (
@@ -274,6 +271,9 @@ function CobrancaAtiva({ cobranca }: { cobranca: NonNullable<PixDetalhe["cobranc
       ) : (
         <p className="text-xs text-muted-foreground">O QR Code ainda não foi gerado; ele vem no próximo envio desta versão.</p>
       )}
+      <p className="break-all text-xs text-muted-foreground">
+        Identificação no Asaas: <span className="font-medium text-foreground">{cobranca.identificacao}</span>
+      </p>
     </section>
   );
 }
@@ -386,17 +386,17 @@ export function ConciliacaoFechamento({ c }: { c: ConciliacaoDetalhe }) {
   return (
     <Card className="p-5">
       <section aria-labelledby="fechamento-conciliacao" className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Scale className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          <h2 id="fechamento-conciliacao" className="text-base font-semibold">
+        <div className="flex items-start gap-2">
+          <Scale className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <h2 id="fechamento-conciliacao" className="min-w-0 flex-1 text-base font-semibold">
             Conciliação com os boletos Prudent
           </h2>
           {c.concluido ? (
-            <Badge variant="success" className="ml-auto">
+            <Badge variant="success" className="shrink-0">
               Concluído
             </Badge>
           ) : c.conciliado ? (
-            <Badge variant="info" className="ml-auto">
+            <Badge variant="info" className="shrink-0">
               Conciliado
             </Badge>
           ) : null}

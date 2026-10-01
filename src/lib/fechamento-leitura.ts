@@ -217,6 +217,11 @@ export function classificarParcelas(
       if (minha) reservasInvalidas++;
       continue;
     }
+    // Liquidada por este fechamento (pago): é dele, não uma parcela barrada.
+    if (minha && p.liquidadaEm !== null) {
+      reservadas.push(p);
+      continue;
+    }
     const r = elegibilidadeFechamento(paraRegra(p), fechamento.id);
     if (r.ok) {
       if (minha) reservadas.push(p);
