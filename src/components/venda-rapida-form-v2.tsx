@@ -42,6 +42,8 @@ import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { CurrencyInput } from "@/components/currency-input";
 import { Badge } from "@/components/ui/badge";
 import { CadastrarClienteRapidoDialog } from "@/components/cadastrar-cliente-rapido-dialog";
+import { ResumoVendaPanel } from "@/components/resumo-venda-panel";
+import { simularMargemVenda } from "@/lib/simular-margem-venda";
 import type { ActionResponse } from "@/lib/action-response";
 import {
   decidirConfirmacaoConsignado,
@@ -402,6 +404,24 @@ export default function VendaRapidaFormV2({
   const cardLimite = limiteData
     ? estadoCardLimite({ descontoEmFolha, limite: limiteData, valorParcela })
     : null;
+
+  // Resumo da venda (spec 2026-09-30 §7): só simulação, nada disto vai no FormData.
+  const simulacao = simularMargemVenda({
+    dataVenda,
+    formaPagamento: formaPagamentoSelected || null,
+    subtotalProdutos,
+    custoProdutos: produtos.reduce((sum, p) => sum + p.custoProduto * p.quantidade, 0),
+    frete: numFrete,
+    envio: numEnvio,
+    desconto: desconto + descontoPontos,
+    temNota,
+    taxaNotaPct: numTaxaNota,
+    comissaoPct,
+    parcelas: parcelasVencimento,
+    numParcelas,
+    repassePct: limiteData?.repassePct ?? null,
+    disponivelAntes: cardLimite?.disponivel ?? null,
+  });
 
   // Sugestão automática de parcelas (apenas desconto em folha)
   useEffect(() => {
@@ -1373,6 +1393,20 @@ export default function VendaRapidaFormV2({
               <div className="text-base font-bold tabular-nums text-warning-text valor-sensivel">{formatBRL(valorComissao)}</div>
             </div>
           </div>
+
+          <Separator />
+
+          <ResumoVendaPanel
+            simulacao={simulacao}
+            barraLimite={
+              cardLimite?.limite != null
+                ? { teto: cardLimite.limite, comprometido: cardLimite.comprometido }
+                : null
+            }
+            taxaNotaPct={numTaxaNota}
+            comissaoPct={comissaoPct}
+            regraVencimento={limiteData?.regraVencimento ?? null}
+          />
 
           <Separator />
 
