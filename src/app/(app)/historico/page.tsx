@@ -32,6 +32,9 @@ import { formatarDataPura, hojeDataPura } from "@/lib/data-pura";
 import { getSession } from "@/lib/session";
 import { totalParcelasExibido, type ParcelaRecebimento } from "@/lib/recebimento-parcelas";
 import { obterEstadoTermoAssinado } from "@/lib/historico-termo-email";
+import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
+import { bloqueioDataDesconto } from "@/lib/data-desconto-unica";
+import type { RegraVencimento } from "@/lib/regra-empresa";
 
 // Data de venda e data pura (meia-noite UTC): formatar em Manaus mostrava o dia
 // anterior — 02/07 virava 01/07 — e fazia o filtro de periodo parecer quebrado.
@@ -167,7 +170,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const editVenda = editId ? await prisma.venda.findUnique({
     where: { id: editId },
     select: {
-      id: true, dataVenda: true, vendedor: true, produtoNome: true,
+      id: true, clienteId: true, dataVenda: true, vendedor: true, produtoNome: true,
       quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       desconto: true, descontoEmFolha: true, boleto: true, formaPagamento: true,
@@ -187,6 +190,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   // "Recebimento das parcelas": todas as parcelas, inclusive de venda 1x. So admin da baixa —
   // as actions tambem exigem admin; aqui e so para nao mostrar botao que seria recusado.
   let editRecebimento: ParcelaRecebimento[] = [];
+  // Data do desconto da venda 1x em folha (2026-10-01): a gravada na parcela 1, o motivo de não
+  // poder mudar (mesmas travas de `updateVenda`) e a regra da empresa do cliente na data da venda.
+  let editDataDesconto: { gravada: string | null; bloqueio: string | null; regra: RegraVencimento | null } = {
+    gravada: null,
+    bloqueio: null,
+    regra: null,
+  };
   const podeDarBaixa = editVenda ? (await getSession())?.role === "admin" : false;
   if (editVenda) {
     try {
@@ -201,9 +211,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           dataPagamento: true,
           origemPagamento: true,
           baixaPor: true,
+          antecipada: true,
+          antecipacaoLoteId: true,
+          boletoPrudentId: true,
+          fechamento: { select: { status: true } },
         },
         orderBy: [{ numeroParcela: "asc" }, { id: "asc" }],
       });
+      const primeira = raw.find((p) => p.numeroParcela === 1) ?? null;
+      editDataDesconto = {
+        ...editDataDesconto,
+        gravada: primeira ? primeira.dataVencimento.toISOString().slice(0, 10) : null,
+        bloqueio: bloqueioDataDesconto(primeira),
+      };
       if ((editVenda.parcelas || 1) > 1) {
         editParcelasVenc = raw.map((p) => ({
           numeroParcela: p.numeroParcela,
@@ -226,6 +246,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       }));
     } catch {
       // Tabela parcelas_vencimento pode não existir em produção antiga
+    }
+    if (editVenda.clienteId) {
+      try {
+        const r = await regraDoClienteNaData(editVenda.clienteId, editVenda.dataVenda);
+        editDataDesconto = { ...editDataDesconto, regra: { diaCorte: r.diaCorte, diaVencimento: r.diaVencimento } };
+      } catch {
+        // Sem a regra, o campo usa o padrão (corte 20, dia 10) — o servidor relê a regra ao salvar.
+      }
     }
   }
 
@@ -642,6 +670,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             editVenda={editVenda}
             editParcelasVenc={editParcelasVenc}
             parcelasPagas={editParcelasPagas}
+            dataDesconto={editDataDesconto}
             recebimento={{ parcelas: editRecebimento, hoje: hojeDataPura(), podeDarBaixa }}
             vendedores={vendedores}
             updateAction={updateVenda}

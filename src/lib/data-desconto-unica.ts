@@ -9,6 +9,7 @@
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { parseDataIsoUtc } from "@/lib/data-input";
 import type { RegraVencimento } from "@/lib/regra-empresa";
+import { STATUS_FECHAMENTO } from "@/lib/fechamento";
 
 const MESES = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -55,4 +56,29 @@ export function avisoMudancaDataDesconto(escolhida: string, dataRegra: string): 
     `Combine com o RH antes: a folha vai descontar em ${mes(e)}, não em ${mes(r)}. ` +
     "O resumo financeiro e a taxa da Prudent já usam a data nova."
   );
+}
+
+/**
+ * Na edição, por que a data do desconto da parcela 1 não pode mudar — as mesmas travas que o
+ * servidor aplica em `updateVenda` (boleto Prudent, fechamento conferido ou posterior, parcela
+ * paga/antecipada ou num lote). `null` = editável. Com motivo, o campo aparece desabilitado e não
+ * vai no formulário (o servidor mantém a data gravada).
+ */
+export function bloqueioDataDesconto(
+  linha: {
+    paga: boolean;
+    antecipada: boolean;
+    antecipacaoLoteId: number | null;
+    boletoPrudentId: number | null;
+    fechamento: { status: string } | null;
+  } | null
+): string | null {
+  if (!linha) return null;
+  if (linha.boletoPrudentId != null) return "A Prudent já emitiu o boleto desta parcela: a data não muda.";
+  if (linha.fechamento && linha.fechamento.status !== STATUS_FECHAMENTO.emPreparacao) {
+    return "A parcela está num fechamento já conferido: a data não muda.";
+  }
+  if (linha.paga || linha.antecipada) return "A parcela já está paga ou antecipada: a data não muda.";
+  if (linha.antecipacaoLoteId != null) return "A parcela está num lote enviado à Prudent: a data não muda.";
+  return null;
 }

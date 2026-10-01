@@ -35,6 +35,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProdutoItemForm } from "@/components/produto-item-form";
 import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
+import { DataDescontoUnica } from "@/components/data-desconto-unica";
+import { dataDaRegraIso, dataDescontoEfetiva } from "@/lib/data-desconto-unica";
 import { parseDataIsoUtc } from "@/lib/data-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BFXIntelligencePanel } from "@/components/bfx-intelligence-panel";
@@ -205,6 +207,8 @@ export default function VendaRapidaFormV2({
 
   // Parcelas com datas
   const [parcelasVencimento, setParcelasVencimento] = useState<Parcela[]>([]);
+  // Data do desconto em 1x em folha (2026-10-01): `null` acompanha a regra da empresa.
+  const [dataDescontoEscolhida, setDataDescontoEscolhida] = useState<string | null>(null);
 
   // Uber Direct
   const [uberEnabled, setUberEnabled] = useState(false);
@@ -405,6 +409,14 @@ export default function VendaRapidaFormV2({
     ? estadoCardLimite({ descontoEmFolha, limite: limiteData, valorParcela })
     : null;
 
+  // Data do desconto da venda 1x em folha (2026-10-01): a da regra da empresa, ou a escolhida.
+  // Vai no FormData e na simulação abaixo — o resumo e a taxa da Prudent usam a mesma data.
+  const dataDescontoRegra = dataDaRegraIso(dataVenda, limiteData?.regraVencimento);
+  const mostrarDataDesconto = numParcelas === 1 && descontoEmFolha && dataDescontoRegra !== null;
+  const dataDescontoUnica = mostrarDataDesconto
+    ? dataDescontoEfetiva(dataDescontoEscolhida, dataDescontoRegra)
+    : null;
+
   // Resumo da venda (spec 2026-09-30 §7): só simulação, nada disto vai no FormData.
   const simulacao = simularMargemVenda({
     dataVenda,
@@ -424,6 +436,7 @@ export default function VendaRapidaFormV2({
       dataVenda,
       total: totalVenda,
       regra: limiteData?.regraVencimento,
+      dataDescontoUnica,
     }),
     numParcelas,
     repassePct: limiteData?.repassePct ?? null,
@@ -714,6 +727,7 @@ export default function VendaRapidaFormV2({
     if (numParcelas > 1 && parcelasVencimento.length > 0) {
       formData.append("parcelasVencimento", JSON.stringify(parcelasVencimento));
     }
+    if (dataDescontoUnica) formData.append("dataDescontoUnica", dataDescontoUnica);
 
     setSuccessAssinaturaToken(null); // Limpa card anterior ao submeter nova venda
     try {
@@ -732,6 +746,7 @@ export default function VendaRapidaFormV2({
           formaPagamento: null,
         });
         setParcelasVencimento([]);
+        setDataDescontoEscolhida(null);
         setProdutoParaSugestoes(null);
         confirmouConsignadoRef.current = false;
         // O estoque caiu com a venda: sem refresh a proxima venda na mesma tela
@@ -1316,17 +1331,31 @@ export default function VendaRapidaFormV2({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Número de Parcelas
-            </Label>
-            <FormSelect
-              name="parcelas"
-              options={parcelasOptions}
-              value={parcelas}
-              onValueChange={setParcelas}
-              placeholder="Selecione"
-            />
+          <div className={cn("grid gap-4", mostrarDataDesconto && "sm:grid-cols-2")}>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Número de Parcelas
+              </Label>
+              <FormSelect
+                name="parcelas"
+                options={parcelasOptions}
+                value={parcelas}
+                onValueChange={setParcelas}
+                placeholder="Selecione"
+              />
+            </div>
+            {/* Só em 1x com desconto em folha: em 2x ou mais as datas ficam no bloco de vencimentos. */}
+            {mostrarDataDesconto && (
+              <DataDescontoUnica
+                id="data-desconto-unica"
+                dataVenda={dataVenda}
+                dataRegra={dataDescontoRegra}
+                escolhida={dataDescontoEscolhida}
+                onEscolhidaChange={setDataDescontoEscolhida}
+                labelClassName="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                avisoClassName="sm:col-span-2"
+              />
+            )}
           </div>
         </CardContent>
       </Card>

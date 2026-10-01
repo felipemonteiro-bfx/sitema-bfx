@@ -1,6 +1,8 @@
 // Data do desconto em venda 1x em folha (2026-10-01): regra pura.
 // Ver docs/superpowers/specs/2026-10-01-data-desconto-venda-1x.md.
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   MENSAGEM_DATA_DESCONTO_FORA,
   parcelaUnicaDaFolha,
@@ -10,6 +12,7 @@ import {
 import { parcelasParaSimulacao } from "@/lib/simular-margem-venda";
 import {
   avisoMudancaDataDesconto,
+  bloqueioDataDesconto,
   dataDaRegraIso,
   dataDescontoEfetiva,
   escolhaAposSelecionar,
@@ -104,5 +107,39 @@ describe("estado do campo (data-desconto-unica)", () => {
       "Combine com o RH antes: a folha vai descontar em novembro de 2027, não em novembro de 2026. O resumo financeiro e a taxa da Prudent já usam a data nova.",
     );
     expect(avisoMudancaDataDesconto("2026-11-10", "2026-11-10")).toBeNull();
+  });
+});
+
+describe("bloqueioDataDesconto (edição)", () => {
+  const aberta = { paga: false, antecipada: false, antecipacaoLoteId: null, boletoPrudentId: null, fechamento: null };
+  it("parcela aberta, sem fechamento ou em preparação: editável", () => {
+    expect(bloqueioDataDesconto(aberta)).toBeNull();
+    expect(bloqueioDataDesconto({ ...aberta, fechamento: { status: "em_preparacao" } })).toBeNull();
+    expect(bloqueioDataDesconto(null)).toBeNull();
+  });
+  it("boleto Prudent, fechamento conferido, paga/antecipada e lote: bloqueada com o motivo", () => {
+    expect(bloqueioDataDesconto({ ...aberta, boletoPrudentId: 3, antecipada: true })).toContain("boleto");
+    expect(bloqueioDataDesconto({ ...aberta, fechamento: { status: "conferido" } })).toContain("fechamento");
+    expect(bloqueioDataDesconto({ ...aberta, paga: true })).toContain("paga");
+    expect(bloqueioDataDesconto({ ...aberta, antecipacaoLoteId: 7 })).toContain("lote");
+  });
+});
+
+describe("ligação dos componentes (fonte)", () => {
+  // Sem render de componente no projeto: a ligação é conferida no fonte, só com `.includes()`.
+  const ler = (rel: string) => readFileSync(join(process.cwd(), rel), "utf8");
+  const pdv = ler("src/components/venda-rapida-form-v2.tsx");
+  const edicao = ler("src/components/edit-venda-com-parcelas.tsx");
+
+  it("o PDV mostra o campo em 1x em folha, simula e envia a data escolhida", () => {
+    expect(pdv.includes("numParcelas === 1 && descontoEmFolha")).toBe(true);
+    expect(pdv.includes("<DataDescontoUnica")).toBe(true);
+    expect(pdv.includes('formData.append("dataDescontoUnica", dataDescontoUnica)')).toBe(true);
+    expect(pdv.includes("      dataDescontoUnica,\n    }),")).toBe(true);
+  });
+
+  it("a edição manda o campo no formulário com o nome que o servidor lê", () => {
+    expect(edicao.includes("<DataDescontoUnica")).toBe(true);
+    expect(edicao.includes('name="dataDescontoUnica"')).toBe(true);
   });
 });

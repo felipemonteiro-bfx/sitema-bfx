@@ -24,6 +24,8 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
+import { FORMA_PAGAMENTO } from "@/lib/forma-pagamento";
+import type { RegraVencimento } from "@/lib/regra-empresa";
 import { RecebimentoParcelas } from "@/components/recebimento-parcelas";
 import type { ParcelaRecebimento } from "@/lib/recebimento-parcelas";
 
@@ -67,6 +69,8 @@ type Props = {
   editVenda: EditVendaData;
   editParcelasVenc: Parcela[];
   parcelasPagas?: number[];
+  /** Data do desconto da venda 1x em folha: gravada, motivo de bloqueio e regra da empresa. */
+  dataDesconto?: { gravada: string | null; bloqueio: string | null; regra: RegraVencimento | null };
   recebimento?: { parcelas: ParcelaRecebimento[]; hoje: string; podeDarBaixa: boolean };
   vendedores: { nomeExibicao: string | null; username: string }[];
   updateAction: (formData: FormData) => Promise<{ success: boolean; error?: string }>;
@@ -78,6 +82,7 @@ export function EditVendaHistoricoForm({
   editVenda,
   editParcelasVenc,
   parcelasPagas,
+  dataDesconto,
   recebimento,
   vendedores,
   updateAction,
@@ -88,6 +93,18 @@ export function EditVendaHistoricoForm({
   // Texto do input (aceita "" e "1." enquanto digita); as parcelas recebem o número.
   const [frete, setFrete] = useState(String(editVenda.valorFrete || 0));
   const [desconto, setDesconto] = useState(String(editVenda.desconto || 0));
+  // Data da venda e forma de pagamento acompanhadas para a "Data do desconto" em 1x em folha
+  // (2026-10-01): o campo só existe em folha e a data da regra muda com a data da venda.
+  const dataVendaGravada = editVenda.dataVenda.toISOString().slice(0, 10);
+  const formaInicial =
+    (editVenda.formaPagamento as FormaPagamento | null | undefined) ??
+    formaFromLegacyFlags({
+      descontoEmFolha: editVenda.descontoEmFolha,
+      boleto: editVenda.boleto,
+      parcelas: editVenda.parcelas,
+    });
+  const [dataVendaAtual, setDataVendaAtual] = useState(dataVendaGravada);
+  const [formaAtual, setFormaAtual] = useState<string>(formaInicial);
   const router = useRouter();
 
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -118,7 +135,7 @@ export function EditVendaHistoricoForm({
 
       <div className="space-y-1">
         <Label htmlFor="edit-data">Data da venda</Label>
-        <DateInput id="edit-data" name="data" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
+        <DateInput id="edit-data" name="data" defaultValue={dataVendaGravada} onChange={setDataVendaAtual} />
       </div>
       <div className="space-y-1">
         <Label htmlFor="edit-vendedor">Vendedor</Label>
@@ -157,8 +174,15 @@ export function EditVendaHistoricoForm({
         initialNumeroParcelas={editVenda.parcelas || 1}
         frete={Number(frete) || 0}
         desconto={Number(desconto) || 0}
-        dataVenda={editVenda.dataVenda.toISOString().slice(0, 10)}
+        dataVenda={dataVendaGravada}
         parcelasPagas={parcelasPagas}
+        dataDesconto={{
+          emFolha: formaAtual === FORMA_PAGAMENTO.DESCONTO_FOLHA,
+          dataVendaAtual,
+          gravada: dataDesconto?.gravada ?? null,
+          bloqueio: dataDesconto?.bloqueio ?? null,
+          regra: dataDesconto?.regra ?? null,
+        }}
       />
 
       {/* Forma de pagamento canonica. Quando a venda nao tem o campo (vendas antigas
@@ -170,14 +194,8 @@ export function EditVendaHistoricoForm({
         <FormSelect
           id="edit-formaPagamento"
           name="formaPagamento"
-          defaultValue={
-            (editVenda.formaPagamento as FormaPagamento | null | undefined) ??
-            formaFromLegacyFlags({
-              descontoEmFolha: editVenda.descontoEmFolha,
-              boleto: editVenda.boleto,
-              parcelas: editVenda.parcelas,
-            })
-          }
+          defaultValue={formaInicial}
+          onValueChange={setFormaAtual}
           options={FORMAS_PAGAMENTO_LIST.map((f) => ({ value: f, label: formaPagamentoLabel(f) }))}
         />
       </div>
