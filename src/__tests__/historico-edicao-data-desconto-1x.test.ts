@@ -209,3 +209,30 @@ describe("updateVenda — data do desconto numa parcela travada", () => {
     expect(criadas()[0]).toMatchObject({ dataVencimento: dia("2026-10-15"), antecipada: true });
   });
 });
+
+describe("updateVenda — achados da revisão (2026-10-01)", () => {
+  it("parcela num lote: mudar só a data da venda não reescreve o vencimento gravado", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([linha({ antecipacaoLoteId: 7 })]);
+    const fd = form();
+    fd.set("data", "2026-09-25");
+    const r = await updateVenda(fd);
+    expect(r).toMatchObject({ success: true });
+    expect(criadas()[0]).toMatchObject({ dataVencimento: dia("2026-10-15"), antecipacaoLoteId: 7 });
+  });
+
+  it("parcela antecipada com a data gravada no campo e a data da venda mudada: passa e mantém a data", async () => {
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([linha({ antecipada: true, paga: true, origemPagamento: "prudent" })]);
+    const fd = form("2026-10-15");
+    fd.set("data", "2026-10-20");
+    const r = await updateVenda(fd);
+    expect(r).toMatchObject({ success: true });
+    expect(criadas()[0]).toMatchObject({ dataVencimento: dia("2026-10-15") });
+  });
+
+  it("forma mudou para folha: data igual à gravada não pula a validação", async () => {
+    dbMock.venda.findUnique.mockResolvedValue({ ...vendaGravada, formaPagamento: FORMA_PAGAMENTO.BOLETO, descontoEmFolha: false, boleto: true });
+    dbMock.parcelaVencimento.findMany.mockResolvedValue([linha({ dataVencimento: dia("2026-09-01") })]);
+    const r = await updateVenda(form("2026-09-01"));
+    expect(r).toEqual({ success: false, error: MSG });
+  });
+});

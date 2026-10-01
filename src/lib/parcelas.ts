@@ -116,7 +116,9 @@ export function validarDataDescontoUnica(
   const data = parseDataIsoUtc(valor.trim());
   if (!data || Number.isNaN(dataVenda.getTime())) return { ok: false, erro: MENSAGEM_DATA_DESCONTO_FORA };
   const inicio = Date.UTC(dataVenda.getUTCFullYear(), dataVenda.getUTCMonth(), dataVenda.getUTCDate());
-  const fim = Date.UTC(dataVenda.getUTCFullYear() + 1, dataVenda.getUTCMonth(), dataVenda.getUTCDate());
+  // Mesmo dia um ano depois; venda em 29/02 vai até 28/02 (Date.UTC rolaria para 01/03).
+  const ultimoDiaDoMes = new Date(Date.UTC(dataVenda.getUTCFullYear() + 1, dataVenda.getUTCMonth() + 1, 0)).getUTCDate();
+  const fim = Date.UTC(dataVenda.getUTCFullYear() + 1, dataVenda.getUTCMonth(), Math.min(dataVenda.getUTCDate(), ultimoDiaDoMes));
   if (data.getTime() < inicio || data.getTime() > fim) return { ok: false, erro: MENSAGEM_DATA_DESCONTO_FORA };
   return { ok: true, data };
 }

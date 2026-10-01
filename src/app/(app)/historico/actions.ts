@@ -412,15 +412,18 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     const manterVencimentoGravado = mesmaDataVenda && formaAntes === formaPagamento && vencimentoGravado != null;
 
     // Data do desconto escolhida no form (2026-10-01; so em 1x em folha, senao e ignorada). Igual a
-    // gravada com a mesma data de venda = save sem mudanca: mantem, sem validar (venda antiga pode
-    // ter vencimento fora do intervalo). Nova (ou a data da venda mudou): validada contra a data da
-    // venda, e a mudanca passa pelas travas de boleto Prudent e fechamento logo abaixo.
+    // gravada num save sem mudanca de data nem de forma = mantem, sem validar (venda antiga pode
+    // ter vencimento fora do intervalo); igual a gravada numa parcela travada (paga, antecipada ou
+    // em lote) tambem: a data dela nao muda de qualquer jeito. Nova (ou a data da venda/forma
+    // mudou): validada contra a data da venda, e a mudanca passa pelas travas logo abaixo.
     const dataDescontoRaw = String(formData.get("dataDescontoUnica") ?? "").trim();
     const vencimentoGravadoDia = vencimentoGravado ? vencimentoGravado.toISOString().slice(0, 10) : null;
+    const linhaUnicaGravada = parcelasExistentes.find((p) => p.numeroParcela === 1);
     let dataDescontoInformada: Date | undefined;
     let dataDescontoMudou = false;
     if (geraLinhasUnicas && emFolha && dataDescontoRaw) {
-      if (mesmaDataVenda && vencimentoGravado && dataDescontoRaw === vencimentoGravadoDia) {
+      const igualAGravada = vencimentoGravado != null && dataDescontoRaw === vencimentoGravadoDia;
+      if (igualAGravada && ((mesmaDataVenda && formaAntes === formaPagamento) || (linhaUnicaGravada && travada(linhaUnicaGravada)))) {
         dataDescontoInformada = vencimentoGravado;
       } else {
         const validada = validarDataDescontoUnica(dataDescontoRaw, new Date(data));
@@ -438,9 +441,10 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
       ? parcelaUnicaDaFolha({ emFolha, dataVenda: new Date(data), total, regra: regraUnica, dataInformada: dataDescontoInformada })
           // Parcela paga ou antecipada mantem o vencimento e o valor gravados: a linha e o
           // registro do que a Prudent pagou. Aplicado aqui, e nao na hora de gravar, para a
-          // taxa de antecipacao sair da MESMA lista que vai para o banco. A data do desconto
-          // mudada a mao fica na lista para as travas abaixo a recusarem (boleto, fechamento,
-          // paga/antecipada) — nunca e trocada em silencio pela gravada.
+          // taxa de antecipacao sair da MESMA lista que vai para o banco. Parcela num lote da
+          // Prudent (sem baixa ainda) tambem mantem o vencimento: o lote foi montado com ele. A data
+          // do desconto mudada a mao fica na lista para as travas abaixo a recusarem (boleto,
+          // fechamento, paga/antecipada/lote) — nunca e trocada em silencio pela gravada.
           .map((p) => {
             const existente = pagasMap.get(p.numeroParcela);
             if (existente && (existente.paga || existente.antecipada)) {
@@ -449,6 +453,9 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
                 dataVencimento: dataDescontoMudou ? p.dataVencimento : existente.dataVencimento,
                 valorParcela: existente.valorParcela,
               };
+            }
+            if (existente && travada(existente) && !dataDescontoMudou) {
+              return { ...p, dataVencimento: existente.dataVencimento };
             }
             return manterVencimentoGravado && existente && !dataDescontoInformada
               ? { ...p, dataVencimento: existente.dataVencimento }

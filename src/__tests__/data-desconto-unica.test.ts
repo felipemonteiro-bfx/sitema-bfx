@@ -134,12 +134,34 @@ describe("ligação dos componentes (fonte)", () => {
   it("o PDV mostra o campo em 1x em folha, simula e envia a data escolhida", () => {
     expect(pdv.includes("numParcelas === 1 && descontoEmFolha")).toBe(true);
     expect(pdv.includes("<DataDescontoUnica")).toBe(true);
-    expect(pdv.includes('formData.append("dataDescontoUnica", dataDescontoUnica)')).toBe(true);
     expect(pdv.includes("      dataDescontoUnica,\n    }),")).toBe(true);
   });
 
   it("a edição manda o campo no formulário com o nome que o servidor lê", () => {
     expect(edicao.includes("<DataDescontoUnica")).toBe(true);
-    expect(edicao.includes('name="dataDescontoUnica"')).toBe(true);
+    expect(edicao.includes('name={enviarDataDesconto ? "dataDescontoUnica" : undefined}')).toBe(true);
+  });
+});
+
+describe("achados da revisão (2026-10-01)", () => {
+  it("venda em 29/02: o limite é o último dia de fevereiro do ano seguinte", () => {
+    const bissexto = new Date("2028-02-29T00:00:00.000Z");
+    expect(validarDataDescontoUnica("2029-02-28", bissexto)).toMatchObject({ ok: true });
+    expect(validarDataDescontoUnica("2029-03-01", bissexto)).toMatchObject({ ok: false });
+  });
+
+  it("o PDV só envia a data quando ela foi escolhida à mão; sem escolha o servidor usa a própria regra", () => {
+    const pdv = readFileSync(join(process.cwd(), "src/components/venda-rapida-form-v2.tsx"), "utf8");
+    expect(pdv.includes('if (mostrarDataDesconto && dataDescontoEscolhida !== null) formData.append("dataDescontoUnica", dataDescontoEscolhida)')).toBe(true);
+    // Sem a regra da empresa carregada, o campo não aparece (mostraria a regra padrão como se fosse a da empresa).
+    expect(pdv.includes("limiteData?.regraVencimento != null")).toBe(true);
+  });
+
+  it("a edição só manda o campo com escolha; sem tocar no campo, mudar a data da venda volta a seguir a regra", () => {
+    const edicao = readFileSync(join(process.cwd(), "src/components/edit-venda-com-parcelas.tsx"), "utf8");
+    expect(edicao.includes("escolhidaEfetiva !== null ||")).toBe(true);
+    // "Voltar para a data da regra" com a gravada diferente: a regra vai no form, senão o servidor manteria a gravada.
+    expect(edicao.includes("dataDesconto.gravada !== dataRegra")).toBe(true);
+    expect(edicao.includes("!dataDescontoTocada && dataDesconto.dataVendaAtual !== dataVenda")).toBe(true);
   });
 });

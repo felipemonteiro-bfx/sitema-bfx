@@ -410,9 +410,13 @@ export default function VendaRapidaFormV2({
     : null;
 
   // Data do desconto da venda 1x em folha (2026-10-01): a da regra da empresa, ou a escolhida.
-  // Vai no FormData e na simulação abaixo — o resumo e a taxa da Prudent usam a mesma data.
+  // A simulação abaixo usa a data efetiva; o FormData só leva a escolhida à mão — sem escolha, o
+  // servidor calcula pela regra da empresa que ele mesmo lê (a do navegador pode estar velha).
   const dataDescontoRegra = dataDaRegraIso(dataVenda, limiteData?.regraVencimento);
-  const mostrarDataDesconto = numParcelas === 1 && descontoEmFolha && dataDescontoRegra !== null;
+  // Só com a regra da empresa já carregada: antes dela o campo mostraria a regra padrão como se
+  // fosse a da empresa. Sem o campo, o servidor usa a própria regra.
+  const mostrarDataDesconto =
+    numParcelas === 1 && descontoEmFolha && dataDescontoRegra !== null && limiteData?.regraVencimento != null;
   const dataDescontoUnica = mostrarDataDesconto
     ? dataDescontoEfetiva(dataDescontoEscolhida, dataDescontoRegra)
     : null;
@@ -727,7 +731,7 @@ export default function VendaRapidaFormV2({
     if (numParcelas > 1 && parcelasVencimento.length > 0) {
       formData.append("parcelasVencimento", JSON.stringify(parcelasVencimento));
     }
-    if (dataDescontoUnica) formData.append("dataDescontoUnica", dataDescontoUnica);
+    if (mostrarDataDesconto && dataDescontoEscolhida !== null) formData.append("dataDescontoUnica", dataDescontoEscolhida);
 
     setSuccessAssinaturaToken(null); // Limpa card anterior ao submeter nova venda
     try {
