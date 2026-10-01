@@ -41,7 +41,7 @@ const ERRO_PARCELAS_MUDARAM = "Parcelas mudaram desde a geração. Clique em Atu
 const ERRO_SO_EM_PREPARACAO = "Isso só pode ser feito com o fechamento em preparação.";
 
 /** O que o fechamento precisa ler de cada parcela. */
-const SELECT_PARCELA = {
+export const SELECT_PARCELA = {
   id: true,
   vendaId: true,
   numeroParcela: true,
@@ -66,7 +66,7 @@ const SELECT_PARCELA = {
   },
 } as const;
 
-type ParcelaLida = {
+export type ParcelaLida = {
   id: number;
   vendaId: number;
   numeroParcela: number;
@@ -89,7 +89,7 @@ type ParcelaLida = {
   };
 };
 
-function paraRegra(p: ParcelaLida): ParcelaParaFechamento {
+export function paraRegra(p: ParcelaLida): ParcelaParaFechamento {
   return {
     id: p.id,
     vendaStatus: p.venda.status,
@@ -106,7 +106,7 @@ function paraRegra(p: ParcelaLida): ParcelaParaFechamento {
 }
 
 /** Parcela é desta empresa e vence nesta competência? (a regra pura não sabe do fechamento) */
-function pertence(p: ParcelaLida, empresaParceiraId: number, inicio: Date, fim: Date): boolean {
+export function pertence(p: ParcelaLida, empresaParceiraId: number, inicio: Date, fim: Date): boolean {
   const t = p.dataVencimento.getTime();
   return p.venda.cliente?.empresaParceiraId === empresaParceiraId && t >= inicio.getTime() && t < fim.getTime();
 }

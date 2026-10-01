@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
   Brain,
+  CalendarCheck,
   CalendarClock,
   FileText,
   FolderPlus,
@@ -47,6 +48,7 @@ const iconMap: Record<string, LucideIcon> = {
   "/financeiro": Wallet,
   "/prudent": ReceiptText,
   "/obrigacoes": CalendarClock,
+  "/fechamento": CalendarCheck,
   "/inteligencia": Brain,
   "/importacao": Upload,
   "/venda-rapida": ShoppingCart,
@@ -220,7 +222,7 @@ export function SidebarNav({ menu }: { menu: MenuItem[] }) {
     {
       label: "Financeiro",
       items: menu.filter(item =>
-        ["/financeiro", "/boletos", "/prudent", "/obrigacoes"].includes(item.href)
+        ["/financeiro", "/boletos", "/prudent", "/obrigacoes", "/fechamento"].includes(item.href)
       ),
     },
     {
