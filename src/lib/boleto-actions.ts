@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { requireSessionOrThrow } from "@/lib/guards";
 import { revalidarVenda } from "@/lib/revalidacao";
 import {
   getAsaasConfig,
@@ -14,6 +15,9 @@ export type GerarBoletoResult = { success: boolean; error?: string };
 
 /** Gera boleto Asaas para uma venda com opção boleto e sem boletoUrl. Retorna erro legível para o usuário. */
 export async function gerarBoletoAsaas(formData: FormData): Promise<GerarBoletoResult> {
+  // Server action que cria cobrança real no Asaas: o Action ID vive no bundle. Sessão (não admin):
+  // o vendedor gera o boleto da própria venda.
+  await requireSessionOrThrow();
   const vendaId = Number(formData.get("vendaId") || 0);
   if (!vendaId) return { success: false, error: "ID da venda inválido." };
   const cfg = await prisma.config.findFirst();
