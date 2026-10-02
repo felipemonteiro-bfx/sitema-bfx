@@ -147,6 +147,7 @@ export default function VendaRapidaFormV2({
     vendedor?: boolean;
     cliente?: boolean;
     envio?: boolean;
+    entrega?: boolean;
     produtoIndices?: number[];
   }>({});
 
@@ -225,6 +226,7 @@ export default function VendaRapidaFormV2({
   const [uberQuoteLoading, setUberQuoteLoading] = useState(false);
   // Frete veio da cotacao Uber (e nao foi digitado depois): o custo real chega pela captura.
   const [freteViaUber, setFreteViaUber] = useState(false);
+  const [entrega, setEntrega] = useState<"" | "1" | "0">("");
   const [uberMotivo, setUberMotivo] = useState<MotivoFalhaUber | null>(null);
   const [uberMensagem, setUberMensagem] = useState<string>(mensagemFalhaUber("sem_credencial"));
 
@@ -533,6 +535,7 @@ export default function VendaRapidaFormV2({
       }
       setFrete(data.fee ?? 0);
       setFreteViaUber(true);
+      setEntrega("1");
       toast.success(
         <span>
           Frete Uber: <span className="valor-sensivel">R$ {(data.fee ?? 0).toFixed(2)}</span> ({data.duration ?? "?"} min)
@@ -660,9 +663,21 @@ export default function VendaRapidaFormV2({
       msgs.push("Cliente");
     }
 
-    if (erroCustoEnvio(frete, envio)) {
-      errors.envio = true;
-      msgs.push("Envio (custo real, pois há frete cobrado)");
+    if (entrega === "") {
+      errors.entrega = true;
+      msgs.push("Entrega ou Retirada");
+    }
+
+    const envioInvalido =
+      entrega === "1" ? !(envio > 0) : entrega === "0" ? frete > 0 : erroCustoEnvio(frete, envio) !== null;
+    if (envioInvalido) {
+      if (entrega === "0") {
+        errors.entrega = true;
+        msgs.push("Retirada não pode ter frete");
+      } else {
+        errors.envio = true;
+        msgs.push(entrega === "1" ? "Envio (custo real, pois é entrega)" : "Envio (custo real, pois há frete cobrado)");
+      }
     }
 
     const produtosFiltrados = produtos.filter((p) => p.produtoNome?.trim());
@@ -727,6 +742,7 @@ export default function VendaRapidaFormV2({
     formData.append("clienteId", selectedCliente!.id.toString());
     formData.append("frete", String(frete));
     formData.append("envio", String(envio));
+    if (entrega) formData.append("entrega", entrega);
     if (freteViaUber) formData.append("freteViaUber", "on");
     formData.append("parcelas", parcelas);
     formData.append("temNota", String(temNota));
@@ -761,6 +777,8 @@ export default function VendaRapidaFormV2({
           desconto: null,
           formaPagamento: null,
         });
+        setEntrega("");
+        setFreteViaUber(false);
         setParcelasVencimento([]);
         setDataDescontoEscolhida(null);
         setProdutoParaSugestoes(null);
@@ -1258,14 +1276,35 @@ export default function VendaRapidaFormV2({
               )}
             </div>
             <div className="space-y-2">
+              <Label htmlFor="entrega" className={cn("text-xs font-bold uppercase tracking-wider", validationErrors.entrega ? "text-error-text" : "text-muted-foreground")}>
+                Entrega ou retirada <span className="text-error-text">*</span>
+                {validationErrors.entrega && entrega === "" && " (obrigatório)"}
+              </Label>
+              <FormSelect
+                id="entrega"
+                name="entrega"
+                value={entrega}
+                onValueChange={(v) => {
+                  setEntrega(v as "" | "1" | "0");
+                  setValidationErrors((prev) => ({ ...prev, entrega: false }));
+                }}
+                searchable={false}
+                placeholder="Selecione"
+                options={[
+                  { value: "1", label: "Entrega" },
+                  { value: "0", label: "Retirada" },
+                ]}
+              />
+            </div>
+            <div className="space-y-2">
               <Label
                 className={cn(
                   "text-xs font-bold uppercase tracking-wider",
                   validationErrors.envio ? "text-error-text" : "text-muted-foreground",
                 )}
               >
-                Envio (Custo){frete > 0 && <span className="text-error-text"> *</span>}
-                {validationErrors.envio && " (obrigatório com frete)"}
+                Envio (Custo){(frete > 0 || entrega === "1") && <span className="text-error-text"> *</span>}
+                {validationErrors.envio && (entrega === "1" ? " (obrigatório na entrega)" : " (obrigatório com frete)")}
               </Label>
               <CurrencyInput
                 value={envio}

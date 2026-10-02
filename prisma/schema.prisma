@@ -154,6 +154,8 @@ model Venda {
   // Novos campos para venda com múltiplos produtos
   valorFrete         Float?    @default(0) @map("valor_frete")
   custoEnvio         Float?    @default(0) @map("custo_envio")
+  // true = entrega, false = retirada, null = venda anterior ao seletor (sem backfill).
+  entrega            Boolean?  @map("entrega")
   parcelas           Int?
   valorParcela       Float?    @map("valor_parcela")
   taxaFinanceiraValor Float?   @map("taxa_financeira_valor")

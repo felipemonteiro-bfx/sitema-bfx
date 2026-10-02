@@ -35,6 +35,7 @@ type EditVendaData = {
   vendedor: string | null;
   valorFrete: number;
   custoEnvio: number;
+  entrega: boolean | null;
   parcelas: number | null;
   temNota: boolean;
   taxaNota: number;
@@ -105,6 +106,7 @@ export function EditVendaFormClient({
   );
   const [frete, setFrete] = useState(editVenda.valorFrete ?? 0);
   const [envio, setEnvio] = useState(editVenda.custoEnvio ?? 0);
+  const [entrega, setEntrega] = useState<string>(editVenda.entrega === true ? "1" : editVenda.entrega === false ? "0" : "");
   const [descontoValor, setDescontoValor] = useState(editVenda.desconto ?? 0);
   const [loading, setLoading] = useState(false);
 
@@ -152,6 +154,7 @@ export function EditVendaFormClient({
 
     formData.set("produtos", JSON.stringify(produtos));
     formData.set("frete", String(frete));
+    if (entrega) formData.set("entrega", entrega);
     formData.set("envio", String(envio));
     formData.set("desconto", String(descontoValor));
 
@@ -231,6 +234,20 @@ export function EditVendaFormClient({
           <div className="space-y-1">
             <Label className="text-xs font-medium text-muted-foreground">Custo de envio</Label>
             <CurrencyInput value={envio} onChange={setEnvio} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="edit-entrega" className="text-xs font-medium text-muted-foreground">Entrega ou retirada</Label>
+            <FormSelect
+              id="edit-entrega"
+              name="entrega"
+              value={entrega}
+              onValueChange={setEntrega}
+              options={[
+                ...(editVenda.entrega == null ? [{ value: "", label: "Não informado" }] : []),
+                { value: "1", label: "Entrega" },
+                { value: "0", label: "Retirada" },
+              ]}
+            />
           </div>
           <div className="space-y-1">
             <Label className="text-xs font-medium text-muted-foreground">Desconto (R$)</Label>

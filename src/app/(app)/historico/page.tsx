@@ -171,7 +171,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     where: { id: editId },
     select: {
       id: true, clienteId: true, dataVenda: true, vendedor: true, produtoNome: true,
-      quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true,
+      quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true, entrega: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       desconto: true, descontoEmFolha: true, boleto: true, formaPagamento: true,
       asaasPaymentId: true, boletoUrl: true,

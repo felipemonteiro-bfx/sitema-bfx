@@ -5,12 +5,14 @@ import {
   erroCustoEnvio,
   erroCustoEnvioNaEdicao,
   MSG_CUSTO_ENVIO_OBRIGATORIO,
+  MSG_CUSTO_ENVIO_ENTREGA,
 } from "@/lib/validations/venda";
 
 const base = {
   data: "2026-10-02",
   vendedor: "Maria",
   clienteId: 1,
+  entrega: false,
   frete: 0,
   envio: 0,
   parcelas: 1,
@@ -36,15 +38,15 @@ describe("erroCustoEnvio", () => {
 
 describe("vendaV2Schema", () => {
   it("rejeita frete > 0 com envio 0, apontando o campo envio", () => {
-    const r = vendaV2Schema.safeParse({ ...base, frete: 30, envio: 0 });
+    const r = vendaV2Schema.safeParse({ ...base, entrega: true, frete: 30, envio: 0 });
     expect(r.success).toBe(false);
     if (!r.success) {
       const issue = r.error.issues.find((i) => i.path[0] === "envio");
-      expect(issue?.message).toBe(MSG_CUSTO_ENVIO_OBRIGATORIO);
+      expect(issue?.message).toBe(MSG_CUSTO_ENVIO_ENTREGA);
     }
   });
   it("aceita frete > 0 com envio > 0", () => {
-    expect(vendaV2Schema.safeParse({ ...base, frete: 30, envio: 18 }).success).toBe(true);
+    expect(vendaV2Schema.safeParse({ ...base, entrega: true, frete: 30, envio: 18 }).success).toBe(true);
   });
   it("aceita retirada", () => {
     expect(vendaV2Schema.safeParse(base).success).toBe(true);
@@ -79,7 +81,7 @@ describe("adocao nos pontos que gravam venda", () => {
   });
   it("a edicao usa a regra com comparacao contra o valor gravado", () => {
     const src = ler("src/app/(app)/historico/actions.ts");
-    expect(src.includes("erroCustoEnvioNaEdicao(")).toBe(true);
+    expect(src.includes("erroEntregaNaEdicao(")).toBe(true);
     expect(src.includes("custoEnvio: true")).toBe(true);
   });
   it("o formulario bloqueia o submit com a mesma regra", () => {
@@ -88,7 +90,7 @@ describe("adocao nos pontos que gravam venda", () => {
   });
   it("as tools do chat (criar_venda e atualizar_venda) seguem a mesma regra", () => {
     const src = ler("src/lib/ai-actions.ts");
-    expect(src.includes("erroCustoEnvio(valorFrete, custoEnvio)")).toBe(true);
-    expect(src.includes("erroCustoEnvioNaEdicao(")).toBe(true);
+    expect(src.includes("erroEntrega({ entrega: parsedParams.entrega")).toBe(true);
+    expect(src.includes("erroEntregaNaEdicao(")).toBe(true);
   });
 });
