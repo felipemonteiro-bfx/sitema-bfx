@@ -115,6 +115,8 @@ ${JSON.stringify(batch.map((r: Record<string, unknown>) => ({
               envio: String(p.envio ?? orig.envio ?? "0"),
               parcelas: String(p.parcelas ?? orig.parcelas ?? "1"),
               antecipada: p.antecipada === true || String(p.antecipada ?? "").toUpperCase().startsWith("S"),
+              // Fato de negocio da planilha: o modelo nao o altera, so passa adiante.
+              entrega: orig.entrega ?? "",
             });
           }
         } catch {

@@ -19,8 +19,8 @@ export default async function Page() {
   });
 
   const csvModel = [
-    "Data (AAAA-MM-DD);Vendedor;Cliente;Produto;Custo Produto;Valor Venda;Frete Cobrado;Custo Envio;Parcelas;Antecipada (S/N)",
-    "2026-02-01;Maria;João da Silva;Notebook;2500;3200;120;80;6;S",
+    "Data (AAAA-MM-DD);Vendedor;Cliente;Produto;Custo Produto;Valor Venda;Frete Cobrado;Custo Envio;Parcelas;Antecipada (S/N);Entrega (S/N)",
+    "2026-02-01;Maria;João da Silva;Notebook;2500;3200;120;80;6;S;S",
   ].join("\n");
   const csvHref = `data:text/csv;charset=utf-8,${encodeURIComponent(csvModel)}`;
 

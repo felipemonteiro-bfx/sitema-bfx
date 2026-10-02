@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { erroCustoEnvio } from "@/lib/validations/venda";
+import {
+  erroCustoEnvio,
+  erroEntrega,
+  MSG_CUSTO_ENVIO_ENTREGA,
+  MSG_RETIRADA_COM_FRETE,
+} from "@/lib/validations/venda";
 
 const toNum = (v: unknown): number => {
   if (typeof v === "number" && !isNaN(v)) return v;
@@ -15,6 +20,27 @@ const toDate = (v: unknown): Date => {
   }
   return new Date();
 };
+
+/** Marca de uma celula de Entrega que nao e S nem N: a rota recusa o lote apontando a linha. */
+export const ENTREGA_INVALIDA = "invalida" as const;
+export type EntregaDaPlanilha = boolean | null | typeof ENTREGA_INVALIDA;
+
+/**
+ * Coluna "Entrega (S/N)": S, sim e 1 viram entrega; N, nao e 0 viram retirada; em branco
+ * (ou coluna ausente) fica null, como as vendas anteriores a regra. Qualquer outra coisa e
+ * invalida, para nunca virar entrega ou retirada por engano.
+ */
+export function lerEntregaDaPlanilha(v: unknown): EntregaDaPlanilha {
+  if (v === true || v === 1) return true;
+  if (v === false || v === 0) return false;
+  if (v === undefined || v === null) return null;
+  if (typeof v !== "string") return ENTREGA_INVALIDA;
+  const t = v.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (t === "") return null;
+  if (t === "s" || t === "sim" || t === "1") return true;
+  if (t === "n" || t === "nao" || t === "0") return false;
+  return ENTREGA_INVALIDA;
+}
 
 /**
  * Schema para linha de importação em lote (CSV)
@@ -45,6 +71,7 @@ export const importacaoRowSchema = z.object({
     const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
     return isNaN(n) || n <= 0 ? 5.97 : n;
   }),
+  entrega: z.unknown().optional().transform(lerEntregaDaPlanilha),
 });
 
 export const importacaoBatchSchema = z.array(importacaoRowSchema);
@@ -69,31 +96,50 @@ export const importacaoPayloadSchema = z.union([
 
 export type ImportacaoRow = z.infer<typeof importacaoRowSchema>;
 
-export type LinhaSemCustoEnvio = { linha: number; cliente: string };
+export type LinhaInvalidaDeFrete = { linha: number; cliente: string; motivo: string };
+
+const MOTIVO_FRETE_SEM_CUSTO = "frete cobrado sem custo de envio";
+const MOTIVO_ENTREGA_SEM_CUSTO = "entrega sem custo de envio";
+const MOTIVO_RETIRADA_COM_FRETE = "retirada com frete cobrado";
+const MOTIVO_ENTREGA_INVALIDA = "entrega deve ser S ou N";
+
+function motivoDaLinha(row: { frete: number; envio: number; entrega?: EntregaDaPlanilha }): string | null {
+  const { entrega } = row;
+  if (entrega === ENTREGA_INVALIDA) return MOTIVO_ENTREGA_INVALIDA;
+  if (typeof entrega === "boolean") {
+    const msg = erroEntrega({ entrega, frete: row.frete, envio: row.envio });
+    if (msg === MSG_CUSTO_ENVIO_ENTREGA) return MOTIVO_ENTREGA_SEM_CUSTO;
+    if (msg === MSG_RETIRADA_COM_FRETE) return MOTIVO_RETIRADA_COM_FRETE;
+    return null;
+  }
+  // Entrega em branco: vale so o piso da regra do frete real (frete > 0 exige custo de envio).
+  return erroCustoEnvio(row.frete, row.envio) ? MOTIVO_FRETE_SEM_CUSTO : null;
+}
 
 /**
- * Linhas da planilha com frete cobrado e sem custo real de envio (a regra do frete real).
- * A numeracao e a posicao na lista enviada, a mesma da tabela de previa. Linha de cliente
- * em branco e ignorada porque a rota nao a grava, mas conta na numeracao.
+ * Linhas da planilha que quebram a regra do frete real ou trazem Entrega invalida. A numeracao
+ * e a posicao na lista enviada, a mesma da tabela de previa. Linha de cliente em branco e
+ * ignorada porque a rota nao a grava, mas conta na numeracao.
  */
-export function linhasSemCustoDeEnvio(
-  rows: { cliente: string; frete: number; envio: number }[],
-): LinhaSemCustoEnvio[] {
-  const linhas: LinhaSemCustoEnvio[] = [];
+export function linhasInvalidasDeFrete(
+  rows: { cliente: string; frete: number; envio: number; entrega?: EntregaDaPlanilha }[],
+): LinhaInvalidaDeFrete[] {
+  const linhas: LinhaInvalidaDeFrete[] = [];
   rows.forEach((row, i) => {
     const cliente = row.cliente.trim();
     if (!cliente) return;
-    if (erroCustoEnvio(row.frete, row.envio)) linhas.push({ linha: i + 1, cliente });
+    const motivo = motivoDaLinha(row);
+    if (motivo) linhas.push({ linha: i + 1, cliente, motivo });
   });
   return linhas;
 }
 
 const MAX_LINHAS_NA_MENSAGEM = 10;
 
-export function mensagemLinhasSemCustoDeEnvio(linhas: LinhaSemCustoEnvio[]): string {
-  const visiveis = linhas.slice(0, MAX_LINHAS_NA_MENSAGEM).map((l) => `linha ${l.linha} (${l.cliente})`);
+export function mensagemLinhasInvalidasDeFrete(linhas: LinhaInvalidaDeFrete[]): string {
+  const visiveis = linhas.slice(0, MAX_LINHAS_NA_MENSAGEM).map((l) => `linha ${l.linha} (${l.cliente}): ${l.motivo}`);
   const resto = linhas.length - visiveis.length;
-  const lista = visiveis.join(", ") + (resto > 0 ? ` e mais ${resto}` : "");
+  const lista = visiveis.join("; ") + (resto > 0 ? `; e mais ${resto}` : "");
   const quantas = linhas.length === 1 ? "1 linha" : `${linhas.length} linhas`;
-  return `${quantas} com frete cobrado e sem custo de envio: ${lista}. Nada foi importado. Corrija a planilha e envie de novo.`;
+  return `${quantas} com problema de frete ou entrega: ${lista}. Nada foi importado. Corrija a planilha e envie de novo.`;
 }
