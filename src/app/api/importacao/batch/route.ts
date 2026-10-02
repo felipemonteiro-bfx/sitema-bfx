@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { importacaoPayloadSchema } from "@/lib/validations/importacao";
+import {
+  importacaoPayloadSchema,
+  linhasSemCustoDeEnvio,
+  mensagemLinhasSemCustoDeEnvio,
+} from "@/lib/validations/importacao";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { revalidarVenda, revalidarCliente } from "@/lib/revalidacao";
 import { registrarRejeicaoVenda } from "@/lib/venda-observabilidade";
@@ -24,6 +28,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { empresaParceiraId, rows: data } = parsed.data;
+
+    // Frete cobrado exige o custo real do envio (PR #37). A transacao e tudo ou nada, entao a
+    // checagem vem antes dela: uma linha ruim recusa o lote e lista quais corrigir.
+    const semCusto = linhasSemCustoDeEnvio(data);
+    if (semCusto.length > 0) {
+      const msg = mensagemLinhasSemCustoDeEnvio(semCusto);
+      registrarRejeicaoVenda({ origem: "importacao", motivo: msg, itens: data.length });
+      return NextResponse.json({ error: msg, linhas: semCusto }, { status: 400 });
+    }
 
     // Empresa aplicada aos clientes criados aqui. Sem isso, cliente novo nascia
     // sem vinculo — ficava fora do relatorio mensal por empresa e a notificacao

@@ -21,6 +21,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Loader2, CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import Papa from "papaparse";
 import { useRouter } from "next/navigation";
+import { lerErroDoCorpo } from "@/lib/importacao-erro";
 
 interface RowData {
   id: string;
@@ -165,7 +166,10 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
         // o refresh basta e nao pisca a tela inteira.
         router.refresh();
       } else {
-        toast.error("Erro ao salvar dados no servidor.");
+        // O servidor explica o que recusou (ex.: linhas sem custo de envio); sem corpo legivel
+        // cai no texto generico.
+        const erroServidor = lerErroDoCorpo(await res.json().catch(() => null));
+        toast.error(erroServidor ?? "Erro ao salvar dados no servidor.");
       }
     } catch {
       toast.error("Erro de conexão.");
