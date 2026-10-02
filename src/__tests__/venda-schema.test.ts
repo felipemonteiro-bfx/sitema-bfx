@@ -7,6 +7,7 @@ const base = {
   clienteId: 1,
   frete: 0,
   envio: 0,
+  entrega: false,
   parcelas: 1,
   temNota: false,
   taxaNota: 5.97,

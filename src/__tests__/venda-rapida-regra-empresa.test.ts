@@ -50,6 +50,7 @@ function formVenda(forma: string): FormData {
   fd.set("data", "2026-09-10");
   fd.set("vendedor", "v");
   fd.set("clienteId", "5");
+  fd.set("entrega", "0");
   fd.set("parcelas", "3");
   fd.set("formaPagamento", forma);
   fd.set("produtos", JSON.stringify([{ produtoNome: "X", custoProduto: 100, valorVenda: 300, quantidade: 1, subtotal: 300 }]));

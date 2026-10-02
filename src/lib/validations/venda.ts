@@ -123,9 +123,12 @@ export const vendaV2Schema = z.object({
   descontoEmFolha: z.boolean().optional().default(false),
   boleto: z.boolean().optional().default(false),
   formaPagamento: z.enum(FORMAS_PAGAMENTO_LIST as [string, ...string[]]).optional(),
+  entrega: z.boolean().optional(),
 }).superRefine((v, ctx) => {
-  const msg = erroCustoEnvio(v.frete, v.envio)
-  if (msg) ctx.addIssue({ code: "custom", path: ["envio"], message: msg })
+  const msg = erroEntrega({ entrega: v.entrega, frete: v.frete, envio: v.envio })
+  if (!msg) return
+  const path = msg === MSG_ENTREGA_OBRIGATORIA ? "entrega" : msg === MSG_RETIRADA_COM_FRETE ? "entrega" : "envio"
+  ctx.addIssue({ code: "custom", path: [path], message: msg })
 })
 
 export type VendaV2FormData = z.infer<typeof vendaV2Schema>

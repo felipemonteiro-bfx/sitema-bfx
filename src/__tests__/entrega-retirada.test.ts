@@ -4,6 +4,7 @@ import {
   erroEntrega, erroEntregaNaEdicao, lerEntregaDoForm,
   MSG_ENTREGA_OBRIGATORIA, MSG_RETIRADA_COM_FRETE, MSG_CUSTO_ENVIO_ENTREGA,
   MSG_CUSTO_ENVIO_OBRIGATORIO,
+  vendaV2Schema,
 } from "@/lib/validations/venda";
 
 describe("migration da coluna entrega", () => {
@@ -69,5 +70,46 @@ describe("lerEntregaDoForm", () => {
     expect(lerEntregaDoForm("1")).toBe(true);
     expect(lerEntregaDoForm("0")).toBe(false);
     for (const v of ["on", "true", "", "2", " 1", null]) expect(lerEntregaDoForm(v)).toBeUndefined();
+  });
+});
+
+const baseV2 = {
+  data: "2026-10-02", vendedor: "Maria", clienteId: 1, frete: 0, envio: 0, parcelas: 1,
+  temNota: false, taxaNota: 0,
+  produtos: [{ produtoNome: "Notebook", custoProduto: 100, valorVenda: 200, quantidade: 1, subtotal: 200 }],
+};
+
+describe("vendaV2Schema com entrega", () => {
+  it("sem entrega rejeita apontando o campo entrega", () => {
+    const r = vendaV2Schema.safeParse(baseV2);
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues.find((i) => i.path[0] === "entrega")?.message).toBe(MSG_ENTREGA_OBRIGATORIA);
+  });
+  it("entrega com frete 0 e envio > 0 passa", () => {
+    expect(vendaV2Schema.safeParse({ ...baseV2, entrega: true, envio: 14 }).success).toBe(true);
+  });
+  it("entrega com envio 0 rejeita no campo envio", () => {
+    const r = vendaV2Schema.safeParse({ ...baseV2, entrega: true });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.issues.find((i) => i.path[0] === "envio")?.message).toBe(MSG_CUSTO_ENVIO_ENTREGA);
+  });
+  it("retirada sem frete passa; retirada com frete rejeita", () => {
+    expect(vendaV2Schema.safeParse({ ...baseV2, entrega: false }).success).toBe(true);
+    expect(vendaV2Schema.safeParse({ ...baseV2, entrega: false, frete: 30 }).success).toBe(false);
+  });
+});
+
+describe("adocao na criacao", () => {
+  it("criarVendaV2 le e grava entrega", () => {
+    const src = readFileSync("src/app/(app)/venda-rapida/actions.ts", "utf8");
+    expect(src.includes('lerEntregaDoForm(formData.get("entrega"))')).toBe(true);
+    expect(src.includes("entrega,")).toBe(true);
+  });
+  it("o form tem o seletor, manda o campo e marca Entrega na cotacao Uber", () => {
+    const src = readFileSync("src/components/venda-rapida-form-v2.tsx", "utf8");
+    expect(src.includes('formData.append("entrega"')).toBe(true);
+    expect(src.includes('id="entrega"')).toBe(true);
+    expect(src.includes('setEntrega("1")')).toBe(true);
+    expect(src.includes('setEntrega("")')).toBe(true);
   });
 });

@@ -6,7 +6,7 @@ import { checkboxLigado } from "@/lib/form-values";
 import { revalidarVenda } from "@/lib/revalidacao";
 import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
-import { vendaV2Schema, erroCustoEnvio } from "@/lib/validations/venda";
+import { vendaV2Schema, erroCustoEnvio, lerEntregaDoForm } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
 import { calcularConsignado, recalcularConsignadoSeguro } from "@/lib/consignado-db";
@@ -174,6 +174,7 @@ export async function criarVendaV2(
       clienteId: Number(formData.get("clienteId") || 0),
       frete: Number(formData.get("frete") || 0),
       envio: Number(formData.get("envio") || 0),
+      entrega: lerEntregaDoForm(formData.get("entrega")),
       parcelas: Number(formData.get("parcelas") || 1),
       temNota: checkboxLigado(formData.get("temNota")),
       taxaNota: Number(formData.get("taxaNota") || 5.97),
@@ -198,7 +199,7 @@ export async function criarVendaV2(
       return errorResponse(String(msg || "Dados inválidos"));
     }
 
-    const { data: dataStr, vendedor, clienteId, frete, envio, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
+    const { data: dataStr, vendedor, clienteId, frete, envio, entrega, parcelas, temNota, taxaNota, produtos: produtosValidados, parcelasVencimento: parcelasValidadas } = parsed.data;
     const descontoManual = parsed.data.desconto ?? 0;
 
     // Numero de parcela repetido (spec 2026-09-30 §3.2): com a unique (venda_id, numero_parcela)
@@ -359,6 +360,7 @@ export async function criarVendaV2(
           // Campos novos
           valorFrete: frete,
           custoEnvio: envio,
+          entrega,
           custoEnvioFonte: fonteCustoEnvioNaCriacao({ envio, freteViaUber: checkboxLigado(formData.get("freteViaUber")) }),
           parcelas,
           valorParcela,
