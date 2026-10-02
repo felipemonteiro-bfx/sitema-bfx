@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import {
   importacaoPayloadSchema,
-  linhasSemCustoDeEnvio,
-  mensagemLinhasSemCustoDeEnvio,
+  linhasInvalidasDeFrete,
+  mensagemLinhasInvalidasDeFrete,
 } from "@/lib/validations/importacao";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { revalidarVenda, revalidarCliente } from "@/lib/revalidacao";
@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
 
     const { empresaParceiraId, rows: data } = parsed.data;
 
-    // Frete cobrado exige o custo real do envio (PR #37). A transacao e tudo ou nada, entao a
-    // checagem vem antes dela: uma linha ruim recusa o lote e lista quais corrigir.
-    const semCusto = linhasSemCustoDeEnvio(data);
-    if (semCusto.length > 0) {
-      const msg = mensagemLinhasSemCustoDeEnvio(semCusto);
+    // Regra do frete real (#37) e regra de entrega/retirada (#38) aplicada a coluna Entrega: a transacao e tudo ou nada, entao a
+    // checagem vem antes dela. Uma linha ruim recusa o lote e lista quais corrigir.
+    const invalidas = linhasInvalidasDeFrete(data);
+    if (invalidas.length > 0) {
+      const msg = mensagemLinhasInvalidasDeFrete(invalidas);
       registrarRejeicaoVenda({ origem: "importacao", motivo: msg, itens: data.length });
-      return NextResponse.json({ error: msg, linhas: semCusto }, { status: 400 });
+      return NextResponse.json({ error: msg, linhas: invalidas }, { status: 400 });
     }
 
     // Empresa aplicada aos clientes criados aqui. Sem isso, cliente novo nascia
@@ -105,6 +105,8 @@ export async function POST(request: NextRequest) {
             valorVenda,
             valorFrete: frete,
             custoEnvio,
+            // Em branco na planilha = null (como as vendas anteriores a regra); S/N gravam true/false.
+            entrega: typeof row.entrega === "boolean" ? row.entrega : null,
             parcelas,
             valorParcela,
             lucroLiquido: lucro,

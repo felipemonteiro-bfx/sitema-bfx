@@ -35,6 +35,8 @@ interface RowData {
   envio: string;
   parcelas: string;
   antecipada: boolean;
+  // Coluna "Entrega (S/N)" da planilha, como veio; a rota interpreta e recusa valor invalido.
+  entrega: string;
 }
 
 interface EmpresaOption {
@@ -81,7 +83,8 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
           frete: row["Frete Cobrado"] || row["Frete"] || "0",
           envio: row["Custo Envio"] || row["Envio"] || "0",
           parcelas: row["Parcelas"] || "1",
-          antecipada: String(row["Antecipada (S/N)"]).toUpperCase().startsWith("S")
+          antecipada: String(row["Antecipada (S/N)"]).toUpperCase().startsWith("S"),
+          entrega: row["Entrega (S/N)"] || row["Entrega"] || "",
         }));
         setData(mapped);
         setLoading(false);
