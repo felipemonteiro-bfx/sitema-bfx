@@ -66,6 +66,15 @@ describe("lerEntregaDaPlanilha", () => {
   it.each(["talvez", "x", "2", "sim!", "entrega", 2, {}])("%j e invalido", (v) => {
     expect(lerEntregaDaPlanilha(v)).toBe(ENTREGA_INVALIDA);
   });
+  it("acento decomposto (NFD) de 'não' vale como retirada, como o Excel do Mac grava", () => {
+    expect(lerEntregaDaPlanilha("na\u0303o")).toBe(false);
+  });
+  it.each(["S\u0308", "s\u0301", "N\u0307", "n\u0303", "\uFF33", "sim\u200b"])(
+    "marca combinante ou caractere parecido nao passa por S/N (%j)",
+    (v) => {
+      expect(lerEntregaDaPlanilha(v)).toBe(ENTREGA_INVALIDA);
+    },
+  );
 });
 
 describe("importacaoPayloadSchema — coluna entrega", () => {

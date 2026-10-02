@@ -35,10 +35,12 @@ export function lerEntregaDaPlanilha(v: unknown): EntregaDaPlanilha {
   if (v === false || v === 0) return false;
   if (v === undefined || v === null) return null;
   if (typeof v !== "string") return ENTREGA_INVALIDA;
-  const t = v.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // So a forma composta (NFC), para o "ã" decomposto do Excel do Mac casar; nenhuma marca e
+  // removida, entao "S" com trema ou letra parecida continua invalida.
+  const t = v.trim().toLowerCase().normalize("NFC");
   if (t === "") return null;
   if (t === "s" || t === "sim" || t === "1") return true;
-  if (t === "n" || t === "nao" || t === "0") return false;
+  if (t === "n" || t === "nao" || t === "não" || t === "0") return false;
   return ENTREGA_INVALIDA;
 }
 
