@@ -113,3 +113,20 @@ describe("adocao na criacao", () => {
     expect(src.includes('setEntrega("")')).toBe(true);
   });
 });
+
+describe("adocao na edicao", () => {
+  it("updateVenda le o valor gravado, valida e so grava quando o form manda", () => {
+    const src = readFileSync("src/app/(app)/historico/actions.ts", "utf8");
+    expect(src.includes("erroEntregaNaEdicao(")).toBe(true);
+    expect(src.includes("entrega: true")).toBe(true);
+    expect(src.includes('lerEntregaDoForm(formData.get("entrega"))')).toBe(true);
+    expect(src.includes("entregaForm !== undefined")).toBe(true);
+  });
+  it("os dois forms de edicao mostram o seletor com Nao informado", () => {
+    for (const f of ["src/components/edit-venda-historico-form.tsx", "src/components/edit-venda-form-client.tsx"]) {
+      const src = readFileSync(f, "utf8");
+      expect(src.includes('name="entrega"') || src.includes('formData.set("entrega"')).toBe(true);
+      expect(src.includes("Não informado")).toBe(true);
+    }
+  });
+});

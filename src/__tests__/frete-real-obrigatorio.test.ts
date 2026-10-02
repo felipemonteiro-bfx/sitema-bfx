@@ -81,7 +81,7 @@ describe("adocao nos pontos que gravam venda", () => {
   });
   it("a edicao usa a regra com comparacao contra o valor gravado", () => {
     const src = ler("src/app/(app)/historico/actions.ts");
-    expect(src.includes("erroCustoEnvioNaEdicao(")).toBe(true);
+    expect(src.includes("erroEntregaNaEdicao(")).toBe(true);
     expect(src.includes("custoEnvio: true")).toBe(true);
   });
   it("o formulario bloqueia o submit com a mesma regra", () => {

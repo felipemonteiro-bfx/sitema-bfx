@@ -49,6 +49,7 @@ type EditVendaData = {
   vendedor: string | null;
   valorFrete: number | null;
   custoEnvio: number | null;
+  entrega: boolean | null;
   custoProduto: number | null;
   valorVenda: number | null;
   quantidade: number | null;
@@ -217,6 +218,19 @@ export function EditVendaHistoricoForm({
       <div className="space-y-1">
         <Label htmlFor="edit-envio">Custo de envio</Label>
         <Input id="edit-envio" name="envio" type="number" step="0.01" defaultValue={editVenda.custoEnvio || 0} />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="edit-entrega">Entrega ou retirada</Label>
+        <FormSelect
+          id="edit-entrega"
+          name="entrega"
+          defaultValue={editVenda.entrega === true ? "1" : editVenda.entrega === false ? "0" : ""}
+          options={[
+            { value: "", label: "Não informado" },
+            { value: "1", label: "Entrega" },
+            { value: "0", label: "Retirada" },
+          ]}
+        />
       </div>
       <div className="space-y-1">
         <Label htmlFor="edit-desconto">Desconto (R$)</Label>

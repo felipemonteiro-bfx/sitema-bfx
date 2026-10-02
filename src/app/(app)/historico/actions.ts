@@ -31,7 +31,7 @@ import {
 import { chavePixEmJogo, parcelasComPixEmJogo } from "@/lib/fechamento-pix-em-jogo";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
-import { produtoItemSchema, erroCustoEnvioNaEdicao } from "@/lib/validations/venda";
+import { produtoItemSchema, erroEntregaNaEdicao, lerEntregaDoForm } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 
 /** Recusa com mensagem para o usuário, lançada dentro da transação para desfazê-la. */
@@ -72,6 +72,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
   const data = String(formData.get("data") || "");
   const frete = Number(formData.get("frete") || 0);
   const envio = Number(formData.get("envio") || 0);
+  const entregaForm = lerEntregaDoForm(formData.get("entrega"));
   const temNota = checkboxLigado(formData.get("temNota"));
   const taxaNota = Number(formData.get("taxaNota") || 5.97);
   const desconto = Number(formData.get("desconto") || 0);
@@ -128,6 +129,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     parcelas: number | null;
     valorFrete: number | null;
     custoEnvio: number | null;
+    entrega: boolean | null;
     desconto: number | null;
     valorVenda: number | null;
     quantidade: number | null;
@@ -147,6 +149,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         parcelas: true,
         valorFrete: true,
         custoEnvio: true,
+        entrega: true,
         desconto: true,
         valorVenda: true,
         quantidade: true,
@@ -162,9 +165,11 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
 
   // Frete cobrado exige o custo real do envio, mas só quando frete ou envio mudaram:
   // venda antiga com custo 0 não pode travar a edição de outro campo.
-  const erroEnvio = erroCustoEnvioNaEdicao(
-    { frete, envio },
-    vendaAntes ? { frete: vendaAntes.valorFrete ?? 0, envio: vendaAntes.custoEnvio ?? 0 } : null,
+  const erroEnvio = erroEntregaNaEdicao(
+    { entrega: entregaForm ?? vendaAntes?.entrega ?? null, frete, envio },
+    // Sem a venda lida (nao deveria ocorrer) o estado de partida e "nao informado, sem custos":
+    // sem entrega no form so vale o piso frete > 0 => envio > 0, como antes desta regra.
+    { entrega: vendaAntes?.entrega ?? null, frete: vendaAntes?.valorFrete ?? 0, envio: vendaAntes?.custoEnvio ?? 0 },
   );
   if (erroEnvio) return { success: false, error: erroEnvio };
 
@@ -636,6 +641,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
           valorVenda: itens.length > 0 ? (itens[0]?.valorVenda ?? 0) : valorLegado,
           valorFrete: frete,
           custoEnvio: envio,
+          ...(entregaForm !== undefined ? { entrega: entregaForm } : {}),
           // Quem edita a venda esta digitando o frete a mao: a procedencia volta a ser
           // "manual". Sem isto a fonte ficaria congelada em "uber_final" e uma recaptura
           // posterior sobrescreveria a correcao humana achando que so reconcilia.
