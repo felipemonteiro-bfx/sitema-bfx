@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   vendaV2Schema,
   erroCustoEnvio,
@@ -70,7 +71,6 @@ describe("erroCustoEnvioNaEdicao", () => {
 });
 
 describe("adocao nos pontos que gravam venda", () => {
-  const { readFileSync } = require("node:fs") as typeof import("node:fs");
   const ler = (p: string) => readFileSync(p, "utf8");
 
   it("a action legada de venda rapida recusa e registra a rejeicao", () => {
