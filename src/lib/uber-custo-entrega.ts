@@ -244,3 +244,16 @@ export function mensagemFalhaCustoUber(motivo: MotivoFalhaCustoUber): string {
       return "A Uber nao respondeu a captura de custo agora. Tente de novo em instantes.";
   }
 }
+
+/**
+ * Fonte do custo de envio ao CRIAR a venda. Frete cotado pela Uber no form deixa o custo real
+ * para a captura posterior; o operador digita um valor (a regra do frete real o exige) e ele
+ * nasce provisorio, para a captura poder corrigi-lo em vez de responder 409. So "uber_provisorio"
+ * e aceito aqui: nunca "uber_final" vindo do navegador.
+ */
+export function fonteCustoEnvioNaCriacao(params: {
+  envio: number;
+  freteViaUber: boolean;
+}): "uber_provisorio" | null {
+  return params.freteViaUber && params.envio > 0 ? "uber_provisorio" : null;
+}

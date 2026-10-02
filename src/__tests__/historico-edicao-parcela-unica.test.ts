@@ -98,6 +98,7 @@ describe("updateVenda — venda em folha em 1x", () => {
     ]);
     const fd = formUmaVez();
     fd.set("frete", "30");
+    fd.set("envio", "18"); // frete cobrado exige o custo real do envio
     fd.set("data", "2026-09-05");
 
     const r = await updateVenda(fd);

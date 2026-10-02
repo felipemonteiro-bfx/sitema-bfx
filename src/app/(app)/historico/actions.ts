@@ -31,7 +31,7 @@ import {
 import { chavePixEmJogo, parcelasComPixEmJogo } from "@/lib/fechamento-pix-em-jogo";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { z } from "zod";
-import { produtoItemSchema } from "@/lib/validations/venda";
+import { produtoItemSchema, erroCustoEnvioNaEdicao } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 
 /** Recusa com mensagem para o usuário, lançada dentro da transação para desfazê-la. */
@@ -127,6 +127,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     boleto?: boolean;
     parcelas: number | null;
     valorFrete: number | null;
+    custoEnvio: number | null;
     desconto: number | null;
     valorVenda: number | null;
     quantidade: number | null;
@@ -145,6 +146,7 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
         boleto: true,
         parcelas: true,
         valorFrete: true,
+        custoEnvio: true,
         desconto: true,
         valorVenda: true,
         quantidade: true,
@@ -157,6 +159,14 @@ export async function updateVenda(formData: FormData): Promise<{ success: boolea
     console.error("Erro ao ler venda para edição:", err);
     return { success: false, error: "Erro ao salvar alterações. Tente novamente." };
   }
+
+  // Frete cobrado exige o custo real do envio, mas só quando frete ou envio mudaram:
+  // venda antiga com custo 0 não pode travar a edição de outro campo.
+  const erroEnvio = erroCustoEnvioNaEdicao(
+    { frete, envio },
+    vendaAntes ? { frete: vendaAntes.valorFrete ?? 0, envio: vendaAntes.custoEnvio ?? 0 } : null,
+  );
+  if (erroEnvio) return { success: false, error: erroEnvio };
 
   // O form de edição descarta item cujo nome é vazio/só espaço e não tem `valor`/`custo_prod`.
   // Sem dado de produto, o caminho legado gravaria valorVenda 0 e lucro sem receita.

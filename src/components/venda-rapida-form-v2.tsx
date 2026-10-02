@@ -27,6 +27,7 @@ import {
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
+import { erroCustoEnvio } from "@/lib/validations/venda";
 import { valorEmReais } from "@/lib/fidelidade";
 import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
 import { useRouter } from "next/navigation";
@@ -145,6 +146,7 @@ export default function VendaRapidaFormV2({
     data?: boolean;
     vendedor?: boolean;
     cliente?: boolean;
+    envio?: boolean;
     produtoIndices?: number[];
   }>({});
 
@@ -192,7 +194,8 @@ export default function VendaRapidaFormV2({
   const setClienteQuery = (v: string) => void setFormState({ clienteQuery: v });
   const setSelectedCliente = (v: ClienteSelected | null) => void setFormState({ selectedCliente: v ?? null });
   const setProdutos = (v: ProdutoItem[]) => void setFormState({ produtos: v.length > 0 ? v : null });
-  const setFrete = (v: number) => void setFormState({ frete: v });
+  // Digitar o frete a mao desfaz a marca "veio da Uber"; a cotacao a religa logo depois.
+  const setFrete = (v: number) => { setFreteViaUber(false); void setFormState({ frete: v }); };
   const setEnvio = (v: number) => void setFormState({ envio: v });
   const setTemNota = (v: boolean) => void setFormState({ temNota: v });
   const setTaxaNota = (v: string) => void setFormState({ taxaNota: v });
@@ -220,6 +223,8 @@ export default function VendaRapidaFormV2({
     country: string;
   } | null>(null);
   const [uberQuoteLoading, setUberQuoteLoading] = useState(false);
+  // Frete veio da cotacao Uber (e nao foi digitado depois): o custo real chega pela captura.
+  const [freteViaUber, setFreteViaUber] = useState(false);
   const [uberMotivo, setUberMotivo] = useState<MotivoFalhaUber | null>(null);
   const [uberMensagem, setUberMensagem] = useState<string>(mensagemFalhaUber("sem_credencial"));
 
@@ -527,6 +532,7 @@ export default function VendaRapidaFormV2({
         return;
       }
       setFrete(data.fee ?? 0);
+      setFreteViaUber(true);
       toast.success(
         <span>
           Frete Uber: <span className="valor-sensivel">R$ {(data.fee ?? 0).toFixed(2)}</span> ({data.duration ?? "?"} min)
@@ -654,6 +660,11 @@ export default function VendaRapidaFormV2({
       msgs.push("Cliente");
     }
 
+    if (erroCustoEnvio(frete, envio)) {
+      errors.envio = true;
+      msgs.push("Envio (custo real, pois há frete cobrado)");
+    }
+
     const produtosFiltrados = produtos.filter((p) => p.produtoNome?.trim());
     if (produtosFiltrados.length === 0) {
       setValidationErrors((prev) => ({ ...prev, produtoIndices: produtos.map((_, i) => i) }));
@@ -716,6 +727,7 @@ export default function VendaRapidaFormV2({
     formData.append("clienteId", selectedCliente!.id.toString());
     formData.append("frete", String(frete));
     formData.append("envio", String(envio));
+    if (freteViaUber) formData.append("freteViaUber", "on");
     formData.append("parcelas", parcelas);
     formData.append("temNota", String(temNota));
     formData.append("taxaNota", taxaNota);
@@ -1246,10 +1258,20 @@ export default function VendaRapidaFormV2({
               )}
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Envio (Custo)
+              <Label
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  validationErrors.envio ? "text-error-text" : "text-muted-foreground",
+                )}
+              >
+                Envio (Custo){frete > 0 && <span className="text-error-text"> *</span>}
+                {validationErrors.envio && " (obrigatório com frete)"}
               </Label>
-              <CurrencyInput value={envio} onChange={setEnvio} />
+              <CurrencyInput
+                value={envio}
+                onChange={setEnvio}
+                className={validationErrors.envio ? "border-destructive border-2" : ""}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">

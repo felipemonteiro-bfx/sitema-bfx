@@ -6,7 +6,7 @@ import { checkboxLigado } from "@/lib/form-values";
 import { revalidarVenda } from "@/lib/revalidacao";
 import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
-import { vendaV2Schema } from "@/lib/validations/venda";
+import { vendaV2Schema, erroCustoEnvio } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
 import { calcularConsignado, recalcularConsignadoSeguro } from "@/lib/consignado-db";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { numerosDeParcelaRepetidos, parcelasDaVendaRapida, validarDataDescontoUnica } from "@/lib/parcelas";
+import { fonteCustoEnvioNaCriacao } from "@/lib/uber-custo-entrega";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
@@ -70,6 +71,11 @@ export async function criarVenda(formData: FormData) {
       ...(clienteId ? { clienteId } : {}),
       ...(vendedor ? { vendedor } : {}),
     });
+    return;
+  }
+  const erroEnvio = erroCustoEnvio(frete, envio);
+  if (erroEnvio) {
+    registrarRejeicaoVenda({ origem: "venda-rapida-legada", motivo: erroEnvio, clienteId });
     return;
   }
   const session = await getSession();
@@ -353,6 +359,7 @@ export async function criarVendaV2(
           // Campos novos
           valorFrete: frete,
           custoEnvio: envio,
+          custoEnvioFonte: fonteCustoEnvioNaCriacao({ envio, freteViaUber: checkboxLigado(formData.get("freteViaUber")) }),
           parcelas,
           valorParcela,
           lucroLiquido: lucroLiquidoFinal,
