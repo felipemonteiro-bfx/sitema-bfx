@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
+import {
+  erroEntrega, erroEntregaNaEdicao, lerEntregaDoForm,
+  MSG_ENTREGA_OBRIGATORIA, MSG_RETIRADA_COM_FRETE, MSG_CUSTO_ENVIO_ENTREGA,
+  MSG_CUSTO_ENVIO_OBRIGATORIO,
+} from "@/lib/validations/venda";
 
 describe("migration da coluna entrega", () => {
   it("adiciona so a coluna nullable, sem default nem NOT NULL", () => {
@@ -11,5 +16,58 @@ describe("migration da coluna entrega", () => {
   it("o schema Prisma declara Venda.entrega como Boolean?", () => {
     const schema = readFileSync("prisma/schema.prisma", "utf8");
     expect(schema.split("\n").some((l) => l.trim().startsWith("entrega") && l.includes("Boolean?"))).toBe(true);
+  });
+});
+
+describe("erroEntrega (venda nova)", () => {
+  it("sem escolha e erro, mesmo com frete e envio", () => {
+    expect(erroEntrega({ entrega: undefined, frete: 0, envio: 0 })).toBe(MSG_ENTREGA_OBRIGATORIA);
+    expect(erroEntrega({ entrega: null, frete: 30, envio: 18 })).toBe(MSG_ENTREGA_OBRIGATORIA);
+  });
+  it("entrega exige envio > 0 mesmo com frete 0", () => {
+    expect(erroEntrega({ entrega: true, frete: 0, envio: 0 })).toBe(MSG_CUSTO_ENVIO_ENTREGA);
+    expect(erroEntrega({ entrega: true, frete: 0, envio: Number.NaN })).toBe(MSG_CUSTO_ENVIO_ENTREGA);
+    expect(erroEntrega({ entrega: true, frete: 0, envio: -5 })).toBe(MSG_CUSTO_ENVIO_ENTREGA);
+  });
+  it("entrega com envio > 0 e ok, com ou sem frete", () => {
+    expect(erroEntrega({ entrega: true, frete: 0, envio: 12 })).toBeNull();
+    expect(erroEntrega({ entrega: true, frete: 30, envio: 12 })).toBeNull();
+  });
+  it("retirada com frete cobrado e erro; retirada sem frete e ok", () => {
+    expect(erroEntrega({ entrega: false, frete: 30, envio: 0 })).toBe(MSG_RETIRADA_COM_FRETE);
+    expect(erroEntrega({ entrega: false, frete: 0, envio: 0 })).toBeNull();
+  });
+});
+
+describe("erroEntregaNaEdicao", () => {
+  const antigaNull = { entrega: null, frete: 30, envio: 0 };
+  it("venda null sem mexer em nada salva", () => {
+    expect(erroEntregaNaEdicao({ ...antigaNull }, antigaNull)).toBeNull();
+  });
+  it("venda null que segue null aplica so a regra do frete (piso da #37)", () => {
+    expect(erroEntregaNaEdicao({ entrega: null, frete: 45, envio: 0 }, antigaNull)).toBe(MSG_CUSTO_ENVIO_OBRIGATORIO);
+    expect(erroEntregaNaEdicao({ entrega: null, frete: 0, envio: 0 }, antigaNull)).toBeNull();
+  });
+  it("trocar null para entrega sem envio recusa; com envio ok", () => {
+    expect(erroEntregaNaEdicao({ entrega: true, frete: 30, envio: 0 }, antigaNull)).toBe(MSG_CUSTO_ENVIO_ENTREGA);
+    expect(erroEntregaNaEdicao({ entrega: true, frete: 30, envio: 20 }, antigaNull)).toBeNull();
+  });
+  it("trocar para retirada mantendo frete cobrado recusa", () => {
+    expect(erroEntregaNaEdicao({ entrega: false, frete: 30, envio: 0 }, antigaNull)).toBe(MSG_RETIRADA_COM_FRETE);
+  });
+  it("venda ja marcada entrega: mudar so o frete exige o envio", () => {
+    const atual = { entrega: true, frete: 0, envio: 15 };
+    expect(erroEntregaNaEdicao({ entrega: true, frete: 10, envio: 0 }, atual)).toBe(MSG_CUSTO_ENVIO_ENTREGA);
+  });
+  it("sem registro atual aplica a regra de venda nova", () => {
+    expect(erroEntregaNaEdicao({ entrega: null, frete: 0, envio: 0 }, null)).toBe(MSG_ENTREGA_OBRIGATORIA);
+  });
+});
+
+describe("lerEntregaDoForm", () => {
+  it("so aceita 1 e 0", () => {
+    expect(lerEntregaDoForm("1")).toBe(true);
+    expect(lerEntregaDoForm("0")).toBe(false);
+    for (const v of ["on", "true", "", "2", " 1", null]) expect(lerEntregaDoForm(v)).toBeUndefined();
   });
 });

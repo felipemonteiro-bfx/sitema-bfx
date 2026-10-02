@@ -69,6 +69,41 @@ export function erroCustoEnvioNaEdicao(
   return erroCustoEnvio(novo.frete, novo.envio)
 }
 
+export const MSG_ENTREGA_OBRIGATORIA = "Escolha Entrega ou Retirada."
+export const MSG_RETIRADA_COM_FRETE = "Retirada não pode ter frete cobrado."
+export const MSG_CUSTO_ENVIO_ENTREGA = "Informe o custo real do envio: a venda é uma entrega."
+
+type EntregaFrete = { entrega: boolean | null | undefined; frete: number; envio: number }
+
+/** Venda nova: a escolha é obrigatória e entrega exige o custo real do envio. */
+export function erroEntrega(v: EntregaFrete): string | null {
+  if (v.entrega === null || v.entrega === undefined) return MSG_ENTREGA_OBRIGATORIA
+  if (v.entrega && !(v.envio > 0)) return MSG_CUSTO_ENVIO_ENTREGA
+  if (!v.entrega && v.frete > 0) return MSG_RETIRADA_COM_FRETE
+  return null
+}
+
+/**
+ * Edição: venda sem alteração em entrega, frete e envio salva sempre. Venda que segue `null`
+ * só responde ao piso `frete > 0 ⇒ envio > 0`; qualquer outra segue a regra de venda nova.
+ */
+export function erroEntregaNaEdicao(
+  novo: { entrega: boolean | null; frete: number; envio: number },
+  atual: { entrega: boolean | null; frete: number; envio: number } | null,
+): string | null {
+  if (!atual) return erroEntrega(novo)
+  if (novo.entrega === atual.entrega && novo.frete === atual.frete && novo.envio === atual.envio) return null
+  if (novo.entrega === null) return erroCustoEnvio(novo.frete, novo.envio)
+  return erroEntrega(novo)
+}
+
+/** `"1"` = entrega, `"0"` = retirada; qualquer outro valor conta como "não escolhido". */
+export function lerEntregaDoForm(v: FormDataEntryValue | null): boolean | undefined {
+  if (v === "1") return true
+  if (v === "0") return false
+  return undefined
+}
+
 /**
  * Schema de validação para venda V2 (múltiplos produtos)
  */
