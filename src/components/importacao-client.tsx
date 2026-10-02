@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { Fragment, useEffect, useMemo, useState, useRef } from 'react';
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,12 @@ import { Loader2, CheckCircle2, Trash2, Sparkles } from "lucide-react";
 import Papa from "papaparse";
 import { useRouter } from "next/navigation";
 import { lerErroDoCorpo } from "@/lib/importacao-erro";
+import {
+  camposDestacados,
+  linhasInvalidasDaPrevia,
+  mensagemAvisoDaPrevia,
+  normalizarCelulasDaPrevia,
+} from "@/lib/validations/importacao";
 
 interface RowData {
   id: string;
@@ -58,6 +64,14 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [empresaId, setEmpresaId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Mesma checagem que o servidor faz antes de gravar (frete real e coluna Entrega): a tela
+  // so adianta o aviso e bloqueia o botao; a rota continua recusando o lote se algo escapar.
+  const invalidas = useMemo(() => linhasInvalidasDaPrevia(data), [data]);
+  const motivoPorLinha = new Map(invalidas.map((l) => [l.linha, l.motivo]));
+  const [jaTeveProblema, setJaTeveProblema] = useState(false);
+  useEffect(() => {
+    if (invalidas.length > 0) setJaTeveProblema(true);
+  }, [invalidas]);
 
   const empresaNome = empresasParceiras.find((e) => String(e.id) === empresaId)?.nome ?? "";
 
@@ -66,13 +80,14 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
     if (!file) return;
 
     setFileName(file.name);
+    setJaTeveProblema(false);
     setLoading(true);
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       delimiter: ";", // Comum no Excel brasileiro
       complete: (results) => {
-        const mapped = (results.data as Record<string, string | undefined>[]).map((row) => ({
+        const mapped = (results.data as Record<string, string | undefined>[]).map((row) => normalizarCelulasDaPrevia({
           id: Math.random().toString(36).substr(2, 9),
           dataVenda: row["Data (AAAA-MM-DD)"] || row["Data"] || new Date().toISOString().slice(0, 10),
           vendedor: row["Vendedor"] || "",
@@ -119,7 +134,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
           setData(suggested.map((r: RowData & { id?: string }) => ({
             ...r,
             id: r.id ?? Math.random().toString(36).substr(2, 9),
-          })));
+          })).map(normalizarCelulasDaPrevia));
           toast.success("IA aplicou sugestões. Revise os dados antes de confirmar.");
         }
       } else {
@@ -139,6 +154,11 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
     const invalid = data.some(row => !row.cliente || !row.produto || isNaN(Number(row.valor)));
     if (invalid) {
       toast.warning("Existem campos obrigatórios vazios ou valores numéricos inválidos na tabela. Por favor, corrija antes de subir.");
+      return;
+    }
+
+    if (invalidas.length > 0) {
+      toast.warning(mensagemAvisoDaPrevia(invalidas));
       return;
     }
 
@@ -275,12 +295,22 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
               >
                 Sugerir com IA
               </Button>
-              <Button onClick={finalizeImport} disabled={saving} className="bg-primary hover:bg-primary/90" leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
+              <Button onClick={finalizeImport} disabled={saving || invalidas.length > 0} className="bg-primary hover:bg-primary/90" leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
                 Subir {data.length} Vendas
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
+            {invalidas.length > 0 && (
+              <div role="alert" className="rounded-md bg-error-bg px-3 py-2 text-sm text-error-text">
+                {mensagemAvisoDaPrevia(invalidas)}
+              </div>
+            )}
+            {invalidas.length === 0 && jaTeveProblema && (
+              <div role="status" className="rounded-md bg-success-bg px-3 py-2 text-sm text-success-text">
+                Nenhuma linha com problema de frete ou entrega.
+              </div>
+            )}
             <ScrollArea className="rounded-md border bg-white w-full">
               <Table>
                 <TableHeader className="bg-muted">
@@ -290,14 +320,23 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                     <TableHead className="min-w-[150px]">Cliente</TableHead>
                     <TableHead className="min-w-[150px]">Produto</TableHead>
                     <TableHead className="w-24 text-right">Valor</TableHead>
+                    <TableHead className="w-24 text-right text-info-text">Frete</TableHead>
+                    <TableHead className="w-24 text-right text-info-text">Envio</TableHead>
+                    <TableHead className="w-24 text-info-text">Entrega</TableHead>
                     <TableHead className="w-20 text-right">Parc.</TableHead>
-                    <TableHead className="w-16">Nota?</TableHead>
+                    <TableHead className="w-16">Antec.</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.map((row) => (
-                    <TableRow key={row.id}>
+                  {data.map((row, index) => {
+                    const motivo = motivoPorLinha.get(index + 1);
+                    const destaque = motivo ? camposDestacados(motivo) : [];
+                    const ruim = (campo: "frete" | "envio" | "entrega") =>
+                      destaque.includes(campo) ? " bg-error-bg text-error-text" : "";
+                    return (
+                    <Fragment key={row.id}>
+                    <TableRow>
                       <TableCell className="p-1">
                         <DateInput
                           value={row.dataVenda}
@@ -336,6 +375,36 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                           className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1 font-semibold"
                         />
                       </TableCell>
+                      <TableCell className={`p-1${destaque.includes("frete") ? "" : " bg-info-bg"}`}>
+                        <input
+                          type="number"
+                          aria-label="Frete cobrado"
+                          value={row.frete}
+                          onChange={(e) => updateCell(row.id, 'frete', e.target.value)}
+                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1${ruim("frete")}`}
+                        />
+                      </TableCell>
+                      <TableCell className={`p-1${destaque.includes("envio") ? "" : " bg-info-bg"}`}>
+                        <input
+                          type="number"
+                          aria-label="Custo de envio"
+                          value={row.envio}
+                          onChange={(e) => updateCell(row.id, 'envio', e.target.value)}
+                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1${ruim("envio")}`}
+                        />
+                      </TableCell>
+                      <TableCell className={`p-1${destaque.includes("entrega") ? "" : " bg-info-bg"}`}>
+                        <select
+                          aria-label="Entrega"
+                          value={row.entrega}
+                          onChange={(e) => updateCell(row.id, 'entrega', e.target.value)}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1${ruim("entrega")}`}
+                        >
+                          <option value="">—</option>
+                          <option value="S">Sim</option>
+                          <option value="N">Não</option>
+                        </select>
+                      </TableCell>
                       <TableCell className="p-1">
                         <input 
                           type="number" 
@@ -371,7 +440,16 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    {motivo && (
+                      <TableRow>
+                        <TableCell colSpan={11} className="px-2.5 pb-1.5 pt-0 text-xs text-error-text">
+                          Linha {index + 1}: {motivo}.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    </Fragment>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </ScrollArea>
