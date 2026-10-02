@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { erroCustoEnvio } from "@/lib/validations/venda";
 
 const toNum = (v: unknown): number => {
   if (typeof v === "number" && !isNaN(v)) return v;
@@ -67,3 +68,32 @@ export const importacaoPayloadSchema = z.union([
 ]);
 
 export type ImportacaoRow = z.infer<typeof importacaoRowSchema>;
+
+export type LinhaSemCustoEnvio = { linha: number; cliente: string };
+
+/**
+ * Linhas da planilha com frete cobrado e sem custo real de envio (a regra do frete real).
+ * A numeracao e a posicao na lista enviada, a mesma da tabela de previa. Linha de cliente
+ * em branco e ignorada porque a rota nao a grava, mas conta na numeracao.
+ */
+export function linhasSemCustoDeEnvio(
+  rows: { cliente: string; frete: number; envio: number }[],
+): LinhaSemCustoEnvio[] {
+  const linhas: LinhaSemCustoEnvio[] = [];
+  rows.forEach((row, i) => {
+    const cliente = row.cliente.trim();
+    if (!cliente) return;
+    if (erroCustoEnvio(row.frete, row.envio)) linhas.push({ linha: i + 1, cliente });
+  });
+  return linhas;
+}
+
+const MAX_LINHAS_NA_MENSAGEM = 10;
+
+export function mensagemLinhasSemCustoDeEnvio(linhas: LinhaSemCustoEnvio[]): string {
+  const visiveis = linhas.slice(0, MAX_LINHAS_NA_MENSAGEM).map((l) => `linha ${l.linha} (${l.cliente})`);
+  const resto = linhas.length - visiveis.length;
+  const lista = visiveis.join(", ") + (resto > 0 ? ` e mais ${resto}` : "");
+  const quantas = linhas.length === 1 ? "1 linha" : `${linhas.length} linhas`;
+  return `${quantas} com frete cobrado e sem custo de envio: ${lista}. Nada foi importado. Corrija a planilha e envie de novo.`;
+}
