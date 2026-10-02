@@ -19,6 +19,7 @@ import {
 } from "@/lib/asaas";
 import { calcularPrimeiroVencimento } from "@/lib/utils";
 import { numerosDeParcelaRepetidos, parcelasDaVendaRapida, validarDataDescontoUnica } from "@/lib/parcelas";
+import { fonteCustoEnvioNaCriacao } from "@/lib/uber-custo-entrega";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
@@ -358,6 +359,7 @@ export async function criarVendaV2(
           // Campos novos
           valorFrete: frete,
           custoEnvio: envio,
+          custoEnvioFonte: fonteCustoEnvioNaCriacao({ envio, freteViaUber: checkboxLigado(formData.get("freteViaUber")) }),
           parcelas,
           valorParcela,
           lucroLiquido: lucroLiquidoFinal,
