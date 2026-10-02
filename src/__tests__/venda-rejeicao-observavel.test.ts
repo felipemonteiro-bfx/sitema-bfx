@@ -138,6 +138,6 @@ describe("adocao nos call sites que rejeitam venda antes do banco", () => {
     // As duas rejeicoes da rota, nomeadas — nao uma contagem, que fecharia com qualquer
     // chamada avulsa noutro ponto do arquivo.
     expect(importacao.includes('motivo: "Corpo da importação não é uma lista"')).toBe(true);
-    expect(importacao.includes("motivo: msg, itens: raw.length")).toBe(true);
+    expect(importacao.includes("motivo: msg, itens: rows.length")).toBe(true);
   });
 });

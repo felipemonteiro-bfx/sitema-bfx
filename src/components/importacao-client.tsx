@@ -36,7 +36,16 @@ interface RowData {
   antecipada: boolean;
 }
 
-export default function ImportacaoClient() {
+interface EmpresaOption {
+  id: number;
+  nome: string;
+}
+
+interface Props {
+  empresasParceiras?: EmpresaOption[];
+}
+
+export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
   const router = useRouter();
   const [data, setData] = useState<RowData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,7 +53,10 @@ export default function ImportacaoClient() {
   const [suggesting, setSuggesting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [empresaId, setEmpresaId] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const empresaNome = empresasParceiras.find((e) => String(e.id) === empresaId)?.nome ?? "";
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,6 +138,11 @@ export default function ImportacaoClient() {
       return;
     }
 
+    if (empresasParceiras.length > 0 && !empresaId) {
+      toast.warning("Selecione a empresa dos clientes antes de importar.");
+      return;
+    }
+
     setConfirmOpen(true);
   };
 
@@ -135,7 +152,10 @@ export default function ImportacaoClient() {
       const res = await fetch('/api/importacao/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          empresaParceiraId: empresaId ? Number(empresaId) : null,
+          rows: data,
+        })
       });
 
       if (res.ok) {
@@ -162,6 +182,7 @@ export default function ImportacaoClient() {
           <AlertDialogTitle>Confirmar importação de {data.length} vendas?</AlertDialogTitle>
           <AlertDialogDescription>
             Os dados serão salvos permanentemente no sistema. Certifique-se de que as informações estão corretas antes de confirmar.
+            {empresaNome && <> Clientes novos serão vinculados a <strong>{empresaNome}</strong>.</>}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -202,6 +223,30 @@ export default function ImportacaoClient() {
             {loading && <Loader2 className="h-5 w-5 animate-spin text-info-text" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">O sistema aceita ponto e vírgula (;) como separador padrão do Excel.</p>
+
+          {empresasParceiras.length > 0 && (
+            <div className="mt-4 space-y-1 border-t border-border/60 pt-4">
+              <label htmlFor="importacao-empresa" className="text-sm font-medium">
+                Empresa dos clientes <span className="text-error-text">*</span>
+              </label>
+              <select
+                id="importacao-empresa"
+                value={empresaId}
+                onChange={(e) => setEmpresaId(e.target.value)}
+                disabled={loading || saving}
+                className="block h-10 w-full max-w-sm rounded-lg border-2 border-input bg-background px-3 text-sm disabled:opacity-50"
+              >
+                <option value="">Selecione a empresa</option>
+                {empresasParceiras.map((e) => (
+                  <option key={e.id} value={String(e.id)}>{e.nome}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Aplicada aos clientes criados nesta importação. Clientes que já existem sem empresa
+                também são vinculados; quem já tem empresa não é alterado.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
