@@ -130,3 +130,16 @@ describe("adocao na edicao", () => {
     }
   });
 });
+
+describe("tools do chat", () => {
+  const ai = readFileSync("src/lib/ai-actions.ts", "utf8");
+  it("criar_venda declara entrega e valida com erroEntrega", () => {
+    expect(ai.includes("optionalBoolean")).toBe(true);
+    expect(ai.includes("erroEntrega({ entrega: parsedParams.entrega")).toBe(true);
+    expect(ai.includes("entrega: { type: \"boolean\"")).toBe(true);
+  });
+  it("atualizar_venda confere o valor gravado e grava entrega", () => {
+    expect(ai.includes("erroEntregaNaEdicao(")).toBe(true);
+    expect(ai.includes("entrega: parsedParams.entrega ?? undefined")).toBe(true);
+  });
+});

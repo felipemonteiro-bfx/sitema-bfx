@@ -90,7 +90,7 @@ describe("adocao nos pontos que gravam venda", () => {
   });
   it("as tools do chat (criar_venda e atualizar_venda) seguem a mesma regra", () => {
     const src = ler("src/lib/ai-actions.ts");
-    expect(src.includes("erroCustoEnvio(valorFrete, custoEnvio)")).toBe(true);
-    expect(src.includes("erroCustoEnvioNaEdicao(")).toBe(true);
+    expect(src.includes("erroEntrega({ entrega: parsedParams.entrega")).toBe(true);
+    expect(src.includes("erroEntregaNaEdicao(")).toBe(true);
   });
 });

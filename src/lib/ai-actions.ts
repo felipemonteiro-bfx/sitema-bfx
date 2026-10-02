@@ -25,7 +25,7 @@ import { z } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
-import { erroCustoEnvio, erroCustoEnvioNaEdicao } from "@/lib/validations/venda";
+import { erroEntrega, erroEntregaNaEdicao } from "@/lib/validations/venda";
 import { checkCredito } from "@/lib/credit";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
@@ -61,6 +61,10 @@ const requiredNumber = () =>
     z.coerce.number().refine(Number.isFinite)
   );
 const optionalNumber = () => toOptional(z.coerce.number().refine(Number.isFinite));
+const optionalBoolean = () =>
+  toOptional(
+    z.union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")]),
+  );
 
 const actionParamSchemas: Record<string, z.ZodTypeAny> = {
   listar_vendas: z.object({
@@ -80,6 +84,7 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
     valorVenda: requiredNumber(),
     valorFrete: optionalNumber(),
     custoEnvio: optionalNumber(),
+    entrega: optionalBoolean(),
     parcelas: optionalNumber(),
     antecipada: optionalNumber(),
   }),
@@ -160,6 +165,7 @@ const actionParamSchemas: Record<string, z.ZodTypeAny> = {
     valorVenda: optionalNumber(),
     valorFrete: optionalNumber(),
     custoEnvio: optionalNumber(),
+    entrega: optionalBoolean(),
     parcelas: optionalNumber(),
   }),
   atualizar_despesa: z.object({
@@ -280,7 +286,7 @@ export const aiActions: AiActionDef[] = [
     roles: ["admin", "vendedor"],
     parameters: {
       type: "object",
-      required: ["dataVenda", "clienteId", "produtoNome", "valorVenda"],
+      required: ["dataVenda", "clienteId", "produtoNome", "valorVenda", "entrega"],
       properties: {
         dataVenda: { type: "string", description: "YYYY-MM-DD" },
         vendedor: { type: "string" },
@@ -290,6 +296,7 @@ export const aiActions: AiActionDef[] = [
         valorVenda: { type: "number" },
         valorFrete: { type: "number" },
         custoEnvio: { type: "number" },
+        entrega: { type: "boolean", description: "true = entrega, false = retirada. Obrigatório." },
         parcelas: { type: "number" },
         antecipada: { type: "number" },
       },
@@ -481,6 +488,7 @@ export const aiActions: AiActionDef[] = [
         valorVenda: { type: "number" },
         valorFrete: { type: "number" },
         custoEnvio: { type: "number" },
+        entrega: { type: "boolean" },
         parcelas: { type: "number" },
       },
     },
@@ -928,7 +936,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           subtotal: valorVenda,
         }]);
         if (erroValidacaoIa) { result = { erro: erroValidacaoIa }; break; }
-        const erroEnvioIa = erroCustoEnvio(valorFrete, custoEnvio);
+        const erroEnvioIa = erroEntrega({ entrega: parsedParams.entrega, frete: valorFrete, envio: custoEnvio });
         if (erroEnvioIa) { result = { erro: erroEnvioIa }; break; }
 
         // Limite de crédito é sempre recalculado no servidor, igual ao fluxo manual, com o
@@ -958,6 +966,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
               valorVenda,
               valorFrete,
               custoEnvio,
+              entrega: parsedParams.entrega,
               lucroLiquido,
               parcelas,
               valorParcela: valorParcelaIa,
@@ -1105,14 +1114,16 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           vendedorIdUpdate = vu?.id;
         }
         // Frete cobrado exige o custo real do envio, só quando frete ou envio mudam.
-        if (parsedParams.valorFrete != null || parsedParams.custoEnvio != null) {
+        if (parsedParams.valorFrete != null || parsedParams.custoEnvio != null || parsedParams.entrega != null) {
           const antes = await prisma.venda.findUnique({
             where: { id: Number(parsedParams.id) },
-            select: { valorFrete: true, custoEnvio: true },
+            select: { entrega: true, valorFrete: true, custoEnvio: true },
           });
-          const atual = antes ? { frete: antes.valorFrete ?? 0, envio: antes.custoEnvio ?? 0 } : null;
-          const erroEnvioIa = erroCustoEnvioNaEdicao(
-            { frete: parsedParams.valorFrete ?? atual?.frete ?? 0, envio: parsedParams.custoEnvio ?? atual?.envio ?? 0 },
+          const atual = antes
+            ? { entrega: antes.entrega ?? null, frete: antes.valorFrete ?? 0, envio: antes.custoEnvio ?? 0 }
+            : { entrega: null, frete: 0, envio: 0 };
+          const erroEnvioIa = erroEntregaNaEdicao(
+            { entrega: parsedParams.entrega ?? atual.entrega, frete: parsedParams.valorFrete ?? atual.frete, envio: parsedParams.custoEnvio ?? atual.envio },
             atual,
           );
           if (erroEnvioIa) { result = { erro: erroEnvioIa }; break; }
@@ -1127,6 +1138,7 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
             valorVenda: parsedParams.valorVenda ?? undefined,
             valorFrete: parsedParams.valorFrete ?? undefined,
             custoEnvio: parsedParams.custoEnvio ?? undefined,
+            entrega: parsedParams.entrega ?? undefined,
             // Frete informado por fora da integracao: a procedencia volta a "manual",
             // senao uma recaptura da Uber sobrescreveria este valor depois.
             custoEnvioFonte: parsedParams.custoEnvio != null ? "manual" : undefined,

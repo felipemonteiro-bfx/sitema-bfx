@@ -22,7 +22,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const { executeAiAction } = await import("@/lib/ai-actions");
 const ctx = { role: "admin" as const, username: "admin", displayName: "Admin", userId: 1 };
-const params = (dataVenda: string) => ({ dataVenda, clienteId: 5, produtoNome: "Produto X", valorVenda: 300, parcelas: 3 });
+const params = (dataVenda: string) => ({ dataVenda, clienteId: 5, produtoNome: "Produto X", valorVenda: 300, parcelas: 3, entrega: false });
 
 beforeEach(() => {
   vi.clearAllMocks();
