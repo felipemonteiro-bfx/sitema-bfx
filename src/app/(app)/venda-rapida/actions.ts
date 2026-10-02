@@ -6,7 +6,7 @@ import { checkboxLigado } from "@/lib/form-values";
 import { revalidarVenda } from "@/lib/revalidacao";
 import type { ActionResponse } from "@/lib/action-response";
 import { successResponse, errorResponse } from "@/lib/action-response";
-import { vendaV2Schema } from "@/lib/validations/venda";
+import { vendaV2Schema, erroCustoEnvio } from "@/lib/validations/venda";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
 import { checkCredito } from "@/lib/credit";
 import { calcularConsignado, recalcularConsignadoSeguro } from "@/lib/consignado-db";
@@ -70,6 +70,11 @@ export async function criarVenda(formData: FormData) {
       ...(clienteId ? { clienteId } : {}),
       ...(vendedor ? { vendedor } : {}),
     });
+    return;
+  }
+  const erroEnvio = erroCustoEnvio(frete, envio);
+  if (erroEnvio) {
+    registrarRejeicaoVenda({ origem: "venda-rapida-legada", motivo: erroEnvio, clienteId });
     return;
   }
   const session = await getSession();

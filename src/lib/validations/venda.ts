@@ -49,6 +49,26 @@ const parcelaVencimentoSchema = z.object({
   valorParcela: z.number().min(0),
 })
 
+export const MSG_CUSTO_ENVIO_OBRIGATORIO =
+  "Informe o custo real do envio: há frete cobrado nesta venda."
+
+/** Há frete cobrado, então houve entrega e o custo real do envio é obrigatório. */
+export function erroCustoEnvio(frete: number, envio: number): string | null {
+  return frete > 0 && !(envio > 0) ? MSG_CUSTO_ENVIO_OBRIGATORIO : null
+}
+
+/**
+ * Na edição a regra só vale se frete ou envio mudaram em relação ao gravado:
+ * venda antiga com frete e custo 0 não pode travar a edição de outro campo.
+ */
+export function erroCustoEnvioNaEdicao(
+  novo: { frete: number; envio: number },
+  atual: { frete: number; envio: number } | null,
+): string | null {
+  if (atual && novo.frete === atual.frete && novo.envio === atual.envio) return null
+  return erroCustoEnvio(novo.frete, novo.envio)
+}
+
 /**
  * Schema de validação para venda V2 (múltiplos produtos)
  */
@@ -68,6 +88,9 @@ export const vendaV2Schema = z.object({
   descontoEmFolha: z.boolean().optional().default(false),
   boleto: z.boolean().optional().default(false),
   formaPagamento: z.enum(FORMAS_PAGAMENTO_LIST as [string, ...string[]]).optional(),
+}).superRefine((v, ctx) => {
+  const msg = erroCustoEnvio(v.frete, v.envio)
+  if (msg) ctx.addIssue({ code: "custom", path: ["envio"], message: msg })
 })
 
 export type VendaV2FormData = z.infer<typeof vendaV2Schema>

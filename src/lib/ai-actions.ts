@@ -25,6 +25,7 @@ import { z } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { formaFromLegacyFlags, legacyFlagsFromForma } from "@/lib/forma-pagamento";
 import { validarItensContraCatalogo } from "@/lib/venda-item-validation";
+import { erroCustoEnvio, erroCustoEnvioNaEdicao } from "@/lib/validations/venda";
 import { checkCredito } from "@/lib/credit";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { classificarNomeFornecedor } from "@/lib/fornecedor-import";
@@ -927,6 +928,8 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
           subtotal: valorVenda,
         }]);
         if (erroValidacaoIa) { result = { erro: erroValidacaoIa }; break; }
+        const erroEnvioIa = erroCustoEnvio(valorFrete, custoEnvio);
+        if (erroEnvioIa) { result = { erro: erroEnvioIa }; break; }
 
         // Limite de crédito é sempre recalculado no servidor, igual ao fluxo manual, com o
         // corte da regra da empresa do cliente vigente na data da venda (spec 2026-09-30 §7),
@@ -1100,6 +1103,19 @@ export async function executeAiAction(name: string, params: any, ctx: ActionCont
         if (parsedParams.vendedor) {
           const vu = await prisma.usuario.findFirst({ where: { OR: [{ username: { equals: parsedParams.vendedor, mode: "insensitive" } }, { nomeExibicao: { equals: parsedParams.vendedor, mode: "insensitive" } }] }, select: { id: true } });
           vendedorIdUpdate = vu?.id;
+        }
+        // Frete cobrado exige o custo real do envio, só quando frete ou envio mudam.
+        if (parsedParams.valorFrete != null || parsedParams.custoEnvio != null) {
+          const antes = await prisma.venda.findUnique({
+            where: { id: Number(parsedParams.id) },
+            select: { valorFrete: true, custoEnvio: true },
+          });
+          const atual = antes ? { frete: antes.valorFrete ?? 0, envio: antes.custoEnvio ?? 0 } : null;
+          const erroEnvioIa = erroCustoEnvioNaEdicao(
+            { frete: parsedParams.valorFrete ?? atual?.frete ?? 0, envio: parsedParams.custoEnvio ?? atual?.envio ?? 0 },
+            atual,
+          );
+          if (erroEnvioIa) { result = { erro: erroEnvioIa }; break; }
         }
         result = await prisma.venda.update({
           where: { id: Number(parsedParams.id) },

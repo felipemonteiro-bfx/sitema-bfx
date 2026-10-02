@@ -27,6 +27,7 @@ import {
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { formatBRL, cn } from "@/lib/utils";
+import { erroCustoEnvio } from "@/lib/validations/venda";
 import { valorEmReais } from "@/lib/fidelidade";
 import { sugerirParcelasDescontoEmFolha } from "@/lib/parcelas";
 import { useRouter } from "next/navigation";
@@ -145,6 +146,7 @@ export default function VendaRapidaFormV2({
     data?: boolean;
     vendedor?: boolean;
     cliente?: boolean;
+    envio?: boolean;
     produtoIndices?: number[];
   }>({});
 
@@ -652,6 +654,11 @@ export default function VendaRapidaFormV2({
     if (!selectedCliente) {
       errors.cliente = true;
       msgs.push("Cliente");
+    }
+
+    if (erroCustoEnvio(frete, envio)) {
+      errors.envio = true;
+      msgs.push("Envio (custo real, pois há frete cobrado)");
     }
 
     const produtosFiltrados = produtos.filter((p) => p.produtoNome?.trim());
@@ -1246,10 +1253,20 @@ export default function VendaRapidaFormV2({
               )}
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Envio (Custo)
+              <Label
+                className={cn(
+                  "text-xs font-bold uppercase tracking-wider",
+                  validationErrors.envio ? "text-error-text" : "text-muted-foreground",
+                )}
+              >
+                Envio (Custo){frete > 0 && <span className="text-error-text"> *</span>}
+                {validationErrors.envio && " (obrigatório com frete)"}
               </Label>
-              <CurrencyInput value={envio} onChange={setEnvio} />
+              <CurrencyInput
+                value={envio}
+                onChange={setEnvio}
+                className={validationErrors.envio ? "border-destructive border-2" : ""}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
