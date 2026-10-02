@@ -227,7 +227,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
           {empresasParceiras.length > 0 && (
             <div className="mt-4 space-y-1 border-t border-border/60 pt-4">
               <label htmlFor="importacao-empresa" className="text-sm font-medium">
-                Empresa dos clientes <span className="text-destructive">*</span>
+                Empresa dos clientes <span className="text-error-text">*</span>
               </label>
               <select
                 id="importacao-empresa"

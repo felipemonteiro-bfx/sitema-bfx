@@ -8,12 +8,18 @@ import { registrarRejeicaoVenda } from "@/lib/venda-observabilidade";
 export async function POST(request: NextRequest) {
   try {
     const raw = await request.json();
+    // Aceita o array puro (formato antigo) ou { empresaParceiraId, rows }.
+    const rows = Array.isArray(raw) ? raw : raw?.rows;
+    if (!Array.isArray(rows)) {
+      registrarRejeicaoVenda({ origem: "importacao", motivo: "Corpo da importação não é uma lista" });
+      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    }
 
     const parsed = importacaoPayloadSchema.safeParse(raw);
     if (!parsed.success) {
       const first = parsed.error.issues[0];
       const msg = first?.path?.length ? `${first.path.join(".")}: ${first.message}` : first?.message ?? "Dados inválidos";
-      registrarRejeicaoVenda({ origem: "importacao", motivo: msg, itens: Array.isArray(raw) ? raw.length : undefined });
+      registrarRejeicaoVenda({ origem: "importacao", motivo: msg, itens: rows.length });
       return NextResponse.json({ error: msg }, { status: 400 });
     }
 
