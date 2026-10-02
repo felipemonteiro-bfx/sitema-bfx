@@ -100,10 +100,10 @@ export type ImportacaoRow = z.infer<typeof importacaoRowSchema>;
 
 export type LinhaInvalidaDeFrete = { linha: number; cliente: string; motivo: string };
 
-const MOTIVO_FRETE_SEM_CUSTO = "frete cobrado sem custo de envio";
-const MOTIVO_ENTREGA_SEM_CUSTO = "entrega sem custo de envio";
-const MOTIVO_RETIRADA_COM_FRETE = "retirada com frete cobrado";
-const MOTIVO_ENTREGA_INVALIDA = "entrega deve ser S ou N";
+export const MOTIVO_FRETE_SEM_CUSTO = "frete cobrado sem custo de envio";
+export const MOTIVO_ENTREGA_SEM_CUSTO = "entrega sem custo de envio";
+export const MOTIVO_RETIRADA_COM_FRETE = "retirada com frete cobrado";
+export const MOTIVO_ENTREGA_INVALIDA = "entrega deve ser S ou N";
 
 function motivoDaLinha(row: { frete: number; envio: number; entrega?: EntregaDaPlanilha }): string | null {
   const { entrega } = row;
@@ -144,4 +144,57 @@ export function mensagemLinhasInvalidasDeFrete(linhas: LinhaInvalidaDeFrete[]): 
   const lista = visiveis.join("; ") + (resto > 0 ? `; e mais ${resto}` : "");
   const quantas = linhas.length === 1 ? "1 linha" : `${linhas.length} linhas`;
   return `${quantas} com problema de frete ou entrega: ${lista}. Nada foi importado. Corrija a planilha e envie de novo.`;
+}
+
+/**
+ * A checagem da tela de previa: recebe as celulas como o operador as ve (strings) e as le como
+ * o schema do servidor (virgula decimal, nao numerico = 0, piso em 0), para tela e rota nunca
+ * divergirem.
+ */
+export function linhasInvalidasDaPrevia(
+  rows: { cliente: string; frete: unknown; envio: unknown; entrega: unknown }[],
+): LinhaInvalidaDeFrete[] {
+  return linhasInvalidasDeFrete(
+    rows.map((r) => ({
+      cliente: r.cliente,
+      frete: Math.max(0, toNum(r.frete)),
+      envio: Math.max(0, toNum(r.envio)),
+      entrega: lerEntregaDaPlanilha(r.entrega),
+    })),
+  );
+}
+
+/** Aviso do topo da previa: quantas linhas faltam corrigir e quais (ate 10). */
+export function mensagemAvisoDaPrevia(linhas: LinhaInvalidaDeFrete[]): string {
+  const nomes = linhas.slice(0, MAX_LINHAS_NA_MENSAGEM).map((l) => `linha ${l.linha}`);
+  const resto = linhas.length - nomes.length;
+  let lista: string;
+  if (resto > 0) lista = `${nomes.join(", ")} e mais ${resto}`;
+  else if (nomes.length > 1) lista = `${nomes.slice(0, -1).join(", ")} e ${nomes[nomes.length - 1]}`;
+  else lista = nomes[0] ?? "";
+  const quantas = linhas.length === 1 ? "1 linha precisa" : `${linhas.length} linhas precisam`;
+  return `${quantas} de correção antes de subir: ${lista}.`;
+}
+
+/** Celulas que o operador deve corrigir em cada motivo (para destacar na previa). */
+export function camposDestacados(motivo: string): ("frete" | "envio" | "entrega")[] {
+  if (motivo === MOTIVO_FRETE_SEM_CUSTO || motivo === MOTIVO_ENTREGA_SEM_CUSTO) return ["envio"];
+  if (motivo === MOTIVO_RETIRADA_COM_FRETE) return ["frete", "entrega"];
+  if (motivo === MOTIVO_ENTREGA_INVALIDA) return ["entrega"];
+  return [];
+}
+
+/**
+ * Deixa as celulas da previa mostrando o que o servidor vai ler: virgula decimal vira ponto (o
+ * campo numerico descarta "30,5") e uma Entrega valida vira S, N ou vazio (o select so conhece
+ * essas opcoes). Entrega invalida segue como veio, para a linha apontar o problema.
+ */
+export function normalizarCelulasDaPrevia<T extends { frete: string; envio: string; entrega: string }>(row: T): T {
+  const entrega = lerEntregaDaPlanilha(row.entrega);
+  return {
+    ...row,
+    frete: String(row.frete ?? "").replace(",", "."),
+    envio: String(row.envio ?? "").replace(",", "."),
+    entrega: entrega === true ? "S" : entrega === false ? "N" : entrega === null ? "" : row.entrega,
+  };
 }
