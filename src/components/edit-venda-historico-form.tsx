@@ -226,7 +226,7 @@ export function EditVendaHistoricoForm({
           name="entrega"
           defaultValue={editVenda.entrega === true ? "1" : editVenda.entrega === false ? "0" : ""}
           options={[
-            { value: "", label: "Não informado" },
+            ...(editVenda.entrega == null ? [{ value: "", label: "Não informado" }] : []),
             { value: "1", label: "Entrega" },
             { value: "0", label: "Retirada" },
           ]}

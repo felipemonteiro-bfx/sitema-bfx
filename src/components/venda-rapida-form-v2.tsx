@@ -1278,13 +1278,17 @@ export default function VendaRapidaFormV2({
             <div className="space-y-2">
               <Label htmlFor="entrega" className={cn("text-xs font-bold uppercase tracking-wider", validationErrors.entrega ? "text-error-text" : "text-muted-foreground")}>
                 Entrega ou retirada <span className="text-error-text">*</span>
-                {validationErrors.entrega && " (obrigatório)"}
+                {validationErrors.entrega && entrega === "" && " (obrigatório)"}
               </Label>
               <FormSelect
                 id="entrega"
                 name="entrega"
                 value={entrega}
-                onValueChange={(v) => setEntrega(v as "" | "1" | "0")}
+                onValueChange={(v) => {
+                  setEntrega(v as "" | "1" | "0");
+                  setValidationErrors((prev) => ({ ...prev, entrega: false }));
+                }}
+                searchable={false}
                 placeholder="Selecione"
                 options={[
                   { value: "1", label: "Entrega" },

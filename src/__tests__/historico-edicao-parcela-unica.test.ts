@@ -26,6 +26,7 @@ vi.mock("@/lib/consignado-db", () => ({ recalcularConsignadoSeguro: vi.fn() }));
 const { updateVenda } = await import("@/app/(app)/historico/actions");
 const { FORMA_PAGAMENTO } = await import("@/lib/forma-pagamento");
 const { custoAntecipacaoVenda } = await import("@/lib/antecipacao-custo");
+const { MSG_CUSTO_ENVIO_ENTREGA, MSG_RETIRADA_COM_FRETE } = await import("@/lib/validations/venda");
 
 function formUmaVez(forma: string = FORMA_PAGAMENTO.DESCONTO_FOLHA): FormData {
   const fd = new FormData();
@@ -303,5 +304,62 @@ describe("updateVenda — 1x em folha com regra da empresa (2026-09-30)", () => 
     dbMock.parcelaVencimento.findMany.mockResolvedValue([]);
     await updateVenda(form());
     expect(criadas()[0]).toMatchObject({ dataVencimento: new Date("2026-10-15T00:00:00.000Z") });
+  });
+});
+
+// Venda legada com entrega NULL passando pelo updateVenda real (revisao final de 2026-10-02).
+describe("updateVenda — venda legada com entrega nula", () => {
+  const gravada = (extra: Record<string, unknown> = {}) => ({
+    clienteId: 42,
+    dataVenda: new Date("2026-09-22T00:00:00.000Z"),
+    formaPagamento: FORMA_PAGAMENTO.DESCONTO_FOLHA,
+    descontoEmFolha: true,
+    boleto: false,
+    parcelas: 1,
+    valorFrete: 30,
+    custoEnvio: 0,
+    entrega: null,
+    desconto: 0,
+    valorVenda: 150,
+    quantidade: 1,
+    custoProduto: 100,
+    produtoNome: "Produto X",
+    itens: [{ subtotal: 150 }],
+    ...extra,
+  });
+  beforeEach(() => {
+    dbMock.cliente.findUnique.mockResolvedValue({ empresaParceiraId: null });
+    dbMock.regraEmpresa.findMany.mockResolvedValue([]);
+  });
+
+  it("salvar sem mexer (entrega vazia): passa e nao escreve entrega", async () => {
+    dbMock.venda.findUnique.mockResolvedValue(gravada());
+    const fd = formUmaVez();
+    fd.set("frete", "30");
+    fd.set("envio", "0");
+    fd.set("entrega", "");
+    const r = await updateVenda(fd);
+    expect(r).toMatchObject({ success: true });
+    expect(dbMock.venda.update.mock.calls[0][0].data).not.toHaveProperty("entrega");
+  });
+
+  it("marcar Entrega sem custo de envio: recusa", async () => {
+    dbMock.venda.findUnique.mockResolvedValue(gravada());
+    const fd = formUmaVez();
+    fd.set("frete", "30");
+    fd.set("envio", "0");
+    fd.set("entrega", "1");
+    const r = await updateVenda(fd);
+    expect(r).toMatchObject({ success: false, error: MSG_CUSTO_ENVIO_ENTREGA });
+  });
+
+  it("marcar Retirada com frete cobrado: recusa", async () => {
+    dbMock.venda.findUnique.mockResolvedValue(gravada({ valorFrete: 0 }));
+    const fd = formUmaVez();
+    fd.set("frete", "30");
+    fd.set("envio", "0");
+    fd.set("entrega", "0");
+    const r = await updateVenda(fd);
+    expect(r).toMatchObject({ success: false, error: MSG_RETIRADA_COM_FRETE });
   });
 });

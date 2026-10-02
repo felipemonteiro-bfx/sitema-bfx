@@ -243,7 +243,7 @@ export function EditVendaFormClient({
               value={entrega}
               onValueChange={setEntrega}
               options={[
-                { value: "", label: "Não informado" },
+                ...(editVenda.entrega == null ? [{ value: "", label: "Não informado" }] : []),
                 { value: "1", label: "Entrega" },
                 { value: "0", label: "Retirada" },
               ]}

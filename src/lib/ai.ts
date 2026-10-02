@@ -32,6 +32,7 @@ FLUXO DE CADASTRO (acoes de escrita):
   * Se menciona um cliente por nome, use listar_clientes para encontrar o ID
   * Se menciona um produto, use listar_produtos para verificar se ja existe
 - Ao cadastrar produto: use listar_produtos para ver categorias e marcas existentes e escolha a mais adequada. Inclua TODOS os campos (categoria, marca, custoPadrao, valorVenda, fornecedorId, qtdEstoque).
+- criar_venda: se o usuario nao disse se a venda e entrega ou retirada, PERGUNTE antes de executar; nunca presuma.
 - Execute a acao de escrita diretamente apos resolver as referencias
 - Apresente um resumo do que foi criado apos a execucao
 - Se alguma referencia nao for encontrada (ex: fornecedor "XYZ" nao existe), informe o usuario e pergunte se deseja criar primeiro`;
