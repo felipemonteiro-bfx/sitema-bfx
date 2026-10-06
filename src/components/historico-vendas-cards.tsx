@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
+import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { VerTermoAssinadoLink } from "@/components/ver-termo-assinado-link";
 import { custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { FORMA_PAGAMENTO, formaFromLegacyFlags, formaPagamentoLabel } from "@/lib/forma-pagamento";
@@ -54,6 +55,7 @@ type Venda = {
   boletoUrl: string | null;
   cliente: { nome: string } | null;
   custoProduto?: number | null;
+  assinaturaToken?: string | null;
   assinatura?: { assinaturaStatus: string | null } | null;
   itens?: { produtoNome: string; custoProduto: number; quantidade: number; subtotal: number }[];
 };
@@ -250,9 +252,11 @@ function VendaCard({
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "touch-manipulation min-h-[44px]")}
               label={venda.descontoEmFolha ? "Autorização" : "PDF"}
             />
-            {venda.assinatura?.assinaturaStatus === "assinado" && (
+            {venda.assinatura?.assinaturaStatus === "assinado" ? (
               <VerTermoAssinadoLink vendaId={venda.id} className="touch-manipulation min-h-[44px]" />
-            )}
+            ) : venda.assinaturaToken ? (
+              <CopiarLinkAssinatura token={venda.assinaturaToken} className="min-h-[44px] touch-manipulation" />
+            ) : null}
           </div>
         </div>
       </CardContent>

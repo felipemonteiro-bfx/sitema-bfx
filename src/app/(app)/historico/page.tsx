@@ -21,6 +21,7 @@ import { fuzzyFindVendas } from "@/lib/db-search";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
 import { VerTermoAssinadoLink } from "@/components/ver-termo-assinado-link";
+import { garantirLinksContrato } from "@/lib/link-contrato-db";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   FORMA_PAGAMENTO,
@@ -156,6 +157,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         select: { produtoNome: true, custoProduto: true, quantidade: true, subtotal: true },
         orderBy: { id: "asc" },
       },
+      status: true,
       assinaturaToken: true,
       assinatura: {
         select: {
@@ -168,6 +170,30 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     },
   });
 
+  // Folha antiga, ou que virou folha na edição, nascia sem token. O link do
+  // contrato passa a existir na hora em que a venda aparece no histórico.
+  const linksNovos = await garantirLinksContrato(vendas);
+  for (const venda of vendas) {
+    const token = linksNovos.get(venda.id);
+    if (!token) continue;
+    venda.assinaturaToken = token;
+    venda.assinatura ??= { assinaturaStatus: "pendente" };
+  }
+  if (editId && !vendas.some((venda) => venda.id === editId)) {
+    const foraDaPagina = await prisma.venda.findUnique({
+      where: { id: editId },
+      select: {
+        id: true,
+        formaPagamento: true,
+        descontoEmFolha: true,
+        assinaturaToken: true,
+        status: true,
+        assinatura: { select: { assinaturaStatus: true } },
+      },
+    });
+    if (foraDaPagina) await garantirLinksContrato([foraDaPagina]);
+  }
+
   const editVenda = editId ? await prisma.venda.findUnique({
     where: { id: editId },
     select: {
@@ -175,6 +201,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       quantidade: true, valorVenda: true, valorFrete: true, custoEnvio: true, entrega: true,
       custoProduto: true, parcelas: true, temNota: true, taxaNota: true,
       desconto: true, descontoEmFolha: true, boleto: true, formaPagamento: true,
+      assinaturaToken: true,
+      assinatura: { select: { assinaturaStatus: true } },
       asaasPaymentId: true, boletoUrl: true,
       itens: {
         select: { produtoNome: true, custoProduto: true, valorVenda: true, quantidade: true, subtotal: true },

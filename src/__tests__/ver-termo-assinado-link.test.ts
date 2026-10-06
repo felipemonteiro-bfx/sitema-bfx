@@ -29,7 +29,8 @@ describe("Ver termo antes de enviar ao RH", () => {
   it("no cartão do celular só aparece quando a venda está assinada", () => {
     const fonte = readFileSync("src/components/historico-vendas-cards.tsx", "utf8");
 
-    expect(fonte).toContain('assinaturaStatus === "assinado" && (\n              <VerTermoAssinadoLink');
+    expect(fonte).toContain('assinaturaStatus === "assinado" ? (\n              <VerTermoAssinadoLink');
+    expect(fonte).toContain("<CopiarLinkAssinatura");
     expect(fonte).toContain('className="touch-manipulation min-h-[44px]"');
   });
 });
