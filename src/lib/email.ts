@@ -14,6 +14,7 @@ import { formatBRL, formatDateBR } from "@/lib/utils";
 import { enviarWhatsApp } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 import { obterDocumentoPorVendaETipo } from "@/lib/documento-service";
+import { gravarCopiaEnviados } from "@/lib/email-enviados";
 import { assertSafeEmailAddresses, buildMimeMessage, type EmailAttachment } from "@/lib/email-mime";
 import { emailsCopia } from "@/lib/email-copia";
 import { linkHistoricoEmails, registrarEnvio, type OrigemEmail, type RegistroEnvio } from "@/lib/email-historico";
@@ -122,6 +123,17 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
     const message = buildMimeMessage(opts, cfg.from);
 
     await smtpSend(cfg, allRecipients, message, toList.length);
+    // O destinatário já recebeu. Falha ao copiar para Enviados não desfaz o envio.
+    await gravarCopiaEnviados({
+      host: process.env.IMAP_HOST?.trim() || cfg.host,
+      port: Number(process.env.IMAP_PORT || 993) || 993,
+      user: cfg.user,
+      pass: cfg.pass,
+      mailbox: process.env.IMAP_SENT_MAILBOX?.trim() || "INBOX.Sent",
+      message,
+    }).catch((error) => {
+      console.error("[email] Falha ao gravar copia em Enviados:", sanitizeEmailError(error));
+    });
   } catch (error) {
     if (opts.registro) await registrarEnvio(opts.registro, dadosDoEnvio(opts, remetente, toList, ccList, sanitizeEmailError(error)));
     throw error;

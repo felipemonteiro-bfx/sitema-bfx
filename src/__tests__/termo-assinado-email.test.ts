@@ -18,6 +18,7 @@ const recusados: string[] = [];
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/documento-service", () => ({ obterDocumentoPorVendaETipo: documentoMock }));
 vi.mock("@/lib/whatsapp", () => ({ enviarWhatsApp: vi.fn() }));
+vi.mock("@/lib/email-enviados", () => ({ gravarCopiaEnviados: vi.fn(async () => undefined) }));
 vi.mock("net", () => ({ connect: netConnectMock }));
 
 describe("enviarTermoAssinadoAoRh", () => {

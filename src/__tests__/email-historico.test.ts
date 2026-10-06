@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { netConnectMock, smtpWrites, dbMock, falharSmtp } = vi.hoisted(() => ({
+const { netConnectMock, smtpWrites, dbMock, falharSmtp, gravarCopiaEnviados } = vi.hoisted(() => ({
   netConnectMock: vi.fn(),
   smtpWrites: [] as string[],
   dbMock: {
@@ -8,11 +8,13 @@ const { netConnectMock, smtpWrites, dbMock, falharSmtp } = vi.hoisted(() => ({
     emailEnvio: { create: vi.fn() },
   },
   falharSmtp: { ativo: false },
+  gravarCopiaEnviados: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/documento-service", () => ({ obterDocumentoPorVendaETipo: vi.fn() }));
 vi.mock("@/lib/whatsapp", () => ({ enviarWhatsApp: vi.fn() }));
+vi.mock("@/lib/email-enviados", () => ({ gravarCopiaEnviados }));
 vi.mock("net", () => ({ connect: netConnectMock }));
 
 function servidorSmtp() {
@@ -52,6 +54,7 @@ beforeEach(() => {
   falharSmtp.ativo = false;
   servidorSmtp();
   dbMock.emailEnvio.create.mockResolvedValue({ id: 1 });
+  gravarCopiaEnviados.mockResolvedValue(undefined);
   process.env.SMTP_HOST = "smtp.test";
   process.env.SMTP_PORT = "25";
   process.env.SMTP_USER = "user";
@@ -89,6 +92,18 @@ describe("sendEmail com registro — histórico de e-mails", () => {
         },
       },
     });
+    expect(gravarCopiaEnviados).toHaveBeenCalledWith(
+      expect.objectContaining({
+        host: "smtp.test",
+        port: 993,
+        user: "user",
+        pass: "pass",
+        mailbox: "INBOX.Sent",
+      }),
+    );
+    const copia = gravarCopiaEnviados.mock.calls[0][0].message as string;
+    expect(copia).toContain("From: bfx@test.com");
+    expect(copia).toContain("To: rh@empresa.test");
   });
 
   it("grava a falha com o motivo e continua lançando o erro", async () => {
@@ -98,6 +113,7 @@ describe("sendEmail com registro — histórico de e-mails", () => {
     await expect(
       sendEmail({ to: "rh@empresa.test", subject: "S", html: "<p>h</p>", registro: { tipo: "semanal", empresaId: 7, origem: "manual" } })
     ).rejects.toThrow(/554/);
+    expect(gravarCopiaEnviados).not.toHaveBeenCalled();
     expect(dbMock.emailEnvio.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ tipo: "semanal", origem: "manual", status: "falhou", erro: expect.stringContaining("554"), cc: null }),
     });
@@ -108,6 +124,16 @@ describe("sendEmail com registro — histórico de e-mails", () => {
     const { sendEmail } = await import("@/lib/email");
 
     await expect(sendEmail({ to: "rh@empresa.test", subject: "S", html: "h", registro: { tipo: "mensal", empresaId: 7 } })).resolves.toBeUndefined();
+  });
+
+  it("falha ao gravar a cópia em Enviados não derruba o envio", async () => {
+    gravarCopiaEnviados.mockRejectedValue(new Error("IMAP fora"));
+    const { sendEmail } = await import("@/lib/email");
+
+    await expect(sendEmail({ to: "rh@empresa.test", subject: "S", html: "h", registro: { tipo: "termo", empresaId: 7 } })).resolves.toBeUndefined();
+    expect(dbMock.emailEnvio.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ status: "enviado", erro: null }),
+    });
   });
 
   it("sem registro não grava nada", async () => {
