@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
+import { VerTermoAssinadoLink } from "@/components/ver-termo-assinado-link";
 import { custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { FORMA_PAGAMENTO, formaFromLegacyFlags, formaPagamentoLabel } from "@/lib/forma-pagamento";
 import { useState, startTransition } from "react";
@@ -249,6 +250,9 @@ function VendaCard({
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "touch-manipulation min-h-[44px]")}
               label={venda.descontoEmFolha ? "Autorização" : "PDF"}
             />
+            {venda.assinatura?.assinaturaStatus === "assinado" && (
+              <VerTermoAssinadoLink vendaId={venda.id} className="touch-manipulation min-h-[44px]" />
+            )}
           </div>
         </div>
       </CardContent>

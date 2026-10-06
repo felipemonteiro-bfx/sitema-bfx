@@ -20,6 +20,7 @@ import { updateVenda, deleteVenda, enviarEmailEmpresa } from "@/app/(app)/histor
 import { fuzzyFindVendas } from "@/lib/db-search";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
+import { VerTermoAssinadoLink } from "@/components/ver-termo-assinado-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   FORMA_PAGAMENTO,
@@ -564,6 +565,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
                           return termoEmail.mostrarReenvio && (
                           <div className="flex flex-col items-end gap-1">
+                            <VerTermoAssinadoLink vendaId={v.id} />
                             <EnviarEmailEmpresaButton
                               vendaId={v.id}
                               onSend={enviarEmailEmpresa}
