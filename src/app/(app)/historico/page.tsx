@@ -8,17 +8,20 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
-import { CheckCircle2, Download } from "lucide-react";
+import { CheckCircle2, Download, Plus } from "lucide-react";
 import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
 import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
 import { EditVendaSheetWrapper } from "@/components/edit-venda-sheet-wrapper";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
-import { valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
+import { FILTRO_VENDA_VALIDA, valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { updateVenda, deleteVenda, enviarEmailEmpresa } from "@/app/(app)/historico/actions";
 import { fuzzyFindVendas } from "@/lib/db-search";
-import { whereAssinatura } from "@/lib/historico-filtros";
+import { filtrosAtivos, whereAssinatura } from "@/lib/historico-filtros";
+import { FiltrosAtivos, descreverPeriodo } from "@/components/filtros-ativos";
+import { BarraDistribuicao } from "@/components/barra-distribuicao";
+import { StatusAssinatura, estadoAssinatura } from "@/components/status-assinatura";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
 import { VerTermoAssinadoLink } from "@/components/ver-termo-assinado-link";
@@ -110,6 +113,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   const totalVendas = await prisma.venda.count({ where });
   const totalPages = Math.ceil(totalVendas / pageSize);
+
+  // Distribuição por assinatura de TODAS as vendas filtradas (não só da página), com os
+  // critérios de historico-filtros. "Sem contrato" é o restante, então as três faixas
+  // somam o total do filtro.
+  const [qtdAssinada, qtdAguardando] = await Promise.all([
+    prisma.venda.count({ where: { AND: [where, FILTRO_VENDA_VALIDA, whereAssinatura("assinado")!] } }),
+    prisma.venda.count({ where: { AND: [where, whereAssinatura("pendente")!] } }),
+  ]);
+  const contagensAssinatura = {
+    assinada: qtdAssinada,
+    aguardando: qtdAguardando,
+    semContrato: Math.max(0, totalVendas - qtdAssinada - qtdAguardando),
+  };
 
   // Totais agregados de TODOS os registros filtrados (independente de paginação).
   // Buscamos apenas os campos necessários para valorTotalVenda/custoTotalVenda.
@@ -290,6 +306,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     }
   }
 
+  // Chip "Cliente": o parâmetro é o id; mostra o nome.
+  const nomesClientes = Object.fromEntries(clientes.map((c) => [String(c.id), c.nome]));
+
   const buildUrl = (params: Partial<Search>) => {
     const newParams = { ...sp, ...params };
     const search = new URLSearchParams();
@@ -311,12 +330,33 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Histórico de Vendas"
-        description="Filtre e edite vendas do período."
-        breadcrumbs={[{ label: "Histórico de Vendas" }]}
+        title="Histórico"
+        description={descreverPeriodo(paraInputDate(start), fimInclusivoParaInput(end))}
+        breadcrumbs={[{ label: "Vendas & Operações" }, { label: "Histórico" }]}
+        actions={
+          <>
+            <a
+              href={xlsxHref}
+              className={cn(buttonVariants({ variant: "outline" }), "min-h-11 gap-2")}
+              download
+            >
+              <Download className="h-4 w-4" aria-hidden="true" />
+              Exportar
+            </a>
+            <Link href="/venda-rapida" className={cn(buttonVariants(), "min-h-11 gap-2")}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Nova venda
+            </Link>
+          </>
+        }
       />
 
-      <HistoricoBuscaFuzzy defaultValue={sp.q || ""} />
+      <div className="flex flex-wrap items-center gap-2">
+        <HistoricoBuscaFuzzy defaultValue={sp.q || ""} />
+        <FiltrosAtivos filtros={filtrosAtivos(sp, { cliente: nomesClientes })} searchParams={sp} />
+      </div>
+
+      <BarraDistribuicao contagens={contagensAssinatura} />
 
       <Card variant="elevated">
         <CardHeader>
@@ -429,56 +469,43 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Vendas ({totalVendas})</CardTitle>
-          <div className="flex items-center gap-3">
-            <a
-              href={xlsxHref}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5")}
-              download
-            >
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Exportar Excel</span>
-            </a>
-            <div className="text-xs text-muted-foreground">Pg {page}/{totalPages || 1}</div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-6">
           <HistoricoVendasCards
             vendas={vendas}
             searchParams={sp}
             gerarBoletoAction={gerarBoletoAsaas}
           />
           <div className="hidden md:block">
-          <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Venda</TableHead>
                 <TableHead>Data</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Vendedor</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-center">Qtd</TableHead>
                 <TableHead className="text-right">Valor Total</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Custo</TableHead>
                 <TableHead className="text-right">Margem</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
                 <TableHead>Pagamento</TableHead>
-                <TableHead className="text-center">Assinado</TableHead>
-                <TableHead className="sticky right-0 bg-background"></TableHead>
+                <TableHead className="sticky right-0 bg-card"><span className="sr-only">Ações</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {vendas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12}>
+                  <TableCell colSpan={13}>
                     <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o período de busca." />
                   </TableCell>
                 </TableRow>
               ) : (
                 vendas.map((v) => (
                   <TableRow key={v.id}>
-                    <TableCell>{formatDateBR(v.dataVenda)}</TableCell>
+                    <TableCell className="min-h-11 font-mono tabular-nums text-muted-foreground">#{v.id}</TableCell>
+                    <TableCell className="font-mono tabular-nums text-muted-foreground">{formatDateBR(v.dataVenda)}</TableCell>
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
                     <TableCell className="max-w-[250px]">
@@ -502,14 +529,23 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center font-medium">{quantidadeTotal(v)}</TableCell>
-                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
+                    <TableCell className="text-center font-mono tabular-nums">{quantidadeTotal(v)}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums valor-sensivel valor-sensivel-fim">
                       {formatBRL(valorTotalVenda(v))}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
+                    <TableCell>
+                      <StatusAssinatura
+                        estado={estadoAssinatura({
+                          status: v.status,
+                          assinaturaStatus: v.assinatura?.assinaturaStatus,
+                          assinaturaToken: v.assinaturaToken,
+                        })}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right font-mono tabular-nums valor-sensivel valor-sensivel-fim">
                       {custoTotalVenda(v) != null ? formatBRL(custoTotalVenda(v)!) : <span className="text-muted-foreground opacity-30">—</span>}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
+                    <TableCell className="text-right font-mono tabular-nums valor-sensivel valor-sensivel-fim">
                       {(() => {
                         const m = margemVenda(v);
                         if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
@@ -561,16 +597,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         );
                       })()}
                     </TableCell>
-                    <TableCell className="text-center">
-                      {v.assinatura?.assinaturaStatus === 'assinado' ? (
-                        <CheckCircle2 className="h-4 w-4 text-success-text mx-auto" />
-                      ) : v.assinaturaToken ? (
-                        <span className="inline-block h-2 w-2 rounded-full bg-warning" title="Aguardando assinatura" />
-                      ) : (
-                        <span className="text-muted-foreground opacity-30">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="sticky right-0 bg-background">
+                    <TableCell className="sticky right-0 bg-card">
                       <div className="flex flex-wrap items-center gap-2 justify-end">
                         <Link
                           href={buildUrl({ edit: v.id.toString() })}
@@ -618,21 +645,21 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             {vendas.length > 0 && (
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-right font-semibold">
+                  <TableCell colSpan={6} className="text-right font-semibold">
                     Totais ({totalVendas} {totalVendas === 1 ? "venda" : "vendas"})
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
+                  <TableCell className="text-right font-mono tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
                     {formatBRL(totaisFiltro.valor)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
+                  <TableCell />
+                  <TableCell className="text-right font-mono tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
                     {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
                   </TableCell>
-                  <TableCell colSpan={5} />
+                  <TableCell colSpan={4} />
                 </TableRow>
               </TableFooter>
             )}
           </Table>
-          </div>
           </div>
 
           {/* Footer com totais — versão mobile */}
