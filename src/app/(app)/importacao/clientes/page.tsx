@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import ImportacaoClientesClient from "@/components/importacao-clientes-client";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
+import { NavImportacao } from "../nav-importacao";
 import { analisarImportacaoClientes, confirmarImportacaoClientes } from "./actions";
 
 export default async function Page() {
@@ -28,16 +29,16 @@ export default async function Page() {
         description="Escolha a empresa parceira e suba um CSV com nome (obrigatório), CPF, telefone, matrícula e e-mail (opcionais). Somente o nome é obrigatório: o CPF é a chave de idempotência quando existir, e o nome normalizado assume esse papel quando não há CPF. A análise mostra o que vai acontecer antes de qualquer gravação — rodar o mesmo arquivo duas vezes não duplica ninguém."
         breadcrumbs={[{ label: "Importação", href: "/importacao" }, { label: "Clientes" }]}
         actions={
-          <a
-            href={csvHref}
-            download="modelo-clientes.csv"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "border-primary text-primary hover:bg-primary/5 cursor-pointer"
-            )}
-          >
-            Baixar Modelo
-          </a>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <NavImportacao atual="/importacao/clientes" />
+            <a
+              href={csvHref}
+              download="modelo-clientes.csv"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer")}
+            >
+              Baixar modelo
+            </a>
+          </div>
         }
       />
       <ImportacaoClientesClient

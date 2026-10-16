@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSelect } from "@/components/form-select";
+import { Alert } from "@/components/ui/alert";
+import { RotuloCampo } from "@/components/rotulo-campo";
+import { NavAreasCrm } from "../nav-areas-crm";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { cn } from "@/lib/utils";
@@ -29,30 +32,29 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         title="Importar leads (funcionários)"
         description="Cole a lista de funcionários de uma empresa parceira. Cada um vira um lead no funil e, ao comprar, vira cliente automaticamente."
         breadcrumbs={[{ label: "CRM", href: "/crm" }, { label: "Importar leads" }]}
+        actions={<NavAreasCrm atual="/crm" />}
       />
 
       {sp.ok && (
-        <div className="rounded-lg border border-success/30 bg-success-bg p-3 text-sm text-success-text">
+        <Alert variant="success" showIcon>
           Importação concluída: {sp.criados ?? 0} novo(s) lead(s), {sp.vinculados ?? 0} já existente(s)
           atualizado(s), {sp.ignorados ?? 0} linha(s) ignorada(s).
-        </div>
+        </Alert>
       )}
       {sp.erro && (
-        <div className="rounded-lg border border-error/30 bg-error-bg p-3 text-sm text-error-text">
+        <Alert variant="error" showIcon>
           {sp.erro === "empresa" ? "Empresa não encontrada." : "Preencha a empresa e a lista."}
-        </div>
+        </Alert>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary text-base">Lista de funcionários</CardTitle>
+          <CardTitle>Lista de funcionários</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={importarLeads} className="space-y-4">
-            <div className="space-y-1">
-              <label htmlFor="empresaId" className="text-xs font-medium text-muted-foreground">
-                Empresa parceira
-              </label>
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="empresaId">Empresa parceira</RotuloCampo>
               <FormSelect
                 id="empresaId"
                 name="empresaId"
@@ -62,10 +64,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               />
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="lista" className="text-xs font-medium text-muted-foreground">
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="lista">
                 Uma pessoa por linha — <code>Nome; Matrícula; Telefone</code> (separador <code>;</code>, vírgula ou tab)
-              </label>
+              </RotuloCampo>
               <Textarea
                 id="lista"
                 name="lista"

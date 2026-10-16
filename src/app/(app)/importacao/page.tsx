@@ -1,11 +1,9 @@
-import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import ImportacaoClient from "@/components/importacao-client";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { NavImportacao } from "./nav-importacao";
 import { cn } from "@/lib/utils";
 
 export default async function Page() {
@@ -29,55 +27,26 @@ export default async function Page() {
       <PageHeader
         title="Importação Inteligente"
         description={'Revise e edite os dados do arquivo antes de confirmar. Use "Sugerir com IA" para padronizar clientes, produtos e preencher campos em branco.'}
+        breadcrumbs={[{ label: "Importação" }]}
         actions={
-          <>
-            <div className="text-right shrink-0 whitespace-nowrap">
-              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wide leading-none">Total no Banco</Label>
-              <div className="text-xl font-bold text-primary leading-tight">{count}</div>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <NavImportacao atual="/importacao" />
+            <div className="shrink-0 whitespace-nowrap text-right">
+              <div className="text-sm font-medium leading-none text-muted-foreground">Total no banco</div>
+              <div className="mt-1 font-mono text-xl font-medium leading-tight text-foreground">{count}</div>
             </div>
             <a
               href={csvHref}
               download="modelo-importacao.csv"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-primary text-primary hover:bg-primary/5 cursor-pointer")}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer")}
             >
-              Baixar Modelo
+              Baixar modelo
             </a>
-          </>
+          </div>
         }
       />
 
       <ImportacaoClient empresasParceiras={empresasParceiras} />
-
-      {/* Os importadores de fornecedores e clientes viviam sem nenhum link na UI —
-          so eram alcancaveis digitando a URL. */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Outras importações</CardTitle>
-          <CardDescription>
-            Cada uma analisa o arquivo e mostra o que seria criado antes de gravar qualquer coisa.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-3">
-          <Link
-            href="/importacao/fornecedores"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            Importar fornecedores
-          </Link>
-          <Link
-            href="/importacao/clientes"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            Importar clientes
-          </Link>
-          <Link
-            href="/importacao/consignado"
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-          >
-            Importar e-Consignado
-          </Link>
-        </CardContent>
-      </Card>
     </div>
   );
 }

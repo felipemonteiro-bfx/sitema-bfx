@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { KpiCard } from "@/components/kpi-card";
+import { RotuloCampo } from "@/components/rotulo-campo";
+import { NavAreasCrm } from "./nav-areas-crm";
 import { FormSelect } from "@/components/form-select";
 import {
   Table,
@@ -113,6 +116,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const countByEstagio = new Map<string, number>();
   for (const g of porEstagio) countByEstagio.set(g.estagioCrm ?? "cliente", g._count._all);
 
+  // Total da base: só para o rodapé de cada estágio do funil.
+  const totalBase = Array.from(countByEstagio.values()).reduce((soma, n) => soma + n, 0);
+
   const qs = (extra: Record<string, string | undefined>) => {
     const params = new URLSearchParams();
     const base: Record<string, string | undefined> = {
@@ -136,17 +142,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         description="Funil de relacionamento: leads, clientes e segmentação. Tudo sobre a mesma base de clientes."
         breadcrumbs={[{ label: "CRM" }]}
         actions={
-          <div className="flex flex-wrap gap-2">
-            <a href="/crm/atendimento" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
-              Atendimento WhatsApp
-            </a>
-            <a href="/crm/relacionamento" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>Relacionamento</a>
-            <a href="/crm/fidelidade" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-              Fidelidade
-            </a>
-            <a href="/crm/campanhas" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-              Campanhas
-            </a>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <NavAreasCrm atual="/crm" />
             <a href="/crm/importar-leads" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
               Importar leads
             </a>
@@ -155,32 +152,43 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       />
 
       {/* Funil: contagem por estágio (clicável para filtrar) */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {ESTAGIOS_ORDEM.map((e) => {
-          const ativo = estagioFiltro === e;
-          return (
-            <a
-              key={e}
-              href={qs({ estagio: ativo ? undefined : e })}
-              className={cn(
-                "rounded-lg border p-3 transition-colors hover:bg-muted",
-                ativo && "border-primary bg-primary/5"
-              )}
-            >
-              <div className="text-xs text-muted-foreground">{estagioLabel(e)}</div>
-              <div className="mt-1 text-2xl font-semibold text-primary">{countByEstagio.get(e) ?? 0}</div>
-            </a>
-          );
-        })}
-      </div>
+      <Card className="p-5 anim-entrada">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-foreground">Funil de relacionamento</h2>
+          <p className="text-sm text-muted-foreground">Clique em um estágio para filtrar a lista.</p>
+        </div>
+        <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr))]">
+          {ESTAGIOS_ORDEM.map((e, i) => {
+            const ativo = estagioFiltro === e;
+            const qtd = countByEstagio.get(e) ?? 0;
+            return (
+              <a
+                key={e}
+                href={qs({ estagio: ativo ? undefined : e })}
+                aria-current={ativo ? "true" : undefined}
+                className={cn("rounded-interno transition-colors", ativo && "ring-2 ring-primary")}
+              >
+                <KpiCard
+                  rotulo={estagioLabel(e)}
+                  valor={String(qtd)}
+                  rodape={ativo ? "Filtro ativo" : `${totalBase > 0 ? Math.round((qtd / totalBase) * 100) : 0}% da base`}
+                  valorSensivel={false}
+                  ordem={i}
+                  className="h-full"
+                />
+              </a>
+            );
+          })}
+        </div>
+      </Card>
 
       {/* Filtros */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-5">
           <form method="get" className="flex flex-wrap items-end gap-3">
             {estagioFiltro && <input type="hidden" name="estagio" value={estagioFiltro} />}
-            <div className="space-y-1">
-              <label htmlFor="q" className="text-xs font-medium text-muted-foreground">Buscar por nome</label>
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="q">Buscar por nome</RotuloCampo>
               <Input
                 id="q"
                 name="q"
@@ -189,8 +197,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 className="w-48"
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="empresa" className="text-xs font-medium text-muted-foreground">Empresa</label>
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="empresa">Empresa</RotuloCampo>
               <FormSelect
                 id="empresa"
                 name="empresa"
@@ -203,8 +211,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ]}
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="tag" className="text-xs font-medium text-muted-foreground">Tag</label>
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="tag">Tag</RotuloCampo>
               <FormSelect
                 id="tag"
                 name="tag"
@@ -217,8 +225,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ]}
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="comprou" className="text-xs font-medium text-muted-foreground">Comprou?</label>
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="comprou">Comprou?</RotuloCampo>
               <FormSelect
                 id="comprou"
                 name="comprou"
@@ -232,8 +240,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ]}
               />
             </div>
-            <div className="space-y-1">
-              <label htmlFor="nivel" className="text-xs font-medium text-muted-foreground">Nível</label>
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="nivel">Nível</RotuloCampo>
               <FormSelect
                 id="nivel"
                 name="nivel"
@@ -255,7 +263,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       {/* Gerenciar tags */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary text-base">Tags</CardTitle>
+          <CardTitle>Tags</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap gap-2">
@@ -277,10 +285,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary text-base">{clientes.length} cliente(s)</CardTitle>
+            <CardTitle>{clientes.length} cliente(s)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-interno bg-poco">
               <Table>
                 <TableHeader>
                   <TableRow>
