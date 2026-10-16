@@ -140,6 +140,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <a href="/crm/atendimento" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
               Atendimento WhatsApp
             </a>
+            <a href="/crm/relacionamento" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>Relacionamento</a>
             <a href="/crm/fidelidade" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               Fidelidade
             </a>

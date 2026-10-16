@@ -26,6 +26,7 @@ type MetaMessage = {
   id?: string;
   type?: string;
   text?: { body?: string };
+  interactive?: { button_reply?: {id?:string;title?:string}; list_reply?: {id?:string;title?:string} };
 };
 
 type MetaContact = { profile?: { name?: string }; wa_id?: string };
@@ -71,8 +72,10 @@ export function extrairMensagens(body: unknown): InboundMeta[] {
     }
 
     for (const msg of value.messages) {
-      if (msg.type !== "text" || !msg.from) continue;
-      const texto = msg.text?.body?.trim();
+      if (!msg.from) continue;
+      const reply=msg.interactive?.button_reply||msg.interactive?.list_reply;
+      const acoes:Record<string,string>={bfx_orcamento:'Orçamento',bfx_pedido:'Pedido',bfx_atendente:'Atendente'};
+      const texto=(msg.type==='text'?msg.text?.body:msg.type==='interactive'&&reply?(acoes[reply.id||'']||reply.title):undefined)?.trim();
       if (!texto) continue;
       out.push({
         telefone: msg.from,

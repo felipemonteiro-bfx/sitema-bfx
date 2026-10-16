@@ -76,6 +76,11 @@ export class MetaProvider implements WhatsAppProvider {
     });
   }
 
+  async sendButtons(numeroE164:string,texto:string,botoes:{id:string;title:string}[]):Promise<WhatsAppSendResult>{
+    if(!botoes.length||botoes.length>3||texto.length>1024||botoes.some(b=>!b.title||b.title.length>20||!b.id||b.id.length>256))return {ok:false,error:'botoes_invalidos',provider:this.name};
+    return this.post({to:numeroE164,type:'interactive',interactive:{type:'button',body:{text:texto},action:{buttons:botoes.map(reply=>({type:'reply',reply}))}}});
+  }
+
   async sendDocument(numeroE164: string, doc: WhatsAppDocument): Promise<WhatsAppSendResult> {
     if (!doc.url) {
       // A Cloud API aceita link público ou media_id; base64 exigiria upload prévio (/media).

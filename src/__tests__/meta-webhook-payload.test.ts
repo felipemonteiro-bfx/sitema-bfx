@@ -98,3 +98,5 @@ describe("extrairStatuses", () => {
     expect(extrairStatuses({ entry: [{}] })).toEqual([]);
   });
 });
+
+it('interpreta botão oficial sem perder a identidade da mensagem',()=>{const r=extrairMensagens({entry:[{changes:[{value:{messages:[{type:'interactive',from:'5592000000000',id:'wamid.button',interactive:{button_reply:{id:'bfx_orcamento',title:'Ver produtos'}}}]}}]}]});expect(r[0]?.texto).toBe('Orçamento');expect(r[0]?.waMessageId).toBe('wamid.button');});

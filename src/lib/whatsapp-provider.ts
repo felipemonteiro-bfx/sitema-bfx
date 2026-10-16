@@ -41,6 +41,7 @@ export type WhatsAppTemplate = {
 export interface WhatsAppProvider {
   readonly name: "evolution" | "meta_cloud";
   sendText(numeroE164: string, texto: string): Promise<WhatsAppSendResult>;
+  sendButtons?(numeroE164:string,texto:string,botoes:{id:string;title:string}[]):Promise<WhatsAppSendResult>;
   sendDocument(numeroE164: string, doc: WhatsAppDocument): Promise<WhatsAppSendResult>;
   sendTemplate(numeroE164: string, tpl: WhatsAppTemplate): Promise<WhatsAppSendResult>;
 }

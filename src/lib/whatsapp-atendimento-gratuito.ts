@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { resolveWhatsAppProviders } from '@/lib/whatsapp-provider';
 import { dentroDaJanela24h, marcarEnviada, marcarFalha } from '@/lib/whatsapp-mensagem';
 import { variantesLocaisDeTelefone } from '@/lib/telefone-busca';
+import { termosDeProduto, respostaEstoque } from '@/lib/whatsapp-estoque';
 import { inicioDaPausa } from '@/lib/whatsapp-pausa';
 
 const normalizar=(t:string)=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -21,8 +22,10 @@ export function respostaPorRegras(texto:string):string|null {
 export async function processarAtendimentoGratuito(telefone:string,texto:string):Promise<void> {
   const cfg=await prisma.config.findFirst();
   if(cfg?.whatsappPreAtendimento!==2||cfg.whatsappAutoEnabled!==1||!/^\d{10,15}$/.test(telefone))return;
-  const corpo=respostaPorRegras(texto);
-  if(!corpo||!await dentroDaJanela24h(telefone))return;
+  let corpo=respostaPorRegras(texto);
+  const termos=termosDeProduto(texto);
+  if(!corpo&&!termos.length&&texto.trim()&&!texto.startsWith('[')&&!humanoOuSaida(texto))corpo='Não consegui identificar seu pedido. Informe o produto/modelo, escreva PAGAMENTO ou PEDIDO, ou ATENDENTE para falar com a equipe.';
+  if((!corpo&&!termos.length)||!await dentroDaJanela24h(telefone))return;
   const {primary}=await resolveWhatsAppProviders();
   if(!primary||primary.name!=='meta_cloud')return;
   const escolha=await prisma.whatsAppMensagem.findFirst({where:{telefone,direcao:'in',OR:[{corpo:{equals:'SAIR',mode:'insensitive'}},{corpo:{equals:'PARAR',mode:'insensitive'}},{corpo:{equals:'VOLTAR',mode:'insensitive'}}]},orderBy:{criadoEm:'desc'},select:{corpo:true}});
@@ -40,15 +43,24 @@ export async function processarAtendimentoGratuito(telefone:string,texto:string)
   // Resposta humana ou solicitação de atendente suspende o bot, inclusive para visitantes.
   const recentes=await prisma.whatsAppMensagem.findFirst({where:{telefone,criadoEm:{gte:pausa},OR:[{direcao:'out',origem:'manual'},{direcao:'in',OR:[{corpo:{contains:'atendente',mode:'insensitive'}},{corpo:{contains:'humano',mode:'insensitive'}},{corpo:{contains:'vendedor',mode:'insensitive'}},{corpo:{contains:'SAIR',mode:'insensitive'}},{corpo:{contains:'parar',mode:'insensitive'}}]}]},select:{id:true}});
   if(recentes)return;
+  if(termos.length){
+    try{
+      const produtos=await prisma.produto.findMany({where:{AND:termos.map(termo=>({OR:[{nome:{contains:termo,mode:'insensitive' as const}},{marca:{contains:termo,mode:'insensitive' as const}},{categoria:{contains:termo,mode:'insensitive' as const}}]}))},select:{nome:true,qtdEstoque:true},orderBy:{qtdEstoque:'desc'},take:6});
+      corpo=respostaEstoque(produtos);
+    }catch{corpo='Não consegui consultar o estoque agora. A equipe precisa conferir o produto antes de confirmar disponibilidade. Escreva ATENDENTE para atendimento humano.';}
+  }
+  if(!corpo)return;
+  const resposta=corpo;
   const registro=await prisma.$transaction(async tx=>{
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${telefone}))`;
-    const repetida=await tx.whatsAppMensagem.findFirst({where:{telefone,direcao:'out',origem:'pre_atendimento',OR:[{criadoEm:{gte:new Date(Date.now()-10*60_000)}},{corpo,criadoEm:{gte:new Date(Date.now()-86_400_000)}}]},select:{id:true}});
+    const repetida=await tx.whatsAppMensagem.findFirst({where:{telefone,direcao:'out',origem:'pre_atendimento',corpo:resposta,criadoEm:{gte:new Date(Date.now()-86_400_000)}},select:{id:true}});
     if(repetida)return null;
-    return tx.whatsAppMensagem.create({data:{telefone,direcao:'out',origem:'pre_atendimento',corpo,status:'pendente'},select:{id:true}});
+    return tx.whatsAppMensagem.create({data:{telefone,direcao:'out',origem:'pre_atendimento',corpo:resposta,status:'pendente'},select:{id:true}});
   });
   if(!registro)return;
   try {
-    const result=await primary.sendText(telefone,corpo);
+    const menu=/^(oi|ola|bom dia|boa tarde|boa noite|menu|ajuda|voltar)[!?.\s]*$/.test(normalizar(texto).trim());
+    const result=menu&&primary.sendButtons?await primary.sendButtons(telefone,resposta,[{id:'bfx_orcamento',title:'Ver produtos'},{id:'bfx_pedido',title:'Meu pedido'},{id:'bfx_atendente',title:'Falar com a equipe'}]):await primary.sendText(telefone,resposta);
     if(result.ok)await marcarEnviada(registro.id,result.messageId);
     else await marcarFalha(registro.id,'Atendimento automático não aceito; conferir janela/conexão.');
   }catch{
