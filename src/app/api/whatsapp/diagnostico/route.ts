@@ -9,7 +9,7 @@ import { metaWebhookTelemetry } from '@/lib/meta-webhook-telemetry';
  * GET /api/whatsapp/diagnostico
  * Diagnoses WhatsApp / Evolution API status and configuration.
  */
-export async function GET() {
+export async function GET(request?: Request) {
   const ok = await requireAdmin();
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -49,10 +49,42 @@ export async function GET() {
     } catch {
       reception = { available: false, reason: "CONSULTA_DE_ENTRADAS_INDISPONIVEL" };
     }
+    // Contagem persistida: telemetria do processo reinicia no deploy e não
+    // serve para comprovar envio, entrega ou bloqueio das rotinas.
+    let outbound: Record<string, unknown>;
+    try {
+      const rawSince = request ? new URL(request.url).searchParams.get("since") : null;
+      const parsedSince = rawSince ? new Date(rawSince) : null;
+      const now = Date.now();
+      const since = parsedSince && Number.isFinite(parsedSince.getTime()) && parsedSince.getTime() <= now
+        ? new Date(Math.max(parsedSince.getTime(), now - 31 * 86400000))
+        : new Date(now - 86400000);
+      const groups = await prisma.whatsAppMensagem.groupBy({
+        by: ["status", "erroMsg"], where: { direcao: "out", criadoEm: { gte: since } }, _count: { _all: true },
+      });
+      const byStatus: Record<string, number> = {};
+      const blockedByReason: Record<string, number> = {};
+      let total = 0;
+      for (const group of groups) {
+        const count = group._count._all;
+        const status = ["pendente", "enviado", "entregue", "lido", "falhou"].includes(group.status) ? group.status : "outro";
+        total += count;
+        byStatus[status] = (byStatus[status] ?? 0) + count;
+        if (status === "falhou") {
+          const known = ["tarifa_nao_autorizada_template", "janela_gratuita_indisponivel", "janela_expirada", "provider_nao_configurado"];
+          const reason = group.erroMsg && known.includes(group.erroMsg) ? group.erroMsg : "outra_falha";
+          blockedByReason[reason] = (blockedByReason[reason] ?? 0) + count;
+        }
+      }
+      outbound = { available: true, since: since.toISOString(), total, byStatus, blockedByReason,
+        note: "Status atual por mensagem. Enviado é aceite, entregue/lido são callbacks. Zero registros não comprova execução de cron. Sem destinatários ou conteúdo." };
+    } catch {
+      outbound = { available: false, reason: "CONSULTA_DE_SAIDAS_INDISPONIVEL" };
+    }
     return NextResponse.json({ provider: "meta_cloud", checkedAt: new Date().toISOString(),
       sendingEnabled: selected?.whatsappAutoEnabled !== undefined
         ? selected.whatsappAutoEnabled === 1 : process.env.WHATSAPP_AUTO_ENABLED !== "0",
-      tokenCheck, reception, webhookTelemetry: metaWebhookTelemetry(),
+      tokenCheck, reception, outbound, webhookTelemetry: metaWebhookTelemetry(),
       status: tokenCheck.ok ? "AUTENTICACAO_CONFIRMADA" : "AUTENTICACAO_NAO_CONFIRMADA",
       note: "Autenticação não comprova envio/entrega. Este diagnóstico não envia mensagens nem ativa automações.",
     }, { headers: { "Cache-Control": "no-store" } });

@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-const mocks=vi.hoisted(()=>({admin:vi.fn(),config:vi.fn(),messages:vi.fn(),evolution:vi.fn(),flags:vi.fn()}));
+const mocks=vi.hoisted(()=>({admin:vi.fn(),config:vi.fn(),messages:vi.fn(),groups:vi.fn(),evolution:vi.fn(),flags:vi.fn()}));
 vi.mock('@/lib/guards',()=>({requireAdmin:mocks.admin}));
-vi.mock('@/lib/db',()=>({prisma:{config:{findFirst:mocks.config},whatsAppMensagem:{findMany:mocks.messages}}}));
+vi.mock('@/lib/db',()=>({prisma:{config:{findFirst:mocks.config},whatsAppMensagem:{findMany:mocks.messages,groupBy:mocks.groups}}}));
 vi.mock('@/lib/evolution',()=>({getInstanceState:mocks.evolution}));
 vi.mock('@/lib/whatsapp',()=>({getWhatsAppFlags:mocks.flags}));
 import { GET } from '@/app/api/whatsapp/diagnostico/route';
@@ -9,10 +9,18 @@ beforeEach(()=>{
  vi.resetAllMocks(); mocks.admin.mockResolvedValue(true);
  mocks.config.mockResolvedValue({whatsappProvider:'meta_cloud',metaWhatsappToken:'test-secret',metaWhatsappPhoneNumberId:'1354895454379397',metaWhatsappApiVersion:'v21.0',whatsappAutoEnabled:0});
  mocks.messages.mockResolvedValue([{id:1,criadoEm:new Date('2026-10-16T03:00:00Z')}]);
+ mocks.groups.mockResolvedValue([]);
  vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,status:200,json:async()=>({id:'1354895454379397',display_phone_number:'+55 92 8477-8250',verified_name:'Bfx Comercio'})}));
 });
 afterEach(()=>vi.unstubAllGlobals());
 describe('diagnóstico Meta sem envio',()=>{
+ it('distingue aceite, entrega e bloqueio sem expor conteúdo ou destinatários',async()=>{
+  mocks.groups.mockResolvedValue([{status:'enviado',erroMsg:null,_count:{_all:2}},{status:'entregue',erroMsg:null,_count:{_all:1}},{status:'falhou',erroMsg:'tarifa_nao_autorizada_template',_count:{_all:3}}]);
+  const data=await(await GET()).json();
+  expect(data.outbound).toMatchObject({available:true,total:6,byStatus:{enviado:2,entregue:1,falhou:3},blockedByReason:{tarifa_nao_autorizada_template:3}});
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(mocks.groups).toHaveBeenCalledWith(expect.objectContaining({by:['status','erroMsg'],where:expect.objectContaining({direcao:'out'})}));
+ });
  it('valida token salvo por GET no número correto, sem Evolution ou exposição de credenciais',async()=>{
   const res=await GET(); const data=await res.json();
   expect(data).toMatchObject({provider:'meta_cloud',tokenCheck:{ok:true,phoneMatches:true},sendingEnabled:false,reception:{recentCount:1}});
