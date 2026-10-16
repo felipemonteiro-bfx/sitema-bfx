@@ -11,6 +11,8 @@ type IntelligenceChatComposerProps = {
   providers?: { value: "openai" | "gemini"; label: string }[];
   formId?: string;
   showProviderSelect?: boolean;
+  /** Texto que já abre no campo (ex.: vindo da busca ⌘K). Não envia sozinho. */
+  initialPrompt?: string;
 };
 
 export function IntelligenceChatComposer({
@@ -18,8 +20,9 @@ export function IntelligenceChatComposer({
   providers = [],
   formId = "intelligence-chat-form",
   showProviderSelect = true,
+  initialPrompt = "",
 }: IntelligenceChatComposerProps) {
-  const [prompt, setPrompt] = React.useState("");
+  const [prompt, setPrompt] = React.useState(initialPrompt);
   const [recording, setRecording] = React.useState(false);
   const [transcribing, setTranscribing] = React.useState(false);
   const [recordingSeconds, setRecordingSeconds] = React.useState(0);

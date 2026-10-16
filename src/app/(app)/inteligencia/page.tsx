@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { prisma } from "@/lib/db";
+import { perguntaInicial } from "@/lib/pergunta-inicial";
 
 async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
   try {
@@ -166,7 +167,13 @@ async function getContextHistory(sessaoId: string) {
   return history;
 }
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ pergunta?: string | string[] }>;
+}) {
+  // `?pergunta=` só pré-preenche o campo (limitado a 500 chars); não envia.
+  const { pergunta } = await searchParams;
   const formId = "intelligence-chat-form";
   const session = await getSession();
   const dbRows = session ? await getDisplayHistory(session.username) : [];
@@ -218,6 +225,7 @@ export default async function Page() {
             action={askAi}
             formId={formId}
             currentProvider={providerAtual}
+            initialPrompt={perguntaInicial(pergunta)}
           />
         </CardContent>
       </Card>
