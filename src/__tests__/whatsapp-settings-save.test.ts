@@ -27,3 +27,5 @@ describe('confirmação de gravação WhatsApp',()=>{
   await expect(save(f)).rejects.toThrow('REDIRECT:/configuracoes?tab=whatsapp&error=whatsapp_invalid_ids');expect(db.update).not.toHaveBeenCalled();
  });
 });
+
+it('preserva modo gratuito por regras ao salvar, sem converter para IA',async()=>{const f=form();f.set('whatsappPreAtendimento','2');await expect(save(f)).rejects.toThrow('REDIRECT:/configuracoes?tab=whatsapp&saved=whatsapp');expect(db.update.mock.calls[0][0].data.whatsappPreAtendimento).toBe(2);});

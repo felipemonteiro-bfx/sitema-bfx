@@ -155,7 +155,7 @@ async function saveWhatsApp(formData: FormData) {
   const autoNPS = checkboxComoNumero(formData.get("whatsappAutoNPS"));
   const autoBoasVindas = checkboxComoNumero(formData.get("whatsappAutoBoasVindas"));
   const autoAgradecimento = checkboxComoNumero(formData.get("whatsappAutoAgradecimento"));
-  const preAtendimento = checkboxComoNumero(formData.get("whatsappPreAtendimento"));
+  const preAtendimento = formData.get("whatsappPreAtendimento") === "2" ? 2 : checkboxComoNumero(formData.get("whatsappPreAtendimento"));
   const diasInativo = Math.max(30, Math.min(365, Number(formData.get("whatsappDiasInativo") || 60) || 60));
   const takeoverMinutos = Math.max(5, Math.min(480, Number(formData.get("whatsappTakeoverMinutos") || 60) || 60));
   // Provider oficial (Meta Cloud API) — token so e sobrescrito se informado (padrao Asaas).
@@ -824,13 +824,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="space-y-1 rounded-lg border border-border bg-muted/30 p-3">
                       <div className="flex items-center gap-2">
-                        <Checkbox
+                        <select
                           id="whatsappPreAtendimento"
                           name="whatsappPreAtendimento"
-                          defaultChecked={(cfg as Record<string, unknown>)?.whatsappPreAtendimento === 1}
-                        />
+                          defaultValue={String((cfg as Record<string, unknown>)?.whatsappPreAtendimento || 0)}
+                          className="rounded-md border bg-background p-2 text-sm"
+                        >
+                          <option value="0">Desligado</option>
+                          <option value="2">Gratuito — respostas por regras</option>
+                          <option value="1">IA externa — pode gerar custo</option>
+                        </select>
                         <label htmlFor="whatsappPreAtendimento" className="text-sm font-medium">
-                          Pré-atendimento por IA
+                          Respostas automáticas
                         </label>
                       </div>
                       <div className="flex items-center gap-2 pl-6">
@@ -849,14 +854,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </label>
                       </div>
                       <p className="text-xs text-muted-foreground pl-6">
-                        Quem mandar mensagem no WhatsApp é atendido por uma IA com acesso ao catálogo de produtos.
-                        Configure o webhook MESSAGES_UPSERT na Evolution API para:
+                        O modo gratuito orienta sobre orçamento, pedido e pagamento, sem consultar IA paga.
+                        Não confirma preços ou quitação. ATENDENTE ou resposta humana pausa o automático.
+                        No modo Meta, use o webhook oficial abaixo:
                       </p>
                       <div className="pl-6 flex flex-wrap items-center gap-2">
                         <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
                           {(() => {
                             const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://seu-dominio.com";
-                            return `${base}/api/webhooks/evolution`;
+                            return `${base}/api/webhooks/${cfg?.whatsappProvider === 'meta_cloud' ? 'meta-whatsapp' : 'evolution'}`;
                           })()}
                         </code>
                         <span className="text-xs text-muted-foreground">

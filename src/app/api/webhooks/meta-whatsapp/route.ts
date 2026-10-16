@@ -15,6 +15,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { processarMensagemRecebida } from "@/lib/whatsapp-pre-atendimento";
+import { processarAtendimentoGratuito } from '@/lib/whatsapp-atendimento-gratuito';
 import { verificarAssinaturaMeta } from "@/lib/meta-webhook-signature";
 import { extrairMensagens, extrairStatuses } from "@/lib/meta-webhook-payload";
 import { registrarEntrada, avancarStatusPorWaMessageId } from "@/lib/whatsapp-mensagem";
@@ -105,6 +106,12 @@ export async function POST(req: Request) {
         corpo: m.texto,
       });
       if (nova) storedMessages++;
+      if (nova && cfg?.whatsappPreAtendimento === 2) {
+        // Aguarda o processamento; nenhuma IA externa ou resposta a evento antigo.
+        await processarAtendimentoGratuito(m.telefone, m.texto).catch(() => {
+          console.warn('[Webhook Meta] Atendimento gratuito indisponível; entrada preservada');
+        });
+      }
       // `nova === false` é reentrega da Meta: não responder duas vezes.
       if (nova && preAtendimentoAtivo) {
         void processarMensagemRecebida(m.telefone, m.texto, m.nome);

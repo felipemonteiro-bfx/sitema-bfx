@@ -1,0 +1,13 @@
+import Link from 'next/link';
+import { prisma } from '@/lib/db';
+import { formatBRL } from '@/lib/utils';
+const data=(d:Date)=>d.toLocaleDateString('pt-BR',{timeZone:'America/Manaus'});
+
+/** Somente leitura, chamado após vínculo único e guarda admin da página. */
+export async function ContextoCliente({clienteId}:{clienteId:number|null}) {
+  if(!clienteId)return <div className="rounded-lg border p-3 text-sm"><strong>Vínculo pendente</strong><p>Telefone sem cadastro único comprovado. Compras e pagamentos não serão associados por nome parcial.</p></div>;
+  const cliente=await prisma.cliente.findUnique({where:{id:clienteId},select:{id:true,nome:true,empresa:true,estagioCrm:true,vendas:{orderBy:{dataVenda:'desc'},take:5,select:{id:true,dataVenda:true,status:true,formaPagamento:true,itens:{select:{produtoNome:true}},parcelasVencimento:{orderBy:{numeroParcela:'asc'},select:{id:true,numeroParcela:true,dataVencimento:true,valorParcela:true,paga:true,dataPagamento:true,origemPagamento:true,liquidadaEm:true}},documentos:{select:{id:true,tipo:true}}}}}});
+  if(!cliente)return <p>Cadastro não encontrado. Vínculo pendente.</p>;
+  return <details className="rounded-lg border p-3" open><summary className="cursor-pointer font-semibold">Cliente, vendas e pagamentos — {cliente.nome}</summary><div className="mt-3 space-y-3 text-sm"><p>Cadastro #{cliente.id} · {cliente.empresa||'Empresa não informada'} · {cliente.estagioCrm||'Etapa não informada'}</p><p className="text-xs text-muted-foreground">Últimas 5 vendas. Baixa registrada não substitui comprovante nem autoriza cobrança; vendas canceladas ou estornadas não compõem saldo ativo. Nenhuma alteração é feita por esta consulta.</p>
+    {cliente.vendas.map(v=><div key={v.id} className="rounded-lg border p-3 space-y-2"><strong>Venda #{v.id} · {data(v.dataVenda)} · {v.status}</strong><p>{v.itens.map(i=>i.produtoNome).join(', ')||'Produtos não informados'} · {v.formaPagamento||'Forma não informada'}</p><p>{v.documentos.length} documento(s) registrado(s)</p>{v.parcelasVencimento.map(p=><p key={p.id}>Parcela #{p.id} ({p.numeroParcela}) · {formatBRL(p.valorParcela)} · vence {data(p.dataVencimento)} · {p.paga||p.liquidadaEm?`Baixa registrada${p.dataPagamento?' em '+data(p.dataPagamento):''} (${p.origemPagamento||'origem não informada'})`:'Sem baixa registrada — conferir antes de cobrar'}</p>)}{!v.parcelasVencimento.length&&<p>Sem parcelas cadastradas; não presumir quitação.</p>}</div>)}{!cliente.vendas.length&&<p>Sem venda vinculada neste cadastro.</p>}<Link href="/historico" className="underline">Abrir histórico de vendas</Link></div></details>;
+}

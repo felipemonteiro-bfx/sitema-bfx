@@ -2,13 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHmac } from "crypto";
 
 const mocks = vi.hoisted(() => ({
-  config: vi.fn(), entrada: vi.fn(), status: vi.fn(), atendimento: vi.fn(),
+  config: vi.fn(), entrada: vi.fn(), status: vi.fn(), atendimento: vi.fn(), gratuito: vi.fn(),
 }));
 vi.mock("@/lib/db", () => ({ prisma: { config: { findFirst: mocks.config } } }));
 vi.mock("@/lib/whatsapp-mensagem", () => ({
   registrarEntrada: mocks.entrada, avancarStatusPorWaMessageId: mocks.status,
 }));
 vi.mock("@/lib/whatsapp-pre-atendimento", () => ({ processarMensagemRecebida: mocks.atendimento }));
+vi.mock('@/lib/whatsapp-atendimento-gratuito',()=>({processarAtendimentoGratuito:mocks.gratuito}));
 import { POST } from "@/app/api/webhooks/meta-whatsapp/route";
 import { metaWebhookTelemetry } from '@/lib/meta-webhook-telemetry';
 
@@ -85,4 +86,13 @@ describe("webhook Meta restrito ao número configurado", () => {
     expect((await POST(request(body))).status).toBe(200);
     expect(mocks.atendimento).not.toHaveBeenCalled();
   });
+});
+
+it('processa modo gratuito sem IA e não responde reentrega',async()=>{
+ mocks.config.mockResolvedValue({metaAppSecret:SECRET,metaWhatsappPhoneNumberId:TARGET,whatsappPreAtendimento:2});
+ mocks.gratuito.mockResolvedValue(undefined);
+ const body={entry:[{changes:[change(TARGET,'free')]}]};
+ expect((await POST(request(body))).status).toBe(200);
+ expect(mocks.gratuito).toHaveBeenCalledTimes(1);expect(mocks.atendimento).not.toHaveBeenCalled();
+ mocks.entrada.mockResolvedValue(false);await POST(request(body));expect(mocks.gratuito).toHaveBeenCalledTimes(1);
 });
