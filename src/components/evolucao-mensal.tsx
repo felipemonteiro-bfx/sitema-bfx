@@ -103,7 +103,7 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
                 {/* As outras colunas esmaecem quando uma recebe o mouse ou o foco (:has, só CSS). */}
                 <ol
                   aria-label="Faturamento por mês"
-                  className="bloco-sensivel relative flex h-full items-stretch gap-2 sm:gap-4 lg:gap-6 [&:has(.evo-col:focus-within)_.evo-col:not(:focus-within)_.evo-barra]:opacity-45 [&:has(.evo-col:hover)_.evo-col:not(:hover)_.evo-barra]:opacity-45"
+                  className="bloco-sensivel relative flex h-full items-stretch gap-2 sm:gap-4 lg:gap-6 [&:has([data-evo-col]:focus-within)_[data-evo-col]:not(:focus-within)_[data-evo-barra]]:opacity-45 [&:has([data-evo-col]:hover)_[data-evo-col]:not(:hover)_[data-evo-barra]]:opacity-45"
                 >
                   {colunas.map((c) => {
                     const m = meses[c.indice];
@@ -114,7 +114,8 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
                         key={c.indice}
                         tabIndex={0}
                         aria-label={`${nome}: faturamento ${formatBRL(m.faturamento)}, custo ${formatBRL(m.custoVariavel)}, margem ${formatBRL(m.margem)}`}
-                        className="evo-col group/col relative flex min-w-0 flex-1 flex-col items-center justify-end rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        data-evo-col=""
+                        className="group/col relative flex min-w-0 flex-1 flex-col items-center justify-end rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {/* Trilha de fundo da coluna em foco. */}
                         <span
@@ -123,7 +124,8 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
                         />
                         <div
                           aria-hidden="true"
-                          className="evo-barra relative flex h-full w-[64%] max-w-14 flex-col-reverse transition-opacity duration-(--mov-hover) motion-reduce:transition-none"
+                          data-evo-barra=""
+                          className="relative flex h-full w-[64%] max-w-14 flex-col-reverse transition-opacity duration-(--mov-hover) motion-reduce:transition-none"
                         >
                           {c.vazio ? (
                             <span className="h-0.5 rounded-sm bg-grafico-trilha" />

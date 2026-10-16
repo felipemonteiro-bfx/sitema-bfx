@@ -47,7 +47,7 @@ describe("D2 — classe de tamanho no proprio <svg> vence o padrao da base", () 
   it("o padrao size-4 da base passa a ser condicional", () => {
     expect(variants.includes("[&_svg]:size-4")).toBe(false);
     expect(
-      variants.includes("[&_svg:not([class*='size-']):not([class*=' h-']):not([class^='h-'])]:size-4")
+      variants.includes("[&_svg:not([class*='size-']):not([class*='_h-']):not([class^='h-'])]:size-4")
     ).toBe(true);
   });
 

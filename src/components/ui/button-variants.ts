@@ -23,7 +23,7 @@ export const buttonVariants = cva(
   // `shrink-0` e `pointer-events-none` continuam incondicionais: nao sao
   // tamanho, e e justamente a falta do `shrink-0` que achata icone em flex
   // apertado (medido: `h-3 w-3` renderizando 8.42px onde nao ha buttonVariants).
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-controle text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-']):not([class*=' h-']):not([class^='h-'])]:size-4 [&_svg]:shrink-0 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-controle text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-']):not([class*='_h-']):not([class^='h-'])]:size-4 [&_svg]:shrink-0 cursor-pointer",
   {
     variants: {
       // Vantage: botao plano, sem sombra (a hierarquia vem de cor e peso, nao de

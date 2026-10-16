@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { RAW_COLOR_PATTERN_SOURCE } from "./scripts/design-tokens/raw-color-scan.mjs";
 import { plugin as shadcn } from "@shadcn/lint";
+import * as shadcnPolicy from "./design-system/lint-policy.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -83,6 +84,19 @@ const bfxPlugin = {
   },
 };
 
+/**
+ * Regras do @shadcn/lint com a politica de design-system/lint-policy.mjs.
+ * `severidade` so muda no bloco temporario do escopo de outras tarefas.
+ */
+const shadcnRules = (severidade = {}) => ({
+  "shadcn/no-unknown-classes": [severidade.unknown ?? "error", shadcnPolicy.noUnknownClasses],
+  "shadcn/no-raw-colors": [severidade.raw ?? "error", shadcnPolicy.noRawColors],
+  "shadcn/no-arbitrary-values": [severidade.arbitrary ?? "warn", shadcnPolicy.noArbitraryValues],
+  "shadcn/no-inline-styles": [severidade.inline ?? "warn", shadcnPolicy.noInlineStyles],
+  "shadcn/require-static-classes": [severidade.static ?? "warn", shadcnPolicy.requireStaticClasses],
+  "shadcn/no-restyle": [severidade.restyle ?? "warn", shadcnPolicy.noRestyle],
+});
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -116,20 +130,42 @@ const eslintConfig = defineConfig([
   ...(exceptionRawColorFiles.length > 0
     ? [{ files: exceptionRawColorFiles, rules: { "bfx/no-raw-color": "off" } }]
     : []),
-  // @shadcn/lint (agent-first linter do design system Tailwind v4). Descobre os
-  // componentes pelo components.json e o tema pelo globals.css. Regras em
-  // "warn" para medir a divida antes de virar "error" (ver design-system/VANTAGE-PADROES.md).
+  // @shadcn/lint (linter do design system Tailwind v4). Descobre os componentes
+  // pelo components.json e o tema pelo globals.css. A POLITICA (o que cada
+  // componente aceita do chamador) mora em design-system/lint-policy.mjs e esta
+  // descrita em design-system/VANTAGE-PADROES.md ("Lint do design system").
   {
     files: ["src/**/*.{ts,tsx}"],
     plugins: { shadcn },
+    rules: shadcnRules(),
+  },
+  // Os componentes de src/components/ui/ sao DONOS da aparencia: la dentro eles
+  // se estilizam (classes de cor/raio/tamanho, valores estruturais como
+  // `ring-[3px]`, className montado por variante). no-raw-colors e
+  // no-inline-styles continuam valendo ali.
+  {
+    files: ["src/components/ui/**/*.{ts,tsx}"],
     rules: {
-      "shadcn/no-unknown-classes": "warn",
-      "shadcn/no-raw-colors": "warn",
-      "shadcn/no-arbitrary-values": "warn",
-      "shadcn/no-inline-styles": "warn",
-      "shadcn/require-static-classes": "warn",
-      "shadcn/no-restyle": "warn",
+      "shadcn/no-restyle": "off",
+      "shadcn/no-arbitrary-values": "off",
+      "shadcn/require-static-classes": "off",
     },
+  },
+  // temporario: tarefas N/L em andamento. Atendimento WhatsApp, janela
+  // destacada, esqueletos (loading.tsx) e a lib de whatsapp/atendimento estao
+  // sendo editados em outras tarefas; ali as regras ficam em "warn" ate elas
+  // terminarem. Remover este bloco quando N/L fecharem.
+  {
+    files: [
+      "src/app/(app)/crm/atendimento/**/*.{ts,tsx}",
+      "src/app/(janela)/**/*.{ts,tsx}",
+      "src/**/loading.tsx",
+      "src/lib/**/whatsapp*/**/*.{ts,tsx}",
+      "src/lib/**/whatsapp*.{ts,tsx}",
+      "src/lib/**/atendimento*/**/*.{ts,tsx}",
+      "src/lib/**/atendimento*.{ts,tsx}",
+    ],
+    rules: shadcnRules({ unknown: "warn", raw: "warn", arbitrary: "warn", inline: "warn", static: "warn", restyle: "warn" }),
   },
   // Override default ignores of eslint-config-next.
   globalIgnores([

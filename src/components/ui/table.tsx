@@ -105,7 +105,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
         "hover:bg-poco",
         "data-[state=selected]:bg-marca-tint",
         isHighlighted && "bg-warning-bg",
-        animated && "animate-fade-in-up fill-both",
+        animated && "animate-fade-in-up anim-fill-both",
         className
       )}
       style={{

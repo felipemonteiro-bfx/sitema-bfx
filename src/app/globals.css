@@ -839,9 +839,9 @@
 .stagger-8 { animation-delay: 400ms; }
 
 /* Animation fill modes */
-.fill-forwards { animation-fill-mode: forwards; }
-.fill-backwards { animation-fill-mode: backwards; }
-.fill-both { animation-fill-mode: both; }
+.anim-fill-forwards { animation-fill-mode: forwards; }
+.anim-fill-backwards { animation-fill-mode: backwards; }
+.anim-fill-both { animation-fill-mode: both; }
 
 /* ========================================
    INTERACTION UTILITY CLASSES
