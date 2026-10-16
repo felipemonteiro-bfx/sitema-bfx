@@ -13,3 +13,6 @@ Colunas com contagem e nomes textuais; cartões com links grandes e distintos pa
 
 ## Verificação
 Testes: validação, não autorizado, telefone/conversa ausente, responsável inválido, persistência por telefone, leitura do evento salvo, conflito de revisão, dados inválidos sem classificação falsa. Verificação de tipos/lint/design tokens, revisão independente, pipeline e inspeção visual quando sessão acessível. Implantação e verificação visual são etapas distintas.
+
+## Ampliação aprovada: arrastar e soltar
+Cartões arrastáveis para as colunas visíveis. Só arrasto iniciado no próprio quadro pode mover; não importar dados de arrasto externo. Preservar responsável e próxima ação e usar a mesma ação autenticada, com revisão concorrente. Não mover com editor aberto nem durante gravação; manter seletor por teclado/celular. Feedback no quadro informa sucesso/conflito e estado otimista só muda depois de confirmação do servidor. Retornar revisão do novo evento para uma segunda movimentação não usar revisão antiga.

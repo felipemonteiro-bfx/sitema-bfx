@@ -18,6 +18,10 @@ export function lerEstadoKanban(corpo:string):EstadoKanban|null{
 export const ESTADO_KANBAN_INICIAL:EstadoKanban={versao:1,etapa:'novas',responsavelId:null,responsavelNome:'Não atribuído',proximaAcao:'Revisar histórico e definir o próximo passo.'};
 export type CartaoConversa={telefone:string;nome:string;ultimaMensagem:string;revisao:number;estado:EstadoKanban;classificado:boolean};
 export type ResponsavelAtendimento={id:number;nome:string};
+export function movimentoKanban(c:CartaoConversa,etapa:string):{telefone:string;etapa:string;responsavelId:number|null;proximaAcao:string;revisao:number}|null{
+ if(!ETAPAS_ATENDIMENTO.some(e=>e.id===etapa)||etapa===c.estado.etapa)return null;
+ return {telefone:c.telefone,etapa,responsavelId:c.estado.responsavelId,proximaAcao:c.estado.proximaAcao,revisao:c.revisao};
+}
 export function resumoEventoKanban(corpo:string):string{
  const e=lerEstadoKanban(corpo);
  return e?`Quadro atualizado: ${ETAPAS_ATENDIMENTO.find(x=>x.id===e.etapa)?.nome}. Responsável: ${e.responsavelNome}. Próxima ação: ${e.proximaAcao}`:'Organização do quadro indisponível; conferir com a equipe.';

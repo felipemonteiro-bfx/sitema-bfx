@@ -3,7 +3,7 @@ const m=vi.hoisted(()=>({admin:vi.fn(),user:vi.fn(),find:vi.fn(),create:vi.fn(),
 vi.mock('@/lib/guards',()=>({requireAdmin:m.admin}));
 vi.mock('next/cache',()=>({revalidatePath:m.revalidate}));
 vi.mock('@/lib/db',()=>({prisma:{usuario:{findUnique:m.user},$transaction:async(f:(t:unknown)=>unknown)=>f({$executeRaw:m.lock,whatsAppMensagem:{findFirst:m.find,create:m.create}})}}));
-import {lerEstadoKanban} from '@/lib/whatsapp-kanban';
+import {lerEstadoKanban,movimentoKanban,ESTADO_KANBAN_INICIAL} from '@/lib/whatsapp-kanban';
 import {salvarOrganizacaoConversa} from '@/app/(app)/crm/atendimento/kanban-actions';
 const telefone='5511999990000';
 const input={telefone,etapa:'em_atendimento',responsavelId:3,proximaAcao:'Conferir orçamento',revisao:0};
@@ -38,4 +38,9 @@ it('persiste revisão entre salvamentos e aceita remover atribuição explicitam
  expect(await salvarOrganizacaoConversa({...input,revisao:90,etapa:'aguardando_fornecedor',responsavelId:null,proximaAcao:'Confirmar prazo com fornecedor'})).toMatchObject({ok:true});
  expect(lerEstadoKanban(atual!.corpo)).toMatchObject({etapa:'aguardando_fornecedor',responsavelId:null,proximaAcao:'Confirmar prazo com fornecedor'});
  expect(await salvarOrganizacaoConversa({...input,revisao:90})).toMatchObject({ok:false});
+});
+it('arrastar altera apenas etapa e conserva responsável, próxima ação e revisão',()=>{
+ const c={telefone,nome:'Teste',ultimaMensagem:'Hoje',revisao:90,classificado:true,estado:{...ESTADO_KANBAN_INICIAL,responsavelId:3,responsavelNome:'Equipe',proximaAcao:'Confirmar modelo'}};
+ expect(movimentoKanban(c,'aguardando_fornecedor')).toEqual({telefone,etapa:'aguardando_fornecedor',responsavelId:3,proximaAcao:'Confirmar modelo',revisao:90});
+ expect(movimentoKanban(c,'novas')).toBeNull();expect(movimentoKanban(c,'inexistente')).toBeNull();
 });
