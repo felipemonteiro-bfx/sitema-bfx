@@ -45,7 +45,7 @@ export async function processarAtendimentoGratuito(telefone:string,texto:string)
   if(recentes)return;
   if(termos.length){
     try{
-      const produtos=await prisma.produto.findMany({where:{AND:termos.map(termo=>({OR:[{nome:{contains:termo,mode:'insensitive' as const}},{marca:{contains:termo,mode:'insensitive' as const}},{categoria:{contains:termo,mode:'insensitive' as const}}]}))},select:{nome:true,qtdEstoque:true},orderBy:{qtdEstoque:'desc'},take:6});
+      const produtos=await prisma.produto.findMany({where:{AND:termos.map(termo=>({OR:[{nome:{contains:termo,mode:'insensitive' as const}},{marca:{contains:termo,mode:'insensitive' as const}},{categoria:{contains:termo,mode:'insensitive' as const}}]}))},select:{nome:true,qtdEstoque:true},orderBy:{qtdEstoque:{sort:'desc',nulls:'last'}},take:6});
       corpo=respostaEstoque(produtos);
     }catch{corpo='Não consegui consultar o estoque agora. A equipe precisa conferir o produto antes de confirmar disponibilidade. Escreva ATENDENTE para atendimento humano.';}
   }
