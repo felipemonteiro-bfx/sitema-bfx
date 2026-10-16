@@ -9,11 +9,12 @@ const dbMock = {
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 
-const { whereAssinaturaPendente, carregarAlertasShell } = await import("@/lib/alertas-shell");
+const { whereAssinaturasPendentesDoUsuario, carregarAlertasShell } = await import("@/lib/alertas-shell");
+const { whereAssinaturaPendente } = await import("@/lib/historico-filtros");
 const { whereParcelasInadimplentes } = await import("@/lib/venda-utils");
 
-const admin = { role: "admin", nomeExibicao: "Admin", username: "admin" };
-const vendedor = { role: "vendedor", nomeExibicao: "Maria", username: "maria" };
+const admin = { id: 1, role: "admin", nomeExibicao: "Admin", username: "admin" };
+const vendedor = { id: 5, role: "vendedor", nomeExibicao: "Maria", username: "maria" };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -21,21 +22,15 @@ beforeEach(() => {
   dbMock.parcelaVencimento.count.mockResolvedValue(9);
 });
 
-describe("whereAssinaturaPendente", () => {
-  it("admin: token gerado, não assinada, cancelada e estornada fora, sem filtro de vendedor", () => {
-    const w = whereAssinaturaPendente(admin);
-    expect(w.assinaturaToken).toEqual({ not: null });
-    expect(w.status).toEqual({ notIn: ["cancelada", "estornada"] });
-    expect(w.NOT).toEqual({ assinatura: { is: { assinaturaStatus: "assinado" } } });
-    expect("vendedor" in w).toBe(false);
+describe("whereAssinaturasPendentesDoUsuario", () => {
+  it("admin: só o critério único de pendente, sem escopo", () => {
+    expect(whereAssinaturasPendentesDoUsuario(admin)).toEqual({ AND: [whereAssinaturaPendente(), {}] });
   });
 
-  it("vendedor: restringe ao próprio nome de exibição", () => {
-    expect(whereAssinaturaPendente(vendedor).vendedor).toBe("Maria");
-  });
-
-  it("vendedor sem nome de exibição: cai para o username", () => {
-    expect(whereAssinaturaPendente({ ...vendedor, nomeExibicao: null }).vendedor).toBe("maria");
+  it("vendedor: critério único + escopo por vendedorId (com perna legada)", () => {
+    expect(whereAssinaturasPendentesDoUsuario(vendedor)).toEqual({
+      AND: [whereAssinaturaPendente(), { OR: [{ vendedorId: 5 }, { vendedorId: null, vendedor: "Maria" }] }],
+    });
   });
 });
 
@@ -69,7 +64,7 @@ describe("carregarAlertasShell", () => {
     expect(r).toEqual({ assinaturasPendentes: 4 });
     expect("parcelasVencidas" in r).toBe(false);
     expect(dbMock.parcelaVencimento.count).not.toHaveBeenCalled();
-    expect(dbMock.venda.count.mock.calls[0][0].where.vendedor).toBe("Maria");
+    expect(JSON.stringify(dbMock.venda.count.mock.calls[0][0].where)).toContain('"vendedorId":5');
   });
 
   it("nunca consulta estoque nem expõe chave de estoque", async () => {

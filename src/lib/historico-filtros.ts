@@ -7,6 +7,7 @@
  */
 import type { Prisma } from "@/generated/prisma";
 import { formaPagamentoLabel, isFormaPagamento } from "@/lib/forma-pagamento";
+import { FILTRO_VENDA_VALIDA } from "@/lib/venda-utils";
 
 export type FiltrosHistorico = {
   from?: string;
@@ -26,22 +27,27 @@ export type FiltroAtivo = { chave: string; rotulo: string; valor: string };
 const ASSINATURA_ROTULO: Record<string, string> = { pendente: "Pendente", assinado: "Assinado" };
 
 /**
- * Critério de "assinatura pendente" igual ao do Histórico (page.tsx, indicador
- * da linha: `assinatura.assinaturaStatus === 'assinado'` = assinada; senão, com
- * `assinaturaToken` = "Aguardando assinatura") e ao da sidebar (spec B2: token,
- * não assinada, não cancelada/estornada). O cron de alertas
- * (api/cron/alertas-admin/route.ts:58-64) e a tool da IA (ai-actions.ts:1411-1417)
- * usam `assinaturaStatus: "pendente"`, mas a linha da assinatura só existe depois
- * do primeiro acesso ao link; por isso aqui o token é o sinal confiável.
+ * FONTE ÚNICA do critério de "assinatura pendente" (Histórico, sidebar e busca ⌘K).
+ *
+ * Venda válida (FILTRO_VENDA_VALIDA: fora canceladas e estornadas), com link de assinatura
+ * gerado (`assinaturaToken`) e SEM `Assinatura` concluída. Venda sem linha em `assinaturas`
+ * (a linha só nasce no primeiro acesso ao link) conta como pendente, igual ao indicador da
+ * linha do Histórico. Assinaturas `expirado` e `processando` também contam como pendentes:
+ * só `assinado` tira a venda da lista.
+ *
+ * O cron de alertas (api/cron/alertas-admin) e a tool da IA usam `assinaturaStatus: "pendente"`
+ * de venda ativa, critério mais estreito de propósito (aviso diário após N dias).
  */
+export function whereAssinaturaPendente(): Prisma.VendaWhereInput {
+  return {
+    ...FILTRO_VENDA_VALIDA,
+    assinaturaToken: { not: null },
+    NOT: { assinatura: { is: { assinaturaStatus: "assinado" } } },
+  };
+}
+
 export function whereAssinatura(valor: string | undefined): Prisma.VendaWhereInput | undefined {
-  if (valor === "pendente") {
-    return {
-      assinaturaToken: { not: null },
-      status: "ativa",
-      NOT: { assinatura: { assinaturaStatus: "assinado" } },
-    };
-  }
+  if (valor === "pendente") return whereAssinaturaPendente();
   if (valor === "assinado") {
     return { assinatura: { assinaturaStatus: "assinado" } };
   }

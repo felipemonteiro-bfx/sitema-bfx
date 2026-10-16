@@ -16,7 +16,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { resolveVendedorScope } from "@/lib/vendedor-scope";
+import { resolveVendedorScope, whereVendasDoUsuario } from "@/lib/vendedor-scope";
+import { whereAssinaturaPendente } from "@/lib/historico-filtros";
 import { fuzzyFindVendas, unaccentFindClienteIds } from "@/lib/db-search";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { interpretarConsulta, rotuloSugestao, statusAssinaturaDe } from "@/lib/busca-rapida";
@@ -59,25 +60,22 @@ export async function GET(req: Request) {
   // Busca por texto: os ids vêm da busca fuzzy já travada no escopo.
   let idsTexto: number[] | undefined;
   if (!consulta.idVenda && consulta.termo) {
-    const achadas = await fuzzyFindVendas(consulta.termo, LIMITE_IDS, escopo);
+    const achadas = await fuzzyFindVendas(consulta.termo, LIMITE_IDS, ehAdmin ? undefined : { id: session.id, nome: escopo as string });
     idsTexto = achadas.map((v) => v.id);
   }
 
-  const vendedorEfetivo = escopo ?? consulta.vendedor;
+  // Escopo do usuário: o MESMO filtro vale para a lista, o total (`count`) e a busca por #id,
+  // para o total nunca revelar vendas que a lista esconde. Não-admin ignora o vendedor citado
+  // no texto (o escopo já é o dele); só admin filtra pelo nome citado.
+  const escopoVendas = whereVendasDoUsuario(session);
   const where = {
     ...(consulta.idVenda ? { id: consulta.idVenda } : {}),
     ...(idsTexto ? { id: { in: idsTexto } } : {}),
-    ...(vendedorEfetivo ? { vendedor: vendedorEfetivo } : {}),
+    ...(ehAdmin && consulta.vendedor ? { vendedor: consulta.vendedor } : {}),
     ...(consulta.forma ? { formaPagamento: consulta.forma } : {}),
-    ...(consulta.assinatura === "assinado"
-      ? { assinatura: { is: { assinaturaStatus: "assinado" } } }
-      : consulta.assinatura === "pendente"
-        ? {
-            status: "ativa",
-            assinaturaToken: { not: null },
-            NOT: { assinatura: { is: { assinaturaStatus: "assinado" } } },
-          }
-        : {}),
+    ...(consulta.assinatura === "assinado" ? { assinatura: { is: { assinaturaStatus: "assinado" } } } : {}),
+    // AND evita que o OR do escopo e o NOT/status do "pendente" se sobrescrevam.
+    AND: [...(consulta.assinatura === "pendente" ? [whereAssinaturaPendente()] : []), escopoVendas],
   };
 
   const [vendasBD, totalVendas] = await Promise.all([
@@ -109,7 +107,7 @@ export async function GET(req: Request) {
       clientesBD = await prisma.cliente.findMany({
         where: {
           id: { in: ids },
-          ...(escopo ? { vendas: { some: { vendedor: escopo } } } : {}),
+          ...(escopo ? { vendas: { some: escopoVendas } } : {}),
         },
         select: { id: true, nome: true },
         orderBy: { nome: "asc" },
