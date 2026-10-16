@@ -121,8 +121,13 @@ export async function fuzzyFindProdutoByNome(nome: string) {
 /**
  * Fuzzy search across vendas by: client name, product name (itens), or vendedor.
  * Returns up to `limit` vendas with cliente + itens included.
+ *
+ * `escopo` (opcional) trava o resultado nas vendas desse vendedor (campo
+ * `vendedor`, nome de exibicao). Sem ele o comportamento e o de sempre. O filtro
+ * entra no SQL (antes do LIMIT) e no `where` final, para o limite nunca esconder
+ * venda do proprio vendedor atras de venda alheia.
  */
-export async function fuzzyFindVendas(search: string, limit = 50) {
+export async function fuzzyFindVendas(search: string, limit = 50, escopo?: string) {
   const q = search.trim();
   if (!q) return [];
 
@@ -134,12 +139,14 @@ export async function fuzzyFindVendas(search: string, limit = 50) {
   const vendedorRows = await prisma.$queryRawUnsafe<VendaIdRow[]>(
     `SELECT id
      FROM "vendas"
-     WHERE similarity(f_unaccent(lower(COALESCE("vendedor", ''))), f_unaccent(lower($1))) > $2
-        OR f_unaccent(lower(COALESCE("vendedor", ''))) ILIKE '%' || f_unaccent(lower($1)) || '%'
+     WHERE (similarity(f_unaccent(lower(COALESCE("vendedor", ''))), f_unaccent(lower($1))) > $2
+        OR f_unaccent(lower(COALESCE("vendedor", ''))) ILIKE '%' || f_unaccent(lower($1)) || '%')
+        ${escopo ? 'AND "vendedor" = $4' : ""}
      LIMIT $3`,
     q,
     0.15,
-    limit
+    limit,
+    ...(escopo ? [escopo] : [])
   );
   const vendedorVendaIds = vendedorRows.map((r) => r.id);
 
@@ -148,12 +155,14 @@ export async function fuzzyFindVendas(search: string, limit = 50) {
   const itemRows = await prisma.$queryRawUnsafe<ItemVendaIdRow[]>(
     `SELECT DISTINCT "venda_id"
      FROM "itens_venda"
-     WHERE similarity(f_unaccent(lower("produto_nome")), f_unaccent(lower($1))) > $2
-        OR f_unaccent(lower("produto_nome")) ILIKE '%' || f_unaccent(lower($1)) || '%'
+     WHERE (similarity(f_unaccent(lower("produto_nome")), f_unaccent(lower($1))) > $2
+        OR f_unaccent(lower("produto_nome")) ILIKE '%' || f_unaccent(lower($1)) || '%')
+        ${escopo ? 'AND "venda_id" IN (SELECT id FROM "vendas" WHERE "vendedor" = $4)' : ""}
      LIMIT $3`,
     q,
     0.15,
-    limit
+    limit,
+    ...(escopo ? [escopo] : [])
   );
   const itemVendaIds = itemRows.map((r) => r.venda_id);
 
@@ -166,7 +175,7 @@ export async function fuzzyFindVendas(search: string, limit = 50) {
   if (conditions.length === 0) return [];
 
   return prisma.venda.findMany({
-    where: { OR: conditions },
+    where: escopo ? { OR: conditions, vendedor: escopo } : { OR: conditions },
     include: {
       cliente: { select: { nome: true, matricula: true, empresa: true } },
       itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
