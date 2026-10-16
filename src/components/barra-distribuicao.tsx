@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export type ContagensAssinatura = { assinada: number; aguardando: number; semContrato: number };
+export type ContagensAssinatura = { assinada: number; aguardando: number; semContrato: number; cancelada: number };
 
 type Chave = keyof ContagensAssinatura;
 
@@ -10,6 +10,7 @@ const ORDEM: { chave: Chave; rotulo: string }[] = [
   { chave: "assinada", rotulo: "Assinada" },
   { chave: "aguardando", rotulo: "Aguardando assinatura" },
   { chave: "semContrato", rotulo: "Sem contrato" },
+  { chave: "cancelada", rotulo: "Cancelada" },
 ];
 
 /**
@@ -18,7 +19,7 @@ const ORDEM: { chave: Chave; rotulo: string }[] = [
  * vira uma trilha neutra, sem NaN).
  */
 export function calcularProporcoes(c: ContagensAssinatura): { total: number; vazio: boolean; segmentos: SegmentoDistribuicao[] } {
-  const total = c.assinada + c.aguardando + c.semContrato;
+  const total = c.assinada + c.aguardando + c.semContrato + c.cancelada;
   if (total <= 0) {
     return { total: 0, vazio: true, segmentos: ORDEM.map((o) => ({ ...o, quantidade: 0, pct: 0 })) };
   }
@@ -46,6 +47,8 @@ const COR_SEGMENTO: Record<Chave, string> = {
   assinada: "bg-muted-foreground",
   aguardando: "bg-marca-tint-texto",
   semContrato: "",
+  // Discreta e neutra: informa sem disputar atenção com assinada/aguardando.
+  cancelada: "bg-divisoria",
 };
 const HACHURA = {
   backgroundImage:

@@ -114,16 +114,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   const totalPages = Math.ceil(totalVendas / pageSize);
 
   // Distribuição por assinatura de TODAS as vendas filtradas (não só da página), com os
-  // critérios de historico-filtros. "Sem contrato" é o restante, então as três faixas
-  // somam o total do filtro.
-  const [qtdAssinada, qtdAguardando] = await Promise.all([
+  // critérios de historico-filtros. Canceladas/estornadas têm faixa própria; "Sem contrato" é o
+  // restante das válidas, então as quatro faixas somam o total do filtro.
+  const [qtdAssinada, qtdAguardando, qtdCancelada] = await Promise.all([
     prisma.venda.count({ where: { AND: [where, FILTRO_VENDA_VALIDA, whereAssinatura("assinado")!] } }),
     prisma.venda.count({ where: { AND: [where, whereAssinatura("pendente")!] } }),
+    prisma.venda.count({ where: { AND: [where, { status: { in: ["cancelada", "estornada"] } }] } }),
   ]);
   const contagensAssinatura = {
     assinada: qtdAssinada,
     aguardando: qtdAguardando,
-    semContrato: Math.max(0, totalVendas - qtdAssinada - qtdAguardando),
+    semContrato: Math.max(0, totalVendas - qtdAssinada - qtdAguardando - qtdCancelada),
+    cancelada: qtdCancelada,
   };
 
   // Totais agregados de TODOS os registros filtrados (independente de paginação).

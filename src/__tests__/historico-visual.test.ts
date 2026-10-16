@@ -53,10 +53,10 @@ describe("descreverPeriodo", () => {
 describe("BarraDistribuicao", () => {
   it("as proporcoes somam 100 (maior resto)", () => {
     for (const c of [
-      { assinada: 5, aguardando: 3, semContrato: 2 },
-      { assinada: 1, aguardando: 1, semContrato: 1 },
-      { assinada: 7, aguardando: 0, semContrato: 1 },
-      { assinada: 0, aguardando: 0, semContrato: 9 },
+      { assinada: 5, aguardando: 3, semContrato: 2, cancelada: 0 },
+      { assinada: 1, aguardando: 1, semContrato: 1, cancelada: 0 },
+      { assinada: 7, aguardando: 0, semContrato: 1, cancelada: 0 },
+      { assinada: 0, aguardando: 0, semContrato: 9, cancelada: 0 },
     ]) {
       const r = calcularProporcoes(c);
       expect(r.vazio).toBe(false);
@@ -65,16 +65,16 @@ describe("BarraDistribuicao", () => {
   });
 
   it("zero vendas: sem NaN, marcado como vazio e a barra vira trilha neutra de 100%", () => {
-    const r = calcularProporcoes({ assinada: 0, aguardando: 0, semContrato: 0 });
+    const r = calcularProporcoes({ assinada: 0, aguardando: 0, semContrato: 0, cancelada: 0 });
     expect(r.vazio).toBe(true);
     expect(r.segmentos.every((s) => s.pct === 0)).toBe(true);
-    const html = renderToStaticMarkup(createElement(BarraDistribuicao, { contagens: { assinada: 0, aguardando: 0, semContrato: 0 } }));
+    const html = renderToStaticMarkup(createElement(BarraDistribuicao, { contagens: { assinada: 0, aguardando: 0, semContrato: 0, cancelada: 0 } }));
     expect(html.includes("NaN")).toBe(false);
     expect(html.includes("0 vendas")).toBe(true);
   });
 
   it("mostra 'N vendas' e a legenda com os tres status (sem Rascunho)", () => {
-    const html = renderToStaticMarkup(createElement(BarraDistribuicao, { contagens: { assinada: 5, aguardando: 3, semContrato: 2 } }));
+    const html = renderToStaticMarkup(createElement(BarraDistribuicao, { contagens: { assinada: 5, aguardando: 3, semContrato: 2, cancelada: 0 } }));
     expect(html.includes("10 vendas")).toBe(true);
     expect(html.includes("Assinada")).toBe(true);
     expect(html.includes("Aguardando assinatura")).toBe(true);
@@ -82,8 +82,25 @@ describe("BarraDistribuicao", () => {
     expect(html.includes("Rascunho")).toBe(false);
   });
 
+  it("cancelada tem faixa e legenda próprias: não vira 'Sem contrato' (R1-6)", () => {
+    const r = calcularProporcoes({ assinada: 2, aguardando: 1, semContrato: 1, cancelada: 4 });
+    expect(r.total).toBe(8);
+    expect(r.segmentos.find((x) => x.chave === "cancelada")!.quantidade).toBe(4);
+    expect(r.segmentos.find((x) => x.chave === "semContrato")!.quantidade).toBe(1);
+    expect(r.segmentos.reduce((a, x) => a + x.pct, 0)).toBe(100);
+    const html = renderToStaticMarkup(createElement(BarraDistribuicao, { contagens: { assinada: 2, aguardando: 1, semContrato: 1, cancelada: 4 } }));
+    expect(html.includes("Cancelada")).toBe(true);
+    expect(html.includes("8 vendas")).toBe(true);
+  });
+
+  it("a página tira as canceladas/estornadas do 'Sem contrato'", () => {
+    const pagina = ler("src/app/(app)/historico/page.tsx");
+    expect(pagina.includes("qtdCancelada")).toBe(true);
+    expect(pagina.includes("semContrato: Math.max(0, totalVendas - qtdAssinada - qtdAguardando - qtdCancelada)")).toBe(true);
+  });
+
   it("singular para 1 venda", () => {
-    const html = renderToStaticMarkup(createElement(BarraDistribuicao, { contagens: { assinada: 1, aguardando: 0, semContrato: 0 } }));
+    const html = renderToStaticMarkup(createElement(BarraDistribuicao, { contagens: { assinada: 1, aguardando: 0, semContrato: 0, cancelada: 0 } }));
     expect(html.includes("1 venda<")).toBe(true);
   });
 });
