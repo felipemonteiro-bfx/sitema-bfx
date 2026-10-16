@@ -533,7 +533,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardHeader>
                   <CardTitle>Conexão WhatsApp</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Escaneie o QR Code para conectar a conta do WhatsApp. Requer a Evolution API configurada abaixo.
+                    Confira o provedor selecionado e as pendências da conexão. Salve alterações abaixo antes de atualizar este cartão.
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -542,10 +542,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle>Integração WhatsApp (Evolution API)</CardTitle>
+                  <CardTitle>Integração WhatsApp</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Configure a Evolution API para envio automático de recibos, links de assinatura, boletos e lembretes
-                    de parcelas. Solução gratuita e open-source.
+                    Configure o provedor para recibos, links de assinatura, boletos e lembretes
+                    de parcelas. Tarifas e limites dependem do serviço selecionado.
                   </p>
                 </CardHeader>
                 <CardContent>

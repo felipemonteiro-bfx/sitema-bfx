@@ -8,6 +8,14 @@ type InstanceState = 'open' | 'connecting' | 'close' | 'unknown';
 
 type StatusResult = {
   state: InstanceState;
+  provider?: 'meta_cloud' | 'evolution';
+  meta?: {
+    phoneConfigured: boolean;
+    tokenConfigured: boolean;
+    appSecretConfigured: boolean;
+    verifyTokenConfigured: boolean;
+    sendingEnabled: boolean;
+  };
   qrcode?: string;
 };
 
@@ -19,7 +27,7 @@ export function WhatsAppConnect() {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/whatsapp');
+      const res = await fetch('/api/whatsapp', { cache: 'no-store' });
       if (!res.ok) {
         if (res.status === 401) return;
         throw new Error('Erro ao verificar status');
@@ -89,6 +97,33 @@ export function WhatsAppConnect() {
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Verificando conexão...
+      </div>
+    );
+  }
+
+  if (status.provider === 'meta_cloud') {
+    const checks = [
+      ['Identificador do número', status.meta?.phoneConfigured],
+      ['Token de envio', status.meta?.tokenConfigured],
+      ['Chave do aplicativo', status.meta?.appSecretConfigured],
+      ['Token de verificação do webhook', status.meta?.verifyTokenConfigured],
+    ] as const;
+    return (
+      <div className="space-y-4">
+        <p className="text-sm font-semibold">Meta Cloud API — conexão ainda não comprovada</p>
+        <ul className="space-y-2 text-sm">
+          {checks.map(([label, configured]) => (
+            <li key={label}><strong>{label}:</strong> {configured ? 'Configurado' : 'Pendente'}</li>
+          ))}
+          <li><strong>Envios automáticos:</strong> {status.meta?.sendingEnabled ? 'Habilitados na configuração' : 'Desligados'}</li>
+        </ul>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Estes indicadores conferem apenas a configuração salva. A liberação do número, a assinatura do webhook e a entrega de mensagens precisam ser confirmadas na Meta. Esta conexão não utiliza o QR Code da Evolution.
+        </p>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="button" variant="outline" size="sm" onClick={fetchStatus} className="gap-2">
+          <RefreshCw className="h-4 w-4" />Atualizar configuração
+        </Button>
       </div>
     );
   }
