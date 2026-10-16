@@ -27,8 +27,6 @@ import { linhaRecebimento, resumoRecebimento, temParcelaRepetida, type ParcelaRe
 import { formatarDataPura } from "@/lib/data-pura";
 import { cn, formatBRL } from "@/lib/utils";
 
-// No escuro `--error-bg` ja tem alfa: aplicar /40 por cima deixava a linha quase invisivel.
-const TINT_VENCIDA = "bg-error-bg/40 hover:bg-error-bg/60 dark:bg-error-bg dark:hover:bg-error-bg";
 
 type Props = {
   parcelas: ParcelaRecebimento[];
@@ -80,7 +78,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
       <FormSecaoTitulo>
         <span className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           <span>Recebimento das parcelas</span>
-          <span className="font-normal normal-case tracking-normal">
+          <span className="font-normal text-muted-foreground">
             Recebido <strong className="font-semibold text-foreground tabular-nums valor-sensivel">{formatBRL(recebido)}</strong> de{" "}
             <span className="tabular-nums valor-sensivel">{formatBRL(total)}</span>
           </span>
@@ -100,7 +98,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
         </Alert>
       )}
 
-      <div className="rounded-lg border border-border">
+      <div className="rounded-interno bg-poco overflow-hidden">
         <Table className="min-w-[640px]">
           <TableHeader>
             <TableRow>
@@ -123,7 +121,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
               const rotulo = `${p.numeroParcela}/${p.totalParcelas}`;
               return (
                 <Fragment key={p.id}>
-                  <TableRow className={cn(linha.situacao === "vencida" && TINT_VENCIDA, aberta && "border-b-0")}>
+                  <TableRow className={cn(aberta && "border-b-0")}>
                     <TableCell className="tabular-nums">{rotulo}</TableCell>
                     <TableCell className="tabular-nums">{formatarDataPura(p.dataVencimento)}</TableCell>
                     <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">{formatBRL(p.valorParcela)}</TableCell>
@@ -214,7 +212,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
                   {aberta && (
                     <TableRow
                       id={`baixa-parcela-${p.id}`}
-                      className={cn("hover:bg-transparent dark:hover:bg-transparent", linha.situacao === "vencida" && TINT_VENCIDA)}
+                      className={"hover:bg-transparent dark:hover:bg-transparent"}
                     >
                       <TableCell colSpan={6} className="pt-0">
                         <div className="flex flex-wrap items-end gap-3 md:pl-20">

@@ -17,7 +17,7 @@ interface Props {
 export function FormSecaoTitulo({ children }: Props) {
   return (
     <div className="md:col-span-3 space-y-2 pt-2 first:pt-0">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      <h3 className="text-sm font-semibold text-foreground">
         {children}
       </h3>
       <Separator />

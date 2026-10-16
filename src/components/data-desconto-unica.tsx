@@ -101,7 +101,7 @@ export function DataDescontoUnica({
       {aviso && (
         <p
           role="note"
-          className={cn("rounded-lg border border-warning/30 bg-warning-bg px-3.5 py-3 text-sm leading-relaxed text-foreground", avisoClassName)}
+          className={cn("rounded-interno bg-poco p-4 text-sm leading-relaxed text-muted-foreground", avisoClassName)}
         >
           {aviso}
         </p>

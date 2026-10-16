@@ -239,7 +239,7 @@ export function EditVendaHistoricoForm({
 
       <FormSecaoTitulo>Fiscal e documentos</FormSecaoTitulo>
 
-      <div className="flex items-center space-x-2 border rounded-md h-10 px-3 bg-muted/50 border-border self-end">
+      <div className="flex items-center space-x-2 rounded-controle h-10 px-3 bg-poco self-end">
         <Checkbox name="temNota" id="edit-temNota" defaultChecked={editVenda.temNota} />
         <label htmlFor="edit-temNota" className="text-xs font-medium text-foreground leading-none cursor-pointer">
           Com Nota Fiscal

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ParcelasVencimentoForm } from "@/components/parcelas-vencimento-form";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -109,7 +110,7 @@ export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTota
           <span>
             Datas de Vencimento ({parcelas.length}x · <span className="valor-sensivel">{formatBRL(totalParcelas)}</span>)
           </span>
-          {diverge && <span className="text-warning-text text-xs">⚠️</span>}
+          {diverge && <Badge variant="warning">Divergente</Badge>}
         </Button>
         <span className="text-xs text-muted-foreground">
           Total das parcelas: <span className="valor-sensivel">{formatBRL(totalParcelas)}</span>
@@ -117,17 +118,17 @@ export function EditParcelasSection({ initialParcelas, numeroParcelas, valorTota
       </div>
 
       {diverge && (
-        <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
+        <div className="mt-2 rounded-interno bg-poco p-4 text-sm text-muted-foreground">
           {/* Sem máscara de propósito: é o aviso que o usuário usa para ACERTAR as parcelas
               durante o lançamento; escondido, ele diz que divergiu mas não por quanto. */}
-          ⚠️ A soma das parcelas ({formatBRL(totalParcelas)}) difere do total da venda
+          A soma das parcelas ({formatBRL(totalParcelas)}) difere do total da venda
           ({formatBRL(valorTotal)}).
         </div>
       )}
 
       {minimoPorPagas !== null && (
-        <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
-          ⚠️ Esta venda ja tem parcelas pagas ate a {minimoPorPagas}ª — a lista nao pode
+        <div className="mt-2 rounded-interno bg-poco p-4 text-sm text-muted-foreground">
+          Esta venda ja tem parcelas pagas ate a {minimoPorPagas}ª — a lista nao pode
           ficar menor que isso.
         </div>
       )}
