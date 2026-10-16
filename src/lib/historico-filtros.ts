@@ -5,7 +5,7 @@
  * Parâmetros reais de /historico: from, to, vendedor, cliente, produto,
  * formaPagamento, q, assinatura (e page/edit, que não são filtros).
  */
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma";
 import { formaPagamentoLabel, isFormaPagamento } from "@/lib/forma-pagamento";
 
 export type FiltrosHistorico = {
