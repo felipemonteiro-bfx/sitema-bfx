@@ -185,8 +185,11 @@ describe("venda cancelada/estornada fora da antecipacao e da inadimplencia", () 
   });
 
   it("inadimplencia filtra o status da venda e ignora parcela ja antecipada (a Prudent pagou)", () => {
+    // O critério mora em whereParcelasInadimplentes (venda-utils), compartilhado com a sidebar.
     const rota = ler("src/app/api/relatorios/inadimplencia/route.ts");
-    expect(rota.includes("FILTRO_VENDA_VALIDA")).toBe(true);
-    expect(rota.includes("antecipada: false")).toBe(true);
+    expect(rota.includes("whereParcelasInadimplentes(")).toBe(true);
+    const utils = ler("src/lib/venda-utils.ts");
+    expect(utils.includes("venda: FILTRO_VENDA_VALIDA")).toBe(true);
+    expect(utils.includes("antecipada: false")).toBe(true);
   });
 });
