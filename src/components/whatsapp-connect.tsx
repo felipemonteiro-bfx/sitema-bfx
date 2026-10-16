@@ -208,11 +208,11 @@ export function WhatsAppConnect() {
         {status.state === 'open' && (
           <Button
             type="button"
-            variant="outline"
+            variant="outlineErro"
             size="sm"
             onClick={handleLogout}
             disabled={actionLoading}
-            className="gap-2 text-destructive hover:text-destructive/80"
+            className="gap-2"
           >
             {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
             Desconectar

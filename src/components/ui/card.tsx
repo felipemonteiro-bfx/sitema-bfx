@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 // variante (e nao na base) porque o `cn` (tailwind-merge) nao conhece os raios
 // customizados e nao os deduplicaria com um `rounded-*` vindo do chamador.
 const cardVariants = cva(
-  "text-card-foreground transition-colors duration-200",
+  "text-card-foreground transition-colors duration-200 focus:outline-none",
   {
     variants: {
       variant: {
@@ -24,10 +24,16 @@ const cardVariants = cva(
         true: "animate-fade-in-up",
         false: "",
       },
+      // Secao com erro de validacao: contorno de erro de 2px.
+      invalido: {
+        true: "border-2 border-error",
+        false: "",
+      },
     },
     defaultVariants: {
       variant: "default",
       animated: false,
+      invalido: false,
     },
   }
 )
@@ -37,10 +43,10 @@ export interface CardProps
     VariantProps<typeof cardVariants> {}
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, animated, ...props }, ref) => (
+  ({ className, variant, animated, invalido, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn(cardVariants({ variant, animated, className }))}
+      className={cn(cardVariants({ variant, animated, invalido, className }))}
       {...props}
     />
   )
@@ -59,13 +65,26 @@ const CardHeader = React.forwardRef<
 ))
 CardHeader.displayName = "CardHeader"
 
+// `display` (padrao): titulo em Space Grotesk. `secao`: titulo de secao do Vantage
+// (`text-lg font-semibold` na fonte de corpo, entrelinha normal), que as telas
+// repetiam por className com `font-sans ... tracking-normal`.
+const cardTitleVariants = cva("text-lg font-semibold tracking-tight text-foreground", {
+  variants: {
+    variant: {
+      display: "font-display leading-none",
+      secao: "font-sans leading-normal tracking-normal",
+    },
+  },
+  defaultVariants: { variant: "display" },
+})
+
 const CardTitle = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof cardTitleVariants>
+>(({ className, variant, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("font-display text-lg font-semibold leading-none tracking-tight text-foreground", className)}
+    className={cn(cardTitleVariants({ variant }), className)}
     {...props}
   />
 ))
@@ -83,11 +102,22 @@ const CardDescription = React.forwardRef<
 ))
 CardDescription.displayName = "CardDescription"
 
+const cardContentVariants = cva("p-6 pt-0", {
+  variants: {
+    // `poco`: area rebaixada do painel (tabela, lista, grafico) com o raio interno.
+    variant: {
+      default: "",
+      poco: "rounded-interno bg-poco",
+    },
+  },
+  defaultVariants: { variant: "default" },
+})
+
 const CardContent = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof cardContentVariants>
+>(({ className, variant, ...props }, ref) => (
+  <div ref={ref} className={cn(cardContentVariants({ variant }), className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -248,4 +278,5 @@ export {
   CardContent,
   CardStats,
   cardVariants,
+  cardTitleVariants,
 }

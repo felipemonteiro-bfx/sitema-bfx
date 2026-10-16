@@ -65,12 +65,12 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
           Nenhum template aprovado na Meta. Aprove um template no WhatsApp Manager
           antes de criar campanhas.
         </p>
-        <Button
+        <Button size="inline"
           type="button"
           variant="link"
           onClick={atualizar}
           disabled={atualizando}
-          className="mt-2 h-auto p-0"
+          className="mt-2"
         >
           {atualizando ? "Atualizando..." : "Atualizar lista"}
         </Button>

@@ -29,7 +29,7 @@ export function MonthFilter() {
         options={mesList}
         placeholder="Selecione o mês"
         searchPlaceholder="Pesquisar mês..."
-        className="w-[180px]"
+        className="w-45"
       />
     </div>
   );

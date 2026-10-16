@@ -157,6 +157,7 @@ describe("pagina do Historico", () => {
   });
 
   it("numero da venda em mono", () => {
-    expect(pagina.includes("font-mono")).toBe(true);
+    // Fonte mono vem da prop `mono`/`numeric` do TableCell (tipografia nao entra por className).
+    expect(pagina.includes("<TableCell mono") || pagina.includes("<TableCell numeric") || pagina.includes("font-mono")).toBe(true);
   });
 });

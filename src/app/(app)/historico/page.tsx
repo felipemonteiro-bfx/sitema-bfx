@@ -463,7 +463,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ]}
               />
               <input type="hidden" name="page" value="1" />
-              <button type="submit" className={cn(buttonVariants(), "cursor-pointer w-full touch-manipulation min-h-[44px]")}>
+              <button type="submit" className={cn(buttonVariants(), "cursor-pointer w-full touch-manipulation min-h-11")}>
                 Aplicar filtros
               </button>
             </form>
@@ -494,7 +494,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <TableHead className="text-right">Margem</TableHead>
                 <TableHead className="text-center">Nota</TableHead>
                 <TableHead>Pagamento</TableHead>
-                <TableHead className="sticky right-0 bg-card"><span className="sr-only">Ações</span></TableHead>
+                <TableHead fundo="card" className="sticky right-0"><span className="sr-only">Ações</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -507,11 +507,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               ) : (
                 vendas.map((v) => (
                   <TableRow key={v.id}>
-                    <TableCell className="min-h-11 font-mono tabular-nums text-muted-foreground">#{v.id}</TableCell>
-                    <TableCell className="font-mono tabular-nums text-muted-foreground">{formatDateBR(v.dataVenda)}</TableCell>
-                    <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
+                    <TableCell tom="muted" mono className="min-h-11">#{v.id}</TableCell>
+                    <TableCell tom="muted" mono>{formatDateBR(v.dataVenda)}</TableCell>
+                    <TableCell peso="medio">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
-                    <TableCell className="max-w-[250px]">
+                    <TableCell className="max-w-62.5">
                       {v.itens && v.itens.length > 1 ? (
                         <details className="cursor-pointer">
                           <summary className="truncate text-sm">
@@ -532,8 +532,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-center font-mono tabular-nums">{quantidadeTotal(v)}</TableCell>
-                    <TableCell className="text-right font-mono tabular-nums valor-sensivel valor-sensivel-fim">
+                    <TableCell mono className="text-center">{quantidadeTotal(v)}</TableCell>
+                    <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                       {formatBRL(valorTotalVenda(v))}
                     </TableCell>
                     <TableCell>
@@ -545,10 +545,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         })}
                       />
                     </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums valor-sensivel valor-sensivel-fim">
+                    <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                       {custoTotalVenda(v) != null ? formatBRL(custoTotalVenda(v)!) : <span className="text-muted-foreground opacity-30">—</span>}
                     </TableCell>
-                    <TableCell className="text-right font-mono tabular-nums valor-sensivel valor-sensivel-fim">
+                    <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                       {(() => {
                         const m = margemVenda(v);
                         if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
@@ -600,7 +600,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         );
                       })()}
                     </TableCell>
-                    <TableCell className="sticky right-0 bg-card">
+                    <TableCell fundo="card" className="sticky right-0">
                       <div className="flex flex-wrap items-center gap-2 justify-end">
                         <Link
                           href={buildUrl({ edit: v.id.toString() })}
@@ -648,14 +648,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             {vendas.length > 0 && (
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-right font-semibold">
+                  <TableCell peso="forte" colSpan={6} className="text-right">
                     Totais ({totalVendas} {totalVendas === 1 ? "venda" : "vendas"})
                   </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
+                  <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">
                     {formatBRL(totaisFiltro.valor)}
                   </TableCell>
                   <TableCell />
-                  <TableCell className="text-right font-mono tabular-nums font-semibold valor-sensivel valor-sensivel-fim">
+                  <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">
                     {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
                   </TableCell>
                   <TableCell colSpan={4} />
@@ -696,7 +696,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {page > 1 ? (
                   <Link 
                     href={buildUrl({ page: (page - 1).toString() })}
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-11 flex items-center")}
                   >
                     Anterior
                   </Link>
@@ -708,7 +708,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {page < totalPages ? (
                   <Link 
                     href={buildUrl({ page: (page + 1).toString() })}
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-11 flex items-center")}
                   >
                     Próxima
                   </Link>

@@ -14,14 +14,22 @@ const SelectValue = SelectPrimitive.Value
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
+    /** `celula`: gatilho dentro de uma celula de planilha editavel (sem moldura, compacto). */
+    variant?: "default" | "celula"
+    /** `error`: valor invalido (fundo e texto de erro). */
+    state?: "default" | "error"
+  }
+>(({ className, children, variant = "default", state = "default", ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
       // Sem sombra (D-03): trigger tem border propria e vive no mesmo plano
       // do card/formulario — nao e um plano acima.
       "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm text-foreground ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      variant === "celula" &&
+        "h-auto border-none bg-transparent p-1 text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring",
+      state === "error" && "bg-error-bg text-error-text",
       className
     )}
     {...props}

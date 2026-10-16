@@ -24,8 +24,6 @@ export const dynamic = "force-dynamic";
 
 type StatusRel = string;
 
-/** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
-const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
 
 function statusBadge(status: StatusRel) {
   switch (status) {
@@ -77,7 +75,7 @@ export default async function Page() {
 
       <Card>
         <CardHeader>
-          <CardTitle className={TITULO_SECAO}>Gerar / enviar agora</CardTitle>
+          <CardTitle variant="secao">Gerar / enviar agora</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={gerarRelatoriosMensais} className="flex flex-wrap items-end gap-3">
@@ -115,15 +113,15 @@ export default async function Page() {
             return (
               <Card key={periodo} className="p-2 pt-5">
                 <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 p-0 px-4 pb-4">
-                  <CardTitle className={TITULO_SECAO}>{periodoLabel(periodo)}</CardTitle>
+                  <CardTitle variant="secao">{periodoLabel(periodo)}</CardTitle>
                   <span className="valor-sensivel text-sm font-mono text-muted-foreground">{formatBRL(totalPeriodo)}</span>
                 </CardHeader>
-                <CardContent className="rounded-interno bg-poco p-0">
+                <CardContent variant="poco" className="p-0">
                   {/* Desktop: tabela */}
                   <div className="hidden overflow-x-auto md:block">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
+                        <TableRow semHover>
                           <TableHead>Empresa</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Vendas</TableHead>
@@ -134,12 +132,12 @@ export default async function Page() {
                       </TableHeader>
                       <TableBody>
                         {itens.map((log) => (
-                          <TableRow key={log.id} className="hover:bg-transparent">
+                          <TableRow semHover key={log.id}>
                             <TableCell>{log.empresa?.nome ?? `#${log.empresaId}`}</TableCell>
                             <TableCell>{statusBadge(log.status)}</TableCell>
-                            <TableCell className="text-right font-mono">{log.totalVendas}</TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(log.valorTotal)}</TableCell>
-                            <TableCell className="font-mono text-muted-foreground">{formatDataHora(log.enviadoEm)}</TableCell>
+                            <TableCell numeric>{log.totalVendas}</TableCell>
+                            <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(log.valorTotal)}</TableCell>
+                            <TableCell tom="muted" mono>{formatDataHora(log.enviadoEm)}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap items-center gap-2">
                                 <a

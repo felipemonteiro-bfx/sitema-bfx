@@ -292,14 +292,14 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                           <SeloPrudent antecipada={l.antecipada} loteId={l.loteId} />
                         </span>
                       </TableCell>
-                      <TableCell className="hidden whitespace-nowrap align-top font-semibold tabular-nums sm:table-cell md:align-middle">
+                      <TableCell peso="forte" mono className="hidden whitespace-nowrap align-top sm:table-cell md:align-middle">
                         {l.identificador}
                       </TableCell>
-                      <TableCell className="hidden tabular-nums md:table-cell">{ddmm(l.vencimento)}</TableCell>
+                      <TableCell mono className="hidden md:table-cell">{ddmm(l.vencimento)}</TableCell>
                       <TableCell className="hidden md:table-cell">
                         <SeloPrudent antecipada={l.antecipada} loteId={l.loteId} />
                       </TableCell>
-                      <TableCell className="whitespace-nowrap pr-4 text-right align-top tabular-nums md:align-middle">
+                      <TableCell numeric className="whitespace-nowrap pr-4 align-top md:align-middle">
                         <span className="valor-sensivel">{formatBRL(l.valor)}</span>
                       </TableCell>
                     </TableRow>
@@ -366,8 +366,8 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                       {editavel && a.id != null && (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="-my-1 h-7 w-7"
+                          size="iconXs"
+                          className="-my-1"
                           aria-label={`Remover ajuste: ${a.justificativa}`}
                           disabled={pendente}
                           onClick={() => {
@@ -594,7 +594,7 @@ function SeloPrudent({ antecipada, loteId }: { antecipada: boolean; loteId: numb
       {loteId != null ? `lote ${loteId} · boleto à BFX` : "boleto à BFX"}
     </Badge>
   ) : (
-    <Badge variant="outline" className="whitespace-nowrap text-muted-foreground">
+    <Badge variant="discreto" className="whitespace-nowrap">
       fica com a BFX
     </Badge>
   );

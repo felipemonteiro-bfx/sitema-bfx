@@ -60,3 +60,55 @@ Telas já no padrão, para copiar a linguagem: `/dashboard`, `/historico`, `/log
 
 Gradiente, sombra pesada (`shadow-md+`), `rounded-xl/2xl` cru (use `rounded-painel/interno/
 controle`), cor Tailwind crua, opacidade em texto (`text-x/70`), ícone em chip colorido, caixa-alta.
+
+## Lint do design system
+
+O `@shadcn/lint` (0.2.0) é a **fonte da verdade** do que uma tela pode e não pode fazer com os
+componentes de `src/components/ui/*`. As seis regras estão em `error`; `npx eslint src` tem de sair
+com 0 erros (o `npm run lint` roda o mesmo). A política mora em **`design-system/lint-policy.mjs`**,
+lida por `eslint.config.mjs`; mudar uma linha ali é decisão de design (revise como um token novo).
+
+| Regra | O que policia |
+|---|---|
+| `no-restyle` | `className` passado a componente da `ui`. Por padrão só **layout** (margem, largura, posição, grid/flex do item, alinhamento de texto) e os marcadores `valor-sensivel*`, `bloco-sensivel`, `anim-*`. Aparência entra por `variant`/`size`/props. |
+| `no-arbitrary-values` | `p-[13px]`, `rounded-[10px]`, `bg-[#333]`. Passa só valor de **layout** sem degrau na escala (`grid-cols-[1fr_auto]`, `h-[90vh]`, `calc()`, `%`, `ch`). Valor com equivalente exato vira escala (`min-h-[44px]` → `min-h-11`). |
+| `no-inline-styles` | `style={{ ... }}` e `<style>`. Valor dinâmico passa por custom property: `style={{ "--h": "40%" }}` + `h-(--h)`. |
+| `require-static-classes` | `className` montado por concatenação/`join`. Use mapa de classes estáticas, `cn()` ou prop/variante. |
+| `no-unknown-classes` | Classe que o Tailwind não gera (typo, `evo-col`). |
+| `no-raw-colors` | Cor de paleta, token não declarado, cor crua em atributo SVG. |
+
+`src/components/ui/**` fica fora de `no-restyle`, `no-arbitrary-values` e `require-static-classes`
+(os componentes são donos da aparência); `no-raw-colors` e `no-inline-styles` valem ali também.
+
+### Contratos (o que cada componente aceita do chamador)
+
+- **Padrão:** `layout` + marcadores. Isso cobre `Button`, `Label`, `Badge` (mais `gap-*`), `Table*`
+  (mais `spacing`, porque a densidade da célula é da tela), `Select*` etc.
+- `Card`, `CardHeader/Content/Footer`: + `spacing`. `CardTitle/Description`: + tipografia **sem** `font-*`
+  (família e peso vêm de `variant`).
+- `Input` (e `CurrencyInput`/`MaskedInput`): só `pl-*`/`pr-*` para reservar espaço de ícone; tamanho,
+  estado, caixa-alta e mono por prop.
+- `Button`: layout e `gap-*` (composição ícone + rótulo). Tamanho, forma e cor por `size`, `forma`, `variant`.
+- Contêineres sobrepostos (`Popover/Sheet/Dialog/AlertDialog*`, `Alert`, `Tabs`, `ScrollArea`…): + `spacing`;
+  `PopoverContent` também tipografia.
+
+### Quando a regra reclama
+
+1. Existe `variant`/`size`/prop que resolve? Use (ver `label.tsx`, `button-variants.ts`, `table.tsx`,
+   `input.tsx`, `card.tsx`, `badge.tsx`, `select.tsx`, `date-input.tsx`).
+2. Padrão que se repete em 3+ telas? Crie a variante no componente **sem quebrar a API existente** e
+   adicione um caso em `src/__tests__/lint-design-system.test.ts`.
+3. Valor recorrente fora da escala (fundo pontilhado, hachura)? Vira `@utility` ou token nomeado em
+   `globals.css` (token de cor: `:root`, `.dark`, `@theme inline` **e** par em `TOKEN_PAIRS`).
+4. Nunca silencie com `eslint-disable` nem troque por `<button>`/`<input>` cru só para escapar da regra.
+
+### Exceções documentadas
+
+- **Escopo temporário em `warn`** (`eslint.config.mjs`, bloco "temporário: tarefas N/L em andamento"):
+  `src/app/(app)/crm/atendimento/**`, `src/app/(janela)/**`, `loading.tsx` e a lib de whatsapp/atendimento.
+  Remover o bloco quando essas tarefas fecharem.
+- Allowlist de `no-arbitrary-values`: só `layout` (motivo acima). `no-inline-styles`: sem allowlist; só
+  custom properties.
+- Marcadores por nome (`valor-sensivel`, `valor-sensivel-fim`, `bloco-sensivel`, `anim-entrada`,
+  `anim-barra`, `anim-dica`): o linter não sabe classificar classe própria e elas só ligam comportamento.
+- O ícone lucide `Calendar` se confunde com o `Calendar` da `ui`: importe `CalendarDays`.

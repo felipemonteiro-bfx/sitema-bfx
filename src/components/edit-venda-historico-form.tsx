@@ -241,7 +241,7 @@ export function EditVendaHistoricoForm({
 
       <div className="flex items-center space-x-2 rounded-controle h-10 px-3 bg-poco self-end">
         <Checkbox name="temNota" id="edit-temNota" defaultChecked={editVenda.temNota} />
-        <Label htmlFor="edit-temNota" className="text-xs text-foreground cursor-pointer">
+        <Label variant="foreground" size="sm" htmlFor="edit-temNota" className="cursor-pointer">
           Com Nota Fiscal
         </Label>
       </div>
@@ -252,7 +252,7 @@ export function EditVendaHistoricoForm({
       <div className="space-y-1">
         <Label>Comprovante Assinado</Label>
         <div className="flex flex-col gap-2">
-          <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" aria-label="Upload de comprovante assinado" />
+          <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10" aria-label="Upload de comprovante assinado" />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <a href={`/api/comprovante?vendaId=${editVenda.id}`} target="_blank" rel="noopener noreferrer" className="font-bold underline flex items-center gap-1 hover:text-foreground" aria-label={`Ver comprovante assinado da venda #${editVenda.id}`}>
               Ver comprovante assinado <ExternalLink className="h-3 w-3" />
@@ -268,7 +268,6 @@ export function EditVendaHistoricoForm({
         <ReciboDownloadLink
           vendaId={editVenda.id}
           tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}
-          className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
           label={editVenda.descontoEmFolha ? "Autorização" : "Baixar recibo PDF"}
         />
         {editVenda.boletoUrl ? (

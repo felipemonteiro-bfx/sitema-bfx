@@ -13,12 +13,13 @@ const PopoverAnchor = PopoverPrimitive.Anchor
 
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
-  & {
+  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
     /** `ancora`: largura do elemento ancorado (painel que abre sobre uma barra inteira). */
     largura?: "padrao" | "ancora"
+    /** Lista/menu dentro do popover: raio interno (14px) em vez do raio de painel (20px). */
+    compacto?: boolean
   }
->(({ className, align = "center", sideOffset = 8, largura = "padrao", ...props }, ref) => (
+>(({ className, align = "center", sideOffset = 8, largura = "padrao", compacto, ...props }, ref) => (
   <PopoverPrimitive.Portal>
     <PopoverPrimitive.Content
       ref={ref}
@@ -28,6 +29,8 @@ const PopoverContent = React.forwardRef<
       className={cn(
         largura === "ancora" ? "popover-ancora" : "w-72 max-w-[calc(100vw-2rem)]",
         "z-[9999] rounded-painel border border-painel-borda bg-popover p-4 text-popover-foreground shadow-[var(--shadow-md)] outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 origin-[--radix-popover-content-transform-origin]",
+        // Depois da base: o cn() fica com a última classe que conflita.
+        compacto && "rounded-interno",
         className
       )}
       {...props}

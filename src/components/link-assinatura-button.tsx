@@ -44,8 +44,8 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
-              size="sm"
-              className="h-7 text-xs"
+              size="xs"
+
               onClick={handleCopy}
               leftIcon={copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
             >
@@ -54,8 +54,8 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
             {showQr && (
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
+                size="iconXs"
+
                 onClick={() => setQrVisible((v) => !v)}
                 title="Mostrar QR Code"
               >

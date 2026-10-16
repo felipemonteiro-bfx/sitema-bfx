@@ -19,9 +19,9 @@ export function ThemeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="ghost"
+          variant="controle"
           size="icon"
-          className="relative size-11 min-h-11 min-w-11 shrink-0 touch-manipulation rounded-controle border border-divisoria bg-controle text-texto-secundario shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
+          className="relative size-11 min-h-11 min-w-11 shrink-0 touch-manipulation"
         >
           <span className="relative inline-flex h-5 w-5 items-center justify-center">
             <Sun className="absolute h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

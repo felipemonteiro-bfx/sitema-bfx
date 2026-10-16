@@ -136,10 +136,10 @@ function VendaCard({
               </span>
               <Button
                 type="button"
-                variant="ghost"
+                variant="discretoPlano"
                 size="icon"
                 onClick={() => setExpanded(!expanded)}
-                className="-m-2 justify-end p-2 text-muted-foreground hover:bg-transparent hover:text-foreground touch-manipulation"
+                className="-m-2 justify-end touch-manipulation"
                 aria-expanded={expanded}
                 aria-label={expanded ? "Recolher detalhes" : "Ver detalhes"}
               >
@@ -221,7 +221,7 @@ function VendaCard({
                               <input type="hidden" name="vendaId" value={venda.id} />
                               <button
                                 type="submit"
-                                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs touch-manipulation min-h-[36px]")}
+                                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs touch-manipulation min-h-9")}
                               >
                                 Gerar boleto
                               </button>
@@ -257,20 +257,22 @@ function VendaCard({
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
             <Link
               href={buildUrl({ edit: venda.id.toString() }) + "#editar-venda"}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px]")}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-11")}
             >
               Editar
             </Link>
             <ReciboDownloadLink
               vendaId={venda.id}
               tipo={venda.descontoEmFolha ? "autorizacao" : "venda"}
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "touch-manipulation min-h-[44px]")}
+              variant="ghost"
+              size="sm"
+              className="min-h-11 touch-manipulation"
               label={venda.descontoEmFolha ? "Autorização" : "PDF"}
             />
             {venda.assinatura?.assinaturaStatus === "assinado" ? (
-              <VerTermoAssinadoLink vendaId={venda.id} className="touch-manipulation min-h-[44px]" />
+              <VerTermoAssinadoLink vendaId={venda.id} className="touch-manipulation min-h-11" />
             ) : venda.assinaturaToken ? (
-              <CopiarLinkAssinatura token={venda.assinaturaToken} className="min-h-[44px] touch-manipulation" />
+              <CopiarLinkAssinatura token={venda.assinaturaToken} className="min-h-11 touch-manipulation" />
             ) : null}
           </div>
         </div>

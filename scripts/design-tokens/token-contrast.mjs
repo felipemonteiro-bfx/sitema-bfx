@@ -520,6 +520,12 @@ export const TOKEN_PAIRS = [
   // o navegador sem backdrop-filter pinta.
   { foreground: "foreground", background: "vidro-piso", min: TEXT_MIN, label: "texto no tooltip (piso opaco do vidro)" },
   { foreground: "muted-foreground", background: "vidro-piso", min: TEXT_MIN, label: "texto secundario no tooltip (piso opaco do vidro)" },
+  // Previa de recibo: folha branca fixa nos dois temas, texto em tons de cinza.
+  { foreground: "papel-texto", background: "papel", min: TEXT_MIN, label: "texto da previa de recibo" },
+  { foreground: "papel-texto-forte", background: "papel", min: TEXT_MIN, label: "texto forte da previa de recibo" },
+  { foreground: "papel-texto-medio", background: "papel", min: TEXT_MIN, label: "texto medio da previa de recibo" },
+  { foreground: "papel-texto-fraco", background: "papel", min: TEXT_MIN, label: "texto fraco da previa de recibo" },
+  { foreground: "papel-traco", background: "papel", min: 1.5, label: "linha de assinatura da previa de recibo (decorativa)" },
   { foreground: "ring", background: "background", min: NON_TEXT_MIN, label: "indicador de foco (UI-06)" },
   { foreground: "ring", background: "card", min: NON_TEXT_MIN, label: "indicador de foco no painel" },
   { foreground: "border", background: "background", min: NON_TEXT_MIN, label: "borda sobre fundo" },

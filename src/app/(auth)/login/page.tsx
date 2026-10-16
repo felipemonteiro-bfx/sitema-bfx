@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -51,10 +51,6 @@ export default function LoginPage() {
     }
   }
 
-  // Campos de 48px com o raio de controle do Vantage. `dark:bg-controle` porque o
-  // `Input` base fixa `dark:bg-card`, que ganharia do `bg-controle` no escuro.
-  const campo =
-    "h-12 rounded-controle border bg-controle text-base dark:bg-controle focus-visible:border-ring focus-visible:ring-ring/30";
 
   return (
     <div className="flex min-h-screen flex-wrap gap-4 bg-background p-4">
@@ -89,7 +85,7 @@ export default function LoginPage() {
                         do usuario administrador a qualquer visitante. */}
                     <Input
                       {...field}
-                      className={campo}
+                      inputSize="lg"
                       autoComplete="username"
                       autoCapitalize="none"
                       autoCorrect="off"
@@ -116,19 +112,20 @@ export default function LoginPage() {
                         autoCapitalize="none"
                         autoCorrect="off"
                         spellCheck={false}
-                        className={`${campo} pr-14`}
+                        inputSize="lg"
+                        className="pr-14"
                       />
                     </FormControl>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="discretoPlano"
                       size="icon"
                       onClick={() => setMostrarSenha((v) => !v)}
                       aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                       aria-pressed={mostrarSenha}
-                      className="absolute right-0.5 top-0.5 h-11 w-11 rounded-controle text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+                      className="absolute right-0.5 top-0.5 h-11 w-11"
                     >
-                      {mostrarSenha ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                      {mostrarSenha ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                     </Button>
                   </div>
                   <FormMessage />
@@ -137,7 +134,8 @@ export default function LoginPage() {
             />
             <Button
               type="submit"
-              className="h-12 w-full rounded-controle text-base font-bold"
+              size="lg"
+              className="w-full"
               loading={form.formState.isSubmitting}
               loadingText="Entrando…"
               rightIcon={<ArrowRight className="h-4 w-4" />}
@@ -153,7 +151,7 @@ export default function LoginPage() {
             >
               {error ? (
                 <>
-                  <AlertCircle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                  <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                   <span>{error}</span>
                 </>
               ) : null}

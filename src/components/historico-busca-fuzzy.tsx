@@ -52,16 +52,16 @@ export function HistoricoBuscaFuzzy({ defaultValue = "" }: Props) {
         value={value}
         onChange={handleChange}
         placeholder="Cliente, produto ou vendedor"
-        className="h-11 rounded-controle pl-9 pr-11"
+        className="pl-9 pr-11"
         aria-label="Busca fuzzy de vendas"
       />
       {value && (
         <Button
           type="button"
-          variant="ghost"
+          variant="discretoPlano"
           size="icon"
           onClick={handleClear}
-          className="absolute right-0 top-1/2 size-11 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+          className="absolute right-0 top-1/2 size-11 -translate-y-1/2"
           aria-label="Limpar busca"
         >
           <X className="h-4 w-4" />

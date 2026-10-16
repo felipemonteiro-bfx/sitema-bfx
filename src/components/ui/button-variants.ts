@@ -23,7 +23,7 @@ export const buttonVariants = cva(
   // `shrink-0` e `pointer-events-none` continuam incondicionais: nao sao
   // tamanho, e e justamente a falta do `shrink-0` que achata icone em flex
   // apertado (medido: `h-3 w-3` renderizando 8.42px onde nao ha buttonVariants).
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-controle text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-']):not([class*=' h-']):not([class^='h-'])]:size-4 [&_svg]:shrink-0 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-controle text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-']):not([class*='_h-']):not([class^='h-'])]:size-4 [&_svg]:shrink-0 cursor-pointer",
   {
     variants: {
       // Vantage: botao plano, sem sombra (a hierarquia vem de cor e peso, nao de
@@ -58,6 +58,54 @@ export const buttonVariants = cva(
         tint:
           "border border-marca-tint-texto/30 bg-marca-tint text-marca-tint-texto hover:brightness-95",
         ghost: "hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
+        // --- Variantes que as telas repetiam por `className` (o lint barra cor no
+        // chamador, design-system/lint-policy.mjs). Nome pelo PAPEL, nao pela cor.
+        // `discreto`: acao secundaria em texto muted que acende no hover.
+        discreto: "text-muted-foreground hover:bg-accent hover:text-foreground active:scale-[0.98]",
+        // `discretoPlano`: igual, sem fundo no hover (ex.: "x" de limpar dentro do campo).
+        discretoPlano: "text-muted-foreground hover:bg-transparent hover:text-foreground",
+        // `discretoErro`: muted que vira vermelho no hover (excluir, remover).
+        discretoErro: "text-muted-foreground hover:bg-accent hover:text-error-text active:scale-[0.98]",
+        // `sutilErro`: acao destrutiva sem preenchimento (texto de erro, fundo so no hover).
+        sutilErro: "text-error-text hover:bg-accent hover:text-error-text active:scale-[0.98]",
+        // `outlineErro`: contorno neutro com texto de erro; no hover vira tint de erro.
+        outlineErro:
+          "border border-divisoria bg-transparent text-error-text transition-colors hover:border-error hover:bg-error-bg hover:text-error-text",
+        // `tintAviso`: pilula de aviso (ex.: link de assinatura pendente).
+        tintAviso:
+          "border border-warning bg-warning-bg text-warning-text hover:bg-warning-bg/70 hover:text-warning-text",
+        // `controle`: botao de icone sobre o trilho `controle` (tema, menu, sino, olho).
+        controle:
+          "border border-divisoria bg-controle text-texto-secundario hover:bg-controle-ativo hover:text-foreground active:scale-[0.98]",
+        // `controleAtivo`: o mesmo botao ligado (ex.: modo discreto ativo).
+        controleAtivo:
+          "border border-primary bg-success-bg text-success-text hover:bg-success-bg hover:text-success-text active:scale-[0.98]",
+        // `campo`: botao que parece campo (gatilho de seletor/busca): fundo `controle`,
+        // borda de campo, texto muted ate ter valor.
+        campo:
+          "h-9 justify-start bg-controle px-3 font-normal text-muted-foreground hover:bg-controle-ativo hover:text-foreground active:scale-100",
+        // `seletor`: gatilho de seletor (combobox) com a mesma pele do Select da ui.
+        // `data-vazio=true` acende o tom muted do placeholder.
+        seletor:
+          "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm font-normal text-foreground ring-offset-background hover:border-input hover:bg-controle hover:text-foreground active:scale-100 focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[vazio=true]:text-muted-foreground data-[erro=true]:border-error data-[tamanho=compacto]:h-9 data-[tamanho=compacto]:rounded-md data-[tamanho=compacto]:px-2 data-[tamanho=compacto]:text-xs data-[tamanho=pilula]:h-10 data-[tamanho=pilula]:rounded-full data-[tamanho=pilula]:border-divisoria data-[tamanho=pilula]:bg-poco data-[tamanho=pilula]:text-xs",
+        // `faixa`: miolo de um intervalo selecionado (tint da marca).
+        faixa: "bg-primary/10 text-foreground hover:bg-primary/15 hover:text-foreground",
+        // `linha`: linha de lista clicavel (resultado de busca, item de menu): largura
+        // total, texto a esquerda, sem raio e sem escala no clique.
+        linha:
+          "h-auto w-full justify-start whitespace-normal rounded-none px-3 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground active:scale-100",
+        // `linhaAcao`: ultima linha da lista com a acao (ex.: "Cadastrar ...").
+        linhaAcao:
+          "h-auto w-full justify-start whitespace-normal rounded-none border-t border-border px-3 py-2 text-left font-medium text-primary hover:bg-accent hover:text-primary active:scale-100",
+        // `linhaDivisoria`: linha de lista com filete embaixo (some na ultima).
+        linhaDivisoria:
+          "h-auto w-full flex-col items-stretch justify-start whitespace-normal rounded-none border-b border-border px-3 py-2.5 text-left font-normal last:border-b-0 hover:bg-accent hover:text-accent-foreground active:scale-100",
+        // `linhaCompacta`: opcao de sugestao em popover (texto pequeno, raio medio).
+        linhaCompacta:
+          "h-auto w-full justify-start whitespace-normal rounded-md px-2 py-1.5 text-left text-xs font-normal hover:bg-accent hover:text-accent-foreground active:scale-100",
+        // `bloco`: o botao e um bloco de conteudo (item de notificacao, quadro de assinatura).
+        bloco:
+          "h-auto w-full flex-col justify-start whitespace-normal rounded-none p-0 text-left font-normal hover:bg-transparent active:scale-100",
         link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
       },
       // Alvo de toque de 44px (WCAG 2.5.5 / UX-02). `default`, `lg` e `icon`
@@ -70,6 +118,16 @@ export const buttonVariants = cva(
         sm: "relative h-9 px-3 text-xs after:absolute after:left-1/2 after:top-1/2 after:min-h-11 after:min-w-full after:-translate-x-1/2 after:-translate-y-1/2",
         lg: "h-12 px-8 text-base",
         icon: "h-11 w-11",
+        // Compactos: acao de linha densa (xs), icone pequeno em campo (iconXs/iconMini),
+        // botao com cara de texto (inline/inlineXs) e o chamado de acao grande (cta).
+        xs: "relative h-7 px-2 text-xs after:absolute after:left-1/2 after:top-1/2 after:min-h-11 after:min-w-full after:-translate-x-1/2 after:-translate-y-1/2",
+        iconXs: "h-7 w-7",
+        iconMini: "h-6 w-6",
+        inline: "h-auto p-0",
+        inlineXs: "h-auto p-0 text-xs",
+        // Celula de mes do seletor de intervalo; `data-hoje=true` marca o mes atual.
+        mes: "h-14 flex-col gap-0 rounded-md px-1 font-semibold data-[hoje=true]:ring-1 data-[hoje=true]:ring-inset data-[hoje=true]:ring-primary/50",
+        cta: "h-12 px-12 text-base font-semibold",
         // Acao em linha de tabela. Existe para substituir o `h-8 px-2` que os
         // call sites de /cadastros empilhavam sobre a size `default`: aquele
         // `px-2` nao apagava o `py-2` da default, entao o content-box ficava em
@@ -78,10 +136,16 @@ export const buttonVariants = cva(
         // centrado e 8px de folga por lado. Area de toque de 44px via `after:`.
         iconSm: "relative h-8 w-8 after:absolute after:left-1/2 after:top-1/2 after:min-h-11 after:min-w-11 after:-translate-x-1/2 after:-translate-y-1/2",
       },
+      // Forma: so a pilula (botao redondo de icone), o resto herda `rounded-controle`.
+      forma: {
+        default: "",
+        pill: "rounded-full",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      forma: "default",
     },
   }
 )

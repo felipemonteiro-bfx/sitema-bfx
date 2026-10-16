@@ -70,7 +70,7 @@ export default async function Page() {
               <TableBody>
                 {grade.empresas.map((e) => (
                   <TableRow key={e.id}>
-                    <TableCell className="pl-3 font-medium">{e.nome}</TableCell>
+                    <TableCell peso="medio" className="pl-3">{e.nome}</TableCell>
                     {grade.competencias.map((c) => {
                       const cel = e.celulas[c];
                       if (cel.tipo === "fechamento") {
@@ -111,7 +111,7 @@ export default async function Page() {
                         );
                       }
                       return (
-                        <TableCell key={c} className="align-top pt-6 text-xs text-muted-foreground">
+                        <TableCell tom="muted" tamanho="xs" key={c} className="align-top pt-6">
                           cobrança via BFX desligada
                         </TableCell>
                       );

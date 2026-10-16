@@ -55,24 +55,24 @@ function BoletoTable({
           <TableHead>Descrição</TableHead>
           <TableHead>Vencimento</TableHead>
           <TableHead className="text-right">Valor</TableHead>
-          <TableHead className="w-[100px]"></TableHead>
+          <TableHead className="w-25"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+            <TableCell tom="muted" colSpan={4} className="text-center py-10">
               {emptyMessage}
             </TableCell>
           </TableRow>
         ) : (
           items.map((p) => (
             <TableRow key={p.id}>
-              <TableCell className="font-medium max-w-[220px] truncate">
+              <TableCell peso="medio" truncar className="max-w-55">
                 {p.description || `Cobrança ${p.id.slice(-8)}`}
               </TableCell>
-              <TableCell className="tabular-nums">{formatDateBr(p.dueDate)}</TableCell>
-              <TableCell className="text-right font-medium tabular-nums valor-sensivel valor-sensivel-fim">
+              <TableCell mono>{formatDateBr(p.dueDate)}</TableCell>
+              <TableCell peso="medio" numeric className="valor-sensivel valor-sensivel-fim">
                 {formatBRL(p.value)}
               </TableCell>
               <TableCell>
@@ -303,7 +303,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     A vencer
                     <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
@@ -324,7 +324,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Vencidos
                     <span className="text-xs font-normal text-muted-foreground">· todo atraso{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
@@ -345,7 +345,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Pagos
                     <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
@@ -366,7 +366,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Gerar boleto manualmente
                   </CardTitle>
@@ -394,7 +394,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                               <TableHead>Cliente</TableHead>
                               <TableHead>Produto</TableHead>
                               <TableHead className="text-right">Valor</TableHead>
-                              <TableHead className="w-[130px]"></TableHead>
+                              <TableHead className="w-32.5"></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -402,8 +402,8 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                               <TableRow key={v.id}>
                                 <TableCell>{formatDateBr(v.dataVenda.toISOString().slice(0, 10))}</TableCell>
                                 <TableCell>{v.cliente?.nome ?? "—"}</TableCell>
-                                <TableCell className="max-w-[180px] truncate">{v.produtoNome ?? "—"}</TableCell>
-                                <TableCell className="text-right tabular-nums font-medium valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
+                                <TableCell truncar className="max-w-45">{v.produtoNome ?? "—"}</TableCell>
+                                <TableCell peso="medio" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
                                 <TableCell>
                                   <GerarBoletoButton
                                     vendaId={v.id}

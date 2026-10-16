@@ -27,7 +27,7 @@ const SITUACAO: Record<SituacaoParcela, { rotulo: string; variante: VarianteSelo
   vencida: { rotulo: "Venceu sem antecipar", variante: "error" },
 };
 
-const CELULA = "px-2 py-1.5 tabular-nums";
+const CELULA = "px-2 py-1.5";
 const PILULA = "whitespace-nowrap";
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
@@ -36,7 +36,7 @@ const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um :
 function Contador({ valor, variante }: { valor: number; variante: VarianteSelo }) {
   if (valor === 0) return <span className="px-1 text-xs font-medium text-muted-foreground">0</span>;
   return (
-    <Badge variant={variante} size="sm" className="px-1.5 font-medium tabular-nums">
+    <Badge numerico variant={variante} size="sm">
       {valor}
     </Badge>
   );
@@ -106,13 +106,14 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
       <PopoverAnchor asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant={estado.fixo ? "secondary" : "ghost"}
+          size="xs"
           {...gatilho}
           aria-label={`${plural(parcelas.quantidade, "parcela", "parcelas")}: ${contagem.antecipadas} antecipadas, ${contagem.emAndamento} em andamento na Prudent, ${contagem.aAntecipar} a antecipar, ${contagem.vencidas} vencidas sem antecipação. Ver parcelas`}
           // Sempre os quatro números, na ordem da legenda do "?" do cabeçalho: a
           // posição e a cor dizem o que cada um conta. Tints opacos com a família -text
           // (policiados pela catraca de contraste). 44px de alvo no celular.
-          className={cn("-mr-1.5 h-11 gap-1 px-1.5 tabular-nums md:h-8", estado.fixo && "bg-muted")}
+          className="-mr-1.5 gap-1"
         >
           <span className="text-sm font-bold text-foreground">{parcelas.quantidade}</span>
           <Barra />
@@ -151,9 +152,9 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
           </div>
         )}
         <div className="mt-2.5 [&>div]:max-h-[min(22rem,50dvh)]">
-          <Table className="text-sm">
-            <TableHeader sticky className="bg-popover">
-              <TableRow className="hover:bg-transparent">
+          <Table>
+            <TableHeader sticky fundo="popover">
+              <TableRow semHover>
                 {selecionaveis.length > 0 && <TableHead className="h-8 w-10 px-2"><span className="sr-only">Selecionar para baixa</span></TableHead>}
                 <TableHead className="h-8 px-2">Nº</TableHead>
                 <TableHead className="h-8 px-2">Vencimento</TableHead>
@@ -163,7 +164,7 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
             </TableHeader>
             <TableBody>
               {lista.map((p) => (
-                <TableRow key={`${p.numero}-${p.vencimento}`} className="hover:bg-transparent">
+                <TableRow semHover key={`${p.numero}-${p.vencimento}`}>
                   {selecionaveis.length > 0 && (
                     <TableCell className="px-2 py-1.5">
                       {p.situacao === "vencida" && p.id != null ? (
@@ -176,11 +177,11 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
                       ) : null}
                     </TableCell>
                   )}
-                  <TableCell className={CELULA}>
+                  <TableCell mono className={CELULA}>
                     {p.numero}/{parcelas.quantidade}
                   </TableCell>
-                  <TableCell className={CELULA}>{formatarDataPura(p.vencimento)}</TableCell>
-                  <TableCell className={cn(CELULA, "text-right whitespace-nowrap valor-sensivel valor-sensivel-fim")}>{formatBRL(p.valor)}</TableCell>
+                  <TableCell mono className={CELULA}>{formatarDataPura(p.vencimento)}</TableCell>
+                  <TableCell numeric className={cn(CELULA, "whitespace-nowrap valor-sensivel valor-sensivel-fim")}>{formatBRL(p.valor)}</TableCell>
                   <TableCell className="px-2 py-1.5">
                     <Badge variant={SITUACAO[p.situacao].variante} className={PILULA}>
                       {p.situacao === "paga" && p.origemPagamento === "manual" ? "Paga manual" : SITUACAO[p.situacao].rotulo}
@@ -193,7 +194,7 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
         </div>
         {selecionadas.length > 0 && (
           <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3">
-            <Label className="block space-y-1 text-xs leading-normal" htmlFor="data-baixa-popover">
+            <Label size="sm" className="block" htmlFor="data-baixa-popover">
               Data do pagamento
               <DateInput
                 id="data-baixa-popover"
@@ -249,12 +250,12 @@ export function LegendaParcelas() {
       <PopoverAnchor asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="discreto"
           size="iconSm"
           {...gatilho}
           aria-label="O que significam os números da coluna Parcelas"
           // 44px de alvo no celular; no computador cabe no cabeçalho compacto.
-          className="h-11 w-11 text-muted-foreground hover:text-foreground md:h-6 md:w-6"
+          className="h-11 w-11 md:h-6 md:w-6"
         >
           <CircleHelp className="h-4 w-4" />
         </Button>

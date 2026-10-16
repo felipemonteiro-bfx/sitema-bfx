@@ -25,8 +25,8 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
         <div className="flex items-center gap-1">
           <Button
             variant="outline"
-            size="icon"
-            className="h-7 w-7"
+            size="iconXs"
+
             disabled={page <= 1}
             onClick={() => onPageChange(1)}
             aria-label="Primeira página"
@@ -35,8 +35,8 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
           </Button>
           <Button
             variant="outline"
-            size="icon"
-            className="h-7 w-7"
+            size="iconXs"
+
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
             aria-label="Página anterior"
@@ -48,8 +48,8 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
           </span>
           <Button
             variant="outline"
-            size="icon"
-            className="h-7 w-7"
+            size="iconXs"
+
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
             aria-label="Próxima página"
@@ -58,8 +58,8 @@ export function TablePagination({ page, totalPages, totalFiltered, totalItems, o
           </Button>
           <Button
             variant="outline"
-            size="icon"
-            className="h-7 w-7"
+            size="iconXs"
+
             disabled={page >= totalPages}
             onClick={() => onPageChange(totalPages)}
             aria-label="Última página"

@@ -45,7 +45,7 @@ export default async function AppLayout({
       {/* Paleta ⌘K: UMA instância (um só listener de teclado). O `SidebarContent` é montado duas
           vezes, por isso ela não mora nele; gatilhos disparam `EVENTO_ABRIR_BUSCA`. */}
       <BuscaRapida role={session.role} urlPendentes={urlPendentes} />
-      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-4 p-3 lg:p-4">
+      <div className="mx-auto flex min-h-screen w-full max-w-400 gap-4 p-3 lg:p-4">
         <aside className="hidden w-65 shrink-0 lg:flex">
           {/* Painel dos artboards: `bg-card` (degrau acima da página), raio de painel e contorno
               decorativo `--painel-borda`. Sem sombra pesada: a separação vem do degrau de cor. */}
@@ -86,7 +86,7 @@ export default async function AppLayout({
                 />
               </MobileMenuTrigger>
               <div className="flex min-w-0 flex-1 items-center gap-2">
-                <span className="max-w-[120px] truncate text-sm font-medium text-foreground sm:max-w-[160px]">
+                <span className="max-w-30 truncate text-sm font-medium text-foreground sm:max-w-40">
                   {userLabel}
                 </span>
                 {/* infoSolid, não info: aqui este é o único selo "Admin" visível (o da sidebar
@@ -138,7 +138,7 @@ function SidebarContent({
       <div className="flex shrink-0 items-center gap-3 px-1">
         {/* Chip da marca no verde primário, ícone no par `primary-foreground`. */}
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-controle bg-primary">
-          <LayoutDashboard className="h-[18px] w-[18px] text-primary-foreground" aria-hidden="true" />
+          <LayoutDashboard className="h-4.5 w-4.5 text-primary-foreground" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-display text-lg font-semibold leading-tight text-foreground">BFX Manager</p>

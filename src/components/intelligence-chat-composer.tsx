@@ -134,11 +134,11 @@ export function IntelligenceChatComposer({
         {recording ? (
           <>
             {/* Cancelar */}
-            <Button
+            <Button forma="pill"
               type="button"
-              variant="ghost"
+              variant="discretoErro"
               size="icon"
-              className="h-10 w-10 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
+              className="h-10 w-10 shrink-0"
               onClick={cancelRecording}
               aria-label="Cancelar gravação"
               title="Cancelar gravação"
@@ -151,8 +151,8 @@ export function IntelligenceChatComposer({
               <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-destructive" />
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-destructive/60 transition-all duration-1000"
-                  style={{ width: `${Math.min((recordingSeconds / 120) * 100, 100)}%` }}
+                  className="h-full w-(--w) rounded-full bg-destructive/60 transition-all duration-1000"
+                  style={{ "--w": `${Math.min((recordingSeconds / 120) * 100, 100)}%` } as React.CSSProperties}
                 />
               </div>
               <span className="shrink-0 font-mono text-xs tabular-nums text-destructive">
@@ -161,10 +161,10 @@ export function IntelligenceChatComposer({
             </div>
 
             {/* Parar e transcrever */}
-            <Button
+            <Button variant="destructive" forma="pill"
               type="button"
               size="icon"
-              className="h-10 w-10 shrink-0 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="h-10 w-10 shrink-0"
               onClick={stopRecording}
               aria-label="Parar e transcrever"
               title="Parar e transcrever"
@@ -176,11 +176,11 @@ export function IntelligenceChatComposer({
           <>
             {/* Botão de dicas */}
             <div className="relative flex items-center group">
-              <Button
+              <Button forma="pill"
                 type="button"
-                variant="ghost"
+                variant="discreto"
                 size="icon"
-                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
+                className="h-10 w-10"
                 aria-label="Guia rápido"
                 aria-describedby="guia-rapida"
               >
@@ -208,7 +208,8 @@ export function IntelligenceChatComposer({
                 name="provider"
                 options={providers}
                 defaultValue={providers[0]?.value ?? "openai"}
-                className="h-10 w-full rounded-full border border-divisoria bg-poco text-xs sm:w-auto sm:min-w-[110px]"
+                aparencia="pilula"
+                className="w-full sm:w-auto sm:min-w-27.5"
                 searchable={false}
               />
             )}
@@ -218,25 +219,25 @@ export function IntelligenceChatComposer({
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-[44px] max-h-32 w-full flex-1 resize-none rounded-controle border border-transparent bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-11 max-h-32 w-full flex-1 resize-none"
             />
 
             {/* Botão direito: Send (com texto) ou Mic (vazio) */}
             {hasText ? (
-              <Button
+              <Button forma="pill"
                 size="icon"
-                className="h-10 w-10 shrink-0 rounded-full transition-all duration-150"
+                className="h-10 w-10 shrink-0"
                 type="submit"
                 aria-label="Enviar mensagem"
               >
                 <Send className="h-4 w-4" />
               </Button>
             ) : (
-              <Button
+              <Button forma="pill"
                 type="button"
                 size="icon"
                 variant="outline"
-                className="h-10 w-10 shrink-0 rounded-full text-muted-foreground transition-all duration-150 hover:border-primary hover:text-primary disabled:opacity-50"
+                className="h-10 w-10 shrink-0"
                 onClick={startRecording}
                 disabled={transcribing}
                 aria-label={transcribing ? "Transcrevendo..." : "Gravar áudio"}

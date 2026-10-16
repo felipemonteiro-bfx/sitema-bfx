@@ -25,6 +25,10 @@ type FormSelectProps = {
   onValueChange?: (val: string) => void;
   placeholder?: string;
   className?: string;
+  /** `compacto`: seletor de tabela/filtro (36px, texto pequeno); `pilula`: seletor arredondado do compositor. */
+  aparencia?: "default" | "compacto" | "pilula";
+  /** `error`: campo invalido (borda de erro). */
+  state?: "default" | "error";
   searchable?: boolean;
   searchPlaceholder?: string;
   formId?: string;
@@ -39,6 +43,8 @@ export function FormSelect({
   onValueChange,
   placeholder = "Selecione",
   className,
+  aparencia = "default",
+  state = "default",
   searchable = true,
   searchPlaceholder = "Pesquisar...",
   formId,
@@ -130,18 +136,16 @@ export function FormSelect({
         <PopoverTrigger asChild>
           <Button
             type="button"
-            variant="outline"
+            variant="seletor"
+            data-vazio={!value}
+            data-erro={state === "error"}
+            data-tamanho={aparencia}
             role="combobox"
             aria-expanded={open}
             aria-controls={listaId}
             id={id}
-            className={cn(
-              // Igual ao Select da ui (Vantage): 44px, rounded-controle, fundo
-              // `controle`, contorno `input`, sem sombra.
-              "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm font-normal text-foreground ring-offset-background hover:border-input hover:bg-controle hover:text-foreground active:scale-100 focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-              !value && "text-muted-foreground",
-              className
-            )}
+            // Igual ao Select da ui (Vantage): a pele inteira vem da variante `seletor`.
+            className={className}
           >
             <span className="flex min-w-0 items-center gap-2">
               {selected?.indicador && <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", selected.indicador)} />}
@@ -151,8 +155,9 @@ export function FormSelect({
           </Button>
         </PopoverTrigger>
         <PopoverContent
+          compacto
           className={cn(
-            "w-[var(--radix-popover-trigger-width)] rounded-interno border bg-popover p-2",
+            "w-[var(--radix-popover-trigger-width)] p-2",
             opcoesRicas && "min-w-56"
           )}
           onKeyDown={aoTeclar}
@@ -175,7 +180,8 @@ export function FormSelect({
                 placeholder={searchPlaceholder}
                 aria-controls={listaId}
                 aria-activedescendant={destaqueValido ? idOpcao(destaque) : undefined}
-                className="h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                state="nu"
+                className="h-7"
               />
             </div>
           )}

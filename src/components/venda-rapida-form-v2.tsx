@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import {
   Loader2,
   User,
-  Calendar,
+  CalendarDays,
   ShoppingCart,
   Plus,
   CreditCard,
@@ -820,7 +820,7 @@ export default function VendaRapidaFormV2({
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       {successAssinaturaToken && (
-        <Card className="animate-fade-in">
+        <Card animated>
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -853,15 +853,10 @@ export default function VendaRapidaFormV2({
       )}
 
       {/* Seção 1: Contexto da Venda */}
-      <Card
-        className={cn(
-          "transition-colors",
-          (validationErrors.data || validationErrors.vendedor) && "border-destructive border-2",
-        )}
-      >
+      <Card invalido={Boolean(validationErrors.data || validationErrors.vendedor)}>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <CalendarDays className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Contexto da Venda
           </CardTitle>
         </CardHeader>
@@ -869,10 +864,7 @@ export default function VendaRapidaFormV2({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label
-                className={cn(
-                  "text-sm font-medium normal-case tracking-normal",
-                  validationErrors.data ? "text-error-text" : "text-muted-foreground",
-                )}
+                variant={validationErrors.data ? "erro" : "default"}
               >
                 Data da Venda <span className="text-error-text">*</span> {validationErrors.data && "(obrigatório)"}
               </Label>
@@ -880,15 +872,12 @@ export default function VendaRapidaFormV2({
                 value={dataVenda}
                 onChange={(v) => setDataVenda(v)}
                 required
-                className={validationErrors.data ? "border-destructive border-2" : ""}
+                state={validationErrors.data ? "error" : "default"}
               />
             </div>
             <div className="space-y-2">
               <Label
-                className={cn(
-                  "text-sm font-medium normal-case tracking-normal",
-                  validationErrors.vendedor ? "text-error-text" : "text-muted-foreground",
-                )}
+                variant={validationErrors.vendedor ? "erro" : "default"}
               >
                 Vendedor Responsável <span className="text-error-text">*</span> {validationErrors.vendedor && "(obrigatório)"}
               </Label>
@@ -898,7 +887,7 @@ export default function VendaRapidaFormV2({
                 value={vendedor}
                 onValueChange={setVendedor}
                 placeholder="Selecione o vendedor"
-                className={validationErrors.vendedor ? "border-destructive [&_button]:border-destructive [&_button]:border-2" : ""}
+                state={validationErrors.vendedor ? "error" : "default"}
               />
             </div>
           </div>
@@ -907,11 +896,8 @@ export default function VendaRapidaFormV2({
 
       {/* Seção 2: Cliente */}
       <Card
-        className={cn(
-          "transition-colors overflow-visible",
-          clienteSuggestions.length > 0 && "relative z-[100]",
-          validationErrors.cliente && "border-destructive border-2",
-        )}
+        invalido={Boolean(validationErrors.cliente)}
+        className={cn("overflow-visible", clienteSuggestions.length > 0 && "relative z-[100]")}
       >
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
@@ -931,10 +917,7 @@ export default function VendaRapidaFormV2({
                   campo. Mesma correcao feita nos tres campos do item de produto. */}
               <Label
                 htmlFor="cliente-query"
-                className={cn(
-                  "text-sm font-medium normal-case tracking-normal",
-                  validationErrors.cliente ? "text-error-text" : "text-muted-foreground",
-                )}
+                variant={validationErrors.cliente ? "erro" : "default"}
               >
                 Buscar Cliente <span className="text-error-text">*</span> {validationErrors.cliente && "(obrigatório)"}
               </Label>
@@ -960,7 +943,8 @@ export default function VendaRapidaFormV2({
               onChange={(e) => setClienteQuery(e.target.value)}
               placeholder="Digite o nome do cliente"
               required
-              className={cn("min-h-[44px] touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
+              state={validationErrors.cliente ? "error" : "default"}
+              className="min-h-11 touch-manipulation"
             />
             {clienteSuggestions.length > 0 && (
               <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-60 overflow-y-auto">
@@ -968,7 +952,7 @@ export default function VendaRapidaFormV2({
                   <Button
                     key={c.id}
                     type="button"
-                    variant="ghost"
+                    variant="linhaDivisoria"
                     role="option"
                     aria-selected={false}
                     onClick={() => {
@@ -987,7 +971,7 @@ export default function VendaRapidaFormV2({
                       setClienteSuggestions([]);
                       setProdutoParaSugestoes(null);
                     }}
-                    className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-none border-b border-border px-3 py-2.5 text-left font-normal last:border-b-0"
+                    className="gap-0"
                   >
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{c.nome}</div>
@@ -1110,14 +1094,14 @@ export default function VendaRapidaFormV2({
               <div className="w-full bg-poco h-1.5 rounded-full overflow-hidden bloco-sensivel">
                 <div
                   className={cn(
-                    "h-full transition-all",
+                    "h-full w-(--w) transition-all",
                     cardLimite.tom === "limite"
                       ? "bg-error"
                       : cardLimite.tom === "alerta" || cardLimite.tom === "excede"
                         ? "bg-warning"
                         : "bg-success"
                   )}
-                  style={{ width: `${cardLimite.pctBarra}%` }}
+                  style={{ "--w": `${cardLimite.pctBarra}%` } as React.CSSProperties}
                 />
               </div>
             )}
@@ -1235,7 +1219,7 @@ export default function VendaRapidaFormV2({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+              <Label>
                 Frete (Cobrado)
               </Label>
               <div className="flex gap-2">
@@ -1264,7 +1248,7 @@ export default function VendaRapidaFormV2({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="entrega" className={cn("text-sm font-medium normal-case tracking-normal", validationErrors.entrega ? "text-error-text" : "text-muted-foreground")}>
+              <Label htmlFor="entrega" variant={validationErrors.entrega ? "erro" : "default"}>
                 Entrega ou retirada <span className="text-error-text">*</span>
                 {validationErrors.entrega && entrega === "" && " (obrigatório)"}
               </Label>
@@ -1286,10 +1270,7 @@ export default function VendaRapidaFormV2({
             </div>
             <div className="space-y-2">
               <Label
-                className={cn(
-                  "text-sm font-medium normal-case tracking-normal",
-                  validationErrors.envio ? "text-error-text" : "text-muted-foreground",
-                )}
+                variant={validationErrors.envio ? "erro" : "default"}
               >
                 Envio (Custo){(frete > 0 || entrega === "1") && <span className="text-error-text"> *</span>}
                 {validationErrors.envio && (entrega === "1" ? " (obrigatório na entrega)" : " (obrigatório com frete)")}
@@ -1297,17 +1278,17 @@ export default function VendaRapidaFormV2({
               <CurrencyInput
                 value={envio}
                 onChange={setEnvio}
-                className={validationErrors.envio ? "border-destructive border-2" : ""}
+                state={validationErrors.envio ? "error" : "default"}
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+              <Label>
                 Desconto (R$)
               </Label>
               <CurrencyInput value={desconto} onChange={setDesconto} />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+              <Label>
                 Resgatar pontos
               </Label>
               <Input
@@ -1330,7 +1311,7 @@ export default function VendaRapidaFormV2({
                   checked={temNota}
                   onCheckedChange={(checked) => setTemNota(checked === true)}
                 />
-                <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground cursor-pointer">
+                <Label className="cursor-pointer">
                   Com Nota Fiscal
                 </Label>
               </div>
@@ -1346,7 +1327,7 @@ export default function VendaRapidaFormV2({
             </div>
           </div>
           <div className="mt-4 pt-4 border-t space-y-2">
-            <Label htmlFor="forma-pagamento" className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+            <Label htmlFor="forma-pagamento">
               Forma de pagamento
             </Label>
             <FormSelect
@@ -1386,7 +1367,7 @@ export default function VendaRapidaFormV2({
         <CardContent>
           <div className={cn("grid gap-4", mostrarDataDesconto && "sm:grid-cols-2")}>
             <div className="space-y-2">
-              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+              <Label>
                 Número de Parcelas
               </Label>
               <FormSelect
@@ -1405,7 +1386,6 @@ export default function VendaRapidaFormV2({
                 dataRegra={dataDescontoRegra}
                 escolhida={dataDescontoEscolhida}
                 onEscolhidaChange={setDataDescontoEscolhida}
-                labelClassName="text-sm font-medium normal-case tracking-normal text-muted-foreground"
                 avisoClassName="sm:col-span-2"
               />
             )}
@@ -1495,8 +1475,7 @@ export default function VendaRapidaFormV2({
             <Button
               type="submit"
               disabled={loading}
-              size="lg"
-              className="px-12 text-base font-semibold"
+              size="cta"
             >
               {loading ? (
                 <>

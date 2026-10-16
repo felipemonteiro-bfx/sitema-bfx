@@ -5,7 +5,6 @@ import { Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 type Notificacao = {
   id: number;
@@ -97,12 +96,12 @@ export function NotificationBell() {
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="controle"
           size="icon"
-          className="relative size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-texto-secundario shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
+          className="relative size-11 min-h-11 min-w-11 touch-manipulation"
           aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         >
-          <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
+          <Bell className="h-4.5 w-4.5" aria-hidden="true" />
           {/* Ancorado DENTRO da caixa do botao. Com o deslocamento negativo que
               havia aqui, o badge de 16x16 saia 3px para cima e 3px para a
               direita de um botao de 36x36 — medido `clientWidth` 34 contra
@@ -127,11 +126,11 @@ export function NotificationBell() {
         <div className="flex items-center justify-between border-b px-4 py-3">
           <span className="text-sm font-semibold text-foreground">Notificações</span>
           {unreadCount > 0 && (
-            <Button
+            <Button size="inlineXs"
               type="button"
-              variant="ghost"
+              variant="discretoPlano"
               onClick={markAllRead}
-              className="h-auto shrink-0 p-0 text-xs font-normal text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+              className="shrink-0"
             >
               Marcar todas como lidas
             </Button>
@@ -159,12 +158,9 @@ export function NotificationBell() {
                 ) : (
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="bloco"
                     onClick={() => markOneRead(n.id)}
-                    className={cn(
-                      "h-auto w-full flex-col items-start justify-start gap-0 whitespace-normal rounded-none p-0 text-left font-normal shadow-none",
-                      "hover:bg-transparent hover:shadow-none active:scale-100"
-                    )}
+                    className="items-start"
                   >
                     <p className="text-sm text-foreground">{n.mensagem}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">

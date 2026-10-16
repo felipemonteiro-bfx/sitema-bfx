@@ -325,7 +325,7 @@ export function SkeletonGrafico({ altura = "h-48" }: { altura?: string }) {
   return (
     <div className={cn("flex items-end gap-2 pt-4", altura)}>
       {alturas.map((h, i) => (
-        <Skeleton key={i} className="flex-1 rounded-b-none" style={{ height: `${h}%` }} />
+        <Skeleton key={i} className="h-(--h) flex-1 rounded-b-none" style={{ "--h": `${h}%` } as React.CSSProperties} />
       ))}
     </div>
   );

@@ -48,7 +48,7 @@ export function PerfilSenhaForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="space-y-1">
-        <Label htmlFor="perfil-senha-atual" className="normal-case tracking-normal text-sm font-medium">Senha atual</Label>
+        <Label htmlFor="perfil-senha-atual">Senha atual</Label>
         <Input
           id="perfil-senha-atual"
           type="password"
@@ -59,7 +59,7 @@ export function PerfilSenhaForm() {
         />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="perfil-senha-nova" className="normal-case tracking-normal text-sm font-medium">Nova senha</Label>
+        <Label htmlFor="perfil-senha-nova">Nova senha</Label>
         <Input
           id="perfil-senha-nova"
           type="password"
@@ -70,7 +70,7 @@ export function PerfilSenhaForm() {
         />
       </div>
       <div className="space-y-1">
-        <Label htmlFor="perfil-senha-confirmacao" className="normal-case tracking-normal text-sm font-medium">Confirmar nova senha</Label>
+        <Label htmlFor="perfil-senha-confirmacao">Confirmar nova senha</Label>
         <Input
           id="perfil-senha-confirmacao"
           type="password"

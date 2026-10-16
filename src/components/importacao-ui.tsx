@@ -21,7 +21,7 @@ export function Contador({
       <div className="text-sm font-medium text-muted-foreground">{label}</div>
       <div className="mt-1 font-mono text-2xl font-medium tabular-nums text-foreground">
         {erro && valor > 0 ? (
-          <Badge variant="error" size="lg" className="font-mono tabular-nums">
+          <Badge numerico variant="error" size="lg">
             {valor}
           </Badge>
         ) : (

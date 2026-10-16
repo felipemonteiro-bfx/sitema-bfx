@@ -71,8 +71,8 @@ export function DeleteVendaButton({ vendaId, deleteAction }: Props) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          <AlertDialogAction variant="destructive"
+
             onClick={handleConfirm}
           >
             Excluir

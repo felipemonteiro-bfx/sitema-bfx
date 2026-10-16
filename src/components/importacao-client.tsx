@@ -321,14 +321,15 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                 Nenhuma linha com problema de frete ou entrega.
               </Alert>
             )}
-            <ScrollArea className="w-full rounded-interno bg-poco">
+            <div className="overflow-hidden rounded-interno bg-poco">
+            <ScrollArea className="w-full">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-32">Data</TableHead>
                     <TableHead>Vendedor</TableHead>
-                    <TableHead className="min-w-[150px]">Cliente</TableHead>
-                    <TableHead className="min-w-[150px]">Produto</TableHead>
+                    <TableHead className="min-w-37.5">Cliente</TableHead>
+                    <TableHead className="min-w-37.5">Produto</TableHead>
                     <TableHead className="w-24 text-right">Valor</TableHead>
                     <TableHead className="w-24 text-right">Frete</TableHead>
                     <TableHead className="w-24 text-right">Envio</TableHead>
@@ -351,7 +352,8 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         <DateInput
                           value={row.dataVenda}
                           onChange={(v) => updateCell(row.id, 'dataVenda', v)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
+                          variant="celula"
+                          className="w-full"
                         />
                       </TableCell>
                       {/* EXCEÇÃO LEGÍTIMA (skill shadcn-bfx): as células de texto e número
@@ -414,7 +416,9 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         >
                           <SelectTrigger
                             aria-label="Entrega"
-                            className={`h-auto w-full border-none bg-transparent p-1 text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded${ruim("entrega")}`}
+                            variant="celula"
+                            state={destaque.includes("entrega") ? "error" : "default"}
+                            className="w-full"
                           >
                             <SelectValue />
                           </SelectTrigger>
@@ -450,11 +454,11 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                       <TableCell className="p-1 text-center">
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
+                          variant="sutilErro"
+                          size="iconMini"
                           aria-label="Remover linha"
                           onClick={() => removeRow(row.id)}
-                          className="h-6 w-6 text-error-text shadow-none hover:bg-transparent hover:text-error-text hover:shadow-none"
+
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -462,7 +466,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                     </TableRow>
                     {motivo && (
                       <TableRow>
-                        <TableCell colSpan={11} className="px-2.5 pb-1.5 pt-0 text-xs text-error-text">
+                        <TableCell tom="erro" tamanho="xs" colSpan={11} className="px-2.5 pb-1.5 pt-0">
                           Linha {index + 1}: {motivo}.
                         </TableCell>
                       </TableRow>
@@ -473,6 +477,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                 </TableBody>
               </Table>
             </ScrollArea>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -33,7 +33,7 @@ type Props = {
   ultimoAviso: string | null;
 };
 
-const CAMPO_LEITURA = "min-w-0 flex-1 bg-muted font-mono";
+const CAMPO_LEITURA = "min-w-0 flex-1";
 
 async function copiarTexto(texto: Promise<string>) {
   // Safari só aceita escrever na área de transferência dentro do clique: o ClipboardItem recebe a
@@ -149,9 +149,9 @@ export function WebhookAsaasCard({ url, tokenMascarado, status, ultimoAviso }: P
 
       <CardContent className="space-y-5">
         <div className="space-y-1.5">
-          <Label htmlFor="webhook-asaas-url" className="normal-case tracking-normal text-sm font-medium">URL do webhook</Label>
+          <Label htmlFor="webhook-asaas-url">URL do webhook</Label>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Input id="webhook-asaas-url" readOnly value={url} className={CAMPO_LEITURA} onFocus={(e) => e.currentTarget.select()} />
+            <Input id="webhook-asaas-url" readOnly state="leitura" mono value={url} className={CAMPO_LEITURA} onFocus={(e) => e.currentTarget.select()} />
             <Button type="button" variant="outline" leftIcon={<Copy className="h-4 w-4" />} onClick={copiarUrl} aria-label="Copiar URL do webhook">
               Copiar
             </Button>
@@ -159,14 +159,16 @@ export function WebhookAsaasCard({ url, tokenMascarado, status, ultimoAviso }: P
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="webhook-asaas-token" className="normal-case tracking-normal text-sm font-medium">Token de autenticação</Label>
+          <Label htmlFor="webhook-asaas-token">Token de autenticação</Label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               id="webhook-asaas-token"
               readOnly
               value={tokenMascarado ?? ""}
               placeholder="Nenhum token gerado"
-              className={`${CAMPO_LEITURA} placeholder:font-sans`}
+              state="leitura"
+              mono
+              className={CAMPO_LEITURA}
             />
             {tokenMascarado && (
               <Button
@@ -207,7 +209,7 @@ export function WebhookAsaasCard({ url, tokenMascarado, status, ultimoAviso }: P
         </div>
 
         {status !== "recebendo" && (
-          <Alert variant="warning" showIcon className="text-xs">
+          <Alert variant="warning" showIcon size="sm">
             <p className="text-pretty">
               Gere o token aqui antes de cadastrar no Asaas. Sem ele o BFX recusa os avisos, e depois de 15 recusas
               seguidas o Asaas pausa o envio.
@@ -246,11 +248,11 @@ export function WebhookAsaasCard({ url, tokenMascarado, status, ultimoAviso }: P
               O navegador não deixou copiar automaticamente. Selecione o token abaixo e copie.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <Input
+          <Input mono
             readOnly
             value={tokenManual ?? ""}
             aria-label="Token de autenticação completo"
-            className="font-mono"
+
             onFocus={(e) => e.currentTarget.select()}
             autoFocus
           />

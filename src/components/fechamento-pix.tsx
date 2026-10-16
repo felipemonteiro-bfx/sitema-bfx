@@ -258,11 +258,10 @@ function CobrancaAtiva({ cobranca }: { cobranca: NonNullable<PixDetalhe["cobranc
       </div>
       {cobranca.copiaECola ? (
         <div className="flex gap-2">
-          <Input
+          <Input mono
             readOnly
             value={cobranca.copiaECola}
             aria-label="Pix copia e cola"
-            className="font-mono text-xs"
             onFocus={(e) => e.currentTarget.select()}
           />
           <Button variant="outline" onClick={copiar} leftIcon={copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}>
@@ -359,7 +358,7 @@ function DialogoRecebimento({ aberto, fechamentoId, onClose }: { aberto: boolean
               type="file"
               name="comprovante"
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              className="h-10 px-2 pt-1.5"
+              className="h-10"
             />
             <p className="text-xs text-muted-foreground">PDF, PNG ou JPG, até 10 MB. Anexar não confirma o recebimento.</p>
           </div>

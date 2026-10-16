@@ -119,10 +119,10 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
   return (
     <Card
       variant="elevated"
+      invalido={hasError}
       className={cn(
         "relative overflow-visible",
         (produtoSuggestions.length > 0 || showDropdown) && "z-10",
-        hasError && "border-destructive border-2",
       )}
     >
       <CardContent className="p-4">
@@ -139,10 +139,10 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="sutilErro"
                     size="icon"
                     onClick={() => onRemove(index)}
-                    className="h-8 w-8 text-error-text hover:text-error-text"
+                    className="h-8 w-8"
                     aria-label="Remover produto"
                   >
                     <X className="h-4 w-4" />
@@ -188,7 +188,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
             <div className="space-y-2 relative min-w-0 xl:basis-2/5">
               <Label
                 htmlFor={`produto-nome-${index}`}
-                className={cn(hasError && "text-error-text")}
+                variant={hasError ? "erro" : "default"}
               >
                 Produto <span className="text-error-text">*</span> {hasError && "(obrigatório)"}
               </Label>
@@ -207,7 +207,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 placeholder="Digite o nome do produto"
                 required
                 aria-required="true"
-                className={hasError ? "border-destructive border-2" : ""}
+                state={hasError ? "error" : "default"}
               />
               {showDropdown && produtoSuggestions.length > 0 && (
                 <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-56 overflow-y-auto">
@@ -215,11 +215,11 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                     <Button
                       key={p.id}
                       type="button"
-                      variant="ghost"
+                      variant="linha"
                       role="option"
                       aria-selected={false}
                       onClick={() => handleProdutoSelect(p)}
-                      className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-none px-3 py-2 text-left font-normal"
+                      className="flex-col items-stretch gap-0"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{p.nome}</span>
@@ -238,13 +238,13 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   )}
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="linhaAcao"
                     onClick={() => {
                       setProdutoSuggestions([]);
                       setIsSearching(false);
                       setCadastrarOpen(true);
                     }}
-                    className="h-auto w-full justify-start gap-2 whitespace-normal rounded-none border-t border-border px-3 py-2 text-left font-medium text-primary hover:text-primary"
+                    className="gap-2"
                   >
                     <Plus className="h-3.5 w-3.5 shrink-0" />
                     Cadastrar &ldquo;{produtoQuery}&rdquo;
@@ -350,9 +350,9 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               </div>
               <div className="rounded-interno bg-poco px-3 py-2 text-center">
                 <div className="text-xs font-medium text-muted-foreground">Margem</div>
-                <Badge
+                <Badge numerico
                   variant={margem >= 20 ? "success" : margem >= 10 ? "warning" : "error"}
-                  className="mt-0.5 tabular-nums valor-sensivel"
+                  className="mt-0.5 valor-sensivel"
                 >
                   {margem.toFixed(1)}%
                 </Badge>

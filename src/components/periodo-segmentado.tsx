@@ -20,7 +20,7 @@ export function PeriodoSegmentado({ periodos, className }: { periodos: Pick<Peri
           href={p.href}
           aria-current={p.ativo ? "true" : undefined}
           className={cn(
-            "inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg px-3 text-sm font-medium text-muted-foreground transition-[background-color,color] duration-(--mov-segmentado) ease-(--mov-curva) hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:px-4",
+            "inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg px-3 text-sm font-medium text-muted-foreground transition-fundo-texto duration-(--mov-segmentado) ease-(--mov-curva) hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 sm:px-4",
             p.ativo && "bg-controle-ativo font-semibold text-foreground"
           )}
         >

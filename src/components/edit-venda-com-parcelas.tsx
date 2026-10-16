@@ -101,7 +101,7 @@ export function EditVendaComParcelas({
       <FormSecaoTitulo>Pagamento e parcelas</FormSecaoTitulo>
 
       <div className="space-y-1">
-        <Label htmlFor="edit-parcelas" className="text-xs">Parcelas</Label>
+        <Label size="sm" htmlFor="edit-parcelas">Parcelas</Label>
         <Input
           id="edit-parcelas"
           name="parcelas"
@@ -121,7 +121,7 @@ export function EditVendaComParcelas({
           escolhida={dataDesconto.bloqueio ? dataDesconto.gravada : escolhidaEfetiva}
           onEscolhidaChange={escolherDataDesconto}
           bloqueio={dataDesconto.bloqueio}
-          labelClassName="text-xs font-medium text-muted-foreground"
+          labelSize="sm"
           avisoClassName="md:col-span-3"
         />
       )}

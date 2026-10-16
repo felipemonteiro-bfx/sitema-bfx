@@ -6,13 +6,17 @@ import { cn } from "@/lib/utils"
 
 type TextareaProps = Omit<React.ComponentProps<"textarea">, "onInput"> & {
   autoResize?: boolean;
+  /** Fonte mono (JSON, CSV colado, codigo). */
+  mono?: boolean;
+  /** Sem moldura nem fundo: o campo vive dentro de outro controle (compositor de chat). */
+  nu?: boolean;
   onInput?: React.FormEventHandler<HTMLTextAreaElement>;
 };
 
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   TextareaProps
->(({ className, autoResize, onInput, ...props }, ref) => {
+>(({ className, autoResize, mono, nu, onInput, ...props }, ref) => {
   const innerRef = React.useRef<HTMLTextAreaElement | null>(null)
 
   React.useImperativeHandle(ref, () => innerRef.current as HTMLTextAreaElement)
@@ -39,6 +43,8 @@ const Textarea = React.forwardRef<
         // Sem sombra (D-03): campo tem border propria e vive no mesmo plano
         // do card/formulario — nao e um plano acima.
         "flex min-h-[80px] w-full rounded-controle border border-input bg-controle px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+        mono && "font-mono",
+        nu && "border-transparent bg-transparent focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
         className
       )}
       ref={innerRef}

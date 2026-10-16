@@ -21,8 +21,6 @@ import {
 type FluxoRow = { mes: string; entradas: number; saidas: number; saldo: number };
 
 // A hachura vem dos tokens, como no EvolucaoMensal (135deg, traço de 2px a cada 6px).
-const HACHURA = "repeating-linear-gradient(135deg, var(--hachura-traco) 0 2px, var(--hachura-fundo) 2px 6px)";
-
 export const TICK_EIXO = { fontSize: 11, fill: "var(--muted-foreground)", fontFamily: "var(--font-mono)" };
 
 export function currency(v: number) {
@@ -83,7 +81,7 @@ function PainelGrafico({
         {legenda}
       </div>
       <div className="rounded-interno bg-poco px-2 pb-3 pt-5 sm:px-4">
-        <div className="bloco-sensivel h-72 min-h-[288px]">{children}</div>
+        <div className="bloco-sensivel h-72 min-h-72">{children}</div>
       </div>
     </section>
   );
@@ -110,7 +108,7 @@ export function FluxoCharts({ rows }: { rows: FluxoRow[] }) {
               { nome: "Entradas", amostra: <span className="size-3 rounded-sm bg-primary" aria-hidden="true" /> },
               {
                 nome: "Saídas",
-                amostra: <span className="size-3 rounded-sm" style={{ background: HACHURA }} aria-hidden="true" />,
+                amostra: <span className="size-3 rounded-sm bg-hachura" aria-hidden="true" />,
               },
             ]}
           />
@@ -121,8 +119,8 @@ export function FluxoCharts({ rows }: { rows: FluxoRow[] }) {
             <defs>
               {/* Hachura das saídas: o mesmo traço do EvolucaoMensal, por token. */}
               <pattern id="hachuraSaidas" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
-                <rect width="6" height="6" style={{ fill: "var(--hachura-fundo)" }} />
-                <rect width="2" height="6" style={{ fill: "var(--hachura-traco)" }} />
+                <rect width="6" height="6" className="fill-hachura-fundo" />
+                <rect width="2" height="6" className="fill-hachura-traco" />
               </pattern>
             </defs>
             {grade}

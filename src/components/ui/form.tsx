@@ -87,7 +87,7 @@ const FormItem = React.forwardRef<HTMLDivElement, FormItemProps>(
           ref={ref} 
           className={cn(
             "space-y-2 transition-all duration-200",
-            animated && "animate-fade-in-up fill-both",
+            animated && "animate-fade-in-up anim-fill-both",
             className
           )} 
           {...props} 

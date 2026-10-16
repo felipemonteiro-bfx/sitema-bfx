@@ -25,7 +25,7 @@ import { Alert } from "@/components/ui/alert";
 import { darBaixaParcela, desfazerBaixaParcela } from "@/app/(app)/historico/baixa-actions";
 import { linhaRecebimento, resumoRecebimento, temParcelaRepetida, type ParcelaRecebimento } from "@/lib/recebimento-parcelas";
 import { formatarDataPura } from "@/lib/data-pura";
-import { cn, formatBRL } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 
 
 type Props = {
@@ -93,13 +93,13 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
       )}
 
       {temParcelaRepetida(parcelas) && (
-        <Alert variant="warning" showIcon className="text-xs">
+        <Alert variant="warning" showIcon size="sm">
           Esta venda tem parcelas com o mesmo número. O total recebido soma as duas linhas.
         </Alert>
       )}
 
       <div className="rounded-interno bg-poco overflow-hidden">
-        <Table className="min-w-[640px]">
+        <Table className="min-w-160">
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">Parcela</TableHead>
@@ -121,10 +121,10 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
               const rotulo = `${p.numeroParcela}/${p.totalParcelas}`;
               return (
                 <Fragment key={p.id}>
-                  <TableRow className={cn(aberta && "border-b-0")}>
-                    <TableCell className="tabular-nums">{rotulo}</TableCell>
-                    <TableCell className="tabular-nums">{formatarDataPura(p.dataVencimento)}</TableCell>
-                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">{formatBRL(p.valorParcela)}</TableCell>
+                  <TableRow semBorda={aberta}>
+                    <TableCell mono>{rotulo}</TableCell>
+                    <TableCell mono>{formatarDataPura(p.dataVencimento)}</TableCell>
+                    <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(p.valorParcela)}</TableCell>
                     <TableCell>
                       {linha.situacao === "paga" ? (
                         <Badge variant="success">Paga</Badge>
@@ -183,8 +183,8 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                <AlertDialogAction variant="destructive"
+
                                   onClick={() =>
                                     executar(desfazerBaixaParcela, { parcelaId: String(p.id), confirmar: "1" }, `Baixa da parcela ${rotulo} desfeita.`)
                                   }
@@ -210,9 +210,9 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
                     )}
                   </TableRow>
                   {aberta && (
-                    <TableRow
+                    <TableRow semHover
                       id={`baixa-parcela-${p.id}`}
-                      className={"hover:bg-transparent dark:hover:bg-transparent"}
+
                     >
                       <TableCell colSpan={6} className="pt-0">
                         <div className="flex flex-wrap items-end gap-3 md:pl-20">

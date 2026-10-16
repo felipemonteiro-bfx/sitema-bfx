@@ -205,15 +205,16 @@ describe("achados 6, 7 e 11 — tabular-nums", () => {
     // Idem: uma das duas colunas ganhou `valor-sensivel` do modo discreto, entao a
     // contagem olha o par de classes, nao o atributo inteiro.
     // H3 (Vantage): numero em Geist Mono (`font-mono`, ja tabular), como o Dashboard.
-    expect(fonte.includes("text-right font-mono")).toBe(true);
-    expect(fonte.split("text-right font-mono").length - 1).toBeGreaterThanOrEqual(2);
+    // A fonte mono e o alinhamento a direita vem da prop `numeric` do TableCell.
+    expect(fonte.includes("<TableCell numeric")).toBe(true);
+    expect(fonte.split("<TableCell numeric").length - 1).toBeGreaterThanOrEqual(2);
   });
 
   it("a coluna Comissao (%) usa tabular-nums", () => {
     const fonte = ler("src/components/commissions-dashboard-client.tsx");
     expect(fonte.includes("{d.percentualComissao}%")).toBe(true);
     const celula = fonte.split("{d.percentualComissao}%")[0].split("<TableCell").pop() || "";
-    expect(celula.includes("tabular-nums") || celula.includes("font-mono")).toBe(true);
+    expect(celula.includes("tabular-nums") || celula.includes("font-mono") || celula.includes("numeric") || celula.includes("mono")).toBe(true);
   });
 });
 
@@ -244,7 +245,7 @@ describe("achado 10 — acentos em /relatorios", () => {
 describe("achado 13 — estados vazios da /financeiro", () => {
   it("as tres celulas colSpan tem respiro vertical", () => {
     const fonte = ler("src/app/(app)/financeiro/page.tsx");
-    const celulas = fonte.split("<TableCell colSpan=").slice(1);
+    const celulas = fonte.split("colSpan={").slice(1);
     expect(celulas).toHaveLength(3);
     for (const celula of celulas) {
       expect(celula.split(">")[0].includes("py-8")).toBe(true);

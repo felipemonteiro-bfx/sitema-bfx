@@ -127,8 +127,7 @@ export default function AssinaturaPage() {
       <div className="flex-1 min-h-0 overflow-hidden">
         <iframe
           src={`/api/assinatura/${token}/recibo`}
-          className="w-full h-full"
-          style={{ border: 'none', display: 'block' }}
+          className="block h-full w-full border-0"
           title="Recibo de Autorização"
         />
       </div>
@@ -136,21 +135,20 @@ export default function AssinaturaPage() {
       {/* Barra inferior — altura fixa, sempre visível. Superfície do tema (painel);
           só o quadro da assinatura é branco fixo, porque a tinta é sempre preta. */}
       <div
-        className="shrink-0 border-t border-painel-borda bg-card px-4 pt-3"
-        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+        className="shrink-0 border-t border-painel-borda bg-card px-4 pt-3 pb-area-segura"
       >
         {/* Área de assinatura */}
         <Button
           type="button"
-          variant="ghost"
+          variant="bloco"
           onClick={() => setModalOpen(true)}
           disabled={submitting}
-          className="mb-2 h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal p-0 font-normal hover:bg-transparent touch-manipulation"
+          className="mb-2 items-stretch touch-manipulation"
         >
           {/* Quadro branco fixo (Fase 14, D-06): a tinta da assinatura (SignatureCanvas/penColor)
               é sempre preta — se o fundo virasse escuro no tema dark, o traço ficaria ilegível. */}
           <span
-            className={`flex min-h-[60px] w-full items-center justify-center rounded-controle border-2 border-dashed transition-colors ${
+            className={`flex min-h-15 w-full items-center justify-center rounded-controle border-2 border-dashed transition-colors ${
               signatureDataUrl
                 ? 'border-border bg-white'
                 : 'border-primary bg-marca-tint active:bg-accent'
@@ -158,7 +156,7 @@ export default function AssinaturaPage() {
           >
             {signatureDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={signatureDataUrl} alt="Assinatura" className="max-h-[56px] object-contain" />
+              <img src={signatureDataUrl} alt="Assinatura" className="max-h-14 object-contain" />
             ) : (
               <span className="flex items-center gap-2 py-3 text-marca-tint-texto">
                 <PenLine className="h-5 w-5 shrink-0" />
@@ -197,7 +195,7 @@ export default function AssinaturaPage() {
             size="lg"
             onClick={handleSubmit}
             disabled={submitting || !signatureDataUrl}
-            className="flex-1 touch-manipulation font-semibold min-h-[48px]"
+            className="flex-1 touch-manipulation min-h-12"
           >
             {submitting ? 'Enviando...' : 'Enviar Assinado'}
           </Button>
@@ -208,23 +206,22 @@ export default function AssinaturaPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-card">
           <div
-            className="flex shrink-0 items-center justify-between border-b border-painel-borda bg-card px-4"
-            style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.75rem' }}
+            className="flex shrink-0 items-center justify-between border-b border-painel-borda bg-card px-4 py-area-segura-topo"
           >
             <h2 className="font-semibold text-sm">Assine com o dedo</h2>
-            <Button
+            <Button forma="pill"
               type="button"
               variant="ghost"
               size="icon"
               onClick={handleModalCancel}
-              className="-mr-2 rounded-full touch-manipulation"
+              className="-mr-2 touch-manipulation"
               aria-label="Fechar e voltar ao documento"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </Button>
           </div>
 
-          <div className="flex-1 overflow-hidden bg-white" /* quadro branco: tinta preta */ style={{ touchAction: 'none' }}>
+          <div className="flex-1 touch-none overflow-hidden bg-white" /* quadro branco: tinta preta */>
             <SignatureCanvas
               ref={sigCanvas}
               penColor="black"
@@ -237,8 +234,7 @@ export default function AssinaturaPage() {
           </div>
 
           <div
-            className="flex shrink-0 gap-3 border-t border-painel-borda bg-card px-4 pt-3"
-            style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+            className="flex shrink-0 gap-3 border-t border-painel-borda bg-card px-4 pt-3 pb-area-segura"
           >
             <Button
               type="button"
@@ -253,7 +249,7 @@ export default function AssinaturaPage() {
               type="button"
               size="lg"
               onClick={handleModalOk}
-              className="flex-1 touch-manipulation font-semibold"
+              className="flex-1 touch-manipulation"
             >
               Confirmar
             </Button>

@@ -41,7 +41,7 @@ function MarkdownTable({ block }: { block: string }) {
             {table.headers.map((h, i) => (
               <TableHead
                 key={i}
-                className={cn("h-9 whitespace-nowrap px-3 text-xs", numericas.has(i) ? "text-right" : "text-left")}
+                className={cn("h-9 whitespace-nowrap px-3", numericas.has(i) ? "text-right" : "text-left")}
               >
                 {h}
               </TableHead>
@@ -50,7 +50,7 @@ function MarkdownTable({ block }: { block: string }) {
         </TableHeader>
         <TableBody>
           {table.rows.map((row, ri) => (
-            <TableRow key={ri} className="hover:bg-transparent">
+            <TableRow semHover key={ri}>
               {row.map((cell, ci) => (
                 // `text-muted-foreground` media 4.43:1 sobre a linha zebrada no
                 // tema claro, abaixo do minimo de 4.5. Celula de dado e conteudo
@@ -58,10 +58,11 @@ function MarkdownTable({ block }: { block: string }) {
                 // continua sendo o tom do cabecalho (achado 7).
                 <TableCell
                   key={ci}
-                  className={cn(
-                    "whitespace-nowrap px-3 py-2 text-xs text-foreground",
-                    numericas.has(ci) && "text-right tabular-nums font-medium"
-                  )}
+                  tamanho="xs"
+                  tom="foreground"
+                  numeric={numericas.has(ci)}
+                  peso={numericas.has(ci) ? "medio" : undefined}
+                  className="whitespace-nowrap px-3 py-2"
                 >
                   {cell}
                 </TableCell>

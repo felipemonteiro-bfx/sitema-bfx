@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -64,8 +65,8 @@ export function VendorMultiSelect({
               escuro. `Input`, `DateInput` e `FormSelect` ja usam este par. */}
           <Button
             id={id}
-            variant="outline"
-            className={["h-10 w-full justify-between dark:bg-card", className].filter(Boolean).join(" ")}
+            variant="seletor"
+            className={cn("h-10", className)}
           >
             Vendedores
             <span className="ml-2 text-xs text-muted-foreground">
@@ -92,7 +93,8 @@ export function VendorMultiSelect({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Pesquisar vendedor..."
-                className="h-8 border-0 bg-transparent p-0 text-sm shadow-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+                state="nu"
+                className="h-8"
               />
             </div>
           </div>

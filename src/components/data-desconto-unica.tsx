@@ -26,7 +26,8 @@ interface Props {
   name?: string;
   /** Motivo de a data não poder mudar (edição). O campo fica desabilitado e não vai no formulário. */
   bloqueio?: string | null;
-  labelClassName?: string;
+  /** Tamanho do rótulo: `sm` (text-xs) nas telas de edição densas. */
+  labelSize?: "default" | "sm";
   /** Classe do aviso de mudança, que ocupa a linha inteira do grid do pai. */
   avisoClassName?: string;
 }
@@ -45,7 +46,7 @@ export function DataDescontoUnica({
   onEscolhidaChange,
   name,
   bloqueio,
-  labelClassName,
+  labelSize,
   avisoClassName,
 }: Props) {
   const valor = dataDescontoEfetiva(escolhida, dataRegra) ?? dataRegra;
@@ -58,7 +59,7 @@ export function DataDescontoUnica({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor={id} className={labelClassName}>
+        <Label htmlFor={id} size={labelSize}>
           Data do desconto
         </Label>
         <DateInput
@@ -68,7 +69,7 @@ export function DataDescontoUnica({
           onChange={(v) => onEscolhidaChange(escolhaAposSelecionar(v, dataRegra))}
           disabled={Boolean(bloqueio)}
           required
-          className={cn(editada && !erro && "border-primary", erro && "border-error")}
+          state={erro ? "error" : editada ? "destaque" : "default"}
         />
         <p className="text-xs text-muted-foreground">
           {bloqueio ? (
@@ -79,10 +80,10 @@ export function DataDescontoUnica({
               {editada && (
                 <>
                   {" "}
-                  <Button
+                  <Button size="inlineXs"
                     type="button"
                     variant="link"
-                    className="h-auto p-0 text-xs font-bold underline underline-offset-4"
+
                     onClick={() => onEscolhidaChange(null)}
                   >
                     Voltar para a data da regra

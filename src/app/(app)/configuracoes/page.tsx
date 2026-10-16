@@ -358,7 +358,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     Esta mensagem aparece no painel dos vendedores.
                   </div>
                   <form action={saveAviso} className="space-y-3">
-                    <Label htmlFor="mensagem" className="normal-case tracking-normal text-sm font-medium">Mensagem</Label>
+                    <Label htmlFor="mensagem">Mensagem</Label>
                     <Textarea id="mensagem" name="mensagem" defaultValue={aviso?.mensagem || ""} />
                     <button className={cn(buttonVariants(), "cursor-pointer")}>Publicar aviso</button>
                   </form>
@@ -419,7 +419,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardContent>
                     <form action={saveAsaas} className="space-y-4">
                       <div className="space-y-1">
-                        <Label htmlFor="asaasApiKey" className="normal-case tracking-normal text-sm font-medium">API Key</Label>
+                        <Label htmlFor="asaasApiKey">API Key</Label>
                         <Input
                           id="asaasApiKey"
                           name="asaasApiKey"
@@ -431,7 +431,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         )}
                       </div>
                       <div className="space-y-1">
-                        <Label className="normal-case tracking-normal text-sm font-medium">Ambiente</Label>
+                        <Label>Ambiente</Label>
                         <FormSelect
                           name="asaasEnv"
                           options={[
@@ -468,7 +468,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardContent>
                     <form action={saveAiProvider} className="space-y-4">
                       <div className="space-y-1">
-                        <Label className="normal-case tracking-normal text-sm font-medium">Provedor ativo</Label>
+                        <Label>Provedor ativo</Label>
                         <FormSelect
                           name="aiProvider"
                           options={[
@@ -483,7 +483,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <div className="rounded-interno bg-poco p-4 space-y-3">
                         <p className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</p>
                         <div className="space-y-1">
-                          <Label htmlFor="litellmUrl" className="normal-case tracking-normal text-sm font-medium">URL da API</Label>
+                          <Label htmlFor="litellmUrl">URL da API</Label>
                           <Input
                             id="litellmUrl"
                             name="litellmUrl"
@@ -492,7 +492,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="litellmKey" className="normal-case tracking-normal text-sm font-medium">API Key</Label>
+                          <Label htmlFor="litellmKey">API Key</Label>
                           <Input
                             id="litellmKey"
                             name="litellmKey"
@@ -504,7 +504,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           )}
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="litellmModel" className="normal-case tracking-normal text-sm font-medium">Modelo</Label>
+                          <Label htmlFor="litellmModel">Modelo</Label>
                           <LitellmModelSelect
                             name="litellmModel"
                             defaultValue={(cfg as Record<string, unknown>)?.litellmModel as string || ""}
@@ -572,7 +572,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <div className="space-y-3 rounded-interno bg-card-elevated p-4">
                       <div className="text-sm font-semibold text-foreground">Provider de envio</div>
                       <div className="space-y-1">
-                        <Label htmlFor="whatsappProvider" className="normal-case tracking-normal text-sm font-medium">Qual API usar</Label>
+                        <Label htmlFor="whatsappProvider">Qual API usar</Label>
                         <FormSelect
                           id="whatsappProvider"
                           name="whatsappProvider"
@@ -587,7 +587,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappToken" className="normal-case tracking-normal text-sm font-medium">Meta — Token permanente</Label>
+                          <Label htmlFor="metaWhatsappToken">Meta — Token permanente</Label>
                           <Input
                             id="metaWhatsappToken"
                             name="metaWhatsappToken"
@@ -597,7 +597,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           {Boolean((cfg as Record<string, unknown>)?.metaWhatsappToken) && <p className="text-xs font-medium text-success-text">Token permanente salvo. Deixe vazio para manter.</p>}
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappPhoneNumberId" className="normal-case tracking-normal text-sm font-medium">Meta — Phone Number ID</Label>
+                          <Label htmlFor="metaWhatsappPhoneNumberId">Meta — Phone Number ID</Label>
                           <Input
                             id="metaWhatsappPhoneNumberId"
                             name="metaWhatsappPhoneNumberId"
@@ -606,7 +606,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappBusinessId" className="normal-case tracking-normal text-sm font-medium">Meta — Business Account ID</Label>
+                          <Label htmlFor="metaWhatsappBusinessId">Meta — Business Account ID</Label>
                           <Input
                             id="metaWhatsappBusinessId"
                             name="metaWhatsappBusinessId"
@@ -615,7 +615,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappApiVersion" className="normal-case tracking-normal text-sm font-medium">Meta — Versão da API</Label>
+                          <Label htmlFor="metaWhatsappApiVersion">Meta — Versão da API</Label>
                           <Input
                             id="metaWhatsappApiVersion"
                             name="metaWhatsappApiVersion"
@@ -624,7 +624,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="metaAppSecret" className="normal-case tracking-normal text-sm font-medium">Meta — Chave secreta do aplicativo</Label>
+                          <Label htmlFor="metaAppSecret">Meta — Chave secreta do aplicativo</Label>
                           <Input
                             id="metaAppSecret"
                             name="metaAppSecret"
@@ -636,7 +636,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           {Boolean((cfg as Record<string, unknown>)?.metaAppSecret) && <p className="text-sm font-medium text-success-text">Chave secreta salva. Deixe vazio para manter a chave atual.</p>}
                         </div>
                         <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="metaWebhookVerifyToken" className="normal-case tracking-normal text-sm font-medium">Meta — Verify token do webhook</Label>
+                          <Label htmlFor="metaWebhookVerifyToken">Meta — Verify token do webhook</Label>
                           <Input
                             id="metaWebhookVerifyToken"
                             name="metaWebhookVerifyToken"
@@ -651,7 +651,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           name="whatsappFallbackEvolution"
                           defaultChecked={(cfg as Record<string, unknown>)?.whatsappFallbackEvolution !== 0}
                         />
-                        <Label htmlFor="whatsappFallbackEvolution" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                        <Label variant="opcao" htmlFor="whatsappFallbackEvolution">
                           Usar Evolution como fallback se o Meta falhar (durante a transição)
                         </Label>
                       </div>
@@ -662,7 +662,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="evolutionApiUrl" className="normal-case tracking-normal text-sm font-medium">URL da Evolution API</Label>
+                      <Label htmlFor="evolutionApiUrl">URL da Evolution API</Label>
                       <Input
                         id="evolutionApiUrl"
                         name="evolutionApiUrl"
@@ -671,7 +671,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="evolutionApiKey" className="normal-case tracking-normal text-sm font-medium">API Key</Label>
+                      <Label htmlFor="evolutionApiKey">API Key</Label>
                       <Input
                         id="evolutionApiKey"
                         name="evolutionApiKey"
@@ -683,7 +683,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="evolutionInstance" className="normal-case tracking-normal text-sm font-medium">Nome da instância</Label>
+                      <Label htmlFor="evolutionInstance">Nome da instância</Label>
                       <Input
                         id="evolutionInstance"
                         name="evolutionInstance"
@@ -700,7 +700,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         name="whatsappAutoEnabled"
                         defaultChecked={cfg?.whatsappAutoEnabled !== 0}
                       />
-                      <Label htmlFor="whatsappAutoEnabled" className="normal-case tracking-normal text-sm font-medium leading-normal text-foreground">
+                      <Label variant="foreground" htmlFor="whatsappAutoEnabled">
                         Envios automáticos ativados (master)
                       </Label>
                     </div>
@@ -715,7 +715,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoRecibo"
                             defaultChecked={cfg?.whatsappAutoRecibo !== 0}
                           />
-                          <Label htmlFor="whatsappAutoRecibo" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoRecibo">
                             Recibo ou link de assinatura após venda
                           </Label>
                         </div>
@@ -725,7 +725,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoBoleto"
                             defaultChecked={cfg?.whatsappAutoBoleto !== 0}
                           />
-                          <Label htmlFor="whatsappAutoBoleto" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoBoleto">
                             Link do boleto ao gerar (manual ou venda)
                           </Label>
                         </div>
@@ -735,7 +735,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoLembrete"
                             defaultChecked={cfg?.whatsappAutoLembrete !== 0}
                           />
-                          <Label htmlFor="whatsappAutoLembrete" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoLembrete">
                             Lembrete de parcelas (boleto, 1–2 dias antes)
                           </Label>
                         </div>
@@ -745,7 +745,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoInadimplencia"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoInadimplencia === 1}
                           />
-                          <Label htmlFor="whatsappAutoInadimplencia" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoInadimplencia">
                             Parcela vencida (lembrete inadimplência)
                           </Label>
                         </div>
@@ -755,7 +755,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoReativacao"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoReativacao === 1}
                           />
-                          <Label htmlFor="whatsappAutoReativacao" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoReativacao">
                             Reativação clientes inativos
                           </Label>
                         </div>
@@ -770,7 +770,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappDiasInativo) || 60)}
                             className="w-16"
                           />
-                          <Label htmlFor="whatsappDiasInativo" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappDiasInativo">
                             dias sem compra para reativação
                           </Label>
                         </div>
@@ -780,7 +780,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoAniversario"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAniversario === 1}
                           />
-                          <Label htmlFor="whatsappAutoAniversario" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoAniversario">
                             Parabéns no aniversário
                           </Label>
                         </div>
@@ -790,7 +790,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoBoasVindas"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoBoasVindas === 1}
                           />
-                          <Label htmlFor="whatsappAutoBoasVindas" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoBoasVindas">
                             Boas-vindas cliente novo
                           </Label>
                         </div>
@@ -800,7 +800,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoAgradecimento"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAgradecimento === 1}
                           />
-                          <Label htmlFor="whatsappAutoAgradecimento" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoAgradecimento">
                             Agradecimento pós-venda (1 dia depois)
                           </Label>
                         </div>
@@ -810,7 +810,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoNPS"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoNPS === 1}
                           />
-                          <Label htmlFor="whatsappAutoNPS" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                          <Label variant="opcao" htmlFor="whatsappAutoNPS">
                             Pesquisa satisfação (7 dias após compra)
                           </Label>
                         </div>
@@ -830,7 +830,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           searchable={false}
                           className="min-w-64"
                         />
-                        <Label htmlFor="whatsappPreAtendimento" className="normal-case tracking-normal text-sm font-medium leading-normal text-foreground">
+                        <Label variant="foreground" htmlFor="whatsappPreAtendimento">
                           Respostas automáticas
                         </Label>
                       </div>
@@ -845,7 +845,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappTakeoverMinutos) || 60)}
                           className="w-16"
                         />
-                        <Label htmlFor="whatsappTakeoverMinutos" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
+                        <Label variant="opcao" htmlFor="whatsappTakeoverMinutos">
                           minutos de pausa após atendente assumir (padrão: 60)
                         </Label>
                       </div>
@@ -892,7 +892,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveEmailFinanceiro} className="space-y-3">
                     <div className="space-y-1">
-                      <Label htmlFor="emailFinanceiro" className="normal-case tracking-normal text-sm font-medium">E-mail</Label>
+                      <Label htmlFor="emailFinanceiro">E-mail</Label>
                       <Input
                         id="emailFinanceiro"
                         name="emailFinanceiro"
@@ -936,13 +936,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         name="uberEnabled"
                         defaultChecked={(cfg as Record<string, unknown>)?.uberEnabled === 1}
                       />
-                      <Label htmlFor="uberEnabled" className="normal-case tracking-normal text-sm font-medium leading-normal text-foreground">
+                      <Label variant="foreground" htmlFor="uberEnabled">
                         Integração ativada
                       </Label>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <Label htmlFor="uberClientId" className="normal-case tracking-normal text-sm font-medium">Client ID</Label>
+                        <Label htmlFor="uberClientId">Client ID</Label>
                         <Input
                           id="uberClientId"
                           name="uberClientId"
@@ -951,7 +951,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberClientSecret" className="normal-case tracking-normal text-sm font-medium">Client Secret</Label>
+                        <Label htmlFor="uberClientSecret">Client Secret</Label>
                         <Input
                           id="uberClientSecret"
                           name="uberClientSecret"
@@ -965,7 +965,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         )}
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberCustomerId" className="normal-case tracking-normal text-sm font-medium">Customer ID (Direct)</Label>
+                        <Label htmlFor="uberCustomerId">Customer ID (Direct)</Label>
                         <Input
                           id="uberCustomerId"
                           name="uberCustomerId"
@@ -974,7 +974,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberOrganizationId" className="normal-case tracking-normal text-sm font-medium">Organization ID (opcional)</Label>
+                        <Label htmlFor="uberOrganizationId">Organization ID (opcional)</Label>
                         <Input
                           id="uberOrganizationId"
                           name="uberOrganizationId"
@@ -994,7 +994,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberPickupStreet" className="normal-case tracking-normal text-sm font-medium">Endereço</Label>
+                        <Label htmlFor="uberPickupStreet">Endereço</Label>
                         <Input
                           id="uberPickupStreet"
                           name="uberPickupStreet"
@@ -1004,11 +1004,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div className="grid gap-3 sm:grid-cols-4">
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupCity" className="normal-case tracking-normal text-sm font-medium">Cidade</Label>
+                          <Label htmlFor="uberPickupCity">Cidade</Label>
                           <Input id="uberPickupCity" name="uberPickupCity" defaultValue={uberPickup.city} />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupState" className="normal-case tracking-normal text-sm font-medium">Estado (UF)</Label>
+                          <Label htmlFor="uberPickupState">Estado (UF)</Label>
                           <Input
                             id="uberPickupState"
                             name="uberPickupState"
@@ -1017,11 +1017,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupZip" className="normal-case tracking-normal text-sm font-medium">CEP</Label>
+                          <Label htmlFor="uberPickupZip">CEP</Label>
                           <Input id="uberPickupZip" name="uberPickupZip" defaultValue={uberPickup.zip} />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupCountry" className="normal-case tracking-normal text-sm font-medium">País</Label>
+                          <Label htmlFor="uberPickupCountry">País</Label>
                           <Input
                             id="uberPickupCountry"
                             name="uberPickupCountry"

@@ -25,10 +25,6 @@ import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; mes?: string; edit?: string };
 
-/** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
-const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
-/** Rótulo de campo em frase normal: o `Label` base ainda vem em caixa-alta. */
-const ROTULO = "text-sm font-medium normal-case tracking-normal";
 
 async function addDespesa(formData: FormData) {
   "use server";
@@ -206,7 +202,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           "Custo" fica no rótulo, não na cor. */}
                       <Card className="p-2 pt-5">
                         <CardHeader className="space-y-1 p-0 px-4 pb-4">
-                          <CardTitle className={TITULO_SECAO}>Composição dos custos</CardTitle>
+                          <CardTitle variant="secao">Composição dos custos</CardTitle>
                           <p className="text-sm text-muted-foreground">De onde vêm os custos do período e o que está parado em estoque.</p>
                         </CardHeader>
                         <CardContent className="space-y-5 p-0 px-2 pb-2">
@@ -292,12 +288,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
                 <Card className="p-2 pt-5">
                   <CardHeader className="p-0 px-4 pb-4">
-                    <CardTitle className={TITULO_SECAO}>Mês a mês</CardTitle>
+                    <CardTitle variant="secao">Mês a mês</CardTitle>
                   </CardHeader>
-                  <CardContent className="rounded-interno bg-poco p-0">
+                  <CardContent variant="poco" className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
+                        <TableRow semHover>
                           <TableHead>Mês</TableHead>
                           <TableHead className="text-right">Entradas</TableHead>
                           <TableHead className="text-right">Saídas</TableHead>
@@ -306,22 +302,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </TableHeader>
                       <TableBody>
                         {fluxo.length === 0 ? (
-                          <TableRow className="hover:bg-transparent">
-                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                          <TableRow semHover>
+                            <TableCell tom="muted" colSpan={4} className="text-center py-8">
                               Nenhum movimento de caixa no período.
                             </TableCell>
                           </TableRow>
                         ) : (
                           fluxo.map((r) => (
-                            <TableRow key={r.mes} className="hover:bg-transparent">
-                              <TableCell className="font-mono">{r.mes}</TableCell>
-                              <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">
+                            <TableRow semHover key={r.mes}>
+                              <TableCell mono>{r.mes}</TableCell>
+                              <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                                 {formatBRL(r.entradas)}
                               </TableCell>
-                              <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">
+                              <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                                 {formatBRL(r.saidas)}
                               </TableCell>
-                              <TableCell className={cn("valor-sensivel valor-sensivel-fim text-right font-mono font-medium", r.saldo < 0 ? "text-error-text" : "text-foreground")}>
+                              <TableCell numeric peso="medio" tom={r.saldo < 0 ? "erro" : "foreground"} className="valor-sensivel valor-sensivel-fim">
                                 {formatBRL(r.saldo)}
                               </TableCell>
                             </TableRow>
@@ -341,7 +337,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <div className="space-y-6">
                 <Card>
                   <CardHeader className="space-y-1">
-                    <CardTitle className={TITULO_SECAO}>Nova despesa</CardTitle>
+                    <CardTitle variant="secao">Nova despesa</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       Registre despesas fixas ou variáveis com data de competência.
                     </p>
@@ -350,15 +346,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <form action={addDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       <input type="hidden" name="mes" value={currentMes} />
                       <div className="col-span-2 space-y-1.5 md:col-span-2">
-                        <Label htmlFor="add-descricao" className={ROTULO}>Descrição</Label>
+                        <Label htmlFor="add-descricao">Descrição</Label>
                         <Input id="add-descricao" name="descricao" placeholder="Ex.: Aluguel, frete, comissão" />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="add-valor" className={ROTULO}>Valor</Label>
+                        <Label htmlFor="add-valor">Valor</Label>
                         <Input id="add-valor" name="valor" placeholder="0,00" type="number" step="0.01" />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="add-tipo" className={ROTULO}>Tipo</Label>
+                        <Label htmlFor="add-tipo">Tipo</Label>
                         <FormSelect
                           name="tipo"
                           options={[
@@ -369,7 +365,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="add-data" className={ROTULO}>Data</Label>
+                        <Label htmlFor="add-data">Data</Label>
                         <DateInput name="data" aria-label="Data" />
                       </div>
                       <div className="col-span-1 md:col-span-3 flex items-end gap-3">
@@ -385,22 +381,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {editDespesa && (
                   <Card>
                     <CardHeader>
-                      <CardTitle className={TITULO_SECAO}>Editar lançamento #{editDespesa.id}</CardTitle>
+                      <CardTitle variant="secao">Editar lançamento #{editDespesa.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <form action={updateDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
                         <input type="hidden" name="id" value={editDespesa.id} />
                         <input type="hidden" name="mes" value={currentMes} />
                         <div className="col-span-2 space-y-1.5 md:col-span-2">
-                          <Label htmlFor="edit-descricao" className={ROTULO}>Descrição</Label>
+                          <Label htmlFor="edit-descricao">Descrição</Label>
                           <Input id="edit-descricao" name="descricao" defaultValue={editDespesa.descricao || ""} />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="edit-valor" className={ROTULO}>Valor</Label>
+                          <Label htmlFor="edit-valor">Valor</Label>
                           <Input id="edit-valor" name="valor" type="number" step="0.01" defaultValue={editDespesa.valor || 0} />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="edit-tipo" className={ROTULO}>Tipo</Label>
+                          <Label htmlFor="edit-tipo">Tipo</Label>
                           <FormSelect
                             name="tipo"
                             options={[
@@ -411,7 +407,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="edit-data" className={ROTULO}>Data</Label>
+                          <Label htmlFor="edit-data">Data</Label>
                           <DateInput name="data" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
                         </div>
                         <div className="col-span-1 md:col-span-3 flex items-end gap-2">
@@ -430,15 +426,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
                 <Card className="p-2 pt-5">
                   <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
-                    <CardTitle className={TITULO_SECAO}>Despesas</CardTitle>
+                    <CardTitle variant="secao">Despesas</CardTitle>
                     <span className="text-sm text-muted-foreground">
                       {despesas.length} {despesas.length === 1 ? "lançamento" : "lançamentos"}
                     </span>
                   </CardHeader>
-                  <CardContent className="rounded-interno bg-poco p-0">
+                  <CardContent variant="poco" className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
+                        <TableRow semHover>
                           <TableHead>Data</TableHead>
                           <TableHead>Descrição</TableHead>
                           <TableHead>Tipo</TableHead>
@@ -448,18 +444,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </TableHeader>
                       <TableBody>
                         {despesas.length === 0 ? (
-                          <TableRow className="hover:bg-transparent">
-                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          <TableRow semHover>
+                            <TableCell tom="muted" colSpan={5} className="text-center py-8">
                               Nenhuma despesa lançada no período.
                             </TableCell>
                           </TableRow>
                         ) : (
                           despesas.map((d) => (
-                            <TableRow key={d.id} className="hover:bg-transparent">
-                              <TableCell className="font-mono">{formatDate(d.dataDespesa)}</TableCell>
+                            <TableRow semHover key={d.id}>
+                              <TableCell mono>{formatDate(d.dataDespesa)}</TableCell>
                               <TableCell>{d.descricao}</TableCell>
                               <TableCell><Badge variant="outline">{d.tipo}</Badge></TableCell>
-                              <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(d.valor || 0)}</TableCell>
+                              <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(d.valor || 0)}</TableCell>
                               <TableCell>
                                 <div className="flex items-center justify-end gap-1">
                                   <Link
@@ -509,15 +505,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </section>
                 <Card className="p-2 pt-5">
                   <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
-                    <CardTitle className={TITULO_SECAO}>Produtos em estoque</CardTitle>
+                    <CardTitle variant="secao">Produtos em estoque</CardTitle>
                     <span className="text-sm text-muted-foreground">
                       {produtosOrdenados.length} {produtosOrdenados.length === 1 ? "produto" : "produtos"}
                     </span>
                   </CardHeader>
-                  <CardContent className="rounded-interno bg-poco p-0">
+                  <CardContent variant="poco" className="p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
+                        <TableRow semHover>
                           <TableHead>Produto</TableHead>
                           <TableHead className="text-right">Qtd</TableHead>
                           <TableHead className="text-right">Custo unit.</TableHead>
@@ -528,8 +524,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </TableHeader>
                       <TableBody>
                         {produtosOrdenados.length === 0 ? (
-                          <TableRow className="hover:bg-transparent">
-                            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                          <TableRow semHover>
+                            <TableCell tom="muted" colSpan={6} className="text-center py-8">
                               Nenhum produto cadastrado.
                             </TableCell>
                           </TableRow>
@@ -540,13 +536,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               ? ((p.valorVenda - (p.custoPadrao ?? 0)) / p.valorVenda) * 100
                               : 0;
                             return (
-                              <TableRow key={p.nome} className="hover:bg-transparent">
-                                <TableCell className="font-medium">{p.nome}</TableCell>
-                                <TableCell className="text-right font-mono">{p.qtdEstoque ?? 0}</TableCell>
-                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(p.custoPadrao ?? 0)}</TableCell>
-                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono font-semibold">{formatBRL(imob)}</TableCell>
-                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(p.valorVenda ?? 0)}</TableCell>
-                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">
+                              <TableRow semHover key={p.nome}>
+                                <TableCell peso="medio">{p.nome}</TableCell>
+                                <TableCell numeric>{p.qtdEstoque ?? 0}</TableCell>
+                                <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(p.custoPadrao ?? 0)}</TableCell>
+                                <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(imob)}</TableCell>
+                                <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(p.valorVenda ?? 0)}</TableCell>
+                                <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                                   <span className="inline-flex items-center justify-end gap-2">
                                     {/* A margem baixa vira selo de estado; o número segue neutro. */}
                                     {margem < 15 && <Badge variant="error">baixa</Badge>}

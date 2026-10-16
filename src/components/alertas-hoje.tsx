@@ -47,7 +47,7 @@ export function AlertasHoje({ alertas, urlAssinaturas }: { alertas?: AlertasShel
         <Link
           key={href}
           href={href}
-          className="flex min-h-8 items-center gap-1.5 rounded-controle px-2 text-xs text-texto-secundario outline-none transition-[background-color,color] duration-[var(--mov-nav)] ease-out hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card motion-reduce:transition-none"
+          className="flex min-h-8 items-center gap-1.5 rounded-controle px-2 text-xs text-texto-secundario outline-none transition-fundo-texto duration-(--mov-nav) ease-out hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card motion-reduce:transition-none"
         >
           <Icone className={`h-4 w-4 shrink-0 ${n > 0 ? cor : "text-sidebar-muted"}`} aria-hidden="true" />
           <span className="min-w-0 truncate">

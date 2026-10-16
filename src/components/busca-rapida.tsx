@@ -219,9 +219,9 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
             origemFoco.current?.focus();
           }}
           className={cn(
-            "fixed left-1/2 top-[8vh] z-[9999] w-[calc(100vw-2rem)] max-w-[760px] -translate-x-1/2 overflow-hidden rounded-painel border border-divisoria bg-popover shadow-lg dark:shadow-[var(--shadow-lg)]",
+            "fixed left-1/2 top-[8vh] z-[9999] w-[calc(100vw-2rem)] max-w-190 -translate-x-1/2 overflow-hidden rounded-painel border border-divisoria bg-popover shadow-lg dark:shadow-elevacao-lg",
             // Abertura: opacity + scale .98 -> 1 em 180ms na curva do redesign.
-            "duration-[180ms] ease-[var(--mov-curva)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:animate-none",
+            "duration-180 ease-(--mov-curva) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-98 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:animate-none",
           )}
         >
           <DialogTitle className="sr-only">Busca rápida</DialogTitle>
@@ -259,7 +259,8 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
               />
             </div>
 
-            <CommandList aria-busy={carregando} className={cn(carregando && resposta && "opacity-70 transition-opacity")}>
+            <div className={cn(carregando && resposta && "opacity-70 transition-opacity")}>
+            <CommandList aria-busy={carregando}>
               {erro && (
                 <p role="alert" className="px-5 py-8 text-center text-sm text-error-text">
                   Não foi possível buscar agora. Tente de novo.
@@ -289,6 +290,7 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
                   </CommandGroup>
                 ))}
             </CommandList>
+            </div>
 
             <div className="flex min-h-14 items-center gap-5 border-t border-divisoria px-4 py-1 text-sm text-muted-foreground sm:px-5">
               <span className="hidden items-center gap-2 sm:flex">
@@ -301,10 +303,10 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
                 <Button
                   type="button"
                   variant="ghost"
-                  className="ml-auto h-11 gap-2 px-3 text-foreground"
+                  className="ml-auto h-11 gap-2"
                   onClick={() => abrir(perguntarIA)}
                 >
-                  <Sparkles className="h-[18px] w-[18px] text-primary" aria-hidden="true" />
+                  <Sparkles className="h-4.5 w-4.5 text-primary" aria-hidden="true" />
                   Perguntar ao BFX Intelligence
                 </Button>
               )}
@@ -398,15 +400,12 @@ export function BuscaRapidaGatilho({ className }: { className?: string }) {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="campo"
       aria-keyshortcuts="Meta+K Control+K"
       // Texto visível curto (cabe ao lado do atalho); o nome acessível continua completo.
       aria-label="Buscar venda, cliente, página"
       onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCA))}
-      className={cn(
-        "h-9 w-full justify-start gap-2.5 rounded-controle bg-controle px-3 font-normal text-muted-foreground hover:bg-controle-ativo hover:text-foreground",
-        className,
-      )}
+      className={cn("w-full gap-2.5", className)}
     >
       <Search className="h-4 w-4" aria-hidden="true" />
       <span className="min-w-0 flex-1 truncate text-left">Buscar…</span>

@@ -23,9 +23,6 @@ export type EvolucaoMensalProps = {
 };
 
 // A hachura vem dos tokens (muda com o tema); o 135deg e os passos são os do artboard.
-const HACHURA = "repeating-linear-gradient(135deg, var(--hachura-traco) 0 2px, var(--hachura-fundo) 2px 6px)";
-// Grade de pontos sutil atrás das colunas.
-const GRADE = "radial-gradient(var(--grafico-trilha) 1px, transparent 1px)";
 
 type Ancora = "esquerda" | "centro" | "direita";
 
@@ -68,7 +65,7 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
         </div>
         <div className="flex flex-wrap items-center gap-5 text-sm text-texto-secundario">
           <span className="flex items-center gap-2">
-            <span className="size-3 rounded-sm" style={{ background: HACHURA }} aria-hidden="true" />
+            <span className="size-3 rounded-sm bg-hachura" aria-hidden="true" />
             Custo
           </span>
           <span className="flex items-center gap-2">
@@ -97,13 +94,12 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
               <div className="relative h-72">
                 <div
                   aria-hidden="true"
-                  className="absolute inset-0"
-                  style={{ backgroundImage: GRADE, backgroundSize: "16px 16px", backgroundPosition: "0 6px" }}
+                  className="absolute inset-0 bg-grade-pontos"
                 />
                 {/* As outras colunas esmaecem quando uma recebe o mouse ou o foco (:has, só CSS). */}
                 <ol
                   aria-label="Faturamento por mês"
-                  className="bloco-sensivel relative flex h-full items-stretch gap-2 sm:gap-4 lg:gap-6 [&:has(.evo-col:focus-within)_.evo-col:not(:focus-within)_.evo-barra]:opacity-45 [&:has(.evo-col:hover)_.evo-col:not(:hover)_.evo-barra]:opacity-45"
+                  className="bloco-sensivel relative flex h-full items-stretch gap-2 sm:gap-4 lg:gap-6 [&:has([data-evo-col]:focus-within)_[data-evo-col]:not(:focus-within)_[data-evo-barra]]:opacity-45 [&:has([data-evo-col]:hover)_[data-evo-col]:not(:hover)_[data-evo-barra]]:opacity-45"
                 >
                   {colunas.map((c) => {
                     const m = meses[c.indice];
@@ -114,7 +110,8 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
                         key={c.indice}
                         tabIndex={0}
                         aria-label={`${nome}: faturamento ${formatBRL(m.faturamento)}, custo ${formatBRL(m.custoVariavel)}, margem ${formatBRL(m.margem)}`}
-                        className="evo-col group/col relative flex min-w-0 flex-1 flex-col items-center justify-end rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        data-evo-col=""
+                        className="group/col relative flex min-w-0 flex-1 flex-col items-center justify-end rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         {/* Trilha de fundo da coluna em foco. */}
                         <span
@@ -123,24 +120,23 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
                         />
                         <div
                           aria-hidden="true"
-                          className="evo-barra relative flex h-full w-[64%] max-w-14 flex-col-reverse transition-opacity duration-(--mov-hover) motion-reduce:transition-none"
+                          data-evo-barra=""
+                          className="relative flex h-full w-[64%] max-w-14 flex-col-reverse transition-opacity duration-(--mov-hover) motion-reduce:transition-none"
                         >
                           {c.vazio ? (
                             <span className="h-0.5 rounded-sm bg-grafico-trilha" />
                           ) : (
                             <>
                               <span
-                                className="anim-barra block rounded-sm"
-                                style={{ height: `${c.custoPct}%`, background: HACHURA, "--i": c.indice } as React.CSSProperties}
+                                className="anim-barra block h-(--h) rounded-sm bg-hachura"
+                                style={{ "--h": `${c.custoPct}%`, "--i": c.indice } as React.CSSProperties}
                               />
                               {!c.negativa && c.margemPct > 0 && (
                                 <span
-                                  className="anim-barra block min-h-1 rounded-sm bg-primary"
+                                  className="anim-barra fio-poco block h-(--h) min-h-1 rounded-sm bg-primary"
                                   style={
                                     {
-                                      height: `${c.margemPct}%`,
-                                      // Fio da cor do poço entre o custo e o topo verde.
-                                      boxShadow: "0 2px 0 0 var(--poco)",
+                                      "--h": `${c.margemPct}%`,
                                       "--i": c.indice,
                                     } as React.CSSProperties
                                   }
@@ -154,9 +150,10 @@ export function EvolucaoMensal({ meses, className }: EvolucaoMensalProps) {
                           aria-hidden="true"
                           className={cn(
                             "anim-dica pointer-events-none absolute z-10 hidden w-52 space-y-2 rounded-xl border border-vidro-borda bg-vidro p-3 text-sm shadow-lg backdrop-blur-md group-hover/col:block group-focus-within/col:block",
+                            "bottom-(--b)",
                             CLASSE_ANCORA[posicao]
                           )}
-                          style={{ bottom: `min(calc(${c.totalPct}% + 12px), calc(100% - 9rem))` }}
+                          style={{ "--b": `min(calc(${c.totalPct}% + 12px), calc(100% - 9rem))` } as React.CSSProperties}
                         >
                           <span className="block font-mono text-texto-secundario">{nome}</span>
                           <Linha nome="Faturamento">{formatBRL(m.faturamento)}</Linha>

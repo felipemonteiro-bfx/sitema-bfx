@@ -46,14 +46,10 @@ export function calcularProporcoes(c: ContagensAssinatura): { total: number; vaz
 const COR_SEGMENTO: Record<Chave, string> = {
   assinada: "bg-muted-foreground",
   aguardando: "bg-marca-tint-texto",
-  semContrato: "",
+  semContrato: "bg-hachura-fina",
   // Discreta e neutra: informa sem disputar atenção com assinada/aguardando.
   cancelada: "bg-divisoria",
 };
-const HACHURA = {
-  backgroundImage:
-    "repeating-linear-gradient(135deg, var(--muted-foreground) 0 2px, var(--poco) 2px 5px)",
-} as const;
 
 /** "N vendas" + barra segmentada por status de assinatura + legenda com contagem. */
 export function BarraDistribuicao({ contagens, className }: { contagens: ContagensAssinatura; className?: string }) {
@@ -70,7 +66,7 @@ export function BarraDistribuicao({ contagens, className }: { contagens: Contage
       <div
         role="img"
         aria-label={`Distribuição por assinatura: ${resumo}`}
-        className="flex h-1.5 min-w-[160px] flex-1 basis-60 gap-1"
+        className="flex h-1.5 min-w-40 flex-1 basis-60 gap-1"
       >
         {vazio ? (
           <span className="h-full flex-1 rounded-full bg-poco" />
@@ -80,8 +76,8 @@ export function BarraDistribuicao({ contagens, className }: { contagens: Contage
             .map((s) => (
               <span
                 key={s.chave}
-                className={cn("h-full rounded-full", COR_SEGMENTO[s.chave])}
-                style={{ flexGrow: s.pct, flexBasis: 0, ...(s.chave === "semContrato" ? HACHURA : {}) }}
+                className={cn("h-full grow-(--g) basis-0 rounded-full", COR_SEGMENTO[s.chave])}
+                style={{ "--g": s.pct } as React.CSSProperties}
               />
             ))
         )}
@@ -91,8 +87,7 @@ export function BarraDistribuicao({ contagens, className }: { contagens: Contage
           <li key={s.chave} className="flex items-center gap-1.5">
             <span
               aria-hidden="true"
-              className={cn("h-2.5 w-2.5 rounded-[3px]", COR_SEGMENTO[s.chave])}
-              style={s.chave === "semContrato" ? HACHURA : undefined}
+              className={cn("h-2.5 w-2.5 rounded-xs", COR_SEGMENTO[s.chave])}
             />
             {s.rotulo}
             <span className="font-mono tabular-nums text-foreground">{s.quantidade}</span>
