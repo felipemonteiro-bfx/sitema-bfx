@@ -4,15 +4,21 @@ import { TrendingUp, TrendingDown, Minus, type LucideIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Vantage: o painel e plano. Sem sombra em nenhuma variante (a sombra era o que
+// fazia o card "flutuar" sobre a casca); a separacao vem do degrau de superficie
+// (--card sobre --background) e do contorno decorativo `border-painel-borda`.
+// O raio e por degrau: painel 20px, card interno 14px. Fica DENTRO de cada
+// variante (e nao na base) porque o `cn` (tailwind-merge) nao conhece os raios
+// customizados e nao os deduplicaria com um `rounded-*` vindo do chamador.
 const cardVariants = cva(
-  "rounded-2xl text-card-foreground transition-all duration-200",
+  "text-card-foreground transition-colors duration-200",
   {
     variants: {
       variant: {
-        default: "border border-border bg-card shadow-md hover:shadow-lg dark:shadow-[var(--shadow-md)] dark:hover:shadow-[var(--shadow-lg)]",
-        elevated: "border border-border bg-card-elevated shadow-lg hover:shadow-xl backdrop-blur-sm dark:shadow-[var(--shadow-lg)] dark:hover:shadow-[var(--shadow-xl)]",
-        outline: "border-2 border-border bg-background/50 hover:bg-card/50 hover:shadow-md dark:hover:shadow-[var(--shadow-md)]",
-        ghost: "shadow-none hover:bg-card/50 hover:shadow-sm dark:hover:shadow-[var(--shadow-sm)]",
+        default: "rounded-painel border border-painel-borda bg-card",
+        elevated: "rounded-interno border border-painel-borda bg-card-elevated",
+        outline: "rounded-painel border border-painel-borda bg-card hover:bg-poco",
+        ghost: "rounded-painel hover:bg-poco",
       },
       animated: {
         true: "animate-fade-in-up",
@@ -59,7 +65,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    className={cn("font-display text-lg font-semibold leading-none tracking-tight text-foreground", className)}
     {...props}
   />
 ))
@@ -136,7 +142,7 @@ const colorConfig: Record<
 > = {
   default: {
     icon: "bg-muted text-muted-foreground",
-    border: "border-border",
+    border: "border-painel-borda",
     bg: "",
     glow: "",
     value: "",
@@ -145,7 +151,7 @@ const colorConfig: Record<
     icon: "bg-success/10 text-success-text dark:bg-success/20",
     border: "border-success/30 dark:border-success/40",
     bg: "bg-gradient-to-br from-success/5 to-transparent dark:from-success/10",
-    glow: "dark:shadow-[var(--glow-primary)]",
+    glow: "",
     value: "text-success-text",
   },
   warning: {
@@ -207,7 +213,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
           {...props}
         >
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg skeleton-base" />
+            <div className="h-10 w-10 rounded-controle skeleton-base" />
             <div className="h-4 w-24 skeleton-base" />
           </div>
           <div className="h-8 w-28 skeleton-base" />
@@ -240,7 +246,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
             </span>
             {Icon && (
               <div className={cn(
-                "hidden sm:flex h-10 w-10 items-center justify-center rounded-lg transition-transform group-hover:scale-110",
+                "hidden sm:flex h-10 w-10 items-center justify-center rounded-controle transition-transform group-hover:scale-110",
                 colorStyles.icon
               )}>
                 <Icon className="h-5 w-5" />

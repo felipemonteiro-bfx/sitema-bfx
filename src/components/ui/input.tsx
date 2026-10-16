@@ -10,7 +10,7 @@ const inputVariants = cva(
   // Sem sombra (D-03): campo tem border-2 propria e vive dentro de um card ou
   // formulario, no mesmo plano do conteudo — nao e um plano acima, entao a
   // sombra e decorativa.
-  "flex h-10 w-full rounded-lg border-2 bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:text-foreground dark:border-input",
+  "flex h-11 w-full rounded-controle border bg-controle px-3 py-2 text-sm text-foreground transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       state: {
@@ -21,7 +21,7 @@ const inputVariants = cva(
       },
       inputSize: {
         sm: "h-8 px-2 text-xs",
-        default: "h-10 px-3 text-sm",
+        default: "h-11 px-3 text-sm",
         lg: "h-12 px-4 text-base",
       },
     },

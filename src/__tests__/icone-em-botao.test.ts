@@ -72,7 +72,10 @@ describe("D2 — classe de tamanho no proprio <svg> vence o padrao da base", () 
   });
 
   it("expoe uma size real de 32px para acao em tabela, em vez de remendo por call site", () => {
-    expect(variants.includes('iconSm: "h-8 w-8"')).toBe(true);
+    // E1 (redesign): o iconSm continua 32x32 visuais, mas ganhou `relative` e o
+    // `after:` de 44px de area de toque — por isso o literal ja nao e so "h-8 w-8".
+    expect(variants.includes('iconSm: "relative h-8 w-8')).toBe(true);
+    expect(variants.includes("after:min-w-11")).toBe(true);
   });
 
   it("os botoes de acao de /cadastros usam a size nova, sem o py-2 herdado da default", () => {

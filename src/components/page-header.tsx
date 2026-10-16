@@ -20,9 +20,12 @@ interface PageHeaderProps {
   description?: React.ReactNode;
   breadcrumbs?: BreadcrumbEntry[];
   actions?: React.ReactNode;
+  // Selo ao lado do titulo (ex.: a pill "Mes em andamento"). Opcional: sem ele a
+  // linha do titulo fica exatamente como era.
+  selo?: React.ReactNode;
 }
 
-export function PageHeader({ title, description, breadcrumbs, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, breadcrumbs, actions, selo }: PageHeaderProps) {
   return (
     <div>
       {breadcrumbs && breadcrumbs.length > 0 && (
@@ -33,7 +36,8 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
             </BreadcrumbItem>
             {breadcrumbs.map((item, i) => (
               <span key={i} className="contents">
-                <BreadcrumbSeparator />
+                {/* Trilha do Vantage: niveis separados por "/", nao por chevron. */}
+                <BreadcrumbSeparator>/</BreadcrumbSeparator>
                 <BreadcrumbItem>
                   {item.href ? (
                     <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
@@ -65,7 +69,17 @@ export function PageHeader({ title, description, breadcrumbs, actions }: PageHea
           telas estreitas isso acompanha o alinhamento do proprio titulo. */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="page-title text-2xl font-bold tracking-tight">{title}</h1>
+          {/* `text-titulo` e fluido (24 a 32px) e `font-display` e a Space Grotesk
+              dos titulos. Cor sempre `foreground`: titulo verde sobre a pagina
+              cinza do tema claro nao fecha 4.5:1. Sem `cn()` aqui de proposito: o
+              tailwind-merge trata `text-titulo` como cor e o descartaria ao lado
+              de `text-foreground`. */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1 className="page-title font-display text-titulo font-semibold tracking-tight text-foreground">
+              {title}
+            </h1>
+            {selo}
+          </div>
           {description && (
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
           )}
