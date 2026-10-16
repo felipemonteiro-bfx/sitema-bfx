@@ -7,7 +7,7 @@ const dbMock = {
 };
 const sessionMock = { getSession: vi.fn() };
 const searchMock = {
-  fuzzyFindVendas: vi.fn(),
+  fuzzyFindVendaIds: vi.fn(),
   unaccentFindClienteIds: vi.fn(),
 };
 
@@ -45,7 +45,7 @@ beforeEach(() => {
   dbMock.venda.findMany.mockResolvedValue([vendaBD]);
   dbMock.venda.count.mockResolvedValue(1);
   dbMock.cliente.findMany.mockResolvedValue([{ id: 7, nome: "Maria Souza" }]);
-  searchMock.fuzzyFindVendas.mockResolvedValue([{ id: 258 }]);
+  searchMock.fuzzyFindVendaIds.mockResolvedValue([258]);
   searchMock.unaccentFindClienteIds.mockResolvedValue([7]);
 });
 
@@ -55,7 +55,7 @@ describe("GET /api/busca-rapida", () => {
     const res = await GET(req("maria"));
     expect(res.status).toBe(401);
     expect(dbMock.venda.findMany).not.toHaveBeenCalled();
-    expect(searchMock.fuzzyFindVendas).not.toHaveBeenCalled();
+    expect(searchMock.fuzzyFindVendaIds).not.toHaveBeenCalled();
   });
 
   it("q com mais de 80 caracteres responde 400", async () => {
@@ -70,7 +70,7 @@ describe("GET /api/busca-rapida", () => {
 
   it("vendedor: busca fuzzy, contagem e listagem levam o escopo por vendedorId (+ perna legada)", async () => {
     await GET(req("maria"));
-    expect(searchMock.fuzzyFindVendas).toHaveBeenCalledWith("maria", expect.any(Number), { id: 1, nome: "Ana" });
+    expect(searchMock.fuzzyFindVendaIds).toHaveBeenCalledWith("maria", expect.any(Number), { id: 1, nome: "Ana" });
     expect(dbMock.venda.findMany.mock.calls[0][0].where.AND).toContainEqual(ESCOPO_ANA);
     expect(dbMock.venda.count.mock.calls[0][0].where.AND).toContainEqual(ESCOPO_ANA);
     // A coluna deprecated sozinha nunca é o escopo.
@@ -93,6 +93,18 @@ describe("GET /api/busca-rapida", () => {
     const url = new URL(body.sugestao.url, "http://local");
     expect(url.searchParams.get("vendedor")).toBe("Ana");
     expect(body.sugestao.url).not.toContain("Bia");
+  });
+
+  it("vendedor: a busca de ids de cliente leva o escopo para dentro do SQL (antes do limite)", async () => {
+    await GET(req("maria"));
+    expect(searchMock.unaccentFindClienteIds).toHaveBeenCalledWith("maria", expect.any(Number), { id: 1, nome: "Ana" });
+  });
+
+  it("admin: a busca de ids de cliente segue sem escopo", async () => {
+    sessionMock.getSession.mockResolvedValue({ id: 9, username: "adm", nomeExibicao: "Adm", role: "admin" });
+    await GET(req("maria"));
+    expect(searchMock.unaccentFindClienteIds).toHaveBeenCalledWith("maria", expect.any(Number), undefined);
+    expect(searchMock.fuzzyFindVendaIds).toHaveBeenCalledWith("maria", expect.any(Number), undefined);
   });
 
   it("vendedor: clientes so os das proprias vendas (mesmo escopo)", async () => {

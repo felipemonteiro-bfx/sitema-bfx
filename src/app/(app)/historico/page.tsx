@@ -17,7 +17,7 @@ import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { FILTRO_VENDA_VALIDA, valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { updateVenda, deleteVenda, enviarEmailEmpresa } from "@/app/(app)/historico/actions";
-import { fuzzyFindVendas } from "@/lib/db-search";
+import { fuzzyFindVendaIds } from "@/lib/db-search";
 import { filtrosAtivos, whereAssinatura } from "@/lib/historico-filtros";
 import { FiltrosAtivos, descreverPeriodo } from "@/components/filtros-ativos";
 import { BarraDistribuicao } from "@/components/barra-distribuicao";
@@ -82,8 +82,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   // Fuzzy search mode: quando `q` está presente, busca por cliente/produto/vendedor
   let fuzzyVendaIds: number[] | null = null;
   if (queryBusca) {
-    const fuzzyResults = await fuzzyFindVendas(queryBusca, 200);
-    fuzzyVendaIds = fuzzyResults.map((v) => v.id);
+    fuzzyVendaIds = await fuzzyFindVendaIds(queryBusca, 200);
   }
 
   // Forma de pagamento: filtro pelo campo canonico `formaPagamento`.

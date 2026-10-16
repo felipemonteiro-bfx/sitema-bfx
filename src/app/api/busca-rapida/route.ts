@@ -18,7 +18,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { resolveVendedorScope, whereVendasDoUsuario } from "@/lib/vendedor-scope";
 import { whereAssinaturaPendente } from "@/lib/historico-filtros";
-import { fuzzyFindVendas, unaccentFindClienteIds } from "@/lib/db-search";
+import { fuzzyFindVendaIds, unaccentFindClienteIds } from "@/lib/db-search";
 import { valorTotalVenda } from "@/lib/venda-utils";
 import { interpretarConsulta, rotuloSugestao, statusAssinaturaDe } from "@/lib/busca-rapida";
 
@@ -57,11 +57,12 @@ export async function GET(req: Request) {
     return NextResponse.json(vazio, { headers: SEM_CACHE });
   }
 
-  // Busca por texto: os ids vêm da busca fuzzy já travada no escopo.
+  // Busca por texto: os ids vêm da busca fuzzy já travada no escopo (dentro do SQL, antes do LIMIT).
+  const escopoSql = ehAdmin ? undefined : { id: session.id, nome: escopo as string };
   let idsTexto: number[] | undefined;
   if (!consulta.idVenda && consulta.termo) {
-    const achadas = await fuzzyFindVendas(consulta.termo, LIMITE_IDS, ehAdmin ? undefined : { id: session.id, nome: escopo as string });
-    idsTexto = achadas.map((v) => v.id);
+    // Só os ids (sem carregar cliente e itens de até 200 vendas).
+    idsTexto = await fuzzyFindVendaIds(consulta.termo, LIMITE_IDS, escopoSql);
   }
 
   // Escopo do usuário: o MESMO filtro vale para a lista, o total (`count`) e a busca por #id,
@@ -102,7 +103,7 @@ export async function GET(req: Request) {
   // Clientes: só por texto; vendedor vê apenas os das próprias vendas.
   let clientesBD: { id: number; nome: string }[] = [];
   if (!consulta.idVenda && consulta.termo) {
-    const ids = await unaccentFindClienteIds(consulta.termo, 500);
+    const ids = await unaccentFindClienteIds(consulta.termo, 500, escopoSql);
     if (ids.length > 0) {
       clientesBD = await prisma.cliente.findMany({
         where: {

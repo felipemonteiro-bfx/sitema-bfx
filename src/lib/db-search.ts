@@ -17,6 +17,18 @@ function likeEsc(expr: string): string {
   return `replace(replace(replace(${expr}, '\\', '\\\\'), '%', '\\%'), '_', '\\_')`;
 }
 
+type Escopo = { id: number; nome: string };
+
+/**
+ * Trava uma busca de clientes nos que têm venda do vendedor (mesma regra de
+ * `whereVendasDoUsuario`: vendedor_id igual OU venda legada sem id com o texto do nome).
+ * Vai DENTRO do SQL, antes do LIMIT, para o corte nunca esconder cliente do vendedor
+ * atrás de cliente alheio. `pId`/`pNome` são os números dos parâmetros ($n) já livres.
+ */
+function existeVendaDoVendedor(pId: number, pNome: number): string {
+  return `EXISTS (SELECT 1 FROM "vendas" v WHERE v."cliente_id" = "clientes"."id" AND (v."vendedor_id" = $${pId} OR (v."vendedor_id" IS NULL AND v."vendedor" = $${pNome})))`;
+}
+
 /**
  * Returns IDs from `table` where `column` is fuzzy-similar to `query`.
  * Matches via trigram similarity OR plain ILIKE (for short tokens).
@@ -26,20 +38,25 @@ async function fuzzyIds(
   column: string,
   query: string,
   limit: number,
-  threshold = 0.15
+  threshold = 0.15,
+  escopoClientes?: Escopo
 ): Promise<number[]> {
   const q = query.trim();
   if (!q) return [];
+  // Escopo só faz sentido na tabela de clientes (EXISTS em vendas do vendedor).
+  const escopo = escopoClientes && table === "clientes" ? escopoClientes : undefined;
   const rows = await prisma.$queryRawUnsafe<IdRow[]>(
     `SELECT id
      FROM "${table}"
-     WHERE similarity(f_unaccent(lower("${column}")), f_unaccent(lower($1))) > $2
-        OR f_unaccent(lower("${column}")) ILIKE '%' || ${likeEsc("f_unaccent(lower($1))")} || '%'
+     WHERE (similarity(f_unaccent(lower("${column}")), f_unaccent(lower($1))) > $2
+        OR f_unaccent(lower("${column}")) ILIKE '%' || ${likeEsc("f_unaccent(lower($1))")} || '%')
+        ${escopo ? `AND ${existeVendaDoVendedor(4, 5)}` : ""}
      ORDER BY similarity(f_unaccent(lower("${column}")), f_unaccent(lower($1))) DESC
      LIMIT $3`,
     q,
     threshold,
-    limit
+    limit,
+    ...(escopo ? [escopo.id, escopo.nome] : [])
   );
   return rows.map((r) => r.id);
 }
@@ -59,17 +76,23 @@ async function unaccentContainsIds(
   table: string,
   column: string,
   query: string,
-  limit: number
+  limit: number,
+  escopoClientes?: Escopo
 ): Promise<number[]> {
   const q = query.trim();
   if (!q) return [];
+  const escopo = escopoClientes && table === "clientes" ? escopoClientes : undefined;
+  // ORDER BY antes do LIMIT: o corte é determinístico (e o escopo, quando há, já filtrou).
   const rows = await prisma.$queryRawUnsafe<IdRow[]>(
     `SELECT id
      FROM "${table}"
      WHERE f_unaccent(lower("${column}")) LIKE '%' || ${likeEsc("f_unaccent(lower($1))")} || '%'
+        ${escopo ? `AND ${existeVendaDoVendedor(3, 4)}` : ""}
+     ORDER BY "${column}" ASC, id ASC
      LIMIT $2`,
     q,
-    limit
+    limit,
+    ...(escopo ? [escopo.id, escopo.nome] : [])
   );
   return rows.map((r) => r.id);
 }
@@ -78,8 +101,8 @@ async function unaccentContainsIds(
  * Accent-insensitive "nome contains" lookup for clients. Returns IDs only, so
  * callers keep their own Prisma `select`.
  */
-export async function unaccentFindClienteIds(search: string, limit = 500) {
-  return unaccentContainsIds("clientes", "nome", search, limit);
+export async function unaccentFindClienteIds(search: string, limit = 500, escopo?: Escopo) {
+  return unaccentContainsIds("clientes", "nome", search, limit, escopo);
 }
 
 export async function fuzzyFindClientes(search: string, limit = 50) {
@@ -130,22 +153,9 @@ export async function fuzzyFindProdutoByNome(nome: string) {
 // Escopo de vendedor em SQL cru: $4 = id do usuario, $5 = nome de exibicao (perna legada).
 const ESCOPO_SQL = `("vendedor_id" = $4 OR ("vendedor_id" IS NULL AND "vendedor" = $5))`;
 
-/**
- * Fuzzy search across vendas by: client name, product name (itens), or vendedor.
- * Returns up to `limit` vendas with cliente + itens included.
- *
- * `escopo` (opcional) trava o resultado nas vendas desse usuario: `vendedor_id` igual ao
- * id OU venda legada sem id (`vendedor_id` nulo) cujo texto `vendedor` e o nome de
- * exibicao (mesma regra de `whereVendasDoUsuario`). Sem ele o comportamento e o de sempre. O filtro
- * entra no SQL (antes do LIMIT) e no `where` final, para o limite nunca esconder
- * venda do proprio vendedor atras de venda alheia.
- */
-export async function fuzzyFindVendas(search: string, limit = 50, escopo?: { id: number; nome: string }) {
-  const q = search.trim();
-  if (!q) return [];
-
-  // 1. Fuzzy match client names → get clienteIds
-  const clienteIds = await fuzzyIds("clientes", "nome", q, limit);
+async function whereFuzzyVendas(q: string, limit: number, escopo?: Escopo) {
+  // 1. Fuzzy match client names → get clienteIds (com escopo, só clientes do vendedor, antes do LIMIT)
+  const clienteIds = await fuzzyIds("clientes", "nome", q, limit, 0.15, escopo);
 
   // 2. Fuzzy match vendedor field on vendas
   type VendaIdRow = { id: number };
@@ -185,12 +195,26 @@ export async function fuzzyFindVendas(search: string, limit = 50, escopo?: { id:
   if (vendedorVendaIds.length > 0) conditions.push({ id: { in: vendedorVendaIds } });
   if (itemVendaIds.length > 0) conditions.push({ id: { in: itemVendaIds } });
 
-  if (conditions.length === 0) return [];
+  if (conditions.length === 0) return null;
+
+  return escopo
+    ? { AND: [{ OR: conditions }, { OR: [{ vendedorId: escopo.id }, { vendedorId: null, vendedor: escopo.nome }] }] }
+    : { OR: conditions };
+}
+
+/**
+ * Fuzzy search across vendas (cliente, produto ou vendedor), com cliente + itens incluídos.
+ * `escopo` trava nas vendas do usuário (mesma regra de `whereVendasDoUsuario`), DENTRO do SQL,
+ * antes do LIMIT, e de novo no `where` final.
+ */
+export async function fuzzyFindVendas(search: string, limit = 50, escopo?: Escopo) {
+  const q = search.trim();
+  if (!q) return [];
+  const where = await whereFuzzyVendas(q, limit, escopo);
+  if (!where) return [];
 
   return prisma.venda.findMany({
-    where: escopo
-      ? { AND: [{ OR: conditions }, { OR: [{ vendedorId: escopo.id }, { vendedorId: null, vendedor: escopo.nome }] }] }
-      : { OR: conditions },
+    where,
     include: {
       cliente: { select: { nome: true, matricula: true, empresa: true } },
       itens: { select: { produtoNome: true, quantidade: true, subtotal: true } },
@@ -198,6 +222,24 @@ export async function fuzzyFindVendas(search: string, limit = 50, escopo?: { id:
     orderBy: { dataVenda: "desc" },
     take: limit,
   });
+}
+
+/**
+ * Mesma busca de `fuzzyFindVendas`, mas devolve só os ids (sem carregar cliente e itens).
+ * Para quem só usa os ids como filtro (rota do ⌘K, Histórico, exportação).
+ */
+export async function fuzzyFindVendaIds(search: string, limit = 50, escopo?: Escopo): Promise<number[]> {
+  const q = search.trim();
+  if (!q) return [];
+  const where = await whereFuzzyVendas(q, limit, escopo);
+  if (!where) return [];
+  const rows = await prisma.venda.findMany({
+    where,
+    select: { id: true },
+    orderBy: { dataVenda: "desc" },
+    take: limit,
+  });
+  return rows.map((r) => r.id);
 }
 
 /**
