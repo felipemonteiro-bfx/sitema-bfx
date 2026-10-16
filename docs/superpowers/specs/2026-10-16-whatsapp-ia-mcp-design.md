@@ -114,6 +114,9 @@ Correções incorporadas (Crítico/Importante do parecer):
 8. **Contexto:** passa o nome do perfil do webhook para o claim `nome`; inclui as últimas N (ex.: 6)
    mensagens da conversa nas últimas 24 h para "sim"/"o primeiro" terem referente; entrada cortada em
    1000 caracteres; limite de respostas de IA por telefone por hora.
-9. **Gateway externo ativo (aberto — decisão do André):** o assistente interno e o gateway não podem
-   responder a mesma mensagem. A flag `whatsappIaMcp` nasce desligada e o desenho de convivência
-   depende de como o gateway recebe as mensagens (ver pergunta registrada na conversa).
+9. **Gateway externo ativo — decisão do André (16/10): o assistente interno o substitui.** A flag
+   `whatsappIaMcp` nasce desligada e é a chave da troca: ligar a flag **junto** com desligar o
+   gateway. O passo de desligar o gateway é de quem cuida da infra/plataforma (não alteramos
+   infra); fica documentado em `docs/MCP-AGENTE-SPEC.md` (seção nova "Assistente interno"). Na tela
+   de Configurações, ao ligar a flag, um aviso lembra de desligar o gateway para não haver duas
+   respostas.
