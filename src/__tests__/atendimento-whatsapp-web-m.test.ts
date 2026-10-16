@@ -156,9 +156,9 @@ describe('M1: lista no estilo WhatsApp Web',()=>{
   expect(html).toContain('rounded-full');
  });
  it('mobile: com telefone escolhido a lista some (<lg); sem, a lista aparece',()=>{
-  expect(html).toContain('hidden @3xl:flex');
+  expect(html).toContain('hidden @xl:flex');
   const sem=renderToStaticMarkup(React.createElement(ConversaLista,{...propsLista,telefoneExplicito:false}));
-  expect(sem).not.toContain('hidden @3xl:flex');
+  expect(sem).not.toContain('hidden @xl:flex');
  });
 });
 
@@ -176,7 +176,7 @@ describe('M2: cabeçalho do chat',()=>{
  });
  it('botão voltar para a lista no celular (lg:hidden) e chat oculto sem telefone escolhido',()=>{
   expect(html).toContain('aria-label="Voltar para a lista de conversas"');
-  expect(renderToStaticMarkup(React.createElement(ConversaChat,{...base,telefoneExplicito:false}))).toContain('hidden @3xl:flex');
+  expect(renderToStaticMarkup(React.createElement(ConversaChat,{...base,telefoneExplicito:false}))).toContain('hidden @xl:flex');
  });
  it('mensagens agrupadas em seções por dia com separador sticky',()=>{
   expect(html).toContain('sticky');expect(html).toContain('>Hoje<');

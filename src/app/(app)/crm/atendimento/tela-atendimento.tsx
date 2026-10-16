@@ -127,7 +127,7 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
           ?<ConversaChat telefone={telefone} nome={nome(telefone)} aberta={aberta} semResposta={semResposta} estadoAutomatico={estadoAutomatico} fichaHref={fichaHref} novaAba={janela}
               telefoneExplicito={telefoneExplicito} urlLista={urlAtendimento(base,{visao:'lista',q,etapa:etapaFiltro,painel})} hrefJanela={hrefJanela}
               mensagens={historicoExibido.map(m=>({id:m.id,criadoEm:m.criadoEm,corpo:m.corpo,direcao:m.direcao,origem:m.origem,status:m.status}))} agora={agora}/>
-          :<section aria-label="Conversa selecionada" className="hidden min-h-0 flex-1 items-center justify-center rounded-painel border border-painel-borda bg-card p-6 text-center text-muted-foreground @3xl:flex dark:border-transparent">Aguardando mensagens recebidas pela integração.</section>}
+          :<section aria-label="Conversa selecionada" className="hidden min-h-0 flex-1 items-center justify-center rounded-painel border border-painel-borda bg-card p-6 text-center text-muted-foreground @xl:flex dark:border-transparent">Aguardando mensagens recebidas pela integração.</section>}
         {telefone&&<PainelContato painel={painel}>
           <ContextoCliente clienteId={contato?.id??null} nome={nome(telefone)} telefone={telefone} fichaHref={fichaHref} novaAba={janela} organizar={organizar}/>
         </PainelContato>}

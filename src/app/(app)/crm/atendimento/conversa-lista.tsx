@@ -63,7 +63,7 @@ const rotuloNaoRespondidas = (n: number) => `${n} ${n === 1 ? 'mensagem sem resp
 
 export function ConversaLista({ itens, selecionado, base, busca, visao, etapa, contagens, painel, telefoneExplicito = false }: Props) {
   const chips = [{ id: 'todas', nome: 'Todas' }, { id: 'aguardando', nome: 'Aguardando resposta' }, ...ETAPAS_ATENDIMENTO];
-  return <section id="conversas" aria-label="Conversas" className={`${telefoneExplicito ? 'hidden @3xl:flex' : 'flex'} min-h-0 min-w-0 w-full flex-col gap-3 overflow-hidden rounded-painel border border-painel-borda bg-card pt-3.5 dark:border-transparent @3xl:w-80 @3xl:shrink-0`}>
+  return <section id="conversas" aria-label="Conversas" className={`${telefoneExplicito ? 'hidden @xl:flex' : 'flex'} min-h-0 min-w-0 w-full flex-col gap-3 overflow-hidden rounded-painel border border-painel-borda bg-card pt-3.5 dark:border-transparent @xl:w-72 @4xl:w-80 @xl:shrink-0`}>
     <div className="flex flex-wrap items-center justify-between gap-2 px-3">
       <h2 className="text-base font-semibold">Conversas <span title={NOTA_LISTA} className="cursor-help font-mono text-sm font-normal text-muted-foreground">{contagens.todas ?? itens.length}</span><span className="sr-only"> ({NOTA_LISTA})</span></h2>
       <AlternarVisao base={base} visao={visao} q={busca} telefone={selecionado} />
