@@ -324,6 +324,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
   if (sp.cliente && sp.cliente !== "all") xlsxParams.set("cliente", sp.cliente);
   if (sp.produto && sp.produto !== "all") xlsxParams.set("produto", sp.produto);
   if (sp.formaPagamento && sp.formaPagamento !== "all") xlsxParams.set("formaPagamento", sp.formaPagamento);
+  if (whereAssinatura(sp.assinatura)) xlsxParams.set("assinatura", String(sp.assinatura));
+  if (queryBusca) xlsxParams.set("q", queryBusca);
   const xlsxHref = `/api/relatorios/vendas-xlsx?${xlsxParams.toString()}`;
 
   return (
