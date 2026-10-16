@@ -121,16 +121,26 @@ export function BuscaRapida({ role }: { role: string }) {
   const [carregando, setCarregando] = React.useState(false);
   const [erro, setErro] = React.useState(false);
   const plataforma = React.useRef<Plataforma>("outra");
+  // Elemento focado antes de abrir. O Content do Radix sem `Trigger` não devolve o
+  // foco sozinho (fica no body depois do Esc), então guardamos e devolvemos à mão.
+  const origemFoco = React.useRef<HTMLElement | null>(null);
 
   // Único listener global de teclado. `navigator` só existe no cliente, por isso o efeito.
   React.useEffect(() => {
     plataforma.current = detectarPlataforma(navigator);
+    function guardarOrigem() {
+      const atual = document.activeElement;
+      // Com a busca aberta o foco está dentro do diálogo: não sobrescreve a origem.
+      if (atual instanceof HTMLElement && !atual.closest("[role=dialog]")) origemFoco.current = atual;
+    }
     function aoTeclar(e: KeyboardEvent) {
       if (!teclaAbreBusca(e, plataforma.current)) return;
       e.preventDefault();
+      guardarOrigem();
       setAberto((a) => !a);
     }
     function aoPedirAbertura() {
+      guardarOrigem();
       setAberto(true);
     }
     window.addEventListener("keydown", aoTeclar);
@@ -204,6 +214,10 @@ export function BuscaRapida({ role }: { role: string }) {
         <DialogOverlay />
         <DialogPrimitive.Content
           aria-describedby="busca-rapida-descricao"
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+            origemFoco.current?.focus();
+          }}
           className={cn(
             "fixed left-1/2 top-[8vh] z-[9999] w-[calc(100vw-2rem)] max-w-[760px] -translate-x-1/2 overflow-hidden rounded-painel border border-divisoria bg-popover shadow-lg dark:shadow-[var(--shadow-lg)]",
             // Abertura: opacity + scale .98 -> 1 em 180ms na curva do redesign.
