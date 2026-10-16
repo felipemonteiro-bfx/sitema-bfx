@@ -35,7 +35,7 @@ export function Bolha({ m }: { m: MensagemExibida }) {
   const saida = m.direcao === 'out';
   return <div className={`bolha-entra flex ${saida ? 'justify-end' : 'justify-start'}`}>
     <article className={`flex max-w-[min(85%,520px)] flex-col gap-1 rounded-2xl px-3 pb-1.5 pt-2 text-foreground ${saida ? 'rounded-br-sm bg-marca-tint' : 'rounded-bl-sm border border-divisoria bg-popover'}`}>
-      <p className="whitespace-pre-wrap break-words text-base leading-relaxed">{m.corpo}</p>
+      <p className="whitespace-pre-wrap break-words text-sm leading-snug">{m.corpo}</p>
       <span className="flex items-center justify-end gap-1.5 font-mono text-xs text-muted-foreground">
         <span className="sr-only">{saida ? 'BFX' : 'Cliente'}, </span>{hora}
         {saida && <Tique status={m.status} />}
