@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
@@ -16,7 +18,7 @@ import { DeleteVendaButton } from "@/components/delete-venda-button";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { formatBRL, cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle2, ExternalLink, Plus } from "lucide-react";
+import { CheckCircle2, ExternalLink, Plus } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
 
@@ -263,8 +265,8 @@ export function EditVendaFormClient({
             <div className="flex flex-col gap-2">
               <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
               {editVenda.assinatura?.assinaturaStatus === "assinado" ? (
-                <div className="flex flex-wrap items-center gap-2 text-xs text-success-text bg-success/10 px-2 py-1.5 rounded-md border border-success/20">
-                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground bg-poco px-3 py-2 rounded-interno">
+                  <Badge variant="success"><CheckCircle2 className="h-3 w-3 shrink-0" />Assinado</Badge>
                   <span>Comprovante assinado.</span>
                   <a href={`/api/comprovante?vendaId=${editVenda.id}`} target="_blank" rel="noopener noreferrer" className="font-bold underline flex items-center gap-1 hover:underline">
                     Ver <ExternalLink className="h-3 w-3" />
@@ -286,15 +288,14 @@ export function EditVendaFormClient({
                   />
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs text-warning-text bg-warning-bg px-2 py-1.5 rounded-md border border-warning">
-                  <AlertCircle className="h-3 w-3" />
+                <Alert variant="warning" showIcon className="text-xs">
                   <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
-                </div>
+                </Alert>
               )}
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
+          <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
               name="temNota"
               id="edit-temNota"
@@ -304,7 +305,7 @@ export function EditVendaFormClient({
               Com Nota Fiscal
             </label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
+          <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
               name="descontoEmFolha"
               id="edit-descontoEmFolha"
@@ -314,7 +315,7 @@ export function EditVendaFormClient({
               Desconto em folha
             </label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
+          <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
               name="boleto"
               id="edit-boleto"
@@ -332,7 +333,7 @@ export function EditVendaFormClient({
           </div>
 
           {/* Resumo */}
-          <div className="md:col-span-3 p-4 rounded-lg bg-muted/50 space-y-2">
+          <div className="md:col-span-3 p-4 rounded-interno bg-poco space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal produtos</span>
               <span className="font-semibold valor-sensivel">{formatBRL(subtotalProdutos)}</span>
@@ -344,7 +345,7 @@ export function EditVendaFormClient({
             {descontoValor > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Desconto</span>
-                <span className="font-semibold text-destructive valor-sensivel">-{formatBRL(descontoValor)}</span>
+                <span className="font-semibold text-error-text valor-sensivel">-{formatBRL(descontoValor)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm font-bold border-t pt-2">

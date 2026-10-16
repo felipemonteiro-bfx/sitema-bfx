@@ -102,10 +102,11 @@ describe("(1) composto da propria matiz -> tint opaco", () => {
       expect(fonte.includes(`bg-${sem}/10`), `composto bg-${sem}/10 no item de produto`).toBe(false);
     }
 
-    const opacosUsados = ["success", "warning", "error", "info"].filter((sem) =>
-      fonte.includes(`bg-${sem}-bg`)
-    );
-    expect(opacosUsados.length, "nenhum tint opaco aplicado nos tiles").toBeGreaterThan(0);
+    // Vantage (H7): os tiles de resultado viraram cards neutros (`bg-poco`) e a faixa da
+    // Margem vive no <Badge>, cujo tint opaco e policiado acima ("Badge usa o tint opaco").
+    // Por isso o item de produto nao precisa mais aplicar `bg-<sem>-bg` ele mesmo; a regra
+    // que importa (nenhum composto da propria matiz) segue travada no laco acima.
+    expect(fonte.includes('<Badge'), "faixa da margem no Badge").toBe(true);
   });
 });
 

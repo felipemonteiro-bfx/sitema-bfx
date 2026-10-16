@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { X, Package, Plus } from "lucide-react";
 import { formatBRL, cn } from "@/lib/utils";
@@ -119,7 +120,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
     <Card
       variant="elevated"
       className={cn(
-        "relative overflow-visible border-primary/20 transition-all hover:border-primary/40",
+        "relative overflow-visible",
         (produtoSuggestions.length > 0 || showDropdown) && "z-10",
         hasError && "border-destructive border-2",
       )}
@@ -127,13 +128,9 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Package className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Produto #{index + 1}
-              </div>
+            <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <div className="text-sm font-semibold text-foreground">
+              Produto #{index + 1}
             </div>
           </div>
           {canRemove && (
@@ -145,7 +142,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                     variant="ghost"
                     size="icon"
                     onClick={() => onRemove(index)}
-                    className="h-8 w-8 text-error-text hover:text-error-text hover:bg-destructive/10"
+                    className="h-8 w-8 text-error-text hover:text-error-text"
                     aria-label="Remover produto"
                   >
                     <X className="h-4 w-4" />
@@ -191,10 +188,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
             <div className="space-y-2 relative min-w-0 xl:basis-2/5">
               <Label
                 htmlFor={`produto-nome-${index}`}
-                className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
-                  hasError ? "text-error-text" : "text-muted-foreground",
-                )}
+                className={cn(hasError && "text-error-text")}
               >
                 Produto <span className="text-error-text">*</span> {hasError && "(obrigatório)"}
               </Label>
@@ -216,7 +210,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 className={hasError ? "border-destructive border-2" : ""}
               />
               {showDropdown && produtoSuggestions.length > 0 && (
-                <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl dark:shadow-[var(--shadow-lg)] max-h-56 overflow-y-auto">
+                <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-56 overflow-y-auto">
                   {produtoSuggestions.map((p) => (
                     <button
                       key={p.id}
@@ -248,7 +242,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                       setIsSearching(false);
                       setCadastrarOpen(true);
                     }}
-                    className="w-full px-3 py-2 text-left hover:bg-primary/10 transition-colors cursor-pointer text-sm border-t border-border flex items-center gap-2 text-primary font-medium"
+                    className="w-full px-3 py-2 text-left hover:bg-poco transition-colors cursor-pointer text-sm border-t border-border flex items-center gap-2 text-primary font-medium"
                   >
                     <Plus className="h-3.5 w-3.5 shrink-0" />
                     Cadastrar &ldquo;{produtoQuery}&rdquo;
@@ -280,7 +274,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               <div className="space-y-2">
                 <Label
                   htmlFor={`custo-produto-${index}`}
-                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                 >
                   Custo Unit.
                 </Label>
@@ -295,7 +288,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               <div className="space-y-2">
                 <Label
                   htmlFor={`valor-venda-${index}`}
-                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                 >
                   Valor Unit.
                 </Label>
@@ -310,7 +302,6 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               <div className="col-span-2 space-y-2 sm:col-span-1">
                 <Label
                   htmlFor={`quantidade-${index}`}
-                  className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                 >
                   Qtd
                 </Label>
@@ -344,47 +335,25 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               tirar. */}
           <div className="pt-3 border-t border-border">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {/* Tint OPACO como os dois vizinhos. Este era o unico dos tres que
-                  ainda usava composto (`bg-muted/30`) — a correcao que criou o
-                  `-bg` opaco passou por Lucro e Margem e esqueceu o Subtotal,
-                  entao os tres blocos de resultado tinham fundos de naturezas
-                  diferentes lado a lado. O contraste do composto passava (4,64
-                  claro / 7,74 escuro), entao isto e consistencia, nao correcao
-                  de acessibilidade. */}
-              <div className="rounded-lg bg-muted px-3 py-2 text-center">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
-                <div className="text-sm font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(item.subtotal)}</div>
+              {/* Vantage: os tres blocos de resultado sao cards neutros (poco). Cor so onde ha
+                  estado real: lucro negativo em `text-error-text` e a faixa da margem num Badge,
+                  como no Dashboard e no Historico (`>= 20` bom, `>= 10` atencao, abaixo ruim). */}
+              <div className="rounded-interno bg-poco px-3 py-2 text-center">
+                <div className="text-xs font-medium text-muted-foreground">Subtotal</div>
+                <div className="text-sm font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(item.subtotal)}</div>
               </div>
-              {/* Tint OPACO (`bg-<sem>-bg`), nao o composto `bg-<sem>/5`: este
-                  Card fica dentro do card elevado de /venda-rapida, e o
-                  composto some 5% da matiz nessa superficie ja mais escura. Os
-                  quatro textos daqui reprovavam por isso — rotulo a 4.39 e 4.32,
-                  valor a 4.47 e 4.43. Mesma decisao dos tiles do "Resumo
-                  Financeiro", logo abaixo nesta mesma tela. */}
-              <div className="rounded-lg bg-success-bg px-3 py-2 text-center">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro</div>
-                <div className="text-sm font-bold tabular-nums text-success-text valor-sensivel">{formatBRL(lucro)}</div>
+              <div className="rounded-interno bg-poco px-3 py-2 text-center">
+                <div className="text-xs font-medium text-muted-foreground">Lucro</div>
+                <div className={cn("text-sm font-semibold tabular-nums valor-sensivel", lucro < 0 ? "text-error-text" : "text-foreground")}>{formatBRL(lucro)}</div>
               </div>
-              {/* Margem por FAIXA, como no Dashboard e no Historico
-                  (`>= 20` bom, `>= 10` atencao, abaixo disso ruim). Aqui ela era
-                  azul fixo: azul nao diz nada sobre a margem estar boa ou ruim, e
-                  a mesma metrica mudava de linguagem conforme a tela. Agora a cor
-                  carrega informacao, que e o criterio da identidade. */}
-              <div
-                className={cn(
-                  "rounded-lg px-3 py-2 text-center",
-                  margem >= 20 ? "bg-success-bg" : margem >= 10 ? "bg-warning-bg" : "bg-error-bg"
-                )}
-              >
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
-                <div
-                  className={cn(
-                    "text-sm font-bold tabular-nums valor-sensivel",
-                    margem >= 20 ? "text-success-text" : margem >= 10 ? "text-warning-text" : "text-error-text"
-                  )}
+              <div className="rounded-interno bg-poco px-3 py-2 text-center">
+                <div className="text-xs font-medium text-muted-foreground">Margem</div>
+                <Badge
+                  variant={margem >= 20 ? "success" : margem >= 10 ? "warning" : "error"}
+                  className="mt-0.5 tabular-nums valor-sensivel"
                 >
                   {margem.toFixed(1)}%
-                </div>
+                </Badge>
               </div>
             </div>
           </div>
