@@ -141,6 +141,8 @@ type IntelligenceChatClientProps = {
   formId?: string;
   /** Provedor configurado agora — usado so no balao otimista da mensagem em voo. */
   currentProvider: string;
+  /** Pergunta que abre preenchida no campo (`?pergunta=`); o envio segue manual. */
+  initialPrompt?: string;
 };
 
 export function IntelligenceChatClient({
@@ -148,6 +150,7 @@ export function IntelligenceChatClient({
   action,
   formId,
   currentProvider,
+  initialPrompt,
 }: IntelligenceChatClientProps) {
   const router = useRouter();
   const [optimisticHistory, addOptimistic] = React.useOptimistic(
@@ -258,6 +261,7 @@ export function IntelligenceChatClient({
           action={handleSubmit}
           formId={formId}
           showProviderSelect={false}
+          initialPrompt={initialPrompt}
         />
       </div>
     </>
