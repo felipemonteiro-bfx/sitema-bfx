@@ -15,7 +15,9 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md border border-border bg-muted/60 p-1 text-muted-foreground",
+      // Segmentado do Vantage: trilho `controle` com contorno decorativo
+      // `divisoria`; o item ativo sobe para `controle-ativo`.
+      "inline-flex min-h-12 items-center justify-center rounded-controle border border-divisoria bg-controle p-1 text-muted-foreground",
       className
     )}
     {...props}
@@ -30,10 +32,10 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      // Sombra COM par (D-03): a aba ativa nao tem borda propria — o unico
-      // separador entre ela e a trilha (`bg-muted/60`) e a troca de
-      // preenchimento + a sombra. E um plano acima de verdade.
-      "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm dark:data-[state=active]:shadow-[var(--shadow-sm)]",
+      // Sem sombra: a aba ativa se separa do trilho so pela troca de
+      // preenchimento (`controle` -> `controle-ativo`) e pelo peso da fonte.
+      // A transicao usa o token de movimento do segmentado (220ms).
+      "inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-medium ring-offset-background transition-[background-color,color] duration-[var(--mov-segmentado)] ease-[var(--mov-curva)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-controle-ativo data-[state=active]:font-semibold data-[state=active]:text-foreground",
       className
     )}
     {...props}
@@ -134,7 +136,7 @@ const ScrollableTabsList = React.forwardRef<
         aria-hidden
         className={cn(
           pista,
-          "left-0 justify-start rounded-l-xl bg-gradient-to-r from-muted to-transparent pl-0.5",
+          "left-0 justify-start rounded-l-xl bg-gradient-to-r from-controle to-transparent pl-0.5",
           pistas.esquerda ? "opacity-100" : "opacity-0"
         )}
       >
@@ -144,7 +146,7 @@ const ScrollableTabsList = React.forwardRef<
         aria-hidden
         className={cn(
           pista,
-          "right-0 justify-end rounded-r-xl bg-gradient-to-l from-muted to-transparent pr-0.5",
+          "right-0 justify-end rounded-r-xl bg-gradient-to-l from-controle to-transparent pr-0.5",
           pistas.direita ? "opacity-100" : "opacity-0"
         )}
       >

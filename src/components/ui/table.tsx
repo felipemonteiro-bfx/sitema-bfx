@@ -8,8 +8,8 @@ const tableVariants = cva("w-full caption-bottom text-sm", {
   variants: {
     variant: {
       default: "",
-      striped: "[&_tbody_tr:nth-child(odd)]:bg-muted/30",
-      bordered: "[&_td]:border [&_th]:border",
+      striped: "[&_tbody_tr:nth-child(odd)]:bg-poco",
+      bordered: "[&_td]:border [&_td]:border-divisoria [&_th]:border [&_th]:border-divisoria",
       compact: "[&_td]:py-2 [&_th]:py-2",
     },
   },
@@ -26,7 +26,7 @@ interface TableProps
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, variant, stickyHeader, ...props }, ref) => (
-    <div className="relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-lg">
+    <div className="relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-interno">
       <table
         ref={ref}
         className={cn(tableVariants({ variant }), stickyHeader && "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10", className)}
@@ -46,7 +46,8 @@ const TableHeader = React.forwardRef<
   <thead
     ref={ref}
     className={cn(
-      "[&_tr]:border-b [&_tr]:bg-muted/40 dark:[&_tr]:bg-muted/20",
+      // Vantage: cabecalho sem tarja; a linha `divisoria` ja o separa do corpo.
+      "[&_tr]:border-b [&_tr]:border-divisoria",
       sticky && "sticky top-0 z-10 bg-card backdrop-blur-sm",
       className
     )}
@@ -77,7 +78,7 @@ const TableFooter = React.forwardRef<
   <tfoot
     ref={ref}
     className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+      "border-t border-divisoria bg-poco font-medium [&>tr]:last:border-b-0",
       className
     )}
     {...props}
@@ -98,10 +99,12 @@ const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
       ref={ref}
       data-state={isSelected ? "selected" : undefined}
       className={cn(
-        "border-b transition-all duration-200",
-        "hover:bg-muted/50 dark:hover:bg-muted/30",
-        "data-[state=selected]:bg-accent/10 dark:data-[state=selected]:bg-accent/20",
-        isHighlighted && "bg-warning/5 dark:bg-warning/10",
+        // Tokens opacos (sem `/opacidade`): o composto escurece o fundo sob o
+        // texto e derruba o contraste. `poco` e o degrau rebaixado do painel.
+        "border-b border-divisoria transition-colors duration-200",
+        "hover:bg-poco",
+        "data-[state=selected]:bg-marca-tint",
+        isHighlighted && "bg-warning-bg",
         animated && "animate-fade-in-up fill-both",
         className
       )}
@@ -135,7 +138,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
       <th
         ref={ref}
         className={cn(
-          "h-11 px-3 text-left align-middle text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+          "h-11 px-3 text-left align-middle text-xs font-medium text-muted-foreground",
           "[&:has([role=checkbox])]:pr-0",
           sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
           className

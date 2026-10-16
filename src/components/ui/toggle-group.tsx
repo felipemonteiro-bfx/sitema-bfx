@@ -21,7 +21,11 @@ const ToggleGroup = React.forwardRef<
 >(({ className, variant, size, children, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
-    className={cn("flex items-center justify-center gap-1", className)}
+    // Trilho segmentado (mesmo desenho do TabsList).
+    className={cn(
+      "flex w-fit items-center justify-center gap-1 rounded-controle border border-divisoria bg-controle p-1",
+      className
+    )}
     {...props}
   >
     <ToggleGroupContext.Provider value={{ variant, size }}>
@@ -46,6 +50,9 @@ const ToggleGroupItem = React.forwardRef<
           variant: context.variant || variant,
           size: context.size || size,
         }),
+        // Item segmentado: ativo sobe para `controle-ativo` em semibold; o
+        // toggle avulso (toggle.tsx) segue como era.
+        "min-h-10 rounded-lg text-muted-foreground transition-[background-color,color] duration-[var(--mov-segmentado)] ease-[var(--mov-curva)] hover:bg-transparent hover:text-foreground data-[state=on]:bg-controle-ativo data-[state=on]:font-semibold data-[state=on]:text-foreground",
         className
       )}
       {...props}

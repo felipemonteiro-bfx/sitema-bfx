@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
@@ -18,6 +18,11 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: 
           "text-foreground border-border hover:bg-muted",
+        // Selo de marca do Vantage: tint verde OPACO + texto `marca-tint-texto`
+        // (5.60:1 no claro, 7.02:1 no escuro). Nunca `text-primary` sobre o
+        // tint: no claro fica em 4.45:1.
+        marca:
+          "border-transparent bg-marca-tint text-marca-tint-texto",
         // Tint OPACO no tema claro (`bg-<sem>-bg`), nao o composto
         // `bg-<sem>/10`. O composto da propria matiz escurece o tom, e o quanto
         // ele escurece depende do que estiver EMBAIXO: sobre `--card` o badge
