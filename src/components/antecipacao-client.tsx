@@ -439,7 +439,7 @@ export default function AntecipacaoClient({
       {/* Filtros: uma coluna no celular (controles com alvo de 44px); em linha a partir de sm. */}
       <div className="mb-4 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
         <div className="flex flex-col gap-1 sm:w-56">
-          <label htmlFor="filtro-empresa" className={rotuloFiltro}>Empresa</label>
+          <Label htmlFor="filtro-empresa">Empresa</Label>
           <FormSelect
             id="filtro-empresa"
             name="_filtroEmpresa"
@@ -451,7 +451,7 @@ export default function AntecipacaoClient({
           />
         </div>
         <div className="flex flex-col gap-1 sm:w-64">
-          <label htmlFor="filtro-status" className={rotuloFiltro}>Status</label>
+          <Label htmlFor="filtro-status">Status</Label>
           <FormSelect
             id="filtro-status"
             name="_filtroStatus"
@@ -465,7 +465,7 @@ export default function AntecipacaoClient({
         <div className="flex flex-col gap-1">
           {/* O filtro e pelo mes do VENCIMENTO, que o sistema poe no mes seguinte ao
               desconto em folha. O seletor grava MM/AAAA, o formato que parsePeriodoMesAno le. */}
-          <label htmlFor="filtro-vencimento" className={rotuloFiltro}>Vencimento</label>
+          <Label htmlFor="filtro-vencimento">Vencimento</Label>
           <IntervaloMesesPicker
             id="filtro-vencimento"
             inicio={periodoInicio}

@@ -80,21 +80,22 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
   return (
     <Popover open={aberto} onOpenChange={aoAbrir}>
       <PopoverTrigger asChild>
-        <button
+        <Button
           type="button"
+          variant="outline"
           id={id}
           aria-haspopup="dialog"
           className={cn(
             // Mesma pele do gatilho do Select (ui/select), ao lado dele na barra de filtros.
-            "flex h-11 w-full items-center gap-2 whitespace-nowrap rounded-controle border border-input bg-controle px-3 text-sm text-foreground ring-offset-background transition-colors duration-200 hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-ring/60 sm:h-10 sm:w-60",
-            !rotulo && "text-muted-foreground",
+            "w-full justify-start px-3 font-normal hover:border-accent/50 hover:bg-controle hover:text-foreground sm:h-10 sm:w-60",
+            !rotulo && "text-muted-foreground hover:text-muted-foreground",
             className
           )}
         >
           <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="flex-1 truncate text-left tabular-nums">{rotulo ?? "Qualquer mês"}</span>
           <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[20rem] p-3">
         <div className="flex items-center justify-between">

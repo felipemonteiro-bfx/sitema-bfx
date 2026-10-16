@@ -9,6 +9,7 @@ import { RotuloCampo } from "@/components/rotulo-campo";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,9 @@ import {
   mensagemAvisoDaPrevia,
   normalizarCelulasDaPrevia,
 } from "@/lib/validations/importacao";
+
+// Valor-sentinela da opção vazia dos Selects: o Radix proíbe SelectItem com value="".
+const SEM_VALOR = "__vazio__";
 
 interface RowData {
   id: string;
@@ -258,18 +262,23 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
               <RotuloCampo htmlFor="importacao-empresa">
                 Empresa dos clientes <span className="text-error-text">*</span>
               </RotuloCampo>
-              <select
-                id="importacao-empresa"
-                value={empresaId}
-                onChange={(e) => setEmpresaId(e.target.value)}
+              {/* O Radix não aceita SelectItem com value="": a opção "nenhuma" usa um
+                  valor-sentinela e o onValueChange o traduz de volta para "". */}
+              <Select
+                value={empresaId === "" ? SEM_VALOR : empresaId}
+                onValueChange={(v) => setEmpresaId(v === SEM_VALOR ? "" : v)}
                 disabled={loading || saving}
-                className="block h-11 w-full max-w-sm rounded-controle border border-input bg-background px-3 text-sm text-foreground disabled:opacity-50"
               >
-                <option value="">Selecione a empresa</option>
-                {empresasParceiras.map((e) => (
-                  <option key={e.id} value={String(e.id)}>{e.nome}</option>
-                ))}
-              </select>
+                <SelectTrigger id="importacao-empresa" className="max-w-sm">
+                  <SelectValue placeholder="Selecione a empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM_VALOR}>Selecione a empresa</SelectItem>
+                  {empresasParceiras.map((e) => (
+                    <SelectItem key={e.id} value={String(e.id)}>{e.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 Aplicada aos clientes criados nesta importação. Clientes que já existem sem empresa
                 também são vinculados; quem já tem empresa não é alterado.
@@ -345,6 +354,10 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                           className="w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
                         />
                       </TableCell>
+                      {/* EXCEÇÃO LEGÍTIMA (skill shadcn-bfx): as células de texto e número
+                          abaixo são <input> crus de propósito. Um <Input> de 44px dentro de
+                          uma célula de grade densa e editável é pior que o campo sem borda
+                          (`border-none bg-transparent text-xs p-1`) que já está aqui. */}
                       <TableCell className="p-1">
                         <input 
                           value={row.vendedor} 
@@ -395,16 +408,22 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         />
                       </TableCell>
                       <TableCell className="p-1">
-                        <select
-                          aria-label="Entrega"
-                          value={row.entrega}
-                          onChange={(e) => updateCell(row.id, 'entrega', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1${ruim("entrega")}`}
+                        <Select
+                          value={row.entrega === "" ? SEM_VALOR : row.entrega}
+                          onValueChange={(v) => updateCell(row.id, 'entrega', v === SEM_VALOR ? "" : v)}
                         >
-                          <option value="">—</option>
-                          <option value="S">Sim</option>
-                          <option value="N">Não</option>
-                        </select>
+                          <SelectTrigger
+                            aria-label="Entrega"
+                            className={`h-auto w-full border-none bg-transparent p-1 text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded${ruim("entrega")}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={SEM_VALOR}>—</SelectItem>
+                            <SelectItem value="S">Sim</SelectItem>
+                            <SelectItem value="N">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="p-1">
                         <input 

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,9 +82,9 @@ export default async function Page() {
         <CardContent>
           <form action={gerarRelatoriosMensais} className="flex flex-wrap items-end gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="periodo" className="text-sm font-medium text-muted-foreground">
+              <Label htmlFor="periodo">
                 Período (mês)
-              </label>
+              </Label>
               <Input
                 id="periodo"
                 name="periodo"

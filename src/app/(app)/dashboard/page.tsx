@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { Label } from "@/components/ui/label";
 import { calcularMetricasPeriodo } from "@/lib/finance";
 import { requireAdmin } from "@/lib/guards";
 import { formatBRL } from "@/lib/utils";
@@ -186,16 +187,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <form className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label htmlFor="filter-from" className="label-form">Início</label>
+                      <Label htmlFor="filter-from" >Início</Label>
                       <DateInput id="filter-from" name="from" defaultValue={currentFromStr} />
                     </div>
                     <div className="space-y-1.5">
-                      <label htmlFor="filter-to" className="label-form">Fim</label>
+                      <Label htmlFor="filter-to" >Fim</Label>
                       <DateInput id="filter-to" name="to" defaultValue={currentToStr} />
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label htmlFor="filter-vendors" className="label-form">Vendedores</label>
+                    <Label htmlFor="filter-vendors" >Vendedores</Label>
                     <VendorMultiSelect
                       id="filter-vendors"
                       name="vendors"

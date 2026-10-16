@@ -241,9 +241,9 @@ export function EditVendaHistoricoForm({
 
       <div className="flex items-center space-x-2 rounded-controle h-10 px-3 bg-poco self-end">
         <Checkbox name="temNota" id="edit-temNota" defaultChecked={editVenda.temNota} />
-        <label htmlFor="edit-temNota" className="text-xs font-medium text-foreground leading-none cursor-pointer">
+        <Label htmlFor="edit-temNota" className="text-xs text-foreground cursor-pointer">
           Com Nota Fiscal
-        </label>
+        </Label>
       </div>
       <div className="space-y-1">
         <Label htmlFor="edit-taxaNota">Taxa da Nota (%)</Label>
