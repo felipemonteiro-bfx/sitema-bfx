@@ -100,7 +100,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
   };
 
   const opcoesEmpresa = empresasUnicas.map((e) => ({ value: e, label: e }));
-  const rotulo = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+  const rotulo = "text-sm font-medium text-muted-foreground";
   const semDesconto = resumo !== null && resumo.compradores === 0;
 
   return (
@@ -146,12 +146,12 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
             onValueChange={setEmpresa}
             placeholder="Escolha a empresa"
             searchable={empresasUnicas.length > 5}
-            className="h-11 sm:h-10"
+            className="h-11 sm:h-10 rounded-controle! border border-input bg-controle dark:bg-controle"
           />
         </div>
 
         <div
-          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-lg bg-info-bg px-3 py-2 text-sm font-semibold tabular-nums text-info-text"
+          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-interno bg-poco px-3 py-2 text-sm font-medium tabular-nums text-foreground"
           aria-live="polite"
         >
           {contando ? (
@@ -177,7 +177,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         </div>
 
         {!contando && !erro && resumo && resumo.matriculasRepetidas.length > 0 && (
-          <div role="status" className="mt-2 flex items-start gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          <div role="status" className="mt-2 flex items-start gap-2 rounded-interno bg-warning-bg px-3 py-2 text-sm text-warning-text">
             <UserSearch className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <div>
               <p>
@@ -201,7 +201,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         )}
 
         {!contando && !erro && resumo && resumo.semMatricula > 0 && (
-          <div role="status" className="mt-2 flex items-start gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          <div role="status" className="mt-2 flex items-start gap-2 rounded-interno bg-warning-bg px-3 py-2 text-sm text-warning-text">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <p>
               <span className="font-bold">{resumo.semMatricula.toLocaleString("pt-BR")} sem matrícula.</span> Saem no

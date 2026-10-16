@@ -85,8 +85,8 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
           id={id}
           aria-haspopup="dialog"
           className={cn(
-            // Mesma pele do gatilho do FormSelect, ao lado dele na barra de filtros.
-            "flex h-11 w-full items-center gap-2 whitespace-nowrap rounded-lg border-2 border-input bg-background px-3 text-sm text-foreground ring-offset-background transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 sm:h-10 sm:w-60 dark:bg-card",
+            // Mesma pele do gatilho do Select (ui/select), ao lado dele na barra de filtros.
+            "flex h-11 w-full items-center gap-2 whitespace-nowrap rounded-controle border border-input bg-controle px-3 text-sm text-foreground ring-offset-background transition-colors duration-200 hover:border-accent/50 focus:outline-none focus:ring-2 focus:ring-ring/60 sm:h-10 sm:w-60",
             !rotulo && "text-muted-foreground",
             className
           )}

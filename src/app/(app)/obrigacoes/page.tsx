@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { CalendarClock, Landmark, TrendingUp } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/guards";
 import { PageHeader } from "@/components/page-header";
 import { Alert } from "@/components/ui/alert";
-import { CardStats } from "@/components/ui/card";
+import { KpiCard } from "@/components/kpi-card";
 import ObrigacoesClient, { type LinhaBoleto } from "@/components/obrigacoes-client";
 import ObrigacoesGrafico from "@/components/obrigacoes-grafico";
 import { formatBRL } from "@/lib/utils";
@@ -174,36 +173,38 @@ export default async function Page() {
         </Alert>
       ))}
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <CardStats
-          title="A pagar antes do Pix"
-          value={formatBRL(projecao.antesDoPix)}
-          description={
+      {/* Indicadores num painel só (padrão Vantage): cartões internos neutros, o rótulo diz o que é. */}
+      <section
+        aria-label="Indicadores de obrigações"
+        className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-2 rounded-painel border border-painel-borda bg-card p-2"
+      >
+        <KpiCard
+          ordem={0}
+          rotulo="A pagar antes do Pix"
+          valor={formatBRL(projecao.antesDoPix)}
+          rodape={
             diaPixPadrao
               ? `${plural(projecao.boletosAntesDoPix, "boleto", "boletos")} antes do dia ${diaPixPadrao}`
               : plural(projecao.boletosAntesDoPix, "boleto", "boletos")
           }
-          icon={CalendarClock}
-          color="warning"
         />
-        <CardStats
-          title="A pagar depois do Pix"
-          value={formatBRL(projecao.depoisDoPix)}
-          description={plural(projecao.boletosDepoisDoPix, "boleto", "boletos")}
-          icon={Landmark}
+        <KpiCard
+          ordem={1}
+          rotulo="A pagar depois do Pix"
+          valor={formatBRL(projecao.depoisDoPix)}
+          rodape={plural(projecao.boletosDepoisDoPix, "boleto", "boletos")}
         />
-        <CardStats
-          title="Maior valor a financiar"
-          value={formatBRL(projecao.pico?.valor ?? 0)}
-          description={
+        <KpiCard
+          ordem={2}
+          rotulo="Maior valor a financiar"
+          valor={formatBRL(projecao.pico?.valor ?? 0)}
+          rodape={
             projecao.pico
               ? `pico em ${ddmm(projecao.pico.data)}, já contando depósitos da Prudent`
               : "nenhum dia sem cobertura nos próximos 60 dias"
           }
-          icon={TrendingUp}
-          color="error"
         />
-      </div>
+      </section>
 
       <ObrigacoesGrafico serie={projecao.serie} pico={projecao.pico} diasPix={diasPix} vencidos={projecao.vencidos} />
 

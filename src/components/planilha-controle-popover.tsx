@@ -104,7 +104,7 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
   // Uma opcao por empresa sem diferenciar maiusculas: e assim que o arquivo agrupa os blocos.
   const empresasUnicas = [...new Map(empresas.map((e) => [e.trim().toUpperCase(), e.trim()])).values()];
   const opcoesEmpresa = [{ value: "todas", label: "Todas as empresas" }, ...empresasUnicas.map((e) => ({ value: e, label: e }))];
-  const rotulo = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+  const rotulo = "text-sm font-medium text-muted-foreground";
   const semParcelas = resumo !== null && resumo.parcelas === 0;
 
   return (
@@ -149,7 +149,7 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
             value={empresa}
             onValueChange={setEmpresa}
             searchable={empresasUnicas.length > 5}
-            className="h-11 sm:h-10"
+            className="h-11 sm:h-10 rounded-controle! border border-input bg-controle dark:bg-controle"
           />
         </div>
 
@@ -165,7 +165,7 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
         </div>
 
         <div
-          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-lg bg-info-bg px-3 py-2 text-sm font-semibold tabular-nums text-info-text"
+          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-interno bg-poco px-3 py-2 text-sm font-medium tabular-nums text-foreground"
           aria-live="polite"
         >
           {contando ? (
