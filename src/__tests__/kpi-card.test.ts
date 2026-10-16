@@ -8,36 +8,66 @@ type Props = Parameters<typeof KpiCard>[0];
 const render = (p: Props) => renderToString(createElement(KpiCard, p)).split("<!-- -->").join("");
 
 describe("KpiCard", () => {
-  it("renderiza no servidor com o valor final, a variação e a linha dos últimos meses", () => {
+  // Redesign Vantage (decisão 2 do spec): o count-up saiu. Antes o teste fixava a pintura
+  // inicial em "0,00" com o valor final só no sr-only; agora o SSR já entrega o valor final,
+  // em font-mono, e a linha de tendência virou sparkline de barras.
+  it("valor final já no SSR, em mono, com modo discreto no valor e na sparkline", () => {
+    const html = render({
+      rotulo: "Faturamento",
+      valor: "R$ 14.960,00",
+      rodape: "11 vendas · 9 clientes",
+      serie: [10, 3, 8, 23, 38, 14.96],
+    });
+    expect(html).toContain("R$ 14.960,00");
+    expect(html).not.toContain("sr-only");
+    expect(html).toContain("font-mono");
+    expect(html).toContain("text-kpi");
+    expect(html).toContain("bg-card-elevated");
+    expect(html).toContain("rounded-interno");
+    expect(html).toContain("11 vendas · 9 clientes");
+    expect(html).toMatch(/valor-sensivel[^>]*>R\$ 14\.960,00/);
+    expect(html).toContain("bloco-sensivel");
+  });
+
+  it("sparkline: uma barra por ponto, só a última em primary, as demais inativas", () => {
+    const html = render({ rotulo: "Faturamento", valor: "R$ 1,00", rodape: "x", serie: [4, 13, 26, 46, 20, 6] });
+    expect(html.split("anim-barra").length - 1).toBe(6);
+    expect(html.split("bg-primary").length - 1).toBe(1);
+    expect(html.split("bg-grafico-inativo").length - 1).toBe(5);
+    expect(html).toContain("--i:5");
+    expect(html.lastIndexOf("bg-primary")).toBeGreaterThan(html.lastIndexOf("bg-grafico-inativo"));
+  });
+
+  it("sem série e com valorSensivel desligado: sem sparkline nem máscara", () => {
+    const html = render({ rotulo: "Margem", valor: "29,3%", rodape: "ticket", valorSensivel: false });
+    expect(html).not.toContain("anim-barra");
+    expect(html).not.toContain("bloco-sensivel");
+    expect(html).not.toContain("valor-sensivel");
+  });
+
+  it("série toda zerada mantém as barras (baixas, mas visíveis)", () => {
+    const html = render({ rotulo: "Clientes", valor: "0", rodape: "x", serie: [0, 0, 0] });
+    expect(html.split("anim-barra").length - 1).toBe(3);
+  });
+
+  it("série com um ponto só não desenha sparkline", () => {
+    const html = render({ rotulo: "Clientes", valor: "9", rodape: "x", serie: [9] });
+    expect(html).not.toContain("anim-barra");
+  });
+
+  it("compat com a página antiga (a D2 troca): número + formato + contexto + tendência", () => {
     const html = render({
       titulo: "Faturamento",
       icone: "carteira",
       tom: "info",
       valor: 14960,
-      contexto: "11 vendas · 9 clientes",
-      variacao: { percentual: -52.04, rotulo: "vs 1/ago–25/ago" },
-      tendencia: [10, 3, 8, 23, 38, 14.96],
+      contexto: "11 vendas",
+      variacao: { percentual: -52.04, rotulo: "vs ago" },
+      tendencia: [1, 2],
     });
-    // Pintura inicial = começo da contagem; o valor final vai para o leitor de tela.
-    // (o BRL usa espaço não quebrável depois do "R$")
-    expect(html).toContain("0,00</span>");
-    expect(html).toMatch(/class="sr-only">R\$\s14\.960,00/);
-    expect(html).toContain("11 vendas · 9 clientes");
+    expect(html).toMatch(/R\$\s14\.960,00/);
+    expect(html).toContain("11 vendas");
     expect(html).toContain("52%");
-    expect(html).toContain("vs 1/ago–25/ago");
-    expect(html).toContain("kpi-tendencia");
-    expect(html).toContain("valor-sensivel");
-    expect(html).toContain("bloco-sensivel");
-  });
-
-  it("texto no lugar do número (top vendedor) e sem variação", () => {
-    const html = render({ titulo: "Top vendedor", icone: "trofeu", tom: "warning", texto: "Jakeline", valorSensivel: false, contexto: "R$ 14.960,00" });
-    expect(html).toContain("Jakeline");
-    expect(html).not.toContain("kpi-tendencia");
-  });
-
-  it("série com um ponto só não desenha linha", () => {
-    const html = render({ titulo: "Clientes", icone: "clientes", tom: "success", valor: 9, formato: "int", contexto: "x", tendencia: [9] });
-    expect(html).not.toContain("kpi-tendencia");
+    expect(html.split("anim-barra").length - 1).toBe(2);
   });
 });
