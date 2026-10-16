@@ -1,24 +1,35 @@
 "use client";
 
+import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-// Actually, let's just make the trigger part a client component
+// Gatilho + folha do menu no celular. O conteúdo (o mesmo painel da sidebar do desktop) vem
+// montado pelo servidor em `children`, já com os contadores: este componente não consulta nada.
 export function MobileMenuTrigger({ children }: { children: React.ReactNode }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Abrir menu" className="cursor-pointer touch-manipulation min-h-[44px] min-w-[44px]">
-          <span className="text-lg leading-none">≡</span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Abrir menu"
+          className="size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-foreground shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
+        >
+          <Menu className="h-5 w-5" aria-hidden="true" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="flex w-72 flex-col overflow-hidden border-[var(--sidebar-border)] bg-[var(--sidebar)] p-4 text-[var(--sidebar-foreground)]">
-        <SheetHeader className="shrink-0">
-          <SheetTitle className="text-[var(--sidebar-foreground)]">Menu</SheetTitle>
+      {/* Mesmo degrau do painel do desktop (`bg-card`) e contorno decorativo. Largura limitada a
+          85vw para não ocupar um celular de 360px inteiro. */}
+      <SheetContent
+        side="left"
+        className="flex w-72 max-w-[85vw] flex-col gap-0 overflow-hidden border-painel-borda bg-card p-4 text-foreground"
+      >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto custom-scrollbar">
-          {children}
-        </div>
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </SheetContent>
     </Sheet>
   );

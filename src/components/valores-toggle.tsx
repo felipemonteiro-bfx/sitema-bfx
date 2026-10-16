@@ -57,7 +57,7 @@ export function ValoresToggle() {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size="icon"
       // `size="icon"` exige nome acessivel (skill shadcn-bfx). O nome e' FIXO e o estado vai
       // no `aria-pressed`: nome que muda junto com o estado faz o leitor anunciar
@@ -68,8 +68,8 @@ export function ValoresToggle() {
       title={rotulo}
       onClick={alternar}
       className={cn(
-        "relative h-9 w-9 min-h-[44px] min-w-[44px] rounded-full touch-manipulation lg:h-9 lg:w-9 lg:min-h-0 lg:min-w-0",
-        oculto && "border-primary bg-success-bg text-success-text"
+        "relative size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-texto-secundario shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none",
+        oculto && "border-primary bg-success-bg text-success-text hover:bg-success-bg hover:text-success-text"
       )}
     >
       {oculto ? (
