@@ -87,6 +87,12 @@ describe("montarGrupos", () => {
     expect(grupo(r, "paginas")).toBeUndefined();
   });
 
+  it("a ação de assinatura usa a URL única do contador (período e vendedor)", () => {
+    const url = "/historico?assinatura=pendente&from=2000-01-01&to=2026-10-16&vendedor=Ana";
+    const r = montarGrupos(null, menuDoPerfil("vendedor"), "vendedor", "", url);
+    expect(grupo(r, "acoes")!.itens.find((i) => i.chave === "acao-assinatura")!.url).toBe(url);
+  });
+
   it("ações não têm atalho com modificador", () => {
     const r = montarGrupos(null, menuDoPerfil("admin"), "admin", "");
     const acoes = grupo(r, "acoes")!;

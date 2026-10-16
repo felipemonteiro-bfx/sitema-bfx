@@ -57,14 +57,16 @@ interface NavItemProps {
   isActive: boolean;
   /** Contador à direita (ex.: assinaturas pendentes no Histórico). Zero/ausente não desenha nada. */
   contagem?: number;
+  /** Destino do link quando difere de `item.href` (o contador e o destino são o mesmo conjunto). */
+  href?: string;
 }
 
-function NavItem({ item, isActive: active, contagem }: NavItemProps) {
+function NavItem({ item, isActive: active, contagem, href }: NavItemProps) {
   const Icon = ICONES[item.icone];
 
   return (
     <Link
-      href={item.href}
+      href={href ?? item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
         // 44px de altura (alvo de toque), raio de controle, transição pelo token --mov-nav.
@@ -104,10 +106,13 @@ function NavItem({ item, isActive: active, contagem }: NavItemProps) {
 export function SidebarNav({
   role,
   contagens,
+  links,
 }: {
   role: string;
   /** Contadores por href, ex.: `{ "/historico": 82 }`. Calculados UMA vez no layout. */
   contagens?: Partial<Record<string, number>>;
+  /** Destino do link por href do item, ex.: o Histórico já filtrado em "pendentes" (a URL do contador). */
+  links?: Partial<Record<string, string>>;
 }) {
   const pathname = usePathname();
   const grupos = menuDoPerfil(role);
@@ -127,6 +132,7 @@ export function SidebarNav({
               item={item}
               isActive={isActive(pathname, item.href)}
               contagem={contagens?.[item.href]}
+              href={links?.[item.href]}
             />
           ))}
         </div>

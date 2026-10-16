@@ -8,6 +8,8 @@
 import type { Prisma } from "@/generated/prisma";
 import { formaPagamentoLabel, isFormaPagamento } from "@/lib/forma-pagamento";
 import { FILTRO_VENDA_VALIDA } from "@/lib/venda-utils";
+import { paraInputDate } from "@/lib/periodo-data";
+import { resolveVendedorScope, type VendedorSessionScope } from "@/lib/vendedor-scope";
 
 export type FiltrosHistorico = {
   from?: string;
@@ -119,4 +121,21 @@ export function filtrosAtivos(
   }
 
   return lista;
+}
+
+/** Início do "todo o período" no Histórico (o contador de pendentes não tem janela de datas). */
+export const INICIO_TODO_PERIODO = "2000-01-01";
+
+/**
+ * Destino ÚNICO do contador de assinaturas pendentes (bloco de alertas, item Histórico da
+ * sidebar e ação do ⌘K). O Histórico sem datas cai no mês corrente, mas o contador
+ * (`carregarAlertasShell`) conta todo o período; por isso a URL leva `from` bem antigo e `to` = hoje
+ * (UTC, como o resto do Histórico). Não-admin leva o próprio nome, o mesmo texto que o Histórico
+ * filtra. O escopo do Histórico por vendedor é outro card (decisão 7).
+ */
+export function urlPendentesDoUsuario(session: VendedorSessionScope, hoje: Date = new Date()): string {
+  const params = new URLSearchParams({ assinatura: "pendente", from: INICIO_TODO_PERIODO, to: paraInputDate(hoje) });
+  const vendedor = session.role === "admin" ? undefined : resolveVendedorScope(undefined, session);
+  if (vendedor) params.set("vendedor", vendedor);
+  return `/historico?${params.toString()}`;
 }

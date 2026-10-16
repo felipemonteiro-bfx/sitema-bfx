@@ -111,6 +111,8 @@ export function montarGrupos(
   menu: GrupoMenu[],
   role: string,
   texto: string,
+  /** URL única de "assinatura pendente" (período e vendedor do contador); ver `urlPendentesDoUsuario`. */
+  urlPendentes = "/historico?assinatura=pendente",
 ): ResultadoGrupos {
   const grupos: GrupoBusca[] = [];
   const t = normalizarBusca(texto);
@@ -170,7 +172,7 @@ export function montarGrupos(
     {
       chave: "acao-assinatura",
       rotulo: "Vendas aguardando assinatura",
-      url: "/historico?assinatura=pendente",
+      url: urlPendentes,
       icone: "assinatura",
     },
   ];

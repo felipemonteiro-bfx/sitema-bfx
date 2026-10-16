@@ -457,6 +457,13 @@ describe("alertas da sidebar: carregados uma vez e so para admin", () => {
     expect(alertasHojeCodigo.includes("carregarAlertasShell")).toBe(false);
   });
 
+  it("o contador do Historico aponta para a URL do helper único (não para /historico puro)", () => {
+    expect(appLayoutCodigo.includes("urlPendentesDoUsuario(session)")).toBe(true);
+    expect(appLayoutCodigo.includes('links={{ "/historico": urlPendentes }}')).toBe(true);
+    expect(sidebarNavCodigo.includes("links?.[item.href]")).toBe(true);
+    expect(appLayoutCodigo.includes("<BuscaRapida role={session.role} urlPendentes={urlPendentes}")).toBe(true);
+  });
+
   it("o contador do Historico vem das assinaturas pendentes", () => {
     expect(appLayoutCodigo.includes("assinaturasPendentes")).toBe(true);
     expect(appLayoutCodigo.includes('"/historico"')).toBe(true);
@@ -468,20 +475,24 @@ describe("alertas da sidebar: carregados uma vez e so para admin", () => {
     const { AlertasHoje } = await import("@/components/alertas-hoje");
 
     const admin = renderToStaticMarkup(
-      createElement(AlertasHoje, { alertas: { assinaturasPendentes: 82, parcelasVencidas: 56 } })
+      createElement(AlertasHoje, {
+        alertas: { assinaturasPendentes: 82, parcelasVencidas: 56 },
+        urlAssinaturas: "/historico?assinatura=pendente&from=2000-01-01&to=2026-10-16",
+      })
     );
     expect(admin.includes("Alertas de hoje")).toBe(true);
-    expect(admin.includes('href="/historico?assinatura=pendente"')).toBe(true);
+    // O destino é o MESMO conjunto do contador (helper único, com período e escopo).
+    expect(admin.includes('href="/historico?assinatura=pendente&amp;from=2000-01-01&amp;to=2026-10-16"')).toBe(true);
     expect(admin.includes('href="/relatorios"')).toBe(true);
     expect(admin.includes("82")).toBe(true);
     expect(admin.includes("56")).toBe(true);
     expect(admin.toLowerCase().includes("estoque")).toBe(false);
 
     const vendedor = renderToStaticMarkup(
-      createElement(AlertasHoje, { alertas: { assinaturasPendentes: 3 } })
+      createElement(AlertasHoje, { alertas: { assinaturasPendentes: 3 }, urlAssinaturas: "/historico" })
     );
     expect(vendedor).toBe("");
-    const semDados = renderToStaticMarkup(createElement(AlertasHoje, { alertas: undefined }));
+    const semDados = renderToStaticMarkup(createElement(AlertasHoje, { alertas: undefined, urlAssinaturas: "/historico" }));
     expect(semDados).toBe("");
   });
 

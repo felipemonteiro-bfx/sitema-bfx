@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { LayoutDashboard } from "lucide-react";
 import { getSession } from "@/lib/session";
+import { urlPendentesDoUsuario } from "@/lib/historico-filtros";
 import { carregarAlertasShell, type AlertasShell } from "@/lib/alertas-shell";
 import { LogoutButton } from "@/components/LogoutButton";
 import { SidebarNav } from "@/components/sidebar-nav";
@@ -34,6 +35,8 @@ export default async function AppLayout({
   } catch {
     alertas = undefined;
   }
+  // Destino ÚNICO do contador de pendentes (alertas, item Histórico e ⌘K): mesmo conjunto contado.
+  const urlPendentes = urlPendentesDoUsuario(session);
   // Vendedor recebe só o contador de assinaturas no Histórico; o bloco "Alertas de hoje" é do admin.
   const alertasDoBloco = session.role === "admin" ? alertas : undefined;
 
@@ -41,7 +44,7 @@ export default async function AppLayout({
     <div className="min-h-screen bg-background">
       {/* Paleta ⌘K: UMA instância (um só listener de teclado). O `SidebarContent` é montado duas
           vezes, por isso ela não mora nele; gatilhos disparam `EVENTO_ABRIR_BUSCA`. */}
-      <BuscaRapida role={session.role} />
+      <BuscaRapida role={session.role} urlPendentes={urlPendentes} />
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-4 p-3 lg:p-4">
         <aside className="hidden w-65 shrink-0 lg:flex">
           {/* Painel dos artboards: `bg-card` (degrau acima da página), raio de painel e contorno
@@ -52,6 +55,8 @@ export default async function AppLayout({
               role={session.role}
               alertas={alertasDoBloco}
               contagens={{ "/historico": alertas?.assinaturasPendentes }}
+              links={{ "/historico": urlPendentes }}
+              urlPendentes={urlPendentes}
               busca={<BuscaRapidaGatilho />}
             />
           </div>
@@ -76,6 +81,8 @@ export default async function AppLayout({
                   role={session.role}
                   alertas={alertasDoBloco}
                   contagens={{ "/historico": alertas?.assinaturasPendentes }}
+                  links={{ "/historico": urlPendentes }}
+                  urlPendentes={urlPendentes}
                 />
               </MobileMenuTrigger>
               <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -107,6 +114,8 @@ function SidebarContent({
   role,
   alertas,
   contagens,
+  links,
+  urlPendentes,
   busca,
 }: {
   userLabel: string;
@@ -115,6 +124,10 @@ function SidebarContent({
   alertas?: AlertasShell;
   /** Contadores por href (ex.: Histórico = assinaturas pendentes). */
   contagens?: Partial<Record<string, number>>;
+  /** Destino do link por href (o Histórico aponta para a URL do contador). */
+  links?: Partial<Record<string, string>>;
+  /** URL única de assinaturas pendentes, para o bloco de alertas. */
+  urlPendentes: string;
   /** Gatilho da busca global; só a sidebar do desktop o recebe (no celular é o botão da lupa). */
   busca?: ReactNode;
 }) {
@@ -133,8 +146,8 @@ function SidebarContent({
         </div>
       </div>
       {busca}
-      <SidebarNav role={role} contagens={contagens} />
-      <AlertasHoje alertas={alertas} />
+      <SidebarNav role={role} contagens={contagens} links={links} />
+      <AlertasHoje alertas={alertas} urlAssinaturas={urlPendentes} />
       <div className="flex items-center gap-2 border-t border-divisoria pt-4">
         <div className="min-w-0 flex-1">
           <LogoutButton />

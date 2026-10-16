@@ -9,15 +9,15 @@ import type { AlertasShell } from "@/lib/alertas-shell";
  * Sem estoque (decisão do milestone v1.1). Os dados chegam por prop: quem consulta é o layout,
  * uma vez, porque o conteúdo da sidebar é montado duas vezes (aside e folha mobile).
  */
-export function AlertasHoje({ alertas }: { alertas?: AlertasShell }) {
+export function AlertasHoje({ alertas, urlAssinaturas }: { alertas?: AlertasShell; urlAssinaturas: string }) {
   if (!alertas || alertas.parcelasVencidas === undefined) return null;
 
   const itens = [
     {
       label: "Assinaturas pendentes",
       n: alertas.assinaturasPendentes,
-      // Leva ao Histórico já filtrado (E2a).
-      href: "/historico?assinatura=pendente",
+      // Leva ao Histórico já filtrado, com a URL única que cobre o mesmo conjunto do contador.
+      href: urlAssinaturas,
       Icone: CircleCheck,
       cor: "text-primary",
     },

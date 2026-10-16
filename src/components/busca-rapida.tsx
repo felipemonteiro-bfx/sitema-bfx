@@ -113,7 +113,7 @@ function Kbd({ children, className }: { children: React.ReactNode; className?: s
   );
 }
 
-export function BuscaRapida({ role }: { role: string }) {
+export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes?: string }) {
   const router = useRouter();
   const [aberto, setAberto] = React.useState(false);
   const [texto, setTexto] = React.useState("");
@@ -197,8 +197,8 @@ export function BuscaRapida({ role }: { role: string }) {
 
   const menu = React.useMemo(() => menuDoPerfil(role), [role]);
   const { grupos, perguntarIA } = React.useMemo(
-    () => montarGrupos(resposta, menu, role, texto),
-    [resposta, menu, role, texto],
+    () => montarGrupos(resposta, menu, role, texto, urlPendentes),
+    [resposta, menu, role, texto, urlPendentes],
   );
 
   function abrir(url: string) {

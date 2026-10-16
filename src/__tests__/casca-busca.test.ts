@@ -13,7 +13,7 @@ const ocorrencias = (texto: string, trecho: string) => texto.split(trecho).lengt
 describe("busca ⌘K na casca (F3)", () => {
   it("monta <BuscaRapida> UMA vez, com o perfil da sessão, fora do SidebarContent", () => {
     expect(ocorrencias(layout, "<BuscaRapida ")).toBe(1);
-    expect(layout).toContain("<BuscaRapida role={session.role} />");
+    expect(layout).toContain("<BuscaRapida role={session.role} urlPendentes={urlPendentes} />");
     // O SidebarContent é montado duas vezes: a paleta (um só listener de teclado) não pode ficar nele.
     const corpoSidebar = layout.split("function SidebarContent")[1] ?? "";
     expect(corpoSidebar).not.toContain("<BuscaRapida ");
