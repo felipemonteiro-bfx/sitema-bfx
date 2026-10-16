@@ -12,6 +12,7 @@ import {ORIGEM_KANBAN,ETAPAS_ATENDIMENTO,lerEstadoKanban,ESTADO_KANBAN_INICIAL} 
 import { ConversaLista, AlternarVisao, BuscaConversas, urlAtendimento, type ItemConversa } from './conversa-lista';
 import { ConversaChat } from './conversa-chat';
 import { AbrirEmNovaJanela, ROTA_JANELA } from './abrir-em-nova-janela';
+import { ultimasMensagensPorTelefone } from '@/lib/whatsapp-ultimas';
 import { horaCurta, previaMensagem } from './status-mensagem';
 
 const BASE_SISTEMA='/crm/atendimento';
@@ -45,7 +46,7 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
     prisma.whatsAppMensagem.findMany({where:{telefone:{in:[...new Set([...grupos.map(g=>g.telefone),...(telefone?[telefone]:[])])]},direcao:'sistema',origem:ORIGEM_KANBAN},orderBy:[{criadoEm:'desc'},{id:'desc'}],distinct:['telefone'],select:{id:true,telefone:true,corpo:true,criadoEm:true,direcao:true,origem:true,status:true}}),
     prisma.usuario.findMany({select:{id:true,username:true,nomeExibicao:true},orderBy:{username:'asc'}}),
     // Só leitura, uma linha por telefone: a última mensagem real (entrada/saída) para a prévia da lista.
-    prisma.whatsAppMensagem.findMany({where:{telefone:{in:grupos.map(g=>g.telefone)},direcao:{in:['in','out']}},orderBy:[{criadoEm:'desc'},{id:'desc'}],distinct:['telefone'],select:{telefone:true,direcao:true,corpo:true,criadoEm:true}}),
+    ultimasMensagensPorTelefone(grupos),
   ]);
   const pessoas=usuarios.map(u=>({id:u.id,nome:u.nomeExibicao||u.username}));
   const [mensagens,ultimaEntrada,cfg]=await Promise.all([
