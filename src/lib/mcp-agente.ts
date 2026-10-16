@@ -317,10 +317,6 @@ function centavos(valor: number): number {
   return Math.trunc(valor * 100) / 100;
 }
 
-function dia(data: Date): string {
-  return data.toISOString().slice(0, 10);
-}
-
 /**
  * Executa uma tool.
  *

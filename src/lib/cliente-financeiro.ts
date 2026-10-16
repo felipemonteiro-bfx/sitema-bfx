@@ -28,7 +28,7 @@ export interface ArgsParcelas {
 
 export interface ParcelaDoCliente {
   vendaId: number;
-  produto: string;
+  produto: string | null;
   numeroParcela: string;
   dataVencimento: string;
   valor: number;
@@ -95,8 +95,8 @@ export interface ArgsBoletos {
 export interface BoletoDoCliente {
   vendaId: number;
   dataVenda: string;
-  produto: string;
-  parcelas: number;
+  produto: string | null;
+  parcelas: number | null;
   valor: number | null;
   emitido: boolean;
   link: string | null;
