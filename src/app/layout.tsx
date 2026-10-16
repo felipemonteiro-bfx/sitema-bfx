@@ -61,14 +61,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    // As `.variable` ficam na tag raiz: é nela (`:root`) que o globals.css monta `--font-mono`,
+    // `--font-sans` e `--font-display`. Presas ao body elas não existiam ali e a Geist Mono não aplicava.
+    <html
+      lang="pt-BR"
+      suppressHydrationWarning
+      className={`${manrope.variable} ${spaceGrotesk.variable} ${geistMono.variable}`}
+    >
       <head>
         {/* Modo discreto: aplica a escolha do aparelho ANTES da primeira pintura. Sem isto, quem
             deixou os valores ocultos veria os números por um instante até o React montar o botão —
             justamente o que o modo existe para evitar. Mesmo caminho do tema (next-themes). */}
         <script dangerouslySetInnerHTML={{ __html: scriptDeInicializacao() }} />
       </head>
-      <body className={`${manrope.variable} ${spaceGrotesk.variable} ${geistMono.variable}`}>
+      <body>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
