@@ -130,13 +130,24 @@ describe('Reply',()=>{
   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
   expect(html).toContain('aria-label="Enviar mensagem"');expect(html).toContain('size-12');expect(html).toContain('rounded-full');
   expect(html).toContain('0/4096');expect(html).toContain('Templates com tarifa continuam bloqueados');
-  expect(html).toContain('Assumir conversa');expect(html).not.toContain('Retomar automático');
+  expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
   expect(html).toContain('Boas-vindas');
  });
  it('com a equipe no comando oferece Retomar',()=>{
   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:false,estadoAutomatico:'Automático pausado pela equipe'}));
   expect(html).toContain('A equipe está no comando');expect(html).toContain('Retomar automático');expect(html).toContain('Janela encerrada');
  });
+});
+
+describe('Reply: as duas ações de controle existem em todos os estados',()=>{
+ // Regressão da revisão do PR #43: um botão só (por regex no texto) escondia ações legítimas.
+ const estados=['Automático gratuito disponível para assuntos previstos','Automático pausado pela equipe','Pausa temporária até 14:00','Automático desligado','Cliente pediu para parar'];
+ for(const estado of estados){
+  it(`estado "${estado}" oferece Assumir conversa e Retomar automático`,()=>{
+   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:estado}));
+   expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
+  });
+ }
 });
 
 describe('tela própria em nova janela',()=>{

@@ -23,9 +23,11 @@ export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta
   <div role="status" className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-controle py-2 pl-3 pr-2 ${pausado?'bg-marca-tint':'bg-controle'}`}>
    {pausado?<UserRound className="size-[18px] shrink-0 text-marca-tint-texto" aria-hidden="true"/>:<Bot className="size-[18px] shrink-0 text-texto-secundario" aria-hidden="true"/>}
    <span className="min-w-[11rem] flex-1 text-sm"><strong className="font-semibold">{pausado?'A equipe está no comando':'Assistente automático'}</strong> <span className="text-texto-secundario">· {estadoAutomatico}</span></span>
-   {pausado
-    ?<Button type="button" variant="outline" size="sm" disabled={busy} onClick={()=>controle(true)}><Bot className="size-4" aria-hidden="true"/>Retomar automático</Button>
-    :<Button type="button" variant="outline" size="sm" disabled={busy} onClick={()=>controle(false)}><UserRound className="size-4" aria-hidden="true"/>Assumir conversa</Button>}
+   {/* As duas ações existem sempre (como na base): o estado só decide qual fica em destaque. */}
+   <div className="flex shrink-0 flex-wrap gap-2">
+    <Button type="button" variant={pausado?'outline':'default'} size="sm" disabled={busy} onClick={()=>controle(false)}><UserRound className="size-4" aria-hidden="true"/>Assumir conversa</Button>
+    <Button type="button" variant={pausado?'default':'outline'} size="sm" disabled={busy} onClick={()=>controle(true)}><Bot className="size-4" aria-hidden="true"/>Retomar automático</Button>
+   </div>
   </div>
   <div role="group" aria-label="Respostas prontas" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
    {prontas.map(p=><Button key={p.titulo} type="button" variant="outline" className="h-10 shrink-0 rounded-full px-3 text-sm font-normal text-texto-secundario" disabled={!aberta||busy} onClick={()=>{setTexto(p.texto);campo.current?.focus();}}>{p.titulo}</Button>)}
