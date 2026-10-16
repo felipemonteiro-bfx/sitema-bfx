@@ -18,6 +18,7 @@ import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { valorTotalVenda, produtosTexto, quantidadeTotal, custoTotalVenda, margemVenda } from "@/lib/venda-utils";
 import { updateVenda, deleteVenda, enviarEmailEmpresa } from "@/app/(app)/historico/actions";
 import { fuzzyFindVendas } from "@/lib/db-search";
+import { whereAssinatura } from "@/lib/historico-filtros";
 import { EditVendaHistoricoForm } from "@/components/edit-venda-historico-form";
 import { EnviarEmailEmpresaButton } from "@/components/enviar-email-empresa-button";
 import { VerTermoAssinadoLink } from "@/components/ver-termo-assinado-link";
@@ -52,6 +53,7 @@ type Search = {
   formaPagamento?: string;
   page?: string;
   q?: string;
+  assinatura?: string;
 };
 
 
@@ -102,6 +104,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
     }),
     clienteId: sp.cliente && sp.cliente !== "all" ? Number(sp.cliente) : undefined,
     ...formaPagamentoWhere,
+    // AND evita colidir com o OR do filtro de produto.
+    ...(whereAssinatura(sp.assinatura) ? { AND: [whereAssinatura(sp.assinatura)!] } : {}),
   };
 
   const totalVendas = await prisma.venda.count({ where });

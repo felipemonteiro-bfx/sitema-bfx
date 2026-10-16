@@ -25,6 +25,7 @@ type SearchParams = {
   produto?: string;
   cliente?: string;
   formaPagamento?: string;
+  assinatura?: string;
   page?: string;
 };
 
