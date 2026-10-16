@@ -51,10 +51,6 @@ export default function LoginPage() {
     }
   }
 
-  // Campos de 48px com o raio de controle do Vantage. `dark:bg-controle` porque o
-  // `Input` base fixa `dark:bg-card`, que ganharia do `bg-controle` no escuro.
-  const campo =
-    "h-12 rounded-controle border bg-controle text-base dark:bg-controle focus-visible:border-ring focus-visible:ring-ring/30";
 
   return (
     <div className="flex min-h-screen flex-wrap gap-4 bg-background p-4">
@@ -89,7 +85,7 @@ export default function LoginPage() {
                         do usuario administrador a qualquer visitante. */}
                     <Input
                       {...field}
-                      className={campo}
+                      inputSize="lg"
                       autoComplete="username"
                       autoCapitalize="none"
                       autoCorrect="off"
@@ -116,7 +112,8 @@ export default function LoginPage() {
                         autoCapitalize="none"
                         autoCorrect="off"
                         spellCheck={false}
-                        className={`${campo} pr-14`}
+                        inputSize="lg"
+                        className="pr-14"
                       />
                     </FormControl>
                     <Button

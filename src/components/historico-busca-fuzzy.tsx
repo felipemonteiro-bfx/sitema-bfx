@@ -52,7 +52,7 @@ export function HistoricoBuscaFuzzy({ defaultValue = "" }: Props) {
         value={value}
         onChange={handleChange}
         placeholder="Cliente, produto ou vendedor"
-        className="h-11 rounded-controle pl-9 pr-11"
+        className="pl-9 pr-11"
         aria-label="Busca fuzzy de vendas"
       />
       {value && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { TableHead } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import type { SortDir } from "@/hooks/use-table-features";
 
@@ -11,14 +12,16 @@ interface SortableHeaderProps {
   currentDir: SortDir;
   onSort: (field: string) => void;
   className?: string;
+  /** Coluna que so ocupa o lugar de uma ordenavel (sem clique nem realce no hover). */
+  estatico?: boolean;
 }
 
-export function SortableHeader({ label, field, currentField, currentDir, onSort, className = "" }: SortableHeaderProps) {
+export function SortableHeader({ label, field, currentField, currentDir, onSort, className = "", estatico = false }: SortableHeaderProps) {
   const isActive = currentField === field;
   return (
     <TableHead
-      interativo
-      className={className}
+      interativo={!estatico}
+      className={cn(estatico && "cursor-default", className)}
       onClick={() => onSort(field)}
     >
       {/* `whitespace-nowrap` + `shrink-0`: sem os dois, numa coluna estreita o

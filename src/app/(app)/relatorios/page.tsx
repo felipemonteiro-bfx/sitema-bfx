@@ -8,8 +8,6 @@ import { cn } from "@/lib/utils";
 import { montarEmpresaOptions } from "@/lib/empresa-options";
 import { formatarDataPura, hojeDataPura, inicioDoMesDataPura } from "@/lib/data-pura";
 
-/** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
-const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
 
 export default async function Page() {
   const ok = await requireAdmin();
@@ -43,7 +41,7 @@ export default async function Page() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className={TITULO_SECAO}>Relatório de vendas</CardTitle>
+            <CardTitle variant="secao">Relatório de vendas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <ReportButtonsClient
@@ -82,7 +80,7 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className={TITULO_SECAO}>Outros relatórios</CardTitle>
+            <CardTitle variant="secao">Outros relatórios</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="space-y-3 rounded-interno bg-card-elevated p-4">
@@ -136,7 +134,7 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className={TITULO_SECAO}>Atalhos</CardTitle>
+            <CardTitle variant="secao">Atalhos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <a

@@ -121,7 +121,7 @@ export function EditVendaComParcelas({
           escolhida={dataDesconto.bloqueio ? dataDesconto.gravada : escolhidaEfetiva}
           onEscolhidaChange={escolherDataDesconto}
           bloqueio={dataDesconto.bloqueio}
-          labelClassName="text-xs font-medium text-muted-foreground"
+          labelSize="sm"
           avisoClassName="md:col-span-3"
         />
       )}

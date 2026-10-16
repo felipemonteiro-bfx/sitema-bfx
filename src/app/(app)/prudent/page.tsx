@@ -371,7 +371,7 @@ export default async function Page() {
               <span className="inline-flex items-center gap-2">
                 Aguardando RH
                 {aguardandoRh.length > 0 && (
-                  <Badge variant="warning" size="sm" className="min-w-6 justify-center tabular-nums">
+                  <Badge numerico variant="warning" size="sm" className="min-w-6 justify-center">
                     {aguardandoRh.length}
                   </Badge>
                 )}

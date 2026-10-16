@@ -30,8 +30,26 @@ export const noRestyle = {
     // chamador so layout (largura `w-full`, margem, posicao) e `gap-*`, que e a
     // composicao icone + rotulo dentro do botao, nao aparencia.
     { pattern: "^Button$", allow: [...BASE, "gap-*"] },
+    // Campos: so o padding horizontal que reserva espaco para um icone/adorno que a
+    // tela posiciona (`pl-9` p/ lupa, `pr-8` p/ botao de limpar). Tamanho (`inputSize`),
+    // estado (`state`), caixa-alta e mono entram por prop. Vale para Input e wrappers
+    // (CurrencyInput, MaskedInput) porque o linter resolve o componente de destino.
+    { pattern: "^Input$", allow: [...BASE, "pl-*", "pr-*"] },
+    // Selo: gap entre icone e texto; o resto (tamanho, numero, tom) e `variant`/`size`/`numerico`.
+    { pattern: "^Badge$", allow: [...BASE, "gap-*"] },
+    // Contêineres sobrepostos (popover, gaveta, dialogo, alerta, abas, grupo de radios,
+    // lista de comandos): o padding e o espacamento interno dependem do conteudo da tela.
+    {
+      pattern: "^(Popover|Sheet|Dialog|AlertDialog)(Content|Header|Footer|Title)$|^Alert(Description)?$|^Tabs(Content)?$|^RadioGroup$|^Command(List|Item)$|^SheetHeader$|^ScrollArea$|^EmptyStateInline$",
+      allow: [...BASE, "spacing"],
+    },
+    // Popover: alem do padding, o corpo de texto (`text-sm`) de um popover de ajuda/legenda.
+    { pattern: "^PopoverContent$", allow: [...BASE, "spacing", "typography"] },
+    // Gatilho de Select: gap entre rotulo e valor (composicao interna).
+    { pattern: "^SelectTrigger$", allow: [...BASE, "gap-*"] },
     // Titulo/descricao de painel: tipografia (tamanho, cor muted), sem trocar a familia/peso.
-    { pattern: "^Card(Title|Description)$", allow: [...BASE, "typography"], deny: ["font-*"] },
+    // `gap-*` no titulo: espaco entre o icone e o texto (o titulo e flex).
+    { pattern: "^Card(Title|Description)$", allow: [...BASE, "typography", "gap-*"], deny: ["font-*"] },
   ],
 };
 

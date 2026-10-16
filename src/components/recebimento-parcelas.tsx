@@ -25,7 +25,7 @@ import { Alert } from "@/components/ui/alert";
 import { darBaixaParcela, desfazerBaixaParcela } from "@/app/(app)/historico/baixa-actions";
 import { linhaRecebimento, resumoRecebimento, temParcelaRepetida, type ParcelaRecebimento } from "@/lib/recebimento-parcelas";
 import { formatarDataPura } from "@/lib/data-pura";
-import { cn, formatBRL } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 
 
 type Props = {
@@ -93,7 +93,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
       )}
 
       {temParcelaRepetida(parcelas) && (
-        <Alert variant="warning" showIcon className="text-xs">
+        <Alert variant="warning" showIcon size="sm">
           Esta venda tem parcelas com o mesmo número. O total recebido soma as duas linhas.
         </Alert>
       )}
@@ -183,8 +183,8 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                <AlertDialogAction variant="destructive"
+
                                   onClick={() =>
                                     executar(desfazerBaixaParcela, { parcelaId: String(p.id), confirmar: "1" }, `Baixa da parcela ${rotulo} desfeita.`)
                                   }

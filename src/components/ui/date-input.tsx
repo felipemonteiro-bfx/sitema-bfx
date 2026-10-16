@@ -26,10 +26,14 @@ export interface DateInputProps {
   required?: boolean
   /** "YYYY-MM-DD": dias depois dele ficam desabilitados no calendario. */
   max?: string
+  /** `error`: campo invalido; `destaque`: valor alterado pelo usuario (borda da marca). */
+  state?: "default" | "error" | "destaque"
+  /** `celula`: campo dentro de uma celula de planilha editavel (sem moldura, compacto). */
+  variant?: "default" | "celula"
 }
 
 const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
-  ({ id, name, defaultValue, value, onChange, className, disabled, required, max, ...props }, ref) => {
+  ({ id, name, defaultValue, value, onChange, className, disabled, required, max, state = "default", variant = "default", ...props }, ref) => {
     const [open, setOpen] = React.useState(false)
     const controlado = value !== undefined
     const [interno, setInterno] = React.useState<Date | undefined>(() =>
@@ -81,6 +85,10 @@ const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
               // plano do card/formulario — nao e um plano acima.
               "flex h-10 w-full items-center justify-between rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
               !date && "text-muted-foreground",
+              state === "error" && "border-error",
+              state === "destaque" && "border-primary",
+              variant === "celula" &&
+                "h-auto rounded border-0 bg-transparent p-1 text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring",
               className
             )}
           >

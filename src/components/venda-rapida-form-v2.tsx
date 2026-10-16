@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import {
   Loader2,
   User,
-  Calendar,
+  CalendarDays,
   ShoppingCart,
   Plus,
   CreditCard,
@@ -820,7 +820,7 @@ export default function VendaRapidaFormV2({
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       {successAssinaturaToken && (
-        <Card className="animate-fade-in">
+        <Card animated>
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -853,15 +853,10 @@ export default function VendaRapidaFormV2({
       )}
 
       {/* Seção 1: Contexto da Venda */}
-      <Card
-        className={cn(
-          "transition-colors",
-          (validationErrors.data || validationErrors.vendedor) && "border-destructive border-2",
-        )}
-      >
+      <Card invalido={Boolean(validationErrors.data || validationErrors.vendedor)}>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <CalendarDays className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Contexto da Venda
           </CardTitle>
         </CardHeader>
@@ -877,7 +872,7 @@ export default function VendaRapidaFormV2({
                 value={dataVenda}
                 onChange={(v) => setDataVenda(v)}
                 required
-                className={validationErrors.data ? "border-destructive border-2" : ""}
+                state={validationErrors.data ? "error" : "default"}
               />
             </div>
             <div className="space-y-2">
@@ -892,7 +887,7 @@ export default function VendaRapidaFormV2({
                 value={vendedor}
                 onValueChange={setVendedor}
                 placeholder="Selecione o vendedor"
-                className={validationErrors.vendedor ? "border-destructive [&_button]:border-destructive [&_button]:border-2" : ""}
+                state={validationErrors.vendedor ? "error" : "default"}
               />
             </div>
           </div>
@@ -901,11 +896,8 @@ export default function VendaRapidaFormV2({
 
       {/* Seção 2: Cliente */}
       <Card
-        className={cn(
-          "transition-colors overflow-visible",
-          clienteSuggestions.length > 0 && "relative z-[100]",
-          validationErrors.cliente && "border-destructive border-2",
-        )}
+        invalido={Boolean(validationErrors.cliente)}
+        className={cn("overflow-visible", clienteSuggestions.length > 0 && "relative z-[100]")}
       >
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
@@ -951,7 +943,8 @@ export default function VendaRapidaFormV2({
               onChange={(e) => setClienteQuery(e.target.value)}
               placeholder="Digite o nome do cliente"
               required
-              className={cn("min-h-11 touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
+              state={validationErrors.cliente ? "error" : "default"}
+              className="min-h-11 touch-manipulation"
             />
             {clienteSuggestions.length > 0 && (
               <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-60 overflow-y-auto">
@@ -1285,7 +1278,7 @@ export default function VendaRapidaFormV2({
               <CurrencyInput
                 value={envio}
                 onChange={setEnvio}
-                className={validationErrors.envio ? "border-destructive border-2" : ""}
+                state={validationErrors.envio ? "error" : "default"}
               />
             </div>
             <div className="space-y-2">
@@ -1393,7 +1386,6 @@ export default function VendaRapidaFormV2({
                 dataRegra={dataDescontoRegra}
                 escolhida={dataDescontoEscolhida}
                 onEscolhidaChange={setDataDescontoEscolhida}
-                labelClassName="text-sm font-medium normal-case tracking-normal text-muted-foreground"
                 avisoClassName="sm:col-span-2"
               />
             )}

@@ -263,7 +263,7 @@ export function EditVendaFormClient({
           <div className="md:col-span-3 space-y-1">
             <Label size="sm">Comprovante Assinado (PDF, JPEG ou PNG)</Label>
             <div className="flex flex-col gap-2">
-              <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
+              <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10" />
               {editVenda.assinatura?.assinaturaStatus === "assinado" ? (
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground bg-poco px-3 py-2 rounded-interno">
                   <Badge variant="success"><CheckCircle2 className="h-3 w-3 shrink-0" />Assinado</Badge>
@@ -288,7 +288,7 @@ export function EditVendaFormClient({
                   />
                 </div>
               ) : (
-                <Alert variant="warning" showIcon className="text-xs">
+                <Alert variant="warning" showIcon size="sm">
                   <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
                 </Alert>
               )}

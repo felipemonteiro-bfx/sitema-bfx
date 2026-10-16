@@ -208,7 +208,8 @@ export function IntelligenceChatComposer({
                 name="provider"
                 options={providers}
                 defaultValue={providers[0]?.value ?? "openai"}
-                className="h-10 w-full rounded-full border border-divisoria bg-poco text-xs sm:w-auto sm:min-w-27.5"
+                aparencia="pilula"
+                className="w-full sm:w-auto sm:min-w-27.5"
                 searchable={false}
               />
             )}
@@ -218,7 +219,7 @@ export function IntelligenceChatComposer({
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-11 max-h-32 w-full flex-1 resize-none rounded-controle border border-transparent bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-11 max-h-32 w-full flex-1 resize-none"
             />
 
             {/* Botão direito: Send (com texto) ou Mic (vazio) */}

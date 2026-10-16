@@ -13,8 +13,6 @@ import { KpiCard } from "@/components/kpi-card";
 import { TICK_EIXO, TooltipGrafico, currency } from "@/components/finance-charts";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-/** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
-const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
 
 interface Props {
   vendedores: string[];
@@ -82,7 +80,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
       {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle className={TITULO_SECAO}>Filtros</CardTitle>
+          <CardTitle variant="secao">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -133,9 +131,9 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
       {/* Gráfico de Comissões: poço rebaixado, barras em verde da marca, eixos em mono. */}
       <Card className="p-2 pt-5">
         <CardHeader className="p-0 px-4 pb-4">
-          <CardTitle className={TITULO_SECAO}>Comissões por vendedor</CardTitle>
+          <CardTitle variant="secao">Comissões por vendedor</CardTitle>
         </CardHeader>
-        <CardContent className="rounded-interno bg-poco px-2 pb-3 pt-5 sm:px-4">
+        <CardContent variant="poco" className="px-2 pb-3 pt-5 sm:px-4">
           <div className="h-75 min-h-75 w-full">
             {loading ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">Carregando gráfico...</div>
@@ -161,14 +159,14 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
       {/* Tabela de Detalhes */}
       <Card className="p-2 pt-5">
         <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
-          <CardTitle className={TITULO_SECAO}>Detalhes das comissões</CardTitle>
+          <CardTitle variant="secao">Detalhes das comissões</CardTitle>
           {!loading && (
             <span className="text-sm text-muted-foreground">
               {details.length} {details.length === 1 ? "venda" : "vendas"}
             </span>
           )}
         </CardHeader>
-        <CardContent className="rounded-interno bg-poco p-0">
+        <CardContent variant="poco" className="p-0">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Carregando dados...</div>
           ) : (

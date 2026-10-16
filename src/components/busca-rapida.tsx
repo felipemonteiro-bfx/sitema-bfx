@@ -259,7 +259,8 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
               />
             </div>
 
-            <CommandList aria-busy={carregando} className={cn(carregando && resposta && "opacity-70 transition-opacity")}>
+            <div className={cn(carregando && resposta && "opacity-70 transition-opacity")}>
+            <CommandList aria-busy={carregando}>
               {erro && (
                 <p role="alert" className="px-5 py-8 text-center text-sm text-error-text">
                   Não foi possível buscar agora. Tente de novo.
@@ -289,6 +290,7 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
                   </CommandGroup>
                 ))}
             </CommandList>
+            </div>
 
             <div className="flex min-h-14 items-center gap-5 border-t border-divisoria px-4 py-1 text-sm text-muted-foreground sm:px-5">
               <span className="hidden items-center gap-2 sm:flex">

@@ -245,7 +245,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={excluindo} onClick={handleExcluir}>
+                    <AlertDialogAction variant="destructive" disabled={excluindo} onClick={handleExcluir}>
                       {excluindo ? "Excluindo..." : "Excluir"}
                     </AlertDialogAction>
                   </AlertDialogFooter>

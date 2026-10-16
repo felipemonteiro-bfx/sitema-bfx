@@ -25,8 +25,6 @@ import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; mes?: string; edit?: string };
 
-/** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
-const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
 
 async function addDespesa(formData: FormData) {
   "use server";
@@ -204,7 +202,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           "Custo" fica no rótulo, não na cor. */}
                       <Card className="p-2 pt-5">
                         <CardHeader className="space-y-1 p-0 px-4 pb-4">
-                          <CardTitle className={TITULO_SECAO}>Composição dos custos</CardTitle>
+                          <CardTitle variant="secao">Composição dos custos</CardTitle>
                           <p className="text-sm text-muted-foreground">De onde vêm os custos do período e o que está parado em estoque.</p>
                         </CardHeader>
                         <CardContent className="space-y-5 p-0 px-2 pb-2">
@@ -290,9 +288,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
                 <Card className="p-2 pt-5">
                   <CardHeader className="p-0 px-4 pb-4">
-                    <CardTitle className={TITULO_SECAO}>Mês a mês</CardTitle>
+                    <CardTitle variant="secao">Mês a mês</CardTitle>
                   </CardHeader>
-                  <CardContent className="rounded-interno bg-poco p-0">
+                  <CardContent variant="poco" className="p-0">
                     <Table>
                       <TableHeader>
                         <TableRow semHover>
@@ -339,7 +337,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <div className="space-y-6">
                 <Card>
                   <CardHeader className="space-y-1">
-                    <CardTitle className={TITULO_SECAO}>Nova despesa</CardTitle>
+                    <CardTitle variant="secao">Nova despesa</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       Registre despesas fixas ou variáveis com data de competência.
                     </p>
@@ -383,7 +381,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {editDespesa && (
                   <Card>
                     <CardHeader>
-                      <CardTitle className={TITULO_SECAO}>Editar lançamento #{editDespesa.id}</CardTitle>
+                      <CardTitle variant="secao">Editar lançamento #{editDespesa.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <form action={updateDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -428,12 +426,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
                 <Card className="p-2 pt-5">
                   <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
-                    <CardTitle className={TITULO_SECAO}>Despesas</CardTitle>
+                    <CardTitle variant="secao">Despesas</CardTitle>
                     <span className="text-sm text-muted-foreground">
                       {despesas.length} {despesas.length === 1 ? "lançamento" : "lançamentos"}
                     </span>
                   </CardHeader>
-                  <CardContent className="rounded-interno bg-poco p-0">
+                  <CardContent variant="poco" className="p-0">
                     <Table>
                       <TableHeader>
                         <TableRow semHover>
@@ -507,12 +505,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </section>
                 <Card className="p-2 pt-5">
                   <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
-                    <CardTitle className={TITULO_SECAO}>Produtos em estoque</CardTitle>
+                    <CardTitle variant="secao">Produtos em estoque</CardTitle>
                     <span className="text-sm text-muted-foreground">
                       {produtosOrdenados.length} {produtosOrdenados.length === 1 ? "produto" : "produtos"}
                     </span>
                   </CardHeader>
-                  <CardContent className="rounded-interno bg-poco p-0">
+                  <CardContent variant="poco" className="p-0">
                     <Table>
                       <TableHeader>
                         <TableRow semHover>

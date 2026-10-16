@@ -275,7 +275,7 @@ export default function ProdutoFormClient({
               accept="image/png,image/jpeg,image/webp"
               onChange={handleImageUpload}
               disabled={isUploading}
-              className="h-auto min-h-10 w-full py-2 text-xs file:mr-2"
+              className="h-auto min-h-10 w-full file:mr-2"
             />
           </div>
         </div>
@@ -289,7 +289,8 @@ export default function ProdutoFormClient({
                   value={nome}
                   onChange={(e) => setNome(normalizeProductName(e.target.value))}
                   placeholder="Ex: Teclado Mecânico RGB"
-                  className={cn("uppercase", isDuplicate ? "border-warning" : "")}
+                  caixaAlta
+                  state={isDuplicate ? "warning" : "default"}
                 />
                 {isDuplicate && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-warning-text">
@@ -305,12 +306,12 @@ export default function ProdutoFormClient({
 
             <div className="space-y-1">
               <Label>Categoria</Label>
-              <Input
+              <Input caixaAlta
                 value={categoria}
                 onChange={(e) => setCategoria(normalizeCadastroText(e.target.value))}
                 placeholder="Ex: Eletrônicos"
                 list={categoryListId}
-                className="uppercase"
+
               />
               <datalist id={categoryListId}>
                 {filteredCategorias.map((item) => (
@@ -324,7 +325,7 @@ export default function ProdutoFormClient({
 
             <div className="space-y-1">
               <Label>Marca</Label>
-              <Input value={marca} onChange={(e) => setMarca(normalizeCadastroText(e.target.value))} placeholder="Marca" className="uppercase" />
+              <Input caixaAlta value={marca} onChange={(e) => setMarca(normalizeCadastroText(e.target.value))} placeholder="Marca" />
             </div>
           </div>
 
@@ -367,7 +368,7 @@ export default function ProdutoFormClient({
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
               <Label>NCM</Label>
-              <Input value={ncm} onChange={(e) => setNcm(normalizeCadastroText(e.target.value))} placeholder="8 dígitos" maxLength={8} className="uppercase" />
+              <Input caixaAlta value={ncm} onChange={(e) => setNcm(normalizeCadastroText(e.target.value))} placeholder="8 dígitos" maxLength={8} />
               <div className="mt-2 rounded-interno bg-poco p-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Tag className="h-3.5 w-3.5" />

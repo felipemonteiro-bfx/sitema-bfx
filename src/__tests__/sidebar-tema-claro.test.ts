@@ -446,7 +446,8 @@ describe("controles do topo e do rodape", () => {
 
   it("o menu mobile abre o mesmo conteudo numa folha no painel (bg-card) com gatilho de 44px", () => {
     const codigo = semComentarios(mobileMenu);
-    expect(codigo.includes("bg-card")).toBe(true);
+    // O fundo de painel vem de `fundo="card"` do SheetContent (bg-card), nao de className.
+    expect(codigo.includes('fundo="card"')).toBe(true);
     expect(codigo.includes("var(--sidebar)")).toBe(false);
     expect(codigo.includes("size-11")).toBe(true);
   });

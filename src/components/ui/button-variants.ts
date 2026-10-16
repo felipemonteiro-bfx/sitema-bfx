@@ -83,7 +83,7 @@ export const buttonVariants = cva(
         // `seletor`: gatilho de seletor (combobox) com a mesma pele do Select da ui.
         // `data-vazio=true` acende o tom muted do placeholder.
         seletor:
-          "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm font-normal text-foreground ring-offset-background hover:border-input hover:bg-controle hover:text-foreground active:scale-100 focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[vazio=true]:text-muted-foreground",
+          "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm font-normal text-foreground ring-offset-background hover:border-input hover:bg-controle hover:text-foreground active:scale-100 focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[vazio=true]:text-muted-foreground data-[erro=true]:border-error data-[tamanho=compacto]:h-9 data-[tamanho=compacto]:rounded-md data-[tamanho=compacto]:px-2 data-[tamanho=compacto]:text-xs data-[tamanho=pilula]:h-10 data-[tamanho=pilula]:rounded-full data-[tamanho=pilula]:border-divisoria data-[tamanho=pilula]:bg-poco data-[tamanho=pilula]:text-xs",
         // `faixa`: miolo de um intervalo selecionado (tint da marca).
         faixa: "bg-primary/10 text-foreground hover:bg-primary/15 hover:text-foreground",
         // `linha`: linha de lista clicavel (resultado de busca, item de menu): largura

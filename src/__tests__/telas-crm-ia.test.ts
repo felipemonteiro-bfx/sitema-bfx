@@ -247,15 +247,12 @@ describe("achado 5 — FormSelect e botao desalinhados no /crm", () => {
   it("os selects da tabela do /crm tem a altura e o raio de size=sm", () => {
     const fonte = ler("src/app/(app)/crm/page.tsx");
     const tabela = fonte.split("<TableBody>").pop() ?? "";
-    const classes = tabela
-      .split("className=\"h-")
-      .slice(1)
-      .map((s) => s.split('"')[0]);
-    expect(classes.length, "selects na tabela").toBeGreaterThanOrEqual(2);
-    for (const c of classes) {
-      expect(c.startsWith("9 "), `altura h-${c}`).toBe(true);
-      expect(c.includes("rounded-md"), `raio em h-${c}`).toBe(true);
-    }
+    // Altura e raio de size=sm vem de `aparencia="compacto"` do FormSelect (h-9 rounded-md na variante seletor).
+    const usos = tabela.split("aparencia=\"compacto\"").length - 1;
+    expect(usos, "selects compactos na tabela").toBeGreaterThanOrEqual(2);
+    const variantes = ler("src/components/ui/button-variants.ts");
+    expect(variantes.includes("data-[tamanho=compacto]:h-9")).toBe(true);
+    expect(variantes.includes("data-[tamanho=compacto]:rounded-md")).toBe(true);
   });
 });
 

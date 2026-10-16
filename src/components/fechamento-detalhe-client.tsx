@@ -594,7 +594,7 @@ function SeloPrudent({ antecipada, loteId }: { antecipada: boolean; loteId: numb
       {loteId != null ? `lote ${loteId} · boleto à BFX` : "boleto à BFX"}
     </Badge>
   ) : (
-    <Badge variant="outline" className="whitespace-nowrap text-muted-foreground">
+    <Badge variant="discreto" className="whitespace-nowrap">
       fica com a BFX
     </Badge>
   );

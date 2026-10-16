@@ -25,7 +25,8 @@ export function MobileMenuTrigger({ children }: { children: React.ReactNode }) {
           85vw para não ocupar um celular de 360px inteiro. */}
       <SheetContent
         side="left"
-        className="flex w-72 max-w-[85vw] flex-col gap-0 overflow-hidden border-painel-borda bg-card p-4 text-foreground"
+        fundo="card"
+        className="flex w-72 max-w-[85vw] flex-col gap-0 overflow-hidden p-4"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Menu</SheetTitle>

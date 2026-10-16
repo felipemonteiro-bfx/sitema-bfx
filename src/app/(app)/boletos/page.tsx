@@ -303,7 +303,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     A vencer
                     <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
@@ -324,7 +324,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Vencidos
                     <span className="text-xs font-normal text-muted-foreground">· todo atraso{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
@@ -345,7 +345,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Pagos
                     <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
@@ -366,7 +366,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             content: (
               <Card className="p-2 pt-5">
                 <CardHeader className="p-0 px-4 pb-4">
-                  <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Gerar boleto manualmente
                   </CardTitle>

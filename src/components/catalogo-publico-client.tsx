@@ -72,7 +72,7 @@ export function CatalogoPublicoClient({ produtos }: Props) {
           placeholder="Buscar produto, marca ou categoria..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-10 h-11 rounded-xl border-border bg-background"
+          className="pl-10"
           aria-label="Buscar produtos"
         />
       </div>

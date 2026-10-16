@@ -95,7 +95,8 @@ export default async function Page() {
                               min={1}
                               max={c.pontos ?? 0}
                               placeholder="pts"
-                              className="h-8 w-20 px-2 text-xs"
+                              inputSize="sm"
+                              className="w-20"
                             />
                             <Button type="submit" variant="outline" size="sm">Resgatar</Button>
                           </form>
@@ -126,7 +127,7 @@ export default async function Page() {
                         {t.descricao ?? t.tipo} · {formatDataHora(t.criadoEm)}
                       </div>
                     </div>
-                    <Badge variant={t.pontos >= 0 ? "success" : "error"} className="tabular-nums">
+                    <Badge numerico variant={t.pontos >= 0 ? "success" : "error"}>
                       {t.pontos >= 0 ? "+" : ""}{t.pontos}
                     </Badge>
                   </li>

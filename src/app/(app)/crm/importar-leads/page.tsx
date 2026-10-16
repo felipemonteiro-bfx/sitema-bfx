@@ -74,7 +74,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 required
                 rows={12}
                 placeholder={"MARIA DA SILVA; 12345; 92984778250\nJOÃO SOUZA; 67890; 92991234567"}
-                className="font-mono text-sm"
+                mono
               />
             </div>
 

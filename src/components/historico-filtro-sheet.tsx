@@ -21,7 +21,7 @@ export function HistoricoFiltroSheet({ children }: Props) {
           Filtros
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[90vh] overflow-y-auto rounded-t-2xl">
+      <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Filtros</SheetTitle>
         </SheetHeader>

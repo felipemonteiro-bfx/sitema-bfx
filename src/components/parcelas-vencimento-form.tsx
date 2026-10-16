@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Info } from "lucide-react";
+import { CalendarDays, Info } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { DateInput } from "@/components/ui/date-input";
 import { dataParaHidden, parseDataISO } from "@/lib/data-input";
@@ -84,7 +84,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
     <Card variant="elevated">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
           Datas de Vencimento das Parcelas
         </CardTitle>
       </CardHeader>
@@ -120,7 +120,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
                   step="0.01"
                   value={parcela.valorParcela}
                   onChange={(e) => handleValorChange(index, Number(e.target.value))}
-                  className="h-8 text-sm"
+                  className="h-8"
                 />
               </div>
             </div>

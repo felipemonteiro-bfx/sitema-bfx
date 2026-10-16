@@ -211,8 +211,8 @@ export default function FornecedoresTabClient({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    <AlertDialogAction variant="destructive"
+
                       disabled={bulkDeleting}
                       onClick={handleBulkDelete}
                     >
@@ -239,7 +239,7 @@ export default function FornecedoresTabClient({
                 </TableHead>
                 <SortableHeader label="Nome" field="nome" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
                 <SortableHeader label="Telefone" field="telefone" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
-                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-20 cursor-default hover:bg-transparent" />
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} estatico className="w-20" />
               </TableRow>
             </TableHeader>
             <TableBody>

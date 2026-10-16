@@ -123,7 +123,7 @@ export function EmailEnvioDetalhe({ fecharHref, envio, anexos }: Props) {
             <Badge variant="outline">{envio.tipo}</Badge>
             {envio.status === "enviado" ? <Badge variant="success">Enviado</Badge> : <Badge variant="error">Falhou</Badge>}
           </div>
-          <SheetTitle className="text-lg leading-snug">{envio.assunto}</SheetTitle>
+          <SheetTitle>{envio.assunto}</SheetTitle>
           <SheetDescription>{envio.empresa ?? "Sem empresa"}</SheetDescription>
         </SheetHeader>
 

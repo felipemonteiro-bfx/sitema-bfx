@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { cn, formatBRL } from '@/lib/utils';
+import { formatBRL } from '@/lib/utils';
 import { formatarDataPura, formatarMesAnoPuro } from '@/lib/data-pura';
 import type {
   CompradorAntecipacao,
@@ -83,7 +83,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
   return (
     <Card className="p-2 pt-5">
       <CardHeader className="p-0 px-4 pb-4">
-        <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+        <CardTitle variant="secao" className="flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           Antecipação: o que já foi e o que falta
         </CardTitle>

@@ -243,7 +243,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
           {perfil.categoriasFavoritas.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {perfil.categoriasFavoritas.map((cat) => (
-                <Badge key={cat} variant="secondary" className="text-xs">
+                <Badge key={cat} variant="secondary">
                   {cat}
                 </Badge>
               ))}
@@ -373,7 +373,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           </div>
                           <div className="flex items-center gap-2">
                             {item.diferenca && item.diferenca > 0 && (
-                              <Badge variant="secondary" className="text-xs valor-sensivel">
+                              <Badge variant="secondary" className="valor-sensivel">
                                 +{formatBRL(item.diferenca)}
                               </Badge>
                             )}

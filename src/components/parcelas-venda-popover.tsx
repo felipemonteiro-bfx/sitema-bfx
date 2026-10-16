@@ -36,7 +36,7 @@ const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um :
 function Contador({ valor, variante }: { valor: number; variante: VarianteSelo }) {
   if (valor === 0) return <span className="px-1 text-xs font-medium text-muted-foreground">0</span>;
   return (
-    <Badge variant={variante} size="sm" className="px-1.5 font-medium tabular-nums">
+    <Badge numerico variant={variante} size="sm">
       {valor}
     </Badge>
   );

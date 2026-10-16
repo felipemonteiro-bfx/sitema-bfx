@@ -873,10 +873,10 @@ export default function AntecipacaoClient({
           (fase 16, achado 8). O card saiu da page.tsx quando o resumo por
           comprador passou a dividir o filtro "Ver na fila" com a fila. */}
       {/* tabIndex -1: recebe o foco do "Ver na fila" sem entrar na ordem do Tab. */}
-      <Card id="fila-antecipacao" tabIndex={-1} className="scroll-mt-4 p-2 pt-5 focus:outline-none">
+      <Card id="fila-antecipacao" tabIndex={-1} className="scroll-mt-4 p-2 pt-5">
         <CardHeader className="p-0 px-4 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+          <CardTitle variant="secao" className="flex items-center gap-2">
             <CircleDollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Vendas — Antecipação
           </CardTitle>

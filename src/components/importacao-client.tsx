@@ -321,7 +321,8 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                 Nenhuma linha com problema de frete ou entrega.
               </Alert>
             )}
-            <ScrollArea className="w-full rounded-interno bg-poco">
+            <div className="overflow-hidden rounded-interno bg-poco">
+            <ScrollArea className="w-full">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -351,7 +352,8 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         <DateInput
                           value={row.dataVenda}
                           onChange={(v) => updateCell(row.id, 'dataVenda', v)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
+                          variant="celula"
+                          className="w-full"
                         />
                       </TableCell>
                       {/* EXCEÇÃO LEGÍTIMA (skill shadcn-bfx): as células de texto e número
@@ -414,7 +416,9 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         >
                           <SelectTrigger
                             aria-label="Entrega"
-                            className={`h-auto w-full border-none bg-transparent p-1 text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded${ruim("entrega")}`}
+                            variant="celula"
+                            state={destaque.includes("entrega") ? "error" : "default"}
+                            className="w-full"
                           >
                             <SelectValue />
                           </SelectTrigger>
@@ -473,6 +477,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                 </TableBody>
               </Table>
             </ScrollArea>
+            </div>
           </CardContent>
         </Card>
       )}

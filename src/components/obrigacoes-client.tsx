@@ -84,13 +84,13 @@ export type LinhaBoleto = {
   }[];
 };
 
-const VARIANTE: Record<TomSituacao, "warning" | "error" | "info" | "success" | "outline"> = {
+const VARIANTE: Record<TomSituacao, "warning" | "error" | "info" | "success" | "outline" | "discreto"> = {
   warning: "warning",
   neutro: "outline",
   error: "error",
   info: "info",
   success: "success",
-  muted: "outline",
+  muted: "discreto",
 };
 
 const ddmm = (s: string) => s.slice(5).split("-").reverse().join("/");
@@ -262,7 +262,7 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
       <TableCell>
         <Badge
           variant={VARIANTE[l.situacao.tom]}
-          className={`whitespace-nowrap ${l.situacao.tom === "muted" ? "text-muted-foreground" : ""}`}
+          className="whitespace-nowrap"
         >
           {l.situacao.rotulo}
         </Badge>
@@ -323,7 +323,7 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
                   <>
                     {(l.pdfArquivoId != null || podeSubstituir) && daBfx(l) && <DropdownMenuSeparator />}
                     <DropdownMenuItem
-                      className="text-error-text focus:text-error-text"
+                      variant="destructive"
                       onSelect={() => onAcao({ tipo: "cancelar", linha: l })}
                     >
                       Cancelar boleto
@@ -402,7 +402,7 @@ function DialogoDocumento({ linha, substituir, onClose }: { linha: LinhaBoleto; 
         <form onSubmit={enviar} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="boleto-pdf">PDF do boleto</Label>
-            <Input id="boleto-pdf" type="file" name="pdf" accept="application/pdf,.pdf" className="h-10 px-2 pt-1.5" />
+            <Input id="boleto-pdf" type="file" name="pdf" accept="application/pdf,.pdf" className="h-10" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="boleto-linha">Linha digitável ou código de barras</Label>
@@ -551,7 +551,7 @@ function DialogoPagamento({ linha, hoje, onClose }: { linha: LinhaBoleto; hoje: 
               type="file"
               name="comprovante"
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              className="h-10 px-2 pt-1.5"
+              className="h-10"
             />
           </div>
           <DialogFooter>
@@ -669,10 +669,10 @@ function DialogoCancelar({ linha, onClose }: { linha: LinhaBoleto; onClose: () =
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pendente}>Voltar</AlertDialogCancel>
-          <AlertDialogAction
+          <AlertDialogAction variant="destructive"
             onClick={confirmar}
             disabled={pendente || !motivoOk}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+
           >
             {pendente ? "Cancelando…" : "Cancelar boleto"}
           </AlertDialogAction>

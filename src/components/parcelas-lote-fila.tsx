@@ -83,8 +83,8 @@ export function ParcelasLoteFila({
               {p.numero} de {total}
               {p.confirmacao === "legado" && (
                 <Badge
-                  variant="outline"
-                  className="ml-auto text-xs font-medium text-muted-foreground"
+                  variant="discreto"
+                  className="ml-auto"
                   title="Legado — sem confirmação do RH"
                 >
                   legado

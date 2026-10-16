@@ -119,10 +119,10 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
   return (
     <Card
       variant="elevated"
+      invalido={hasError}
       className={cn(
         "relative overflow-visible",
         (produtoSuggestions.length > 0 || showDropdown) && "z-10",
-        hasError && "border-destructive border-2",
       )}
     >
       <CardContent className="p-4">
@@ -207,7 +207,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 placeholder="Digite o nome do produto"
                 required
                 aria-required="true"
-                className={hasError ? "border-destructive border-2" : ""}
+                state={hasError ? "error" : "default"}
               />
               {showDropdown && produtoSuggestions.length > 0 && (
                 <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-56 overflow-y-auto">
@@ -350,9 +350,9 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               </div>
               <div className="rounded-interno bg-poco px-3 py-2 text-center">
                 <div className="text-xs font-medium text-muted-foreground">Margem</div>
-                <Badge
+                <Badge numerico
                   variant={margem >= 20 ? "success" : margem >= 10 ? "warning" : "error"}
-                  className="mt-0.5 tabular-nums valor-sensivel"
+                  className="mt-0.5 valor-sensivel"
                 >
                   {margem.toFixed(1)}%
                 </Badge>

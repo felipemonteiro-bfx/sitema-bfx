@@ -192,12 +192,12 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
   return (
     <Card className="p-2 pt-5">
       <CardHeader className="p-0 px-4 pb-4">
-        <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+        <CardTitle variant="secao" className="flex items-center gap-2">
           <History className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           Histórico de Antecipações
         </CardTitle>
       </CardHeader>
-      <CardContent className="rounded-interno bg-poco p-4">
+      <CardContent variant="poco" className="p-4">
         {vazio ? (
           <p className="text-center text-muted-foreground py-8 text-sm">Nenhuma antecipação realizada ainda.</p>
         ) : (

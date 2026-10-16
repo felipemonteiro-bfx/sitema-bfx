@@ -235,8 +235,8 @@ export default function ProdutosTabClient({
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                <AlertDialogAction variant="destructive"
+
                   disabled={bulkDeleting}
                   onClick={handleBulkDelete}
                 >
@@ -262,7 +262,7 @@ export default function ProdutosTabClient({
                 onCheckedChange={handleSelectAll}
               />
             </TableHead>
-            <SortableHeader label="Foto" field="_foto" currentDir="asc" onSort={() => {}} className="w-20 cursor-default hover:bg-transparent" />
+            <SortableHeader label="Foto" field="_foto" currentDir="asc" onSort={() => {}} estatico className="w-20" />
             <SortableHeader label="Nome" field="nome" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Categoria" field="categoria" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Marca/Fornecedor" field="marca" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
@@ -308,7 +308,7 @@ export default function ProdutosTabClient({
                 </TableCell>
                 <TableCell peso="medio">{p.nome}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className="font-normal">{p.categoria || "N/A"}</Badge>
+                  <Badge variant="secondary">{p.categoria || "N/A"}</Badge>
                 </TableCell>
                 <TableCell>
                   <div className="text-xs font-semibold">{p.marca}</div>
@@ -347,8 +347,8 @@ export default function ProdutosTabClient({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          <AlertDialogAction variant="destructive"
+
                             disabled={deleting === p.id}
                             onClick={async () => {
                               setDeleting(p.id);

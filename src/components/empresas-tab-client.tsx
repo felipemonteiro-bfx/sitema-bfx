@@ -74,7 +74,7 @@ function CamposRhEmails({ prefixo, empresa }: { prefixo: string; empresa?: Empre
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor={campo("rh")}>Responsável RH</Label>
-          <Input id={campo("rh")} name="rh" defaultValue={empresa?.responsavelRh || ""} placeholder="Responsável RH" className="uppercase" />
+          <Input caixaAlta id={campo("rh")} name="rh" defaultValue={empresa?.responsavelRh || ""} placeholder="Responsável RH" />
         </div>
         <div className="space-y-1">
           <Label htmlFor={campo("tel")}>Telefone RH</Label>
@@ -255,7 +255,7 @@ export default function EmpresasTabClient({
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <Label htmlFor="add-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
-                <Input id="add-empresa-nome" name="nome" placeholder="Empresa" aria-required="true" className="uppercase" />
+                <Input caixaAlta id="add-empresa-nome" name="nome" placeholder="Empresa" aria-required="true" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="add-empresa-cnpj">CNPJ</Label>
@@ -333,8 +333,8 @@ export default function EmpresasTabClient({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    <AlertDialogAction variant="destructive"
+
                       disabled={bulkDeleting}
                       onClick={handleBulkDelete}
                     >
@@ -365,7 +365,7 @@ export default function EmpresasTabClient({
                 <SortableHeader label="Contato" field="emailRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <TableHead className="text-center">Clientes</TableHead>
                 <TableHead>Vinculadas</TableHead>
-                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-20 cursor-default hover:bg-transparent" />
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} estatico className="w-20" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -465,7 +465,7 @@ export default function EmpresasTabClient({
               <input type="hidden" name="id" value={editingEmpresa.id} />
               <div className="space-y-1">
                 <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
-                <Input id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
+                <Input caixaAlta id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">

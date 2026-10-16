@@ -161,7 +161,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         breadcrumbs={[{ label: rotuloPeriodo(currentFromStr, currentToStr) }]}
         selo={
           mesEmAndamento ? (
-            <Badge variant="marca" size="lg" className="gap-2 font-semibold">
+            <Badge variant="marca" size="lg" className="gap-2">
               <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
               Mês em andamento
             </Badge>
@@ -215,12 +215,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       {avisos.length > 0 && (
         <Card className="anim-entrada p-2 pt-5" style={{ "--i": 0 } as React.CSSProperties}>
           <CardHeader className="p-0 px-4 pb-4">
-            <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
+            <CardTitle variant="secao" className="flex items-center gap-2">
               <Megaphone className="h-4 w-4 text-primary" aria-hidden="true" />
               Mural de Avisos
             </CardTitle>
           </CardHeader>
-          <CardContent className="rounded-interno bg-poco p-0 py-1">
+          <CardContent variant="poco" className="p-0 py-1">
             <ul className="divide-y divide-divisoria">
               {avisos.map((a) => (
                 <li key={a.id} className="flex items-start gap-3 px-4 py-3 text-sm">
@@ -297,12 +297,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,24rem),1fr))] gap-4">
             <Card className="anim-entrada p-2 pt-5" style={{ "--i": 5 } as React.CSSProperties}>
               <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
-                <CardTitle className="font-sans text-lg font-semibold leading-normal tracking-normal">Raio-X da equipe</CardTitle>
+                <CardTitle variant="secao">Raio-X da equipe</CardTitle>
                 <span className="text-sm text-muted-foreground">
                   {teamRows.length} {teamRows.length === 1 ? "vendedor" : "vendedores"}
                 </span>
               </CardHeader>
-              <CardContent className="rounded-interno bg-poco p-0">
+              <CardContent variant="poco" className="p-0">
                 <Table className="[&_td]:px-2 [&_th]:px-2 sm:[&_td]:px-4 sm:[&_th]:px-4">
                   <TableHeader>
                     <TableRow semHover>

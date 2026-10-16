@@ -24,8 +24,6 @@ export const dynamic = "force-dynamic";
 
 type StatusRel = string;
 
-/** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
-const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
 
 function statusBadge(status: StatusRel) {
   switch (status) {
@@ -77,7 +75,7 @@ export default async function Page() {
 
       <Card>
         <CardHeader>
-          <CardTitle className={TITULO_SECAO}>Gerar / enviar agora</CardTitle>
+          <CardTitle variant="secao">Gerar / enviar agora</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={gerarRelatoriosMensais} className="flex flex-wrap items-end gap-3">
@@ -115,10 +113,10 @@ export default async function Page() {
             return (
               <Card key={periodo} className="p-2 pt-5">
                 <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 p-0 px-4 pb-4">
-                  <CardTitle className={TITULO_SECAO}>{periodoLabel(periodo)}</CardTitle>
+                  <CardTitle variant="secao">{periodoLabel(periodo)}</CardTitle>
                   <span className="valor-sensivel text-sm font-mono text-muted-foreground">{formatBRL(totalPeriodo)}</span>
                 </CardHeader>
-                <CardContent className="rounded-interno bg-poco p-0">
+                <CardContent variant="poco" className="p-0">
                   {/* Desktop: tabela */}
                   <div className="hidden overflow-x-auto md:block">
                     <Table>

@@ -25,6 +25,10 @@ type FormSelectProps = {
   onValueChange?: (val: string) => void;
   placeholder?: string;
   className?: string;
+  /** `compacto`: seletor de tabela/filtro (36px, texto pequeno); `pilula`: seletor arredondado do compositor. */
+  aparencia?: "default" | "compacto" | "pilula";
+  /** `error`: campo invalido (borda de erro). */
+  state?: "default" | "error";
   searchable?: boolean;
   searchPlaceholder?: string;
   formId?: string;
@@ -39,6 +43,8 @@ export function FormSelect({
   onValueChange,
   placeholder = "Selecione",
   className,
+  aparencia = "default",
+  state = "default",
   searchable = true,
   searchPlaceholder = "Pesquisar...",
   formId,
@@ -132,6 +138,8 @@ export function FormSelect({
             type="button"
             variant="seletor"
             data-vazio={!value}
+            data-erro={state === "error"}
+            data-tamanho={aparencia}
             role="combobox"
             aria-expanded={open}
             aria-controls={listaId}
@@ -147,8 +155,9 @@ export function FormSelect({
           </Button>
         </PopoverTrigger>
         <PopoverContent
+          compacto
           className={cn(
-            "w-[var(--radix-popover-trigger-width)] rounded-interno border bg-popover p-2",
+            "w-[var(--radix-popover-trigger-width)] p-2",
             opcoesRicas && "min-w-56"
           )}
           onKeyDown={aoTeclar}
@@ -171,7 +180,8 @@ export function FormSelect({
                 placeholder={searchPlaceholder}
                 aria-controls={listaId}
                 aria-activedescendant={destaqueValido ? idOpcao(destaque) : undefined}
-                className="h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+                state="nu"
+                className="h-7"
               />
             </div>
           )}

@@ -48,6 +48,13 @@ const badgeVariants = cva(
           "border-transparent bg-info text-info-foreground hover:bg-info/90",
         ghost:
           "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+        // `discreto`: contorno neutro com texto muted (anotacao ao lado de um titulo).
+        discreto: "border-border bg-transparent font-medium text-muted-foreground",
+      },
+      // Numero ou codigo: Geist Mono tabular.
+      numerico: {
+        true: "font-mono tabular-nums",
+        false: "",
       },
       size: {
         default: "px-2.5 py-0.5 text-xs",
@@ -63,6 +70,7 @@ const badgeVariants = cva(
       variant: "default",
       size: "default",
       animated: false,
+      numerico: false,
     },
   }
 )
@@ -71,9 +79,9 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
-function Badge({ className, variant, size, animated, ...props }: BadgeProps) {
+function Badge({ className, variant, size, animated, numerico, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant, size, animated }), className)} {...props} />
+    <div className={cn(badgeVariants({ variant, size, animated, numerico }), className)} {...props} />
   )
 }
 

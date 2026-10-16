@@ -93,8 +93,8 @@ const shadcnRules = (severidade = {}) => ({
   "shadcn/no-raw-colors": [severidade.raw ?? "error", shadcnPolicy.noRawColors],
   "shadcn/no-arbitrary-values": [severidade.arbitrary ?? "error", shadcnPolicy.noArbitraryValues],
   "shadcn/no-inline-styles": [severidade.inline ?? "error", shadcnPolicy.noInlineStyles],
-  "shadcn/require-static-classes": [severidade.static ?? "warn", shadcnPolicy.requireStaticClasses],
-  "shadcn/no-restyle": [severidade.restyle ?? "warn", shadcnPolicy.noRestyle],
+  "shadcn/require-static-classes": [severidade.static ?? "error", shadcnPolicy.requireStaticClasses],
+  "shadcn/no-restyle": [severidade.restyle ?? "error", shadcnPolicy.noRestyle],
 });
 
 const eslintConfig = defineConfig([
