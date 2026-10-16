@@ -143,8 +143,16 @@ describe("achado 12 — abas inativas, e os rotulos sobre card elevado", () => {
   // 0.545 resolvia as abas (4.47 -> 4.62), mas o gate de runtime achou 22
   // rotulos de /venda-rapida ainda a 4.40: eles ficam sobre --card-elevated,
   // mais escuro que --card. 0.535 fecha os dois (4.60 sobre o elevado).
-  it("--muted-foreground claro esta em 0.535", () => {
-    expect(corpoDoBloco(css, ":root").includes("--muted-foreground: oklch(0.535 0 0)")).toBe(true);
+  //
+  // Redesign Vantage (2026-10-16): a pagina do tema claro passou a ser #ECEEEC
+  // (L 0.947), mais escura que os 0.985 de antes, e 0.535 cai para 4.44:1 sobre
+  // ela — o par muted-foreground/background reprovaria. O token foi recalibrado
+  // para o #5C635E dos artboards (oklch 0.492), que fecha 5.1:1 na pagina,
+  // 6.17:1 no painel e 5.80:1 na casca. A intencao do teste (muted-foreground
+  // fecha 4.5 nas superficies) agora esta nos pares de TOKEN_PAIRS; aqui fica
+  // fixado o valor novo e o piso de luminosidade.
+  it("--muted-foreground claro esta em 0.492 (#5C635E dos artboards)", () => {
+    expect(corpoDoBloco(css, ":root").includes("--muted-foreground: oklch(0.492 0.012 154.8)")).toBe(true);
   });
 });
 

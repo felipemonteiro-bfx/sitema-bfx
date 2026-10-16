@@ -363,6 +363,83 @@ Três armadilhas que essa fase pagou e que valem para qualquer superfície nova:
 O `.sidebar-dark` (que fixava `color-scheme: dark` no painel) foi removido: com a sidebar clara ele
 pintaria a barra de rolagem e os controles nativos de escuro dentro de uma superfície clara.
 
+## 4.2 Redesign Vantage: superfícies, marca e gráfico (2026-10-16)
+
+Contrato de tokens da tarefa A (spec `docs/superpowers/specs/2026-10-16-redesign-vantage-design.md`,
+seção 3). Cada token de cor tem **três pontos** — valor em `:root`, valor em `.dark`, chave
+`--color-*` no `@theme inline` — e o quarto, o par em `TOKEN_PAIRS`. Valores e razões de contraste
+medidos por `npm run contraste:check`.
+
+### Degraus de superfície (decidido pelo significado)
+
+| Superfície | Token (utilitária) | Claro | Escuro |
+|---|---|---|---|
+| Página (fora da casca) | `--background` (`bg-background`) | #EDEDED (croma 0) | #070807 |
+| Casca (`main`) | `--shell` (`bg-shell`) | #F7F8F7 | #0B0C0B |
+| Painel / Card | `--card`, `--sidebar` (`bg-card`) | #FFFFFF | #111312 |
+| Card interno | `--card-elevated` | #F7F8F7 | #161917 |
+| Poço (área rebaixada) | `--poco` (`bg-poco`) | #F3F5F3 | #0F1110 |
+| Controle (trilho, busca) | `--controle` | #EAEDEA | #131514 |
+| Controle selecionado | `--controle-ativo` | #FFFFFF | #262A27 |
+| Popover | `--popover` | #FFFFFF | #1A1D1B |
+
+`--shell` e `--card` são tokens **diferentes** nos dois temas: a casca e o painel não se confundem
+mais (antes `main` e `Card` eram ambos `bg-card`).
+
+No claro `--background`, `--card` e `--popover` têm **croma 0** (`tokens-fundo-neutro`, D-01): o
+verde de croma 0.003 dos artboards cede ao croma 0 (imperceptível). No escuro os neutros são
+esverdeados de croma 0.003-0.009. `--muted` (#F1F3F1 / #1E211F), `--secondary` e a família
+`--sidebar-*` foram recalibrados para o mesmo eixo (sem matiz 250/260).
+
+### Texto
+
+| Token | Claro | Escuro | Contraste (claro / escuro) |
+|---|---|---|---|
+| `--foreground` | #141614 | #EDEFEE | 15.6–18.2 / 12.6–17.4 |
+| `--texto-secundario` (`text-texto-secundario`) | #3B413D | #C9CECB | 10.45 / 11.70 no painel |
+| `--muted-foreground` | #5C635E | #9BA19D | 6.17 / 7.09 no painel; ≥5.23 / ≥5.53 em shell, poço, controle |
+| `--marca-tint-texto` | #0C6E0B | #6FCA69 | 5.60 / 7.02 sobre `--marca-tint` |
+
+**Regra do verde como texto:** `--primary` claro (#0F7F0E) dá 5.14:1 no painel e 4.69:1 no poço,
+mas só **4.43:1 na página** e **4.45:1 sobre `--marca-tint`**. Portanto, no tema claro,
+**`text-primary` não vai sobre a página nem sobre o tint** (por isso não há par
+`primary/background`). Texto verde sobre página/tint é `text-marca-tint-texto`. O mesmo vale
+para `--muted-foreground`, que foi recalibrado de 0.535 (4.44:1 na página nova) para 0.492.
+
+### Marca, borda e foco
+
+| Token | Claro | Escuro |
+|---|---|---|
+| `--primary` (inalterado) | #0F7F0E | #6FCA69 |
+| `--marca-tint` (`bg-marca-tint`) | #E3F3E2 | #16301A |
+| `--ring` e `--sidebar-ring` (verde da marca) | = primary | = primary |
+| `--border`, `--input` (≥3:1 contra fundo, card e sidebar) | oklch(0.62 0 0) | oklch(0.52 0.008 155) |
+| `--shell-borda`, `--painel-borda`, `--divisoria` (decorativas, **fora** dos pares de 3:1) | #E1E4E1 / #E6E9E6 / #E6E9E6 | #1A1D1B / #1F2220 / #1F2220 |
+
+Campos mantêm a borda de `--border`/`--input` (decisão aprovada); linhas decorativas usam as três
+de cima, que medem ~1.2:1 de propósito.
+
+### Gráfico e vidro
+
+| Token | Claro | Escuro | Nota |
+|---|---|---|---|
+| `--hachura-traco` | #80867F | #5E645F | 3.40 / 3.13:1 no poço (artboards davam 2.83 / 2.91 — ajustado) |
+| `--hachura-fundo` | #F3F5F3 | #1E211F | |
+| `--grafico-neutro` | #7A807B | #6E746F | 3.68 / 3.96:1 no poço (artboard claro #C5CAC6 dava 1.5) |
+| `--grafico-trilha`, `--grafico-inativo` | #D3D7D3, #C5CAC6 | #2A2D2B, #3A3E3B | decorativos |
+| `--vidro`, `--vidro-borda` | branco 92%, #E1E4E1 | #1C1F1D 92%, #2F3330 | alfa ⇒ a catraca marca SKIP |
+| `--vidro-piso` | #FFFFFF | #1C1F1D | versão **opaca** do vidro: é o fallback sem `backdrop-filter` (`@supports not`) e o que `TOKEN_PAIRS` mede (18.19 / 14.39:1 com `--foreground`) |
+
+### Raios, fontes, tamanhos e movimento (não variam com o tema)
+
+`--radius-shell` 24px, `--radius-painel` 20px, `--radius-interno` 14px, `--radius-controle` 12px
+(`rounded-shell`…). `--font-mono` = Geist Mono (`font-mono`; `.tabular-nums` o usa),
+`--font-sans` = Manrope, `--font-display` = Space Grotesk. `--text-titulo` e `--text-kpi` são os
+**únicos** tamanhos fluidos (clamp) — `escala:check` continua barrando `text-[13px]`. Movimento:
+`--mov-*` + `.anim-entrada` / `.anim-barra` / `.anim-dica` (atraso por `--i`); constantes em
+`src/lib/motion.ts`, comparadas com o CSS por `redesign-tokens.test.ts`. Só transform, opacity e
+filter; `prefers-reduced-motion` zera as três classes.
+
 ## 5. Exceção declarada
 
 `src/app/api/relatorios/catalogo/route.ts` devolve um documento HTML autônomo que carrega

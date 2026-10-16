@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import { Geist_Mono, Manrope, Space_Grotesk } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToasterResponsive } from "@/components/toaster-responsive";
@@ -21,13 +21,22 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+// Numeros (`.tabular-nums`) e valores de KPI. Terceira fonte: `swap` + so os
+// pesos usados, para nao pesar no primeiro carregamento nem travar o texto.
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   minimumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+    { media: "(prefers-color-scheme: light)", color: "#ECEEEC" },
+    { media: "(prefers-color-scheme: dark)", color: "#070807" },
   ],
 };
 
@@ -59,7 +68,7 @@ export default function RootLayout({
             justamente o que o modo existe para evitar. Mesmo caminho do tema (next-themes). */}
         <script dangerouslySetInnerHTML={{ __html: scriptDeInicializacao() }} />
       </head>
-      <body className={`${manrope.variable} ${spaceGrotesk.variable}`}>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable} ${geistMono.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

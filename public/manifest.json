@@ -4,8 +4,8 @@
   "description": "Gestão comercial BFX — vendas, financeiro e relatórios",
   "start_url": "/dashboard",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#2563eb",
+  "background_color": "#070807",
+  "theme_color": "#070807",
   "orientation": "portrait-primary",
   "icons": [
     {

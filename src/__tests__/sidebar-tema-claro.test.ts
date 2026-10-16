@@ -147,10 +147,17 @@ describe("a sidebar acompanha o tema", () => {
   });
 
   it("no tema escuro nada muda: a sidebar continua escura", () => {
-    expect(lightnessDoToken(".dark", "sidebar")).toBe(0.17);
-    expect(lightnessDoToken(".dark", "sidebar-accent")).toBe(0.28);
-    expect(lightnessDoToken(".dark", "sidebar-foreground")).toBe(0.985);
-    expect(lightnessDoToken(".dark", "sidebar-muted")).toBe(0.65);
+    // Redesign Vantage (2026-10-16): os L exatos mudaram porque a sidebar passou
+    // a ser o PAINEL dos artboards (= --card #111312) e os neutros viraram
+    // esverdeados de croma baixissimo. O que este teste guarda — a sidebar do
+    // tema escuro continuar ESCURA — segue valendo, agora no degrau novo:
+    // fundo 0.184 (era 0.17), accent 0.244 (0.28), texto 0.950 (0.985), muted
+    // 0.703 (0.65), borda 0.248 (0.32; agora = --divisoria, decorativa).
+    // O contraste de cada elemento e policiado pela catraca nos testes abaixo.
+    expect(lightnessDoToken(".dark", "sidebar")).toBe(0.184);
+    expect(lightnessDoToken(".dark", "sidebar-accent")).toBe(0.244);
+    expect(lightnessDoToken(".dark", "sidebar-foreground")).toBe(0.95);
+    expect(lightnessDoToken(".dark", "sidebar-muted")).toBe(0.703);
     // 0.76, nao mais 0.68: o accent deixou de ser o vermelho/rosa (hue 25) e
     // passou a ser o verde da logo BFX (hue 142.6). Verde e mais claro que
     // vermelho na mesma luminosidade percebida, entao o valor que entrega
@@ -158,7 +165,7 @@ describe("a sidebar acompanha o tema", () => {
     // guarda — a sidebar do tema escuro continuar escura — segue valendo:
     // fundo, accent, texto, muted e borda estao inalterados acima.
     expect(lightnessDoToken(".dark", "sidebar-primary")).toBe(0.76);
-    expect(lightnessDoToken(".dark", "sidebar-border")).toBe(0.32);
+    expect(lightnessDoToken(".dark", "sidebar-border")).toBe(0.248);
   });
 
   it("o comentario que declarava a sidebar 'sempre escura' saiu do CSS", () => {
