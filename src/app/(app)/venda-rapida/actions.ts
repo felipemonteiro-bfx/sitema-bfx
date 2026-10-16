@@ -23,6 +23,7 @@ import { fonteCustoEnvioNaCriacao } from "@/lib/uber-custo-entrega";
 import { regraDoClienteNaData } from "@/lib/regra-empresa-db";
 import { enviarWhatsApp, getWhatsAppFlags } from "@/lib/whatsapp";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
+import { montarMensagensDocumentosVenda } from "@/lib/whatsapp-venda-templates";
 import { signReciboId } from "@/lib/recibo-url";
 import { creditarPontosVenda, resgatarPontos } from "@/lib/fidelidade-service";
 import { valorEmReais } from "@/lib/fidelidade";
@@ -557,24 +558,24 @@ export async function criarVendaV2(
       });
       if (cliente?.telefone) {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3008";
-        let mensagem = "";
-        if (waConfig?.autoRecibo) {
-          mensagem =
-            descontoEmFolha && assinaturaToken
-              ? `Olá! Segue o link para assinar sua autorização de desconto em folha: ${baseUrl}/assinatura/${assinaturaToken}`
-              : `Olá! Segue seu recibo de venda: ${baseUrl}/api/recibo?id=${venda.id}&sig=${signReciboId(venda.id)}${descontoEmFolha ? "&tipo=autorizacao" : ""}`;
-          if (boletoUrl && waConfig.autoBoleto) {
-            mensagem += `\n\nSeu boleto: ${boletoUrl}`;
-          }
-        } else if (boletoUrl && waConfig?.autoBoleto) {
-          mensagem = `Olá! Seu boleto da venda #${venda.id} foi gerado. Acesse: ${boletoUrl}`;
-        }
-        if (mensagem) {
+        const documentos = montarMensagensDocumentosVenda({
+          nome: cliente.nome ?? "Cliente",
+          autoRecibo: !!waConfig?.autoRecibo,
+          autoBoleto: !!waConfig?.autoBoleto,
+          assinaturaUrl: descontoEmFolha
+            ? assinaturaToken
+              ? `${baseUrl}/assinatura/${assinaturaToken}`
+              : `${baseUrl}/api/recibo?id=${venda.id}&sig=${signReciboId(venda.id)}&tipo=autorizacao`
+            : undefined,
+          reciboUrl: `${baseUrl}/api/recibo?id=${venda.id}&sig=${signReciboId(venda.id)}`,
+          boletoUrl,
+        });
+        for (const template of documentos) {
           void enviarWhatsApp({
             telefone: cliente.telefone,
             clienteId,
             origem: "venda",
-            template: comFallback(TEMPLATES.recibo, [cliente.nome ?? "Cliente"], mensagem),
+            template,
           });
         }
 
