@@ -115,3 +115,16 @@ Tema claro (neutros e Card mudam em ~69 arquivos); contraste de pares novos e de
 (`--vidro` precisa de fallback opaco); `--border` mantendo 3:1; Geist Mono mais larga em tabelas a
 360px (`/financeiro`, `/prudent`, `/boletos`); CLS da terceira fonte; contadores da sidebar a cada
 navegação (layout `force-dynamic`); a ⌘K não pode alargar o que o vendedor já vê; ordem dos merges.
+
+Escopo do vendedor: o vínculo real é `Venda.vendedorId` (a coluna texto `vendedor` é deprecated e não
+é única). `whereVendasDoUsuario` (`src/lib/vendedor-scope.ts`) usa `vendedorId` e, só para venda legada
+sem id (`vendedorId` nulo, como a importação grava quando o nome não bate com usuário), o texto. É o
+mesmo filtro da lista, do total e do `#id` da ⌘K, dos clientes do vendedor e do contador da sidebar.
+
+Assinatura pendente tem fonte única (`whereAssinaturaPendente`, `src/lib/historico-filtros.ts`): venda
+válida com `assinaturaToken` e sem `Assinatura` assinada; venda sem linha de Assinatura, `expirado` e
+`processando` contam como pendentes.
+
+Contador de parcelas vencidas: segue o relatório de inadimplência (inclui o vencimento de hoje, usa o
+relógio do servidor e inclui parcela em lote de antecipação) e pode divergir do cron `alertas-admin`
+(`< hoje`, só `ativa`). Divergência conhecida; não "corrigir" sem decisão do André.

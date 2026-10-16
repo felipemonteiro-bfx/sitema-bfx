@@ -1,13 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { filtrosAtivos, urlSemFiltro, whereAssinatura } from "@/lib/historico-filtros";
+import { filtrosAtivos, urlSemFiltro, whereAssinatura, whereAssinaturaPendente } from "@/lib/historico-filtros";
+
+describe("whereAssinaturaPendente (fonte única: Histórico, sidebar e busca)", () => {
+  it("token gerado, venda válida e sem assinatura concluída (sem linha de Assinatura = pendente)", () => {
+    expect(whereAssinaturaPendente()).toEqual({
+      status: { notIn: ["cancelada", "estornada"] },
+      assinaturaToken: { not: null },
+      NOT: { assinatura: { is: { assinaturaStatus: "assinado" } } },
+    });
+  });
+});
 
 describe("whereAssinatura", () => {
-  it("pendente: token gerado, venda ativa e sem assinatura concluída", () => {
-    expect(whereAssinatura("pendente")).toEqual({
-      assinaturaToken: { not: null },
-      status: "ativa",
-      NOT: { assinatura: { assinaturaStatus: "assinado" } },
-    });
+  it("pendente: é exatamente o critério único whereAssinaturaPendente", () => {
+    expect(whereAssinatura("pendente")).toEqual(whereAssinaturaPendente());
   });
 
   it("assinado: assinatura concluída", () => {

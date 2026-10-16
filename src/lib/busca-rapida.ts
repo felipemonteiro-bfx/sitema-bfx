@@ -82,7 +82,11 @@ export function interpretarConsulta(texto: string, vendedores: string[], escopo?
   const norm = normalizarBusca(texto);
 
   const soId = norm.split(" ").length === 1 ? norm.match(/^#?(\d{1,9})$/) : null;
-  if (soId) return { termo: "", idVenda: Number(soId[1]) };
+  if (soId) {
+    // Parse estrito: só dígitos (a regex já garante), inteiro seguro e positivo.
+    const id = Number(soId[1]);
+    if (Number.isSafeInteger(id) && id > 0) return { termo: "", idVenda: id };
+  }
 
   let resto = ` ${norm} `;
 
