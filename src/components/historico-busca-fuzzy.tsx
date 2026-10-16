@@ -46,13 +46,13 @@ export function HistoricoBuscaFuzzy({ defaultValue = "" }: Props) {
   };
 
   return (
-    <div className="relative w-full max-w-md">
+    <div className="relative min-w-0 flex-1 basis-64">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
       <Input
         value={value}
         onChange={handleChange}
-        placeholder="Buscar por cliente, produto ou vendedor..."
-        className="pl-9 pr-8"
+        placeholder="Cliente, produto ou vendedor"
+        className="h-11 rounded-controle pl-9 pr-11"
         aria-label="Busca fuzzy de vendas"
       />
       {value && (
@@ -61,7 +61,7 @@ export function HistoricoBuscaFuzzy({ defaultValue = "" }: Props) {
           variant="ghost"
           size="icon"
           onClick={handleClear}
-          className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+          className="absolute right-0 top-1/2 size-11 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
           aria-label="Limpar busca"
         >
           <X className="h-4 w-4" />
