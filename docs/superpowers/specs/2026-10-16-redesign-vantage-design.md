@@ -104,9 +104,10 @@ tint #E3F3E2, texto 2º #3B413D, muted #5C635E.
 | F2 | Paleta: `ui/command.tsx` (cmdk), `busca-rapida.tsx`, `lib/busca-rapida-ui.ts` (`teclaAbreBusca`, `montarGrupos`), debounce 200ms + AbortController | idem + teste | A, A2, contrato F1 |
 | D2 | Montar o Início, `periodo-segmentado.tsx`, `lib/dashboard-periodo.ts` | `dashboard/page.tsx` + novos | D1, E1 |
 | E2 | Histórico visual: `filtros-ativos.tsx`, `barra-distribuicao.tsx`, `status-assinatura.tsx` | `historico/page.tsx` + novos | E1, E2a |
+| G | CRM Atendimento WhatsApp no padrão de 3 colunas (artboard `Atendimento.dc.html`, aprovado em 16/10): lista com busca + chips por etapa + avatar/prévia/hora/contador; chat com bolhas (cliente neutra à esquerda, BFX verde à direita com tique enviado/entregue/lida), registro interno como pílula tracejada, janela 24h no cabeçalho; rodapé com faixa do automático (Assumir/Retomar), respostas prontas em chips, campo + botão enviar; coluna de contexto (ficha, fidelidade, Organizar atendimento, últimas vendas). Kanban recebe o mesmo visual. Só layout: nenhuma regra de envio, janela, pausa ou kanban muda | `crm/atendimento/{page,kanban,reply,contexto,resumo-cliente}.tsx` | E1 |
 | F3 | Encaixar a busca na casca e no mobile (`aria-keyshortcuts="Meta+K Control+K"`) | `(app)/layout.tsx`, `sidebar-nav.tsx`, `mobile-menu-trigger.tsx` | B, F2 |
 
-Ondas: 1 = A, A2, B2, F1, F4, E2a · 2 = B, C, D1, E1, F2 · 3 = D2, E2, F3 · 4 = revisão em subagentes + Grok, gates completos, build, PR.
+Ondas: 1 = A, A2, B2, F1, F4, E2a, S1 (escopo por vendedorId) · 2 = B, C, D1, E1, F2 · 3 = D2, E2, F3, G · 4 = revisão em subagentes + Grok, gates completos, build, PR.
 
 ## 6. Riscos
 
