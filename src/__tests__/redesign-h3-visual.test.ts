@@ -118,7 +118,10 @@ describe("gráficos do fluxo de caixa", () => {
 
   it("usam o poço, os tokens de hachura/trilha e eixo em mono", () => {
     expect(fonte.includes("bg-poco")).toBe(true);
-    expect(fonte.includes("--hachura-traco")).toBe(true);
+    // Hachura por utilitaria nomeada (`bg-hachura`, em globals.css, lê --hachura-*)
+    // e por classes de preenchimento do <pattern> SVG; a trilha vem do token.
+    expect(fonte.includes("bg-hachura")).toBe(true);
+    expect(fonte.includes("fill-hachura-traco")).toBe(true);
     expect(fonte.includes("--grafico-trilha")).toBe(true);
     expect(fonte.includes("fontFamily")).toBe(true);
   });

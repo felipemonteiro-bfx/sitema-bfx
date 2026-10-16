@@ -51,7 +51,7 @@ export function ReceiptPreview({ template, logoPath }: ReceiptPreviewProps) {
               alt="Company Logo"
               fill
               unoptimized
-              style={{ objectFit: "contain" }}
+              className="object-contain"
             />
           </div>
         )}

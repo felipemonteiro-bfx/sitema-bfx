@@ -55,8 +55,8 @@ export default function ObrigacoesGrafico({ serie, pico, diasPix, vencidos }: Pr
         <figure className="relative m-0 rounded-interno bg-poco px-4 pb-3 pt-10">
           {pico && (
             <span
-              className="absolute top-3 -translate-x-1/2 whitespace-nowrap text-sm font-semibold text-error-text"
-              style={{ left: `${Math.min(88, Math.max(12, posicao(pico.data)))}%` }}
+              className="absolute left-(--x) top-3 -translate-x-1/2 whitespace-nowrap text-sm font-semibold text-error-text"
+              style={{ "--x": `${Math.min(88, Math.max(12, posicao(pico.data)))}%` } as React.CSSProperties}
             >
               pico <span className="valor-sensivel">{formatBRL(pico.valor)}</span> · {ddmm(pico.data)}
             </span>
@@ -108,8 +108,8 @@ export default function ObrigacoesGrafico({ serie, pico, diasPix, vencidos }: Pr
               {diasPix.map((d) => (
                 <span
                   key={d}
-                  className="absolute -translate-x-1/2 whitespace-nowrap text-xs text-muted-foreground"
-                  style={{ left: `${Math.min(94, Math.max(6, posicao(d)))}%` }}
+                  className="absolute left-(--x) -translate-x-1/2 whitespace-nowrap text-xs text-muted-foreground"
+                  style={{ "--x": `${Math.min(94, Math.max(6, posicao(d)))}%` } as React.CSSProperties}
                 >
                   Pix {ddmm(d)}
                 </span>

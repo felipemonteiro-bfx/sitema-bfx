@@ -1110,14 +1110,14 @@ export default function VendaRapidaFormV2({
               <div className="w-full bg-poco h-1.5 rounded-full overflow-hidden bloco-sensivel">
                 <div
                   className={cn(
-                    "h-full transition-all",
+                    "h-full w-(--w) transition-all",
                     cardLimite.tom === "limite"
                       ? "bg-error"
                       : cardLimite.tom === "alerta" || cardLimite.tom === "excede"
                         ? "bg-warning"
                         : "bg-success"
                   )}
-                  style={{ width: `${cardLimite.pctBarra}%` }}
+                  style={{ "--w": `${cardLimite.pctBarra}%` } as React.CSSProperties}
                 />
               </div>
             )}

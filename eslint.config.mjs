@@ -92,7 +92,7 @@ const shadcnRules = (severidade = {}) => ({
   "shadcn/no-unknown-classes": [severidade.unknown ?? "error", shadcnPolicy.noUnknownClasses],
   "shadcn/no-raw-colors": [severidade.raw ?? "error", shadcnPolicy.noRawColors],
   "shadcn/no-arbitrary-values": [severidade.arbitrary ?? "warn", shadcnPolicy.noArbitraryValues],
-  "shadcn/no-inline-styles": [severidade.inline ?? "warn", shadcnPolicy.noInlineStyles],
+  "shadcn/no-inline-styles": [severidade.inline ?? "error", shadcnPolicy.noInlineStyles],
   "shadcn/require-static-classes": [severidade.static ?? "warn", shadcnPolicy.requireStaticClasses],
   "shadcn/no-restyle": [severidade.restyle ?? "warn", shadcnPolicy.noRestyle],
 });

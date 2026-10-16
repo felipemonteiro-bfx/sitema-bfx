@@ -40,20 +40,20 @@ export function LoginPainelMarca() {
 
         <div className="max-w-lg rounded-painel bg-poco p-5">
           {/* Grade de pontos ao fundo; as colunas crescem de baixo para cima. */}
-          <div className="flex h-36 items-end gap-3.5 bg-[radial-gradient(var(--hachura-fundo)_1px,transparent_1px)] bg-[length:14px_14px]">
+          <div className="flex h-36 items-end gap-3.5 bg-grade-pontos-fina">
             {BARRAS.map(([topo, base], i) => (
               <div
                 key={i}
-                className="flex flex-1 flex-col gap-[3px]"
+                className="flex flex-1 flex-col gap-0.75"
                 style={{ "--i": i } as CSSProperties}
               >
                 <span
-                  className="anim-barra block rounded bg-primary"
-                  style={{ height: topo }}
+                  className="anim-barra block h-(--h) rounded bg-primary"
+                  style={{ "--h": topo } as CSSProperties}
                 />
                 <span
-                  className="anim-barra block rounded bg-[repeating-linear-gradient(135deg,var(--hachura-traco)_0_2px,var(--hachura-fundo)_2px_6px)]"
-                  style={{ height: base }}
+                  className="anim-barra block h-(--h) rounded bg-hachura"
+                  style={{ "--h": base } as CSSProperties}
                 />
               </div>
             ))}

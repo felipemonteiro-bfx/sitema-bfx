@@ -122,7 +122,7 @@ export function SkeletonGrafico() {
   return (
     <div className="flex h-48 items-end gap-2 pt-4">
       {alturas.map((h, i) => (
-        <Skeleton key={i} className="flex-1 rounded-b-none" style={{ height: `${h}%` }} />
+        <Skeleton key={i} className="h-(--h) flex-1 rounded-b-none" style={{ "--h": `${h}%` } as React.CSSProperties} />
       ))}
     </div>
   );

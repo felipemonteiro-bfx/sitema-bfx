@@ -127,8 +127,7 @@ export default function AssinaturaPage() {
       <div className="flex-1 min-h-0 overflow-hidden">
         <iframe
           src={`/api/assinatura/${token}/recibo`}
-          className="w-full h-full"
-          style={{ border: 'none', display: 'block' }}
+          className="block h-full w-full border-0"
           title="Recibo de Autorização"
         />
       </div>
@@ -136,8 +135,7 @@ export default function AssinaturaPage() {
       {/* Barra inferior — altura fixa, sempre visível. Superfície do tema (painel);
           só o quadro da assinatura é branco fixo, porque a tinta é sempre preta. */}
       <div
-        className="shrink-0 border-t border-painel-borda bg-card px-4 pt-3"
-        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+        className="shrink-0 border-t border-painel-borda bg-card px-4 pt-3 pb-area-segura"
       >
         {/* Área de assinatura */}
         <Button
@@ -208,8 +206,7 @@ export default function AssinaturaPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex flex-col bg-card">
           <div
-            className="flex shrink-0 items-center justify-between border-b border-painel-borda bg-card px-4"
-            style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top, 0px))', paddingBottom: '0.75rem' }}
+            className="flex shrink-0 items-center justify-between border-b border-painel-borda bg-card px-4 py-area-segura-topo"
           >
             <h2 className="font-semibold text-sm">Assine com o dedo</h2>
             <Button
@@ -224,7 +221,7 @@ export default function AssinaturaPage() {
             </Button>
           </div>
 
-          <div className="flex-1 overflow-hidden bg-white" /* quadro branco: tinta preta */ style={{ touchAction: 'none' }}>
+          <div className="flex-1 touch-none overflow-hidden bg-white" /* quadro branco: tinta preta */>
             <SignatureCanvas
               ref={sigCanvas}
               penColor="black"
@@ -237,8 +234,7 @@ export default function AssinaturaPage() {
           </div>
 
           <div
-            className="flex shrink-0 gap-3 border-t border-painel-borda bg-card px-4 pt-3"
-            style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+            className="flex shrink-0 gap-3 border-t border-painel-borda bg-card px-4 pt-3 pb-area-segura"
           >
             <Button
               type="button"

@@ -66,12 +66,12 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
                   className="flex h-2.5 overflow-hidden rounded-full bg-muted"
                 >
                   <span
-                    className="bg-muted-foreground"
-                    style={{ width: `${larguraBarra(barraLimite.comprometido, barraLimite.teto)}%` }}
+                    className="w-(--w) bg-muted-foreground"
+                    style={{ "--w": `${larguraBarra(barraLimite.comprometido, barraLimite.teto)}%` } as React.CSSProperties}
                   />
                   <span
-                    className={limite.depois < 0 ? "bg-error" : "bg-success"}
-                    style={{ width: `${larguraBarra(valorParcela, barraLimite.teto)}%` }}
+                    className={limite.depois < 0 ? "w-(--w) bg-error" : "w-(--w) bg-success"}
+                    style={{ "--w": `${larguraBarra(valorParcela, barraLimite.teto)}%` } as React.CSSProperties}
                   />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">

@@ -151,8 +151,8 @@ export function IntelligenceChatComposer({
               <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-destructive" />
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-destructive/60 transition-all duration-1000"
-                  style={{ width: `${Math.min((recordingSeconds / 120) * 100, 100)}%` }}
+                  className="h-full w-(--w) rounded-full bg-destructive/60 transition-all duration-1000"
+                  style={{ "--w": `${Math.min((recordingSeconds / 120) * 100, 100)}%` } as React.CSSProperties}
                 />
               </div>
               <span className="shrink-0 font-mono text-xs tabular-nums text-destructive">

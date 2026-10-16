@@ -49,8 +49,6 @@ function parseDateEnd(dateStr: string) {
   return endDate;
 }
 
-/** Atraso escalonado da entrada (`--i` do `.anim-entrada`). */
-const entrada = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
 export default async function Page({ searchParams }: { searchParams: Promise<Search> }) {
   const ok = await requireAdmin();
@@ -215,7 +213,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       />
 
       {avisos.length > 0 && (
-        <Card className="anim-entrada p-2 pt-5" style={entrada(0)}>
+        <Card className="anim-entrada p-2 pt-5" style={{ "--i": 0 } as React.CSSProperties}>
           <CardHeader className="p-0 px-4 pb-4">
             <CardTitle className="flex items-center gap-2 font-sans text-lg font-semibold leading-normal tracking-normal">
               <Megaphone className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -292,12 +290,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             />
           </section>
 
-          <div className="anim-entrada" style={entrada(4)}>
+          <div className="anim-entrada" style={{ "--i": 4 } as React.CSSProperties}>
             <EvolucaoMensal meses={evoMeses} />
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,24rem),1fr))] gap-4">
-            <Card className="anim-entrada p-2 pt-5" style={entrada(5)}>
+            <Card className="anim-entrada p-2 pt-5" style={{ "--i": 5 } as React.CSSProperties}>
               <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
                 <CardTitle className="font-sans text-lg font-semibold leading-normal tracking-normal">Raio-X da equipe</CardTitle>
                 <span className="text-sm text-muted-foreground">
@@ -341,8 +339,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               className="bloco-sensivel hidden h-1.5 min-w-12 flex-1 overflow-hidden rounded-sm bg-grafico-trilha sm:block"
                             >
                               <span
-                                className="block h-full rounded-sm bg-primary"
-                                style={{ width: `${Math.min(100, Math.max(0, r.margem))}%` }}
+                                className="block h-full w-(--w) rounded-sm bg-primary"
+                                style={{ "--w": `${Math.min(100, Math.max(0, r.margem))}%` } as React.CSSProperties}
                               />
                             </span>
                             <span
@@ -359,7 +357,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </CardContent>
             </Card>
 
-            <div className="anim-entrada flex" style={entrada(6)}>
+            <div className="anim-entrada flex" style={{ "--i": 6 } as React.CSSProperties}>
               <TopProdutos produtos={topProd} className="w-full" />
             </div>
           </div>
@@ -367,7 +365,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
           {/* Os dois cobrem os mesmos 6 meses, na mesma ordem: junta o faturamento de cada mês
               ao número de clientes que o gerou. Com filtro de vendedores a série de clientes não
               é filtrada, então o faturamento sai para os dois lados não divergirem. */}
-          <div className="anim-entrada" style={entrada(7)}>
+          <div className="anim-entrada" style={{ "--i": 7 } as React.CSSProperties}>
             <ClientesMesAMes
               meses={serieClientes.map((m, i) => ({
                 ...m,

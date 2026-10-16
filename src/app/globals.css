@@ -1238,3 +1238,46 @@
     pointer-events: none;
   }
 }
+
+/* Respiro de area segura (notch / barra de gestos) das barras fixas da assinatura. */
+@utility pb-area-segura {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+@utility py-area-segura-topo {
+  padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  padding-bottom: 0.75rem;
+}
+
+/* ========================================
+   FUNDOS DE GRAFICO (utilitarias nomeadas)
+   ========================================
+   Hachura, trilha e grade de pontos dos graficos, por token. Antes eram strings
+   `repeating-linear-gradient(...)` repetidas em 6 arquivos (style inline ou classe
+   arbitraria); agora cada uma tem um nome e muda num lugar so. */
+@utility bg-hachura {
+  background-image: repeating-linear-gradient(135deg, var(--hachura-traco) 0 2px, var(--hachura-fundo) 2px 6px);
+}
+@utility bg-hachura-fina {
+  background-image: repeating-linear-gradient(135deg, var(--muted-foreground) 0 2px, var(--poco) 2px 5px);
+}
+@utility bg-hachura-trilha {
+  background-image: repeating-linear-gradient(135deg, var(--grafico-inativo) 0 2px, transparent 2px 5px);
+}
+@utility bg-grade-pontos {
+  background-image: radial-gradient(var(--grafico-trilha) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: 0 6px;
+}
+@utility bg-grade-pontos-fina {
+  background-image: radial-gradient(var(--hachura-fundo) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+/* Fio da cor do poco entre o custo (hachura) e o topo verde da coluna. */
+@utility fio-poco {
+  box-shadow: 0 2px 0 0 var(--poco);
+}
+
+/* Atraso por item vindo de `--atraso` (ms), p.ex. linhas de tabela que entram em sequencia. */
+@utility anim-atraso {
+  animation-delay: var(--atraso, 0ms);
+}

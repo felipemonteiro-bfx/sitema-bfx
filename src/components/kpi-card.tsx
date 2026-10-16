@@ -79,8 +79,8 @@ export function KpiCard({ rotulo, valor, rodape, serie, variacao, ordem = 0, val
               return (
                 <span
                   key={i}
-                  className={cn("anim-barra block w-1.5 rounded-sm", ultima ? "bg-primary" : "bg-grafico-inativo")}
-                  style={{ height: `${h}%`, "--i": i } as React.CSSProperties}
+                  className={cn("anim-barra block h-(--h) w-1.5 rounded-sm", ultima ? "bg-primary" : "bg-grafico-inativo")}
+                  style={{ "--h": `${h}%`, "--i": i } as React.CSSProperties}
                 />
               );
             })}

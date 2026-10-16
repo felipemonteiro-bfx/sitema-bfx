@@ -7,8 +7,6 @@ import { EmptyStateInline } from "@/components/ui/empty-state";
 export type ProdutoTop = { label: string; value: number };
 
 // Hachura da trilha de cada barra: tokens, igual à do gráfico de evolução.
-const TRILHA = "repeating-linear-gradient(135deg, var(--grafico-inativo) 0 2px, transparent 2px 5px)";
-
 /** Top produtos por unidades vendidas no período: poço com uma barra por produto. */
 export function TopProdutos({ produtos, className }: { produtos: ProdutoTop[]; className?: string }) {
   const lista = [...produtos].sort((a, b) => b.value - a.value);
@@ -39,10 +37,10 @@ export function TopProdutos({ produtos, className }: { produtos: ProdutoTop[]; c
                   {p.label}
                 </span>
                 {/* Valor aproximado pela barra: o número exato está ao lado, em mono. */}
-                <span aria-hidden="true" className="bloco-sensivel block h-2 overflow-hidden rounded-sm" style={{ background: TRILHA }}>
+                <span aria-hidden="true" className="bloco-sensivel block h-2 overflow-hidden rounded-sm bg-hachura-trilha">
                   <span
-                    className={`block h-full rounded-sm ${i === 0 ? "bg-primary" : "bg-grafico-neutro"}`}
-                    style={{ width: `${maior > 0 ? (p.value / maior) * 100 : 0}%` }}
+                    className={`block h-full w-(--w) rounded-sm ${i === 0 ? "bg-primary" : "bg-grafico-neutro"}`}
+                    style={{ "--w": `${maior > 0 ? (p.value / maior) * 100 : 0}%` } as React.CSSProperties}
                   />
                 </span>
                 <span className="text-right font-mono text-texto-secundario">{p.value} un.</span>

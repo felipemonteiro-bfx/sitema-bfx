@@ -16,8 +16,6 @@ export type MesClientes = {
 };
 
 // Hachura dos recorrentes: tokens, a mesma do gráfico de evolução do Início.
-const HACHURA = "repeating-linear-gradient(135deg, var(--hachura-traco) 0 2px, var(--hachura-fundo) 2px 6px)";
-
 function Legenda() {
   return (
     <div className="flex gap-5 text-sm text-texto-secundario">
@@ -26,7 +24,7 @@ function Legenda() {
         Novos
       </span>
       <span className="flex items-center gap-2">
-        <span className="size-3 rounded-sm" style={{ background: HACHURA }} aria-hidden="true" />
+        <span className="size-3 rounded-sm bg-hachura" aria-hidden="true" />
         Recorrentes
       </span>
     </div>
@@ -67,15 +65,15 @@ export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
             {meses.map((m, i) => (
               <div key={m.mesLongo} className="flex min-w-0 flex-1 flex-col items-center justify-end">
                 <span className="mb-1 font-mono text-sm font-medium">{m.total}</span>
-                <div className="flex w-[64%] max-w-14 flex-col-reverse" style={{ height: `${(m.total / teto) * 100}%` }}>
+                <div className="flex h-(--h) w-[64%] max-w-14 flex-col-reverse" style={{ "--h": `${(m.total / teto) * 100}%` } as React.CSSProperties}>
                   <span
-                    className="anim-barra block rounded-sm"
-                    style={{ height: `${m.total > 0 ? (m.recorrentes / m.total) * 100 : 0}%`, background: HACHURA, "--i": i } as React.CSSProperties}
+                    className="anim-barra block h-(--h) rounded-sm bg-hachura"
+                    style={{ "--h": `${m.total > 0 ? (m.recorrentes / m.total) * 100 : 0}%`, "--i": i } as React.CSSProperties}
                   />
                   {m.novos > 0 && (
                     <span
-                      className="anim-barra block min-h-1 rounded-sm bg-primary"
-                      style={{ height: `${(m.novos / m.total) * 100}%`, boxShadow: "0 2px 0 0 var(--poco)", "--i": i } as React.CSSProperties}
+                      className="anim-barra fio-poco block h-(--h) min-h-1 rounded-sm bg-primary"
+                      style={{ "--h": `${(m.novos / m.total) * 100}%`, "--i": i } as React.CSSProperties}
                     />
                   )}
                 </div>

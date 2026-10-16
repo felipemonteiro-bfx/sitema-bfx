@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { EvolucaoMensal } from "@/components/evolucao-mensal";
@@ -47,9 +48,12 @@ describe("EvolucaoMensal (SSR)", () => {
     expect(html).toContain("Margem");
     expect(html).toContain("50 mil");
     expect(html).toContain("font-mono");
-    expect(html).toContain("--grafico-trilha");
-    expect(html).toContain("--hachura-traco");
-    expect(html).toContain("--hachura-fundo");
+    // O desenho vem de utilitarias nomeadas (globals.css), que leem os tokens.
+    expect(html).toContain("bg-grade-pontos");
+    expect(html).toContain("bg-hachura");
+    const css = readFileSync("src/app/globals.css", "utf8");
+    expect(css).toMatch(/@utility bg-grade-pontos \{[^}]*--grafico-trilha/);
+    expect(css).toMatch(/@utility bg-hachura \{[^}]*--hachura-traco[^}]*--hachura-fundo/);
   });
 
   it("margem positiva tem topo verde (bg-primary) e as barras animam por --i", () => {

@@ -130,8 +130,7 @@ export function AssinaturaFormClient({ token, clienteNome }: Props) {
             ref={canvasRef}
             width={450}
             height={120}
-            className="w-full max-w-[450px] cursor-crosshair touch-none rounded border border-border bg-white"
-            style={{ maxHeight: 120 }}
+            className="w-full max-w-[450px] max-h-30 cursor-crosshair touch-none rounded border border-border bg-white"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}
