@@ -46,6 +46,10 @@ const badgeVariants = cva(
           "border-transparent bg-error text-error-foreground hover:bg-error/90",
         infoSolid:
           "border-transparent bg-info text-info-foreground hover:bg-info/90",
+        // Selo neutro do Vantage (sem estoque, a vencer, não emitido): o `secondary`
+        // do tema claro é escuro demais para um estado sem urgência.
+        neutro:
+          "border-transparent bg-controle-ativo text-texto-secundario",
         ghost:
           "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
       },

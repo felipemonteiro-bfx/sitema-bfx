@@ -26,3 +26,12 @@ Artboard de referência: `AtendimentoAtalhos.dc.html` (abas Estoque, Parcelas, B
 ## Fora de escopo
 
 UI, envio automático (o atalho só preenche o campo), vencimento de boleto, preço e quantidade em texto, `meu_limite`, mudança do schema.
+
+## Interface (tarefa A3, 16/10)
+
+- O raio do composer abre o painel de atalhos (Popover ancorado à barra do composer; abaixo de 640px vira Sheet de baixo). `aria-expanded`, Esc fecha, foco preso e devolvido ao raio (ou ao campo, se inseriu). Desabilitado com a janela encerrada. As respostas prontas seguem nos chips e no "/" (D2).
+- Abas Estoque (busca com debounce de 250 ms, mínimo 2 caracteres, estados carregando/vazio/erro, selo "N un."/"Sem estoque", "aproximado"), Parcelas (cliente, três cards, situação, resumo) e Boletos ("Inserir link" só com link https; senão selo "sem link").
+- Inserir só preenche o campo. Campo vazio: preenche direto. Com texto: AlertDialog "Substituir o texto atual?" (regra pura `decidirInsercao`). Nunca envia.
+- Sem preço na aba Estoque. Valores em dinheiro com `valor-sensivel`.
+- Diferenças em relação ao artboard: a prévia mostra o item em foco/hover (o artboard mostrava o último inserido, que aqui fecha o painel); a faixa de abas usa a altura padrão do `TabsList`; "Vencidas" é a contagem de parcelas vencidas.
+- Novos: variante `tint` do Button, variante `neutro` do Badge e `largura="ancora"` do PopoverContent.

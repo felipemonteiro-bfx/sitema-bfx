@@ -1,13 +1,17 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, UserRound, Bot, RotateCw, CircleHelp, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { responderConversa, controlarAutomatico } from './actions';
 import { edicaoPendente } from './refresh-regras';
+import { PainelAtalhos } from './atalhos-painel';
+import { decidirInsercao } from './atalhos-regras';
 import { PRONTAS, acaoDaTecla, filtrarProntas, termoDeBarra, type Pronta } from './composer-regras';
 
 /** Contador de caracteres só aparece perto do limite de 4096. */
@@ -15,6 +19,19 @@ const LIMITE_AVISO = 3500;
 
 /** Destaque sutil do botão do estado atual (borda e texto verdes; nunca preenchido). Aplicado no invólucro: o Button não aceita classes. */
 const DESTAQUE_ATIVO = '[&>button]:border-marca-tint-texto/40 [&>button]:text-marca-tint-texto';
+
+/** Raio ativo (painel aberto): tint de marca como no artboard. Aplicado no invólucro: o Button não aceita classes. */
+const RAIO_ABERTO = '[&>button]:border [&>button]:border-marca-tint-texto/40 [&>button]:bg-marca-tint [&>button]:text-marca-tint-texto';
+
+/** Celular: o painel vira Sheet de baixo (abaixo de 640px). No servidor assume desktop. */
+const MQ_CELULAR = '(max-width: 639px)';
+function useCelular() {
+  return useSyncExternalStore(
+    (cb) => { const m = window.matchMedia(MQ_CELULAR); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb); },
+    () => window.matchMedia(MQ_CELULAR).matches,
+    () => false,
+  );
+}
 
 /** Lista de respostas prontas aberta pelo "/". Escolher SÓ preenche o campo; nunca envia. */
 function ListaProntas({ itens, indice, onEscolher }: { itens: readonly Pronta[]; indice: number; onEscolher: (p: Pronta) => void }) {
@@ -32,6 +49,8 @@ function ListaProntas({ itens, indice, onEscolher }: { itens: readonly Pronta[];
 export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta:boolean;estadoAutomatico:string}) {
  const router=useRouter();const [texto,setTexto]=useState('');const [busy,setBusy]=useState(false);const [notice,setNotice]=useState('');const sending=useRef(false);const campo=useRef<HTMLTextAreaElement>(null);
  const [indice,setIndice]=useState(0);const [barraFechada,setBarraFechada]=useState(false);
+ // Atalhos rápidos: painel aberto, texto aguardando confirmação de substituição e se o fechamento veio de uma inserção.
+ const [atalhosAberto,setAtalhosAberto]=useState(false);const [pendente,setPendente]=useState<string|null>(null);const inseriu=useRef(false);const raio=useRef<HTMLButtonElement>(null);const celular=useCelular();
  useEffect(()=>{const timer=setInterval(()=>{if(!sending.current&&!edicaoPendente(document))router.refresh();},30000);return()=>clearInterval(timer);},[router]);
  async function controle(retomar:boolean){if(sending.current)return;sending.current=true;setBusy(true);try{const r=await controlarAutomatico(telefone,retomar);setNotice(r.message);router.refresh();}catch{setNotice('Não foi possível confirmar a mudança. Atualize antes de repetir.');}finally{sending.current=false;setBusy(false);}}
  // Envio único (botão e Enter): mesmas guardas de sempre — janela aberta, texto não vazio e anti-duplo-envio.
@@ -41,6 +60,11 @@ export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta
  const filtradasBarra=termo===null?[]:filtrarProntas(PRONTAS,termo);
  const barraAberta=termo!==null&&!barraFechada&&filtradasBarra.length>0&&aberta;
  function escolher(p:Pronta){setTexto(p.texto);setIndice(0);setBarraFechada(false);campo.current?.focus();}
+ // Inserir SÓ preenche o campo (nunca envia). Com texto no campo, pergunta antes de substituir.
+ function inserir(novo:string){if(decidirInsercao(texto,novo)==='confirmar'){setPendente(novo);return;}aplicarInsercao(novo);}
+ function aplicarInsercao(novo:string){inseriu.current=true;setTexto(novo);setIndice(0);setBarraFechada(false);setPendente(null);setAtalhosAberto(false);}
+ // Ao fechar: foco no campo se inseriu; senão volta ao raio.
+ function aoFecharFoco(e:Event){e.preventDefault();(inseriu.current?campo.current:raio.current)?.focus();inseriu.current=false;}
  function aoDigitar(v:string){setTexto(v);setIndice(0);setBarraFechada(false);}
  function aoTeclar(e:React.KeyboardEvent<HTMLTextAreaElement>){
   if(barraAberta){
@@ -76,9 +100,20 @@ export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta
   <div role="group" aria-label="Respostas prontas" className="flex gap-1.5 overflow-x-auto px-3 pb-0.5 pt-2.5 [&>button]:shrink-0 [&>button]:rounded-full [&>button]:font-normal [&>button]:text-texto-secundario">
    {PRONTAS.map(p=><Button key={p.titulo} type="button" variant="outline" size="sm" title={p.texto} disabled={!aberta||busy} onClick={()=>escolher(p)}>{p.titulo}</Button>)}
   </div>
-  {/* Barra de escrita: atalhos rápidos (em breve), campo em pílula e enviar redondo. */}
-  <div className="relative flex items-end gap-2 px-3 py-2.5">
-   <span className="shrink-0 [&>button]:rounded-full"><Button type="button" variant="ghost" size="icon" aria-label="Atalhos rápidos (em breve)" title="Atalhos rápidos (em breve)" disabled><Zap className="size-5 text-muted-foreground" aria-hidden="true"/></Button></span>
+  {/* Barra de escrita: raio dos atalhos rápidos, campo em pílula e enviar redondo. */}
+  <Popover open={atalhosAberto&&!celular} onOpenChange={setAtalhosAberto} modal>
+  <PopoverAnchor asChild><div className="relative flex items-end gap-2 px-3 py-2.5">
+    <span className={`shrink-0 [&>button]:rounded-full ${atalhosAberto?RAIO_ABERTO:''}`}>
+     <PopoverTrigger asChild><Button ref={raio} type="button" variant="ghost" size="icon" aria-label="Atalhos rápidos" title="Atalhos rápidos" aria-expanded={atalhosAberto} disabled={!aberta||busy}><Zap className={`size-5 ${atalhosAberto?'':'text-muted-foreground'}`} aria-hidden="true"/></Button></PopoverTrigger>
+    </span>
+    <PopoverContent side="top" align="center" sideOffset={-6} aria-label="Atalhos rápidos" onCloseAutoFocus={aoFecharFoco} largura="ancora"><PainelAtalhos telefone={telefone} onInserir={inserir}/></PopoverContent>
+   <Sheet open={atalhosAberto&&celular} onOpenChange={setAtalhosAberto}>
+    <SheetContent side="bottom" onCloseAutoFocus={aoFecharFoco}><div className="sr-only"><SheetHeader><SheetTitle>Atalhos rápidos</SheetTitle><SheetDescription>Estoque, parcelas e boletos. Inserir só preenche o campo de mensagem.</SheetDescription></SheetHeader></div><div className="max-h-96 overflow-y-auto"><PainelAtalhos telefone={telefone} onInserir={inserir}/></div></SheetContent>
+   </Sheet>
+   <AlertDialog open={pendente!==null} onOpenChange={o=>{if(!o)setPendente(null);}}>
+    <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Substituir o texto atual?</AlertDialogTitle><AlertDialogDescription>O campo já tem uma mensagem. Ao substituir, o que você escreveu é trocado pelo texto do atalho. Nada é enviado.</AlertDialogDescription></AlertDialogHeader>
+     <AlertDialogFooter><AlertDialogCancel>Manter o meu texto</AlertDialogCancel><AlertDialogAction onClick={()=>{if(pendente!==null)aplicarInsercao(pendente);}}>Substituir</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+   </AlertDialog>
    {barraAberta&&<div className="absolute bottom-full left-3 z-20 mb-1 w-96 max-w-full rounded-painel border border-painel-borda bg-popover p-2 shadow-md"><ListaProntas itens={filtradasBarra} indice={indice} onEscolher={escolher}/></div>}
    {/* Campo como no artboard (borda e fundo do Textarea); o invólucro só ajusta a altura mínima e tira o puxador de redimensionar. */}
    <div className="min-w-0 flex-1 [&_textarea]:max-h-36 [&_textarea]:min-h-12 [&_textarea]:resize-none">
@@ -86,7 +121,8 @@ export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta
     <Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" rows={1} autoResize placeholder="Escreva uma mensagem" maxLength={4096} value={texto} onChange={e=>aoDigitar(e.target.value)} onKeyDown={aoTeclar} disabled={!aberta||busy}/>
    </div>
    <span className="shrink-0 [&>button]:size-12 [&>button]:rounded-full"><Button type="submit" size="icon" aria-label="Enviar mensagem" aria-busy={busy} disabled={!aberta||busy||!texto.trim()}><Send className="size-5" aria-hidden="true"/></Button></span>
-  </div>
+  </div></PopoverAnchor>
+  </Popover>
   {texto.length>LIMITE_AVISO&&<p className="-mt-1.5 px-5 pb-2 text-right font-mono text-xs text-muted-foreground">{texto.length}/4096</p>}
   {notice&&<p role="status" className="mx-3 mb-3 rounded-controle border border-divisoria bg-controle p-3 text-sm font-medium">{notice}</p>}
  </form>;

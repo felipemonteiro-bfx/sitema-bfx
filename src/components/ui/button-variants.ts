@@ -53,6 +53,10 @@ export const buttonVariants = cva(
           "border border-input bg-controle text-foreground hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-[0.98] transition-all",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98]",
+        // Ação de marca em tint (atalhos do atendimento): borda e texto `marca-tint-texto`
+        // (5.60:1 sobre o tint), preenchimento OPACO. Nunca preenchido de verde cheio.
+        tint:
+          "border border-marca-tint-texto/30 bg-marca-tint text-marca-tint-texto hover:brightness-95",
         ghost: "hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
         link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
       },

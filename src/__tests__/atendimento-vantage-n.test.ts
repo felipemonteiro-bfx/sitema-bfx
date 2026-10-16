@@ -46,9 +46,12 @@ describe('N1: composer com chips de respostas prontas',()=>{
   for(const t of ['Boas-vindas','Pedir modelo','Pedido / entrega','Conferir pagamento','Atendimento humano','Encerrar'])expect(html).toContain(t);
   expect(html).toContain('overflow-x-auto');
  });
- it('o raio fica desabilitado como atalhos rápidos (em breve) e não abre respostas prontas',()=>{
-  const raio=html.split('<button').find(b=>b.includes('Atalhos rápidos (em breve)'))!;
-  expect(raio).toContain('disabled');
+ // Atualizado na tarefa A3: o raio deixou de ser um "(em breve)" desabilitado e passou a abrir o painel de
+ // atalhos (estoque, parcelas, boletos). O que continua valendo: ele NÃO abre as respostas prontas (chips e "/", D2).
+ it('o raio abre os atalhos rápidos (não as respostas prontas)',()=>{
+  const raio=html.split('<button').find(b=>b.includes('aria-label="Atalhos rápidos"'))!;
+  expect(raio).toContain('aria-expanded="false"');
+  expect(raio.split('</button>')[0]).not.toContain('disabled=""');
   expect(html).not.toMatch(/<button[^>]*aria-label="Respostas prontas"/);
  });
 });

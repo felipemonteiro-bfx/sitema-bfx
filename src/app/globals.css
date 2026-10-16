@@ -1238,3 +1238,9 @@
     pointer-events: none;
   }
 }
+
+/* Popover com a largura do elemento ancorado (painel de atalhos do atendimento sobre a barra do composer). */
+@utility popover-ancora {
+  width: var(--radix-popover-trigger-width);
+  max-width: calc(100vw - 2rem);
+}
