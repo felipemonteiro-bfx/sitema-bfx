@@ -4,7 +4,7 @@ import { formatBRL, formatDateBR } from "@/lib/utils";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { fontePdfSegura } from "@/lib/pdf-texto";
 import { linhaCsv } from "@/lib/csv";
-import { FILTRO_VENDA_VALIDA } from "@/lib/venda-utils";
+import { whereParcelasInadimplentes } from "@/lib/venda-utils";
 
 export async function GET(req: Request) {
   // Só admin (a tela /relatorios é só admin): nomes, empresas e valores em atraso.
@@ -23,13 +23,8 @@ export async function GET(req: Request) {
   const end = to ? new Date(to + "T23:59:59") : hoje;
 
   const parcelas = await prisma.parcelaVencimento.findMany({
-    where: {
-      paga: false,
-      // Parcela antecipada já foi paga pela Prudent: não é atraso do cliente.
-      antecipada: false,
-      dataVencimento: { ...(start ? { gte: start } : {}), lte: end },
-      venda: FILTRO_VENDA_VALIDA,
-    },
+    // Critério compartilhado com o contador da sidebar (lib/alertas-shell).
+    where: whereParcelasInadimplentes(end, start),
     include: {
       venda: {
         include: { cliente: { select: { nome: true, empresa: true } } },

@@ -5,6 +5,20 @@
 export const FILTRO_VENDA_VALIDA = { status: { notIn: ["cancelada", "estornada"] } };
 
 /**
+ * Critério único de parcela inadimplente (relatório de inadimplência e contador da sidebar):
+ * não paga, não antecipada (a Prudent já pagou, não é atraso do cliente), venda válida e
+ * vencimento até `ate`. `desde` é um piso opcional; sem ele, atraso de qualquer época conta.
+ */
+export function whereParcelasInadimplentes(ate: Date, desde?: Date | null) {
+  return {
+    paga: false,
+    antecipada: false,
+    dataVencimento: { ...(desde ? { gte: desde } : {}), lte: ate },
+    venda: FILTRO_VENDA_VALIDA,
+  };
+}
+
+/**
  * Calcula o valor total de uma venda, considerando itens (múltiplos produtos) ou campos legados.
  */
 export function valorTotalVenda(v: {
