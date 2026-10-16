@@ -18,12 +18,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { checkboxComoNumero } from "@/lib/form-values";
 import { PageHeader } from "@/components/page-header";
+import { SettingsSaveButton } from "@/components/settings-save-button";
 import { WebhookAsaasCard } from "@/components/webhook-asaas-card";
 import { formatarUltimoAviso, mascararToken, statusWebhookAsaas, urlWebhookAsaas } from "@/lib/webhook-asaas-token";
 import { headers } from "next/headers";
 import { normalizarEmailFinanceiro } from "@/lib/alertas-obrigacoes";
 
-type Search = { tab?: string; error?: string };
+type Search = { tab?: string; saved?: string; error?: string };
 
 /**
  * E-mail do financeiro (2026-09-30, Fase 4): recebe os alertas de obrigação da Prudent que pedem
@@ -166,10 +167,9 @@ async function saveWhatsApp(formData: FormData) {
   const metaVerifyToken = String(formData.get("metaWebhookVerifyToken") || "").trim();
   const metaAppSecret = String(formData.get("metaAppSecret") || "").trim();
   if ((metaPhoneId && !/^\d+$/.test(metaPhoneId)) || (metaBusinessId && !/^\d+$/.test(metaBusinessId))) {
-    throw new Error("Os IDs da Meta devem conter somente números. Confira o preenchimento automático do navegador.");
+    redirect("/configuracoes?tab=whatsapp&error=whatsapp_invalid_ids");
   }
   const fallbackEvolution = checkboxComoNumero(formData.get("whatsappFallbackEvolution"));
-  const cfg = await prisma.config.findFirst();
   const data = {
     evolutionApiUrl: url || null,
     evolutionApiKey: key || null,
@@ -196,12 +196,18 @@ async function saveWhatsApp(formData: FormData) {
     ...(metaToken ? { metaWhatsappToken: metaToken } : {}),
     ...(metaAppSecret ? { metaAppSecret } : {}),
   };
-  if (cfg) {
-    await prisma.config.update({ where: { id: cfg.id }, data });
-  } else {
-    await prisma.config.create({ data });
+  try {
+    const cfg = await prisma.config.findFirst();
+    if (cfg) {
+      await prisma.config.update({ where: { id: cfg.id }, data });
+    } else {
+      await prisma.config.create({ data });
+    }
+  } catch {
+    redirect("/configuracoes?tab=whatsapp&error=whatsapp_save_failed");
   }
   revalidarConfig();
+  redirect("/configuracoes?tab=whatsapp&saved=whatsapp");
 }
 
 async function saveUber(formData: FormData) {
@@ -326,6 +332,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         description="Personalize comunicados, recibos e integrações."
         breadcrumbs={[{ label: "Configurações" }]}
       />
+      {sp.tab === "whatsapp" && sp.saved === "whatsapp" && !sp.error && (
+        <div role="status" className="rounded-lg border border-success bg-success-bg p-4 font-medium text-success-text">
+          Configurações do WhatsApp salvas. A chave permanece oculta por segurança. Salvar não comprova a conexão nem ativa os envios por si só.
+        </div>
+      )}
+      {sp.tab === "whatsapp" && (sp.error === "whatsapp_save_failed" || sp.error === "whatsapp_invalid_ids") && (
+        <div role="alert" className="rounded-lg border border-error bg-error-bg p-4 font-medium text-error-text">
+          {sp.error === "whatsapp_invalid_ids" ? "Não foi salvo: os IDs da Meta devem conter somente números. Confira os campos e tente novamente." : "Não foi possível confirmar o salvamento. Confira a conexão e tente novamente."}
+        </div>
+      )}
       <QueryTabs
         defaultTab={sp.tab || "mural"}
         tabs={[
@@ -584,6 +600,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             type="password"
                             placeholder={(cfg as Record<string, unknown>)?.metaWhatsappToken ? "•••••••• (salvo)" : "System User token"}
                           />
+                          {Boolean((cfg as Record<string, unknown>)?.metaWhatsappToken) && <p className="text-xs font-medium text-success-text">Token permanente salvo. Deixe vazio para manter.</p>}
                         </div>
                         <div className="space-y-1">
                           <Label htmlFor="metaWhatsappPhoneNumberId">Meta — Phone Number ID</Label>
@@ -622,6 +639,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             placeholder={(cfg as Record<string, unknown>)?.metaAppSecret ? "•••••••• (salvo; deixe vazio para manter)" : "Chave do aplicativo para validar os eventos recebidos"}
                           />
                           <p className="text-xs text-muted-foreground">A chave salva não é exibida. Informe-a somente nesta tela administrativa.</p>
+                          {Boolean((cfg as Record<string, unknown>)?.metaAppSecret) && <p className="text-sm font-medium text-success-text">Chave secreta salva. Deixe vazio para manter a chave atual.</p>}
                         </div>
                         <div className="space-y-1 sm:col-span-2">
                           <Label htmlFor="metaWebhookVerifyToken">Meta — Verify token do webhook</Label>
@@ -850,7 +868,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       Alternativa: use variáveis de ambiente EVOLUTION_API_URL, EVOLUTION_API_KEY e
                       EVOLUTION_INSTANCE.
                     </p>
-                    <button className={cn(buttonVariants(), "cursor-pointer")}>Salvar</button>
+                    <SettingsSaveButton />
                   </form>
                 </CardContent>
               </Card>
