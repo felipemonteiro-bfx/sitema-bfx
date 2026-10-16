@@ -4,6 +4,7 @@ import { dentroDaJanela24h, marcarEnviada, marcarFalha } from '@/lib/whatsapp-me
 import { variantesLocaisDeTelefone } from '@/lib/telefone-busca';
 import { termosDeProduto, respostaEstoque } from '@/lib/whatsapp-estoque';
 import { inicioDaPausa } from '@/lib/whatsapp-pausa';
+import { consultarRespostaManager } from '@/lib/whatsapp-manager-consultas';
 
 const normalizar=(t:string)=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const humanoOuSaida=(t:string)=>/\b(humano|atendente|vendedor|parar|sair|cancelar mensagens)\b/.test(normalizar(t));
@@ -43,7 +44,9 @@ export async function processarAtendimentoGratuito(telefone:string,texto:string)
   // Resposta humana ou solicitação de atendente suspende o bot, inclusive para visitantes.
   const recentes=await prisma.whatsAppMensagem.findFirst({where:{telefone,criadoEm:{gte:pausa},OR:[{direcao:'out',origem:'manual'},{direcao:'in',OR:[{corpo:{contains:'atendente',mode:'insensitive'}},{corpo:{contains:'humano',mode:'insensitive'}},{corpo:{contains:'vendedor',mode:'insensitive'}},{corpo:{contains:'SAIR',mode:'insensitive'}},{corpo:{contains:'parar',mode:'insensitive'}}]}]},select:{id:true}});
   if(recentes)return;
-  if(termos.length){
+  const contextoManager=await consultarRespostaManager(telefone,texto);
+  if(contextoManager)corpo=contextoManager;
+  if(termos.length&&!contextoManager){
     try{
       const produtos=await prisma.produto.findMany({where:{AND:termos.map(termo=>({OR:[{nome:{contains:termo,mode:'insensitive' as const}},{marca:{contains:termo,mode:'insensitive' as const}},{categoria:{contains:termo,mode:'insensitive' as const}}]}))},select:{nome:true,qtdEstoque:true},orderBy:{qtdEstoque:{sort:'desc',nulls:'last'}},take:6});
       corpo=respostaEstoque(produtos);
