@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type ReciboDownloadLinkProps = {
   vendaId: number;
@@ -73,15 +74,18 @@ export function ReciboDownloadLink({
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={handleClick}
         disabled={loading}
-        className={cn(className)}
+        // O chamador define a aparência de link (tamanho, cor); o Button só
+        // entrega foco, desabilitado e alvo de toque, sem moldura própria.
+        className={cn("h-auto rounded-none p-0 font-normal hover:bg-transparent active:scale-100", className)}
         title={`Baixar recibo em PDF${tipo === "autorizacao" ? " (Autorização)" : ""}`}
       >
         {loading ? "Baixando..." : children ?? label}
-      </button>
+      </Button>
       {error && (
         <span className="text-xs text-destructive" role="alert">
           {error}

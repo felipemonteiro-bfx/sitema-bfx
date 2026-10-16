@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -133,10 +134,12 @@ function VendaCard({
               <span className="font-mono text-xs tabular-nums text-muted-foreground">
                 {formatDateBR(venda.dataVenda)}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground touch-manipulation min-h-[44px] min-w-[44px] -m-2 p-2 justify-end"
+                className="-m-2 justify-end p-2 text-muted-foreground hover:bg-transparent hover:text-foreground touch-manipulation"
                 aria-expanded={expanded}
                 aria-label={expanded ? "Recolher detalhes" : "Ver detalhes"}
               >
@@ -145,7 +148,7 @@ function VendaCard({
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 

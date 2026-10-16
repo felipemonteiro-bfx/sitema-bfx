@@ -965,9 +965,10 @@ export default function VendaRapidaFormV2({
             {clienteSuggestions.length > 0 && (
               <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-60 overflow-y-auto">
                 {clienteSuggestions.map((c) => (
-                  <button
+                  <Button
                     key={c.id}
                     type="button"
+                    variant="ghost"
                     role="option"
                     aria-selected={false}
                     onClick={() => {
@@ -986,7 +987,7 @@ export default function VendaRapidaFormV2({
                       setClienteSuggestions([]);
                       setProdutoParaSugestoes(null);
                     }}
-                    className="w-full px-3 py-2.5 text-left hover:bg-accent transition-colors cursor-pointer text-sm border-b border-border last:border-b-0"
+                    className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-none border-b border-border px-3 py-2.5 text-left font-normal last:border-b-0"
                   >
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{c.nome}</div>
@@ -1006,7 +1007,7 @@ export default function VendaRapidaFormV2({
                         </span>
                       )}
                     </div>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

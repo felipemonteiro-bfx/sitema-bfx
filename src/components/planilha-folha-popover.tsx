@@ -1,5 +1,6 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Download, Loader2, UserSearch } from "lucide-react";
@@ -119,9 +120,9 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         </p>
 
         <div className="mt-3.5 flex flex-col gap-1">
-          <label htmlFor="planilha-folha-competencia" className={rotulo}>
+          <Label htmlFor="planilha-folha-competencia">
             Competência
-          </label>
+          </Label>
           <IntervaloMesesPicker
             id="planilha-folha-competencia"
             inicio={competencia}
@@ -135,9 +136,9 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         </div>
 
         <div className="mt-2.5 flex flex-col gap-1">
-          <label htmlFor="planilha-folha-empresa" className={rotulo}>
+          <Label htmlFor="planilha-folha-empresa">
             Empresa
-          </label>
+          </Label>
           <FormSelect
             id="planilha-folha-empresa"
             name="_planilhaFolhaEmpresa"

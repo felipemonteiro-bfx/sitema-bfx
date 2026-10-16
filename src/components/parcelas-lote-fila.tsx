@@ -5,6 +5,7 @@
 // exclusão, que o card de seleção, o CSV e o lote recebem. Parcela ainda não confirmada pelo RH
 // aparece travada. A tela só mostra: quem decide o que entra é o servidor.
 
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatBRL } from "@/lib/utils";
@@ -65,10 +66,12 @@ export function ParcelasLoteFila({
         const marcada = !travada && vendaSelecionada && !excluidas.includes(p.id as number);
         const inputId = `parcela-lote-${vendaId}-${p.numero}`;
         return (
-          <label
+          <Label
             key={p.id ?? p.numero}
             htmlFor={inputId}
             className={cn(
+              // O Label traz tamanho/peso/cor próprios; o cartão herda os do contexto.
+              "text-base font-normal leading-normal text-foreground",
               "flex min-h-11 flex-col gap-1 rounded-controle px-3.5 py-3 tabular-nums transition-colors",
               marcada
                 ? "border border-primary bg-marca-tint"
@@ -110,7 +113,7 @@ export function ParcelasLoteFila({
                 "fica com a BFX"
               )}
             </span>
-          </label>
+          </Label>
         );
       })}
     </fieldset>

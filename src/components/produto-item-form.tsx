@@ -212,13 +212,14 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
               {showDropdown && produtoSuggestions.length > 0 && (
                 <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-56 overflow-y-auto">
                   {produtoSuggestions.map((p) => (
-                    <button
+                    <Button
                       key={p.id}
                       type="button"
+                      variant="ghost"
                       role="option"
                       aria-selected={false}
                       onClick={() => handleProdutoSelect(p)}
-                      className="w-full px-3 py-2 text-left hover:bg-accent transition-colors cursor-pointer text-sm"
+                      className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-none px-3 py-2 text-left font-normal"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{p.nome}</span>
@@ -228,25 +229,26 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                           {formatBRL(p.valorVenda)}
                         </div>
                       )}
-                    </button>
+                    </Button>
                   ))}
                   {produtoSuggestions.length === 0 && (
                     <div className="px-3 py-2 text-sm text-muted-foreground">
                       Nenhum produto encontrado
                     </div>
                   )}
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => {
                       setProdutoSuggestions([]);
                       setIsSearching(false);
                       setCadastrarOpen(true);
                     }}
-                    className="w-full px-3 py-2 text-left hover:bg-poco transition-colors cursor-pointer text-sm border-t border-border flex items-center gap-2 text-primary font-medium"
+                    className="h-auto w-full justify-start gap-2 whitespace-normal rounded-none border-t border-border px-3 py-2 text-left font-medium text-primary hover:text-primary"
                   >
                     <Plus className="h-3.5 w-3.5 shrink-0" />
                     Cadastrar &ldquo;{produtoQuery}&rdquo;
-                  </button>
+                  </Button>
                 </div>
               )}
               <CadastrarProdutoRapidoDialog

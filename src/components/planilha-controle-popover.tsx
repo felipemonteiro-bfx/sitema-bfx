@@ -1,5 +1,6 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
@@ -123,9 +124,9 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
         </p>
 
         <div className="mt-3.5 flex flex-col gap-1">
-          <label htmlFor="planilha-controle-meses" className={rotulo}>
+          <Label htmlFor="planilha-controle-meses">
             Meses de desconto
-          </label>
+          </Label>
           <IntervaloMesesPicker
             id="planilha-controle-meses"
             inicio={inicio}
@@ -139,9 +140,9 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
         </div>
 
         <div className="mt-2.5 flex flex-col gap-1">
-          <label htmlFor="planilha-controle-empresa" className={rotulo}>
+          <Label htmlFor="planilha-controle-empresa">
             Empresa
-          </label>
+          </Label>
           <FormSelect
             id="planilha-controle-empresa"
             name="_planilhaEmpresa"
@@ -159,9 +160,9 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
             checked={incluirPassados}
             onCheckedChange={(valor) => setIncluirPassados(valor === true)}
           />
-          <label htmlFor="planilha-controle-passados" className="text-sm">
+          <Label htmlFor="planilha-controle-passados" className="text-sm text-foreground">
             Incluir meses que já passaram
-          </label>
+          </Label>
         </div>
 
         <div

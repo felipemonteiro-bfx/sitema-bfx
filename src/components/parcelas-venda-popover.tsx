@@ -1,5 +1,6 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { Fragment, useState, useTransition } from "react";
 import { ChevronDown, CircleHelp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -192,7 +193,7 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
         </div>
         {selecionadas.length > 0 && (
           <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3">
-            <label className="space-y-1 text-xs font-medium text-muted-foreground" htmlFor="data-baixa-popover">
+            <Label className="block space-y-1 text-xs leading-normal" htmlFor="data-baixa-popover">
               Data do pagamento
               <DateInput
                 id="data-baixa-popover"
@@ -202,7 +203,7 @@ export function ParcelasVendaPopover({ parcelas, hoje }: { parcelas: ParcelasDaV
                 className="mt-1 w-40"
                 disabled={emAndamento}
               />
-            </label>
+            </Label>
             <Button type="button" size="sm" loading={emAndamento} onClick={confirmarBaixa}>
               {/* Rótulo inteiro num <span>: o `gap` do Button abriria folga em volta do valor. */}
               <span>

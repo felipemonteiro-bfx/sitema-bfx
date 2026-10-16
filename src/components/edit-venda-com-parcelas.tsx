@@ -1,5 +1,6 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { useState, useCallback } from "react";
 import { EditVendaItens } from "@/components/edit-venda-itens-client";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
@@ -100,8 +101,9 @@ export function EditVendaComParcelas({
       <FormSecaoTitulo>Pagamento e parcelas</FormSecaoTitulo>
 
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
+        <Label htmlFor="edit-parcelas" className="text-xs">Parcelas</Label>
         <Input
+          id="edit-parcelas"
           name="parcelas"
           type="number"
           min={1}

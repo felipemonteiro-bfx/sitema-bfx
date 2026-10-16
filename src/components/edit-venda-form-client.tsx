@@ -301,9 +301,9 @@ export function EditVendaFormClient({
               id="edit-temNota"
               defaultChecked={editVenda.temNota}
             />
-            <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer text-foreground">
+            <Label htmlFor="edit-temNota" className="text-xs cursor-pointer text-foreground">
               Com Nota Fiscal
-            </label>
+            </Label>
           </div>
           <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
@@ -311,9 +311,9 @@ export function EditVendaFormClient({
               id="edit-descontoEmFolha"
               defaultChecked={editVenda.descontoEmFolha ?? false}
             />
-            <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer text-foreground">
+            <Label htmlFor="edit-descontoEmFolha" className="text-xs cursor-pointer text-foreground">
               Desconto em folha
-            </label>
+            </Label>
           </div>
           <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
@@ -321,9 +321,9 @@ export function EditVendaFormClient({
               id="edit-boleto"
               defaultChecked={editVenda.boleto ?? false}
             />
-            <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer text-foreground">
+            <Label htmlFor="edit-boleto" className="text-xs cursor-pointer text-foreground">
               Boleto
-            </label>
+            </Label>
           </div>
           <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opções: desconto em folha ou boleto.</p>
 

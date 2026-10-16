@@ -131,9 +131,11 @@ describe("importacao-client — tela da previa", () => {
 
   it("Entrega e uma lista com em branco, Sim e Nao", () => {
     expect(src.includes('aria-label="Entrega"')).toBe(true);
-    expect(src.includes('<option value="">—</option>')).toBe(true);
-    expect(src.includes('<option value="S">Sim</option>')).toBe(true);
-    expect(src.includes('<option value="N">Não</option>')).toBe(true);
+    // Select da ui (J2): a opção vazia usa o valor-sentinela, traduzido de volta para "".
+    expect(src.includes("<SelectItem value={SEM_VALOR}>—</SelectItem>")).toBe(true);
+    expect(src.includes('<SelectItem value="S">Sim</SelectItem>')).toBe(true);
+    expect(src.includes('<SelectItem value="N">Não</SelectItem>')).toBe(true);
+    expect(src.includes("v === SEM_VALOR ? \"\" : v")).toBe(true);
   });
 
   it("usa a mesma checagem do servidor, mostra o aviso e bloqueia o botao com linha invalida", () => {
