@@ -113,8 +113,8 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
         {telefone
           ?<ConversaChat telefone={telefone} nome={nome(telefone)} aberta={aberta} semResposta={semResposta} estadoAutomatico={estadoAutomatico} fichaHref={fichaHref} novaAba={janela}
               mensagens={historicoExibido.map(m=>({id:m.id,criadoEm:m.criadoEm,corpo:m.corpo,direcao:m.direcao,origem:m.origem,status:m.status}))} agora={agora}/>
-          :<section aria-label="Conversa selecionada" className="order-1 flex min-h-64 items-center justify-center rounded-painel border border-painel-borda bg-card p-6 text-center text-muted-foreground lg:order-none">Aguardando mensagens recebidas pela integração.</section>}
-        {telefone&&<aside aria-label="Contexto do cliente" className={`order-3 flex min-w-0 flex-col gap-3 overflow-y-auto rounded-painel border border-painel-borda bg-card p-3 lg:order-none ${janela?'':'lg:col-span-2 xl:col-span-1'}`}>
+          :<section aria-label="Conversa selecionada" className="order-1 flex min-h-64 items-center justify-center rounded-painel border border-painel-borda bg-card p-6 text-center dark:border-transparent text-muted-foreground lg:order-none">Aguardando mensagens recebidas pela integração.</section>}
+        {telefone&&<aside aria-label="Contexto do cliente" className={`order-3 flex min-w-0 flex-col gap-3 overflow-y-auto rounded-painel border border-painel-borda bg-card p-3 dark:border-transparent lg:order-none ${janela?'':'lg:col-span-2 xl:col-span-1'}`}>
           <ContextoCliente clienteId={contato?.id??null} nome={nome(telefone)} fichaHref={fichaHref} novaAba={janela} organizar={organizar}/>
         </aside>}
       </div>;

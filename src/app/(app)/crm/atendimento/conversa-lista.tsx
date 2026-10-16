@@ -50,7 +50,7 @@ type Props = {
 
 export function ConversaLista({ itens, selecionado, base, busca, visao, etapa, contagens }: Props) {
   const chips = [{ id: 'todas', nome: 'Todas' }, ...ETAPAS_ATENDIMENTO];
-  return <section id="conversas" aria-label="Conversas" className="order-2 flex min-w-0 flex-col gap-3 rounded-painel border border-painel-borda bg-card p-3 lg:order-none">
+  return <section id="conversas" aria-label="Conversas" className="order-2 flex min-w-0 flex-col gap-3 rounded-painel border border-painel-borda bg-card p-3 dark:border-transparent lg:order-none">
     <div className="flex flex-wrap items-center justify-between gap-2 px-1">
       <h2 className="flex items-center gap-2 text-base font-semibold"><MessageSquare className="size-4 text-primary" aria-hidden="true" />Conversas <span className="font-mono text-sm font-normal text-muted-foreground">{contagens.todas ?? itens.length}</span></h2>
       <AlternarVisao base={base} visao={visao} q={busca} telefone={selecionado} />
