@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db';
 import { resolveWhatsAppProviders } from '@/lib/whatsapp-provider';
 import { dentroDaJanela24h, marcarEnviada, marcarFalha } from '@/lib/whatsapp-mensagem';
 import { variantesLocaisDeTelefone } from '@/lib/telefone-busca';
+import { inicioDaPausa } from '@/lib/whatsapp-pausa';
 
 const normalizar=(t:string)=>t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const humanoOuSaida=(t:string)=>/\b(humano|atendente|vendedor|parar|sair|cancelar mensagens)\b/.test(normalizar(t));
@@ -26,7 +27,9 @@ export async function processarAtendimentoGratuito(telefone:string,texto:string)
   if(!primary||primary.name!=='meta_cloud')return;
   const escolha=await prisma.whatsAppMensagem.findFirst({where:{telefone,direcao:'in',OR:[{corpo:{equals:'SAIR',mode:'insensitive'}},{corpo:{equals:'PARAR',mode:'insensitive'}},{corpo:{equals:'VOLTAR',mode:'insensitive'}}]},orderBy:{criadoEm:'desc'},select:{corpo:true}});
   if(escolha&&/^(sair|parar)$/i.test(escolha.corpo?.trim()||''))return;
-  const pausa=new Date(Date.now()-Math.max(5,cfg.whatsappTakeoverMinutos||60)*60_000);
+  const controle=await prisma.whatsAppMensagem.findFirst({where:{telefone,direcao:'sistema',origem:{in:['controle_pausa','controle_retomada']}},orderBy:{criadoEm:'desc'},select:{origem:true,criadoEm:true}});
+  const pausa=inicioDaPausa(new Date(),cfg.whatsappTakeoverMinutos||60,controle);
+  if(!pausa)return;
   const aliases=variantesLocaisDeTelefone(telefone).flatMap(t=>[t,'55'+t]);
   const assumido=await prisma.$queryRaw<{id:number}[]>`
     SELECT id FROM clientes

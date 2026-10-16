@@ -3,6 +3,17 @@ import { requireAdmin } from '@/lib/guards';
 import { prisma } from '@/lib/db';
 import { dentroDaJanela24h, marcarEnviada, marcarFalha } from '@/lib/whatsapp-mensagem';
 import { resolveWhatsAppProviders } from '@/lib/whatsapp-provider';
+import { processarAtendimentoGratuito } from '@/lib/whatsapp-atendimento-gratuito';
+
+export async function controlarAutomatico(telefone:string,retomar:boolean):Promise<{ok:boolean;message:string}> {
+  if(!await requireAdmin()||!/^\d{10,15}$/.test(telefone))return {ok:false,message:'Acesso ou contato inválido.'};
+  await prisma.whatsAppMensagem.create({data:{telefone,direcao:'sistema',origem:retomar?'controle_retomada':'controle_pausa',corpo:retomar?'Automático retomado pela equipe.':'Atendimento assumido pela equipe; automático pausado.',status:'controle'}});
+  if(retomar){
+    const ultima=await prisma.whatsAppMensagem.findFirst({where:{telefone,direcao:{in:['in','out']}},orderBy:{criadoEm:'desc'},select:{direcao:true,corpo:true,criadoEm:true}});
+    if(ultima?.direcao==='in'&&Date.now()-ultima.criadoEm.getTime()<30*60_000)await processarAtendimentoGratuito(telefone,ultima.corpo);
+  }
+  return {ok:true,message:retomar?'Automático retomado. Confira no histórico o resultado da mensagem recente; não há reenvio automático de respostas já registradas.':'Automático pausado nesta conversa até a equipe retomar.'};
+}
 
 export async function responderConversa(telefone:string, texto:string):Promise<{ok:boolean;message:string}> {
   if (!await requireAdmin()) return {ok:false,message:'Acesso restrito ao atendimento autorizado.'};

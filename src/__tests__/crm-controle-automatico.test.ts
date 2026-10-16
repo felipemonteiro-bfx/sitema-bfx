@@ -1,0 +1,12 @@
+import { beforeEach,expect,it,vi } from 'vitest';
+const m=vi.hoisted(()=>({admin:vi.fn(),create:vi.fn(),find:vi.fn(),free:vi.fn()}));
+vi.mock('@/lib/guards',()=>({requireAdmin:m.admin}));
+vi.mock('@/lib/db',()=>({prisma:{whatsAppMensagem:{create:m.create,findFirst:m.find}}}));
+vi.mock('@/lib/whatsapp-atendimento-gratuito',()=>({processarAtendimentoGratuito:m.free}));
+vi.mock('@/lib/whatsapp-provider',()=>({resolveWhatsAppProviders:vi.fn()}));
+vi.mock('@/lib/whatsapp-mensagem',()=>({dentroDaJanela24h:vi.fn(),marcarEnviada:vi.fn(),marcarFalha:vi.fn()}));
+import { controlarAutomatico } from '@/app/(app)/crm/atendimento/actions';
+beforeEach(()=>{vi.resetAllMocks();m.admin.mockResolvedValue(true);m.create.mockResolvedValue({id:1});m.find.mockResolvedValue({direcao:'in',corpo:'menu',criadoEm:new Date()});});
+it('nega controle sem autorização e não grava mensagem',async()=>{m.admin.mockResolvedValue(false);expect((await controlarAutomatico('5592000000000',true)).ok).toBe(false);expect(m.create).not.toHaveBeenCalled();});
+it('pausa cria somente registro interno sem enviar',async()=>{await controlarAutomatico('5592000000000',false);expect(m.create).toHaveBeenCalledWith({data:expect.objectContaining({direcao:'sistema',origem:'controle_pausa'})});expect(m.free).not.toHaveBeenCalled();});
+it('retoma e trata apenas entrada recente ainda como última mensagem',async()=>{await controlarAutomatico('5592000000000',true);expect(m.free).toHaveBeenCalledWith('5592000000000','menu');m.free.mockClear();m.find.mockResolvedValue({direcao:'out',corpo:'já respondida',criadoEm:new Date()});await controlarAutomatico('5592000000000',true);expect(m.free).not.toHaveBeenCalled();m.find.mockResolvedValue({direcao:'in',corpo:'antiga',criadoEm:new Date(Date.now()-31*60000)});await controlarAutomatico('5592000000000',true);expect(m.free).not.toHaveBeenCalled();});
