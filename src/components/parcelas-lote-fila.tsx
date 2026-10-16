@@ -69,10 +69,10 @@ export function ParcelasLoteFila({
             key={p.id ?? p.numero}
             htmlFor={inputId}
             className={cn(
-              "flex min-h-11 flex-col gap-1 rounded-lg px-3.5 py-3 tabular-nums transition-colors",
+              "flex min-h-11 flex-col gap-1 rounded-controle px-3.5 py-3 tabular-nums transition-colors",
               marcada
-                ? "border-2 border-primary bg-success-bg"
-                : "border border-dashed border-border",
+                ? "border border-primary bg-marca-tint"
+                : "border border-dashed border-divisoria",
               travada || !vendaSelecionada || desabilitado ? "cursor-not-allowed" : "cursor-pointer hover:bg-accent/50"
             )}
           >

@@ -44,7 +44,7 @@ export function ProdutosVendaPopover({ produtos, className }: { produtos: Produt
         </Button>
       </PopoverAnchor>
       <PopoverContent align="start" className="w-96 p-3" {...conteudo}>
-        <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Produtos da venda</div>
+        <div className="mb-2 text-sm font-medium text-muted-foreground">Produtos da venda</div>
         {/* Tabela de verdade: colunas alinhadas e lidas como tabela pelo leitor de
             tela. Venda com muitos itens rola por dentro, com cabeçalho e total fixos.
             O nome aparece inteiro, quebrando linha — nada de reticências. */}

@@ -389,7 +389,7 @@ export function ConciliacaoFechamento({ c }: { c: ConciliacaoDetalhe }) {
       <section aria-labelledby="fechamento-conciliacao" className="flex flex-col gap-3">
         <div className="flex items-start gap-2">
           <Scale className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <h2 id="fechamento-conciliacao" className="min-w-0 flex-1 text-base font-semibold">
+          <h2 id="fechamento-conciliacao" className="min-w-0 flex-1 text-lg font-semibold text-foreground">
             Conciliação com os boletos Prudent
           </h2>
           {c.concluido ? (
@@ -419,7 +419,7 @@ export function ConciliacaoFechamento({ c }: { c: ConciliacaoDetalhe }) {
         {c.divergencias.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhuma divergência entre os boletos e o demonstrativo.</p>
         ) : (
-          <ul className="flex flex-col gap-1.5 rounded-lg border border-error/50 bg-error-bg p-3 text-sm text-error-text dark:bg-error/10">
+          <ul role="alert" className="flex flex-col gap-1.5 rounded-interno border border-error/50 bg-error-bg p-3 text-sm text-error-text dark:bg-error/10">
             {c.divergencias.map((d) => (
               <li key={d.chave}>{d.texto}</li>
             ))}

@@ -22,6 +22,7 @@ import { hojeDataPura } from "@/lib/data-pura";
 import { agruparAguardandoRh, estadoConfirmacao } from "@/lib/confirmacao-rh";
 import AguardandoRhClient from "@/components/aguardando-rh-client";
 import { QueryTabs } from "@/components/query-tabs";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
 
@@ -370,9 +371,9 @@ export default async function Page() {
               <span className="inline-flex items-center gap-2">
                 Aguardando RH
                 {aguardandoRh.length > 0 && (
-                  <span className="min-w-6 rounded-full bg-warning px-1.5 text-xs font-bold tabular-nums text-warning-foreground">
+                  <Badge variant="warning" size="sm" className="min-w-6 justify-center tabular-nums">
                     {aguardandoRh.length}
-                  </span>
+                  </Badge>
                 )}
               </span>
             ),
