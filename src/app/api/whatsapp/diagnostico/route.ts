@@ -12,6 +12,51 @@ export async function GET() {
   const ok = await requireAdmin();
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const selected = await prisma.config.findFirst() as Record<string, unknown> | null;
+  if ((selected?.whatsappProvider || process.env.WHATSAPP_PROVIDER) === "meta_cloud") {
+    const text = (v: unknown) => typeof v === "string" ? v.trim() : "";
+    const token = text(selected?.metaWhatsappToken) || process.env.META_WHATSAPP_TOKEN?.trim();
+    const phoneId = text(selected?.metaWhatsappPhoneNumberId) || process.env.META_WHATSAPP_PHONE_NUMBER_ID?.trim() || "";
+    const rawVersion = text(selected?.metaWhatsappApiVersion) || "v21.0";
+    const version = /^v\d+\.\d+$/.test(rawVersion) ? rawVersion : "v21.0";
+    let tokenCheck: Record<string, unknown> = { ok: false, reason: "TOKEN_OU_NUMERO_AUSENTE" };
+    if (token && /^\d+$/.test(phoneId)) {
+      try {
+        // Somente leitura. A chave permanece no servidor, fora de URLs/logs/resposta.
+        const res = await fetch(`https://graph.facebook.com/${version}/${phoneId}?fields=id,display_phone_number,verified_name`, {
+          method: "GET", headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store", signal: AbortSignal.timeout(10000),
+        });
+        const data = await res.json();
+        tokenCheck = res.ok ? {
+          ok: data.id === phoneId, phoneMatches: data.id === phoneId,
+          displayPhoneNumber: data.display_phone_number, verifiedName: data.verified_name,
+        } : { ok: false, httpStatus: res.status, errorCode: typeof data.error?.code === "number" ? data.error.code : null };
+      } catch {
+        tokenCheck = { ok: false, reason: "CONSULTA_META_INDISPONIVEL" };
+      }
+    }
+    let reception: Record<string, unknown>;
+    try {
+      const recent = await prisma.whatsAppMensagem.findMany({
+        where: { direcao: "in", criadoEm: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+        orderBy: { criadoEm: "desc" }, take: 5, select: { id: true, criadoEm: true },
+      });
+      reception = { recentCount: recent.length, sampleLimit: 5, windowHours: 24,
+        latestReceivedAt: recent[0]?.criadoEm ?? null,
+        note: "Registros de entrada no Manager; confirme horário e origem com uma mensagem nova para provar o teste do8250." };
+    } catch {
+      reception = { available: false, reason: "CONSULTA_DE_ENTRADAS_INDISPONIVEL" };
+    }
+    return NextResponse.json({ provider: "meta_cloud", checkedAt: new Date().toISOString(),
+      sendingEnabled: selected?.whatsappAutoEnabled !== undefined
+        ? selected.whatsappAutoEnabled === 1 : process.env.WHATSAPP_AUTO_ENABLED !== "0",
+      tokenCheck, reception,
+      status: tokenCheck.ok ? "AUTENTICACAO_CONFIRMADA" : "AUTENTICACAO_NAO_CONFIRMADA",
+      note: "Autenticação não comprova envio/entrega. Este diagnóstico não envia mensagens nem ativa automações.",
+    }, { headers: { "Cache-Control": "no-store" } });
+  }
+
   const diagnostico: Record<string, unknown> = {};
 
   // 1. Check config
