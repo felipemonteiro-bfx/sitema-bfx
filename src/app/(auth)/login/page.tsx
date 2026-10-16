@@ -1,12 +1,11 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -16,6 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { LoginPainelMarca } from "@/components/login-painel-marca";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 
 export default function LoginPage() {
@@ -51,97 +51,116 @@ export default function LoginPage() {
     }
   }
 
+  // Campos de 48px com o raio de controle do Vantage. `dark:bg-controle` porque o
+  // `Input` base fixa `dark:bg-card`, que ganharia do `bg-controle` no escuro.
+  const campo =
+    "h-12 rounded-controle border bg-controle text-base dark:bg-controle focus-visible:border-ring focus-visible:ring-ring/30";
+
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-6 py-10">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background to-muted" />
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          {/* `<h1>` de verdade: o titulo era um `CardTitle`, que renderiza
-              `<div>`, e a pagina ficava sem nenhum cabecalho de nivel 1 — o
-              leitor de tela nao tinha como anunciar do que se trata a tela.
-              As classes reproduzem exatamente o que o `CardTitle` aplicava
-              (`text-lg font-semibold leading-none tracking-tight` com o
-              `text-2xl` por cima), entao nada muda visualmente.
-              Fase 18, achado 9. */}
-          <h1 className="text-2xl font-semibold leading-none tracking-tight">BFX Manager</h1>
-          <p className="text-sm text-muted-foreground">Acesso seguro ao painel</p>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Usuário</FormLabel>
+    <div className="flex min-h-screen flex-wrap gap-4 bg-background p-4">
+      {/* No celular o formulario vem primeiro; o painel de marca e enfeite. */}
+      <div className="order-2 flex min-w-0 flex-[1_1_32.5rem] min-[960px]:order-1">
+        <LoginPainelMarca />
+      </div>
+      <main className="order-1 flex min-w-0 flex-[1_1_26rem] items-center justify-center px-0 py-6 sm:px-4 sm:py-10 min-[960px]:order-2">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="anim-entrada flex w-full max-w-[25rem] flex-col gap-5"
+          >
+            <div className="flex flex-col gap-2">
+              {/* `<h1>` de verdade: o titulo era um `CardTitle`, que renderiza
+                  `<div>`, e a pagina ficava sem nenhum cabecalho de nivel 1 — o
+                  leitor de tela nao tinha como anunciar do que se trata a tela.
+                  Fase 18, achado 9. */}
+              <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">Entrar</h1>
+              <p className="text-base text-muted-foreground">
+                Use o usuário e a senha que a administração cadastrou para você.
+              </p>
+            </div>
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Usuário</FormLabel>
+                  <FormControl>
+                    {/* Sem placeholder de exemplo: "admin" ali entregava o nome
+                        do usuario administrador a qualquer visitante. */}
+                    <Input
+                      {...field}
+                      className={campo}
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoFocus
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Senha</FormLabel>
+                  <div className="relative">
                     <FormControl>
-                      {/* Sem placeholder de exemplo: "admin" ali entregava o nome
-                          do usuario administrador a qualquer visitante. */}
                       <Input
                         {...field}
-                        autoComplete="username"
+                        type={mostrarSenha ? "text" : "password"}
+                        autoComplete="current-password"
                         autoCapitalize="none"
                         autoCorrect="off"
                         spellCheck={false}
-                        autoFocus
+                        className={`${campo} pr-14`}
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Senha</FormLabel>
-                    <div className="relative">
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type={mostrarSenha ? "text" : "password"}
-                          autoComplete="current-password"
-                          autoCapitalize="none"
-                          autoCorrect="off"
-                          spellCheck={false}
-                          className="pr-11"
-                        />
-                      </FormControl>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setMostrarSenha((v) => !v)}
-                        aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                        aria-pressed={mostrarSenha}
-                        className="absolute right-0 top-0 text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
-                      >
-                        {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Sempre no DOM: o role="alert" so anuncia quando o texto muda
-                  dentro de uma regiao que ja existia. */}
-              <p role="alert" className="min-h-5 text-sm text-error-text">
-                {error}
-              </p>
-              <Button
-                type="submit"
-                className="w-full"
-                loading={form.formState.isSubmitting}
-                loadingText="Entrando…"
-              >
-                Entrar
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setMostrarSenha((v) => !v)}
+                      aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                      aria-pressed={mostrarSenha}
+                      className="absolute right-0.5 top-0.5 h-11 w-11 rounded-controle text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+                    >
+                      {mostrarSenha ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                    </Button>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="h-12 w-full rounded-controle text-base font-bold"
+              loading={form.formState.isSubmitting}
+              loadingText="Entrando…"
+              rightIcon={<ArrowRight className="h-4 w-4" />}
+            >
+              Entrar
+            </Button>
+            {/* Sempre no DOM: o role="alert" so anuncia quando o texto muda
+                dentro de uma regiao que ja existia. Vazia, `empty:` zera o
+                padding e o fundo para nao sobrar uma caixa vermelha. */}
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 rounded-controle bg-error-bg p-3 text-sm text-error-text empty:bg-transparent empty:p-0"
+            >
+              {error ? (
+                <>
+                  <AlertCircle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                  <span>{error}</span>
+                </>
+              ) : null}
+            </div>
+          </form>
+        </Form>
+      </main>
     </div>
   );
 }
