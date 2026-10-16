@@ -33,7 +33,7 @@ export function ConversaChat({ telefone, nome, aberta, semResposta, estadoAutoma
   return <section aria-label="Conversa selecionada" className={`${visivel} min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-painel border border-painel-borda bg-card dark:border-transparent`}>
     <style>{ESTILO_BOLHA}</style>
     <header className="flex min-h-16 shrink-0 items-center gap-1 border-b border-divisoria px-2 py-2">
-      <Button asChild variant="ghost" size="icon" className="@xl:hidden"><Link href={urlLista} aria-label="Voltar para a lista de conversas"><ArrowLeft className="size-5" aria-hidden="true" /></Link></Button>
+      <span className="@xl:hidden"><Button asChild variant="ghost" size="icon"><Link href={urlLista} aria-label="Voltar para a lista de conversas"><ArrowLeft className="size-5" aria-hidden="true" /></Link></Button></span>
       <BotaoPainel nome={nome} className="flex min-w-0 flex-1 items-center gap-3 rounded-controle px-2 py-1 text-left hover:bg-controle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-marca-tint font-display text-sm font-semibold text-marca-tint-texto">{iniciais(nome)}</span>
         <span className="flex min-w-0 flex-col">
@@ -52,7 +52,7 @@ export function ConversaChat({ telefone, nome, aberta, semResposta, estadoAutoma
     <LogMensagens key={`log-${telefone}`} className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-poco bg-[radial-gradient(var(--grafico-trilha)_1px,transparent_1px)] [background-size:18px_18px] px-3 pb-4 @xl:px-6">
       {dias.map(d => <section key={d.chave} aria-label={d.rotulo} className="flex flex-col">
         {/* Separador de data: pílula centralizada que fica fixa no topo enquanto o dia rola. */}
-        <div className="sticky top-0 z-10 flex justify-center py-2"><span className="inline-flex h-7 items-center rounded-full bg-popover px-3 text-xs text-texto-secundario shadow-[var(--shadow-sm)]">{d.rotulo}</span></div>
+        <div className="sticky top-0 z-10 flex justify-center py-2"><span className="inline-flex h-7 items-center rounded-full bg-popover px-3 text-xs text-texto-secundario shadow-sm">{d.rotulo}</span></div>
         {d.itens.map(i => <Bolha key={i.m.id} m={i.m} inicioGrupo={i.inicioGrupo} />)}
       </section>)}
     </LogMensagens>

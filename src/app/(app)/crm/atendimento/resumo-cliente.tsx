@@ -25,8 +25,8 @@ export function ResumoCliente({nome,cadastro,empresa,etapa,pontos,fichaHref,tele
     <div className="rounded-interno bg-card-elevated p-3"><dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><BadgePercent className="size-3.5 shrink-0" aria-hidden="true"/><span aria-hidden="true">Em desconto</span><span className="sr-only">Equivalente em desconto</span></dt><dd className="valor-sensivel mt-1 font-mono text-lg tabular-nums text-marca-tint-texto">{formatBRL(valorEmReais(pontos))}</dd></div>
    </dl>
    <Popover>
-    <PopoverTrigger asChild><Button type="button" variant="ghost" size="iconSm" aria-label="Sobre os pontos de fidelidade" aria-describedby="nota-pontos" title={NOTA_PONTOS} className="absolute right-3 top-2 size-7 text-muted-foreground"><Info className="size-3.5" aria-hidden="true"/></Button></PopoverTrigger>
-    <PopoverContent align="end" className="w-72 p-4 text-xs leading-relaxed">{NOTA_PONTOS}</PopoverContent>
+    <div className="absolute right-3 top-2"><PopoverTrigger asChild><Button type="button" variant="ghost" size="iconSm" aria-label="Sobre os pontos de fidelidade" aria-describedby="nota-pontos" title={NOTA_PONTOS}><Info className="size-3.5 text-muted-foreground" aria-hidden="true"/></Button></PopoverTrigger></div>
+    <PopoverContent align="end"><p className="text-xs leading-relaxed">{NOTA_PONTOS}</p></PopoverContent>
    </Popover>
    <span id="nota-pontos" className="sr-only">{NOTA_PONTOS}</span>
   </section>

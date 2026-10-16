@@ -13,15 +13,15 @@ import { PRONTAS, acaoDaTecla, filtrarProntas, termoDeBarra, type Pronta } from 
 /** Contador de caracteres só aparece perto do limite de 4096. */
 const LIMITE_AVISO = 3500;
 
-/** Destaque sutil do botão do estado atual (borda e texto verdes; nunca preenchido). */
-const DESTAQUE_ATIVO = 'border-marca-tint-texto/40 text-marca-tint-texto';
+/** Destaque sutil do botão do estado atual (borda e texto verdes; nunca preenchido). Aplicado no invólucro: o Button não aceita classes. */
+const DESTAQUE_ATIVO = '[&>button]:border-marca-tint-texto/40 [&>button]:text-marca-tint-texto';
 
 /** Lista de respostas prontas aberta pelo "/". Escolher SÓ preenche o campo; nunca envia. */
 function ListaProntas({ itens, indice, onEscolher }: { itens: readonly Pronta[]; indice: number; onEscolher: (p: Pronta) => void }) {
   if (!itens.length) return <p className="px-3 py-2 text-sm text-muted-foreground">Nenhuma resposta pronta com esse termo.</p>;
   return <ul role="listbox" aria-label="Respostas prontas" className="flex max-h-64 flex-col overflow-y-auto">
-    {itens.map((p, i) => <li key={p.titulo} role="option" aria-selected={i === indice}>
-      <Button type="button" variant="ghost" onClick={() => onEscolher(p)} className={`h-auto w-full flex-col items-start gap-0.5 rounded-controle px-3 py-2 text-left font-normal ${i === indice ? 'bg-controle' : ''}`}>
+    {itens.map((p, i) => <li key={p.titulo} role="option" aria-selected={i === indice} className="aria-selected:[&>button]:bg-controle [&>button]:h-auto [&>button]:w-full [&>button]:flex-col [&>button]:items-start [&>button]:gap-0.5 [&>button]:px-3 [&>button]:py-2 [&>button]:text-left [&>button]:font-normal">
+      <Button type="button" variant="ghost" onClick={() => onEscolher(p)}>
         <span className="text-sm font-semibold">{p.titulo}</span>
         <span className="line-clamp-2 whitespace-normal text-xs text-texto-secundario">{p.texto}</span>
       </Button>
@@ -62,29 +62,30 @@ export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta
     {!aberta&&<span className="block truncate text-xs text-texto-secundario">Aguarde nova mensagem do cliente · envio com tarifa bloqueado</span>}
     {aberta&&<span className="sr-only"> · Resposta de atendimento disponível · templates com tarifa bloqueados</span>}</span>
    <div className="flex flex-wrap items-center gap-1.5">
-    <Button type="button" variant="outline" size="sm" aria-pressed={pausado} className={pausado?DESTAQUE_ATIVO:undefined} disabled={busy} onClick={()=>controle(false)}><UserRound className="size-4" aria-hidden="true"/>Assumir conversa</Button>
-    <Button type="button" variant="outline" size="sm" aria-pressed={!pausado} className={pausado?undefined:DESTAQUE_ATIVO} disabled={busy} onClick={()=>controle(true)}><Bot className="size-4" aria-hidden="true"/>Retomar automático</Button>
+    <span className={pausado?DESTAQUE_ATIVO:undefined}><Button type="button" variant="outline" size="sm" aria-pressed={pausado} disabled={busy} onClick={()=>controle(false)}><UserRound className="size-4" aria-hidden="true"/>Assumir conversa</Button></span>
+    <span className={pausado?undefined:DESTAQUE_ATIVO}><Button type="button" variant="outline" size="sm" aria-pressed={!pausado} disabled={busy} onClick={()=>controle(true)}><Bot className="size-4" aria-hidden="true"/>Retomar automático</Button></span>
     <Button type="button" variant="ghost" size="iconSm" aria-label="Atualizar conversa" title="Atualizar conversa" onClick={()=>router.refresh()}><RotateCw className="size-4 text-muted-foreground" aria-hidden="true"/></Button>
     <Popover>
      <PopoverTrigger asChild><Button type="button" variant="ghost" size="iconSm" aria-label="Como funciona o automático" aria-describedby="ajuda-automatico" title="Como funciona o automático"><CircleHelp className="size-4 text-muted-foreground" aria-hidden="true"/></Button></PopoverTrigger>
-     <PopoverContent align="end" className="w-80 p-4 text-xs leading-relaxed" aria-label="Como funciona o automático">{ajuda}</PopoverContent>
+     <PopoverContent align="end" aria-label="Como funciona o automático"><div className="text-xs leading-relaxed">{ajuda}</div></PopoverContent>
     </Popover>
    </div>
   </div>
   <div id="ajuda-automatico" className="sr-only">{ajuda}</div>
   {/* Respostas prontas em chips roláveis: clicar SÓ preenche o campo (nunca envia). Também abrem com "/". */}
-  <div role="group" aria-label="Respostas prontas" className="flex gap-1.5 overflow-x-auto px-3 pb-0.5 pt-2.5">
-   {PRONTAS.map(p=><Button key={p.titulo} type="button" variant="outline" size="sm" title={p.texto} className="shrink-0 rounded-full font-normal text-texto-secundario" disabled={!aberta||busy} onClick={()=>escolher(p)}>{p.titulo}</Button>)}
+  <div role="group" aria-label="Respostas prontas" className="flex gap-1.5 overflow-x-auto px-3 pb-0.5 pt-2.5 [&>button]:shrink-0 [&>button]:rounded-full [&>button]:font-normal [&>button]:text-texto-secundario">
+   {PRONTAS.map(p=><Button key={p.titulo} type="button" variant="outline" size="sm" title={p.texto} disabled={!aberta||busy} onClick={()=>escolher(p)}>{p.titulo}</Button>)}
   </div>
   {/* Barra de escrita: atalhos rápidos (em breve), campo em pílula e enviar redondo. */}
   <div className="relative flex items-end gap-2 px-3 py-2.5">
-   <Button type="button" variant="ghost" size="icon" aria-label="Atalhos rápidos (em breve)" title="Atalhos rápidos (em breve)" className="shrink-0 rounded-full" disabled><Zap className="size-5 text-muted-foreground" aria-hidden="true"/></Button>
-   {barraAberta&&<div className="absolute bottom-full left-3 z-20 mb-1 w-[min(24rem,calc(100%-1.5rem))] rounded-painel border border-painel-borda bg-popover p-2 shadow-[var(--shadow-md)]"><ListaProntas itens={filtradasBarra} indice={indice} onEscolher={escolher}/></div>}
-   <div className="flex min-w-0 flex-1 items-end rounded-[1.5rem] bg-poco px-4 focus-within:ring-2 focus-within:ring-ring/60">
-    <Label htmlFor="resposta-whatsapp" className="sr-only">Sua mensagem</Label>
-    <Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" rows={1} autoResize className="max-h-36 min-h-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-0 py-3 text-sm leading-normal shadow-none focus-visible:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0" placeholder="Escreva uma mensagem" maxLength={4096} value={texto} onChange={e=>aoDigitar(e.target.value)} onKeyDown={aoTeclar} disabled={!aberta||busy}/>
+   <span className="shrink-0 [&>button]:rounded-full"><Button type="button" variant="ghost" size="icon" aria-label="Atalhos rápidos (em breve)" title="Atalhos rápidos (em breve)" disabled><Zap className="size-5 text-muted-foreground" aria-hidden="true"/></Button></span>
+   {barraAberta&&<div className="absolute bottom-full left-3 z-20 mb-1 w-96 max-w-full rounded-painel border border-painel-borda bg-popover p-2 shadow-md"><ListaProntas itens={filtradasBarra} indice={indice} onEscolher={escolher}/></div>}
+   {/* Campo como no artboard (borda e fundo do Textarea); o invólucro só ajusta a altura mínima e tira o puxador de redimensionar. */}
+   <div className="min-w-0 flex-1 [&_textarea]:max-h-36 [&_textarea]:min-h-12 [&_textarea]:resize-none">
+    <span className="sr-only"><Label htmlFor="resposta-whatsapp">Sua mensagem</Label></span>
+    <Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" rows={1} autoResize placeholder="Escreva uma mensagem" maxLength={4096} value={texto} onChange={e=>aoDigitar(e.target.value)} onKeyDown={aoTeclar} disabled={!aberta||busy}/>
    </div>
-   <Button type="submit" size="icon" aria-label="Enviar mensagem" aria-busy={busy} className="size-11 shrink-0 rounded-full" disabled={!aberta||busy||!texto.trim()}><Send className="size-5" aria-hidden="true"/></Button>
+   <span className="shrink-0 [&>button]:size-12 [&>button]:rounded-full"><Button type="submit" size="icon" aria-label="Enviar mensagem" aria-busy={busy} disabled={!aberta||busy||!texto.trim()}><Send className="size-5" aria-hidden="true"/></Button></span>
   </div>
   {texto.length>LIMITE_AVISO&&<p className="-mt-1.5 px-5 pb-2 text-right font-mono text-xs text-muted-foreground">{texto.length}/4096</p>}
   {notice&&<p role="status" className="mx-3 mb-3 rounded-controle border border-divisoria bg-controle p-3 text-sm font-medium">{notice}</p>}
