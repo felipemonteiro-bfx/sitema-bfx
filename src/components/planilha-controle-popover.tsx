@@ -111,7 +111,7 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-11 gap-2 font-semibold sm:h-10">
+        <Button type="button" variant="outline" className="h-11 gap-2 sm:h-10">
           <Download className="h-4 w-4 text-primary" />
           Baixar planilha de controle
         </Button>
@@ -150,7 +150,7 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
             value={empresa}
             onValueChange={setEmpresa}
             searchable={empresasUnicas.length > 5}
-            className="h-11 sm:h-10 rounded-controle! border border-input bg-controle dark:bg-controle"
+            className="h-11 sm:h-10"
           />
         </div>
 
@@ -160,7 +160,7 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
             checked={incluirPassados}
             onCheckedChange={(valor) => setIncluirPassados(valor === true)}
           />
-          <Label htmlFor="planilha-controle-passados" className="text-sm text-foreground">
+          <Label variant="foreground" htmlFor="planilha-controle-passados">
             Incluir meses que já passaram
           </Label>
         </div>

@@ -8,16 +8,30 @@
 // alinhamento de texto). Aparencia (cor, forma, efeito, tipografia, padding)
 // entra por `variant`/`size` do componente. Excecoes por componente abaixo.
 
-/** Categoria aceita em todo componente que nao tem contrato proprio. */
-const BASE = ["layout"];
+/**
+ * Marcadores de comportamento do projeto (globals.css): nao pintam nada, ligam
+ * o modo discreto (`valor-sensivel*`, `bloco-sensivel`) e a entrada animada
+ * (`anim-*`). O linter nao sabe classificar classe propria, entao entram por nome.
+ */
+const MARCADORES = ["valor-sensivel", "valor-sensivel-fim", "bloco-sensivel", "anim-entrada", "anim-barra", "anim-dica"];
+
+/** O que todo componente aceita do chamador: layout e marcadores. */
+const BASE = ["layout", ...MARCADORES];
 
 export const noRestyle = {
   allow: BASE,
   contracts: [
     // Painel e suas partes: o espacamento interno pertence a pagina.
-    { pattern: "^Card$|^Card(Header|Content|Footer)$", allow: ["layout", "spacing"] },
+    { pattern: "^Card$|^Card(Header|Content|Footer)$", allow: [...BASE, "spacing"] },
+    // Tabela: a densidade (padding da celula) e decisao da tela; tipografia e cor
+    // entram por props do componente (`tom`, `peso`, `tamanho`, `numeric`, `mono`).
+    { pattern: "^Table$|^Table(Head|Cell)$", allow: [...BASE, "spacing"] },
+    // Botao: tamanho, forma e cor vem de `size`/`variant` (button-variants.ts). Do
+    // chamador so layout (largura `w-full`, margem, posicao) e `gap-*`, que e a
+    // composicao icone + rotulo dentro do botao, nao aparencia.
+    { pattern: "^Button$", allow: [...BASE, "gap-*"] },
     // Titulo/descricao de painel: tipografia (tamanho, cor muted), sem trocar a familia/peso.
-    { pattern: "^Card(Title|Description)$", allow: ["layout", "typography"], deny: ["font-*"] },
+    { pattern: "^Card(Title|Description)$", allow: [...BASE, "typography"], deny: ["font-*"] },
   ],
 };
 

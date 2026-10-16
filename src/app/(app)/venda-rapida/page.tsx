@@ -68,7 +68,8 @@ export default async function Page() {
               <ReciboDownloadLink
                 vendaId={ultima.id}
                 tipo={ultima.descontoEmFolha ? "autorizacao" : "venda"}
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer")}
+                variant="outline"
+                size="sm"
                 label={ultima.descontoEmFolha ? "Autorização" : "Recibo"}
               />
               {ultima.descontoEmFolha && ultima.assinaturaToken && (

@@ -15,8 +15,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 /** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
 const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
-/** Rótulo de campo em frase normal: o `Label` base ainda vem em caixa-alta. */
-const ROTULO = "text-sm font-medium normal-case tracking-normal";
 
 interface Props {
   vendedores: string[];
@@ -89,7 +87,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label className={ROTULO}>Vendedor</Label>
+              <Label>Vendedor</Label>
               <FormSelect
                 name="vendedorFiltro"
                 value={vendedorFiltro}
@@ -100,11 +98,11 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
               />
             </div>
             <div className="space-y-1.5">
-              <Label className={ROTULO}>Data Início</Label>
+              <Label>Data Início</Label>
               <DateInput value={dataInicio} onChange={(v) => setDataInicio(v)} />
             </div>
             <div className="space-y-1.5">
-              <Label className={ROTULO}>Data Fim</Label>
+              <Label>Data Fim</Label>
               <DateInput value={dataFim} onChange={(v) => setDataFim(v)} />
             </div>
           </div>
@@ -176,7 +174,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
+                <TableRow semHover>
                   <TableHead>Data</TableHead>
                   <TableHead>Vendedor</TableHead>
                   <TableHead>Cliente</TableHead>
@@ -189,22 +187,22 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
               </TableHeader>
               <TableBody>
                 {details.length === 0 ? (
-                  <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableRow semHover>
+                    <TableCell tom="muted" colSpan={8} className="text-center py-8">
                       Nenhum registro encontrado para os filtros selecionados.
                     </TableCell>
                   </TableRow>
                 ) : (
                   details.map((d) => (
-                    <TableRow key={d.vendaId} className="hover:bg-transparent">
-                      <TableCell className="font-mono">{new Date(d.data).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableRow semHover key={d.vendaId}>
+                      <TableCell mono>{new Date(d.data).toLocaleDateString('pt-BR')}</TableCell>
                       <TableCell>{d.vendedor}</TableCell>
-                      <TableCell className="max-w-37.5 truncate">{d.cliente}</TableCell>
-                      <TableCell className="max-w-37.5 truncate">{d.produto}</TableCell>
-                      <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(d.valorVenda)}</TableCell>
-                      <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(d.lucroLiquido)}</TableCell>
-                      <TableCell className="text-right font-mono">{d.percentualComissao}%</TableCell>
-                      <TableCell className="valor-sensivel valor-sensivel-fim text-right font-semibold font-mono">{formatBRL(d.valorComissao)}</TableCell>
+                      <TableCell truncar className="max-w-37.5">{d.cliente}</TableCell>
+                      <TableCell truncar className="max-w-37.5">{d.produto}</TableCell>
+                      <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(d.valorVenda)}</TableCell>
+                      <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(d.lucroLiquido)}</TableCell>
+                      <TableCell numeric>{d.percentualComissao}%</TableCell>
+                      <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(d.valorComissao)}</TableCell>
                     </TableRow>
                   ))
                 )}

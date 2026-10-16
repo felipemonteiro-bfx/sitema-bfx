@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { AlertCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
@@ -121,12 +121,12 @@ export default function LoginPage() {
                     </FormControl>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="discretoPlano"
                       size="icon"
                       onClick={() => setMostrarSenha((v) => !v)}
                       aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                       aria-pressed={mostrarSenha}
-                      className="absolute right-0.5 top-0.5 h-11 w-11 rounded-controle text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+                      className="absolute right-0.5 top-0.5 h-11 w-11"
                     >
                       {mostrarSenha ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                     </Button>
@@ -137,7 +137,8 @@ export default function LoginPage() {
             />
             <Button
               type="submit"
-              className="h-12 w-full rounded-controle text-base font-bold"
+              size="lg"
+              className="w-full"
               loading={form.formState.isSubmitting}
               loadingText="Entrando…"
               rightIcon={<ArrowRight className="h-4 w-4" />}

@@ -186,11 +186,11 @@ export function EditVendaFormClient({
         <form onSubmit={handleSubmit} encType="multipart/form-data" className="grid gap-4 md:grid-cols-3">
           <input type="hidden" name="id" value={editVenda.id} />
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Data da venda</Label>
+            <Label size="sm">Data da venda</Label>
             <DateInput name="data" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Vendedor</Label>
+            <Label size="sm">Vendedor</Label>
             <FormSelect
               name="vendedor"
               defaultValue={editVenda.vendedor || ""}
@@ -210,7 +210,7 @@ export function EditVendaFormClient({
           {/* Produtos - span full width */}
           <div className="md:col-span-3 space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-muted-foreground">Produtos da venda</Label>
+              <Label size="sm">Produtos da venda</Label>
               <Button type="button" variant="outline" size="sm" onClick={addProduto} leftIcon={<Plus className="h-4 w-4" />}>
                 Adicionar produto
               </Button>
@@ -230,15 +230,15 @@ export function EditVendaFormClient({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Frete ao cliente</Label>
+            <Label size="sm">Frete ao cliente</Label>
             <CurrencyInput value={frete} onChange={setFrete} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Custo de envio</Label>
+            <Label size="sm">Custo de envio</Label>
             <CurrencyInput value={envio} onChange={setEnvio} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="edit-entrega" className="text-xs font-medium text-muted-foreground">Entrega ou retirada</Label>
+            <Label size="sm" htmlFor="edit-entrega">Entrega ou retirada</Label>
             <FormSelect
               id="edit-entrega"
               name="entrega"
@@ -252,16 +252,16 @@ export function EditVendaFormClient({
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Desconto (R$)</Label>
+            <Label size="sm">Desconto (R$)</Label>
             <CurrencyInput value={descontoValor} onChange={setDescontoValor} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Parcelas</Label>
+            <Label size="sm">Parcelas</Label>
             <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
           </div>
 
           <div className="md:col-span-3 space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</Label>
+            <Label size="sm">Comprovante Assinado (PDF, JPEG ou PNG)</Label>
             <div className="flex flex-col gap-2">
               <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
               {editVenda.assinatura?.assinaturaStatus === "assinado" ? (
@@ -301,7 +301,7 @@ export function EditVendaFormClient({
               id="edit-temNota"
               defaultChecked={editVenda.temNota}
             />
-            <Label htmlFor="edit-temNota" className="text-xs cursor-pointer text-foreground">
+            <Label variant="foreground" size="sm" htmlFor="edit-temNota" className="cursor-pointer">
               Com Nota Fiscal
             </Label>
           </div>
@@ -311,7 +311,7 @@ export function EditVendaFormClient({
               id="edit-descontoEmFolha"
               defaultChecked={editVenda.descontoEmFolha ?? false}
             />
-            <Label htmlFor="edit-descontoEmFolha" className="text-xs cursor-pointer text-foreground">
+            <Label variant="foreground" size="sm" htmlFor="edit-descontoEmFolha" className="cursor-pointer">
               Desconto em folha
             </Label>
           </div>
@@ -321,14 +321,14 @@ export function EditVendaFormClient({
               id="edit-boleto"
               defaultChecked={editVenda.boleto ?? false}
             />
-            <Label htmlFor="edit-boleto" className="text-xs cursor-pointer text-foreground">
+            <Label variant="foreground" size="sm" htmlFor="edit-boleto" className="cursor-pointer">
               Boleto
             </Label>
           </div>
           <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opções: desconto em folha ou boleto.</p>
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Taxa da Nota (%)</Label>
+            <Label size="sm">Taxa da Nota (%)</Label>
             <Input name="taxaNota" type="number" step="0.01" defaultValue={editVenda.taxaNota || 5.97} />
           </div>
 
@@ -367,7 +367,6 @@ export function EditVendaFormClient({
               <ReciboDownloadLink
                 vendaId={editVenda.id}
                 tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}
-                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                 label={editVenda.descontoEmFolha ? "Autorização" : "Recibo de Venda"}
               />
               {editVenda.boletoUrl ? (

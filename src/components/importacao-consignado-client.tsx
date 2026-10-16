@@ -252,9 +252,9 @@ export default function ImportacaoConsignadoClient({
                       <TableBody>
                         {plano.erros.map((erro, i) => (
                           <TableRow key={i}>
-                            <TableCell className="font-mono tabular-nums">{erro.linha}</TableCell>
+                            <TableCell mono>{erro.linha}</TableCell>
                             <TableCell>{descreverMotivoConsignado(erro.motivo)}</TableCell>
-                            <TableCell className="font-mono text-xs">{erro.conteudo}</TableCell>
+                            <TableCell tamanho="xs" mono>{erro.conteudo}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

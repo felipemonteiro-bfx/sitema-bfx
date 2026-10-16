@@ -33,11 +33,11 @@ export default function Error({
             <div className="w-full space-y-2 text-left">
               <Button
                 type="button"
-                variant="ghost"
+                variant="discreto"
                 size="sm"
                 aria-expanded={expanded}
                 onClick={() => setExpanded(!expanded)}
-                className="text-muted-foreground"
+
               >
                 {expanded ? "Ocultar detalhes" : "Mostrar detalhes do erro"}
               </Button>

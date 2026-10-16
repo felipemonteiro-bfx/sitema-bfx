@@ -78,10 +78,13 @@ describe("H5 — padrões do Vantage nas telas de Importação, Intelligence e C
 });
 
 describe("H5 — estrutura compartilhada", () => {
-  it("o rótulo de campo é frase normal (anula a caixa-alta do Label da ui)", () => {
+  it("o rótulo de campo é frase normal (o Label da ui ja nasce assim)", () => {
     const f = ler("src/components/rotulo-campo.tsx");
-    expect(f.includes("normal-case")).toBe(true);
-    expect(f.includes("tracking-normal")).toBe(true);
+    expect(f.includes("<Label")).toBe(true);
+    expect(f.includes("uppercase")).toBe(false);
+    const base = ler("src/components/ui/label.tsx");
+    expect(base.includes("uppercase")).toBe(false);
+    expect(base.includes("text-muted-foreground")).toBe(true);
   });
 
   it("a navegação de áreas do CRM tem as 5 áreas e usa o segmentado com aria-current", () => {

@@ -136,10 +136,10 @@ function VendaCard({
               </span>
               <Button
                 type="button"
-                variant="ghost"
+                variant="discretoPlano"
                 size="icon"
                 onClick={() => setExpanded(!expanded)}
-                className="-m-2 justify-end p-2 text-muted-foreground hover:bg-transparent hover:text-foreground touch-manipulation"
+                className="-m-2 justify-end touch-manipulation"
                 aria-expanded={expanded}
                 aria-label={expanded ? "Recolher detalhes" : "Ver detalhes"}
               >
@@ -264,7 +264,9 @@ function VendaCard({
             <ReciboDownloadLink
               vendaId={venda.id}
               tipo={venda.descontoEmFolha ? "autorizacao" : "venda"}
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "touch-manipulation min-h-11")}
+              variant="ghost"
+              size="sm"
+              className="min-h-11 touch-manipulation"
               label={venda.descontoEmFolha ? "Autorização" : "PDF"}
             />
             {venda.assinatura?.assinaturaStatus === "assinado" ? (

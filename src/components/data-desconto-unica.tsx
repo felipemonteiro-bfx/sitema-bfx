@@ -79,10 +79,10 @@ export function DataDescontoUnica({
               {editada && (
                 <>
                   {" "}
-                  <Button
+                  <Button size="inlineXs"
                     type="button"
                     variant="link"
-                    className="h-auto p-0 text-xs font-bold underline underline-offset-4"
+
                     onClick={() => onEscolhidaChange(null)}
                   >
                     Voltar para a data da regra

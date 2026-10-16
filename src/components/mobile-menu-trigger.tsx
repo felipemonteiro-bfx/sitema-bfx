@@ -13,10 +13,10 @@ export function MobileMenuTrigger({ children }: { children: React.ReactNode }) {
       <SheetTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="controle"
           size="icon"
           aria-label="Abrir menu"
-          className="size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-foreground shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
+          className="size-11 min-h-11 min-w-11 touch-manipulation"
         >
           <Menu className="h-5 w-5" aria-hidden="true" />
         </Button>
@@ -43,12 +43,12 @@ export function BotaoBuscaMobile() {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="controle"
       size="icon"
       aria-label="Buscar (Ctrl K)"
       aria-keyshortcuts="Meta+K Control+K"
       onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCA))}
-      className="size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-foreground shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
+      className="size-11 min-h-11 min-w-11 touch-manipulation"
     >
       <Search className="h-5 w-5" aria-hidden="true" />
     </Button>

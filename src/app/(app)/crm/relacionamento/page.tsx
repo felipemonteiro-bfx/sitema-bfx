@@ -52,11 +52,11 @@ export default async function Page(){
       </TableHeader>
       <TableBody>
        {dados.slice(0,500).map(c=><TableRow key={c.id}>
-        <TableCell className="font-medium">{c.nome}</TableCell>
+        <TableCell peso="medio">{c.nome}</TableCell>
         <TableCell><Badge variant={VARIANTE_SEGMENTO[c.segmento as typeof SEGMENTOS[number]]}>{c.segmento}</Badge></TableCell>
-        <TableCell className="tabular-nums">{c.dias===null?'Sem registro':`${c.dias} dias`}</TableCell>
-        <TableCell className="text-right tabular-nums">{c.vendas.length}</TableCell>
-        <TableCell className="valor-sensivel text-right tabular-nums">{formatBRL(c.total)}</TableCell>
+        <TableCell mono>{c.dias===null?'Sem registro':`${c.dias} dias`}</TableCell>
+        <TableCell numeric>{c.vendas.length}</TableCell>
+        <TableCell numeric className="valor-sensivel">{formatBRL(c.total)}</TableCell>
         <TableCell><Link className="text-sm font-medium text-marca-tint-texto underline-offset-4 hover:underline" href={`/crm?q=${encodeURIComponent(c.nome)}`}>Conferir cadastro e consentimento</Link></TableCell>
        </TableRow>)}
       </TableBody>

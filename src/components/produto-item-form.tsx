@@ -139,10 +139,10 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="sutilErro"
                     size="icon"
                     onClick={() => onRemove(index)}
-                    className="h-8 w-8 text-error-text hover:text-error-text"
+                    className="h-8 w-8"
                     aria-label="Remover produto"
                   >
                     <X className="h-4 w-4" />
@@ -188,7 +188,7 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
             <div className="space-y-2 relative min-w-0 xl:basis-2/5">
               <Label
                 htmlFor={`produto-nome-${index}`}
-                className={cn(hasError && "text-error-text")}
+                variant={hasError ? "erro" : "default"}
               >
                 Produto <span className="text-error-text">*</span> {hasError && "(obrigatório)"}
               </Label>
@@ -215,11 +215,11 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                     <Button
                       key={p.id}
                       type="button"
-                      variant="ghost"
+                      variant="linha"
                       role="option"
                       aria-selected={false}
                       onClick={() => handleProdutoSelect(p)}
-                      className="h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal rounded-none px-3 py-2 text-left font-normal"
+                      className="flex-col items-stretch gap-0"
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{p.nome}</span>
@@ -238,13 +238,13 @@ export function ProdutoItemForm({ item, index, onUpdate, onRemove, canRemove, ha
                   )}
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="linhaAcao"
                     onClick={() => {
                       setProdutoSuggestions([]);
                       setIsSearching(false);
                       setCadastrarOpen(true);
                     }}
-                    className="h-auto w-full justify-start gap-2 whitespace-normal rounded-none border-t border-border px-3 py-2 text-left font-medium text-primary hover:text-primary"
+                    className="gap-2"
                   >
                     <Plus className="h-3.5 w-3.5 shrink-0" />
                     Cadastrar &ldquo;{produtoQuery}&rdquo;

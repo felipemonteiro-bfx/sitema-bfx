@@ -86,12 +86,12 @@ function Anexo({ envioId, anexo }: { envioId: number; anexo: AnexoDetalhe }) {
             {anexo.previa.totalLinhas > anexo.previa.linhas.length && ` · mostrando as ${anexo.previa.linhas.length} primeiras`}
           </div>
           <div className="max-h-72 overflow-auto rounded-interno bg-poco">
-            <Table className="text-xs">
+            <Table tamanho="xs">
               <TableBody>
                 {anexo.previa.linhas.map((linha, i) => (
                   <TableRow key={i}>
                     {linha.map((celula, j) => (
-                      <TableCell key={j} className="whitespace-nowrap px-2 py-1.5 font-mono">{celula}</TableCell>
+                      <TableCell mono key={j} className="whitespace-nowrap px-2 py-1.5">{celula}</TableCell>
                     ))}
                   </TableRow>
                 ))}

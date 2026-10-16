@@ -237,7 +237,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                       <Button
                         type="button"
                         size="sm"
-                        className="gap-1.5 text-xs"
+                        className="gap-1.5"
                         onClick={(e) => {
                           e.preventDefault();
                           setDataRetorno(hoje);
@@ -252,9 +252,9 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                       </Button>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="outlineErro"
                         size="sm"
-                        className="gap-1.5 text-xs text-error-text hover:text-error-text"
+                        className="gap-1.5"
                         onClick={(e) => { e.preventDefault(); setCancelando(b); }}
                       >
                         <X className="h-3.5 w-3.5" />
@@ -262,11 +262,11 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                       </Button>
                     </>
                   )}
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => { e.preventDefault(); handleExcel(b); }}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={(e) => { e.preventDefault(); handleExcel(b); }}>
                     <FileSpreadsheet className="h-3.5 w-3.5" />
                     Planilha
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => { e.preventDefault(); handleRelatorio(b); }}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={(e) => { e.preventDefault(); handleRelatorio(b); }}>
                     <ImageIcon className="h-3.5 w-3.5" />
                     Relatório Visual
                   </Button>

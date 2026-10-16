@@ -85,11 +85,11 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
         </div>
       </div>
       <div>
-        <Label htmlFor="logo-upload" className="normal-case tracking-normal block leading-normal text-foreground">
+        <Label variant="foreground" htmlFor="logo-upload" className="block">
           Carregar nova logo
         </Label>
         <div className="mt-1 flex flex-wrap items-center gap-2">
-          <Label htmlFor="logo-upload" className="normal-case tracking-normal cursor-pointer leading-normal text-foreground">
+          <Label variant="foreground" htmlFor="logo-upload" className="cursor-pointer">
             <span className="inline-flex h-11 items-center justify-center rounded-controle border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
               Escolher arquivo
             </span>

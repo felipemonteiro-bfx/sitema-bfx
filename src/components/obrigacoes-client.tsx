@@ -242,15 +242,15 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
   const temMenu = (daBfx(l) && (l.pdfArquivoId != null || podeSubstituir || pagamentosVivos.length > 0)) || podeCancelar;
 
   return (
-    <TableRow className={vivo(l) ? undefined : "text-muted-foreground"}>
-      <TableCell className="pl-4 font-semibold tabular-nums">{ddmm(l.vence)}</TableCell>
+    <TableRow apagada={!vivo(l)}>
+      <TableCell peso="forte" mono className="pl-4">{ddmm(l.vence)}</TableCell>
       <TableCell>{l.empresa}</TableCell>
-      <TableCell className="tabular-nums">#{l.loteId}</TableCell>
-      <TableCell className="text-right tabular-nums">{l.parcelas}</TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell mono>#{l.loteId}</TableCell>
+      <TableCell numeric>{l.parcelas}</TableCell>
+      <TableCell numeric>
         <span className="valor-sensivel">{formatBRL(l.esperado)}</span>
       </TableCell>
-      <TableCell className={`text-right tabular-nums ${l.diverge ? "font-semibold text-error-text" : ""}`}>
+      <TableCell numeric peso={l.diverge ? "forte" : undefined} tom={l.diverge ? "erro" : undefined}>
         {l.noBoleto != null ? (
           <span className="valor-sensivel" title={l.divergenciaJustificativa ?? undefined}>
             {formatBRL(l.noBoleto)}

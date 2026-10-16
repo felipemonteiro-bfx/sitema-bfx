@@ -136,7 +136,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableBody>
                       {users.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground">
+                          <TableCell tom="muted" colSpan={5} className="text-center">
                             Sem dados.
                           </TableCell>
                         </TableRow>
@@ -152,10 +152,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 {u.role}
                               </Badge>
                             </TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">
+                            <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                               {formatMoney(u.metaMensal || 0)}
                             </TableCell>
-                            <TableCell className="text-right tabular-nums">{u.comissaoPct}</TableCell>
+                            <TableCell numeric>{u.comissaoPct}</TableCell>
                           </TableRow>
                         ))
                       )}
@@ -178,7 +178,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <form method="get" className="grid gap-2 md:grid-cols-[1fr_auto] items-end">
                     <input type="hidden" name="tab" value="detalhes" />
                     <div className="space-y-1">
-                      <Label htmlFor="rh-filter-user" className="normal-case tracking-normal text-sm font-medium">Filtrar funcionário</Label>
+                      <Label htmlFor="rh-filter-user">Filtrar funcionário</Label>
                       <FormSelect
                         name="user"
                         defaultValue={selectedUser ? String(selectedUser) : "all"}
@@ -207,15 +207,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       >
                         <input type="hidden" name="id" value={u.id} />
                         <div className="space-y-1 md:col-span-2">
-                          <Label htmlFor={`rh-nome-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Nome</Label>
+                          <Label htmlFor={`rh-nome-${u.id}`}>Nome</Label>
                           <Input id={`rh-nome-${u.id}`} name="nome" defaultValue={u.nomeExibicao || ""} />
                         </div>
                         <div className="space-y-1 md:col-span-2">
-                          <Label htmlFor={`rh-login-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Login</Label>
+                          <Label htmlFor={`rh-login-${u.id}`}>Login</Label>
                           <Input id={`rh-login-${u.id}`} name="login" defaultValue={u.username} />
                         </div>
                         <div className="space-y-1">
-                          <Label className="normal-case tracking-normal text-sm font-medium">Role</Label>
+                          <Label>Role</Label>
                           <FormSelect
                             name="role"
                             defaultValue={u.role || "vendedor"}
@@ -226,11 +226,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor={`rh-meta-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Meta</Label>
+                          <Label htmlFor={`rh-meta-${u.id}`}>Meta</Label>
                           <Input id={`rh-meta-${u.id}`} name="meta" type="number" defaultValue={u.metaMensal || 0} />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor={`rh-comissao-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Comissão %</Label>
+                          <Label htmlFor={`rh-comissao-${u.id}`}>Comissão %</Label>
                           <Input
                             id={`rh-comissao-${u.id}`}
                             name="comissao"
@@ -268,15 +268,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={addUser} className="grid gap-3 md:grid-cols-3">
                     <div className="space-y-1">
-                      <Label htmlFor="novo-nome" className="normal-case tracking-normal text-sm font-medium">Nome completo</Label>
+                      <Label htmlFor="novo-nome">Nome completo</Label>
                       <Input id="novo-nome" name="nome" placeholder="Nome Completo" aria-required="true" />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="novo-login" className="normal-case tracking-normal text-sm font-medium">Login</Label>
+                      <Label htmlFor="novo-login">Login</Label>
                       <Input id="novo-login" name="login" placeholder="Login" aria-required="true" />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="novo-senha" className="normal-case tracking-normal text-sm font-medium">Senha</Label>
+                      <Label htmlFor="novo-senha">Senha</Label>
                       <Input id="novo-senha" name="senha" placeholder="Senha" type="password" aria-required="true" />
                     </div>
                     <FormSelect

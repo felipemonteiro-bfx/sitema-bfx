@@ -6,6 +6,19 @@ import { cn } from "@/lib/utils"
 
 const tableVariants = cva("w-full caption-bottom text-sm", {
   variants: {
+    tamanho: {
+      default: "",
+      xs: "text-xs",
+    },
+    mono: {
+      true: "tabular-nums",
+      false: "",
+    },
+    /** Células com raio próprio (coluna em destaque): `border-separate` em vez de `collapse`. */
+    separado: {
+      true: "border-separate border-spacing-0",
+      false: "",
+    },
     variant: {
       default: "",
       striped: "[&_tbody_tr:nth-child(odd)]:bg-poco",
@@ -15,6 +28,9 @@ const tableVariants = cva("w-full caption-bottom text-sm", {
   },
   defaultVariants: {
     variant: "default",
+    tamanho: "default",
+    mono: false,
+    separado: false,
   },
 })
 
@@ -25,11 +41,11 @@ interface TableProps
 }
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
-  ({ className, variant, stickyHeader, ...props }, ref) => (
+  ({ className, variant, tamanho, mono, separado, stickyHeader, ...props }, ref) => (
     <div className="relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-interno">
       <table
         ref={ref}
-        className={cn(tableVariants({ variant }), stickyHeader && "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10", className)}
+        className={cn(tableVariants({ variant, tamanho, mono, separado }), stickyHeader && "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10", className)}
         {...props}
       />
     </div>
@@ -41,13 +57,17 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement> & {
     sticky?: boolean
+    /** Fundo do cabeçalho: `poco` (rebaixado do painel) ou `popover` (dentro de popover). */
+    fundo?: "poco" | "popover"
   }
->(({ className, sticky, ...props }, ref) => (
+>(({ className, sticky, fundo, ...props }, ref) => (
   <thead
     ref={ref}
     className={cn(
       // Vantage: cabecalho sem tarja; a linha `divisoria` ja o separa do corpo.
       "[&_tr]:border-b [&_tr]:border-divisoria",
+      fundo === "poco" && "bg-poco",
+      fundo === "popover" && "bg-popover",
       sticky && "sticky top-0 z-10 bg-card backdrop-blur-sm",
       className
     )}
@@ -58,12 +78,16 @@ TableHeader.displayName = "TableHeader"
 
 const TableBody = React.forwardRef<
   HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLTableSectionElement> & {
+    /** Linha entre as linhas desenhada na célula (para `Table separado`, onde o `<tr>` não tem borda). */
+    linhasNasCelulas?: boolean
+  }
+>(({ className, linhasNasCelulas, ...props }, ref) => (
   <tbody
     ref={ref}
     className={cn(
       "[&_tr:last-child]:border-0",
+      linhasNasCelulas && "[&_td]:border-t [&_th]:border-t",
       className
     )}
     {...props}
@@ -73,12 +97,16 @@ TableBody.displayName = "TableBody"
 
 const TableFooter = React.forwardRef<
   HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLTableSectionElement> & {
+    /** `card` quando o rodapé fica fixo sobre linhas que rolam por baixo (rodapé de popover). */
+    fundo?: "card"
+  }
+>(({ className, fundo, ...props }, ref) => (
   <tfoot
     ref={ref}
     className={cn(
       "border-t border-divisoria bg-poco font-medium [&>tr]:last:border-b-0",
+      fundo === "card" && "bg-card",
       className
     )}
     {...props}
@@ -91,10 +119,20 @@ interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
   isHighlighted?: boolean
   animated?: boolean
   animationDelay?: number
+  /** Linha sem realce no hover (cabeçalho, linha de total, linha só de leitura). */
+  semHover?: boolean
+  /** Linha clicável (cursor de mão). */
+  clicavel?: boolean
+  /** Linha que não responde mais (já processada): apagada e sem mão. */
+  inativa?: boolean
+  /** Linha de dado vencido/encerrado: texto em tom secundário. */
+  apagada?: boolean
+  /** Sem a linha divisória de baixo (linha que se junta à de detalhe aberta). */
+  semBorda?: boolean
 }
 
 const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
-  ({ className, isSelected, isHighlighted, animated, animationDelay, style, ...props }, ref) => (
+  ({ className, isSelected, isHighlighted, animated, animationDelay, semHover, clicavel, inativa, apagada, semBorda, style, ...props }, ref) => (
     <tr
       ref={ref}
       data-state={isSelected ? "selected" : undefined}
@@ -102,9 +140,13 @@ const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(
         // Tokens opacos (sem `/opacidade`): o composto escurece o fundo sob o
         // texto e derruba o contraste. `poco` e o degrau rebaixado do painel.
         "border-b border-divisoria transition-colors duration-200",
-        "hover:bg-poco",
+        semHover ? "hover:bg-transparent" : "hover:bg-poco",
         "data-[state=selected]:bg-marca-tint",
         isHighlighted && "bg-warning-bg",
+        clicavel && !inativa && "cursor-pointer",
+        inativa && "cursor-default opacity-70",
+        apagada && "text-muted-foreground",
+        semBorda && "border-b-0",
         animated && "animate-fade-in-up anim-fill-both anim-atraso",
         className
       )}
@@ -120,14 +162,32 @@ TableRow.displayName = "TableRow"
 
 type SortDirection = "asc" | "desc" | null
 
-interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
+// Texto do cabeçalho: a tela escolhe tamanho, tom e peso por prop (o lint barra
+// `text-*`/`font-*` no className). O padrão é o do Vantage: text-xs, medium, muted.
+const tableHeadVariants = cva("", {
+  variants: {
+    tamanho: { default: "", sm: "text-sm" },
+    tom: { default: "", foreground: "text-foreground" },
+    peso: { default: "", forte: "font-semibold" },
+    fundo: { default: "", card: "bg-card" },
+    /** Coluna em destaque (cabeçalho da coluna que o lucro considera). */
+    destaque: { default: "", topo: "rounded-t-interno bg-card-elevated font-semibold" },
+    /** Cabeçalho clicável de ordenação. */
+    interativo: { true: "cursor-pointer select-none transition-colors hover:bg-accent/50", false: "" },
+  },
+  defaultVariants: { tamanho: "default", tom: "default", peso: "default", fundo: "default", destaque: "default", interativo: false },
+})
+
+interface TableHeadProps
+  extends React.ThHTMLAttributes<HTMLTableCellElement>,
+    VariantProps<typeof tableHeadVariants> {
   sortable?: boolean
   sortDirection?: SortDirection
   onSort?: () => void
 }
 
 const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
-  ({ className, sortable, sortDirection, onSort, children, ...props }, ref) => {
+  ({ className, sortable, sortDirection, onSort, tamanho, tom, peso, fundo, destaque, interativo, children, ...props }, ref) => {
     const SortIcon = sortDirection === "asc" 
       ? ArrowUp 
       : sortDirection === "desc" 
@@ -141,6 +201,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
           "h-11 px-3 text-left align-middle text-xs font-medium text-muted-foreground",
           "[&:has([role=checkbox])]:pr-0",
           sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
+          tableHeadVariants({ tamanho, tom, peso, fundo, destaque, interativo }),
           className
         )}
         onClick={sortable ? onSort : undefined}
@@ -166,13 +227,42 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
 )
 TableHead.displayName = "TableHead"
 
-interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
+// Texto da célula: tom, peso e tamanho por prop (o lint barra `text-*`/`font-*`
+// no className). `mono` é número alinhado à esquerda (código, id, data);
+// `numeric` é número alinhado à direita (dinheiro, quantidade).
+const tableCellVariants = cva("", {
+  variants: {
+    tom: {
+      default: "",
+      muted: "text-muted-foreground",
+      foreground: "text-foreground",
+      erro: "text-error-text",
+      sucesso: "text-success-text",
+    },
+    peso: { default: "", medio: "font-medium", forte: "font-semibold", negrito: "font-bold" },
+    tamanho: { default: "", xs: "text-xs", sm: "text-sm", base: "text-base" },
+    mono: { true: "font-mono tabular-nums", false: "" },
+    truncar: { true: "truncate", false: "" },
+    fundo: { default: "", card: "bg-card", elevado: "bg-card-elevated" },
+    /** Coluna em destaque: `meio` no corpo, `base` na última linha (fecha o raio). */
+    destaque: {
+      default: "",
+      meio: "bg-card-elevated font-semibold",
+      base: "rounded-b-interno bg-card-elevated font-semibold",
+    },
+  },
+  defaultVariants: { tom: "default", peso: "default", tamanho: "default", mono: false, truncar: false, fundo: "default", destaque: "default" },
+})
+
+interface TableCellProps
+  extends React.TdHTMLAttributes<HTMLTableCellElement>,
+    VariantProps<typeof tableCellVariants> {
   highlight?: "success" | "warning" | "error" | "info"
   numeric?: boolean
 }
 
 const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ className, highlight, numeric, ...props }, ref) => {
+  ({ className, highlight, numeric, tom, peso, tamanho, mono, truncar, fundo, destaque, ...props }, ref) => {
     // Celula destacada e TEXTO sobre a superficie da tabela (card), nao
     // preenchimento: usa a variante `-text`. Com o token de preenchimento o
     // tema claro media 2.97 / 2.06 / 4.04 / 4.13; com `-text`, 5.18 / 5.23 /
@@ -191,6 +281,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
           "p-3 align-middle",
           "[&:has([role=checkbox])]:pr-0",
           numeric && "tabular-nums text-right font-mono",
+          tableCellVariants({ tom, peso, tamanho, mono, truncar, fundo, destaque }),
           highlight && highlightClasses[highlight],
           className
         )}
@@ -267,4 +358,6 @@ export {
   TableEmpty,
   TableLoading,
   tableVariants,
+  tableHeadVariants,
+  tableCellVariants,
 }

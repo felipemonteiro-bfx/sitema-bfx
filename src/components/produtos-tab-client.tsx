@@ -192,11 +192,11 @@ export default function ProdutosTabClient({
             {table.search && (
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
+                variant="discretoPlano"
+                size="iconMini"
                 onClick={clearSearch}
                 aria-label="Limpar busca"
-                className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+                className="absolute right-2 top-1/2 -translate-y-1/2"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -306,7 +306,7 @@ export default function ProdutosTabClient({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="font-medium">{p.nome}</TableCell>
+                <TableCell peso="medio">{p.nome}</TableCell>
                 <TableCell>
                   <Badge variant="secondary" className="font-normal">{p.categoria || "N/A"}</Badge>
                 </TableCell>
@@ -316,22 +316,22 @@ export default function ProdutosTabClient({
                     {p.fornecedor?.nome || "Sem fornecedor"}
                   </div>
                 </TableCell>
-                <TableCell className="font-mono text-xs">{p.ncm}</TableCell>
-                <TableCell className="text-xs text-muted-foreground tabular-nums">
+                <TableCell tamanho="xs" mono>{p.ncm}</TableCell>
+                <TableCell tom="muted" tamanho="xs" mono>
                   {p.dataCompra
                     ? new Date(p.dataCompra).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                     : "—"}
                 </TableCell>
-                <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">{formatBRL(p.valorVenda || 0)}</TableCell>
+                <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(p.valorVenda || 0)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="discretoErro"
                           size="iconSm"
-                          className="text-muted-foreground hover:text-destructive"
+
                           title="Excluir"
                           aria-label={`Excluir ${p.nome}`}
                         >
@@ -377,9 +377,9 @@ export default function ProdutosTabClient({
                     </AlertDialog>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="discreto"
                       size="iconSm"
-                      className="text-muted-foreground hover:text-foreground"
+
                       title="Editar"
                       aria-label={`Editar ${p.nome}`}
                       onClick={() => handleOpenProduto(p.id)}

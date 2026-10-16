@@ -171,7 +171,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                 />
                 <div className="flex items-center gap-2">
                   <Switch id="so-pendentes" checked={soPendentes} onCheckedChange={setSoPendentes} />
-                  <Label htmlFor="so-pendentes" className="text-sm font-medium">
+                  <Label htmlFor="so-pendentes">
                     Só quem tem parcela a antecipar
                   </Label>
                 </div>
@@ -187,7 +187,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
               ) : (
                 <div className={TABELA_COM_ROLAGEM}>
                   <Table>
-                    <TableHeader sticky className="bg-poco">
+                    <TableHeader fundo="poco" sticky>
                       <TableRow>
                         <TableHead>Comprador</TableHead>
                         <TableHead className="hidden sm:table-cell text-right">Já antecipado</TableHead>
@@ -230,13 +230,13 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell className="hidden sm:table-cell text-right tabular-nums">
+                            <TableCell numeric className="hidden sm:table-cell">
                               <CelulaValor qtd={c.antecipadas.qtd} valor={c.antecipadas.valor} />
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell text-right tabular-nums">
+                            <TableCell numeric className="hidden lg:table-cell">
                               <CelulaValor qtd={c.emAndamento.qtd} valor={c.emAndamento.valor} />
                             </TableCell>
-                            <TableCell className="text-right tabular-nums">
+                            <TableCell numeric>
                               {c.aAntecipar.qtd > 0 ? (
                                 <CelulaValor qtd={c.aAntecipar.qtd} valor={c.aAntecipar.valor} />
                               ) : tudoAntecipado ? (
@@ -250,7 +250,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                                 </div>
                               )}
                             </TableCell>
-                            <TableCell className="hidden md:table-cell tabular-nums text-sm text-foreground">
+                            <TableCell tom="foreground" tamanho="sm" mono className="hidden md:table-cell">
                               {c.aAntecipar.proximoVencimento ? formatarDataPura(c.aAntecipar.proximoVencimento) : '—'}
                             </TableCell>
                             <TableCell className="text-right">
@@ -286,7 +286,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                 </p>
                 <div className="flex items-center gap-2">
                   <Switch id="meses-anteriores" checked={mesesAnteriores} onCheckedChange={setMesesAnteriores} />
-                  <Label htmlFor="meses-anteriores" className="text-sm font-medium">
+                  <Label htmlFor="meses-anteriores">
                     Mostrar meses anteriores
                   </Label>
                 </div>
@@ -309,7 +309,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
               ) : (
                 <div className={TABELA_COM_ROLAGEM}>
                   <Table>
-                    <TableHeader sticky className="bg-poco">
+                    <TableHeader fundo="poco" sticky>
                       <TableRow>
                         <TableHead>Vencimento</TableHead>
                         <TableHead className="text-right">Já antecipado</TableHead>
@@ -321,20 +321,20 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                     <TableBody>
                       {mesesVisiveis.map((m) => (
                         <TableRow key={m.mes} isSelected={m.mes === mesAtual}>
-                          <TableCell className="font-semibold text-foreground whitespace-nowrap">
+                          <TableCell tom="foreground" peso="forte" className="whitespace-nowrap">
                             {formatarMesAnoPuro(`${m.mes}-01`)}
                             {/* Na linha de baixo: ao lado do mes, a coluna estourava 400px. */}
                             {m.mes === mesAtual && (
                               <div className="text-xs font-medium text-muted-foreground">este mês</div>
                             )}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell numeric>
                             <CelulaValor qtd={m.antecipadas.qtd} valor={m.antecipadas.valor} />
                           </TableCell>
-                          <TableCell className="hidden lg:table-cell text-right tabular-nums">
+                          <TableCell numeric className="hidden lg:table-cell">
                             <CelulaValor qtd={m.emAndamento.qtd} valor={m.emAndamento.valor} />
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell numeric>
                             <CelulaValor qtd={m.aAntecipar.qtd} valor={m.aAntecipar.valor} />
                             {/* No celular a coluna de vencidas some; sem isto mes passado
                                 apareceria so com "—" e as vencidas em lugar nenhum. */}
@@ -351,7 +351,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="hidden sm:table-cell text-right tabular-nums">
+                          <TableCell numeric className="hidden sm:table-cell">
                             <CelulaValor
                               qtd={m.vencidasSemAntecipar.qtd}
                               valor={m.vencidasSemAntecipar.valor}

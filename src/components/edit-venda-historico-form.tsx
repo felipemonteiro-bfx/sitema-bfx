@@ -241,7 +241,7 @@ export function EditVendaHistoricoForm({
 
       <div className="flex items-center space-x-2 rounded-controle h-10 px-3 bg-poco self-end">
         <Checkbox name="temNota" id="edit-temNota" defaultChecked={editVenda.temNota} />
-        <Label htmlFor="edit-temNota" className="text-xs text-foreground cursor-pointer">
+        <Label variant="foreground" size="sm" htmlFor="edit-temNota" className="cursor-pointer">
           Com Nota Fiscal
         </Label>
       </div>
@@ -268,7 +268,6 @@ export function EditVendaHistoricoForm({
         <ReciboDownloadLink
           vendaId={editVenda.id}
           tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}
-          className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
           label={editVenda.descontoEmFolha ? "Autorização" : "Baixar recibo PDF"}
         />
         {editVenda.boletoUrl ? (

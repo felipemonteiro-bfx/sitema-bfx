@@ -73,27 +73,27 @@ function CamposRhEmails({ prefixo, empresa }: { prefixo: string; empresa?: Empre
       <legend className="px-1.5 text-sm font-semibold text-muted-foreground">RH e e-mails</legend>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor={campo("rh")} className="normal-case tracking-normal text-sm font-medium">Responsável RH</Label>
+          <Label htmlFor={campo("rh")}>Responsável RH</Label>
           <Input id={campo("rh")} name="rh" defaultValue={empresa?.responsavelRh || ""} placeholder="Responsável RH" className="uppercase" />
         </div>
         <div className="space-y-1">
-          <Label htmlFor={campo("tel")} className="normal-case tracking-normal text-sm font-medium">Telefone RH</Label>
+          <Label htmlFor={campo("tel")}>Telefone RH</Label>
           <MaskedInput id={campo("tel")} name="tel" mask="phone" defaultValue={empresa?.telefoneRh || ""} />
         </div>
       </div>
       <div className={cn("grid gap-3", prefixo === "add" && "md:grid-cols-3")}>
         <div className="space-y-1">
-          <Label htmlFor={campo("email")} className="normal-case tracking-normal text-sm font-medium">E-mail do RH</Label>
+          <Label htmlFor={campo("email")}>E-mail do RH</Label>
           <Input id={campo("email")} name="email" type="email" defaultValue={empresa?.emailRh || ""} placeholder="rh@empresa.com.br" aria-describedby={campo("email-ajuda")} />
           <p id={campo("email-ajuda")} className="text-xs text-muted-foreground">Recebe o termo assinado e os relatórios.</p>
         </div>
         <div className="space-y-1">
-          <Label htmlFor={campo("emailCopia")} className="normal-case tracking-normal text-sm font-medium">Em cópia</Label>
+          <Label htmlFor={campo("emailCopia")}>Em cópia</Label>
           <Input id={campo("emailCopia")} name="emailCopia" inputMode="email" autoComplete="off" defaultValue={empresa?.emailCopia || ""} placeholder="nome@prudent.com.br" aria-describedby={campo("emailCopia-ajuda")} />
           <p id={campo("emailCopia-ajuda")} className="text-xs text-muted-foreground">Recebe junto tudo o que vai ao RH (ex.: Prudent). Vários: separe por vírgula.</p>
         </div>
         <div className="space-y-1">
-          <Label htmlFor={campo("emailsExtras")} className="normal-case tracking-normal text-sm font-medium">Aviso de cada venda</Label>
+          <Label htmlFor={campo("emailsExtras")}>Aviso de cada venda</Label>
           <Input id={campo("emailsExtras")} name="emailsExtras" defaultValue={empresa?.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" aria-describedby={campo("emailsExtras-ajuda")} />
           <p id={campo("emailsExtras-ajuda")} className="text-xs text-muted-foreground">Recebe um aviso a cada venda nova.</p>
         </div>
@@ -254,15 +254,15 @@ export default function EmpresasTabClient({
           <form action={handleAdd} className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label htmlFor="add-empresa-nome" className="normal-case tracking-normal text-sm font-medium">Empresa <span className="text-destructive">*</span></Label>
+                <Label htmlFor="add-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
                 <Input id="add-empresa-nome" name="nome" placeholder="Empresa" aria-required="true" className="uppercase" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-empresa-cnpj" className="normal-case tracking-normal text-sm font-medium">CNPJ</Label>
+                <Label htmlFor="add-empresa-cnpj">CNPJ</Label>
                 <Input id="add-empresa-cnpj" name="cnpj" placeholder="00.000.000/0000-00" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-empresa-dia-relatorio" className="normal-case tracking-normal text-sm font-medium">Dia do relatório mensal</Label>
+                <Label htmlFor="add-empresa-dia-relatorio">Dia do relatório mensal</Label>
                 <Input
                   id="add-empresa-dia-relatorio"
                   name="diaRelatorioMensal"
@@ -295,7 +295,7 @@ export default function EmpresasTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md text-muted-foreground shadow-none hover:bg-muted hover:text-foreground hover:shadow-none">
+              <Button type="button" variant="discreto" size="iconXs" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-1 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4" />
               </Button>
             )}
@@ -363,8 +363,8 @@ export default function EmpresasTabClient({
                 <SortableHeader label="CNPJ" field="cnpj" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="RH" field="responsavelRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="Contato" field="emailRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
-                <TableHead className="text-xs text-center">Clientes</TableHead>
-                <TableHead className="text-xs">Vinculadas</TableHead>
+                <TableHead className="text-center">Clientes</TableHead>
+                <TableHead>Vinculadas</TableHead>
                 <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-20 cursor-default hover:bg-transparent" />
               </TableRow>
             </TableHeader>
@@ -385,8 +385,8 @@ export default function EmpresasTabClient({
                         onCheckedChange={(checked) => handleSelectOne(e.id, checked)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{e.nome}</TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{e.cnpj || "—"}</TableCell>
+                    <TableCell peso="medio">{e.nome}</TableCell>
+                    <TableCell tom="muted" tamanho="xs" mono>{e.cnpj || "—"}</TableCell>
                     <TableCell>{e.responsavelRh || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell>
                       {!e.telefoneRh && !e.emailRh && !e.emailCopia && <span className="text-muted-foreground">—</span>}
@@ -403,7 +403,7 @@ export default function EmpresasTabClient({
                         {e._count?.clientes ?? 0}
                       </span>
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell tamanho="xs">
                       {(e.vinculos || []).length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {(e.vinculos || []).map((v) => (
@@ -419,11 +419,11 @@ export default function EmpresasTabClient({
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {onVincularAction && (
-                          <Button
+                          <Button size="xs"
                             type="button"
-                            variant="ghost"
+                            variant="discreto"
                             onClick={() => openVinculos(e)}
-                            className="h-8 px-2 py-0 text-muted-foreground hover:text-foreground text-xs"
+
                             title="Gerenciar vínculos"
                             aria-label={`Vínculos de ${e.nome}`}
                           >
@@ -432,10 +432,10 @@ export default function EmpresasTabClient({
                         )}
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="discreto"
                           size="iconSm"
                           onClick={() => setEditingEmpresa(e)}
-                          className="text-muted-foreground hover:text-foreground"
+
                           title="Editar"
                           aria-label={`Editar ${e.nome}`}
                         >
@@ -464,16 +464,16 @@ export default function EmpresasTabClient({
               {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
               <input type="hidden" name="id" value={editingEmpresa.id} />
               <div className="space-y-1">
-                <Label htmlFor="edit-empresa-nome" className="normal-case tracking-normal text-sm font-medium">Empresa <span className="text-destructive">*</span></Label>
+                <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
                 <Input id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-cnpj" className="normal-case tracking-normal text-sm font-medium">CNPJ</Label>
+                  <Label htmlFor="edit-empresa-cnpj">CNPJ</Label>
                   <Input id="edit-empresa-cnpj" name="cnpj" defaultValue={editingEmpresa.cnpj || ""} placeholder="00.000.000/0000-00" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-dia-relatorio" className="normal-case tracking-normal text-sm font-medium">Dia do relatório mensal</Label>
+                  <Label htmlFor="edit-empresa-dia-relatorio">Dia do relatório mensal</Label>
                   <Input
                     id="edit-empresa-dia-relatorio"
                     name="diaRelatorioMensal"
@@ -520,7 +520,7 @@ export default function EmpresasTabClient({
                 // neste bloco (cada vinculo e independente), logo nao existe
                 // estado indeterminado a tratar — o `toggleVinculo` ignora o
                 // valor recebido e alterna a partir do Set.
-                <Label key={e.id} htmlFor={`vinculo-${e.id}`} className="normal-case tracking-normal flex min-h-11 cursor-pointer items-center gap-3 rounded-controle border px-3 py-2 text-sm font-normal leading-normal text-foreground hover:bg-muted">
+                <Label variant="cartao" key={e.id} htmlFor={`vinculo-${e.id}`}>
                   <Checkbox
                     id={`vinculo-${e.id}`}
                     checked={vinculacaoIds.has(e.id)}

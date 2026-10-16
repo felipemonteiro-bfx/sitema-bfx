@@ -447,7 +447,7 @@ export default function AntecipacaoClient({
             value={filtroEmpresa}
             onValueChange={setFiltroEmpresa}
             searchable={empresasDisponiveis.length > 5}
-            className="h-11 sm:h-10 rounded-controle! border border-input bg-controle dark:bg-controle"
+            className="h-11 sm:h-10"
           />
         </div>
         <div className="flex flex-col gap-1 sm:w-64">
@@ -459,7 +459,7 @@ export default function AntecipacaoClient({
             value={filtroStatus}
             onValueChange={setFiltroStatus}
             searchable={false}
-            className="h-11 sm:h-10 rounded-controle! border border-input bg-controle dark:bg-controle"
+            className="h-11 sm:h-10"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -500,9 +500,9 @@ export default function AntecipacaoClient({
         {temFiltro && (
           <Button
             type="button"
-            variant="ghost"
+            variant="discreto"
             size="sm"
-            className="h-11 justify-self-start text-muted-foreground hover:text-foreground sm:h-10"
+            className="h-11 justify-self-start sm:h-10"
             onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); setFiltroComprador(null); }}
           >
             Limpar filtros
@@ -515,7 +515,7 @@ export default function AntecipacaoClient({
           div de rolagem que o <Table> cria em volta da <table>. */}
       <div className={TABELA_COM_ROLAGEM}>
       <Table>
-        <TableHeader sticky className="bg-poco">
+        <TableHeader fundo="poco" sticky>
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
@@ -546,7 +546,7 @@ export default function AntecipacaoClient({
         <TableBody>
           {vendasFiltradas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+              <TableCell tom="muted" colSpan={9} className="text-center py-8">
                 Nenhuma venda encontrada com os filtros aplicados.
               </TableCell>
             </TableRow>
@@ -563,13 +563,9 @@ export default function AntecipacaoClient({
                 <TableRow
                   // O estado da venda mora no Badge da coluna Status; a linha só marca
                   // o que não dá para marcar (já antecipada) e o que está selecionado.
-                  className={`transition-colors duration-200 ${
-                    isTotalmenteAntecipado
-                      ? 'cursor-default opacity-70'
-                      : isSelected
-                      ? 'cursor-pointer bg-marca-tint'
-                      : 'cursor-pointer hover:bg-accent/50'
-                  }`}
+                  clicavel
+                  inativa={isTotalmenteAntecipado}
+                  isSelected={isSelected && !isTotalmenteAntecipado}
                   onClick={() => !isProcessing && toggleSelect(v.id, isTotalmenteAntecipado)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -579,8 +575,8 @@ export default function AntecipacaoClient({
                       disabled={isProcessing || isTotalmenteAntecipado}
                     />
                   </TableCell>
-                  <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
-                  <TableCell className="text-foreground text-sm max-w-45 md:max-w-37.5">
+                  <TableCell tom="foreground" peso="medio">{formatDateBR(v.dataVenda)}</TableCell>
+                  <TableCell tom="foreground" tamanho="sm" className="max-w-45 md:max-w-37.5">
                     <span className="block truncate">{v.clienteNome || '—'}</span>
                     {/* No celular Empresa e Produto deixam de ser colunas e vem aqui,
                         com o popover de produtos ainda ao alcance do toque. */}
@@ -593,14 +589,14 @@ export default function AntecipacaoClient({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden text-foreground md:table-cell">
+                  <TableCell tom="foreground" className="hidden md:table-cell">
                     {v.empresaConveniada ? (
                       <Badge variant="marca">{v.empresaConveniada}</Badge>
                     ) : (
                       <span className="text-muted-foreground text-xs">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="hidden font-semibold text-foreground max-w-62.5 md:table-cell">
+                  <TableCell tom="foreground" peso="forte" className="hidden max-w-62.5 md:table-cell">
                     {variosProdutos ? (
                       // Hover abre, clique fixa, sair sem clicar fecha — e o clique
                       // nunca seleciona a venda (ver use-popover-hover.ts).
@@ -614,7 +610,7 @@ export default function AntecipacaoClient({
                   <TableCell>
                     <StatusBadge status={v.status} />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-medium text-foreground valor-sensivel valor-sensivel-fim">{formatBRL(v.valorVenda || 0)}</TableCell>
+                  <TableCell tom="foreground" peso="medio" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(v.valorVenda || 0)}</TableCell>
                   <TableCell className="text-right">
                     {/* "total / antecipadas / a antecipar / vencidas", contados no
                         servidor; a legenda fica no "?" do cabecalho da coluna. */}
@@ -643,8 +639,8 @@ export default function AntecipacaoClient({
                   </TableCell>
                 </TableRow>
                 {expandida && temParcelaAberta && (
-                  <TableRow id={`parcelas-lote-${v.id}`} className="hover:bg-transparent">
-                    <TableCell colSpan={9} className="bg-card-elevated px-4 py-4">
+                  <TableRow semHover id={`parcelas-lote-${v.id}`}>
+                    <TableCell fundo="elevado" colSpan={9} className="px-4 py-4">
                       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                         <span className="text-sm font-bold text-foreground">
                           V{v.id} · {v.clienteNome || '—'}
@@ -753,8 +749,7 @@ export default function AntecipacaoClient({
               type="button"
               disabled={selectedIds.length === 0 || isProcessing}
               variant="outline"
-              size="sm"
-              className="h-10 flex-1 cursor-pointer gap-2 px-4 text-sm sm:flex-none"
+              className="h-10 flex-1 cursor-pointer gap-2 sm:flex-none"
               onClick={handleGerarPlanilha}
             >
               <FileSpreadsheet className="h-4 w-4" />
@@ -764,8 +759,7 @@ export default function AntecipacaoClient({
               type="button"
               disabled={selectedIds.length === 0 || isProcessing}
               variant="outline"
-              size="sm"
-              className="h-10 flex-1 cursor-pointer gap-2 px-4 text-sm sm:flex-none"
+              className="h-10 flex-1 cursor-pointer gap-2 sm:flex-none"
               onClick={handleGerarRelatorioVisual}
             >
               <ImageIcon className="h-4 w-4" />
@@ -777,8 +771,7 @@ export default function AntecipacaoClient({
               type="button"
               disabled={selectedIds.length === 0 || isProcessing || registrando}
               variant="outline"
-              size="sm"
-              className="h-10 flex-1 cursor-pointer gap-2 px-4 text-sm sm:flex-none"
+              className="h-10 flex-1 cursor-pointer gap-2 sm:flex-none"
               onClick={() => {
                 setDataRegistro(hoje);
                 setRegistroAberto(true);
@@ -792,7 +785,8 @@ export default function AntecipacaoClient({
           {/* CTA principal — espera o cálculo do servidor para não antecipar no escuro. */}
           <Button
             disabled={selectedIds.length === 0 || isProcessing || calculando}
-            className="h-11 w-full cursor-pointer gap-2 px-6 text-sm sm:ml-auto sm:h-12 sm:w-auto sm:px-8 sm:text-base"
+            size="lg"
+            className="h-11 w-full cursor-pointer gap-2 sm:ml-auto sm:h-12 sm:w-auto"
           >
             {isProcessing ? (
               <>

@@ -115,7 +115,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
 
       {ordenadas.length > 0 && (
         <div className="overflow-x-auto rounded-interno bg-poco p-2">
-          <Table className="tabular-nums">
+          <Table mono>
             <TableHeader>
               <TableRow>
                 <TableHead>Vigência</TableHead>
@@ -131,8 +131,8 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
             </TableHeader>
             <TableBody>
               {ordenadas.map((r) => (
-                <TableRow key={r.id} aria-current={editando?.id === r.id ? "true" : undefined} className={editando?.id === r.id ? "bg-muted/50" : undefined}>
-                  <TableCell className="whitespace-nowrap font-semibold">
+                <TableRow key={r.id} aria-current={editando?.id === r.id ? "true" : undefined} isSelected={editando?.id === r.id}>
+                  <TableCell peso="forte" className="whitespace-nowrap">
                     {brDe(r.vigenteDe)} → {r.vigenteAte ? brDe(r.vigenteAte) : "em aberto"}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">dia {r.diaCorte}</TableCell>
@@ -174,31 +174,31 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label htmlFor={campo("de")} className="normal-case tracking-normal text-sm font-medium">
+            <Label htmlFor={campo("de")}>
               Início <span className="font-normal text-muted-foreground">dia 1º</span>
             </Label>
             <Input id={campo("de")} name="vigenteDe" type="date" required defaultValue={isoDe(inicial?.vigenteDe ?? null)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("ate")} className="normal-case tracking-normal text-sm font-medium">
+            <Label htmlFor={campo("ate")}>
               Fim <span className="font-normal text-muted-foreground">opcional · dia 1º, não incluso</span>
             </Label>
             <Input id={campo("ate")} name="vigenteAte" type="date" defaultValue={isoDe(inicial?.vigenteAte ?? null)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("corte")} className="normal-case tracking-normal text-sm font-medium">Dia de corte</Label>
+            <Label htmlFor={campo("corte")}>Dia de corte</Label>
             <Input id={campo("corte")} name="diaCorte" type="number" min={1} max={28} step={1} required defaultValue={inicial?.diaCorte ?? REGRA_PADRAO.diaCorte} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("venc")} className="normal-case tracking-normal text-sm font-medium">Dia de vencimento</Label>
+            <Label htmlFor={campo("venc")}>Dia de vencimento</Label>
             <Input id={campo("venc")} name="diaVencimento" type="number" min={1} max={28} step={1} required defaultValue={inicial?.diaVencimento ?? REGRA_PADRAO.diaVencimento} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("pix")} className="normal-case tracking-normal text-sm font-medium">Dia do Pix</Label>
+            <Label htmlFor={campo("pix")}>Dia do Pix</Label>
             <Input id={campo("pix")} name="diaPix" type="number" min={1} max={28} step={1} required defaultValue={inicial?.diaPix ?? REGRA_PADRAO.diaPix} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("repasse")} className="normal-case tracking-normal text-sm font-medium">Repasse %</Label>
+            <Label htmlFor={campo("repasse")}>Repasse %</Label>
             <Input
               id={campo("repasse")}
               name="repassePct"
@@ -213,7 +213,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
         <div className="flex items-start gap-3 border-t pt-4">
           <Checkbox id={campo("bfx")} name="cobrancaViaBfx" defaultChecked={inicial?.cobrancaViaBfx ?? false} aria-describedby={campo("bfx-ajuda")} className="mt-0.5" />
           <div className="grid gap-1 text-sm">
-            <Label htmlFor={campo("bfx")} className="normal-case tracking-normal text-sm font-semibold">Cobrança via BFX</Label>
+            <Label htmlFor={campo("bfx")} variant="forte">Cobrança via BFX</Label>
             <p id={campo("bfx-ajuda")} className="text-muted-foreground">
               A empresa paga um Pix por mês e a BFX quita os boletos da Prudent. Só ligue depois da confirmação formal da Prudent.
             </p>
@@ -231,7 +231,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
             <>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button type="button" variant="ghost" className="mr-auto text-destructive hover:text-destructive" disabled={excluindo}>
+                  <Button type="button" variant="sutilErro" className="mr-auto" disabled={excluindo}>
                     Excluir regra
                   </Button>
                 </AlertDialogTrigger>

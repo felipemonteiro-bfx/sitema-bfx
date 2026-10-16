@@ -140,10 +140,10 @@ export default function AssinaturaPage() {
         {/* Área de assinatura */}
         <Button
           type="button"
-          variant="ghost"
+          variant="bloco"
           onClick={() => setModalOpen(true)}
           disabled={submitting}
-          className="mb-2 h-auto w-full flex-col items-stretch justify-start gap-0 whitespace-normal p-0 font-normal hover:bg-transparent touch-manipulation"
+          className="mb-2 items-stretch touch-manipulation"
         >
           {/* Quadro branco fixo (Fase 14, D-06): a tinta da assinatura (SignatureCanvas/penColor)
               é sempre preta — se o fundo virasse escuro no tema dark, o traço ficaria ilegível. */}
@@ -195,7 +195,7 @@ export default function AssinaturaPage() {
             size="lg"
             onClick={handleSubmit}
             disabled={submitting || !signatureDataUrl}
-            className="flex-1 touch-manipulation font-semibold min-h-12"
+            className="flex-1 touch-manipulation min-h-12"
           >
             {submitting ? 'Enviando...' : 'Enviar Assinado'}
           </Button>
@@ -209,12 +209,12 @@ export default function AssinaturaPage() {
             className="flex shrink-0 items-center justify-between border-b border-painel-borda bg-card px-4 py-area-segura-topo"
           >
             <h2 className="font-semibold text-sm">Assine com o dedo</h2>
-            <Button
+            <Button forma="pill"
               type="button"
               variant="ghost"
               size="icon"
               onClick={handleModalCancel}
-              className="-mr-2 rounded-full touch-manipulation"
+              className="-mr-2 touch-manipulation"
               aria-label="Fechar e voltar ao documento"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -249,7 +249,7 @@ export default function AssinaturaPage() {
               type="button"
               size="lg"
               onClick={handleModalOk}
-              className="flex-1 touch-manipulation font-semibold"
+              className="flex-1 touch-manipulation"
             >
               Confirmar
             </Button>

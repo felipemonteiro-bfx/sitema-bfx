@@ -14,7 +14,6 @@ import {
   proximoIntervalo,
   rotuloIntervalo,
   valorCompacto,
-  type EstadoMes,
 } from "@/lib/periodo-meses";
 
 const NOMES_MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -34,15 +33,8 @@ interface Props {
   className?: string;
 }
 
-// Pontas e mês único em preenchimento primário; o miolo do intervalo num tint
-// da mesma matiz, para a faixa se ler como um bloco contínuo.
-const ESTILO_MES: Record<EstadoMes, string> = {
-  inicio: "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
-  fim: "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
-  unico: "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground",
-  dentro: "bg-primary/10 text-foreground hover:bg-primary/15 hover:text-foreground",
-  fora: "text-foreground",
-};
+// Pontas e mês único em preenchimento primário (variant `default`); o miolo do intervalo num
+// tint da mesma matiz (variant `faixa`), para a faixa se ler como um bloco contínuo.
 
 /**
  * Seletor de intervalo de meses da fila de antecipação, em Popover + Button do
@@ -82,15 +74,12 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="outline"
+          // Mesma pele do gatilho do Select (ui/select), ao lado dele na barra de filtros.
+          variant="seletor"
+          data-vazio={!rotulo}
           id={id}
           aria-haspopup="dialog"
-          className={cn(
-            // Mesma pele do gatilho do Select (ui/select), ao lado dele na barra de filtros.
-            "w-full justify-start px-3 font-normal hover:border-accent/50 hover:bg-controle hover:text-foreground sm:h-10 sm:w-60",
-            !rotulo && "text-muted-foreground hover:text-muted-foreground",
-            className
-          )}
+          className={cn("sm:h-10 sm:w-60", className)}
         >
           <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
           <span className="flex-1 truncate text-left tabular-nums">{rotulo ?? "Qualquer mês"}</span>
@@ -121,7 +110,9 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
               <Button
                 key={mes}
                 type="button"
-                variant="ghost"
+                variant={estado === "dentro" ? "faixa" : preenchido ? "default" : "ghost"}
+                size="mes"
+                data-hoje={mes === mesDeHoje && !preenchido}
                 aria-pressed={selecionado}
                 aria-current={mes === mesDeHoje ? "date" : undefined}
                 aria-label={`${NOMES_MESES[i]} de ${ano}${valor ? `, falta antecipar ${valor}` : ""}`}
@@ -130,12 +121,6 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
                     ? aplicar({ inicio: mes, fim: mes, aguardandoFim: false }, true)
                     : aplicar(proximoIntervalo(intervalo, mes), intervalo.aguardandoFim)
                 }
-                className={cn(
-                  "h-14 flex-col gap-0 rounded-md px-1 font-semibold",
-                  ESTILO_MES[estado],
-                  // Mês de hoje: contorno, para achar o "agora" sem ler o ano.
-                  mes === mesDeHoje && !preenchido && "ring-1 ring-inset ring-primary/50"
-                )}
               >
                 <span className="text-sm leading-5">{NOMES_MESES[i]}</span>
                 <span
@@ -165,9 +150,9 @@ export function IntervaloMesesPicker({ inicio, fim, onChange, hoje, valoresPorMe
           {rotulo && !unico && (
             <Button
               type="button"
-              variant="ghost"
+              variant="discreto"
               size="sm"
-              className="ml-auto text-muted-foreground"
+              className="ml-auto"
               onClick={() => aplicar({ inicio: "", fim: "", aguardandoFim: false }, true)}
             >
               Limpar

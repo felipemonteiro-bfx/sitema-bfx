@@ -129,7 +129,7 @@ export function CadastrarClienteRapidoDialog({
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Nome */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+            <Label>
               Nome do cliente *
             </Label>
             <Input
@@ -159,7 +159,7 @@ export function CadastrarClienteRapidoDialog({
           {/* Telefone + CPF */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+              <Label>
                 Telefone
               </Label>
               <Input
@@ -169,7 +169,7 @@ export function CadastrarClienteRapidoDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+              <Label>
                 CPF <span className="font-normal">(so p/ boleto)</span>
               </Label>
               <Input
@@ -182,7 +182,7 @@ export function CadastrarClienteRapidoDialog({
 
           {/* Empresa parceira */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
+            <Label>
               Empresa parceira
             </Label>
             <FormSelect

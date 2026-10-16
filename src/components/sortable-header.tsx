@@ -17,7 +17,8 @@ export function SortableHeader({ label, field, currentField, currentDir, onSort,
   const isActive = currentField === field;
   return (
     <TableHead
-      className={`cursor-pointer select-none hover:bg-accent/50 transition-colors ${className}`}
+      interativo
+      className={className}
       onClick={() => onSort(field)}
     >
       {/* `whitespace-nowrap` + `shrink-0`: sem os dois, numa coluna estreita o

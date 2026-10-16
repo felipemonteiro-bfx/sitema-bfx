@@ -256,7 +256,7 @@ export default function ProdutoFormClient({
       <div className="grid gap-6 md:grid-cols-4">
         <div className="md:col-span-1 space-y-4">
           <div className="space-y-2">
-            <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Imagem do Produto</Label>
+            <Label>Imagem do Produto</Label>
               <div className="relative w-full aspect-square rounded-interno border border-dashed flex items-center justify-center bg-poco hover:bg-muted transition overflow-hidden">
               {(previewUrl || imagemPath) ? (
                 <Image
@@ -283,7 +283,7 @@ export default function ProdutoFormClient({
         <div className="md:col-span-3 grid gap-3">
           <div className="grid gap-3 md:grid-cols-3">
             <div className="space-y-1 relative">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Nome do produto</Label>
+              <Label>Nome do produto</Label>
               <div className="relative">
                 <Input
                   value={nome}
@@ -304,7 +304,7 @@ export default function ProdutoFormClient({
             </div>
 
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Categoria</Label>
+              <Label>Categoria</Label>
               <Input
                 value={categoria}
                 onChange={(e) => setCategoria(normalizeCadastroText(e.target.value))}
@@ -323,29 +323,29 @@ export default function ProdutoFormClient({
             </div>
 
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Marca</Label>
+              <Label>Marca</Label>
               <Input value={marca} onChange={(e) => setMarca(normalizeCadastroText(e.target.value))} placeholder="Marca" className="uppercase" />
             </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Custo (R$)</Label>
+              <Label>Custo (R$)</Label>
               <CurrencyInput value={custo} onChange={setCusto} />
             </div>
 
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Valor de Venda (R$)</Label>
+              <Label>Valor de Venda (R$)</Label>
               <CurrencyInput value={valor} onChange={setValor} />
             </div>
 
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Qtd em Estoque</Label>
+              <Label>Qtd em Estoque</Label>
               <Input type="number" value={estoque} onChange={(e) => setEstoque(e.target.value)} placeholder="0" />
             </div>
 
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Fornecedor</Label>
+              <Label>Fornecedor</Label>
               <FormSelect
                 name="fornecedorId"
                 value={fornecedorId}
@@ -356,7 +356,7 @@ export default function ProdutoFormClient({
             </div>
 
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium">Data da Compra</Label>
+              <Label>Data da Compra</Label>
               <DateInput
                 value={dataCompra}
                 onChange={(v) => setDataCompra(v)}
@@ -366,7 +366,7 @@ export default function ProdutoFormClient({
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
-              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">NCM</Label>
+              <Label>NCM</Label>
               <Input value={ncm} onChange={(e) => setNcm(normalizeCadastroText(e.target.value))} placeholder="8 dígitos" maxLength={8} className="uppercase" />
               <div className="mt-2 rounded-interno bg-poco p-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -382,8 +382,8 @@ export default function ProdutoFormClient({
                       <Button
                         key={item.codigo}
                         type="button"
-                        variant="ghost"
-                        className="h-auto w-full items-start justify-start gap-2 whitespace-normal rounded-md px-2 py-2 text-left text-xs font-normal"
+                        variant="linhaCompacta"
+                        className="items-start gap-2"
                         onClick={() => setNcm(item.codigo)}
                       >
                         <span className="rounded bg-background px-2 py-1 font-semibold text-foreground">
@@ -413,7 +413,7 @@ export default function ProdutoFormClient({
         <Button
           disabled={isSubmitting || isUploading || isDuplicate}
           type="submit"
-          className="bg-primary hover:bg-primary/90"
+
           leftIcon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
         >
           {isEdit ? "Atualizar Produto" : "Cadastrar Produto"}

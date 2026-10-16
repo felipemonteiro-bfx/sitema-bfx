@@ -84,8 +84,8 @@ export default async function Page() {
                     {clientes.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell>{c.nome}</TableCell>
-                        <TableCell className="text-right font-medium tabular-nums">{c.pontos ?? 0}</TableCell>
-                        <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
+                        <TableCell peso="medio" numeric>{c.pontos ?? 0}</TableCell>
+                        <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
                         <TableCell>
                           <form action={resgatarPontosCliente} className="flex items-center gap-1">
                             <input type="hidden" name="clienteId" value={c.id} />

@@ -211,18 +211,22 @@ describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", ()
     expect(fonte.includes('className="whitespace-nowrap"')).toBe(true);
   });
 
-  it("o unico whitespace-normal do projeto continua sendo o item do sino, que e flex-col de proposito", () => {
+  it("whitespace-normal so existe nas variantes de bloco/linha do Button, que quebram linha de proposito", () => {
+    // O lint barra tipografia/whitespace no className das telas: o item do sino (flex-col)
+    // usa `variant="bloco"` e a regra mora em button-variants.ts.
     const comWhitespaceNormal = [
       "src/components/notification-bell.tsx",
       "src/components/ui/button.tsx",
       "src/components/ui/tabs.tsx",
       "src/components/sortable-header.tsx",
     ].filter((f) => ler(f).includes("whitespace-normal"));
-    expect(comWhitespaceNormal).toEqual(["src/components/notification-bell.tsx"]);
+    expect(comWhitespaceNormal).toEqual([]);
 
     const sino = ler("src/components/notification-bell.tsx");
-    const linha = sino.split("\n").find((l) => l.includes("whitespace-normal")) || "";
-    expect(linha.includes("flex-col")).toBe(true);
+    expect(sino.includes('variant="bloco"')).toBe(true);
+    const variants = ler("src/components/ui/button-variants.ts");
+    const bloco = variants.split("\n").find((l) => l.includes("h-auto w-full flex-col") && l.includes("whitespace-normal")) || "";
+    expect(bloco.includes("flex-col")).toBe(true);
   });
 });
 

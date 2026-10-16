@@ -144,11 +144,11 @@ export default function FornecedoresTabClient({
           <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="add-fornecedor-nome" className="normal-case tracking-normal text-sm font-medium">Nome do Fornecedor <span className="text-destructive">*</span></Label>
+                <Label htmlFor="add-fornecedor-nome">Nome do Fornecedor <span className="text-destructive">*</span></Label>
                 <Input id="add-fornecedor-nome" name="nome" placeholder="Razao Social ou Nome" aria-required="true" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-fornecedor-telefone" className="normal-case tracking-normal text-sm font-medium">Telefone/WhatsApp</Label>
+                <Label htmlFor="add-fornecedor-telefone">Telefone/WhatsApp</Label>
                 <MaskedInput id="add-fornecedor-telefone" name="telefone" mask="phone" />
               </div>
             </div>
@@ -171,7 +171,7 @@ export default function FornecedoresTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none">
+              <Button type="button" variant="discretoPlano" size="iconMini" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2">
                 <Trash2 className="h-3 w-3" />
               </Button>
             )}
@@ -259,15 +259,15 @@ export default function FornecedoresTabClient({
                         onCheckedChange={(checked) => handleSelectOne(f.id, checked)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{f.nome}</TableCell>
+                    <TableCell peso="medio">{f.nome}</TableCell>
                     <TableCell>{f.telefone}</TableCell>
                     <TableCell>
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="discreto"
                         size="iconSm"
                         onClick={() => setEditingFornecedor(f)}
-                        className="text-muted-foreground hover:text-foreground"
+
                         title="Editar"
                         aria-label={`Editar ${f.nome}`}
                       >
@@ -296,11 +296,11 @@ export default function FornecedoresTabClient({
               <input type="hidden" name="id" value={editingFornecedor.id} />
               <div className="grid gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-fornecedor-nome" className="normal-case tracking-normal text-sm font-medium">Nome do Fornecedor <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="edit-fornecedor-nome">Nome do Fornecedor <span className="text-destructive">*</span></Label>
                   <Input id="edit-fornecedor-nome" name="nome" defaultValue={editingFornecedor.nome} placeholder="Razao Social ou Nome" aria-required="true" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-fornecedor-telefone" className="normal-case tracking-normal text-sm font-medium">Telefone/WhatsApp</Label>
+                  <Label htmlFor="edit-fornecedor-telefone">Telefone/WhatsApp</Label>
                   <MaskedInput id="edit-fornecedor-telefone" name="telefone" mask="phone" defaultValue={editingFornecedor.telefone || ""} />
                 </div>
               </div>

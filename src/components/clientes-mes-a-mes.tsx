@@ -90,7 +90,7 @@ export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
         </div>
 
         <div className="space-y-2">
-          <Table className="text-sm">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Mês</TableHead>
@@ -104,25 +104,20 @@ export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
               {[...meses].reverse().map((m) => (
                 <TableRow key={m.mesLongo}>
                   <TableCell>{m.mesLongo}</TableCell>
-                  <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
+                  <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                     {m.faturamento === undefined ? "—" : formatBRL(m.faturamento)}
                   </TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">
+                  <TableCell peso="forte" numeric>
                     {m.total}
                     <span className="block text-xs font-normal text-muted-foreground">{m.novos} {m.novos === 1 ? "novo" : "novos"}</span>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground valor-sensivel valor-sensivel-fim">
+                  <TableCell tom="muted" numeric className="valor-sensivel valor-sensivel-fim">
                     {m.faturamento === undefined || m.total === 0 ? "—" : formatBRL(m.faturamento / m.total)}
                   </TableCell>
                   <TableCell
-                    className={cn(
-                      "text-right font-semibold tabular-nums",
-                      !m.variacao || m.variacao.diferenca === 0
-                        ? "text-muted-foreground"
-                        : m.variacao.diferenca > 0
-                          ? "text-success-text"
-                          : "text-error-text"
-                    )}
+                    numeric
+                    peso="forte"
+                    tom={!m.variacao || m.variacao.diferenca === 0 ? "muted" : m.variacao.diferenca > 0 ? "sucesso" : "erro"}
                   >
                     {textoVariacao(m.variacao)}
                   </TableCell>

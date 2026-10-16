@@ -167,8 +167,8 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
               <div className="ml-auto flex gap-2">
                 <Button
                   type="button"
-                  variant="outline"
-                  className="text-error-text hover:text-error-text"
+                  variant="outlineErro"
+
                   disabled={sel.length === 0 || salvando}
                   onClick={() => {
                     setMotivo('');
@@ -225,13 +225,13 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
                           aria-label={`Selecionar ${t.titulo}`}
                         />
                       </TableCell>
-                      <TableCell className="font-semibold tabular-nums text-foreground">{t.titulo}</TableCell>
-                      <TableCell className="max-w-55 text-foreground">
+                      <TableCell tom="foreground" peso="forte" mono>{t.titulo}</TableCell>
+                      <TableCell tom="foreground" className="max-w-55">
                         <span className="block truncate">{t.colaborador || '—'}</span>
                       </TableCell>
-                      <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">{t.matricula || '—'}</TableCell>
-                      <TableCell className="tabular-nums text-foreground">{formatarDataPura(t.vencimento)}</TableCell>
-                      <TableCell className="pr-4 text-right tabular-nums text-foreground valor-sensivel valor-sensivel-fim">
+                      <TableCell tom="muted" mono className="hidden sm:table-cell">{t.matricula || '—'}</TableCell>
+                      <TableCell tom="foreground" mono>{formatarDataPura(t.vencimento)}</TableCell>
+                      <TableCell tom="foreground" numeric className="pr-4 valor-sensivel valor-sensivel-fim">
                         {formatBRL(t.valor)}
                       </TableCell>
                     </TableRow>

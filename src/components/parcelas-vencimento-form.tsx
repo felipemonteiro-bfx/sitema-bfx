@@ -96,7 +96,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
               className="p-4 rounded-interno bg-poco space-y-2"
             >
               <div className="flex items-center justify-between">
-                <Label className="text-foreground font-semibold">
+                <Label variant="forte">
                   {parcela.numeroParcela}ª Parcela
                 </Label>
                 <div className="text-sm font-semibold tabular-nums text-foreground valor-sensivel">
@@ -105,7 +105,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Vencimento</Label>
+                <Label size="sm">Vencimento</Label>
                 <DateInput
                   value={parcela.dataVencimento}
                   onChange={(v) => handleDataChange(index, v)}
@@ -114,7 +114,7 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Valor (ajustar se necessário)</Label>
+                <Label size="sm">Valor (ajustar se necessário)</Label>
                 <Input
                   type="number"
                   step="0.01"

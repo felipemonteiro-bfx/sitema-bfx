@@ -61,18 +61,18 @@ function BoletoTable({
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+            <TableCell tom="muted" colSpan={4} className="text-center py-10">
               {emptyMessage}
             </TableCell>
           </TableRow>
         ) : (
           items.map((p) => (
             <TableRow key={p.id}>
-              <TableCell className="font-medium max-w-55 truncate">
+              <TableCell peso="medio" truncar className="max-w-55">
                 {p.description || `Cobrança ${p.id.slice(-8)}`}
               </TableCell>
-              <TableCell className="tabular-nums">{formatDateBr(p.dueDate)}</TableCell>
-              <TableCell className="text-right font-medium tabular-nums valor-sensivel valor-sensivel-fim">
+              <TableCell mono>{formatDateBr(p.dueDate)}</TableCell>
+              <TableCell peso="medio" numeric className="valor-sensivel valor-sensivel-fim">
                 {formatBRL(p.value)}
               </TableCell>
               <TableCell>
@@ -402,8 +402,8 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                               <TableRow key={v.id}>
                                 <TableCell>{formatDateBr(v.dataVenda.toISOString().slice(0, 10))}</TableCell>
                                 <TableCell>{v.cliente?.nome ?? "—"}</TableCell>
-                                <TableCell className="max-w-45 truncate">{v.produtoNome ?? "—"}</TableCell>
-                                <TableCell className="text-right tabular-nums font-medium valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
+                                <TableCell truncar className="max-w-45">{v.produtoNome ?? "—"}</TableCell>
+                                <TableCell peso="medio" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
                                 <TableCell>
                                   <GerarBoletoButton
                                     vendaId={v.id}

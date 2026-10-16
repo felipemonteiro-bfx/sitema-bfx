@@ -149,7 +149,7 @@ export function WebhookAsaasCard({ url, tokenMascarado, status, ultimoAviso }: P
 
       <CardContent className="space-y-5">
         <div className="space-y-1.5">
-          <Label htmlFor="webhook-asaas-url" className="normal-case tracking-normal text-sm font-medium">URL do webhook</Label>
+          <Label htmlFor="webhook-asaas-url">URL do webhook</Label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input id="webhook-asaas-url" readOnly value={url} className={CAMPO_LEITURA} onFocus={(e) => e.currentTarget.select()} />
             <Button type="button" variant="outline" leftIcon={<Copy className="h-4 w-4" />} onClick={copiarUrl} aria-label="Copiar URL do webhook">
@@ -159,7 +159,7 @@ export function WebhookAsaasCard({ url, tokenMascarado, status, ultimoAviso }: P
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="webhook-asaas-token" className="normal-case tracking-normal text-sm font-medium">Token de autenticação</Label>
+          <Label htmlFor="webhook-asaas-token">Token de autenticação</Label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Input
               id="webhook-asaas-token"

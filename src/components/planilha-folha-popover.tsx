@@ -107,7 +107,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-11 gap-2 font-semibold sm:h-10">
+        <Button type="button" variant="outline" className="h-11 gap-2 sm:h-10">
           <Download className="h-4 w-4 text-primary" />
           Baixar planilha da folha
         </Button>
@@ -147,7 +147,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
             onValueChange={setEmpresa}
             placeholder="Escolha a empresa"
             searchable={empresasUnicas.length > 5}
-            className="h-11 sm:h-10 rounded-controle! border border-input bg-controle dark:bg-controle"
+            className="h-11 sm:h-10"
           />
         </div>
 

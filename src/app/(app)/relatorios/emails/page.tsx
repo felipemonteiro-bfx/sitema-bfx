@@ -124,7 +124,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Bus
               <div className="hidden rounded-interno bg-poco md:block">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
+                    <TableRow semHover>
                       <TableHead className="w-32">Enviado em</TableHead>
                       <TableHead className="w-40">Tipo</TableHead>
                       <TableHead className="w-40">Empresa</TableHead>
@@ -135,8 +135,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Bus
                   <TableBody>
                     {envios.map((e) => (
                       <TableRow key={e.id} data-state={e.id === envioId ? "selected" : undefined}>
-                        <TableCell className="align-top font-mono text-muted-foreground">{formatarQuando(e.enviadoEm)}</TableCell>
-                        <TableCell className="align-top font-medium">{rotuloTipoEmail(e.tipo)}</TableCell>
+                        <TableCell tom="muted" mono className="align-top">{formatarQuando(e.enviadoEm)}</TableCell>
+                        <TableCell peso="medio" className="align-top">{rotuloTipoEmail(e.tipo)}</TableCell>
                         <TableCell className="align-top">{e.empresa?.nome ?? "—"}</TableCell>
                         <TableCell className="align-top">
                           <div className="space-y-0.5">

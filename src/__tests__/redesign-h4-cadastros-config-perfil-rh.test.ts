@@ -45,8 +45,12 @@ describe("redesign H4 - padrões Vantage", () => {
     );
     expect(ruins).toEqual([]);
   });
-  it("todo Label passa normal-case (o Label da ui vem em caixa-alta) ou é sr-only", () => {
-    const ruins = violacoes(/<Label\b/).filter((l) => !/normal-case|sr-only/.test(l));
+  it("o Label da ui nasce em frase normal e nenhuma tela o põe em caixa-alta", () => {
+    // Antes cada <Label> repetia `normal-case tracking-normal`; agora a base do Label ja e Vantage.
+    const base = readFileSync(join(RAIZ, "src/components/ui/label.tsx"), "utf8");
+    expect(base.includes("uppercase")).toBe(false);
+    expect(base.includes("tracking-wide")).toBe(false);
+    const ruins = violacoes(/<Label\b/).filter((l) => /uppercase|tracking-/.test(l));
     expect(ruins).toEqual([]);
   });
   it("título de painel não é verde", () => {

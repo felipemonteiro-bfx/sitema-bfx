@@ -70,19 +70,19 @@ export default async function Page() {
             <form action={savePerfil} className="grid gap-3 md:grid-cols-2">
               {/* Sem campo de id: savePerfil usa o id da sessao. */}
               <div className="space-y-1">
-                <Label htmlFor="perfil-nome" className="normal-case tracking-normal text-sm font-medium">Nome</Label>
+                <Label htmlFor="perfil-nome">Nome</Label>
                 <Input id="perfil-nome" name="nome" defaultValue={user.nomeExibicao || ""} placeholder="Nome" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="perfil-email" className="normal-case tracking-normal text-sm font-medium">E-mail</Label>
+                <Label htmlFor="perfil-email">E-mail</Label>
                 <Input id="perfil-email" name="email" defaultValue={user.email || ""} placeholder="Email" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="perfil-telefone" className="normal-case tracking-normal text-sm font-medium">Telefone</Label>
+                <Label htmlFor="perfil-telefone">Telefone</Label>
                 <MaskedInput id="perfil-telefone" name="telefone" mask="phone" defaultValue={user.telefone || ""} />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="perfil-endereco" className="normal-case tracking-normal text-sm font-medium">Endereço</Label>
+                <Label htmlFor="perfil-endereco">Endereço</Label>
                 <Input id="perfil-endereco" name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" />
               </div>
               <button className={cn(buttonVariants(), "md:col-span-2 bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar alterações</button>

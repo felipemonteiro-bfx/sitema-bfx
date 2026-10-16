@@ -72,9 +72,14 @@ describe("H8 — padrões do Vantage nos componentes compartilhados e nos esquel
   describe("FormSelect igual ao Select da ui", () => {
     const fonte = FONTES["form-select.tsx"];
     it("gatilho com rounded-controle, bg-controle, border-input e 44px", () => {
+      // A pele do gatilho mora na variante `seletor` do Button (button-variants.ts).
+      expect(fonte.includes('variant="seletor"')).toBe(true);
+      const variantes = ler("src/components/ui/button-variants.ts");
+      const seletor = variantes.split("\n").find((l) => l.includes("rounded-controle border border-input bg-controle") && l.includes("h-11")) || "";
       for (const classe of ["rounded-controle", "bg-controle", "border-input", "h-11"]) {
-        expect(fonte.includes(classe), classe).toBe(true);
+        expect(seletor.includes(classe), classe).toBe(true);
       }
+      expect(seletor.includes("border-2"), "border-2").toBe(false);
       expect(fonte.includes("border-2"), "border-2").toBe(false);
     });
     it("sem opacidade em texto", () => {

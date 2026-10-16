@@ -123,7 +123,7 @@ export default async function Page() {
                   <div className="hidden overflow-x-auto md:block">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
+                        <TableRow semHover>
                           <TableHead>Empresa</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Vendas</TableHead>
@@ -134,12 +134,12 @@ export default async function Page() {
                       </TableHeader>
                       <TableBody>
                         {itens.map((log) => (
-                          <TableRow key={log.id} className="hover:bg-transparent">
+                          <TableRow semHover key={log.id}>
                             <TableCell>{log.empresa?.nome ?? `#${log.empresaId}`}</TableCell>
                             <TableCell>{statusBadge(log.status)}</TableCell>
-                            <TableCell className="text-right font-mono">{log.totalVendas}</TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(log.valorTotal)}</TableCell>
-                            <TableCell className="font-mono text-muted-foreground">{formatDataHora(log.enviadoEm)}</TableCell>
+                            <TableCell numeric>{log.totalVendas}</TableCell>
+                            <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(log.valorTotal)}</TableCell>
+                            <TableCell tom="muted" mono>{formatDataHora(log.enviadoEm)}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap items-center gap-2">
                                 <a

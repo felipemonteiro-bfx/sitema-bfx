@@ -173,7 +173,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             <PeriodoSegmentado periodos={periodos} />
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="h-12 rounded-controle" leftIcon={<Filter className="h-4 w-4" />}>
+                <Button variant="outline" className="h-12" leftIcon={<Filter className="h-4 w-4" />}>
                   Filtros
                   {vendorsFilter && (
                     <span className="size-2 rounded-full bg-primary" aria-label="Filtro de vendedores ativo" />
@@ -305,16 +305,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               <CardContent className="rounded-interno bg-poco p-0">
                 <Table className="[&_td]:px-2 [&_th]:px-2 sm:[&_td]:px-4 sm:[&_th]:px-4">
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-sm">Vendedor</TableHead>
-                      <TableHead className="text-right text-sm max-sm:hidden">Vendas</TableHead>
-                      <TableHead className="text-right text-sm">Faturamento</TableHead>
-                      <TableHead className="text-sm">Margem</TableHead>
+                    <TableRow semHover>
+                      <TableHead tamanho="sm">Vendedor</TableHead>
+                      <TableHead tamanho="sm" className="text-right max-sm:hidden">Vendas</TableHead>
+                      <TableHead tamanho="sm" className="text-right">Faturamento</TableHead>
+                      <TableHead tamanho="sm">Margem</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {teamRows.map((r) => (
-                      <TableRow key={r.vendedor} className="hover:bg-transparent">
+                      <TableRow semHover key={r.vendedor}>
                         <TableCell>
                           <div className="flex items-center gap-2.5">
                             <span

@@ -301,9 +301,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                             {formatBRL(sugestao.valorVenda)}
                           </div>
                           <Button
-                            size="sm"
+                            size="xs"
                             variant="ghost"
-                            className="h-6 px-2 text-xs"
+
                             onClick={(e) => {
                               e.stopPropagation();
                               onAddProduto({

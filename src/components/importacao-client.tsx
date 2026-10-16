@@ -450,11 +450,11 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                       <TableCell className="p-1 text-center">
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
+                          variant="sutilErro"
+                          size="iconMini"
                           aria-label="Remover linha"
                           onClick={() => removeRow(row.id)}
-                          className="h-6 w-6 text-error-text shadow-none hover:bg-transparent hover:text-error-text hover:shadow-none"
+
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -462,7 +462,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                     </TableRow>
                     {motivo && (
                       <TableRow>
-                        <TableCell colSpan={11} className="px-2.5 pb-1.5 pt-0 text-xs text-error-text">
+                        <TableCell tom="erro" tamanho="xs" colSpan={11} className="px-2.5 pb-1.5 pt-0">
                           Linha {index + 1}: {motivo}.
                         </TableCell>
                       </TableRow>

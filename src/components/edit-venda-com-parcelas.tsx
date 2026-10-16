@@ -101,7 +101,7 @@ export function EditVendaComParcelas({
       <FormSecaoTitulo>Pagamento e parcelas</FormSecaoTitulo>
 
       <div className="space-y-1">
-        <Label htmlFor="edit-parcelas" className="text-xs">Parcelas</Label>
+        <Label size="sm" htmlFor="edit-parcelas">Parcelas</Label>
         <Input
           id="edit-parcelas"
           name="parcelas"

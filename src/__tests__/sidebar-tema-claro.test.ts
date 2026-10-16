@@ -415,12 +415,17 @@ describe("controles do topo e do rodape", () => {
   it("sino e olho tem 44px e o visual de controle do Vantage", () => {
     const sino = semComentarios(ler("src/components/notification-bell.tsx"));
     const olho = semComentarios(ler("src/components/valores-toggle.tsx"));
-    for (const fonte of [sino, olho]) {
-      expect(fonte.includes("size-11")).toBe(true);
-      expect(fonte.includes("bg-controle")).toBe(true);
-      expect(fonte.includes("border-divisoria")).toBe(true);
-      expect(fonte.includes("rounded-controle")).toBe(true);
-    }
+    // O visual de controle mora nas variantes `controle`/`controleAtivo` do Button (o lint barra
+    // cor, borda e raio no className das telas); o alvo de 44px vem de `size-11` ou `size="icon"`.
+    expect(sino.includes('variant="controle"')).toBe(true);
+    expect(olho.includes('"controleAtivo"') && olho.includes('"controle"')).toBe(true);
+    expect(sino.includes("size-11")).toBe(true);
+    expect(olho.includes('size="icon"')).toBe(true);
+    const variantes = ler("src/components/ui/button-variants.ts");
+    const controle = variantes.split("\n").find((l) => l.includes("border-divisoria bg-controle")) || "";
+    expect(controle.includes("bg-controle")).toBe(true);
+    expect(controle.includes("border-divisoria")).toBe(true);
+    expect(variantes.includes("rounded-controle")).toBe(true);
   });
 
   it("Sair e tema tem alvo de pelo menos 44px", () => {

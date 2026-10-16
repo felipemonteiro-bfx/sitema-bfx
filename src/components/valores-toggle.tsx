@@ -57,7 +57,7 @@ export function ValoresToggle() {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant={oculto ? "controleAtivo" : "controle"}
       size="icon"
       // `size="icon"` exige nome acessivel (skill shadcn-bfx). O nome e' FIXO e o estado vai
       // no `aria-pressed`: nome que muda junto com o estado faz o leitor anunciar
@@ -67,10 +67,7 @@ export function ValoresToggle() {
       aria-pressed={oculto}
       title={rotulo}
       onClick={alternar}
-      className={cn(
-        "relative size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-texto-secundario shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none",
-        oculto && "border-primary bg-success-bg text-success-text hover:bg-success-bg hover:text-success-text"
-      )}
+      className="relative touch-manipulation"
     >
       {oculto ? (
         <EyeOff className="h-[1.2rem] w-[1.2rem]" />

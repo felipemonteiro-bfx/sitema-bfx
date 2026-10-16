@@ -130,18 +130,14 @@ export function FormSelect({
         <PopoverTrigger asChild>
           <Button
             type="button"
-            variant="outline"
+            variant="seletor"
+            data-vazio={!value}
             role="combobox"
             aria-expanded={open}
             aria-controls={listaId}
             id={id}
-            className={cn(
-              // Igual ao Select da ui (Vantage): 44px, rounded-controle, fundo
-              // `controle`, contorno `input`, sem sombra.
-              "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm font-normal text-foreground ring-offset-background hover:border-input hover:bg-controle hover:text-foreground active:scale-100 focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-              !value && "text-muted-foreground",
-              className
-            )}
+            // Igual ao Select da ui (Vantage): a pele inteira vem da variante `seletor`.
+            className={className}
           >
             <span className="flex min-w-0 items-center gap-2">
               {selected?.indicador && <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", selected.indicador)} />}

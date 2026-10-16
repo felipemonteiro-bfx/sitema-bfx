@@ -301,7 +301,7 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
                 <Button
                   type="button"
                   variant="ghost"
-                  className="ml-auto h-11 gap-2 px-3 text-foreground"
+                  className="ml-auto h-11 gap-2"
                   onClick={() => abrir(perguntarIA)}
                 >
                   <Sparkles className="h-4.5 w-4.5 text-primary" aria-hidden="true" />
@@ -398,15 +398,12 @@ export function BuscaRapidaGatilho({ className }: { className?: string }) {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="campo"
       aria-keyshortcuts="Meta+K Control+K"
       // Texto visível curto (cabe ao lado do atalho); o nome acessível continua completo.
       aria-label="Buscar venda, cliente, página"
       onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCA))}
-      className={cn(
-        "h-9 w-full justify-start gap-2.5 rounded-controle bg-controle px-3 font-normal text-muted-foreground hover:bg-controle-ativo hover:text-foreground",
-        className,
-      )}
+      className={cn("w-full gap-2.5", className)}
     >
       <Search className="h-4 w-4" aria-hidden="true" />
       <span className="min-w-0 flex-1 truncate text-left">Buscar…</span>

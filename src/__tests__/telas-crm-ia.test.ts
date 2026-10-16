@@ -286,8 +286,9 @@ describe("achado 7 — corpo da tabela markdown no tema claro", () => {
     const fonte = ler("src/components/intelligence-chat-client.tsx");
     // H5: a tabela markdown passou a usar o `TableCell` da ui (poço do Vantage), no lugar do <td> cru.
     const celula = fonte.split("<TableCell")[1]?.split("</TableCell>")[0] ?? "";
+    // Tom por prop do TableCell (tom="foreground" = text-foreground); o className nao leva cor.
     expect(celula.includes("text-muted-foreground")).toBe(false);
-    expect(celula.includes("text-foreground")).toBe(true);
+    expect(celula.includes('tom="foreground"')).toBe(true);
   });
 });
 

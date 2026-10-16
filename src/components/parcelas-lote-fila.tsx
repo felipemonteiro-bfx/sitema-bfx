@@ -8,7 +8,7 @@
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatBRL } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 import { formatarDataPura } from "@/lib/data-pura";
 import { algumMesNoIntervalo } from "@/lib/periodo-meses";
 import type { ParcelasDaVenda } from "@/lib/antecipacao-compradores";
@@ -69,15 +69,9 @@ export function ParcelasLoteFila({
           <Label
             key={p.id ?? p.numero}
             htmlFor={inputId}
-            className={cn(
-              // O Label traz tamanho/peso/cor próprios; o cartão herda os do contexto.
-              "text-base font-normal leading-normal text-foreground",
-              "flex min-h-11 flex-col gap-1 rounded-controle px-3.5 py-3 tabular-nums transition-colors",
-              marcada
-                ? "border border-primary bg-marca-tint"
-                : "border border-dashed border-divisoria",
-              travada || !vendaSelecionada || desabilitado ? "cursor-not-allowed" : "cursor-pointer hover:bg-accent/50"
-            )}
+            variant="parcela"
+            data-marcada={marcada}
+            data-bloqueada={travada || !vendaSelecionada || desabilitado}
           >
             <span className="flex items-center gap-2 font-bold text-foreground">
               <Checkbox
