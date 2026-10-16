@@ -44,12 +44,13 @@ describe('item 3: rodapé do composer compacto',()=>{
   expect(fechado).toContain('Aguarde nova mensagem do cliente · envio com tarifa bloqueado');
   expect(aberto).toContain('0/4096');
  });
- it('o texto longo mudou para o "Como funciona o automático", sem sumir',()=>{
-  const d=aberto.indexOf('<details');
-  expect(d).toBeGreaterThan(-1);
-  for(const t of ['Janela aberta. Templates com tarifa continuam bloqueados','Clicar no botão não envia a mensagem'])expect(aberto.indexOf(t)).toBeGreaterThan(d);
-  expect(fechado.indexOf('Janela encerrada. Envio com tarifa bloqueado')).toBeGreaterThan(fechado.indexOf('<details'));
-  expect(aberto).toContain('Como funciona o automático');
+ it('o texto longo vive no Popover do ícone de ajuda (K), sem sumir: fica no leitor de tela',()=>{
+  // Antes era um <details> de uma linha; agora é um ícone de ajuda na faixa do assistente. O texto
+  // continua no DOM (sr-only, ligado ao gatilho por aria-describedby) e abre visível no Popover.
+  expect(aberto).toContain('aria-label="Como funciona o automático"');
+  expect(aberto).toContain('aria-describedby="ajuda-automatico"');
+  for(const t of ['Janela aberta. Templates com tarifa continuam bloqueados','Clicar no botão não envia a mensagem'])expect(aberto).toContain(t);
+  expect(fechado).toContain('Janela encerrada. Envio com tarifa bloqueado');
  });
 });
 
