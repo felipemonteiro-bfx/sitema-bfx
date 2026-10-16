@@ -130,51 +130,15 @@ interface CardStatsProps extends React.HTMLAttributes<HTMLDivElement> {
   animated?: boolean
 }
 
-// `value` e a cor do numero do KPI. Precisa ser uma classe literal: antes era
-// montada como `text-${color}`, que o Tailwind nao detecta ao varrer o codigo.
-// Funcionava so por carona — a classe era emitida porque OUTROS arquivos a
-// tinham escrita por extenso. Enquanto a carona durar nada quebra; no dia em
-// que o ultimo uso literal sair do codigo, o KPI perde a cor em silencio, sem
-// erro de build e sem teste vermelho. Classe literal aqui elimina a aposta.
-const colorConfig: Record<
-  ColorVariant,
-  { icon: string; border: string; bg: string; glow: string; value: string }
-> = {
-  default: {
-    icon: "bg-muted text-muted-foreground",
-    border: "border-painel-borda",
-    bg: "",
-    glow: "",
-    value: "",
-  },
-  success: {
-    icon: "bg-success/10 text-success-text dark:bg-success/20",
-    border: "border-success/30 dark:border-success/40",
-    bg: "bg-gradient-to-br from-success/5 to-transparent dark:from-success/10",
-    glow: "",
-    value: "text-success-text",
-  },
-  warning: {
-    icon: "bg-warning/10 text-warning-text dark:bg-warning/20",
-    border: "border-warning/30 dark:border-warning/40",
-    bg: "bg-gradient-to-br from-warning/5 to-transparent dark:from-warning/10",
-    glow: "",
-    value: "text-warning-text",
-  },
-  error: {
-    icon: "bg-error-bg text-error-text dark:bg-error/20",
-    border: "border-error/30 dark:border-error/40",
-    bg: "bg-gradient-to-br from-error/5 to-transparent dark:from-error/10",
-    glow: "",
-    value: "text-error-text",
-  },
-  info: {
-    icon: "bg-info/10 text-info-text dark:bg-info/20",
-    border: "border-info/30 dark:border-info/40",
-    bg: "bg-gradient-to-br from-info/5 to-transparent dark:from-info/10",
-    glow: "",
-    value: "text-info-text",
-  },
+// Vantage: o tom NAO pinta o card (nem borda, nem fundo, nem o valor). Ele vira so um
+// ponto ao lado do rotulo, que e o lugar de estado nos padroes. Classes literais para o
+// Tailwind detectar; o valor do KPI fica sempre em `text-foreground`.
+const tomPonto: Record<ColorVariant, string> = {
+  default: "",
+  success: "bg-success",
+  warning: "bg-warning",
+  error: "bg-error",
+  info: "bg-info",
 }
 
 const trendConfig: Record<TrendDirection, { icon: typeof TrendingUp; color: string }> = {
@@ -197,7 +161,7 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
     animated = true,
     ...props 
   }, ref) => {
-    const colorStyles = colorConfig[color]
+    const ponto = tomPonto[color]
     const TrendIcon = trend ? trendConfig[trend.direction].icon : null
     const trendColor = trend ? trendConfig[trend.direction].color : ""
 
@@ -205,19 +169,17 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
       return (
         <Card
           ref={ref}
+          variant="elevated"
           className={cn(
-            "p-6 space-y-3",
-            animated && "animate-fade-in-up",
+            "space-y-3 border-0 px-5 py-4",
+            animated && "anim-entrada",
             className
           )}
           {...props}
         >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-controle skeleton-base" />
-            <div className="h-4 w-24 skeleton-base" />
-          </div>
-          <div className="h-8 w-28 skeleton-base" />
-          <div className="h-4 w-20 skeleton-base" />
+          <div className="h-4 w-24 animate-pulse rounded-md bg-muted motion-reduce:animate-none" />
+          <div className="h-8 w-28 animate-pulse rounded-md bg-muted motion-reduce:animate-none" />
+          <div className="h-4 w-20 animate-pulse rounded-md bg-muted motion-reduce:animate-none" />
         </Card>
       )
     }
@@ -225,68 +187,51 @@ const CardStats = React.forwardRef<HTMLDivElement, CardStatsProps>(
     return (
       <Card
         ref={ref}
+        variant="elevated"
         className={cn(
-          "relative overflow-hidden p-6",
-          colorStyles.border,
-          colorStyles.glow,
-          animated && "animate-fade-in-up",
-          "group cursor-default hover:scale-[1.02] transition-transform",
+          "space-y-3 border-0 px-5 py-4",
+          animated && "anim-entrada",
           className
         )}
         {...props}
       >
-        {color !== "default" && (
-          <div className={cn("absolute inset-0", colorStyles.bg)} />
-        )}
-        
-        <div className="relative space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {title}
-            </span>
-            {Icon && (
-              <div className={cn(
-                "hidden sm:flex h-10 w-10 items-center justify-center rounded-controle transition-transform group-hover:scale-110",
-                colorStyles.icon
-              )}>
-                <Icon className="h-5 w-5" />
-              </div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-muted-foreground">
+            {ponto && <span aria-hidden="true" className={cn("size-1.5 shrink-0 rounded-full", ponto)} />}
+            <span className="truncate">{title}</span>
+          </span>
+          {Icon && <Icon className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" aria-hidden="true" />}
+        </div>
+
+        {/* Modo discreto: a marca vai num <span> em volta do numero, nao no <div>.
+            O <div> ocupa a largura do card, e a fileira de pontos iria de borda a
+            borda; no <span> ela fica do tamanho do valor. Cobre de uma vez os cards
+            do dashboard e os de /boletos. */}
+        <div className="truncate font-mono text-2xl font-medium tracking-tight text-foreground tabular-nums">
+          <span className={cn(valorSensivel && "valor-sensivel")}>{value}</span>
+        </div>
+
+        {(trend || description) && (
+          <div className="flex items-center gap-2 text-sm">
+            {trend && TrendIcon && (
+              <span className={cn("flex items-center gap-1 font-medium", trendColor)}>
+                <TrendIcon className="h-4 w-4" />
+                {/* Modo discreto: so a porcentagem some; a seta fica, como o icone
+                    do card, porque e o rotulo da direcao e nao o valor. */}
+                <span className="valor-sensivel">
+                  {trend.value > 0 && "+"}
+                  {Number(trend.value.toFixed(1))}%
+                </span>
+              </span>
+            )}
+            {description && (
+              <span className="text-muted-foreground">{description}</span>
+            )}
+            {trend?.label && (
+              <span className="text-muted-foreground">{trend.label}</span>
             )}
           </div>
-          
-          {/* Modo discreto: a marca vai num <span> em volta do numero, nao no <div>.
-              O <div> ocupa a largura do card, e a fileira de pontos iria de borda a
-              borda; no <span> ela fica do tamanho do valor. Cobre de uma vez os cards
-              do dashboard e os de /boletos. */}
-          <div className={cn(
-            "text-lg font-bold tabular-nums sm:text-2xl",
-            colorStyles.value
-          )}>
-            <span className={cn(valorSensivel && "valor-sensivel")}>{value}</span>
-          </div>
-          
-          {(trend || description) && (
-            <div className="flex items-center gap-2 text-sm">
-              {trend && TrendIcon && (
-                <span className={cn("flex items-center gap-1 font-medium", trendColor)}>
-                  <TrendIcon className="h-4 w-4" />
-                  {/* Modo discreto: so a porcentagem some; a seta fica, como o icone
-                      do card, porque e o rotulo da direcao e nao o valor. */}
-                  <span className="valor-sensivel">
-                    {trend.value > 0 && "+"}
-                    {Number(trend.value.toFixed(1))}%
-                  </span>
-                </span>
-              )}
-              {description && (
-                <span className="text-muted-foreground">{description}</span>
-              )}
-              {trend?.label && (
-                <span className="text-muted-foreground">{trend.label}</span>
-              )}
-            </div>
-          )}
-        </div>
+        )}
       </Card>
     )
   }

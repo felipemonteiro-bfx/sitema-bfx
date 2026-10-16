@@ -134,9 +134,9 @@ export function FormSelect({
             aria-controls={listaId}
             id={id}
             className={cn(
-              // Sem sombra (D-03): trigger tem border-2 propria e vive no
-              // mesmo plano do card/formulario — nao e um plano acima.
-              "flex h-10 w-full items-center justify-between whitespace-nowrap rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
+              // Igual ao Select da ui (Vantage): 44px, rounded-controle, fundo
+              // `controle`, contorno `input`, sem sombra.
+              "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
               !value && "text-muted-foreground",
               className
             )}
@@ -145,12 +145,12 @@ export function FormSelect({
               {selected?.indicador && <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", selected.indicador)} />}
               <span className="line-clamp-1">{selected?.label ?? placeholder}</span>
             </span>
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
           </button>
         </PopoverTrigger>
         <PopoverContent
           className={cn(
-            "w-[var(--radix-popover-trigger-width)] rounded-xl border bg-popover p-2",
+            "w-[var(--radix-popover-trigger-width)] rounded-interno border bg-popover p-2",
             opcoesRicas && "min-w-56"
           )}
           onKeyDown={aoTeclar}
@@ -161,7 +161,7 @@ export function FormSelect({
           }}
         >
           {searchable && (
-            <div className="mb-2 flex items-center gap-2 border-b border-border/60 pb-2">
+            <div className="mb-2 flex items-center gap-2 border-b border-divisoria pb-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 ref={buscaRef}
@@ -173,7 +173,7 @@ export function FormSelect({
                 placeholder={searchPlaceholder}
                 aria-controls={listaId}
                 aria-activedescendant={destaqueValido ? idOpcao(destaque) : undefined}
-                className="h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </div>
           )}
@@ -199,7 +199,7 @@ export function FormSelect({
                     aria-selected={opt.value === value}
                     tabIndex={-1}
                     className={cn(
-                      "relative flex w-full cursor-default select-none items-center gap-2 rounded-md py-2 pl-2.5 pr-8 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                      "relative flex w-full cursor-default select-none items-center gap-2 rounded-controle py-2 pl-2.5 pr-8 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
                       opt.value === value && "bg-accent/50",
                       viaTeclado && indice === destaque && "bg-accent text-accent-foreground"
                     )}
@@ -212,7 +212,7 @@ export function FormSelect({
                     {opt.indicador && <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", opt.indicador)} />}
                     <span className="truncate">{opt.label}</span>
                     {opt.hint && (
-                      <span className="ml-auto shrink-0 pl-2 text-xs tabular-nums opacity-70">{opt.hint}</span>
+                      <span className="ml-auto shrink-0 pl-2 text-xs tabular-nums">{opt.hint}</span>
                     )}
                     {opt.value === value && (
                       <span className="absolute right-2 inline-flex h-4 w-4 items-center justify-center">
