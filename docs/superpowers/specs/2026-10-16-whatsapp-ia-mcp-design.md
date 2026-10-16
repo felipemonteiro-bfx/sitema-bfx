@@ -78,3 +78,42 @@ atual (avaliar depois); memória entre conversas; qualquer push/PR/deploy.
   à de hoje.
 - Ponta a ponta local: o próprio `/api/mcp/agente` rodando no dev, LiteLLM mockado, sem enviar
   WhatsApp.
+
+
+## Revisão do Grok (16/10) e decisões do André — o que muda no desenho
+
+Decisões do André: dados do cliente podem ir ao LiteLLM da Softlive (`ai.softlive.dev`); a IA
+**não** informa preço (mantém "a equipe confirma preço e condições"); **existe um gateway externo
+ativo** usando o `mcp-bfx` no mesmo número.
+
+Correções incorporadas (Crítico/Importante do parecer):
+
+1. **Ordem:** a IA entra no MESMO ponto onde hoje roda `consultarRespostaManager` — depois de config,
+   janela 24h, provedor, SAIR/PARAR, pausa, takeover e resposta manual/atendente recentes. Teste
+   negativo: em cada guarda, nem `fetch` ao MCP nem LiteLLM são chamados.
+2. **Webhook não espera a IA:** o processamento do modo 2 com IA roda depois do 200 à Meta
+   (`after()` do Next) — a entrada já está gravada, e reentrega cai em `nova === false`.
+3. **Trava de duplicidade antes do modelo:** dentro do `pg_advisory_xact_lock` por telefone, cria a
+   linha `out/pre_atendimento` com status `gerando` amarrada ao id da mensagem de entrada; se já existe
+   resposta para essa entrada, sai. Depois gera, atualiza o corpo e envia. O dedupe por corpo de 24 h
+   deixa de ser a única barreira.
+4. **Aterramento:** em assunto financeiro/pedido (mesma detecção de hoje), a resposta da IA só sai se
+   houve `tools/call` com `isError: false`; senão, cai no determinístico. Sempre: sem promessa de
+   preço nem de quitação — ressalvas fixas anexadas por código, não pelo modelo; corte de `<think>`
+   (`stripThinkTags`), de markdown e truncamento em fronteira de linha (sem quebrar link de boleto).
+5. **Isolamento da IA interna:** o assistente NÃO importa `runAiWithActions`, `aiActions` nem
+   `src/lib/mcp.ts` (teste negativo de import). Monta o modelo LiteLLM próprio a partir da Config.
+6. **Cliente MCP:** trata 202 sem corpo em `notifications/initialized`, 401 sem envelope e
+   `isError: true` com HTTP 200 (entrega ao modelo só `para_o_cliente`, nunca
+   `instrucao_interna_nao_repetir`). URL com host permitido (`127.0.0.1`, `localhost`,
+   `*.svc.cluster.local`); padrão em produção = Service `mcp-bfx`; em dev, `MCP_AGENTE_URL` explícito
+   (a porta do dev é 3008). JWT por `SignJWT` próprio com `MCP_AGENTE_SECRET`, `aud=mcp-bfx`,
+   `exp` 5 min — nunca `createSessionToken`.
+7. **Bug no servidor MCP:** `meu_limite` não aplica `FILTRO_VENDA_VALIDA` (conta cancelada/estornada)
+   — corrigir junto, com teste.
+8. **Contexto:** passa o nome do perfil do webhook para o claim `nome`; inclui as últimas N (ex.: 6)
+   mensagens da conversa nas últimas 24 h para "sim"/"o primeiro" terem referente; entrada cortada em
+   1000 caracteres; limite de respostas de IA por telefone por hora.
+9. **Gateway externo ativo (aberto — decisão do André):** o assistente interno e o gateway não podem
+   responder a mesma mensagem. A flag `whatsappIaMcp` nasce desligada e o desenho de convivência
+   depende de como o gateway recebe as mensagens (ver pergunta registrada na conversa).
