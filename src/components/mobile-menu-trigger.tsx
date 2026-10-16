@@ -1,8 +1,9 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { EVENTO_ABRIR_BUSCA } from "@/lib/busca-rapida-ui";
 
 // Gatilho + folha do menu no celular. O conteúdo (o mesmo painel da sidebar do desktop) vem
 // montado pelo servidor em `children`, já com os contadores: este componente não consulta nada.
@@ -32,5 +33,24 @@ export function MobileMenuTrigger({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-0 flex-1 flex-col">{children}</div>
       </SheetContent>
     </Sheet>
+  );
+}
+
+// Botão de busca do cabeçalho mobile: o gatilho em forma de campo mora na sidebar, que no celular
+// fica dentro da folha. Aqui só a lupa (44px), que dispara o mesmo evento que o `<BuscaRapida>`
+// único da casca escuta. O nome acessível cita Ctrl K porque é o atalho de quem usa teclado.
+export function BotaoBuscaMobile() {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label="Buscar (Ctrl K)"
+      aria-keyshortcuts="Meta+K Control+K"
+      onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCA))}
+      className="size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-foreground shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
+    >
+      <Search className="h-5 w-5" aria-hidden="true" />
+    </Button>
   );
 }

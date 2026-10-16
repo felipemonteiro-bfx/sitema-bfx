@@ -1,5 +1,41 @@
 import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
+
+// O tailwind-merge v3 só conhece a escala padrão do Tailwind. As utilitárias do Vantage vêm do
+// bloco `@theme` de globals.css e precisam ser registradas aqui, senão: `rounded-painel` não
+// disputa com `rounded-lg`, e `text-titulo` é lido como COR e descarta o `text-foreground`.
+// Manter em sincronia com `--radius-*`, `--text-*` e `--color-*` do `@theme`.
+const twMerge = extendTailwindMerge({
+  extend: {
+    theme: {
+      // Raios nomeados (`rounded-shell|painel|interno|controle`).
+      radius: ["shell", "painel", "interno", "controle"],
+      // Escala de tamanho de fonte (`text-titulo`, `text-kpi`): grupo font-size, não cor.
+      text: ["titulo", "kpi"],
+      // Cores de superfície e de gráfico do redesign (bg-/text-/border-/ring-… dessas chaves).
+      color: [
+        "shell",
+        "shell-borda",
+        "painel-borda",
+        "poco",
+        "controle",
+        "controle-ativo",
+        "divisoria",
+        "marca-tint",
+        "marca-tint-texto",
+        "texto-secundario",
+        "hachura-traco",
+        "hachura-fundo",
+        "grafico-neutro",
+        "grafico-trilha",
+        "grafico-inativo",
+        "vidro",
+        "vidro-borda",
+        "vidro-piso",
+      ],
+    },
+  },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

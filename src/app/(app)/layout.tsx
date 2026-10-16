@@ -6,7 +6,8 @@ import { carregarAlertasShell, type AlertasShell } from "@/lib/alertas-shell";
 import { LogoutButton } from "@/components/LogoutButton";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { AlertasHoje } from "@/components/alertas-hoje";
-import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
+import { BuscaRapida, BuscaRapidaGatilho } from "@/components/busca-rapida";
+import { BotaoBuscaMobile, MobileMenuTrigger } from "@/components/mobile-menu-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ValoresToggle } from "@/components/valores-toggle";
 import { NotificationBell } from "@/components/notification-bell";
@@ -38,6 +39,9 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Paleta ⌘K: UMA instância (um só listener de teclado). O `SidebarContent` é montado duas
+          vezes, por isso ela não mora nele; gatilhos disparam `EVENTO_ABRIR_BUSCA`. */}
+      <BuscaRapida role={session.role} />
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-4 p-3 lg:p-4">
         <aside className="hidden w-65 shrink-0 lg:flex">
           {/* Painel dos artboards: `bg-card` (degrau acima da página), raio de painel e contorno
@@ -48,16 +52,24 @@ export default async function AppLayout({
               role={session.role}
               alertas={alertasDoBloco}
               contagens={{ "/historico": alertas?.assinaturasPendentes }}
+              busca={<BuscaRapidaGatilho />}
             />
           </div>
         </aside>
         {/* A casca: um degrau abaixo do painel, com o contorno `--shell-borda`. */}
         <main className="min-w-0 flex-1 rounded-shell bg-shell border border-shell-borda px-4 py-5 lg:px-10 lg:py-7">
-          {/* Barra do conteúdo. No celular leva o gatilho do menu + quem está logado; em qualquer
-              tamanho leva o sino e o olho do modo discreto no canto direito (nome e perfil já
-              estão na sidebar do desktop). */}
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3 lg:hidden">
+          {/* Desktop: sino e olho do modo discreto flutuam no canto superior direito da casca, SEM
+              linha própria. O float faz o cabeçalho da página contornar os dois botões (o flex do
+              PageHeader é um BFC e encolhe ao lado dele), então as ações da página nunca ficam
+              por baixo; abaixo do cabeçalho o conteúdo volta à largura inteira. */}
+          <div className="hidden lg:float-right lg:ml-3 lg:flex lg:items-center lg:gap-2">
+            <NotificationBell />
+            <ValoresToggle />
+          </div>
+          {/* Celular: gatilho do menu + quem está logado à esquerda; busca, sino e olho à direita.
+              Nome e perfil já estão na sidebar do desktop. */}
+          <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+            <div className="flex min-w-0 items-center gap-3">
               <MobileMenuTrigger>
                 <SidebarContent
                   userLabel={userLabel}
@@ -77,7 +89,8 @@ export default async function AppLayout({
                 </Badge>
               </div>
             </div>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
+              <BotaoBuscaMobile />
               <NotificationBell />
               <ValoresToggle />
             </div>
@@ -102,7 +115,7 @@ function SidebarContent({
   alertas?: AlertasShell;
   /** Contadores por href (ex.: Histórico = assinaturas pendentes). */
   contagens?: Partial<Record<string, number>>;
-  /** Lugar do gatilho da busca global (tarefa F3 encaixa o componente aqui). */
+  /** Gatilho da busca global; só a sidebar do desktop o recebe (no celular é o botão da lupa). */
   busca?: ReactNode;
 }) {
   return (
