@@ -199,13 +199,15 @@ describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", ()
     expect(ler("src/components/ui/button.tsx").includes('<span className="inline-flex shrink-0 items-center justify-center">{leftIcon}</span>')).toBe(true);
   });
 
-  it("a pilula do ponto de equilibrio nao quebra e o ponto nao some", () => {
+  it("a pilula do ponto de equilibrio nao quebra", () => {
     // Aqui o "icone" e um <span> redondo de 6px, nao um <svg> — e o unico dos
     // casos que a regra (e) do gate NAO ve (ela exige um <svg>). Corrigido no
     // fonte e travado aqui.
     const fonte = ler("src/app/(app)/financeiro/page.tsx");
-    expect(fonte.includes("inline-flex items-center gap-1 whitespace-nowrap rounded-full")).toBe(true);
-    expect(fonte.includes('"h-1.5 w-1.5 shrink-0 rounded-full"')).toBe(true);
+    // H3 (Vantage): a pilula virou <Badge> (inline-flex, rounded-full) e o ponto de cor
+    // saiu — o estado vai so no tint do Badge. Resta travar que o texto nao quebra.
+    expect(fonte.includes('<Badge')).toBe(true);
+    expect(fonte.includes('className="whitespace-nowrap"')).toBe(true);
   });
 
   it("o unico whitespace-normal do projeto continua sendo o item do sino, que e flex-col de proposito", () => {

@@ -189,27 +189,31 @@ describe("achado 5 — botao Buscar da /boletos alinhado ao Input", () => {
 describe("achados 6, 7 e 11 — tabular-nums", () => {
   it("os KPIs de dinheiro da /financeiro usam tabular-nums", () => {
     const fonte = ler("src/app/(app)/financeiro/page.tsx");
-    // Sem as aspas de fechamento: o modo discreto (24/09) acrescenta `valor-sensivel`
-    // nas mesmas classes, e o que este teste garante e' o `tabular-nums` no KPI de
-    // dinheiro, nao a string exata do className.
-    expect(fonte.includes("text-2xl font-bold tabular-nums")).toBe(true);
-    expect(fonte.split("text-2xl font-semibold tabular-nums").length - 1).toBeGreaterThanOrEqual(4);
-    expect(fonte.split("text-base font-semibold tabular-nums").length - 1).toBeGreaterThanOrEqual(3);
+    // Redesign Vantage (H3): os KPIs passaram para o KpiCard, que desenha o valor em
+    // `font-mono` (Geist Mono) por dentro; a pagina so garante que os usa e que os
+    // cartoes internos da composicao de custos usam `font-mono` (mono ja e tabular).
+    // `tabular-nums` saiu desses numeros: a regra global `.tabular-nums` redefine
+    // `font-family: var(--font-mono)` fora de camada e vence o utilitario `font-mono`.
+    expect(fonte.includes("<KpiCard")).toBe(true);
+    expect(fonte.split("text-base font-semibold font-mono").length - 1).toBeGreaterThanOrEqual(2);
+    const kpi = ler("src/components/kpi-card.tsx");
+    expect(kpi.includes("font-mono")).toBe(true);
   });
 
   it("as colunas numericas de /relatorios/mensais usam tabular-nums", () => {
     const fonte = ler("src/app/(app)/relatorios/mensais/page.tsx");
     // Idem: uma das duas colunas ganhou `valor-sensivel` do modo discreto, entao a
     // contagem olha o par de classes, nao o atributo inteiro.
-    expect(fonte.includes("text-right tabular-nums")).toBe(true);
-    expect(fonte.split("text-right tabular-nums").length - 1).toBeGreaterThanOrEqual(2);
+    // H3 (Vantage): numero em Geist Mono (`font-mono`, ja tabular), como o Dashboard.
+    expect(fonte.includes("text-right font-mono")).toBe(true);
+    expect(fonte.split("text-right font-mono").length - 1).toBeGreaterThanOrEqual(2);
   });
 
   it("a coluna Comissao (%) usa tabular-nums", () => {
     const fonte = ler("src/components/commissions-dashboard-client.tsx");
     expect(fonte.includes("{d.percentualComissao}%")).toBe(true);
     const celula = fonte.split("{d.percentualComissao}%")[0].split("<TableCell").pop() || "";
-    expect(celula.includes("tabular-nums")).toBe(true);
+    expect(celula.includes("tabular-nums") || celula.includes("font-mono")).toBe(true);
   });
 });
 

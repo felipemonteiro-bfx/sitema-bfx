@@ -11,6 +11,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { COLUNAS_VENDAS, COLUNAS_PADRAO, type ColunaKey } from "@/lib/relatorio-vendas-colunas";
 
+/** Rótulo de campo em frase normal: o `Label` base ainda vem em caixa-alta. */
+const ROTULO = "text-sm font-medium normal-case tracking-normal";
+
 type Props = {
   empresaOptions: string[];
   defaultFrom: string;
@@ -46,8 +49,8 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="space-y-1">
-          <Label htmlFor="rel-empresa">Empresa</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="rel-empresa" className={ROTULO}>Empresa</Label>
           <FormSelect
             id="rel-empresa"
             name="empresa"
@@ -59,16 +62,16 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
             ]}
           />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="rel-from">Data inicial</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="rel-from" className={ROTULO}>Data inicial</Label>
           <DateInput id="rel-from" name="from" value={from} onChange={setFrom} />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="rel-to">Data final</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="rel-to" className={ROTULO}>Data final</Label>
           <DateInput id="rel-to" name="to" value={to} onChange={setTo} />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="rel-colunas-trigger">Colunas</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="rel-colunas-trigger" className={ROTULO}>Colunas</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -111,7 +114,7 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
                           checked={marcado}
                           onCheckedChange={(checked) => toggleColuna(coluna.key, checked === true)}
                         />
-                        <Label htmlFor={inputId} className="cursor-pointer text-sm font-normal">
+                        <Label htmlFor={inputId} className="cursor-pointer text-sm font-normal normal-case tracking-normal">
                           {coluna.label}
                         </Label>
                       </div>
@@ -125,12 +128,12 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
       </div>
 
       {semColunas && (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Escolha ao menos uma coluna para baixar o relatório.
         </p>
       )}
 
-      <div className="flex flex-wrap gap-3 pt-4 border-t">
+      <div className="flex flex-wrap gap-3">
         <Button
           type="button"
           onClick={() => handleDownload("csv")}
