@@ -365,7 +365,7 @@ export default function EmpresasTabClient({
                 <SortableHeader label="Contato" field="emailRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <TableHead className="text-xs text-center">Clientes</TableHead>
                 <TableHead className="text-xs">Vinculadas</TableHead>
-                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-20 cursor-default hover:bg-transparent" />
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -463,7 +463,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 ]}
               />
               <input type="hidden" name="page" value="1" />
-              <button type="submit" className={cn(buttonVariants(), "cursor-pointer w-full touch-manipulation min-h-[44px]")}>
+              <button type="submit" className={cn(buttonVariants(), "cursor-pointer w-full touch-manipulation min-h-11")}>
                 Aplicar filtros
               </button>
             </form>
@@ -511,7 +511,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableCell className="font-mono tabular-nums text-muted-foreground">{formatDateBR(v.dataVenda)}</TableCell>
                     <TableCell className="font-medium">{v.cliente?.nome || "N/D"}</TableCell>
                     <TableCell>{v.vendedor}</TableCell>
-                    <TableCell className="max-w-[250px]">
+                    <TableCell className="max-w-62.5">
                       {v.itens && v.itens.length > 1 ? (
                         <details className="cursor-pointer">
                           <summary className="truncate text-sm">
@@ -696,7 +696,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {page > 1 ? (
                   <Link 
                     href={buildUrl({ page: (page - 1).toString() })}
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-11 flex items-center")}
                   >
                     Anterior
                   </Link>
@@ -708,7 +708,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 {page < totalPages ? (
                   <Link 
                     href={buildUrl({ page: (page + 1).toString() })}
-                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px] flex items-center")}
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-11 flex items-center")}
                   >
                     Próxima
                   </Link>

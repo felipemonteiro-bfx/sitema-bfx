@@ -45,7 +45,7 @@ export default async function Page() {
   const totalUltima = ultima ? valorTotalVenda(ultima) : 0;
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto">
+    <div className="space-y-8 max-w-350 mx-auto">
       <PageHeader
         title="Terminal de vendas"
         description="PDV inteligente BFX Intelligence"

@@ -14,7 +14,7 @@ export function HistoricoFiltroSheet({ children }: Props) {
       <SheetTrigger asChild>
         <Button
           variant="outline"
-          className="w-full md:hidden touch-manipulation min-h-[44px]"
+          className="w-full md:hidden touch-manipulation min-h-11"
           aria-label="Abrir filtros"
           leftIcon={<Filter className="h-4 w-4" />}
         >

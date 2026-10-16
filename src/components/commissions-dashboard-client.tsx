@@ -138,7 +138,7 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
           <CardTitle className={TITULO_SECAO}>Comissões por vendedor</CardTitle>
         </CardHeader>
         <CardContent className="rounded-interno bg-poco px-2 pb-3 pt-5 sm:px-4">
-          <div className="h-[300px] min-h-[300px] w-full">
+          <div className="h-75 min-h-75 w-full">
             {loading ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">Carregando gráfico...</div>
             ) : commissions.length === 0 ? (
@@ -199,8 +199,8 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
                     <TableRow key={d.vendaId} className="hover:bg-transparent">
                       <TableCell className="font-mono">{new Date(d.data).toLocaleDateString('pt-BR')}</TableCell>
                       <TableCell>{d.vendedor}</TableCell>
-                      <TableCell className="max-w-[150px] truncate">{d.cliente}</TableCell>
-                      <TableCell className="max-w-[150px] truncate">{d.produto}</TableCell>
+                      <TableCell className="max-w-37.5 truncate">{d.cliente}</TableCell>
+                      <TableCell className="max-w-37.5 truncate">{d.produto}</TableCell>
                       <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(d.valorVenda)}</TableCell>
                       <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(d.lucroLiquido)}</TableCell>
                       <TableCell className="text-right font-mono">{d.percentualComissao}%</TableCell>

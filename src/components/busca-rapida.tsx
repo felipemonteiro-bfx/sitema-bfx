@@ -219,9 +219,9 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
             origemFoco.current?.focus();
           }}
           className={cn(
-            "fixed left-1/2 top-[8vh] z-[9999] w-[calc(100vw-2rem)] max-w-[760px] -translate-x-1/2 overflow-hidden rounded-painel border border-divisoria bg-popover shadow-lg dark:shadow-[var(--shadow-lg)]",
+            "fixed left-1/2 top-[8vh] z-[9999] w-[calc(100vw-2rem)] max-w-190 -translate-x-1/2 overflow-hidden rounded-painel border border-divisoria bg-popover shadow-lg dark:shadow-elevacao-lg",
             // Abertura: opacity + scale .98 -> 1 em 180ms na curva do redesign.
-            "duration-[180ms] ease-[var(--mov-curva)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:animate-none",
+            "duration-180 ease-(--mov-curva) data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-98 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 motion-reduce:animate-none",
           )}
         >
           <DialogTitle className="sr-only">Busca rápida</DialogTitle>
@@ -304,7 +304,7 @@ export function BuscaRapida({ role, urlPendentes }: { role: string; urlPendentes
                   className="ml-auto h-11 gap-2 px-3 text-foreground"
                   onClick={() => abrir(perguntarIA)}
                 >
-                  <Sparkles className="h-[18px] w-[18px] text-primary" aria-hidden="true" />
+                  <Sparkles className="h-4.5 w-4.5 text-primary" aria-hidden="true" />
                   Perguntar ao BFX Intelligence
                 </Button>
               )}

@@ -102,7 +102,7 @@ export function NotificationBell() {
           className="relative size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-texto-secundario shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
           aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         >
-          <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
+          <Bell className="h-4.5 w-4.5" aria-hidden="true" />
           {/* Ancorado DENTRO da caixa do botao. Com o deslocamento negativo que
               havia aqui, o badge de 16x16 saia 3px para cima e 3px para a
               direita de um botao de 36x36 — medido `clientWidth` 34 contra

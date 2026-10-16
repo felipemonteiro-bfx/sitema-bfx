@@ -226,7 +226,7 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
                         />
                       </TableCell>
                       <TableCell className="font-semibold tabular-nums text-foreground">{t.titulo}</TableCell>
-                      <TableCell className="max-w-[220px] text-foreground">
+                      <TableCell className="max-w-55 text-foreground">
                         <span className="block truncate">{t.colaborador || '—'}</span>
                       </TableCell>
                       <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">{t.matricula || '—'}</TableCell>

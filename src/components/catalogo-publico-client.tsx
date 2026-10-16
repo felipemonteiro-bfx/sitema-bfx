@@ -90,7 +90,7 @@ export function CatalogoPublicoClient({ produtos }: Props) {
             return (
             <article
               key={p.id}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm dark:shadow-[var(--shadow-sm)] transition-all duration-300 hover:shadow-lg dark:hover:shadow-[var(--shadow-lg)] hover:border-info"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm dark:shadow-elevacao-sm transition-all duration-300 hover:shadow-lg dark:hover:shadow-elevacao-lg hover:border-info"
             >
               <div className="relative aspect-square bg-muted dark:bg-background">
                 <ProdutoImagem src={imgPath} alt={p.nome} />

@@ -61,7 +61,7 @@ export function LogoutButton() {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-105">
           <DialogHeader className="gap-2">
             {/* Mesmo par do botao, pelo mesmo motivo — aqui o fundo e o
                 `--popover`, nao a sidebar: `text-destructive` sobre

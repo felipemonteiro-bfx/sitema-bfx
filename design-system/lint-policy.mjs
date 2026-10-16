@@ -22,8 +22,11 @@ export const noRestyle = {
 };
 
 export const noArbitraryValues = {
-  // Larguras/alturas de layout arbitrarias (ex.: `max-w-[28rem]`) sao
-  // legitimas; aparencia (cor, raio, sombra, fonte) nao.
+  // Unica excecao: valores de LAYOUT sem degrau na escala (colunas de grid
+  // `grid-cols-[1fr_auto]`, unidades de viewport `h-[90vh]`, `calc()`, `%`,
+  // `ch`). Aparencia (cor, raio, sombra, tamanho de fonte, espacamento) nao
+  // passa: tem de vir de token/escala do @theme. Valor que TEM equivalente
+  // exato na escala (`min-h-[44px]` = `min-h-11`) foi trocado, nao liberado.
   allow: ["layout"],
 };
 

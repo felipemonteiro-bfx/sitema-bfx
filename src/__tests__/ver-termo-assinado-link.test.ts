@@ -31,6 +31,6 @@ describe("Ver termo antes de enviar ao RH", () => {
 
     expect(fonte).toContain('assinaturaStatus === "assinado" ? (\n              <VerTermoAssinadoLink');
     expect(fonte).toContain("<CopiarLinkAssinatura");
-    expect(fonte).toContain('className="touch-manipulation min-h-[44px]"');
+    expect(fonte).toContain('className="touch-manipulation min-h-11"');
   });
 });

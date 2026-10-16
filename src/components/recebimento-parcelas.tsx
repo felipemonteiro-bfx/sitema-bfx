@@ -99,7 +99,7 @@ export function RecebimentoParcelas({ parcelas, hoje, podeDarBaixa }: Props) {
       )}
 
       <div className="rounded-interno bg-poco overflow-hidden">
-        <Table className="min-w-[640px]">
+        <Table className="min-w-160">
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">Parcela</TableHead>

@@ -66,7 +66,7 @@ export function BarraDistribuicao({ contagens, className }: { contagens: Contage
       <div
         role="img"
         aria-label={`Distribuição por assinatura: ${resumo}`}
-        className="flex h-1.5 min-w-[160px] flex-1 basis-60 gap-1"
+        className="flex h-1.5 min-w-40 flex-1 basis-60 gap-1"
       >
         {vazio ? (
           <span className="h-full flex-1 rounded-full bg-poco" />
@@ -87,7 +87,7 @@ export function BarraDistribuicao({ contagens, className }: { contagens: Contage
           <li key={s.chave} className="flex items-center gap-1.5">
             <span
               aria-hidden="true"
-              className={cn("h-2.5 w-2.5 rounded-[3px]", COR_SEGMENTO[s.chave])}
+              className={cn("h-2.5 w-2.5 rounded-xs", COR_SEGMENTO[s.chave])}
             />
             {s.rotulo}
             <span className="font-mono tabular-nums text-foreground">{s.quantidade}</span>

@@ -148,7 +148,7 @@ export default function AssinaturaPage() {
           {/* Quadro branco fixo (Fase 14, D-06): a tinta da assinatura (SignatureCanvas/penColor)
               é sempre preta — se o fundo virasse escuro no tema dark, o traço ficaria ilegível. */}
           <span
-            className={`flex min-h-[60px] w-full items-center justify-center rounded-controle border-2 border-dashed transition-colors ${
+            className={`flex min-h-15 w-full items-center justify-center rounded-controle border-2 border-dashed transition-colors ${
               signatureDataUrl
                 ? 'border-border bg-white'
                 : 'border-primary bg-marca-tint active:bg-accent'
@@ -156,7 +156,7 @@ export default function AssinaturaPage() {
           >
             {signatureDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={signatureDataUrl} alt="Assinatura" className="max-h-[56px] object-contain" />
+              <img src={signatureDataUrl} alt="Assinatura" className="max-h-14 object-contain" />
             ) : (
               <span className="flex items-center gap-2 py-3 text-marca-tint-texto">
                 <PenLine className="h-5 w-5 shrink-0" />
@@ -195,7 +195,7 @@ export default function AssinaturaPage() {
             size="lg"
             onClick={handleSubmit}
             disabled={submitting || !signatureDataUrl}
-            className="flex-1 touch-manipulation font-semibold min-h-[48px]"
+            className="flex-1 touch-manipulation font-semibold min-h-12"
           >
             {submitting ? 'Enviando...' : 'Enviar Assinado'}
           </Button>

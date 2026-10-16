@@ -262,14 +262,14 @@ export default function ProdutosTabClient({
                 onCheckedChange={handleSelectAll}
               />
             </TableHead>
-            <SortableHeader label="Foto" field="_foto" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
+            <SortableHeader label="Foto" field="_foto" currentDir="asc" onSort={() => {}} className="w-20 cursor-default hover:bg-transparent" />
             <SortableHeader label="Nome" field="nome" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Categoria" field="categoria" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Marca/Fornecedor" field="marca" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="NCM" field="ncm" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Data Compra" field="dataCompra" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Valor" field="valorVenda" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} className="text-right" />
-            <TableHead className="w-[100px]"></TableHead>
+            <TableHead className="w-25"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

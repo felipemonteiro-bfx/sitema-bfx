@@ -34,7 +34,7 @@ export function LoginPainelMarca() {
       </div>
 
       <div className="flex flex-col gap-7">
-        <h2 className="max-w-[14ch] font-display text-3xl font-semibold leading-[1.08] tracking-tight text-card-foreground sm:text-4xl lg:text-5xl">
+        <h2 className="max-w-[14ch] font-display text-3xl font-semibold leading-hero tracking-tight text-card-foreground sm:text-4xl lg:text-5xl">
           Vendas, parcelas e antecipação num lugar só.
         </h2>
 

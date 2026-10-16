@@ -327,8 +327,8 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                   <TableRow>
                     <TableHead className="w-32">Data</TableHead>
                     <TableHead>Vendedor</TableHead>
-                    <TableHead className="min-w-[150px]">Cliente</TableHead>
-                    <TableHead className="min-w-[150px]">Produto</TableHead>
+                    <TableHead className="min-w-37.5">Cliente</TableHead>
+                    <TableHead className="min-w-37.5">Produto</TableHead>
                     <TableHead className="w-24 text-right">Valor</TableHead>
                     <TableHead className="w-24 text-right">Frete</TableHead>
                     <TableHead className="w-24 text-right">Envio</TableHead>

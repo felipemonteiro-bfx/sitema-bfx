@@ -126,6 +126,13 @@
   --color-vidro: var(--vidro);
   --color-vidro-borda: var(--vidro-borda);
   --color-vidro-piso: var(--vidro-piso);
+  --color-papel: var(--papel);
+  --color-papel-texto: var(--papel-texto);
+  --color-papel-texto-forte: var(--papel-texto-forte);
+  --color-papel-texto-medio: var(--papel-texto-medio);
+  --color-papel-texto-fraco: var(--papel-texto-fraco);
+  --color-papel-linha: var(--papel-linha);
+  --color-papel-traco: var(--papel-traco);
 
   /* Raios por degrau de superficie: `rounded-shell`, `rounded-painel`,
      `rounded-interno`, `rounded-controle`. Nao variam com o tema. */
@@ -148,6 +155,14 @@
   --text-titulo--line-height: 1.15;
   --text-kpi: clamp(1.75rem, 1.25rem + 1.8vw, 2.5rem);
   --text-kpi--line-height: 1.1;
+  /* Entrelinha do titulo grande da tela de login (`leading-hero`). */
+  --leading-hero: 1.08;
+  /* Sombras de elevacao do TEMA ESCURO: o `--shadow-*` de :root/.dark ja troca
+     por tema; estas chaves o expoem como utilitaria (`dark:shadow-elevacao-md`)
+     sem classe arbitraria `shadow-[var(--shadow-md)]`. */
+  --shadow-elevacao-sm: var(--shadow-sm);
+  --shadow-elevacao-md: var(--shadow-md);
+  --shadow-elevacao-lg: var(--shadow-lg);
 }
 
 :root {
@@ -375,6 +390,16 @@
   --vidro-borda: oklch(0.916 0.005 145.5); /* #E1E4E1 */
   --vidro-piso: oklch(1 0 0); /* #FFFFFF — versao OPACA do vidro (fallback e par de contraste: 18.19:1 com --foreground) */
 
+  /* Papel: a previa de recibo simula uma folha impressa e fica clara nos DOIS temas
+     (por isso o mesmo valor em :root e .dark). Antes eram hex crus em classe arbitraria. */
+  --papel: oklch(1 0 0); /* #FFFFFF */
+  --papel-texto: oklch(0.278 0.033 256.848); /* #1F2937 */
+  --papel-texto-forte: oklch(0.21 0.034 264.665); /* #111827 */
+  --papel-texto-medio: oklch(0.446 0.03 256.802); /* #4B5563 */
+  --papel-texto-fraco: oklch(0.551 0.027 264.364); /* #6B7280 — 4.83:1 no papel */
+  --papel-linha: oklch(0.967 0.003 264.542); /* #F3F4F6 — filete decorativo */
+  --papel-traco: oklch(0.707 0.022 261.325); /* #9CA3AF — linha de assinatura */
+
   /* Raios e fontes (mesmo valor do @theme; aqui para o CSS puro usar var()) */
   --radius-shell: 24px;
   --radius-painel: 20px;
@@ -548,6 +573,16 @@
   --vidro: oklch(0.235 0.006 156.8 / 92%); /* #1C1F1D a 92% */
   --vidro-borda: oklch(0.316 0.008 153.5); /* #2F3330 */
   --vidro-piso: oklch(0.235 0.006 156.8); /* #1C1F1D — versao OPACA do vidro (fallback e par de contraste: 14.39:1 com --foreground) */
+
+  /* Papel: a previa de recibo simula uma folha impressa e fica clara nos DOIS temas
+     (por isso o mesmo valor em :root e .dark). Antes eram hex crus em classe arbitraria. */
+  --papel: oklch(1 0 0); /* #FFFFFF */
+  --papel-texto: oklch(0.278 0.033 256.848); /* #1F2937 */
+  --papel-texto-forte: oklch(0.21 0.034 264.665); /* #111827 */
+  --papel-texto-medio: oklch(0.446 0.03 256.802); /* #4B5563 */
+  --papel-texto-fraco: oklch(0.551 0.027 264.364); /* #6B7280 — 4.83:1 no papel */
+  --papel-linha: oklch(0.967 0.003 264.542); /* #F3F4F6 — filete decorativo */
+  --papel-traco: oklch(0.707 0.022 261.325); /* #9CA3AF — linha de assinatura */
 }
 
 /* Piso opaco do vidro: onde o navegador nao suporta `backdrop-filter`, o
@@ -1280,4 +1315,11 @@
 /* Atraso por item vindo de `--atraso` (ms), p.ex. linhas de tabela que entram em sequencia. */
 @utility anim-atraso {
   animation-delay: var(--atraso, 0ms);
+}
+
+/* Transicao so de fundo e cor do texto (a `transition-colors` do Tailwind tambem anima borda, fill e stroke). */
+@utility transition-fundo-texto {
+  transition-property: background-color, color;
+  transition-timing-function: var(--default-transition-timing-function);
+  transition-duration: var(--default-transition-duration);
 }

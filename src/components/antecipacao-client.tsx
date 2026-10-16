@@ -483,7 +483,7 @@ export default function AntecipacaoClient({
             <span className={rotuloFiltro}>Comprador</span>
             {/* Chip de marca: par marca-tint/marca-tint-texto, policiado pela catraca de contraste. */}
             <div className="flex h-11 items-center gap-1 rounded-controle bg-marca-tint pl-3 pr-1 text-sm font-medium text-marca-tint-texto sm:h-10">
-              <span className="truncate sm:max-w-[220px]" title={filtroComprador.nome}>{filtroComprador.nome}</span>
+              <span className="truncate sm:max-w-55" title={filtroComprador.nome}>{filtroComprador.nome}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -580,7 +580,7 @@ export default function AntecipacaoClient({
                     />
                   </TableCell>
                   <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
-                  <TableCell className="text-foreground text-sm max-w-[180px] md:max-w-[150px]">
+                  <TableCell className="text-foreground text-sm max-w-45 md:max-w-37.5">
                     <span className="block truncate">{v.clienteNome || '—'}</span>
                     {/* No celular Empresa e Produto deixam de ser colunas e vem aqui,
                         com o popover de produtos ainda ao alcance do toque. */}
@@ -600,7 +600,7 @@ export default function AntecipacaoClient({
                       <span className="text-muted-foreground text-xs">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="hidden font-semibold text-foreground max-w-[250px] md:table-cell">
+                  <TableCell className="hidden font-semibold text-foreground max-w-62.5 md:table-cell">
                     {variosProdutos ? (
                       // Hover abre, clique fixa, sair sem clicar fecha — e o clique
                       // nunca seleciona a venda (ver use-popover-hover.ts).
@@ -682,7 +682,7 @@ export default function AntecipacaoClient({
         {/* Linha 1: Total + Métricas — tudo vindo do servidor (calcularSelecaoAction). */}
         <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
           {/* Total selecionado */}
-          <div className="min-w-[140px] flex-shrink-0">
+          <div className="min-w-35 flex-shrink-0">
             <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
               Total a antecipar
               {calculando && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-label="Calculando" />}

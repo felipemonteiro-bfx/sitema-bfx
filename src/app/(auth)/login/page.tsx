@@ -128,7 +128,7 @@ export default function LoginPage() {
                       aria-pressed={mostrarSenha}
                       className="absolute right-0.5 top-0.5 h-11 w-11 rounded-controle text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
                     >
-                      {mostrarSenha ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+                      {mostrarSenha ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                     </Button>
                   </div>
                   <FormMessage />
@@ -153,7 +153,7 @@ export default function LoginPage() {
             >
               {error ? (
                 <>
-                  <AlertCircle className="mt-0.5 h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                  <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                   <span>{error}</span>
                 </>
               ) : null}

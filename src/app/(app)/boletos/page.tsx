@@ -55,7 +55,7 @@ function BoletoTable({
           <TableHead>Descrição</TableHead>
           <TableHead>Vencimento</TableHead>
           <TableHead className="text-right">Valor</TableHead>
-          <TableHead className="w-[100px]"></TableHead>
+          <TableHead className="w-25"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -68,7 +68,7 @@ function BoletoTable({
         ) : (
           items.map((p) => (
             <TableRow key={p.id}>
-              <TableCell className="font-medium max-w-[220px] truncate">
+              <TableCell className="font-medium max-w-55 truncate">
                 {p.description || `Cobrança ${p.id.slice(-8)}`}
               </TableCell>
               <TableCell className="tabular-nums">{formatDateBr(p.dueDate)}</TableCell>
@@ -394,7 +394,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                               <TableHead>Cliente</TableHead>
                               <TableHead>Produto</TableHead>
                               <TableHead className="text-right">Valor</TableHead>
-                              <TableHead className="w-[130px]"></TableHead>
+                              <TableHead className="w-32.5"></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -402,7 +402,7 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                               <TableRow key={v.id}>
                                 <TableCell>{formatDateBr(v.dataVenda.toISOString().slice(0, 10))}</TableCell>
                                 <TableCell>{v.cliente?.nome ?? "—"}</TableCell>
-                                <TableCell className="max-w-[180px] truncate">{v.produtoNome ?? "—"}</TableCell>
+                                <TableCell className="max-w-45 truncate">{v.produtoNome ?? "—"}</TableCell>
                                 <TableCell className="text-right tabular-nums font-medium valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
                                 <TableCell>
                                   <GerarBoletoButton

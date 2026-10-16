@@ -81,7 +81,7 @@ function PainelGrafico({
         {legenda}
       </div>
       <div className="rounded-interno bg-poco px-2 pb-3 pt-5 sm:px-4">
-        <div className="bloco-sensivel h-72 min-h-[288px]">{children}</div>
+        <div className="bloco-sensivel h-72 min-h-72">{children}</div>
       </div>
     </section>
   );

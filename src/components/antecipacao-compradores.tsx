@@ -208,7 +208,7 @@ export default function AntecipacaoCompradores({ resumo, meses, hoje, compradorN
                           <TableRow key={c.chave} isSelected={naFila}>
                             <TableCell>
                               <div
-                                className="font-semibold text-foreground truncate max-w-[150px] sm:max-w-[260px]"
+                                className="font-semibold text-foreground truncate max-w-37.5 sm:max-w-65"
                                 title={c.nome}
                               >
                                 {c.nome}

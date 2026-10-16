@@ -239,7 +239,7 @@ export default function FornecedoresTabClient({
                 </TableHead>
                 <SortableHeader label="Nome" field="nome" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
                 <SortableHeader label="Telefone" field="telefone" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
-                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-20 cursor-default hover:bg-transparent" />
               </TableRow>
             </TableHeader>
             <TableBody>

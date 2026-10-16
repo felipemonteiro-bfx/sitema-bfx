@@ -960,7 +960,7 @@ export default function VendaRapidaFormV2({
               onChange={(e) => setClienteQuery(e.target.value)}
               placeholder="Digite o nome do cliente"
               required
-              className={cn("min-h-[44px] touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
+              className={cn("min-h-11 touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
             />
             {clienteSuggestions.length > 0 && (
               <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-60 overflow-y-auto">

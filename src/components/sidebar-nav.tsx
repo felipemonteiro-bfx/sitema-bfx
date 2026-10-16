@@ -72,7 +72,7 @@ function NavItem({ item, isActive: active, contagem, href }: NavItemProps) {
         // 44px de altura (alvo de toque) no celular e em telas altas; no desktop de ~900px a altura cai
         // para 32px, o que deixa o menu inteiro à vista (o painel tem altura fixa), raio de controle, transição pelo token --mov-nav.
         "group relative flex min-h-11 items-center gap-3 rounded-controle px-3 text-sm lg:min-h-8 [@media(min-height:1000px)]:lg:min-h-11",
-        "transition-[background-color,color] duration-[var(--mov-nav)] ease-out motion-reduce:transition-none",
+        "transition-fundo-texto duration-(--mov-nav) ease-out motion-reduce:transition-none",
         // Anel verde da marca no foco por teclado, com folga na cor do painel.
         "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
         // Ativo: no escuro o degrau `controle-ativo` com texto foreground (artboard Main); no claro
@@ -83,11 +83,11 @@ function NavItem({ item, isActive: active, contagem, href }: NavItemProps) {
           : "font-medium text-texto-secundario hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
       )}
     >
-      <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+      <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
 
       {item.isNew && (
-        <span className="flex h-[22px] items-center rounded-full bg-marca-tint text-marca-tint-texto px-2 text-xs font-semibold">
+        <span className="flex h-5.5 items-center rounded-full bg-marca-tint text-marca-tint-texto px-2 text-xs font-semibold">
           Novo
         </span>
       )}

@@ -379,7 +379,7 @@ describe("o item de menu do Vantage", () => {
   it("o item tem 44px de altura, rounded-controle e hover pelo token --mov-nav", () => {
     expect(sidebarNavCodigo.includes("min-h-11")).toBe(true);
     expect(sidebarNavCodigo.includes("rounded-controle")).toBe(true);
-    expect(sidebarNavCodigo.includes("var(--mov-nav)")).toBe(true);
+    expect(sidebarNavCodigo.includes("duration-(--mov-nav)")).toBe(true);
   });
 
   it("a pill Novo usa o par marca-tint / marca-tint-texto", () => {

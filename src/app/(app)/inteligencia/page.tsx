@@ -219,7 +219,7 @@ export default async function Page({
       />
 
       <Card className="anim-entrada h-full">
-        <CardContent className="flex h-[60vh] min-h-[420px] flex-col gap-4 p-4 sm:p-6 sm:h-[68vh] lg:h-[72vh]">
+        <CardContent className="flex h-[60vh] min-h-105 flex-col gap-4 p-4 sm:p-6 sm:h-[68vh] lg:h-[72vh]">
           <IntelligenceChatClient
             history={history}
             action={askAi}
