@@ -137,6 +137,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         breadcrumbs={[{ label: "CRM" }]}
         actions={
           <div className="flex flex-wrap gap-2">
+            <a href="/crm/atendimento" className={cn(buttonVariants({ variant: "default", size: "sm" }))}>
+              Atendimento WhatsApp
+            </a>
             <a href="/crm/fidelidade" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
               Fidelidade
             </a>

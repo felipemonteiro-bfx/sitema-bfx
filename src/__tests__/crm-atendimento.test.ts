@@ -1,0 +1,13 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+const m=vi.hoisted(()=>({admin:vi.fn(),window:vi.fn(),resolve:vi.fn(),send:vi.fn(),find:vi.fn(),create:vi.fn(),sent:vi.fn(),fail:vi.fn(),lock:vi.fn()}));
+vi.mock('@/lib/guards',()=>({requireAdmin:m.admin}));
+vi.mock('@/lib/whatsapp-mensagem',()=>({dentroDaJanela24h:m.window,marcarEnviada:m.sent,marcarFalha:m.fail}));
+vi.mock('@/lib/whatsapp-provider',()=>({resolveWhatsAppProviders:m.resolve}));
+vi.mock('@/lib/db',()=>({prisma:{$transaction:async (fn: (tx:unknown)=>unknown)=>fn({$executeRaw:m.lock,whatsAppMensagem:{findFirst:m.find,create:m.create}})}}));
+import { responderConversa } from '@/app/(app)/crm/atendimento/actions';
+beforeEach(()=>{vi.resetAllMocks();m.admin.mockResolvedValue(true);m.window.mockResolvedValue(true);m.resolve.mockResolvedValue({primary:{name:'meta_cloud',sendText:m.send}});m.find.mockResolvedValue(null);m.create.mockResolvedValue({id:12});m.send.mockResolvedValue({ok:true,messageId:'wamid.test'});});
+it('nega acesso antes de consultar ou enviar',async()=>{m.admin.mockResolvedValue(false);expect((await responderConversa('559200000000','Olá')).ok).toBe(false);expect(m.resolve).not.toHaveBeenCalled();});
+it('bloqueia janela fechada sem chamar o transporte',async()=>{m.window.mockResolvedValue(false);expect((await responderConversa('559200000000','Olá')).ok).toBe(false);expect(m.send).not.toHaveBeenCalled();});
+it('não repete mensagem recente, mesmo pendente',async()=>{m.find.mockResolvedValue({id:11});expect((await responderConversa('559200000000','Olá')).ok).toBe(false);expect(m.send).not.toHaveBeenCalled();});
+it('registra a saída e distingue aceitação de entrega',async()=>{expect(await responderConversa('559200000000','Olá')).toMatchObject({ok:true});expect(m.sent).toHaveBeenCalledWith(12,'wamid.test');expect(m.lock).toHaveBeenCalled();});
+it('não repete nem expõe erro técnico em falha de transporte',async()=>{m.send.mockRejectedValue(new Error('private-token'));const result=await responderConversa('559200000000','Olá');expect(result.ok).toBe(false);expect(JSON.stringify(result)).not.toContain('private-token');expect(m.send).toHaveBeenCalledTimes(1);});
