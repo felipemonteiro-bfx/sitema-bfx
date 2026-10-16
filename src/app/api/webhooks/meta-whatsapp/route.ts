@@ -9,8 +9,8 @@
  * HMAC é a única barreira de autenticação — sem ela, qualquer um acionaria a IA
  * e provocaria envio de WhatsApp para um número escolhido pelo atacante.
  *
- * Responde sempre 200 (exceto assinatura inválida → 401): 5xx faz a Meta
- * reentregar com backoff e, com falhas repetidas, desativar a inscrição.
+ * Confirma apenas eventos processados. Falha de persistência retorna 503 para
+ * permitir reentrega; eventos de outros números não entram no CRM.
  */
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
@@ -18,6 +18,25 @@ import { processarMensagemRecebida } from "@/lib/whatsapp-pre-atendimento";
 import { verificarAssinaturaMeta } from "@/lib/meta-webhook-signature";
 import { extrairMensagens, extrairStatuses } from "@/lib/meta-webhook-payload";
 import { registrarEntrada, avancarStatusPorWaMessageId } from "@/lib/whatsapp-mensagem";
+
+function eventosDoNumero(body: unknown, phoneNumberId: string) {
+  const entries = body && typeof body === "object" ? (body as Record<string, unknown>).entry : null;
+  if (!Array.isArray(entries)) return { entry: [] };
+  return { entry: entries.flatMap((entry: unknown) => {
+    if (!entry || typeof entry !== "object") return [];
+    const record = entry as Record<string, unknown>;
+    if (!Array.isArray(record.changes)) return [];
+    const changes = record.changes.filter((change: unknown) => {
+      if (!change || typeof change !== "object") return false;
+      const value = (change as Record<string, unknown>).value;
+      if (!value || typeof value !== "object") return false;
+      const metadata = (value as Record<string, unknown>).metadata;
+      return !!metadata && typeof metadata === "object" &&
+        (metadata as Record<string, unknown>).phone_number_id === phoneNumberId;
+    });
+    return changes.length ? [{ ...record, changes }] : [];
+  }) };
+}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -53,8 +72,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Assinatura inválida" }, { status: 401 });
   }
 
+  const rawPhoneId = (cfg as Record<string, unknown> | null)?.metaWhatsappPhoneNumberId;
+  const phoneNumberId = (typeof rawPhoneId === "string" ? rawPhoneId.trim() : "") ||
+    process.env.META_WHATSAPP_PHONE_NUMBER_ID?.trim() || "";
+  if (!/^\d+$/.test(phoneNumberId)) {
+    return NextResponse.json({ error: "Número Meta não configurado" }, { status: 503 });
+  }
+
   try {
-    const body = JSON.parse(rawBody) as unknown;
+    const body = eventosDoNumero(JSON.parse(rawBody) as unknown, phoneNumberId);
 
     // Callbacks de status: avançam o estado da mensagem já registrada.
     for (const s of extrairStatuses(body)) {
@@ -82,6 +108,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     console.error("[Webhook Meta]", err);
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return NextResponse.json({ error: "Falha temporária ao registrar evento" }, { status: 503 });
   }
 }

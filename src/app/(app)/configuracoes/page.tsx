@@ -164,6 +164,10 @@ async function saveWhatsApp(formData: FormData) {
   const metaBusinessId = String(formData.get("metaWhatsappBusinessId") || "").trim();
   const metaApiVersion = String(formData.get("metaWhatsappApiVersion") || "v21.0").trim() || "v21.0";
   const metaVerifyToken = String(formData.get("metaWebhookVerifyToken") || "").trim();
+  const metaAppSecret = String(formData.get("metaAppSecret") || "").trim();
+  if ((metaPhoneId && !/^\d+$/.test(metaPhoneId)) || (metaBusinessId && !/^\d+$/.test(metaBusinessId))) {
+    throw new Error("Os IDs da Meta devem conter somente números. Confira o preenchimento automático do navegador.");
+  }
   const fallbackEvolution = checkboxComoNumero(formData.get("whatsappFallbackEvolution"));
   const cfg = await prisma.config.findFirst();
   const data = {
@@ -190,6 +194,7 @@ async function saveWhatsApp(formData: FormData) {
     metaWebhookVerifyToken: metaVerifyToken || null,
     whatsappFallbackEvolution: fallbackEvolution,
     ...(metaToken ? { metaWhatsappToken: metaToken } : {}),
+    ...(metaAppSecret ? { metaAppSecret } : {}),
   };
   if (cfg) {
     await prisma.config.update({ where: { id: cfg.id }, data });
@@ -606,6 +611,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             placeholder="v21.0"
                             defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappApiVersion ?? "v21.0")}
                           />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label htmlFor="metaAppSecret">Meta — Chave secreta do aplicativo</Label>
+                          <Input
+                            id="metaAppSecret"
+                            name="metaAppSecret"
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder={(cfg as Record<string, unknown>)?.metaAppSecret ? "•••••••• (salvo; deixe vazio para manter)" : "Chave do aplicativo para validar os eventos recebidos"}
+                          />
+                          <p className="text-xs text-muted-foreground">A chave salva não é exibida. Informe-a somente nesta tela administrativa.</p>
                         </div>
                         <div className="space-y-1 sm:col-span-2">
                           <Label htmlFor="metaWebhookVerifyToken">Meta — Verify token do webhook</Label>
