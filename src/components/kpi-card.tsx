@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
-import { cn, formatBRL } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /**
  * Cartão de indicador do Início (redesign Vantage). Componente de servidor: o valor
@@ -23,42 +23,6 @@ export type KpiCardProps = {
   className?: string;
 };
 
-/**
- * Formato antigo, ainda usado por `dashboard/page.tsx` até a D2 montar o Início novo.
- * @deprecated use `KpiCardProps`; `icone` e `tom` são ignorados (o visual novo não tem os dois).
- */
-export type IconeKpi = "carteira" | "lucro" | "carrinho" | "clientes" | "trofeu";
-export type KpiCardLegadoProps = {
-  titulo: string;
-  icone?: IconeKpi;
-  tom?: "info" | "success" | "warning";
-  valor?: number;
-  formato?: "brl" | "int";
-  texto?: string;
-  contexto: React.ReactNode;
-  variacao?: { percentual: number; rotulo: string } | null;
-  tendencia?: number[];
-  ordem?: number;
-  valorSensivel?: boolean;
-  className?: string;
-};
-
-function normalizar(p: KpiCardProps | KpiCardLegadoProps): KpiCardProps {
-  if ("rotulo" in p) return p;
-  const valor =
-    p.valor === undefined ? (p.texto ?? "—") : p.formato === "int" ? String(Math.round(p.valor)) : formatBRL(p.valor);
-  return {
-    rotulo: p.titulo,
-    valor,
-    rodape: p.contexto,
-    serie: p.tendencia,
-    variacao: p.variacao,
-    ordem: p.ordem,
-    valorSensivel: p.valorSensivel,
-    className: p.className,
-  };
-}
-
 /** Altura mínima de uma barra (%): o mês zerado continua visível como um traço. */
 const ALTURA_MINIMA = 12;
 
@@ -67,8 +31,7 @@ function alturas(serie: number[]): number[] {
   return serie.map((v) => (max > 0 ? Math.max(ALTURA_MINIMA, (Math.max(v, 0) / max) * 100) : ALTURA_MINIMA));
 }
 
-export function KpiCard(props: KpiCardProps | KpiCardLegadoProps) {
-  const { rotulo, valor, rodape, serie, variacao, ordem = 0, valorSensivel = true, className } = normalizar(props);
+export function KpiCard({ rotulo, valor, rodape, serie, variacao, ordem = 0, valorSensivel = true, className }: KpiCardProps) {
   const barras = serie && serie.length >= 2 ? alturas(serie) : null;
   const Seta = !variacao || variacao.percentual === 0 ? Minus : variacao.percentual > 0 ? ArrowUp : ArrowDown;
   const corVariacao =
@@ -84,7 +47,7 @@ export function KpiCard(props: KpiCardProps | KpiCardLegadoProps) {
       style={{ "--i": ordem } as React.CSSProperties}
     >
       <h3 className="text-sm font-medium text-muted-foreground">{rotulo}</h3>
-      <div className={cn("truncate font-mono text-kpi font-medium tracking-tight", valorSensivel && "valor-sensivel")}>
+      <div className={cn("truncate font-mono text-2xl font-medium 2xl:text-3xl tracking-tight", valorSensivel && "valor-sensivel")}>
         {valor}
       </div>
       <div className="flex items-end justify-between gap-3">

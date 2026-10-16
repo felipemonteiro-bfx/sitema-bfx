@@ -21,7 +21,8 @@ describe("KpiCard", () => {
     expect(html).toContain("R$ 14.960,00");
     expect(html).not.toContain("sr-only");
     expect(html).toContain("font-mono");
-    expect(html).toContain("text-kpi");
+    // 24px (30px só em 2xl), como o artboard: `text-kpi` (28–40px) truncava "R$ 2.190,00" no cartão de ~250px.
+    expect(html).toContain("text-2xl");
     expect(html).toContain("bg-card-elevated");
     expect(html).toContain("rounded-interno");
     expect(html).toContain("11 vendas · 9 clientes");
@@ -53,21 +54,5 @@ describe("KpiCard", () => {
   it("série com um ponto só não desenha sparkline", () => {
     const html = render({ rotulo: "Clientes", valor: "9", rodape: "x", serie: [9] });
     expect(html).not.toContain("anim-barra");
-  });
-
-  it("compat com a página antiga (a D2 troca): número + formato + contexto + tendência", () => {
-    const html = render({
-      titulo: "Faturamento",
-      icone: "carteira",
-      tom: "info",
-      valor: 14960,
-      contexto: "11 vendas",
-      variacao: { percentual: -52.04, rotulo: "vs ago" },
-      tendencia: [1, 2],
-    });
-    expect(html).toMatch(/R\$\s14\.960,00/);
-    expect(html).toContain("11 vendas");
-    expect(html).toContain("52%");
-    expect(html.split("anim-barra").length - 1).toBe(2);
   });
 });

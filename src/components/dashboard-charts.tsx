@@ -1,10 +1,8 @@
 import { Package } from "lucide-react";
 import { EmptyStateInline } from "@/components/ui/empty-state";
-import { EvolucaoMensal } from "@/components/evolucao-mensal";
 
 // A evolução mensal (antes um ComposedChart do Recharts, aqui) agora é `EvolucaoMensal`,
-// um componente de servidor. Este arquivo ficou com o Top produtos e com um invólucro de
-// compatibilidade para a página atual, que a D2 deixa de usar.
+// um componente de servidor próprio. Este arquivo ficou só com o Top produtos.
 
 export type ProdutoTop = { label: string; value: number };
 
@@ -54,29 +52,5 @@ export function TopProdutos({ produtos, className }: { produtos: ProdutoTop[]; c
         )}
       </div>
     </section>
-  );
-}
-
-type EvoRow = { mes: string; total: number; lucro: number };
-
-/**
- * @deprecated Compatibilidade com `dashboard/page.tsx` até a D2 montar o Início novo
- * (`<EvolucaoMensal meses={...} />` + `<TopProdutos produtos={...} />` direto).
- * Mapeia o formato antigo: o `lucro` daquela série é o faturamento menos o custo, ou seja,
- * a margem; o custo variável é o que sobra.
- */
-export function DashboardCharts({ evoData, topProdutos }: { evoData: EvoRow[]; topProdutos: ProdutoTop[] }) {
-  return (
-    <div className="space-y-4">
-      <EvolucaoMensal
-        meses={evoData.map((d) => ({
-          rotulo: d.mes,
-          faturamento: d.total,
-          custoVariavel: d.total - d.lucro,
-          margem: d.lucro,
-        }))}
-      />
-      <TopProdutos produtos={topProdutos} />
-    </div>
   );
 }

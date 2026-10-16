@@ -61,7 +61,7 @@ export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
         </div>
         <Legenda />
       </div>
-      <div className="grid gap-6 rounded-interno bg-poco p-4 sm:p-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 rounded-interno bg-poco p-4 sm:p-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         <div>
           <div role="img" aria-label={`Gráfico de clientes por mês. ${resumo}`} className="flex h-64 items-stretch gap-2 sm:gap-4">
             {meses.map((m, i) => (
