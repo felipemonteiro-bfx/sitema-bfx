@@ -8,6 +8,9 @@ const dbMock = {
   produto: { count: vi.fn() },
 };
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
+// unstable_cache só funciona dentro do runtime do Next: aqui registramos a chave e executamos direto.
+const cacheMock = vi.fn((fn: (...a: unknown[]) => unknown, _chave?: string[], _opcoes?: { revalidate?: number }) => fn);
+vi.mock("next/cache", () => ({ unstable_cache: cacheMock }));
 
 const { whereAssinaturasPendentesDoUsuario, carregarAlertasShell } = await import("@/lib/alertas-shell");
 const { whereAssinaturaPendente } = await import("@/lib/historico-filtros");
@@ -71,5 +74,24 @@ describe("carregarAlertasShell", () => {
     const r = await carregarAlertasShell(admin);
     expect(dbMock.produto.count).not.toHaveBeenCalled();
     expect(Object.keys(r).some((k) => k.toLowerCase().includes("estoque"))).toBe(false);
+  });
+});
+
+// R1-7: o layout é force-dynamic; sem cache seriam 2 count a cada navegação.
+describe("carregarAlertasShell — cache de 60s por usuário", () => {
+  it("envolve a consulta em unstable_cache com revalidate 60 e chave por id + perfil", async () => {
+    await carregarAlertasShell(vendedor);
+    const [, chave, opcoes] = cacheMock.mock.calls[cacheMock.mock.calls.length - 1];
+    expect(opcoes?.revalidate).toBe(60);
+    expect(chave).toContain("5");
+    expect(chave).toContain("vendedor");
+  });
+
+  it("usuários diferentes não compartilham a chave (o vendedor nunca recebe o número do admin)", async () => {
+    await carregarAlertasShell(admin);
+    const chaveAdmin = cacheMock.mock.calls[cacheMock.mock.calls.length - 1][1];
+    await carregarAlertasShell(vendedor);
+    const chaveVendedor = cacheMock.mock.calls[cacheMock.mock.calls.length - 1][1];
+    expect(chaveAdmin).not.toEqual(chaveVendedor);
   });
 });
