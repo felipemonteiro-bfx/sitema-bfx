@@ -117,7 +117,9 @@ describe("os formularios nativos continuam enviando o valor", () => {
     // submetido — e o Server Action grava 0 para sempre, em silencio.
     const page = ler("src/app/(app)/configuracoes/page.tsx");
     const blocos = page.split("<Checkbox").slice(1);
-    expect(blocos).toHaveLength(13);
+    // Pré-atendimento agora é um seletor 0/1/2, não um checkbox.
+    expect(blocos).toHaveLength(12);
+    expect(page).toMatch(/<select[\s\S]*?name="whatsappPreAtendimento"/);
     for (const bloco of blocos) {
       expect(bloco.split("/>")[0].includes("name=")).toBe(true);
     }
