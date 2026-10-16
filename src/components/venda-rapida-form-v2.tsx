@@ -820,7 +820,7 @@ export default function VendaRapidaFormV2({
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       {successAssinaturaToken && (
-        <Card className="border-success/30 bg-success/5 animate-fade-in">
+        <Card className="animate-fade-in">
           <CardContent className="pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -842,7 +842,7 @@ export default function VendaRapidaFormV2({
                   )}`}
                   target="_blank"
                   rel="noreferrer"
-                  className={cn(buttonVariants({ variant: "success", size: "sm" }), "text-xs font-bold uppercase")}
+                  className={buttonVariants({ variant: "success", size: "sm" })}
                 >
                   Enviar WhatsApp
                 </a>
@@ -854,15 +854,14 @@ export default function VendaRapidaFormV2({
 
       {/* Seção 1: Contexto da Venda */}
       <Card
-        variant="elevated"
         className={cn(
-          "border-primary/20 transition-colors",
+          "transition-colors",
           (validationErrors.data || validationErrors.vendedor) && "border-destructive border-2",
         )}
       >
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-primary" />
+            <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Contexto da Venda
           </CardTitle>
         </CardHeader>
@@ -871,7 +870,7 @@ export default function VendaRapidaFormV2({
             <div className="space-y-2">
               <Label
                 className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
+                  "text-sm font-medium normal-case tracking-normal",
                   validationErrors.data ? "text-error-text" : "text-muted-foreground",
                 )}
               >
@@ -887,7 +886,7 @@ export default function VendaRapidaFormV2({
             <div className="space-y-2">
               <Label
                 className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
+                  "text-sm font-medium normal-case tracking-normal",
                   validationErrors.vendedor ? "text-error-text" : "text-muted-foreground",
                 )}
               >
@@ -908,16 +907,15 @@ export default function VendaRapidaFormV2({
 
       {/* Seção 2: Cliente */}
       <Card
-        variant="elevated"
         className={cn(
-          "border-info/20 transition-colors overflow-visible",
+          "transition-colors overflow-visible",
           clienteSuggestions.length > 0 && "relative z-[100]",
           validationErrors.cliente && "border-destructive border-2",
         )}
       >
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <User className="h-4 w-4 text-info-text" />
+            <User className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Cliente
           </CardTitle>
         </CardHeader>
@@ -934,7 +932,7 @@ export default function VendaRapidaFormV2({
               <Label
                 htmlFor="cliente-query"
                 className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
+                  "text-sm font-medium normal-case tracking-normal",
                   validationErrors.cliente ? "text-error-text" : "text-muted-foreground",
                 )}
               >
@@ -965,7 +963,7 @@ export default function VendaRapidaFormV2({
               className={cn("min-h-[44px] touch-manipulation", validationErrors.cliente ? "border-destructive border-2" : "")}
             />
             {clienteSuggestions.length > 0 && (
-              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-border rounded-lg shadow-xl dark:shadow-[var(--shadow-lg)] max-h-60 overflow-y-auto">
+              <div role="listbox" className="absolute top-full left-0 right-0 z-[100] mt-1 bg-popover border border-painel-borda rounded-interno shadow-sm max-h-60 overflow-y-auto">
                 {clienteSuggestions.map((c) => (
                   <button
                     key={c.id}
@@ -993,7 +991,7 @@ export default function VendaRapidaFormV2({
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{c.nome}</div>
                       {c.renda && c.renda > 0 && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-success/10 dark:bg-success/20 text-success-text font-medium">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-poco text-muted-foreground font-medium">
                           Renda: <span className="valor-sensivel">{formatBRL(c.renda)}</span>
                         </span>
                       )}
@@ -1047,22 +1045,11 @@ export default function VendaRapidaFormV2({
 
       {/* Seção 2.6: Limite e Margem Disponível */}
       {selectedCliente && limiteData && cardLimite && (
-        <Card
-          className={cn(
-            "border-2 transition-colors",
-            cardLimite.tom === "limite"
-              ? "bg-error-bg border-error/30"
-              : cardLimite.tom === "alerta" || cardLimite.tom === "excede"
-                ? "bg-warning/10 border-warning/30"
-                : cardLimite.tom === "renda_pendente"
-                  ? "bg-muted/40 border-border"
-                  : "bg-success/10 border-success/30"
-          )}
-        >
+        <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between text-sm">
+            <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
+                <CreditCard className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 Limite e Margem
               </span>
               {cardLimite.tom === "alerta" && (
@@ -1088,27 +1075,27 @@ export default function VendaRapidaFormV2({
               </p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-              <div>
-                <div className="text-xs font-bold uppercase text-muted-foreground">Limite</div>
-                <div className="text-sm font-bold tabular-nums text-foreground valor-sensivel">
+              <div className="rounded-interno bg-card-elevated p-4">
+                <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Limite</div>
+                <div className="text-base font-semibold tabular-nums text-foreground valor-sensivel">
                   {cardLimite.limite == null ? "—" : formatBRL(cardLimite.limite)}
                 </div>
               </div>
-              <div>
-                <div className="text-xs font-bold uppercase text-muted-foreground">Comprometido</div>
-                <div className="text-sm font-bold tabular-nums text-foreground valor-sensivel">
+              <div className="rounded-interno bg-card-elevated p-4">
+                <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Comprometido</div>
+                <div className="text-base font-semibold tabular-nums text-foreground valor-sensivel">
                   {formatBRL(cardLimite.comprometido)}
                 </div>
               </div>
-              <div>
-                <div className="text-xs font-bold uppercase text-muted-foreground">Disponível</div>
+              <div className="rounded-interno bg-card-elevated p-4">
+                <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Disponível</div>
                 <div
                   className={cn(
-                    "text-sm font-bold tabular-nums valor-sensivel",
+                    "text-base font-semibold tabular-nums valor-sensivel",
                     cardLimite.disponivel == null
                       ? "text-muted-foreground"
                       : cardLimite.disponivel > 0
-                        ? "text-success-text"
+                        ? "text-foreground"
                         : "text-error-text"
                   )}
                 >
@@ -1119,7 +1106,7 @@ export default function VendaRapidaFormV2({
             {cardLimite.pctBarra != null && (
               /* bloco-sensivel: a barra mostra a faixa de comprometimento que os
                  percentuais abaixo ocultam. */
-              <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden bloco-sensivel">
+              <div className="w-full bg-poco h-1.5 rounded-full overflow-hidden bloco-sensivel">
                 <div
                   className={cn(
                     "h-full transition-all",
@@ -1146,8 +1133,8 @@ export default function VendaRapidaFormV2({
               </p>
             )}
             {cardLimite.tom === "alerta" && (
-              <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-sm text-muted-foreground bg-poco p-4 rounded-interno">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-warning-text" aria-hidden="true" />
                 <div>
                   {valorParcela > 0 ? "Com esta venda o consignado fica em" : "Consignado em"}{" "}
                   <span className="valor-sensivel">{formatarPctConsignado(cardLimite.pctPosterior)}</span> (alerta a partir de 20%).
@@ -1155,8 +1142,8 @@ export default function VendaRapidaFormV2({
               </div>
             )}
             {cardLimite.tom === "limite" && (
-              <div className="flex items-start gap-2 text-xs text-error-text bg-error-bg p-3 rounded-lg border border-error/30">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-sm text-muted-foreground bg-poco p-4 rounded-interno">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-error-text" aria-hidden="true" />
                 <div>
                   {valorParcela > 0 ? "Com esta venda o consignado chega a" : "Consignado em"}{" "}
                   <span className="valor-sensivel">{formatarPctConsignado(cardLimite.pctPosterior)}</span>. A venda só sai se você confirmar.
@@ -1164,8 +1151,8 @@ export default function VendaRapidaFormV2({
               </div>
             )}
             {cardLimite.tom === "excede" && (
-              <div className="flex items-start gap-2 text-xs text-warning-text bg-warning-bg p-3 rounded-lg border border-warning/30">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 text-sm text-muted-foreground bg-poco p-4 rounded-interno">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-warning-text" aria-hidden="true" />
                 <div>
                   Parcela (<span className="valor-sensivel">{formatBRL(valorParcela)}</span>) excede o valor disponível (<span className="valor-sensivel">{formatBRL(cardLimite.disponivel ?? 0)}</span>).
                   A venda será registrada com indicação de excedeu limite.
@@ -1207,7 +1194,7 @@ export default function VendaRapidaFormV2({
             renderizado. Com a linha podendo quebrar, o titulo fica inteiro. */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5 shrink-0 text-primary" />
+            <ShoppingCart className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
             Produtos da Venda
           </h3>
           <Button
@@ -1237,17 +1224,17 @@ export default function VendaRapidaFormV2({
       </div>
 
       {/* Seção 4: Despesas Adicionais */}
-      <Card variant="elevated" className="border-warning/20">
+      <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <Truck className="h-4 w-4 text-warning-text" />
+            <Truck className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Despesas Adicionais
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
                 Frete (Cobrado)
               </Label>
               <div className="flex gap-2">
@@ -1276,7 +1263,7 @@ export default function VendaRapidaFormV2({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="entrega" className={cn("text-xs font-bold uppercase tracking-wider", validationErrors.entrega ? "text-error-text" : "text-muted-foreground")}>
+              <Label htmlFor="entrega" className={cn("text-sm font-medium normal-case tracking-normal", validationErrors.entrega ? "text-error-text" : "text-muted-foreground")}>
                 Entrega ou retirada <span className="text-error-text">*</span>
                 {validationErrors.entrega && entrega === "" && " (obrigatório)"}
               </Label>
@@ -1299,7 +1286,7 @@ export default function VendaRapidaFormV2({
             <div className="space-y-2">
               <Label
                 className={cn(
-                  "text-xs font-bold uppercase tracking-wider",
+                  "text-sm font-medium normal-case tracking-normal",
                   validationErrors.envio ? "text-error-text" : "text-muted-foreground",
                 )}
               >
@@ -1313,13 +1300,13 @@ export default function VendaRapidaFormV2({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
                 Desconto (R$)
               </Label>
               <CurrencyInput value={desconto} onChange={setDesconto} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
                 Resgatar pontos
               </Label>
               <Input
@@ -1331,7 +1318,7 @@ export default function VendaRapidaFormV2({
                 placeholder="0"
               />
               {pontosResgatar > 0 && (
-                <p className="text-xs text-success-text">
+                <p className="text-xs text-muted-foreground">
                   Desconto por pontos: <span className="valor-sensivel">-{formatBRL(descontoPontos)}</span> (limitado ao saldo do cliente)
                 </p>
               )}
@@ -1342,7 +1329,7 @@ export default function VendaRapidaFormV2({
                   checked={temNota}
                   onCheckedChange={(checked) => setTemNota(checked === true)}
                 />
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground cursor-pointer">
+                <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground cursor-pointer">
                   Com Nota Fiscal
                 </Label>
               </div>
@@ -1358,7 +1345,7 @@ export default function VendaRapidaFormV2({
             </div>
           </div>
           <div className="mt-4 pt-4 border-t space-y-2">
-            <Label htmlFor="forma-pagamento" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Label htmlFor="forma-pagamento" className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
               Forma de pagamento
             </Label>
             <FormSelect
@@ -1376,8 +1363,8 @@ export default function VendaRapidaFormV2({
               ]}
             />
             {boleto && selectedCliente && !selectedCliente.cpf && !selectedCliente.cnpj && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/30 text-warning-foreground dark:text-warning text-sm">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
+              <div className="flex items-center gap-2 p-4 rounded-interno bg-poco text-muted-foreground text-sm">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-warning-text" aria-hidden="true" />
                 <span>
                   O cliente &quot;{selectedCliente.nome}&quot; não tem CPF ou CNPJ cadastrado. Cadastre em Cadastros → Clientes para poder gerar boleto no Asaas.
                 </span>
@@ -1388,17 +1375,17 @@ export default function VendaRapidaFormV2({
       </Card>
 
       {/* Seção 5: Parcelamento */}
-      <Card variant="elevated" className="border-success/20">
+      <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-success-text" />
+            <CreditCard className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Parcelamento
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className={cn("grid gap-4", mostrarDataDesconto && "sm:grid-cols-2")}>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label className="text-sm font-medium normal-case tracking-normal text-muted-foreground">
                 Número de Parcelas
               </Label>
               <FormSelect
@@ -1417,7 +1404,7 @@ export default function VendaRapidaFormV2({
                 dataRegra={dataDescontoRegra}
                 escolhida={dataDescontoEscolhida}
                 onEscolhidaChange={setDataDescontoEscolhida}
-                labelClassName="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                labelClassName="text-sm font-medium normal-case tracking-normal text-muted-foreground"
                 avisoClassName="sm:col-span-2"
               />
             )}
@@ -1435,38 +1422,30 @@ export default function VendaRapidaFormV2({
         regra={limiteData?.regraVencimento}
       />
 
-      {/* Seção 7: Resumo Financeiro */}
-      <Card
-        variant="elevated"
-        className="border-primary/30 bg-card-elevated bg-gradient-to-br from-primary/5 to-transparent"
-      >
+      {/* Seção 7: Resumo Financeiro. Painel neutro; subtotal, lucro e margem são
+          cards internos neutros com o valor em foreground (negativo em error-text).
+          O rótulo já diz o que é cada número: nada de tint verde ou vermelho. */}
+      <Card>
         <CardHeader className="pb-3">
           <CardTitle>Resumo Financeiro</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Os tiles coloridos usam o tint OPACO, nao `bg-<sem>/5`. Este Card
-              empilha tres camadas — `bg-card-elevated` (0.96, ja mais escuro
-              que o card normal) + o gradiente `from-primary/5` + o tint do
-              tile — e sobre essa pilha nem a variante `-text` fechava no tema
-              claro: 4.01 (info), 4.04 (success), 4.14 (warning). Com
-              `bg-<sem>-bg`: 4.59 / 4.75 / 4.69. Mesma decisao ja tomada no
-              icone de /venda-rapida. O escuro passava nos dois casos. */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</div>
-              <div className="text-base font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(subtotalProdutos)}</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Subtotal</div>
+              <div className="text-base font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(subtotalProdutos)}</div>
             </div>
-            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Frete</div>
-              <div className="text-base font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(numFrete)}</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Frete</div>
+              <div className="text-base font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(numFrete)}</div>
             </div>
-            <div className="rounded-lg bg-primary/5 px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Total Venda</div>
-              <div className="text-lg font-bold tabular-nums text-primary valor-sensivel">{formatBRL(totalVenda)}</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Total da venda</div>
+              <div className="text-lg font-semibold tabular-nums text-marca-tint-texto valor-sensivel">{formatBRL(totalVenda)}</div>
             </div>
-            <div className="rounded-lg bg-info-bg px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Valor Parcela</div>
-              <div className="text-base font-bold tabular-nums text-info-text valor-sensivel">{formatBRL(totalVenda / numParcelas)}</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Valor da parcela</div>
+              <div className="text-base font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(totalVenda / numParcelas)}</div>
             </div>
           </div>
 
@@ -1477,21 +1456,21 @@ export default function VendaRapidaFormV2({
           <Separator />
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="rounded-lg bg-muted/30 px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Custo Total</div>
-              <div className="text-base font-bold tabular-nums text-foreground valor-sensivel">{formatBRL(custoTotal)}</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Custo total</div>
+              <div className="text-base font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(custoTotal)}</div>
             </div>
-            <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Lucro Bruto</div>
-              <div className="text-base font-bold tabular-nums text-success-text valor-sensivel">{formatBRL(lucroBruto)}</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Lucro bruto</div>
+              <div className={cn("text-base font-semibold tabular-nums valor-sensivel", lucroBruto < 0 ? "text-error-text" : "text-foreground")}>{formatBRL(lucroBruto)}</div>
             </div>
-            <div className="rounded-lg bg-success-bg px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Margem</div>
-              <div className="text-base font-bold tabular-nums text-success-text valor-sensivel">{margemPct.toFixed(1)}%</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Margem</div>
+              <div className={cn("text-base font-semibold tabular-nums valor-sensivel", margemPct < 0 ? "text-error-text" : "text-foreground")}>{margemPct.toFixed(1)}%</div>
             </div>
-            <div className="rounded-lg bg-warning-bg px-3 py-2.5 text-center">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground">Comissao ({comissaoPct}%)</div>
-              <div className="text-base font-bold tabular-nums text-warning-text valor-sensivel">{formatBRL(valorComissao)}</div>
+            <div className="rounded-interno bg-card-elevated p-4 text-center">
+              <div className="text-sm font-medium normal-case tracking-normal text-muted-foreground">Comissão ({comissaoPct}%)</div>
+              <div className="text-base font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(valorComissao)}</div>
             </div>
           </div>
 
@@ -1516,7 +1495,7 @@ export default function VendaRapidaFormV2({
               type="submit"
               disabled={loading}
               size="lg"
-              className="px-12 text-base font-bold"
+              className="px-12 text-base font-semibold"
             >
               {loading ? (
                 <>

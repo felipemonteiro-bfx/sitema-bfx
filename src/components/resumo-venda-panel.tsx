@@ -50,7 +50,7 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
               <span className="sr-only">depois desta venda:</span>
               <span
                 className={cn(
-                  "text-xl font-extrabold valor-sensivel",
+                  "text-xl font-semibold valor-sensivel",
                   limite.depois < 0 ? "text-error-text" : "text-foreground"
                 )}
               >
@@ -138,8 +138,8 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
         </div>
 
         {antecipavel && semParcelas && (
-          <p className="flex items-center gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
-            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <p className="flex items-center gap-2 rounded-interno bg-poco p-4 text-sm text-muted-foreground">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warning-text" aria-hidden="true" />
             Informe as datas das parcelas para simular a antecipação.
           </p>
         )}
@@ -158,7 +158,7 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
                   scope="col"
                   className={cn(
                     "text-right text-sm normal-case tracking-normal text-foreground",
-                    destaque(c) && "rounded-t-lg bg-success-bg font-bold text-success-text"
+                    destaque(c) && "rounded-t-interno bg-card-elevated font-semibold"
                   )}
                 >
                   {c.rotulo}
@@ -180,7 +180,7 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
                 {cenarios.map((c) => (
                   <TableCell
                     key={c.chave}
-                    className={cn("text-right valor-sensivel", destaque(c) && "bg-success-bg text-success-text")}
+                    className={cn("text-right valor-sensivel", destaque(c) && "bg-card-elevated font-semibold")}
                   >
                     {formatBRL(c[linha.campo])}
                   </TableCell>
@@ -195,9 +195,9 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
                 <TableCell
                   key={c.chave}
                   className={cn(
-                    "text-right text-base font-extrabold valor-sensivel",
-                    destaque(c) && "rounded-b-lg bg-success-bg",
-                    c.lucro < 0 ? "text-error-text" : destaque(c) ? "text-success-text" : "text-foreground"
+                    "text-right text-base font-semibold valor-sensivel",
+                    destaque(c) && "rounded-b-interno bg-card-elevated",
+                    c.lucro < 0 ? "text-error-text" : "text-foreground"
                   )}
                 >
                   {formatBRL(c.lucro)}
