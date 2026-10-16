@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Info, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ETAPAS_ATENDIMENTO } from '@/lib/whatsapp-kanban';
 import { iniciais, rotuloContagem } from './status-mensagem';
@@ -27,7 +27,7 @@ export function urlAtendimento(base: string, p: { visao?: string; telefone?: str
 
 /** Alternador Lista/Kanban em links (funciona sem JS). Só a Lista carrega o telefone aberto. */
 export function AlternarVisao({ base, visao, q, telefone }: { base: string; visao: string; q: string; telefone?: string }) {
-  return <nav aria-label="Visualização das conversas" className="inline-flex rounded-controle bg-poco p-[3px]">
+  return <nav aria-label="Visualização das conversas" className="inline-flex rounded-controle bg-poco p-0.75">
     {[{ id: 'lista', nome: 'Lista' }, { id: 'kanban', nome: 'Kanban' }].map(v =>
       <Link key={v.id} href={urlAtendimento(base, { visao: v.id, q, telefone: v.id === 'lista' ? telefone : undefined })} aria-current={visao === v.id ? 'page' : undefined}
         className={`inline-flex min-h-8 items-center rounded-lg px-2.5 text-xs ${visao === v.id ? 'bg-controle-ativo font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>{v.nome}</Link>)}
@@ -44,7 +44,8 @@ export function BuscaConversas({ visao, q, etapa, rotulo = 'Buscar nome ou telef
     {etapa && etapa !== 'todas' && <input type="hidden" name="etapa" value={etapa} />}
     <label className="flex h-11 items-center gap-2.5 rounded-full bg-poco px-4 text-sm text-muted-foreground focus-within:ring-2 focus-within:ring-ring">
       <Search className="size-4 shrink-0" aria-hidden="true" />
-      <Input name="q" type="search" defaultValue={q} aria-label={rotulo} placeholder="Nome ou telefone" className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 hover:border-0 focus-visible:border-0 focus-visible:shadow-none focus-visible:ring-0" />
+      {/* O campo some dentro do poço da busca: o invólucro tira a borda e o fundo do Input (a pílula é o <label>). */}
+      <span className="min-w-0 flex-1 [&_input]:h-auto [&_input]:border-0 [&_input]:bg-transparent [&_input]:p-0 [&_input]:shadow-none [&_input]:ring-0 [&_input]:hover:border-0 [&_input]:focus-visible:border-0 [&_input]:focus-visible:shadow-none [&_input]:focus-visible:ring-0"><Input name="q" type="search" defaultValue={q} aria-label={rotulo} placeholder="Nome ou telefone" /></span>
     </label>
   </form>;
 }
@@ -59,13 +60,17 @@ type Props = {
 /** Regra do limite da lista: fica no title do contador (e em texto só para leitor de tela), não num parágrafo no pé. */
 const NOTA_LISTA = 'Até as 100 mais recentes. Contagens se referem a esta busca. Etapa do atendimento é independente da janela de envio.';
 
+/** Aviso sobre o histórico (antes um bloco solto no pé da tela): vive no ícone de info do cabeçalho da lista. */
+const NOTA_HISTORICO = 'Conversas registradas no Manager desde a integração. Mensagens de outros aplicativos podem não aparecer aqui. Grupos continuam no WhatsApp Web.';
+
 const rotuloNaoRespondidas = (n: number) => `${n} ${n === 1 ? 'mensagem sem resposta' : 'mensagens sem resposta'}`;
 
 export function ConversaLista({ itens, selecionado, base, busca, visao, etapa, contagens, painel, telefoneExplicito = false }: Props) {
   const chips = [{ id: 'todas', nome: 'Todas' }, { id: 'aguardando', nome: 'Aguardando resposta' }, ...ETAPAS_ATENDIMENTO];
   return <section id="conversas" aria-label="Conversas" className={`${telefoneExplicito ? 'hidden @xl:flex' : 'flex'} min-h-0 min-w-0 w-full flex-col gap-3 overflow-hidden rounded-painel border border-painel-borda bg-card pt-3.5 dark:border-transparent @xl:w-72 @4xl:w-80 @xl:shrink-0`}>
     <div className="flex flex-wrap items-center justify-between gap-2 px-3">
-      <h2 className="text-base font-semibold">Conversas <span title={NOTA_LISTA} className="cursor-help font-mono text-sm font-normal text-muted-foreground">{contagens.todas ?? itens.length}</span><span className="sr-only"> ({NOTA_LISTA})</span></h2>
+      <div className="flex items-center gap-1"><h2 className="text-base font-semibold">Conversas <span title={NOTA_LISTA} className="cursor-help font-mono text-sm font-normal text-muted-foreground">{contagens.todas ?? itens.length}</span><span className="sr-only"> ({NOTA_LISTA})</span></h2>
+      <span className="inline-flex size-7 items-center justify-center text-muted-foreground" title={`Sobre este histórico: ${NOTA_HISTORICO}`}><Info className="size-4" aria-hidden="true" /><span className="sr-only">Sobre este histórico: {NOTA_HISTORICO}</span></span></div>
       <AlternarVisao base={base} visao={visao} q={busca} telefone={selecionado} />
     </div>
     <div className="px-3"><BuscaConversas visao={visao} q={busca} etapa={etapa} /></div>
@@ -73,7 +78,7 @@ export function ConversaLista({ itens, selecionado, base, busca, visao, etapa, c
       {chips.map(c => {
         const ativo = etapa === c.id;
         return <Link key={c.id} href={urlAtendimento(base, { visao: 'lista', telefone: selecionado, q: busca, etapa: c.id, painel })} aria-current={ativo ? 'true' : undefined}
-          className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors duration-[var(--mov-nav)] ${ativo ? 'border-marca-tint-texto/30 bg-marca-tint font-semibold text-marca-tint-texto' : 'border-divisoria text-muted-foreground hover:bg-controle'}`}>
+          className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs transition-colors duration-120 ${ativo ? 'border-marca-tint-texto/30 bg-marca-tint font-semibold text-marca-tint-texto' : 'border-divisoria text-muted-foreground hover:bg-controle'}`}>
           {c.nome}<span className="font-mono">{contagens[c.id] ?? 0}</span></Link>;
       })}
     </nav>
@@ -84,7 +89,7 @@ export function ConversaLista({ itens, selecionado, base, busca, visao, etapa, c
         const n = c.naoRespondidas ?? 0;
         return <li key={c.telefone} className="group">
           <Link href={urlAtendimento(base, { visao: 'lista', telefone: c.telefone, q: busca, etapa, painel })} aria-current={atual ? 'page' : undefined}
-            className={`flex items-center gap-3 px-3 transition-colors duration-[var(--mov-nav)] motion-reduce:transition-none ${atual ? 'bg-controle-ativo' : 'hover:bg-controle'}`}>
+            className={`flex items-center gap-3 px-3 transition-colors duration-120 motion-reduce:transition-none ${atual ? 'bg-controle-ativo' : 'hover:bg-controle'}`}>
             <span aria-hidden="true" className={`flex size-12 shrink-0 items-center justify-center rounded-full font-display text-base font-semibold ${c.aguardando ? 'bg-marca-tint text-marca-tint-texto' : 'bg-controle text-texto-secundario'}`}>{iniciais(c.nome)}</span>
             <span className="flex min-w-0 flex-1 flex-col gap-0.5 border-b border-divisoria py-3 group-last:border-b-0">
               <span className="flex items-baseline justify-between gap-2">

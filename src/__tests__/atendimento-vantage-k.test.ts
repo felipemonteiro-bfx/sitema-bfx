@@ -77,7 +77,8 @@ describe('K2: aviso de cliente aguardando é um ponto + texto curto',()=>{
 describe('K4: contexto do cliente',()=>{
  const html=renderToStaticMarkup(React.createElement(ResumoCliente,{nome:'Ana Souza',cadastro:5,empresa:'Prefeitura',etapa:'cliente',pontos:1000,fichaHref:'/f'}));
  it('avatar de 64px, valores em cards internos, texto legal fora do parágrafo (Tooltip/title)',()=>{
-  expect(html).toContain('size-20'); // M5: avatar grandeexpect(html).toContain('bg-card-elevated');
+  // N: avatar de 64px (size-16) como no artboard; os valores ficam em cards internos.
+  expect(html).toContain('size-16');expect(html).toContain('bg-card-elevated');
   expect(html).not.toMatch(/<p[^>]*>Não é saldo em dinheiro/);
   expect(html).toContain('Não é saldo em dinheiro');
  });

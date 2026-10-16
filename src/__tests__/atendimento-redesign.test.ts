@@ -128,7 +128,8 @@ describe('Reply',()=>{
  });
  it('renderiza botão redondo de 48px, contador e aviso de tarifa',()=>{
   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
-  expect(html).toContain('aria-label="Enviar mensagem"');expect(html).toContain('size-11');expect(html).toContain('rounded-full');
+  // N: botão de envio de 48px (size-12) como no artboard; a classe vai no invólucro porque o Button não aceita classes (@shadcn/lint).
+  expect(html).toContain('aria-label="Enviar mensagem"');expect(html).toContain('size-12');expect(html).toContain('rounded-full');
   expect(html).not.toContain('0/4096'); // M4: contador só perto do limite (> 3500)
   expect(html).toContain('Templates com tarifa continuam bloqueados');
   expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
