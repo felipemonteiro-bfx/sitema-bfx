@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Send, UserRound, Bot, RotateCw, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { responderConversa, controlarAutomatico } from './actions';
 // Textos das respostas prontas: os mesmos de sempre. Escolher um SÓ preenche o campo.
 const prontas=[
@@ -33,7 +34,7 @@ export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta
    {prontas.map(p=><Button key={p.titulo} type="button" variant="outline" className="h-10 shrink-0 rounded-full px-3 text-sm font-normal text-texto-secundario" disabled={!aberta||busy} onClick={()=>{setTexto(p.texto);campo.current?.focus();}}>{p.titulo}</Button>)}
   </div>
   <div className="flex items-end gap-2.5">
-   <label htmlFor="resposta-whatsapp" className="sr-only">Sua mensagem</label>
+   <Label htmlFor="resposta-whatsapp" className="normal-case tracking-normal sr-only">Sua mensagem</Label>
    <Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" rows={1} className="max-h-40 min-h-12 flex-1 resize-y rounded-interno text-base" placeholder="Escreva ou escolha uma resposta pronta…" maxLength={4096} value={texto} onChange={e=>setTexto(e.target.value)} disabled={!aberta||busy}/>
    <Button type="submit" size="icon" aria-label="Enviar mensagem" aria-busy={busy} className="size-12 shrink-0 rounded-full" disabled={!aberta||busy||!texto.trim()}><Send className="size-5" aria-hidden="true"/></Button>
   </div>

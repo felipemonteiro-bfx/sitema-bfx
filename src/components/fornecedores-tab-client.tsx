@@ -4,7 +4,6 @@ import { useState, startTransition, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -263,15 +262,17 @@ export default function FornecedoresTabClient({
                     <TableCell className="font-medium">{f.nome}</TableCell>
                     <TableCell>{f.telefone}</TableCell>
                     <TableCell>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="iconSm"
                         onClick={() => setEditingFornecedor(f)}
-                        className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
+                        className="text-muted-foreground hover:text-foreground"
                         title="Editar"
                         aria-label={`Editar ${f.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -291,6 +292,7 @@ export default function FornecedoresTabClient({
           </SheetHeader>
           {editingFornecedor && (
             <form action={handleUpdate} className="grid gap-4 mt-4 [&_input]:uppercase">
+              {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
               <input type="hidden" name="id" value={editingFornecedor.id} />
               <div className="grid gap-3">
                 <div className="space-y-1">

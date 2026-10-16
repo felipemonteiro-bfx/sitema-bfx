@@ -168,6 +168,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
         <h4 id={campo("form-titulo")} className="text-sm font-semibold text-foreground">
           {inicial ? `Editar regra de ${brDe(inicial.vigenteDe)}` : "Nova regra"}
         </h4>
+        {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
         <input type="hidden" name="empresaParceiraId" value={empresaParceiraId} />
         {inicial && <input type="hidden" name="id" value={inicial.id} />}
 

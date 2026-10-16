@@ -4,7 +4,6 @@ import { useState, startTransition, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -284,6 +283,7 @@ export default function ClientesTabClient({
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <Label htmlFor="add-empresa" className="normal-case tracking-normal text-sm font-medium">Empresa/Vinculo</Label>
+                {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
                 <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId} />
                 <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === selectedEmpresaId)?.nome ?? ""} />
                 <FormSelect
@@ -477,15 +477,17 @@ export default function ClientesTabClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="iconSm"
                         onClick={() => openEditSheet(c)}
-                        className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
+                        className="text-muted-foreground hover:text-foreground"
                         title="Editar"
                         aria-label={`Editar ${c.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

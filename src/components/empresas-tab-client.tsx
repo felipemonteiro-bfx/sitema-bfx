@@ -4,7 +4,6 @@ import { useState, startTransition, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -420,25 +419,28 @@ export default function EmpresasTabClient({
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {onVincularAction && (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
                             onClick={() => openVinculos(e)}
-                            className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 py-0 text-muted-foreground hover:text-foreground text-xs")}
+                            className="h-8 px-2 py-0 text-muted-foreground hover:text-foreground text-xs"
                             title="Gerenciar vínculos"
                             aria-label={`Vínculos de ${e.nome}`}
                           >
                             Vincular
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="iconSm"
                           onClick={() => setEditingEmpresa(e)}
-                          className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
+                          className="text-muted-foreground hover:text-foreground"
                           title="Editar"
                           aria-label={`Editar ${e.nome}`}
                         >
                           <Pencil className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -459,6 +461,7 @@ export default function EmpresasTabClient({
           </SheetHeader>
           {editingEmpresa && (
             <form action={handleUpdate} className="grid gap-4 mt-4">
+              {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
               <input type="hidden" name="id" value={editingEmpresa.id} />
               <div className="space-y-1">
                 <Label htmlFor="edit-empresa-nome" className="normal-case tracking-normal text-sm font-medium">Empresa <span className="text-destructive">*</span></Label>
@@ -517,14 +520,15 @@ export default function EmpresasTabClient({
                 // neste bloco (cada vinculo e independente), logo nao existe
                 // estado indeterminado a tratar — o `toggleVinculo` ignora o
                 // valor recebido e alterna a partir do Set.
-                <label key={e.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-controle border px-3 py-2 text-sm hover:bg-muted">
+                <Label key={e.id} htmlFor={`vinculo-${e.id}`} className="normal-case tracking-normal flex min-h-11 cursor-pointer items-center gap-3 rounded-controle border px-3 py-2 text-sm font-normal leading-normal text-foreground hover:bg-muted">
                   <Checkbox
+                    id={`vinculo-${e.id}`}
                     checked={vinculacaoIds.has(e.id)}
                     onCheckedChange={() => toggleVinculo(e.id)}
                     aria-label={`Vincular ${e.nome}`}
                   />
                   {e.nome}
-                </label>
+                </Label>
               ))}
           </div>
           <div className="mt-auto flex items-center justify-end gap-2 pt-6">
