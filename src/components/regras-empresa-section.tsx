@@ -114,7 +114,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
       </div>
 
       {ordenadas.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border">
+        <div className="overflow-x-auto rounded-interno bg-poco p-2">
           <Table className="tabular-nums">
             <TableHeader>
               <TableRow>
@@ -164,7 +164,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
         </div>
       )}
 
-      <form key={versaoForm} action={handleSalvar} aria-labelledby={campo("form-titulo")} className="grid gap-4 rounded-xl border p-4">
+      <form key={versaoForm} action={handleSalvar} aria-labelledby={campo("form-titulo")} className="grid gap-4 rounded-interno bg-card-elevated p-4">
         <h4 id={campo("form-titulo")} className="text-sm font-semibold text-foreground">
           {inicial ? `Editar regra de ${brDe(inicial.vigenteDe)}` : "Nova regra"}
         </h4>
@@ -173,31 +173,31 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label htmlFor={campo("de")}>
+            <Label htmlFor={campo("de")} className="normal-case tracking-normal text-sm font-medium">
               Início <span className="font-normal text-muted-foreground">dia 1º</span>
             </Label>
             <Input id={campo("de")} name="vigenteDe" type="date" required defaultValue={isoDe(inicial?.vigenteDe ?? null)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("ate")}>
+            <Label htmlFor={campo("ate")} className="normal-case tracking-normal text-sm font-medium">
               Fim <span className="font-normal text-muted-foreground">opcional · dia 1º, não incluso</span>
             </Label>
             <Input id={campo("ate")} name="vigenteAte" type="date" defaultValue={isoDe(inicial?.vigenteAte ?? null)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("corte")}>Dia de corte</Label>
+            <Label htmlFor={campo("corte")} className="normal-case tracking-normal text-sm font-medium">Dia de corte</Label>
             <Input id={campo("corte")} name="diaCorte" type="number" min={1} max={28} step={1} required defaultValue={inicial?.diaCorte ?? REGRA_PADRAO.diaCorte} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("venc")}>Dia de vencimento</Label>
+            <Label htmlFor={campo("venc")} className="normal-case tracking-normal text-sm font-medium">Dia de vencimento</Label>
             <Input id={campo("venc")} name="diaVencimento" type="number" min={1} max={28} step={1} required defaultValue={inicial?.diaVencimento ?? REGRA_PADRAO.diaVencimento} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("pix")}>Dia do Pix</Label>
+            <Label htmlFor={campo("pix")} className="normal-case tracking-normal text-sm font-medium">Dia do Pix</Label>
             <Input id={campo("pix")} name="diaPix" type="number" min={1} max={28} step={1} required defaultValue={inicial?.diaPix ?? REGRA_PADRAO.diaPix} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor={campo("repasse")}>Repasse %</Label>
+            <Label htmlFor={campo("repasse")} className="normal-case tracking-normal text-sm font-medium">Repasse %</Label>
             <Input
               id={campo("repasse")}
               name="repassePct"
@@ -212,7 +212,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
         <div className="flex items-start gap-3 border-t pt-4">
           <Checkbox id={campo("bfx")} name="cobrancaViaBfx" defaultChecked={inicial?.cobrancaViaBfx ?? false} aria-describedby={campo("bfx-ajuda")} className="mt-0.5" />
           <div className="grid gap-1 text-sm">
-            <Label htmlFor={campo("bfx")} className="font-semibold">Cobrança via BFX</Label>
+            <Label htmlFor={campo("bfx")} className="normal-case tracking-normal text-sm font-semibold">Cobrança via BFX</Label>
             <p id={campo("bfx-ajuda")} className="text-muted-foreground">
               A empresa paga um Pix por mês e a BFX quita os boletos da Prudent. Só ligue depois da confirmação formal da Prudent.
             </p>

@@ -139,17 +139,17 @@ export default function FornecedoresTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary">Novo Fornecedor</CardTitle>
+          <CardTitle>Novo Fornecedor</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
-                <Label htmlFor="add-fornecedor-nome">Nome do Fornecedor <span className="text-destructive">*</span></Label>
+                <Label htmlFor="add-fornecedor-nome" className="normal-case tracking-normal text-sm font-medium">Nome do Fornecedor <span className="text-destructive">*</span></Label>
                 <Input id="add-fornecedor-nome" name="nome" placeholder="Razao Social ou Nome" aria-required="true" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-fornecedor-telefone">Telefone/WhatsApp</Label>
+                <Label htmlFor="add-fornecedor-telefone" className="normal-case tracking-normal text-sm font-medium">Telefone/WhatsApp</Label>
                 <MaskedInput id="add-fornecedor-telefone" name="telefone" mask="phone" />
               </div>
             </div>
@@ -162,7 +162,7 @@ export default function FornecedoresTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-primary">Fornecedores Cadastrados</CardTitle>
+          <CardTitle>Fornecedores Cadastrados</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -180,7 +180,7 @@ export default function FornecedoresTabClient({
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+            <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2">
               <span className="text-sm font-medium">
                 {selectedIds.size} selecionado(s)
                 {selecionadosForaDaPagina > 0 && (
@@ -227,7 +227,7 @@ export default function FornecedoresTabClient({
               </Button>
             </div>
           )}
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="overflow-x-auto rounded-interno bg-poco p-2">
           <Table>
             <TableHeader>
               <TableRow>
@@ -294,11 +294,11 @@ export default function FornecedoresTabClient({
               <input type="hidden" name="id" value={editingFornecedor.id} />
               <div className="grid gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-fornecedor-nome">Nome do Fornecedor <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="edit-fornecedor-nome" className="normal-case tracking-normal text-sm font-medium">Nome do Fornecedor <span className="text-destructive">*</span></Label>
                   <Input id="edit-fornecedor-nome" name="nome" defaultValue={editingFornecedor.nome} placeholder="Razao Social ou Nome" aria-required="true" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-fornecedor-telefone">Telefone/WhatsApp</Label>
+                  <Label htmlFor="edit-fornecedor-telefone" className="normal-case tracking-normal text-sm font-medium">Telefone/WhatsApp</Label>
                   <MaskedInput id="edit-fornecedor-telefone" name="telefone" mask="phone" defaultValue={editingFornecedor.telefone || ""} />
                 </div>
               </div>

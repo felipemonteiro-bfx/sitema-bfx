@@ -358,7 +358,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     Esta mensagem aparece no painel dos vendedores.
                   </div>
                   <form action={saveAviso} className="space-y-3">
-                    <Label htmlFor="mensagem">Mensagem</Label>
+                    <Label htmlFor="mensagem" className="normal-case tracking-normal text-sm font-medium">Mensagem</Label>
                     <Textarea id="mensagem" name="mensagem" defaultValue={aviso?.mensagem || ""} />
                     <button className={cn(buttonVariants(), "cursor-pointer")}>Publicar aviso</button>
                   </form>
@@ -419,7 +419,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardContent>
                     <form action={saveAsaas} className="space-y-4">
                       <div className="space-y-1">
-                        <Label htmlFor="asaasApiKey">API Key</Label>
+                        <Label htmlFor="asaasApiKey" className="normal-case tracking-normal text-sm font-medium">API Key</Label>
                         <Input
                           id="asaasApiKey"
                           name="asaasApiKey"
@@ -431,7 +431,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         )}
                       </div>
                       <div className="space-y-1">
-                        <Label>Ambiente</Label>
+                        <Label className="normal-case tracking-normal text-sm font-medium">Ambiente</Label>
                         <FormSelect
                           name="asaasEnv"
                           options={[
@@ -468,7 +468,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardContent>
                     <form action={saveAiProvider} className="space-y-4">
                       <div className="space-y-1">
-                        <Label>Provedor ativo</Label>
+                        <Label className="normal-case tracking-normal text-sm font-medium">Provedor ativo</Label>
                         <FormSelect
                           name="aiProvider"
                           options={[
@@ -480,10 +480,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           searchable={false}
                         />
                       </div>
-                      <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                      <div className="rounded-interno bg-poco p-4 space-y-3">
                         <p className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</p>
                         <div className="space-y-1">
-                          <Label htmlFor="litellmUrl">URL da API</Label>
+                          <Label htmlFor="litellmUrl" className="normal-case tracking-normal text-sm font-medium">URL da API</Label>
                           <Input
                             id="litellmUrl"
                             name="litellmUrl"
@@ -492,7 +492,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="litellmKey">API Key</Label>
+                          <Label htmlFor="litellmKey" className="normal-case tracking-normal text-sm font-medium">API Key</Label>
                           <Input
                             id="litellmKey"
                             name="litellmKey"
@@ -504,7 +504,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           )}
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="litellmModel">Modelo</Label>
+                          <Label htmlFor="litellmModel" className="normal-case tracking-normal text-sm font-medium">Modelo</Label>
                           <LitellmModelSelect
                             name="litellmModel"
                             defaultValue={(cfg as Record<string, unknown>)?.litellmModel as string || ""}
@@ -567,18 +567,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveWhatsApp} className="space-y-4">
                     {/* Provider oficial (Meta Cloud API) — sem risco de ban do numero */}
-                    {/* Sem o tint de fundo: os 8 `<Label>` deste painel sao
-                        `text-muted-foreground` a 12px, e sobre o composto de
-                        `info` o cinza caia para 4.36:1 (medido em runtime) —
-                        o mesmo cinza passa com folga sobre o card (4.87:1). O
-                        agrupamento continua legivel pela borda e pelo titulo
-                        "Provider de envio". Trocar a cor do `<Label>` resolveria
-                        so aqui e mudaria o formulario inteiro do sistema.
-                        Fase 18, achado 11. */}
-                    <div className="space-y-3 rounded-lg border border-info/30 p-4">
-                      <div className="text-sm font-semibold text-info-text">Provider de envio</div>
+                    {/* Agrupamento neutro (card interno), sem tint de estado: o agrupamento vem do titulo
+                        "Provider de envio" e do degrau de superficie. */}
+                    <div className="space-y-3 rounded-interno bg-card-elevated p-4">
+                      <div className="text-sm font-semibold text-foreground">Provider de envio</div>
                       <div className="space-y-1">
-                        <Label htmlFor="whatsappProvider">Qual API usar</Label>
+                        <Label htmlFor="whatsappProvider" className="normal-case tracking-normal text-sm font-medium">Qual API usar</Label>
                         <FormSelect
                           id="whatsappProvider"
                           name="whatsappProvider"
@@ -593,7 +587,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappToken">Meta — Token permanente</Label>
+                          <Label htmlFor="metaWhatsappToken" className="normal-case tracking-normal text-sm font-medium">Meta — Token permanente</Label>
                           <Input
                             id="metaWhatsappToken"
                             name="metaWhatsappToken"
@@ -603,7 +597,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           {Boolean((cfg as Record<string, unknown>)?.metaWhatsappToken) && <p className="text-xs font-medium text-success-text">Token permanente salvo. Deixe vazio para manter.</p>}
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappPhoneNumberId">Meta — Phone Number ID</Label>
+                          <Label htmlFor="metaWhatsappPhoneNumberId" className="normal-case tracking-normal text-sm font-medium">Meta — Phone Number ID</Label>
                           <Input
                             id="metaWhatsappPhoneNumberId"
                             name="metaWhatsappPhoneNumberId"
@@ -612,7 +606,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappBusinessId">Meta — Business Account ID</Label>
+                          <Label htmlFor="metaWhatsappBusinessId" className="normal-case tracking-normal text-sm font-medium">Meta — Business Account ID</Label>
                           <Input
                             id="metaWhatsappBusinessId"
                             name="metaWhatsappBusinessId"
@@ -621,7 +615,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappApiVersion">Meta — Versão da API</Label>
+                          <Label htmlFor="metaWhatsappApiVersion" className="normal-case tracking-normal text-sm font-medium">Meta — Versão da API</Label>
                           <Input
                             id="metaWhatsappApiVersion"
                             name="metaWhatsappApiVersion"
@@ -630,7 +624,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="metaAppSecret">Meta — Chave secreta do aplicativo</Label>
+                          <Label htmlFor="metaAppSecret" className="normal-case tracking-normal text-sm font-medium">Meta — Chave secreta do aplicativo</Label>
                           <Input
                             id="metaAppSecret"
                             name="metaAppSecret"
@@ -642,7 +636,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           {Boolean((cfg as Record<string, unknown>)?.metaAppSecret) && <p className="text-sm font-medium text-success-text">Chave secreta salva. Deixe vazio para manter a chave atual.</p>}
                         </div>
                         <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="metaWebhookVerifyToken">Meta — Verify token do webhook</Label>
+                          <Label htmlFor="metaWebhookVerifyToken" className="normal-case tracking-normal text-sm font-medium">Meta — Verify token do webhook</Label>
                           <Input
                             id="metaWebhookVerifyToken"
                             name="metaWebhookVerifyToken"
@@ -668,7 +662,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="evolutionApiUrl">URL da Evolution API</Label>
+                      <Label htmlFor="evolutionApiUrl" className="normal-case tracking-normal text-sm font-medium">URL da Evolution API</Label>
                       <Input
                         id="evolutionApiUrl"
                         name="evolutionApiUrl"
@@ -677,7 +671,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="evolutionApiKey">API Key</Label>
+                      <Label htmlFor="evolutionApiKey" className="normal-case tracking-normal text-sm font-medium">API Key</Label>
                       <Input
                         id="evolutionApiKey"
                         name="evolutionApiKey"
@@ -689,7 +683,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="evolutionInstance">Nome da instância</Label>
+                      <Label htmlFor="evolutionInstance" className="normal-case tracking-normal text-sm font-medium">Nome da instância</Label>
                       <Input
                         id="evolutionInstance"
                         name="evolutionInstance"
@@ -710,7 +704,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         Envios automáticos ativados (master)
                       </label>
                     </div>
-                    <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="space-y-3 rounded-interno bg-poco p-4">
                       <p className="text-xs font-semibold text-muted-foreground">
                         O que enviar automaticamente
                       </p>
@@ -822,13 +816,13 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-1 rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="space-y-1 rounded-interno bg-poco p-4">
                       <div className="flex items-center gap-2">
                         <select
                           id="whatsappPreAtendimento"
                           name="whatsappPreAtendimento"
                           defaultValue={String((cfg as Record<string, unknown>)?.whatsappPreAtendimento || 0)}
-                          className="rounded-md border bg-background p-2 text-sm"
+                          className="h-11 rounded-controle border border-input bg-card px-3 text-sm"
                         >
                           <option value="0">Desligado</option>
                           <option value="2">Gratuito — respostas por regras</option>
@@ -896,7 +890,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={saveEmailFinanceiro} className="space-y-3">
                     <div className="space-y-1">
-                      <Label htmlFor="emailFinanceiro">E-mail</Label>
+                      <Label htmlFor="emailFinanceiro" className="normal-case tracking-normal text-sm font-medium">E-mail</Label>
                       <Input
                         id="emailFinanceiro"
                         name="emailFinanceiro"
@@ -946,7 +940,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-1">
-                        <Label htmlFor="uberClientId">Client ID</Label>
+                        <Label htmlFor="uberClientId" className="normal-case tracking-normal text-sm font-medium">Client ID</Label>
                         <Input
                           id="uberClientId"
                           name="uberClientId"
@@ -955,7 +949,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberClientSecret">Client Secret</Label>
+                        <Label htmlFor="uberClientSecret" className="normal-case tracking-normal text-sm font-medium">Client Secret</Label>
                         <Input
                           id="uberClientSecret"
                           name="uberClientSecret"
@@ -969,7 +963,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         )}
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberCustomerId">Customer ID (Direct)</Label>
+                        <Label htmlFor="uberCustomerId" className="normal-case tracking-normal text-sm font-medium">Customer ID (Direct)</Label>
                         <Input
                           id="uberCustomerId"
                           name="uberCustomerId"
@@ -978,7 +972,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberOrganizationId">Organization ID (opcional)</Label>
+                        <Label htmlFor="uberOrganizationId" className="normal-case tracking-normal text-sm font-medium">Organization ID (opcional)</Label>
                         <Input
                           id="uberOrganizationId"
                           name="uberOrganizationId"
@@ -998,7 +992,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <Label htmlFor="uberPickupStreet">Endereço</Label>
+                        <Label htmlFor="uberPickupStreet" className="normal-case tracking-normal text-sm font-medium">Endereço</Label>
                         <Input
                           id="uberPickupStreet"
                           name="uberPickupStreet"
@@ -1008,11 +1002,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </div>
                       <div className="grid gap-3 sm:grid-cols-4">
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupCity">Cidade</Label>
+                          <Label htmlFor="uberPickupCity" className="normal-case tracking-normal text-sm font-medium">Cidade</Label>
                           <Input id="uberPickupCity" name="uberPickupCity" defaultValue={uberPickup.city} />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupState">Estado (UF)</Label>
+                          <Label htmlFor="uberPickupState" className="normal-case tracking-normal text-sm font-medium">Estado (UF)</Label>
                           <Input
                             id="uberPickupState"
                             name="uberPickupState"
@@ -1021,11 +1015,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupZip">CEP</Label>
+                          <Label htmlFor="uberPickupZip" className="normal-case tracking-normal text-sm font-medium">CEP</Label>
                           <Input id="uberPickupZip" name="uberPickupZip" defaultValue={uberPickup.zip} />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor="uberPickupCountry">País</Label>
+                          <Label htmlFor="uberPickupCountry" className="normal-case tracking-normal text-sm font-medium">País</Label>
                           <Input
                             id="uberPickupCountry"
                             name="uberPickupCountry"

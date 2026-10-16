@@ -256,15 +256,15 @@ export default function ProdutoFormClient({
       <div className="grid gap-6 md:grid-cols-4">
         <div className="md:col-span-1 space-y-4">
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-muted-foreground">Imagem do Produto</Label>
-              <div className="relative w-full aspect-square rounded-xl border border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/30 transition overflow-hidden">
+            <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Imagem do Produto</Label>
+              <div className="relative w-full aspect-square rounded-interno border border-dashed flex items-center justify-center bg-poco hover:bg-muted transition overflow-hidden">
               {(previewUrl || imagemPath) ? (
                 <Image
                   src={previewUrl || imagemPath}
                   alt="Produto"
                   fill
                   unoptimized
-                  className="absolute inset-0 object-cover rounded-xl"
+                  className="absolute inset-0 object-cover rounded-interno"
                 />
               ) : (
                 <Camera className="h-10 w-10 text-muted-foreground" />
@@ -283,7 +283,7 @@ export default function ProdutoFormClient({
         <div className="md:col-span-3 grid gap-3">
           <div className="grid gap-3 md:grid-cols-3">
             <div className="space-y-1 relative">
-              <Label className="text-xs font-semibold text-muted-foreground">Nome do produto</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Nome do produto</Label>
               <div className="relative">
                 <Input
                   value={nome}
@@ -304,7 +304,7 @@ export default function ProdutoFormClient({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">Categoria</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Categoria</Label>
               <Input
                 value={categoria}
                 onChange={(e) => setCategoria(normalizeCadastroText(e.target.value))}
@@ -323,29 +323,29 @@ export default function ProdutoFormClient({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">Marca</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Marca</Label>
               <Input value={marca} onChange={(e) => setMarca(normalizeCadastroText(e.target.value))} placeholder="Marca" className="uppercase" />
             </div>
           </div>
 
           <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">Custo (R$)</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Custo (R$)</Label>
               <CurrencyInput value={custo} onChange={setCusto} />
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">Valor de Venda (R$)</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Valor de Venda (R$)</Label>
               <CurrencyInput value={valor} onChange={setValor} />
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">Qtd em Estoque</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Qtd em Estoque</Label>
               <Input type="number" value={estoque} onChange={(e) => setEstoque(e.target.value)} placeholder="0" />
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">Fornecedor</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">Fornecedor</Label>
               <FormSelect
                 name="fornecedorId"
                 value={fornecedorId}
@@ -356,7 +356,7 @@ export default function ProdutoFormClient({
             </div>
 
             <div className="space-y-1">
-              <Label>Data da Compra</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium">Data da Compra</Label>
               <DateInput
                 value={dataCompra}
                 onChange={(v) => setDataCompra(v)}
@@ -366,10 +366,10 @@ export default function ProdutoFormClient({
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-1">
-              <Label className="text-xs font-semibold text-muted-foreground">NCM</Label>
+              <Label className="normal-case tracking-normal text-sm font-medium text-muted-foreground">NCM</Label>
               <Input value={ncm} onChange={(e) => setNcm(normalizeCadastroText(e.target.value))} placeholder="8 dígitos" maxLength={8} className="uppercase" />
-              <div className="mt-2 rounded-lg border border-border/60 bg-muted/30 p-2">
-                <div className="flex items-center gap-2 text-xs uppercase text-muted-foreground">
+              <div className="mt-2 rounded-interno bg-poco p-2">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Tag className="h-3.5 w-3.5" />
                   Possíveis NCMs pelo nome
                   {isSearchingNcm && <span className="ml-auto">Buscando...</span>}

@@ -70,31 +70,31 @@ interface Props {
 function CamposRhEmails({ prefixo, empresa }: { prefixo: string; empresa?: EmpresaListItem | null }) {
   const campo = (nome: string) => `${prefixo}-empresa-${nome}`;
   return (
-    <fieldset className="grid gap-3 rounded-xl border p-4">
+    <fieldset className="grid gap-3 rounded-interno bg-card-elevated p-4">
       <legend className="px-1.5 text-sm font-semibold text-muted-foreground">RH e e-mails</legend>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <Label htmlFor={campo("rh")}>Responsável RH</Label>
+          <Label htmlFor={campo("rh")} className="normal-case tracking-normal text-sm font-medium">Responsável RH</Label>
           <Input id={campo("rh")} name="rh" defaultValue={empresa?.responsavelRh || ""} placeholder="Responsável RH" className="uppercase" />
         </div>
         <div className="space-y-1">
-          <Label htmlFor={campo("tel")}>Telefone RH</Label>
+          <Label htmlFor={campo("tel")} className="normal-case tracking-normal text-sm font-medium">Telefone RH</Label>
           <MaskedInput id={campo("tel")} name="tel" mask="phone" defaultValue={empresa?.telefoneRh || ""} />
         </div>
       </div>
       <div className={cn("grid gap-3", prefixo === "add" && "md:grid-cols-3")}>
         <div className="space-y-1">
-          <Label htmlFor={campo("email")}>E-mail do RH</Label>
+          <Label htmlFor={campo("email")} className="normal-case tracking-normal text-sm font-medium">E-mail do RH</Label>
           <Input id={campo("email")} name="email" type="email" defaultValue={empresa?.emailRh || ""} placeholder="rh@empresa.com.br" aria-describedby={campo("email-ajuda")} />
           <p id={campo("email-ajuda")} className="text-xs text-muted-foreground">Recebe o termo assinado e os relatórios.</p>
         </div>
         <div className="space-y-1">
-          <Label htmlFor={campo("emailCopia")}>Em cópia</Label>
+          <Label htmlFor={campo("emailCopia")} className="normal-case tracking-normal text-sm font-medium">Em cópia</Label>
           <Input id={campo("emailCopia")} name="emailCopia" inputMode="email" autoComplete="off" defaultValue={empresa?.emailCopia || ""} placeholder="nome@prudent.com.br" aria-describedby={campo("emailCopia-ajuda")} />
           <p id={campo("emailCopia-ajuda")} className="text-xs text-muted-foreground">Recebe junto tudo o que vai ao RH (ex.: Prudent). Vários: separe por vírgula.</p>
         </div>
         <div className="space-y-1">
-          <Label htmlFor={campo("emailsExtras")}>Aviso de cada venda</Label>
+          <Label htmlFor={campo("emailsExtras")} className="normal-case tracking-normal text-sm font-medium">Aviso de cada venda</Label>
           <Input id={campo("emailsExtras")} name="emailsExtras" defaultValue={empresa?.emailsExtras || ""} placeholder="email1@x.com, email2@y.com" aria-describedby={campo("emailsExtras-ajuda")} />
           <p id={campo("emailsExtras-ajuda")} className="text-xs text-muted-foreground">Recebe um aviso a cada venda nova.</p>
         </div>
@@ -249,21 +249,21 @@ export default function EmpresasTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary">Nova Empresa</CardTitle>
+          <CardTitle>Nova Empresa</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={handleAdd} className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label htmlFor="add-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
+                <Label htmlFor="add-empresa-nome" className="normal-case tracking-normal text-sm font-medium">Empresa <span className="text-destructive">*</span></Label>
                 <Input id="add-empresa-nome" name="nome" placeholder="Empresa" aria-required="true" className="uppercase" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-empresa-cnpj">CNPJ</Label>
+                <Label htmlFor="add-empresa-cnpj" className="normal-case tracking-normal text-sm font-medium">CNPJ</Label>
                 <Input id="add-empresa-cnpj" name="cnpj" placeholder="00.000.000/0000-00" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-empresa-dia-relatorio">Dia do relatório mensal</Label>
+                <Label htmlFor="add-empresa-dia-relatorio" className="normal-case tracking-normal text-sm font-medium">Dia do relatório mensal</Label>
                 <Input
                   id="add-empresa-dia-relatorio"
                   name="diaRelatorioMensal"
@@ -285,7 +285,7 @@ export default function EmpresasTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-2">
-          <CardTitle className="text-primary">Empresas Parceiras</CardTitle>
+          <CardTitle>Empresas Parceiras</CardTitle>
           <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -304,7 +304,7 @@ export default function EmpresasTabClient({
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+            <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2">
               <span className="text-sm font-medium">
                 {selectedIds.size === 1 ? "1 selecionada" : `${selectedIds.size} selecionadas`}
                 {selecionadosForaDaPagina > 0 && (
@@ -349,7 +349,7 @@ export default function EmpresasTabClient({
               </Button>
             </div>
           )}
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="overflow-x-auto rounded-interno bg-poco p-2">
           <Table>
             <TableHeader>
               <TableRow>
@@ -461,16 +461,16 @@ export default function EmpresasTabClient({
             <form action={handleUpdate} className="grid gap-4 mt-4">
               <input type="hidden" name="id" value={editingEmpresa.id} />
               <div className="space-y-1">
-                <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
+                <Label htmlFor="edit-empresa-nome" className="normal-case tracking-normal text-sm font-medium">Empresa <span className="text-destructive">*</span></Label>
                 <Input id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-cnpj">CNPJ</Label>
+                  <Label htmlFor="edit-empresa-cnpj" className="normal-case tracking-normal text-sm font-medium">CNPJ</Label>
                   <Input id="edit-empresa-cnpj" name="cnpj" defaultValue={editingEmpresa.cnpj || ""} placeholder="00.000.000/0000-00" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-empresa-dia-relatorio">Dia do relatório mensal</Label>
+                  <Label htmlFor="edit-empresa-dia-relatorio" className="normal-case tracking-normal text-sm font-medium">Dia do relatório mensal</Label>
                   <Input
                     id="edit-empresa-dia-relatorio"
                     name="diaRelatorioMensal"
@@ -517,7 +517,7 @@ export default function EmpresasTabClient({
                 // neste bloco (cada vinculo e independente), logo nao existe
                 // estado indeterminado a tratar — o `toggleVinculo` ignora o
                 // valor recebido e alterna a partir do Set.
-                <label key={e.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
+                <label key={e.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-controle border px-3 py-2 text-sm hover:bg-muted">
                   <Checkbox
                     checked={vinculacaoIds.has(e.id)}
                     onCheckedChange={() => toggleVinculo(e.id)}

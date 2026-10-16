@@ -107,7 +107,7 @@ export function ResetSenhaDialog({ userId, userName }: Props) {
 
         <div className="space-y-3">
           <div className="space-y-1">
-            <Label htmlFor={`reset-senha-valor-${userId}`}>Nova senha</Label>
+            <Label htmlFor={`reset-senha-valor-${userId}`} className="normal-case tracking-normal text-sm font-medium">Nova senha</Label>
             <Input
               id={`reset-senha-valor-${userId}`}
               type="text"
