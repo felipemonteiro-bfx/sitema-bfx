@@ -69,8 +69,9 @@ function NavItem({ item, isActive: active, contagem, href }: NavItemProps) {
       href={href ?? item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        // 44px de altura (alvo de toque), raio de controle, transição pelo token --mov-nav.
-        "group relative flex min-h-11 items-center gap-3 rounded-controle px-3 text-sm",
+        // 44px de altura (alvo de toque) no celular e em telas altas; no desktop de ~900px a altura cai
+        // para 32px, o que deixa o menu inteiro à vista (o painel tem altura fixa), raio de controle, transição pelo token --mov-nav.
+        "group relative flex min-h-11 items-center gap-3 rounded-controle px-3 text-sm lg:min-h-8 [@media(min-height:1000px)]:lg:min-h-11",
         "transition-[background-color,color] duration-[var(--mov-nav)] ease-out motion-reduce:transition-none",
         // Anel verde da marca no foco por teclado, com folga na cor do painel.
         "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
@@ -120,12 +121,12 @@ export function SidebarNav({
   return (
     <nav
       aria-label="Menu principal"
-      className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
+      className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto lg:gap-2 [@media(min-height:1000px)]:lg:gap-4"
     >
       {grupos.map((grupo) => (
-        <div key={grupo.label} className="flex flex-col gap-0.5">
+        <div key={grupo.label} className="flex flex-col gap-0.5 lg:gap-0 [@media(min-height:1000px)]:lg:gap-0.5">
           {/* Rótulo do grupo: token muted opaco, sem opacidade parcial (o `/80` media 4.17:1). */}
-          <span className="px-3 pb-1.5 text-xs font-medium text-sidebar-muted">{grupo.label}</span>
+          <span className="px-3 pb-1 text-xs font-medium text-sidebar-muted">{grupo.label}</span>
           {grupo.items.map((item) => (
             <NavItem
               key={item.href}

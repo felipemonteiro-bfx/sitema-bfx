@@ -49,7 +49,7 @@ export default async function AppLayout({
         <aside className="hidden w-65 shrink-0 lg:flex">
           {/* Painel dos artboards: `bg-card` (degrau acima da página), raio de painel e contorno
               decorativo `--painel-borda`. Sem sombra pesada: a separação vem do degrau de cor. */}
-          <div className="sticky top-4 h-[calc(100vh-2rem)] w-full overflow-hidden rounded-painel border border-painel-borda bg-card px-4 py-5 text-foreground">
+          <div className="sticky top-4 h-[calc(100vh-2rem)] w-full overflow-hidden rounded-painel border border-painel-borda bg-card px-4 py-3 text-foreground [@media(min-height:1000px)]:py-5 dark:border-transparent">
             <SidebarContent
               userLabel={userLabel}
               role={session.role}
@@ -131,9 +131,11 @@ function SidebarContent({
   /** Gatilho da busca global; só a sidebar do desktop o recebe (no celular é o botão da lupa). */
   busca?: ReactNode;
 }) {
+  // Altura de ~900px: gaps menores no desktop; cabeçalho, busca, alertas e rodapé não encolhem
+  // (shrink-0) e só o menu rola, se faltar espaço. Em telas altas volta ao respiro original.
   return (
-    <div className="flex h-full min-h-0 flex-col gap-5">
-      <div className="flex items-center gap-3 px-1">
+    <div className="flex h-full min-h-0 flex-col gap-4 lg:gap-2 [@media(min-height:1000px)]:lg:gap-5">
+      <div className="flex shrink-0 items-center gap-3 px-1">
         {/* Chip da marca no verde primário, ícone no par `primary-foreground`. */}
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-controle bg-primary">
           <LayoutDashboard className="h-[18px] w-[18px] text-primary-foreground" aria-hidden="true" />
@@ -145,10 +147,12 @@ function SidebarContent({
           </p>
         </div>
       </div>
-      {busca}
+      {busca && <div className="shrink-0">{busca}</div>}
       <SidebarNav role={role} contagens={contagens} links={links} />
-      <AlertasHoje alertas={alertas} urlAssinaturas={urlPendentes} />
-      <div className="flex items-center gap-2 border-t border-divisoria pt-4">
+      <div className="shrink-0 empty:hidden">
+        <AlertasHoje alertas={alertas} urlAssinaturas={urlPendentes} />
+      </div>
+      <div className="flex shrink-0 items-center gap-2 border-t border-divisoria pt-3">
         <div className="min-w-0 flex-1">
           <LogoutButton />
         </div>

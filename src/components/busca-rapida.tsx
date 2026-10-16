@@ -400,14 +400,16 @@ export function BuscaRapidaGatilho({ className }: { className?: string }) {
       type="button"
       variant="ghost"
       aria-keyshortcuts="Meta+K Control+K"
+      // Texto visível curto (cabe ao lado do atalho); o nome acessível continua completo.
+      aria-label="Buscar venda, cliente, página"
       onClick={() => window.dispatchEvent(new Event(EVENTO_ABRIR_BUSCA))}
       className={cn(
-        "h-11 w-full justify-start gap-2.5 rounded-controle bg-controle px-3 font-normal text-muted-foreground hover:bg-controle-ativo hover:text-foreground",
+        "h-9 w-full justify-start gap-2.5 rounded-controle bg-controle px-3 font-normal text-muted-foreground hover:bg-controle-ativo hover:text-foreground",
         className,
       )}
     >
       <Search className="h-4 w-4" aria-hidden="true" />
-      <span className="min-w-0 flex-1 truncate text-left">Buscar venda, cliente, página</span>
+      <span className="min-w-0 flex-1 truncate text-left">Buscar…</span>
       <kbd className="inline-flex h-6 items-center rounded-md bg-controle-ativo px-1.5 font-mono text-xs text-muted-foreground dark:bg-controle">
         {plataforma === "mac" ? "⌘K" : "Ctrl K"}
       </kbd>
