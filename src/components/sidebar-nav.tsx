@@ -2,286 +2,134 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
+  Banknote,
   Brain,
   CalendarCheck,
   CalendarClock,
+  ClipboardList,
   FileText,
   FolderPlus,
+  History,
+  Home,
+  MessagesSquare,
+  ReceiptText,
   Settings,
   ShoppingCart,
-  Wallet,
-  Users,
-  ReceiptText,
-  ClipboardList,
-  User,
-  History,
   Upload,
-  Sparkles,
-  Home,
+  User,
+  Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { menuDoPerfil, type ChaveIcone, type ItemMenu } from "@/lib/menu";
 
-type MenuItem = {
-  href: string;
-  label: string;
-  external?: boolean;
-  badge?: string | number;
-  isNew?: boolean;
-};
-
-type MenuGroup = {
-  label?: string;
-  items: MenuItem[];
-};
-
-const iconMap: Record<string, LucideIcon> = {
-  "/dashboard": Home,
-  "/boletos": ReceiptText,
-  "/financeiro": Wallet,
-  "/prudent": ReceiptText,
-  "/obrigacoes": CalendarClock,
-  "/fechamento": CalendarCheck,
-  "/inteligencia": Brain,
-  "/importacao": Upload,
-  "/venda-rapida": ShoppingCart,
-  "/historico": History,
-  "/cadastros": FolderPlus,
-  "/gestao-rh": Users,
-  "/relatorios": FileText,
-  "/configuracoes": Settings,
-  "/comissoes": ClipboardList,
-  "/perfil": User,
+// Chave de ícone (do módulo puro `lib/menu.ts`) -> componente lucide. O `Record` completo faz o
+// TypeScript reprovar uma chave nova sem ícone. O agrupamento e os itens vêm TODOS de
+// `menuDoPerfil`: a cópia local que existia aqui foi o que fez o /crm sumir uma vez.
+const ICONES: Record<ChaveIcone, LucideIcon> = {
+  inicio: Home,
+  venda: ShoppingCart,
+  historico: History,
+  importacao: Upload,
+  financeiro: Wallet,
+  boletos: ReceiptText,
+  prudent: Banknote,
+  obrigacoes: CalendarClock,
+  fechamento: CalendarCheck,
+  ia: Brain,
+  crm: MessagesSquare,
+  relatorios: FileText,
+  cadastros: FolderPlus,
+  rh: Users,
+  configuracoes: Settings,
+  comissoes: ClipboardList,
+  perfil: User,
 };
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 interface NavItemProps {
-  item: MenuItem;
+  item: ItemMenu;
   isActive: boolean;
-  index: number;
+  /** Contador à direita (ex.: assinaturas pendentes no Histórico). Zero/ausente não desenha nada. */
+  contagem?: number;
 }
 
-function NavItem({ item, isActive: active, index }: NavItemProps) {
-  const Icon = iconMap[item.href];
-  
-  const content = (
+function NavItem({ item, isActive: active, contagem }: NavItemProps) {
+  const Icon = ICONES[item.icone];
+
+  return (
     <Link
       href={item.href}
-      target={item.external ? "_blank" : undefined}
-      rel={item.external ? "noreferrer" : undefined}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
-        "transition-all duration-200 ease-out",
-        "outline-none focus-visible:ring-2 focus-visible:ring-[var(--sidebar-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sidebar)]",
-        // O hover usa o accent OPACO, nao `/80`: o composto muda de cor com o
-        // fundo por baixo e nao e mensuravel pela catraca — o par medido
-        // precisa ser o par renderizado.
+        // 44px de altura (alvo de toque), raio de controle, transição pelo token --mov-nav.
+        "group relative flex min-h-11 items-center gap-3 rounded-controle px-3 text-sm",
+        "transition-[background-color,color] duration-[var(--mov-nav)] ease-out motion-reduce:transition-none",
+        // Anel verde da marca no foco por teclado, com folga na cor do painel.
+        "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card",
+        // Ativo: no escuro o degrau `controle-ativo` com texto foreground (artboard Main); no claro
+        // o `--controle-ativo` é branco e sumiria sobre o painel branco, então o artboard
+        // InicioClaro usa o tint da marca com o texto verde. Hover usa o accent OPACO.
         active
-          ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] shadow-md dark:shadow-[var(--shadow-md)]"
-          : "text-[var(--sidebar-muted)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]",
-        "animate-fade-in-up fill-both"
+          ? "bg-marca-tint font-semibold text-marca-tint-texto dark:bg-controle-ativo dark:text-foreground"
+          : "font-medium text-texto-secundario hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
       )}
-      style={{ animationDelay: `${index * 30}ms` }}
     >
-      {active && (
-        <span 
-          className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-[var(--sidebar-primary)] animate-fade-in-scale"
-          aria-hidden="true"
-        />
-      )}
-      
-      {/* Tint OPACO (`--sidebar-primary-bg`) no lugar do composto
-          `--sidebar-primary/20`: o composto escurece o proprio tom e nao e
-          mensuravel pela catraca.
+      <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+      <span className="min-w-0 flex-1 truncate">{item.label}</span>
 
-          O estado inativo fica SEM fundo. Era `bg-white/5`, que no escuro ja
-          era praticamente invisivel e no claro seria invisivel de vez; pintar
-          de `--sidebar-accent` resolveria o claro mas deixaria o escuro
-          visivelmente mais carregado do que e hoje. Sem fundo, o icone inativo
-          cai direto sobre `--sidebar` (par ja policiado, 6.20:1 claro / 5.90:1
-          escuro), o escuro fica pixel-a-pixel como era, e o chip colorido passa
-          a significar so uma coisa: hover ou ativo. */}
-      <span className={cn(
-        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
-        active
-          ? "bg-[var(--sidebar-primary-bg)]"
-          : "group-hover:bg-[var(--sidebar-primary-bg)] group-hover:scale-105"
-      )}>
-        {Icon && (
-          <Icon className={cn(
-            "h-4 w-4 transition-transform duration-200",
-            active && "text-[var(--sidebar-primary)]",
-            !active && "group-hover:scale-105"
-          )} />
-        )}
-      </span>
-      
-      <span className="flex-1 truncate">{item.label}</span>
-      
       {item.isNew && (
-        <span className="flex items-center gap-1 rounded-full bg-[var(--sidebar-primary-bg)] px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-[var(--sidebar-primary)] animate-pulse-soft">
-          <Sparkles className="h-3 w-3" />
+        <span className="flex h-[22px] items-center rounded-full bg-marca-tint text-marca-tint-texto px-2 text-xs font-semibold">
           Novo
         </span>
       )}
-      
-      {item.badge && !item.isNew && (
-        // `text-white` cru sobre um preenchimento que muda de tema dava
-        // 3.41:1 (claro) e 3.15:1 (escuro). O par de tokens fecha nos dois:
-        // 6.25:1 e 6.03:1 — `--sidebar-primary-foreground` INVERTE.
-        <span className={cn(
-          "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold",
-          "bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]",
-          "animate-fade-in-scale"
-        )}>
-          {item.badge}
+
+      {contagem !== undefined && contagem > 0 && (
+        // Par neutro (não o preenchimento da marca): o número informa, não chama. Mono para os
+        // dígitos não dançarem. O `sr-only` dá o contexto que o número solto não tem.
+        <span className="flex h-6 min-w-6 items-center justify-center rounded-md bg-divisoria px-1.5 font-mono text-xs text-texto-secundario">
+          {contagem}
+          <span className="sr-only"> pendentes</span>
         </span>
       )}
     </Link>
   );
-
-  return (
-    <TooltipProvider delayDuration={500}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          {content}
-        </TooltipTrigger>
-        <TooltipContent side="right" sideOffset={10} className="hidden lg:block">
-          <p>{item.label}</p>
-          {/* O `TooltipContent` desenha sobre `bg-primary`, que INVERTE entre os
-              temas (0.145 no claro, 0.985 no escuro). Nenhum token semantico
-              serve nos dois: o token de preenchimento dava 6.54 no claro mas
-              2.37 no escuro, e a variante de texto daria 3.75 / 2.37. Quem
-              fecha nos dois lados e o par do proprio tooltip —
-              `text-primary-foreground`, 18.93:1. O destaque fica no peso da
-              fonte, nao na matiz. */}
-          {item.isNew && <p className="text-xs font-semibold text-primary-foreground">Nova funcionalidade</p>}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
 }
 
-interface SidebarNavGroupProps {
-  group: MenuGroup;
-  pathname: string;
-  startIndex: number;
-}
+export function SidebarNav({
+  role,
+  contagens,
+}: {
+  role: string;
+  /** Contadores por href, ex.: `{ "/historico": 82 }`. Calculados UMA vez no layout. */
+  contagens?: Partial<Record<string, number>>;
+}) {
+  const pathname = usePathname();
+  const grupos = menuDoPerfil(role);
 
-function SidebarNavGroup({ group, pathname, startIndex }: SidebarNavGroupProps) {
   return (
-    <div className="space-y-1">
-      {group.label && (
-        <div className="px-3 py-2">
-          {/* Sem `/80`: a opacidade parcial derrubava o rotulo de grupo para
-              4.17:1 no escuro — a catraca aprovava o token e a tela reprovava
-              o pixel. Em 10px isso e exatamente onde nao da para ceder. */}
-          <span className="text-xs font-semibold uppercase tracking-wider text-[var(--sidebar-muted)]">
-            {group.label}
-          </span>
+    <nav
+      aria-label="Menu principal"
+      className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
+    >
+      {grupos.map((grupo) => (
+        <div key={grupo.label} className="flex flex-col gap-0.5">
+          {/* Rótulo do grupo: token muted opaco, sem opacidade parcial (o `/80` media 4.17:1). */}
+          <span className="px-3 pb-1.5 text-xs font-medium text-sidebar-muted">{grupo.label}</span>
+          {grupo.items.map((item) => (
+            <NavItem
+              key={item.href}
+              item={item}
+              isActive={isActive(pathname, item.href)}
+              contagem={contagens?.[item.href]}
+            />
+          ))}
         </div>
-      )}
-      {group.items.map((item, index) => (
-        <NavItem
-          key={item.href}
-          item={item}
-          isActive={!item.external && isActive(pathname, item.href)}
-          index={startIndex + index}
-        />
-      ))}
-    </div>
-  );
-}
-
-export function SidebarNav({ menu }: { menu: MenuItem[] }) {
-  const pathname = usePathname();
-  
-  const baseGroups: MenuGroup[] = [
-    {
-      label: "Visão geral",
-      items: menu.filter(item => ["/dashboard"].includes(item.href)),
-    },
-    {
-      label: "Vendas & Operações",
-      items: menu.filter(item =>
-        ["/venda-rapida", "/historico", "/importacao"].includes(item.href)
-      ),
-    },
-    {
-      label: "Financeiro",
-      items: menu.filter(item =>
-        ["/financeiro", "/boletos", "/prudent", "/obrigacoes", "/fechamento"].includes(item.href)
-      ),
-    },
-    {
-      label: "Inteligência & Dados",
-      items: menu.filter(item =>
-        ["/inteligencia", "/crm", "/relatorios", "/cadastros", "/gestao-rh", "/comissoes"].includes(item.href)
-      ),
-    },
-    {
-      label: "Sistema",
-      items: menu.filter(item =>
-        ["/configuracoes", "/perfil"].includes(item.href)
-      ),
-    },
-  ];
-
-  // Rede de seguranca: qualquer item do menu que nao caiu em nenhum grupo acima
-  // (ex.: rota nova adicionada em layout.tsx mas esquecida aqui) vai para "Outros"
-  // em vez de sumir silenciosamente do sidebar. Foi o que aconteceu com /crm.
-  const agrupados = new Set(baseGroups.flatMap(g => g.items.map(i => i.href)));
-  const semGrupo = menu.filter(item => !agrupados.has(item.href));
-
-  const groups: MenuGroup[] = [
-    ...baseGroups,
-    { label: "Outros", items: semGrupo },
-  ].filter(group => group.items.length > 0);
-
-  let itemIndex = 0;
-
-  return (
-    <nav className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto custom-scrollbar">
-      {groups.map((group, groupIndex) => {
-        const startIndex = itemIndex;
-        itemIndex += group.items.length;
-        return (
-          <SidebarNavGroup
-            key={groupIndex}
-            group={group}
-            pathname={pathname}
-            startIndex={startIndex}
-          />
-        );
-      })}
-    </nav>
-  );
-}
-
-export function SidebarNavSimple({ menu }: { menu: MenuItem[] }) {
-  const pathname = usePathname();
-
-  return (
-    <nav className="flex flex-1 flex-col gap-1">
-      {menu.map((item, index) => (
-        <NavItem
-          key={item.href}
-          item={item}
-          isActive={!item.external && isActive(pathname, item.href)}
-          index={index}
-        />
       ))}
     </nav>
   );

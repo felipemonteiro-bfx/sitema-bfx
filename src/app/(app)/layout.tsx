@@ -1,44 +1,18 @@
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { LayoutDashboard } from "lucide-react";
 import { getSession } from "@/lib/session";
+import { carregarAlertasShell, type AlertasShell } from "@/lib/alertas-shell";
 import { LogoutButton } from "@/components/LogoutButton";
-import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "@/components/sidebar-nav";
+import { AlertasHoje } from "@/components/alertas-hoje";
 import { MobileMenuTrigger } from "@/components/mobile-menu-trigger";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ValoresToggle } from "@/components/valores-toggle";
 import { NotificationBell } from "@/components/notification-bell";
 import { Badge } from "@/components/ui/badge";
-import { LayoutDashboard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
-
-const adminMenu = [
-  { href: "/dashboard", label: "Início" },
-  { href: "/venda-rapida", label: "Venda Rápida" },
-  { href: "/historico", label: "Histórico" },
-  { href: "/importacao", label: "Importação" },
-  { href: "/financeiro", label: "Financeiro & DRE" },
-  { href: "/boletos", label: "Boletos" },
-  { href: "/prudent", label: "Prudent (Antecipação)" },
-  { href: "/obrigacoes", label: "Obrigações" },
-  { href: "/fechamento", label: "Fechamento" },
-  { href: "/inteligencia", label: "BFX Intelligence", isNew: true },
-  { href: "/crm", label: "CRM", isNew: true },
-  { href: "/relatorios", label: "Relatórios" },
-  { href: "/cadastros", label: "Cadastros" },
-  { href: "/gestao-rh", label: "Gestão de RH" },
-  { href: "/configuracoes", label: "Configurações" },
-];
-
-const sellerMenu = [
-  { href: "/dashboard", label: "Início" },
-  { href: "/venda-rapida", label: "Venda Rápida" },
-  { href: "/comissoes", label: "Minhas Comissões" },
-  { href: "/historico", label: "Histórico" },
-  { href: "/cadastros", label: "Cadastros" },
-  { href: "/relatorios", label: "Relatórios PDF" },
-  { href: "/perfil", label: "Meu Perfil" },
-];
 
 export default async function AppLayout({
   children,
@@ -48,46 +22,56 @@ export default async function AppLayout({
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const menu = session.role === "admin" ? adminMenu : sellerMenu;
+  const userLabel = session.nomeExibicao || session.username;
+
+  // Contadores da sidebar: UMA consulta por requisição. O `SidebarContent` é montado duas vezes
+  // (aside do desktop e folha do mobile) e recebe o resultado por prop — nunca consulta sozinho.
+  // Falha do banco não derruba a casca: sem alertas a sidebar só fica sem os números.
+  let alertas: AlertasShell | undefined;
+  try {
+    alertas = await carregarAlertasShell(session);
+  } catch {
+    alertas = undefined;
+  }
+  // Vendedor recebe só o contador de assinaturas no Histórico; o bloco "Alertas de hoje" é do admin.
+  const alertasDoBloco = session.role === "admin" ? alertas : undefined;
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-6 px-3 py-5 lg:px-6">
-        <aside className="hidden w-72 shrink-0 lg:flex animate-slide-in-left">
-          {/* Sem `.sidebar-dark`: aquela classe fixava `color-scheme: dark` no
-              painel. Agora que a sidebar acompanha o tema, o `color-scheme`
-              fixo pintaria a barra de rolagem e os controles nativos de escuro
-              dentro de uma superficie clara. Herdar do documento ja da o certo
-              nos dois temas. */}
-          {/* `border-border`, a MESMA do <main> ao lado, e nao
-              `border-sidebar-border`. Os dois paineis ficam lado a lado sobre
-              `--background`: com a sidebar clara (0.965) contra a pagina
-              (0.985), `--sidebar-border` dava 1.79:1 e o painel praticamente
-              perdia o contorno enquanto o vizinho mantinha o dele a 3.49:1.
-              `--sidebar-border` continua sendo o separador INTERNO, onde uma
-              linha discreta e o que se quer. */}
-          <div className="sticky top-5 h-[calc(100vh-2.5rem)] w-full rounded-2xl border border-border bg-[var(--sidebar)] px-5 py-6 text-[var(--sidebar-foreground)] shadow-xl dark:shadow-[var(--shadow-lg)] transition-all duration-300">
-            <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
+      <div className="mx-auto flex min-h-screen w-full max-w-[1600px] gap-4 p-3 lg:p-4">
+        <aside className="hidden w-65 shrink-0 lg:flex">
+          {/* Painel dos artboards: `bg-card` (degrau acima da página), raio de painel e contorno
+              decorativo `--painel-borda`. Sem sombra pesada: a separação vem do degrau de cor. */}
+          <div className="sticky top-4 h-[calc(100vh-2rem)] w-full overflow-hidden rounded-painel border border-painel-borda bg-card px-4 py-5 text-foreground">
+            <SidebarContent
+              userLabel={userLabel}
+              role={session.role}
+              alertas={alertasDoBloco}
+              contagens={{ "/historico": alertas?.assinaturasPendentes }}
+            />
           </div>
         </aside>
-        <main className="flex-1 min-w-0 rounded-2xl border border-border bg-card px-4 py-5 shadow-lg backdrop-blur-sm transition-all duration-300 dark:shadow-[var(--shadow-md)] lg:px-8 lg:py-7 animate-fade-in">
-          {/* Navbar do conteudo. Antes existia so no celular (`lg:hidden`); agora vale em
-              qualquer tamanho porque e' aqui que ficam o sino e o olho do modo discreto
-              (pedido do Andre, 24/09: os tres botoes juntos no cabecalho da sidebar
-              disputavam atencao e espaco). O tema desceu para o pe da sidebar. No desktop
-              so o lado direito aparece — nome e perfil ja estao na sidebar. */}
-          <div className="mb-6 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0 lg:hidden">
+        {/* A casca: um degrau abaixo do painel, com o contorno `--shell-borda`. */}
+        <main className="min-w-0 flex-1 rounded-shell bg-shell border border-shell-borda px-4 py-5 lg:px-10 lg:py-7">
+          {/* Barra do conteúdo. No celular leva o gatilho do menu + quem está logado; em qualquer
+              tamanho leva o sino e o olho do modo discreto no canto direito (nome e perfil já
+              estão na sidebar do desktop). */}
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3 lg:hidden">
               <MobileMenuTrigger>
-                <SidebarContent menu={menu} userLabel={session.nomeExibicao || session.username} role={session.role} />
+                <SidebarContent
+                  userLabel={userLabel}
+                  role={session.role}
+                  alertas={alertasDoBloco}
+                  contagens={{ "/historico": alertas?.assinaturasPendentes }}
+                />
               </MobileMenuTrigger>
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className="text-sm font-medium text-foreground truncate max-w-[120px] sm:max-w-[160px]">
-                  {session.nomeExibicao || session.username}
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                <span className="max-w-[120px] truncate text-sm font-medium text-foreground sm:max-w-[160px]">
+                  {userLabel}
                 </span>
-                {/* infoSolid, nao info: no mobile este e' o unico badge "Admin"
-                    visivel (o da sidebar fica oculto) e o info translucido
-                    media 3.63:1 no tema claro, abaixo dos 4.5:1 com 10px. */}
+                {/* infoSolid, não info: aqui este é o único selo "Admin" visível (o da sidebar
+                    fica oculto) e o info translúcido não fecha 4.5:1 no tema claro. */}
                 <Badge variant={session.role === "admin" ? "infoSolid" : "secondary"} size="sm">
                   {session.role === "admin" ? "Admin" : "Vendedor"}
                 </Badge>
@@ -98,9 +82,7 @@ export default async function AppLayout({
               <ValoresToggle />
             </div>
           </div>
-          <div className="animate-fade-in-up">
-            {children}
-          </div>
+          <div className="anim-entrada">{children}</div>
         </main>
       </div>
     </div>
@@ -108,64 +90,43 @@ export default async function AppLayout({
 }
 
 function SidebarContent({
-  menu,
   userLabel,
   role,
+  alertas,
+  contagens,
+  busca,
 }: {
-  menu: { href: string; label: string; external?: boolean; isNew?: boolean }[];
   userLabel: string;
-  role?: string;
+  role: string;
+  /** Só admin. Vem pronto do layout (que consulta uma vez). */
+  alertas?: AlertasShell;
+  /** Contadores por href (ex.: Histórico = assinaturas pendentes). */
+  contagens?: Partial<Record<string, number>>;
+  /** Lugar do gatilho da busca global (tarefa F3 encaixa o componente aqui). */
+  busca?: ReactNode;
 }) {
   return (
-      <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      <div className="flex items-start justify-between gap-2">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            {/* O simbolo da marca e desacoplado da paleta da sidebar: o
-                gradiente `--gradient-cta-*` e decorativo e identico nos dois
-                temas, entao o chip continua igual enquanto a sidebar inverte.
-                Antes o inicio do gradiente era `--sidebar-primary`, que agora
-                escurece no tema claro (ele virou cor de TEXTO da marca) — o
-                logo teria mudado de cor de brinde. O icone usa o token do
-                gradiente, nao `text-white` cru: 5.05:1 no extremo claro e
-                8.65:1 no escuro do degrade (verde da marca). */}
-            {/* Sem sombra (D-03): chip decorativo do logo, sem borda propria,
-                fica encaixado no cabecalho da sidebar — mesmo plano. */}
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-gradient-cta-from to-gradient-cta-to">
-              <LayoutDashboard className="h-4 w-4 text-gradient-cta-foreground" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-[var(--sidebar-foreground)]">
-                BFX Manager
-              </h1>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-[var(--sidebar-muted)]">{userLabel}</span>
-            {/* infoSolid (não "info" translúcido): a variante sólida traz o próprio
-                preenchimento (`bg-info` + `text-info-foreground`, 5.37:1), então não
-                depende do que está atrás. É justamente por isso que ela sobrevive à
-                sidebar passar a acompanhar o tema — a variante translúcida "info"
-                mede o contraste CONTRA o fundo (4.39:1 sobre a sidebar escura) e teria
-                de ser recalibrada de novo agora que esse fundo inverte. */}
-            <Badge variant={role === "admin" ? "infoSolid" : "secondary"} size="sm">
-              {role === "admin" ? "Admin" : "Vendedor"}
-            </Badge>
-          </div>
+    <div className="flex h-full min-h-0 flex-col gap-5">
+      <div className="flex items-center gap-3 px-1">
+        {/* Chip da marca no verde primário, ícone no par `primary-foreground`. */}
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-controle bg-primary">
+          <LayoutDashboard className="h-[18px] w-[18px] text-primary-foreground" aria-hidden="true" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-lg font-semibold leading-tight text-foreground">BFX Manager</p>
+          <p className="truncate text-xs text-sidebar-muted">
+            {userLabel} · {role === "admin" ? "Admin" : "Vendedor"}
+          </p>
         </div>
       </div>
-      <Separator className="my-5 bg-[var(--sidebar-border)]" />
-      <SidebarNav menu={menu} />
-      <div className="mt-auto">
-        <Separator className="my-4 bg-[var(--sidebar-border)]" />
-        {/* Tema junto do Sair (24/09): saiu do cabecalho, onde competia com o sino e com
-            o olho. O Sair ocupa a linha (`w-full` proprio) e o tema fica na ponta. */}
-        <div className="flex items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <LogoutButton />
-          </div>
-          <ThemeToggle />
+      {busca}
+      <SidebarNav role={role} contagens={contagens} />
+      <AlertasHoje alertas={alertas} />
+      <div className="flex items-center gap-2 border-t border-divisoria pt-4">
+        <div className="min-w-0 flex-1">
+          <LogoutButton />
         </div>
+        <ThemeToggle />
       </div>
     </div>
   );

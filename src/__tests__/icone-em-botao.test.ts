@@ -33,7 +33,7 @@ describe("D1 — badge do sino nao vaza do botao", () => {
   });
 
   it("separa o badge do glifo do sino com anel na cor da superficie", () => {
-    expect(fonte.includes("ring-2 ring-sidebar")).toBe(true);
+    expect(fonte.includes("ring-2 ring-controle")).toBe(true);
   });
 
   it("nao intercepta clique do gatilho do popover", () => {

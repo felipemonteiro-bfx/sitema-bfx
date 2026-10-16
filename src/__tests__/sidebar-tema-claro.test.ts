@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
+import { CHAVES_ICONE } from "@/lib/menu";
 
 /**
  * A sidebar precisa acompanhar o tema.
@@ -37,6 +38,17 @@ const css = ler("src/app/globals.css");
 const sidebarNav = ler("src/components/sidebar-nav.tsx");
 const appLayout = ler("src/app/(app)/layout.tsx");
 const script = ler("scripts/design-tokens/token-contrast.mjs");
+const mobileMenu = ler("src/components/mobile-menu-trigger.tsx");
+// Pode ainda nao existir no RED: a leitura vazia deixa os testes que dependem dele reprovarem
+// com a mensagem certa em vez de derrubar o arquivo inteiro na carga.
+function lerSeExistir(rel: string): string {
+  try {
+    return ler(rel);
+  } catch {
+    return "";
+  }
+}
+const alertasHoje = lerSeExistir("src/components/alertas-hoje.tsx");
 
 /**
  * Remove comentarios antes de procurar por classe crua. Sem isto, um
@@ -60,6 +72,7 @@ function semComentarios(fonte: string): string {
 
 const sidebarNavCodigo = semComentarios(sidebarNav);
 const appLayoutCodigo = semComentarios(appLayout);
+const alertasHojeCodigo = semComentarios(alertasHoje);
 const cssCodigo = semComentarios(css);
 
 // --- leitura da catraca -------------------------------------------------
@@ -288,59 +301,137 @@ describe("os tokens novos existem nos tres pontos", () => {
   });
 });
 
-// --- 4. os consumidores -------------------------------------------------
+// --- 4. os consumidores (redesign Vantage, tarefa B) --------------------
 
-describe("os consumidores acompanham os tokens", () => {
-  it("a sidebar nao tem mais cor crua branca", () => {
-    // `text-white` sobre um fundo que muda de tema e o erro classico: dava
-    // 3.41:1 (claro) e 3.15:1 (escuro) sobre `--sidebar-primary`. E `bg-white/5`
-    // no chip do icone e literalmente invisivel sobre fundo claro.
-    expect(sidebarNavCodigo.includes("text-white")).toBe(false);
-    expect(sidebarNavCodigo.includes("bg-white/")).toBe(false);
+describe("a casca segue os degraus do Vantage", () => {
+  it("a pagina e bg-background e o <main> e a casca (rounded-shell bg-shell)", () => {
+    expect(appLayoutCodigo.includes("bg-background")).toBe(true);
+    expect(appLayoutCodigo.includes("rounded-shell bg-shell")).toBe(true);
+    expect(appLayoutCodigo.includes("border-shell-borda")).toBe(true);
+  });
+
+  it("a sidebar e um painel (bg-card rounded-painel) sem sombra pesada", () => {
+    expect(appLayoutCodigo.includes("rounded-painel")).toBe(true);
+    expect(appLayoutCodigo.includes("bg-card")).toBe(true);
+    expect(appLayoutCodigo.includes("shadow-xl")).toBe(false);
+    expect(appLayoutCodigo.includes("shadow-lg")).toBe(false);
+    expect(appLayoutCodigo.includes("var(--sidebar)")).toBe(false);
+  });
+
+  it("o logo e um chip bg-primary com icone text-primary-foreground, sem cor crua", () => {
     expect(appLayoutCodigo.includes("text-white")).toBe(false);
-  });
-
-  it("o badge de contagem usa o par de tokens do preenchimento", () => {
-    expect(
-      sidebarNavCodigo.includes("bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]")
-    ).toBe(true);
-  });
-
-  it("o chip do icone e o badge NOVO usam o tint OPACO, nao o composto /20", () => {
-    // O composto da propria matiz escurece o tom e derruba o texto abaixo de
-    // 4.5 mesmo com o token certo — e o composto nao e mensuravel pela catraca.
-    expect(sidebarNavCodigo.includes("var(--sidebar-primary)]/20")).toBe(false);
-    expect(sidebarNavCodigo.includes("var(--sidebar-primary)]/15")).toBe(false);
-    expect(sidebarNavCodigo.includes("bg-[var(--sidebar-primary-bg)]")).toBe(true);
-  });
-
-  it("nenhum texto da sidebar renderiza com opacidade parcial", () => {
-    // `text-[var(--sidebar-muted)]/80` media 4.17:1 no escuro: a catraca
-    // aprovava o token e a tela reprovava o pixel.
-    expect(sidebarNavCodigo.includes("text-[var(--sidebar-muted)]/80")).toBe(false);
-    expect(sidebarNavCodigo.includes("var(--sidebar-accent)]/80")).toBe(false);
-  });
-
-  it("o item ativo usa o par accent/accent-foreground", () => {
-    expect(
-      sidebarNavCodigo.includes(
-        "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)]"
-      )
-    ).toBe(true);
+    expect(appLayoutCodigo.includes("bg-primary")).toBe(true);
+    expect(appLayoutCodigo.includes("text-primary-foreground")).toBe(true);
+    expect(appLayoutCodigo.includes("font-display")).toBe(true);
   });
 
   it("o container da sidebar nao forca mais color-scheme: dark", () => {
-    // `.sidebar-dark` fixava `color-scheme: dark` no painel. Com a sidebar
-    // clara isso pintaria a barra de rolagem e os controles nativos de escuro
-    // dentro de uma superficie clara.
     expect(appLayoutCodigo.includes("sidebar-dark")).toBe(false);
     expect(cssCodigo.includes(".sidebar-dark")).toBe(false);
   });
 
+  it("nao existe 'Trocar empresa'", () => {
+    expect(appLayoutCodigo.includes("Trocar empresa")).toBe(false);
+    expect(sidebarNavCodigo.includes("Trocar empresa")).toBe(false);
+  });
+
+  it("reserva o lugar do gatilho da busca (prop busca) acima do menu", () => {
+    expect(appLayoutCodigo.includes("busca?: ReactNode")).toBe(true);
+    const iBusca = appLayoutCodigo.indexOf("{busca}");
+    const iNav = appLayoutCodigo.indexOf("<SidebarNav");
+    expect(iBusca).toBeGreaterThan(-1);
+    expect(iBusca).toBeLessThan(iNav);
+  });
+});
+
+describe("a navegacao consome o menu do modulo, sem copia local", () => {
+  it("usa menuDoPerfil e nao declara agrupamento proprio", () => {
+    expect(sidebarNavCodigo.includes("menuDoPerfil")).toBe(true);
+    expect(sidebarNavCodigo.includes('from "@/lib/menu"')).toBe(true);
+    // a copia que fez o /crm sumir: listas de hrefs por grupo e a rede "Outros"
+    expect(sidebarNavCodigo.includes('"/venda-rapida"')).toBe(false);
+    expect(sidebarNavCodigo.includes("Vendas & Operações")).toBe(false);
+    expect(sidebarNavCodigo.includes("Outros")).toBe(false);
+  });
+
+  it("o layout tambem nao copia os arrays de menu", () => {
+    expect(appLayoutCodigo.includes("adminMenu")).toBe(false);
+    expect(appLayoutCodigo.includes("sellerMenu")).toBe(false);
+  });
+
+  it("mapeia TODA chave de icone do modulo para um componente lucide", () => {
+    for (const chave of CHAVES_ICONE) {
+      expect(sidebarNavCodigo.includes(`${chave}:`), `icone da chave ${chave} sem mapeamento`).toBe(true);
+    }
+  });
+});
+
+describe("o item de menu do Vantage", () => {
+  it("o item ativo usa controle-ativo, texto semibold e aria-current", () => {
+    // No claro `--controle-ativo` e branco (= painel) e sumiria: ali vale o tint da marca.
+    expect(sidebarNavCodigo.includes("dark:bg-controle-ativo")).toBe(true);
+    expect(sidebarNavCodigo.includes("dark:text-foreground")).toBe(true);
+    expect(sidebarNavCodigo.includes("bg-marca-tint font-semibold text-marca-tint-texto")).toBe(true);
+    expect(sidebarNavCodigo.includes("font-semibold")).toBe(true);
+    expect(sidebarNavCodigo.includes('aria-current={active ? "page" : undefined}')).toBe(true);
+  });
+
+  it("o item tem 44px de altura, rounded-controle e hover pelo token --mov-nav", () => {
+    expect(sidebarNavCodigo.includes("min-h-11")).toBe(true);
+    expect(sidebarNavCodigo.includes("rounded-controle")).toBe(true);
+    expect(sidebarNavCodigo.includes("var(--mov-nav)")).toBe(true);
+  });
+
+  it("a pill Novo usa o par marca-tint / marca-tint-texto", () => {
+    expect(sidebarNavCodigo.includes("bg-marca-tint text-marca-tint-texto")).toBe(true);
+  });
+
+  it("o contador do Historico usa o par neutro em fonte mono", () => {
+    expect(sidebarNavCodigo.includes("bg-divisoria")).toBe(true);
+    expect(sidebarNavCodigo.includes("text-texto-secundario")).toBe(true);
+    expect(sidebarNavCodigo.includes("font-mono")).toBe(true);
+    // nao e mais o preenchimento da marca
+    expect(sidebarNavCodigo.includes("sidebar-primary-foreground")).toBe(false);
+  });
+
+  it("nenhum texto da navegacao renderiza com opacidade parcial", () => {
+    expect(sidebarNavCodigo.includes("text-sidebar-muted/")).toBe(false);
+    expect(sidebarNavCodigo.includes("text-muted-foreground/")).toBe(false);
+    expect(sidebarNavCodigo.includes("text-texto-secundario/")).toBe(false);
+    expect(sidebarNavCodigo.includes("var(--sidebar-muted)]/")).toBe(false);
+  });
+
+  it("nao ha cor crua branca", () => {
+    expect(sidebarNavCodigo.includes("text-white")).toBe(false);
+    expect(sidebarNavCodigo.includes("bg-white/")).toBe(false);
+  });
+
+  it("o rotulo de grupo e pequeno e muted", () => {
+    expect(sidebarNavCodigo.includes("text-sidebar-muted")).toBe(true);
+  });
+});
+
+describe("controles do topo e do rodape", () => {
+  it("sino e olho tem 44px e o visual de controle do Vantage", () => {
+    const sino = semComentarios(ler("src/components/notification-bell.tsx"));
+    const olho = semComentarios(ler("src/components/valores-toggle.tsx"));
+    for (const fonte of [sino, olho]) {
+      expect(fonte.includes("size-11")).toBe(true);
+      expect(fonte.includes("bg-controle")).toBe(true);
+      expect(fonte.includes("border-divisoria")).toBe(true);
+      expect(fonte.includes("rounded-controle")).toBe(true);
+    }
+  });
+
+  it("Sair e tema tem alvo de pelo menos 44px", () => {
+    const sair = semComentarios(ler("src/components/LogoutButton.tsx"));
+    const tema = semComentarios(ler("src/components/theme-toggle.tsx"));
+    expect(sair.includes("min-h-11")).toBe(true);
+    expect(tema.includes("size-11")).toBe(true);
+  });
+
   it("o botao Sair usa a variante de TEXTO e o tint opaco", () => {
     const logout = semComentarios(ler("src/components/LogoutButton.tsx"));
-    // `text-destructive` e o token de PREENCHIMENTO usado como texto — 4.44:1
-    // sobre a sidebar clara, e 4.07:1 sobre o proprio tint `/5`.
     expect(logout.includes("text-destructive")).toBe(false);
     expect(logout.includes("bg-destructive/")).toBe(false);
     expect(logout.includes("border-destructive/")).toBe(false);
@@ -348,18 +439,53 @@ describe("os consumidores acompanham os tokens", () => {
     expect(logout.includes("bg-error-bg")).toBe(true);
   });
 
-  it("o painel da sidebar tem a mesma borda do <main> ao lado", () => {
-    // Os dois ficam lado a lado sobre `--background`: com bordas de pesos
-    // diferentes a sidebar clara praticamente perde o contorno (1.79:1)
-    // enquanto o vizinho mantem o dele (3.49:1).
-    expect(appLayoutCodigo.includes("border border-border bg-[var(--sidebar)]")).toBe(true);
+  it("o menu mobile abre o mesmo conteudo numa folha no painel (bg-card) com gatilho de 44px", () => {
+    const codigo = semComentarios(mobileMenu);
+    expect(codigo.includes("bg-card")).toBe(true);
+    expect(codigo.includes("var(--sidebar)")).toBe(false);
+    expect(codigo.includes("size-11")).toBe(true);
+  });
+});
+
+describe("alertas da sidebar: carregados uma vez e so para admin", () => {
+  it("carregarAlertasShell e chamado UMA vez, no layout (SidebarContent monta duas vezes)", () => {
+    const chamadas = appLayoutCodigo.split("carregarAlertasShell(").length - 1;
+    expect(chamadas).toBe(1);
+    // o SidebarContent recebe por prop, nao consulta
+    expect(appLayoutCodigo.includes("alertas={alertas}")).toBe(true);
+    expect(sidebarNavCodigo.includes("carregarAlertasShell")).toBe(false);
+    expect(alertasHojeCodigo.includes("carregarAlertasShell")).toBe(false);
   });
 
-  it("o logo usa o gradiente da marca e o token de icone", () => {
-    // O gradiente da marca e decorativo e identico nos dois temas — desacoplar
-    // do `--sidebar-primary` mantem o simbolo estavel enquanto a paleta da
-    // sidebar inverte.
-    expect(appLayoutCodigo.includes("from-gradient-cta-from to-gradient-cta-to")).toBe(true);
-    expect(appLayoutCodigo.includes("text-gradient-cta-foreground")).toBe(true);
+  it("o contador do Historico vem das assinaturas pendentes", () => {
+    expect(appLayoutCodigo.includes("assinaturasPendentes")).toBe(true);
+    expect(appLayoutCodigo.includes('"/historico"')).toBe(true);
+  });
+
+  it("o bloco aparece para admin, com os links certos, e some para vendedor", async () => {
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    const { createElement } = await import("react");
+    const { AlertasHoje } = await import("@/components/alertas-hoje");
+
+    const admin = renderToStaticMarkup(
+      createElement(AlertasHoje, { alertas: { assinaturasPendentes: 82, parcelasVencidas: 56 } })
+    );
+    expect(admin.includes("Alertas de hoje")).toBe(true);
+    expect(admin.includes('href="/historico?assinatura=pendente"')).toBe(true);
+    expect(admin.includes('href="/relatorios"')).toBe(true);
+    expect(admin.includes("82")).toBe(true);
+    expect(admin.includes("56")).toBe(true);
+    expect(admin.toLowerCase().includes("estoque")).toBe(false);
+
+    const vendedor = renderToStaticMarkup(
+      createElement(AlertasHoje, { alertas: { assinaturasPendentes: 3 } })
+    );
+    expect(vendedor).toBe("");
+    const semDados = renderToStaticMarkup(createElement(AlertasHoje, { alertas: undefined }));
+    expect(semDados).toBe("");
+  });
+
+  it("o layout so entrega alertas ao bloco quando a sessao e admin", () => {
+    expect(appLayoutCodigo.includes('session.role === "admin"')).toBe(true);
   });
 });

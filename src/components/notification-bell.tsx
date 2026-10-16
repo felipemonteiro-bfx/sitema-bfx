@@ -99,10 +99,10 @@ export function NotificationBell() {
           type="button"
           variant="ghost"
           size="icon"
-          className="relative h-9 w-9 rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] shadow-none hover:bg-sidebar-accent hover:text-[var(--sidebar-accent-foreground)] hover:shadow-none"
+          className="relative size-11 min-h-11 min-w-11 touch-manipulation rounded-controle border border-divisoria bg-controle text-texto-secundario shadow-none hover:bg-controle-ativo hover:text-foreground hover:shadow-none dark:hover:shadow-none"
           aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         >
-          <Bell className="h-4 w-4" />
+          <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
           {/* Ancorado DENTRO da caixa do botao. Com o deslocamento negativo que
               havia aqui, o badge de 16x16 saia 3px para cima e 3px para a
               direita de um botao de 36x36 — medido `clientWidth` 34 contra
@@ -117,7 +117,7 @@ export function NotificationBell() {
               a fonte (`h-4 min-w-4` + `text-xs`), senao o numero nao caberia.
               Mesmo par usado no contador da navegacao lateral. */}
           {unreadCount > 0 && (
-            <span className="pointer-events-none absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 text-xs font-bold leading-none text-error-foreground ring-2 ring-sidebar">
+            <span className="pointer-events-none absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-xs font-bold leading-none text-primary-foreground ring-2 ring-controle">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}

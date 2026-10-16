@@ -46,10 +46,11 @@ export function LogoutButton() {
            A correcao usa a variante de TEXTO (`--error-text`, que existe desde
            a fase 17 exatamente para isso) e troca os tints compostos pelo
            opaco `--error-bg`: 5.17:1 sobre a sidebar e 4.66:1 sobre o tint no
-           claro; 5.66:1 e 5.65:1 no escuro. A borda passa a `border-border`,
-           a mesma do ThemeToggle ao lado (3.30:1 claro / 3.46:1 escuro) — o
-           `border-destructive/30` dava 1.72:1 e nao delimitava o controle. */
-        className="w-full justify-between rounded-lg border-border bg-transparent px-3 py-2 text-error-text transition-colors hover:border-error hover:bg-error-bg hover:text-error-text"
+           claro; 5.66:1 e 5.65:1 no escuro. Redesign Vantage: 44px de alvo
+           (`min-h-11`), `rounded-controle` e a borda decorativa `--divisoria`, a
+           mesma dos controles do topo — o rotulo "Sair" em texto de 4.5:1+ e
+           quem identifica o botao, a borda nao carrega informacao. */
+        className="min-h-11 w-full justify-between rounded-controle border border-divisoria bg-transparent px-3 py-2 text-error-text transition-colors hover:border-error hover:bg-error-bg hover:text-error-text"
       >
         <span className="flex items-center gap-3">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-error-bg text-error-text">
