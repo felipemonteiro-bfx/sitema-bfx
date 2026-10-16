@@ -4,6 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
+import { KpiCard } from "@/components/kpi-card";
+import { Pencil, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { formatBRL, cn } from "@/lib/utils";
@@ -21,6 +24,11 @@ import Link from "next/link";
 import { createAuditLog } from "@/lib/audit";
 
 type Search = { tab?: string; mes?: string; edit?: string };
+
+/** Título de seção do Vantage (sobrepõe o `font-display` do CardTitle). */
+const TITULO_SECAO = "font-sans text-lg font-semibold leading-normal tracking-normal";
+/** Rótulo de campo em frase normal: o `Label` base ainda vem em caixa-alta. */
+const ROTULO = "text-sm font-medium normal-case tracking-normal";
 
 async function addDespesa(formData: FormData) {
   "use server";
@@ -117,14 +125,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <PageHeader
-          title="Financeiro & DRE"
-          description="Visão consolidada de receitas, despesas e caixa."
-          breadcrumbs={[{ label: "Financeiro & DRE" }]}
-        />
-        <MonthFilter />
-      </div>
+      <PageHeader
+        title="Financeiro & DRE"
+        description="Visão consolidada de receitas, despesas e caixa."
+        breadcrumbs={[{ label: "Financeiro & DRE" }]}
+        actions={<MonthFilter />}
+      />
 
       <QueryTabs
         defaultTab={sp.tab || "dre"}
@@ -133,7 +139,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             value: "dre",
             label: "DRE Inteligente",
             content: (
-              <>
+              <div className="space-y-6">
                 {(() => {
                   const custoTotal = dre.custosVar + dre.fixas;
                   const pontoEqStatus =
@@ -143,126 +149,96 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     : 'red';
                   return (
                     <>
-                      <div className="grid gap-4 md:grid-cols-3">
-                        {/* Receita */}
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Receita Bruta</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="valor-sensivel text-2xl font-bold tabular-nums">{formatBRL(dre.receita)}</div>
-                            <div className="mt-1 text-xs text-muted-foreground">{dre.totalVendas ?? '—'} vendas no período</div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Custos */}
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Custos do Período</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="valor-sensivel text-2xl font-bold tabular-nums text-error-text">{formatBRL(custoTotal)}</div>
-                            {/* A taxa da Prudent faltava nesta lista desde que
-                                `finance.ts` passou a soma-la em `custosVar`: o
-                                total ja a incluia e a legenda nao, entao o numero
-                                nao batia com a decomposicao que o leitor somava
-                                de cabeca. */}
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              CMV + comissões + frete + taxa Prudent + despesas
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        {/* Lucro + Ponto de Equilíbrio */}
-                        <Card className={cn(
-                          dre.lucro < 0 ? "border-destructive/30 bg-destructive/5 dark:bg-destructive/10" :
-                          dre.lucro === 0 ? "border-warning/30 bg-warning/5" : ""
-                        )}>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Lucro Líquido</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className={cn("valor-sensivel text-2xl font-bold tabular-nums", dre.lucro >= 0 ? "text-success-text" : "text-error-text")}>
-                              {formatBRL(dre.lucro)}
-                            </div>
-                            {/* Ponto de Equilíbrio indicator */}
-                            <div className="mt-2 flex items-center gap-1.5">
-                              <span className={cn(
-                                "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium",
-                                pontoEqStatus === 'green' ? "bg-success/10 text-success-text dark:bg-success/20" :
-                                pontoEqStatus === 'yellow' ? "bg-warning/10 text-warning-text dark:bg-warning/20" :
-                                pontoEqStatus === 'red' ? "bg-destructive/10 text-error-text dark:bg-destructive/20" :
-                                "bg-muted text-muted-foreground"
-                              )}>
-                                <span className={cn(
-                                  "h-1.5 w-1.5 shrink-0 rounded-full",
-                                  pontoEqStatus === 'green' ? "bg-success" :
-                                  pontoEqStatus === 'yellow' ? "bg-warning" :
-                                  pontoEqStatus === 'red' ? "bg-destructive" : "bg-muted-foreground"
-                                )} />
-                                {pontoEqStatus === 'green' ? "Acima do ponto" :
-                                 pontoEqStatus === 'yellow' ? "No limite" :
-                                 pontoEqStatus === 'red' ? "Abaixo do ponto" :
+                      <section
+                        aria-label="Indicadores do período"
+                        className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-2 rounded-painel border border-painel-borda bg-card p-2"
+                      >
+                        <KpiCard
+                          ordem={0}
+                          rotulo="Receita bruta"
+                          valor={formatBRL(dre.receita)}
+                          rodape={`${dre.totalVendas ?? "—"} vendas no período`}
+                        />
+                        {/* A taxa da Prudent faltava nesta lista desde que
+                            `finance.ts` passou a soma-la em `custosVar`: o
+                            total ja a incluia e a legenda nao, entao o numero
+                            nao batia com a decomposicao que o leitor somava
+                            de cabeca. */}
+                        <KpiCard
+                          ordem={1}
+                          rotulo="Custos do período"
+                          valor={formatBRL(custoTotal)}
+                          rodape="CMV + comissões + frete + taxa Prudent + despesas"
+                        />
+                        {/* Só o prejuízo ganha cor: o valor do lucro é neutro e fica vermelho quando é negativo. */}
+                        <KpiCard
+                          ordem={2}
+                          rotulo="Lucro líquido"
+                          valor={formatBRL(dre.lucro)}
+                          className={dre.lucro < 0 ? "[&>div]:text-error-text" : undefined}
+                          rodape={
+                            <span className="flex flex-wrap items-center gap-2">
+                              <Badge
+                                variant={
+                                  pontoEqStatus === "green" ? "success"
+                                  : pontoEqStatus === "yellow" ? "warning"
+                                  : pontoEqStatus === "red" ? "error"
+                                  : "outline"
+                                }
+                                className="whitespace-nowrap"
+                              >
+                                {pontoEqStatus === "green" ? "Acima do ponto" :
+                                 pontoEqStatus === "yellow" ? "No limite" :
+                                 pontoEqStatus === "red" ? "Abaixo do ponto" :
                                  "Sem custos fixos"}
-                              </span>
+                              </Badge>
                               {dre.pontoEq > 0 && (
-                                <span className="text-xs tabular-nums text-muted-foreground">PE: <span className="valor-sensivel">{formatBRL(dre.pontoEq)}</span></span>
+                                <span className="font-mono">
+                                  PE: <span className="valor-sensivel">{formatBRL(dre.pontoEq)}</span>
+                                </span>
                               )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
+                            </span>
+                          }
+                        />
+                      </section>
 
-                      {/* Detalhes de custos */}
-                      <Card className="mt-4">
-                        <CardHeader>
-                          <CardTitle>Composição dos Custos</CardTitle>
+                      {/* Detalhes de custos: o painel agrupa, cada item é um card interno neutro.
+                          "Custo" fica no rótulo, não na cor. */}
+                      <Card className="p-2 pt-5">
+                        <CardHeader className="space-y-1 p-0 px-4 pb-4">
+                          <CardTitle className={TITULO_SECAO}>Composição dos custos</CardTitle>
+                          <p className="text-sm text-muted-foreground">De onde vêm os custos do período e o que está parado em estoque.</p>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          {/* Custos do período */}
+                        <CardContent className="space-y-5 p-0 px-2 pb-2">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Custos do período</p>
-                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                                <div className="text-xs text-muted-foreground">CMV</div>
-                                <div className="valor-sensivel mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.detalhe.cmv)}</div>
-                                <div className="text-xs text-muted-foreground">Custo de mercadorias vendidas</div>
-                              </div>
-                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                                <div className="text-xs text-muted-foreground">Comissões</div>
-                                <div className="valor-sensivel mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.detalhe.comissoes)}</div>
-                                <div className="text-xs text-muted-foreground">Equipe de vendas</div>
-                              </div>
-                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                                <div className="text-xs text-muted-foreground">Frete Real</div>
-                                <div className="valor-sensivel mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.detalhe.freteReal)}</div>
-                                <div className="text-xs text-muted-foreground">Custo logístico</div>
-                              </div>
-                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                                <div className="text-xs text-muted-foreground">Taxa Prudent</div>
-                                <div className="valor-sensivel mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.detalhe.taxaAntecipacao)}</div>
-                                <div className="text-xs text-muted-foreground">Antecipação do desconto em folha</div>
-                              </div>
-                              <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                                <div className="text-xs text-muted-foreground">Despesas Fixas</div>
-                                <div className="valor-sensivel mt-0.5 text-base font-semibold tabular-nums text-error-text">{formatBRL(dre.fixas)}</div>
-                                <div className="text-xs text-muted-foreground">Operação mensal</div>
-                              </div>
+                            <p className="mb-2 px-2 text-sm font-medium text-muted-foreground">Custos do período</p>
+                            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-2">
+                              {[
+                                { rotulo: "CMV", valor: dre.detalhe.cmv, nota: "Custo de mercadorias vendidas" },
+                                { rotulo: "Comissões", valor: dre.detalhe.comissoes, nota: "Equipe de vendas" },
+                                { rotulo: "Frete real", valor: dre.detalhe.freteReal, nota: "Custo logístico" },
+                                { rotulo: "Taxa Prudent", valor: dre.detalhe.taxaAntecipacao, nota: "Antecipação do desconto em folha" },
+                                { rotulo: "Despesas fixas", valor: dre.fixas, nota: "Operação mensal" },
+                              ].map((item) => (
+                                <div key={item.rotulo} className="rounded-interno bg-card-elevated p-4">
+                                  <div className="text-sm font-medium text-muted-foreground">{item.rotulo}</div>
+                                  <div className="valor-sensivel mt-1 text-base font-semibold font-mono text-foreground">{formatBRL(item.valor)}</div>
+                                  <div className="mt-1 text-xs text-muted-foreground">{item.nota}</div>
+                                </div>
+                              ))}
                             </div>
                           </div>
 
                           {/* Capital em estoque — separado, não é custo do período */}
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Capital imobilizado</p>
-                            <div className="rounded-lg border border-warning/20 bg-warning/5 dark:bg-warning/10 p-3 flex items-start gap-3">
-                              <div className="flex-1">
-                                <div className="text-xs text-muted-foreground">Capital em Estoque</div>
-                                <div className="valor-sensivel mt-0.5 text-base font-semibold tabular-nums text-warning-text">{formatBRL(estoqueImobilizado)}</div>
-                                <div className="text-xs text-muted-foreground">Valor de custo da mercadoria parada em estoque</div>
+                            <p className="mb-2 px-2 text-sm font-medium text-muted-foreground">Capital imobilizado</p>
+                            <div className="flex items-start gap-3 rounded-interno bg-card-elevated p-4">
+                              <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium text-muted-foreground">Capital em estoque</div>
+                                <div className="valor-sensivel mt-1 text-base font-semibold font-mono text-foreground">{formatBRL(estoqueImobilizado)}</div>
+                                <div className="mt-1 text-xs text-muted-foreground">Valor de custo da mercadoria parada em estoque</div>
                               </div>
-                              <span className="shrink-0 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning-text dark:bg-warning/20">
-                                não deduzido do lucro
-                              </span>
+                              <Badge variant="outline" className="shrink-0">não deduzido do lucro</Badge>
                             </div>
                           </div>
                         </CardContent>
@@ -270,106 +246,102 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </>
                   );
                 })()}
-              </>
+              </div>
             ),
           },
           {
             value: "fluxo",
             label: "Fluxo de Caixa",
             content: (
-              <Card>
-                <CardHeader className="space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <CardTitle>Fluxo de Caixa (6 meses)</CardTitle>
-                    <span className="rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
-                      atualizado automaticamente
-                    </span>
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Fluxo de caixa (6 meses)</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Compare entradas, saídas e saldo mês a mês para identificar sazonalidade.
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Compare entradas, saídas e saldo mês a mês para identificar sazonalidade.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {/* Sem sombra (D-03): wrapper do grafico tem borda propria e
-                      ja vive dentro do Card (que tem a sua) — mesmo plano. */}
-                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                    <div className="bloco-sensivel">
-                      <FluxoCharts rows={fluxo} />
-                    </div>
-                  </div>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                      <div className="text-xs text-muted-foreground">Entrada média</div>
-                      <div className="valor-sensivel mt-1 text-base font-semibold tabular-nums text-success-text">
-                        {formatBRL(
-                          fluxo.length ? fluxo.reduce((acc, r) => acc + r.entradas, 0) / fluxo.length : 0
-                        )}
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                      <div className="text-xs text-muted-foreground">Saída média</div>
-                      <div className="valor-sensivel mt-1 text-base font-semibold tabular-nums text-error-text">
-                        {formatBRL(
-                          fluxo.length ? fluxo.reduce((acc, r) => acc + r.saidas, 0) / fluxo.length : 0
-                        )}
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-                      <div className="text-xs text-muted-foreground">Saldo médio</div>
-                      <div className="valor-sensivel mt-1 text-base font-semibold tabular-nums text-foreground">
-                        {formatBRL(
-                          fluxo.length ? fluxo.reduce((acc, r) => acc + r.saldo, 0) / fluxo.length : 0
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6" />
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Mês</TableHead>
-                        <TableHead className="text-right">Entradas</TableHead>
-                        <TableHead className="text-right">Saídas</TableHead>
-                        <TableHead className="text-right">Saldo</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {fluxo.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                            Nenhum movimento de caixa no período.
-                          </TableCell>
+                  <Badge variant="outline">atualizado automaticamente</Badge>
+                </div>
+
+                <FluxoCharts rows={fluxo} />
+
+                <section
+                  aria-label="Médias do fluxo de caixa"
+                  className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-2 rounded-painel border border-painel-borda bg-card p-2"
+                >
+                  <KpiCard
+                    ordem={0}
+                    rotulo="Entrada média"
+                    valor={formatBRL(fluxo.length ? fluxo.reduce((acc, r) => acc + r.entradas, 0) / fluxo.length : 0)}
+                    rodape="por mês no período"
+                  />
+                  <KpiCard
+                    ordem={1}
+                    rotulo="Saída média"
+                    valor={formatBRL(fluxo.length ? fluxo.reduce((acc, r) => acc + r.saidas, 0) / fluxo.length : 0)}
+                    rodape="por mês no período"
+                  />
+                  <KpiCard
+                    ordem={2}
+                    rotulo="Saldo médio"
+                    valor={formatBRL(fluxo.length ? fluxo.reduce((acc, r) => acc + r.saldo, 0) / fluxo.length : 0)}
+                    rodape="por mês no período"
+                  />
+                </section>
+
+                <Card className="p-2 pt-5">
+                  <CardHeader className="p-0 px-4 pb-4">
+                    <CardTitle className={TITULO_SECAO}>Mês a mês</CardTitle>
+                  </CardHeader>
+                  <CardContent className="rounded-interno bg-poco p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead>Mês</TableHead>
+                          <TableHead className="text-right">Entradas</TableHead>
+                          <TableHead className="text-right">Saídas</TableHead>
+                          <TableHead className="text-right">Saldo</TableHead>
                         </TableRow>
-                      ) : (
-                        fluxo.map((r) => (
-                          <TableRow key={r.mes}>
-                            <TableCell>{r.mes}</TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums text-success-text">
-                              {formatBRL(r.entradas)}
-                            </TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums text-error-text">
-                              {formatBRL(r.saidas)}
-                            </TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums font-medium text-foreground">
-                              {formatBRL(r.saldo)}
+                      </TableHeader>
+                      <TableBody>
+                        {fluxo.length === 0 ? (
+                          <TableRow className="hover:bg-transparent">
+                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                              Nenhum movimento de caixa no período.
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+                        ) : (
+                          fluxo.map((r) => (
+                            <TableRow key={r.mes} className="hover:bg-transparent">
+                              <TableCell className="font-mono">{r.mes}</TableCell>
+                              <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">
+                                {formatBRL(r.entradas)}
+                              </TableCell>
+                              <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">
+                                {formatBRL(r.saidas)}
+                              </TableCell>
+                              <TableCell className={cn("valor-sensivel valor-sensivel-fim text-right font-mono font-medium", r.saldo < 0 ? "text-error-text" : "text-foreground")}>
+                                {formatBRL(r.saldo)}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
             ),
           },
           {
             value: "lanc",
             label: "Lançamentos",
             content: (
-              <>
+              <div className="space-y-6">
                 <Card>
                   <CardHeader className="space-y-1">
-                    <CardTitle>Nova Despesa</CardTitle>
+                    <CardTitle className={TITULO_SECAO}>Nova despesa</CardTitle>
                     <p className="text-sm text-muted-foreground">
                       Registre despesas fixas ou variáveis com data de competência.
                     </p>
@@ -377,16 +349,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardContent>
                     <form action={addDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       <input type="hidden" name="mes" value={currentMes} />
-                      <div className="col-span-2 space-y-1 md:col-span-2">
-                        <Label htmlFor="add-descricao">Descrição</Label>
+                      <div className="col-span-2 space-y-1.5 md:col-span-2">
+                        <Label htmlFor="add-descricao" className={ROTULO}>Descrição</Label>
                         <Input id="add-descricao" name="descricao" placeholder="Ex.: Aluguel, frete, comissão" />
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="add-valor">Valor</Label>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="add-valor" className={ROTULO}>Valor</Label>
                         <Input id="add-valor" name="valor" placeholder="0,00" type="number" step="0.01" />
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="add-tipo">Tipo</Label>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="add-tipo" className={ROTULO}>Tipo</Label>
                         <FormSelect
                           name="tipo"
                           options={[
@@ -396,8 +368,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           defaultValue="Fixa"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor="add-data">Data</Label>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="add-data" className={ROTULO}>Data</Label>
                         <DateInput name="data" aria-label="Data" />
                       </div>
                       <div className="col-span-1 md:col-span-3 flex items-end gap-3">
@@ -411,24 +383,24 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 </Card>
 
                 {editDespesa && (
-                  <Card className="mt-4 border-warning/20 bg-warning/5">
+                  <Card>
                     <CardHeader>
-                      <CardTitle>Editar Lançamento #{editDespesa.id}</CardTitle>
+                      <CardTitle className={TITULO_SECAO}>Editar lançamento #{editDespesa.id}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <form action={updateDespesa} className="grid grid-cols-2 gap-4 md:grid-cols-4">
                         <input type="hidden" name="id" value={editDespesa.id} />
                         <input type="hidden" name="mes" value={currentMes} />
-                        <div className="col-span-2 space-y-1 md:col-span-2">
-                          <Label htmlFor="edit-descricao">Descrição</Label>
+                        <div className="col-span-2 space-y-1.5 md:col-span-2">
+                          <Label htmlFor="edit-descricao" className={ROTULO}>Descrição</Label>
                           <Input id="edit-descricao" name="descricao" defaultValue={editDespesa.descricao || ""} />
                         </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="edit-valor">Valor</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-valor" className={ROTULO}>Valor</Label>
                           <Input id="edit-valor" name="valor" type="number" step="0.01" defaultValue={editDespesa.valor || 0} />
                         </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="edit-tipo">Tipo</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-tipo" className={ROTULO}>Tipo</Label>
                           <FormSelect
                             name="tipo"
                             options={[
@@ -438,8 +410,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             defaultValue={editDespesa.tipo || "Fixa"}
                           />
                         </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="edit-data">Data</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="edit-data" className={ROTULO}>Data</Label>
                           <DateInput name="data" defaultValue={editDespesa.dataDespesa.toISOString().slice(0, 10)} aria-label="Data" />
                         </div>
                         <div className="col-span-1 md:col-span-3 flex items-end gap-2">
@@ -456,14 +428,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </Card>
                 )}
 
-                <Card className="mt-4">
-                  <CardHeader>
-                    <CardTitle>Despesas</CardTitle>
+                <Card className="p-2 pt-5">
+                  <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
+                    <CardTitle className={TITULO_SECAO}>Despesas</CardTitle>
+                    <span className="text-sm text-muted-foreground">
+                      {despesas.length} {despesas.length === 1 ? "lançamento" : "lançamentos"}
+                    </span>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="rounded-interno bg-poco p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="hover:bg-transparent">
                           <TableHead>Data</TableHead>
                           <TableHead>Descrição</TableHead>
                           <TableHead>Tipo</TableHead>
@@ -473,37 +448,37 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </TableHeader>
                       <TableBody>
                         {despesas.length === 0 ? (
-                          <TableRow>
+                          <TableRow className="hover:bg-transparent">
                             <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                               Nenhuma despesa lançada no período.
                             </TableCell>
                           </TableRow>
                         ) : (
                           despesas.map((d) => (
-                            <TableRow key={d.id}>
-                              <TableCell>{formatDate(d.dataDespesa)}</TableCell>
+                            <TableRow key={d.id} className="hover:bg-transparent">
+                              <TableCell className="font-mono">{formatDate(d.dataDespesa)}</TableCell>
                               <TableCell>{d.descricao}</TableCell>
-                              <TableCell>{d.tipo}</TableCell>
-                              <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(d.valor || 0)}</TableCell>
+                              <TableCell><Badge variant="outline">{d.tipo}</Badge></TableCell>
+                              <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(d.valor || 0)}</TableCell>
                               <TableCell>
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-1">
                                   <Link
                                     href={`/financeiro?tab=lanc&mes=${currentMes}&edit=${d.id}`}
-                                    className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "cursor-pointer")}
+                                    className={cn(buttonVariants({ size: "iconSm", variant: "ghost" }), "cursor-pointer")}
                                     title="Editar"
                                     aria-label="Editar despesa"
                                   >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                    <Pencil className="h-4 w-4" aria-hidden="true" />
                                   </Link>
                                   <form action={deleteDespesa}>
                                     <input type="hidden" name="id" value={d.id} />
                                     <input type="hidden" name="mes" value={currentMes} />
                                     <button
-                                      className={cn(buttonVariants({ size: "icon", variant: "ghost" }), "text-error-text hover:text-error-text hover:bg-destructive/10 cursor-pointer")}
+                                      className={cn(buttonVariants({ size: "iconSm", variant: "ghost" }), "text-error-text hover:text-error-text cursor-pointer")}
                                       title="Excluir"
                                       aria-label="Excluir despesa"
                                     >
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                                     </button>
                                   </form>
                                 </div>
@@ -515,38 +490,34 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </Table>
                   </CardContent>
                 </Card>
-              </>
+              </div>
             ),
           },
           {
             value: "estoque",
             label: "Estoque",
             content: (
-              <>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <Card>
-                    <CardHeader><CardTitle className="text-sm font-medium">Valor Imobilizado</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold tabular-nums text-warning-text"><span className="valor-sensivel">{formatBRL(estoqueImobilizado)}</span></CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader><CardTitle className="text-sm font-medium">Potencial de Receita</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold tabular-nums text-success-text"><span className="valor-sensivel">{formatBRL(estoquePotencialReceita)}</span></CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader><CardTitle className="text-sm font-medium">Margem Potencial</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold tabular-nums"><span className="valor-sensivel">{estoqueMargemPct.toFixed(1)}%</span></CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader><CardTitle className="text-sm font-medium">Itens Zerados</CardTitle></CardHeader>
-                    <CardContent className="text-2xl font-semibold tabular-nums text-error-text">{estoqueItensZerados}</CardContent>
-                  </Card>
-                </div>
-                <Card className="mt-4">
-                  <CardHeader><CardTitle>Produtos em Estoque</CardTitle></CardHeader>
-                  <CardContent>
+              <div className="space-y-6">
+                <section
+                  aria-label="Indicadores do estoque"
+                  className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-2 rounded-painel border border-painel-borda bg-card p-2"
+                >
+                  <KpiCard ordem={0} rotulo="Valor imobilizado" valor={formatBRL(estoqueImobilizado)} rodape="custo da mercadoria em estoque" />
+                  <KpiCard ordem={1} rotulo="Potencial de receita" valor={formatBRL(estoquePotencialReceita)} rodape="se vender todo o estoque" />
+                  <KpiCard ordem={2} rotulo="Margem potencial" valor={`${estoqueMargemPct.toFixed(1)}%`} rodape="sobre o potencial de receita" />
+                  <KpiCard ordem={3} rotulo="Itens zerados" valor={String(estoqueItensZerados)} valorSensivel={false} rodape="produtos sem estoque" />
+                </section>
+                <Card className="p-2 pt-5">
+                  <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
+                    <CardTitle className={TITULO_SECAO}>Produtos em estoque</CardTitle>
+                    <span className="text-sm text-muted-foreground">
+                      {produtosOrdenados.length} {produtosOrdenados.length === 1 ? "produto" : "produtos"}
+                    </span>
+                  </CardHeader>
+                  <CardContent className="rounded-interno bg-poco p-0">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow className="hover:bg-transparent">
                           <TableHead>Produto</TableHead>
                           <TableHead className="text-right">Qtd</TableHead>
                           <TableHead className="text-right">Custo unit.</TableHead>
@@ -557,7 +528,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       </TableHeader>
                       <TableBody>
                         {produtosOrdenados.length === 0 ? (
-                          <TableRow>
+                          <TableRow className="hover:bg-transparent">
                             <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                               Nenhum produto cadastrado.
                             </TableCell>
@@ -569,14 +540,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                               ? ((p.valorVenda - (p.custoPadrao ?? 0)) / p.valorVenda) * 100
                               : 0;
                             return (
-                              <TableRow key={p.nome}>
+                              <TableRow key={p.nome} className="hover:bg-transparent">
                                 <TableCell className="font-medium">{p.nome}</TableCell>
-                                <TableCell className="text-right tabular-nums">{p.qtdEstoque ?? 0}</TableCell>
-                                <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(p.custoPadrao ?? 0)}</TableCell>
-                                <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums font-semibold text-warning-text">{formatBRL(imob)}</TableCell>
-                                <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(p.valorVenda ?? 0)}</TableCell>
-                                <TableCell className={cn("valor-sensivel valor-sensivel-fim text-right tabular-nums font-medium", margem >= 30 ? "text-success-text" : margem >= 15 ? "text-warning-text" : "text-error-text")}>
-                                  {margem.toFixed(1)}%
+                                <TableCell className="text-right font-mono">{p.qtdEstoque ?? 0}</TableCell>
+                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(p.custoPadrao ?? 0)}</TableCell>
+                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono font-semibold">{formatBRL(imob)}</TableCell>
+                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">{formatBRL(p.valorVenda ?? 0)}</TableCell>
+                                <TableCell className="valor-sensivel valor-sensivel-fim text-right font-mono">
+                                  <span className="inline-flex items-center justify-end gap-2">
+                                    {/* A margem baixa vira selo de estado; o número segue neutro. */}
+                                    {margem < 15 && <Badge variant="error">baixa</Badge>}
+                                    {margem.toFixed(1)}%
+                                  </span>
                                 </TableCell>
                               </TableRow>
                             );
@@ -586,7 +561,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </Table>
                   </CardContent>
                 </Card>
-              </>
+              </div>
             ),
           },
         ]}
