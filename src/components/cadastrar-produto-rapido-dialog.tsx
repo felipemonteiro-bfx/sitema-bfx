@@ -189,13 +189,14 @@ export function CadastrarProdutoRapidoDialog({
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Fornecedor
                 </Label>
-                <button
+                <Button
                   type="button"
+                  variant="link"
                   onClick={() => setFornecedorDialogOpen(true)}
-                  className="text-xs font-medium text-primary hover:underline"
+                  className="h-auto p-0 text-xs font-medium"
                 >
                   + Novo fornecedor
-                </button>
+                </Button>
               </div>
               <FormSelect
                 name="fornecedorId"
@@ -272,17 +273,18 @@ export function CadastrarProdutoRapidoDialog({
               </div>
               <div className="max-h-32 space-y-1 overflow-y-auto pr-1">
                 {ncmSuggestions.map((item) => (
-                  <button
+                  <Button
                     key={item.codigo}
                     type="button"
-                    className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted"
+                    variant="ghost"
+                    className="h-auto w-full items-start justify-start gap-2 whitespace-normal rounded-md px-2 py-1.5 text-left text-xs font-normal"
                     onClick={() => setNcm(item.codigo)}
                   >
                     <span className="rounded bg-background px-2 py-0.5 font-semibold text-foreground shrink-0">
                       {item.codigo}
                     </span>
                     <span className="text-muted-foreground">{item.descricao}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

@@ -379,17 +379,18 @@ export default function ProdutoFormClient({
                     <div className="text-xs text-muted-foreground">Nenhuma sugestão ainda.</div>
                   ) : (
                     ncmSuggestions.map((item) => (
-                      <button
+                      <Button
                         key={item.codigo}
                         type="button"
-                        className="flex w-full items-start gap-2 rounded-md px-2 py-2 text-left text-xs transition-colors hover:bg-muted"
+                        variant="ghost"
+                        className="h-auto w-full items-start justify-start gap-2 whitespace-normal rounded-md px-2 py-2 text-left text-xs font-normal"
                         onClick={() => setNcm(item.codigo)}
                       >
                         <span className="rounded bg-background px-2 py-1 font-semibold text-foreground">
                           {item.codigo}
                         </span>
                         <span className="text-muted-foreground">{item.descricao}</span>
-                      </button>
+                      </Button>
                     ))
                   )}
                 </div>

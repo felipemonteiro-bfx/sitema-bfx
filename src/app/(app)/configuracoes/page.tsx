@@ -651,9 +651,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           name="whatsappFallbackEvolution"
                           defaultChecked={(cfg as Record<string, unknown>)?.whatsappFallbackEvolution !== 0}
                         />
-                        <label htmlFor="whatsappFallbackEvolution" className="text-sm">
+                        <Label htmlFor="whatsappFallbackEvolution" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                           Usar Evolution como fallback se o Meta falhar (durante a transição)
-                        </label>
+                        </Label>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Webhook do Meta: aponte para <code>…/api/webhooks/meta-whatsapp</code>. Mensagens
@@ -700,9 +700,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         name="whatsappAutoEnabled"
                         defaultChecked={cfg?.whatsappAutoEnabled !== 0}
                       />
-                      <label htmlFor="whatsappAutoEnabled" className="text-sm font-medium">
+                      <Label htmlFor="whatsappAutoEnabled" className="normal-case tracking-normal text-sm font-medium leading-normal text-foreground">
                         Envios automáticos ativados (master)
-                      </label>
+                      </Label>
                     </div>
                     <div className="space-y-3 rounded-interno bg-poco p-4">
                       <p className="text-xs font-semibold text-muted-foreground">
@@ -715,9 +715,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoRecibo"
                             defaultChecked={cfg?.whatsappAutoRecibo !== 0}
                           />
-                          <label htmlFor="whatsappAutoRecibo" className="text-sm">
+                          <Label htmlFor="whatsappAutoRecibo" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Recibo ou link de assinatura após venda
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -725,9 +725,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoBoleto"
                             defaultChecked={cfg?.whatsappAutoBoleto !== 0}
                           />
-                          <label htmlFor="whatsappAutoBoleto" className="text-sm">
+                          <Label htmlFor="whatsappAutoBoleto" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Link do boleto ao gerar (manual ou venda)
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -735,9 +735,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoLembrete"
                             defaultChecked={cfg?.whatsappAutoLembrete !== 0}
                           />
-                          <label htmlFor="whatsappAutoLembrete" className="text-sm">
+                          <Label htmlFor="whatsappAutoLembrete" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Lembrete de parcelas (boleto, 1–2 dias antes)
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -745,9 +745,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoInadimplencia"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoInadimplencia === 1}
                           />
-                          <label htmlFor="whatsappAutoInadimplencia" className="text-sm">
+                          <Label htmlFor="whatsappAutoInadimplencia" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Parcela vencida (lembrete inadimplência)
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -755,9 +755,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoReativacao"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoReativacao === 1}
                           />
-                          <label htmlFor="whatsappAutoReativacao" className="text-sm">
+                          <Label htmlFor="whatsappAutoReativacao" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Reativação clientes inativos
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Input
@@ -770,9 +770,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappDiasInativo) || 60)}
                             className="w-16"
                           />
-                          <label htmlFor="whatsappDiasInativo" className="text-sm">
+                          <Label htmlFor="whatsappDiasInativo" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             dias sem compra para reativação
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -780,9 +780,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoAniversario"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAniversario === 1}
                           />
-                          <label htmlFor="whatsappAutoAniversario" className="text-sm">
+                          <Label htmlFor="whatsappAutoAniversario" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Parabéns no aniversário
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -790,9 +790,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoBoasVindas"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoBoasVindas === 1}
                           />
-                          <label htmlFor="whatsappAutoBoasVindas" className="text-sm">
+                          <Label htmlFor="whatsappAutoBoasVindas" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Boas-vindas cliente novo
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -800,9 +800,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoAgradecimento"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAgradecimento === 1}
                           />
-                          <label htmlFor="whatsappAutoAgradecimento" className="text-sm">
+                          <Label htmlFor="whatsappAutoAgradecimento" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Agradecimento pós-venda (1 dia depois)
-                          </label>
+                          </Label>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -810,27 +810,29 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             name="whatsappAutoNPS"
                             defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoNPS === 1}
                           />
-                          <label htmlFor="whatsappAutoNPS" className="text-sm">
+                          <Label htmlFor="whatsappAutoNPS" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                             Pesquisa satisfação (7 dias após compra)
-                          </label>
+                          </Label>
                         </div>
                       </div>
                     </div>
                     <div className="space-y-1 rounded-interno bg-poco p-4">
                       <div className="flex items-center gap-2">
-                        <select
+                        <FormSelect
                           id="whatsappPreAtendimento"
                           name="whatsappPreAtendimento"
                           defaultValue={String((cfg as Record<string, unknown>)?.whatsappPreAtendimento || 0)}
-                          className="h-11 rounded-controle border border-input bg-card px-3 text-sm"
-                        >
-                          <option value="0">Desligado</option>
-                          <option value="2">Gratuito — respostas por regras</option>
-                          <option value="1">IA externa — pode gerar custo</option>
-                        </select>
-                        <label htmlFor="whatsappPreAtendimento" className="text-sm font-medium">
+                          options={[
+                            { value: "0", label: "Desligado" },
+                            { value: "2", label: "Gratuito — respostas por regras" },
+                            { value: "1", label: "IA externa — pode gerar custo" },
+                          ]}
+                          searchable={false}
+                          className="min-w-64"
+                        />
+                        <Label htmlFor="whatsappPreAtendimento" className="normal-case tracking-normal text-sm font-medium leading-normal text-foreground">
                           Respostas automáticas
-                        </label>
+                        </Label>
                       </div>
                       <div className="flex items-center gap-2 pl-6">
                         <Input
@@ -843,9 +845,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappTakeoverMinutos) || 60)}
                           className="w-16"
                         />
-                        <label htmlFor="whatsappTakeoverMinutos" className="text-sm">
+                        <Label htmlFor="whatsappTakeoverMinutos" className="normal-case tracking-normal text-sm font-normal leading-normal text-foreground">
                           minutos de pausa após atendente assumir (padrão: 60)
-                        </label>
+                        </Label>
                       </div>
                       <p className="text-xs text-muted-foreground pl-6">
                         O modo gratuito orienta sobre orçamento, pedido e pagamento, sem consultar IA paga.
@@ -934,9 +936,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         name="uberEnabled"
                         defaultChecked={(cfg as Record<string, unknown>)?.uberEnabled === 1}
                       />
-                      <label htmlFor="uberEnabled" className="text-sm font-medium">
+                      <Label htmlFor="uberEnabled" className="normal-case tracking-normal text-sm font-medium leading-normal text-foreground">
                         Integração ativada
-                      </label>
+                      </Label>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-1">

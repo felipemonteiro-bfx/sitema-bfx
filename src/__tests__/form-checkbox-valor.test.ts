@@ -119,7 +119,7 @@ describe("os formularios nativos continuam enviando o valor", () => {
     const blocos = page.split("<Checkbox").slice(1);
     // Pré-atendimento agora é um seletor 0/1/2, não um checkbox.
     expect(blocos).toHaveLength(12);
-    expect(page).toMatch(/<select[\s\S]*?name="whatsappPreAtendimento"/);
+    expect(page).toMatch(/<FormSelect[\s\S]*?name="whatsappPreAtendimento"/);
     for (const bloco of blocos) {
       expect(bloco.split("/>")[0].includes("name=")).toBe(true);
     }
