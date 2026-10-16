@@ -37,8 +37,8 @@ const FONTES: Record<string, string> = {
 for (const loading of achar("src/app")) FONTES[loading] = ler(loading);
 
 describe("H8 — padrões do Vantage nos componentes compartilhados e nos esqueletos", () => {
-  it("encontra os 19 loading.tsx", () => {
-    expect(achar("src/app").length).toBe(19);
+  it("encontra os 24 loading.tsx (19 + atendimento, janela, obrigações, relacionamento e importar leads, tarefa L)", () => {
+    expect(achar("src/app").length).toBe(24);
   });
 
   for (const [nome, fonte] of Object.entries(FONTES)) {
