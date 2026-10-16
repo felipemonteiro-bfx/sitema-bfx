@@ -1,7 +1,8 @@
 import { jwtVerify } from "jose";
 import { prisma } from "@/lib/db";
 import { buscarProdutos } from "@/lib/busca-produtos";
-import { FILTRO_PARCELA_COMPROMETIDA, situacaoParaCliente } from "@/lib/baixa-parcelas";
+import { FILTRO_PARCELA_COMPROMETIDA } from "@/lib/baixa-parcelas";
+import { boletosDoCliente, parcelasDoCliente } from "@/lib/cliente-financeiro";
 
 /**
  * `mcp-bfx` — servidor MCP para o agente de WhatsApp que atende o CLIENTE
@@ -335,41 +336,20 @@ export async function executarTool(
   switch (nome) {
     case "minhas_parcelas": {
       if (!escopo) throw new Error("escopo_ausente");
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      // Visão do cliente (situacaoParaCliente): parcela antecipada na Prudent segue em aberto até
-      // vencer, porque a folha ainda desconta — o `paga` do banco é a visão da BFX.
-      const parcelas = await prisma.parcelaVencimento.findMany({
-        where: {
-          venda: { clienteId: escopo.clienteId },
-          ...(args.apenasEmAberto
-            ? { OR: [{ paga: false }, { origemPagamento: "prudent", dataVencimento: { gte: hoje } }] }
-            : {}),
-          ...(args.apenasVencidas ? { paga: false, dataVencimento: { lt: hoje } } : {}),
-        },
-        include: { venda: { select: { id: true, produtoNome: true, parcelas: true } } },
-        orderBy: { dataVencimento: "asc" },
-        take: 200,
-      });
-      const comSituacao = parcelas.map((p) => ({ p, situacao: situacaoParaCliente(p, hoje) }));
+      // A consulta mora em `cliente-financeiro` (compartilhada com os atalhos
+      // do atendimento); aqui só se monta o formato que o agente sempre viu.
+      const r = await parcelasDoCliente(escopo.clienteId, args);
       return {
         cliente: escopo.nome,
-        totalEmAberto: centavos(
-          comSituacao.filter((x) => x.situacao !== "paga").reduce((s, x) => s + x.p.valorParcela, 0),
-        ),
-        totalVencido: centavos(
-          comSituacao.filter((x) => x.situacao === "vencida").reduce((s, x) => s + x.p.valorParcela, 0),
-        ),
-        parcelas: comSituacao.map(({ p, situacao }) => ({
-          produto: p.venda.produtoNome,
-          numeroParcela: `${p.numeroParcela}/${p.venda.parcelas}`,
-          dataVencimento: dia(p.dataVencimento),
-          valor: centavos(p.valorParcela),
-          paga: situacao === "paga",
-          diasAtraso:
-            situacao === "vencida"
-              ? Math.floor((hoje.getTime() - p.dataVencimento.getTime()) / 86400000)
-              : 0,
+        totalEmAberto: r.totalEmAberto,
+        totalVencido: r.totalVencido,
+        parcelas: r.parcelas.map((p) => ({
+          produto: p.produto,
+          numeroParcela: p.numeroParcela,
+          dataVencimento: p.dataVencimento,
+          valor: p.valor,
+          paga: p.paga,
+          diasAtraso: p.diasAtraso,
         })),
       };
     }
@@ -411,32 +391,16 @@ export async function executarTool(
 
     case "meus_boletos": {
       if (!escopo) throw new Error("escopo_ausente");
-      const vendas = await prisma.venda.findMany({
-        where: {
-          clienteId: escopo.clienteId,
-          boleto: true,
-          ...(args.apenasPendentes ? { boletoUrl: null } : {}),
-        },
-        select: {
-          id: true,
-          dataVenda: true,
-          produtoNome: true,
-          parcelas: true,
-          valorVenda: true,
-          boletoUrl: true,
-        },
-        orderBy: { dataVenda: "desc" },
-        take: 50,
-      });
+      const r = await boletosDoCliente(escopo.clienteId, args);
       return {
-        total: vendas.length,
-        boletos: vendas.map((v) => ({
-          dataVenda: dia(v.dataVenda),
-          produto: v.produtoNome,
-          parcelas: v.parcelas,
-          valor: v.valorVenda == null ? null : centavos(v.valorVenda),
-          emitido: Boolean(v.boletoUrl),
-          link: v.boletoUrl ?? null,
+        total: r.total,
+        boletos: r.boletos.map((b) => ({
+          dataVenda: b.dataVenda,
+          produto: b.produto,
+          parcelas: b.parcelas,
+          valor: b.valor,
+          emitido: b.emitido,
+          link: b.link,
         })),
       };
     }
