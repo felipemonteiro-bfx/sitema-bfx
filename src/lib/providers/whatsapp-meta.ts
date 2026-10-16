@@ -15,6 +15,8 @@ export type MetaConfig = {
   token: string;
   phoneNumberId: string;
   apiVersion: string; // ex.: "v21.0"
+  /** Restringe saídas a serviço na franquia gratuita; nunca envia templates. */
+  freeServiceOnly?: boolean;
 };
 
 type MetaResponse = {
@@ -33,6 +35,18 @@ export class MetaProvider implements WhatsAppProvider {
 
   private async post(payload: Record<string, unknown>): Promise<WhatsAppSendResult> {
     try {
+      if (this.cfg.freeServiceOnly) {
+        if (payload.type === "template") {
+          return { ok: false, error: "tarifa_nao_autorizada_template", provider: this.name };
+        }
+        // A franquia mensal é compartilhada por todos os aplicativos do número.
+        // Sem forma de pagamento, a Meta interrompe entregas ao esgotá-la.
+        // Não tratar templates de utilidade na janela como gratuitos (out/2026).
+        const { dentroDaJanela24h } = await import("@/lib/whatsapp-mensagem");
+        if (!(await dentroDaJanela24h(String(payload.to)))) {
+          return { ok: false, error: "janela_gratuita_indisponivel", provider: this.name };
+        }
+      }
       const res = await fetch(this.endpoint, {
         method: "POST",
         headers: {

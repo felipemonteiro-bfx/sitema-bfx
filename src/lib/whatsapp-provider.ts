@@ -75,7 +75,7 @@ function buildMeta(cfg: ConfigLike, enabled: boolean): MetaProvider | null {
   const apiVersion =
     str(cfg?.metaWhatsappApiVersion) || str(process.env.META_WHATSAPP_API_VERSION) || "v21.0";
   if (!enabled || !token || !phoneNumberId) return null;
-  return new MetaProvider({ token, phoneNumberId, apiVersion });
+  return new MetaProvider({ token, phoneNumberId, apiVersion, freeServiceOnly: true });
 }
 
 /**
