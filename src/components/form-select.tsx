@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -127,8 +128,9 @@ export function FormSelect({
       <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={aoAbrir}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             type="button"
+            variant="outline"
             role="combobox"
             aria-expanded={open}
             aria-controls={listaId}
@@ -136,7 +138,7 @@ export function FormSelect({
             className={cn(
               // Igual ao Select da ui (Vantage): 44px, rounded-controle, fundo
               // `controle`, contorno `input`, sem sombra.
-              "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+              "flex h-11 w-full items-center justify-between whitespace-nowrap rounded-controle border border-input bg-controle px-3 py-2 text-sm font-normal text-foreground ring-offset-background hover:border-input hover:bg-controle hover:text-foreground active:scale-100 focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
               !value && "text-muted-foreground",
               className
             )}
@@ -146,7 +148,7 @@ export function FormSelect({
               <span className="line-clamp-1">{selected?.label ?? placeholder}</span>
             </span>
             <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent
           className={cn(
@@ -189,6 +191,8 @@ export function FormSelect({
               <div className="px-2.5 py-3 text-sm text-muted-foreground">Nenhum resultado.</div>
             ) : (
               <div className="space-y-0.5">
+                {/* exceção shadcn: os <button role="option"> abaixo são itens de listbox, não botões
+                    de ação — equivalem ao SelectItem da ui; Button imporia altura, nowrap e foco. */}
                 {filtered.map((opt, indice) => (
                   <button
                     key={opt.value}

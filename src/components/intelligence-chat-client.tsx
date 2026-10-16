@@ -7,6 +7,7 @@ import { IntelligenceChatComposer } from "@/components/intelligence-chat-compose
 import { stripToolMarkup } from "@/lib/strip-tool-markup";
 import { colunasNumericas } from "@/lib/markdown-tabela";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 function parseMarkdownTable(block: string): { headers: string[]; rows: string[][] } | null {
@@ -96,7 +97,7 @@ const MD_COMPONENTS = {
   ol: ({ children }: { children?: React.ReactNode }) => <ol className="list-decimal pl-5 space-y-0.5 my-1">{children}</ol>,
   li: ({ children }: { children?: React.ReactNode }) => <li className="leading-relaxed">{children}</li>,
   code: ({ children }: { children?: React.ReactNode }) => <code className="rounded bg-muted px-1 py-0.5 text-xs font-mono">{children}</code>,
-  hr: () => <hr className="my-2 border-border" />,
+  hr: () => <Separator className="my-2" />,
 };
 
 function MarkdownContent({ text }: { text: string }) {

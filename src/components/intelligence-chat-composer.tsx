@@ -124,6 +124,8 @@ export function IntelligenceChatComposer({
       ref={formRef}
       onSubmit={() => setPrompt("")}
     >
+      {/* exceção shadcn: gatilho `hidden` (display:none) para requestSubmit do formulário;
+          não tem pegada visual, então Button não acrescentaria nada. */}
       <button ref={submitRef} type="submit" className="hidden" aria-hidden="true" />
 
       <div className="flex items-center gap-2 rounded-interno border border-divisoria bg-controle px-3 py-2 focus-within:border-primary">

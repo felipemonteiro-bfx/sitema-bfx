@@ -172,7 +172,8 @@ describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", ()
   for (const [arquivo, descricao] of casos) {
     it(`${descricao} nao deixa o texto quebrar ao lado do icone`, () => {
       const fonte = ler(arquivo);
-      expect(fonte.includes("whitespace-nowrap")).toBe(true);
+      // J3: o 404 passou a usar `buttonVariants`, que já traz `whitespace-nowrap` na base.
+      expect(fonte.includes("whitespace-nowrap") || fonte.includes("buttonVariants")).toBe(true);
     });
   }
 
