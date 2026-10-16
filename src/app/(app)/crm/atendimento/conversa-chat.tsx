@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, UserRound } from 'lucide-react';
+import { ArrowLeft, Clock, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Bolha, ESTILO_BOLHA, type MensagemExibida } from './bolha';
 import { LogMensagens } from './log-mensagens';
@@ -38,9 +38,11 @@ export function ConversaChat({ telefone, nome, aberta, semResposta, estadoAutoma
         <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-marca-tint font-display text-sm font-semibold text-marca-tint-texto">{iniciais(nome)}</span>
         <span className="flex min-w-0 flex-col">
           <span className="truncate text-base font-semibold leading-tight">{nome}</span>
-          <span className="truncate text-xs text-muted-foreground"><span className="font-mono">+{telefone}</span> · {aberta ? 'janela aberta' : 'aguardando cliente'}</span>
+          <span className="truncate font-mono text-xs text-muted-foreground">+{telefone}</span>
         </span>
       </BotaoPainel>
+      {/* Estado da janela de 24h à direita (pílula de marca quando aberta; neutra quando encerrada). */}
+      <span className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold ${aberta ? 'bg-marca-tint text-marca-tint-texto' : 'bg-controle text-texto-secundario'}`}><Clock className="size-3.5" aria-hidden="true" /><span className="@max-xl:sr-only">{aberta ? 'Janela aberta' : 'Aguardando cliente'}</span></span>
       <div className="flex shrink-0 items-center">
         <Button asChild variant="ghost" size="icon"><Link href={fichaHref} {...abrir} aria-label="Abrir ficha do cliente" title="Abrir ficha do cliente"><UserRound className="size-5 text-muted-foreground" aria-hidden="true" /></Link></Button>
         {hrefJanela && <span className="hidden @xl:inline-flex"><AbrirEmNovaJanela href={hrefJanela} variante="icone" /></span>}

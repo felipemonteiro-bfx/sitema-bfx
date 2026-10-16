@@ -166,8 +166,9 @@ describe('M2: cabeçalho do chat',()=>{
  const base={telefone:'5592900000001',nome:'Ana Souza',aberta:true,semResposta:false,estadoAutomatico:'Automático gratuito disponível para assuntos previstos',fichaHref:'/crm/atendimento/ficha?telefone=5592900000001',mensagens:[msg(1,'2026-10-16T14:00:00Z','in'),msg(2,'2026-10-16T14:01:00Z','out')],agora:new Date('2026-10-16T15:00:00Z'),telefoneExplicito:true,urlLista:'/crm/atendimento?visao=lista',hrefJanela:'/crm/atendimento/janela?visao=lista'};
  const html=renderToStaticMarkup(React.createElement(ConversaChat,base));
  it('subtítulo com telefone mono e estado da janela',()=>{
-  expect(html).toContain('+5592900000001');expect(html).toContain('janela aberta');
-  expect(renderToStaticMarkup(React.createElement(ConversaChat,{...base,aberta:false}))).toContain('aguardando cliente');
+  // N3: o estado da janela saiu do subtítulo e virou pílula à direita (como no artboard).
+  expect(html).toContain('+5592900000001');expect(html).toContain('Janela aberta');
+  expect(renderToStaticMarkup(React.createElement(ConversaChat,{...base,aberta:false}))).toContain('Aguardando cliente');
  });
  it('ícones do cabeçalho são ghost icon com aria-label',()=>{
   expect(html).toMatch(/aria-label="Abrir ficha do cliente"/);

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Info, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ETAPAS_ATENDIMENTO } from '@/lib/whatsapp-kanban';
 import { iniciais, rotuloContagem } from './status-mensagem';
@@ -59,13 +59,17 @@ type Props = {
 /** Regra do limite da lista: fica no title do contador (e em texto só para leitor de tela), não num parágrafo no pé. */
 const NOTA_LISTA = 'Até as 100 mais recentes. Contagens se referem a esta busca. Etapa do atendimento é independente da janela de envio.';
 
+/** Aviso sobre o histórico (antes um bloco solto no pé da tela): vive no ícone de info do cabeçalho da lista. */
+const NOTA_HISTORICO = 'Conversas registradas no Manager desde a integração. Mensagens de outros aplicativos podem não aparecer aqui. Grupos continuam no WhatsApp Web.';
+
 const rotuloNaoRespondidas = (n: number) => `${n} ${n === 1 ? 'mensagem sem resposta' : 'mensagens sem resposta'}`;
 
 export function ConversaLista({ itens, selecionado, base, busca, visao, etapa, contagens, painel, telefoneExplicito = false }: Props) {
   const chips = [{ id: 'todas', nome: 'Todas' }, { id: 'aguardando', nome: 'Aguardando resposta' }, ...ETAPAS_ATENDIMENTO];
   return <section id="conversas" aria-label="Conversas" className={`${telefoneExplicito ? 'hidden @xl:flex' : 'flex'} min-h-0 min-w-0 w-full flex-col gap-3 overflow-hidden rounded-painel border border-painel-borda bg-card pt-3.5 dark:border-transparent @xl:w-72 @4xl:w-80 @xl:shrink-0`}>
     <div className="flex flex-wrap items-center justify-between gap-2 px-3">
-      <h2 className="text-base font-semibold">Conversas <span title={NOTA_LISTA} className="cursor-help font-mono text-sm font-normal text-muted-foreground">{contagens.todas ?? itens.length}</span><span className="sr-only"> ({NOTA_LISTA})</span></h2>
+      <div className="flex items-center gap-1"><h2 className="text-base font-semibold">Conversas <span title={NOTA_LISTA} className="cursor-help font-mono text-sm font-normal text-muted-foreground">{contagens.todas ?? itens.length}</span><span className="sr-only"> ({NOTA_LISTA})</span></h2>
+      <span className="inline-flex size-7 items-center justify-center text-muted-foreground" title={`Sobre este histórico: ${NOTA_HISTORICO}`}><Info className="size-4" aria-hidden="true" /><span className="sr-only">Sobre este histórico: {NOTA_HISTORICO}</span></span></div>
       <AlternarVisao base={base} visao={visao} q={busca} telefone={selecionado} />
     </div>
     <div className="px-3"><BuscaConversas visao={visao} q={busca} etapa={etapa} /></div>

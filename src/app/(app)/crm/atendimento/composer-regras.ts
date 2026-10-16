@@ -7,7 +7,7 @@ export const PRONTAS = [
   { titulo: 'Pedido / entrega', texto: 'Pode informar o número do pedido e o que precisa verificar sobre a entrega ou o pós-venda?' },
   { titulo: 'Conferir pagamento', texto: 'Recebemos sua mensagem sobre pagamento. Vamos conferir o comprovante e a baixa no sistema antes de confirmar a quitação.' },
   { titulo: 'Atendimento humano', texto: 'Olá! Sou da equipe BFX e vou continuar seu atendimento por aqui.' },
-  { titulo: 'Encerrar atendimento', texto: 'Obrigado pelo contato com a BFX! Se precisar de mais alguma coisa, estamos à disposição.' },
+  { titulo: 'Encerrar', texto: 'Obrigado pelo contato com a BFX! Se precisar de mais alguma coisa, estamos à disposição.' },
 ] as const;
 export type Pronta = (typeof PRONTAS)[number];
 

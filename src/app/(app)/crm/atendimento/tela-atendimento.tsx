@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/page-header';
 import { identificarContato } from '@/lib/crm-whatsapp-identidade';
 import { variantesLocaisDeTelefone } from '@/lib/telefone-busca';
 import { ContextoCliente } from './contexto';
-import { MessageSquare, Users, Megaphone, Gift, CircleDot, UserRound, ArrowRight } from 'lucide-react';
+import { MessageSquare, Users, Megaphone, Gift } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { inicioDaPausa } from '@/lib/whatsapp-pausa';
 import {KanbanConversas,OrganizarConversa} from './kanban';
@@ -92,15 +92,15 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
   // A área da tela é um contêiner: as colunas respondem à largura DELA (a sidebar come espaço no sistema
   // e não existe na janela), não à da viewport. < 48rem lista OU chat; >= 48rem lista + chat; >= 80rem + painel.
   // Altura fixa da área visível: o log rola por dentro e o composer fica no pé, sem rolar a página.
-  // No celular, com uma conversa aberta, o cabeçalho da página some e o chat ocupa a tela (como o app do WhatsApp).
+  // A área ocupa `h-dvh` e devolve o que fica acima dela (cabeçalho) com padding + margem negativa de mesmo valor
+  // (escala do Tailwind, sem valor arbitrário). No celular, com uma conversa aberta, o cabeçalho da página some.
   const chatCheio=!janela&&visao==='lista'&&telefoneExplicito;
-  const altura=janela?'h-[calc(100dvh-9.5rem)] min-h-[24rem]':chatCheio?'h-[calc(100dvh-7rem)] min-h-[24rem] md:h-[calc(100dvh-20rem)] min-[1280px]:h-[calc(100dvh-15.5rem)]':'h-[calc(100dvh-20rem)] min-h-[24rem] min-[1280px]:h-[calc(100dvh-15.5rem)]';
+  const altura=janela?'h-dvh -mb-22 pb-22':chatCheio?'h-dvh -mb-28 pb-28 md:-mb-67 md:pb-67 xl:-mb-49 xl:pb-49':'h-dvh -mb-67 pb-67 xl:-mb-49 xl:pb-49';
   const hrefJanela=janela?undefined:urlAtendimento(ROTA_JANELA,{visao:'lista',telefone,q,etapa:etapaFiltro,painel});
   const areas=[{href:'/crm/atendimento',nome:'Conversas',Icon:MessageSquare},{href:'/crm',nome:'Clientes',Icon:Users},{href:'/crm/relacionamento',nome:'Relacionamento',Icon:Users},{href:'/crm/campanhas',nome:'Campanhas',Icon:Megaphone},{href:'/crm/fidelidade',nome:'Fidelidade',Icon:Gift}];
-  const sobre=<details className="text-xs text-muted-foreground"><summary className="min-h-9 cursor-pointer py-2">Sobre este histórico</summary><p className="mb-2 leading-relaxed">Conversas registradas no Manager desde a integração. Mensagens de outros aplicativos podem não aparecer aqui. Grupos continuam no WhatsApp Web.</p></details>;
-  // "Organizar atendimento": cartão de formulário compacto. O <details> do OrganizarConversa (kanban.tsx) fica
-  // porque o refresh de 30s depende de [data-kanban-editor][open]; aqui só se estiliza o cabeçalho dele.
-  const organizar=cartaoSelecionado&&<section aria-label="Atendimento" className="border-t border-divisoria px-4 py-4 text-sm [&_summary]:min-h-9 [&_summary]:text-sm [&>div]:mt-2.5 [&>div]:border-t [&>div]:border-divisoria [&>div]:pt-1.5"><h3 className="mb-3 text-xs font-medium text-muted-foreground">Atendimento</h3><dl className="flex flex-col gap-2.5 text-sm"><div className="flex items-center gap-3"><CircleDot className="size-4 shrink-0 text-muted-foreground" aria-hidden="true"/><dt className="flex-1 text-texto-secundario">Etapa</dt><dd className="font-medium">{nomeEtapa(cartaoSelecionado.estado.etapa)}</dd></div><div className="flex items-center gap-3"><UserRound className="size-4 shrink-0 text-muted-foreground" aria-hidden="true"/><dt className="flex-1 text-texto-secundario">Responsável</dt><dd className="font-medium">{cartaoSelecionado.estado.responsavelNome}</dd></div><div className="flex items-start gap-3"><ArrowRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true"/><dt className="shrink-0 text-texto-secundario">Próxima ação</dt><dd className="min-w-0 flex-1 whitespace-pre-wrap break-words text-right font-medium">{cartaoSelecionado.estado.proximaAcao}</dd></div></dl><OrganizarConversa key={cartaoSelecionado.telefone} cartao={cartaoSelecionado} pessoas={pessoas}/></section>;
+  // "Organizar atendimento": formulário sempre aberto no painel de dados do contato (como no artboard).
+  // Pausa o refresh de 30s só enquanto há alteração não salva (data-sujo, ver refresh-regras.ts).
+  const organizar=cartaoSelecionado&&<section aria-label="Atendimento"><OrganizarConversa key={cartaoSelecionado.telefone} cartao={cartaoSelecionado} pessoas={pessoas} aberto/></section>;
 
   const navAreas=<nav aria-label="Áreas do CRM" className="flex flex-wrap gap-1 rounded-controle border border-divisoria bg-controle p-1">{areas.map(({href,nome,Icon})=><Link key={href} href={href} aria-current={href==='/crm/atendimento'?'page':undefined} className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm ${href==='/crm/atendimento'?'bg-controle-ativo font-semibold text-foreground':'text-muted-foreground hover:text-foreground'}`}><Icon className="size-4" aria-hidden="true"/>{nome}</Link>)}</nav>;
   const cabecalho=janela
@@ -121,7 +121,7 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
         <KanbanConversas cartoes={cartoes} pessoas={pessoas} busca={q} base={base}/>
       </div>
     :<div data-atendimento-raiz className={`@container ${altura}`}>
-        <div className="flex h-full gap-3">
+        <div className="flex h-full min-h-96 gap-3">
         <ConversaLista itens={itensVisiveis} selecionado={telefone} base={base} busca={q} visao="lista" etapa={etapaFiltro} contagens={contagens} painel={painel} telefoneExplicito={telefoneExplicito}/>
         {telefone
           ?<ConversaChat telefone={telefone} nome={nome(telefone)} aberta={aberta} semResposta={semResposta} estadoAutomatico={estadoAutomatico} fichaHref={fichaHref} novaAba={janela}
@@ -134,6 +134,6 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
         </div>
       </div>;
 
-  if(janela)return <div className="flex min-h-dvh flex-col bg-background">{cabecalho}<main className="flex-1 space-y-3 p-3 lg:p-4">{corpo}{sobre}</main></div>;
-  return <div className="space-y-4"><div className={chatCheio?'hidden md:block':undefined}>{cabecalho}</div>{corpo}<div className={chatCheio?'hidden md:block':undefined}>{sobre}</div></div>;
+  if(janela)return <div className="flex min-h-dvh flex-col bg-background">{cabecalho}<main className="flex-1 space-y-3 p-3 lg:p-4">{corpo}</main></div>;
+  return <div className="space-y-4"><div className={chatCheio?'hidden md:block':undefined}>{cabecalho}</div>{corpo}</div>;
 }
