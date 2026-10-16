@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
 import { getWhatsAppFlags } from "@/lib/whatsapp";
 import { getInstanceState } from "@/lib/evolution";
+import { metaWebhookTelemetry } from '@/lib/meta-webhook-telemetry';
 
 /**
  * GET /api/whatsapp/diagnostico
@@ -51,7 +52,7 @@ export async function GET() {
     return NextResponse.json({ provider: "meta_cloud", checkedAt: new Date().toISOString(),
       sendingEnabled: selected?.whatsappAutoEnabled !== undefined
         ? selected.whatsappAutoEnabled === 1 : process.env.WHATSAPP_AUTO_ENABLED !== "0",
-      tokenCheck, reception,
+      tokenCheck, reception, webhookTelemetry: metaWebhookTelemetry(),
       status: tokenCheck.ok ? "AUTENTICACAO_CONFIRMADA" : "AUTENTICACAO_NAO_CONFIRMADA",
       note: "Autenticação não comprova envio/entrega. Este diagnóstico não envia mensagens nem ativa automações.",
     }, { headers: { "Cache-Control": "no-store" } });

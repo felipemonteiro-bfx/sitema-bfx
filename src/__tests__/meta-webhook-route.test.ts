@@ -10,6 +10,7 @@ vi.mock("@/lib/whatsapp-mensagem", () => ({
 }));
 vi.mock("@/lib/whatsapp-pre-atendimento", () => ({ processarMensagemRecebida: mocks.atendimento }));
 import { POST } from "@/app/api/webhooks/meta-whatsapp/route";
+import { metaWebhookTelemetry } from '@/lib/meta-webhook-telemetry';
 
 const SECRET = "unit-test-only-not-a-real-key";
 const TARGET = "111111111111111";
@@ -35,6 +36,13 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 describe("webhook Meta restrito ao número configurado", () => {
+  it('diferencia assinatura rejeitada de evento autenticado sem número aceito, sem guardar payload', async () => {
+    await POST(request({ entry: [] }, false));
+    expect(metaWebhookTelemetry().events.at(-1)?.outcome).toBe('signature_rejected');
+    await POST(request({ entry: [{ changes: [change('222222222222222', 'foreign')] }] }));
+    expect(metaWebhookTelemetry().events.at(-1)).toMatchObject({outcome:'processed',acceptedChanges:0,storedMessages:0});
+    expect(JSON.stringify(metaWebhookTelemetry())).not.toContain(SECRET);
+  });
   it("persiste somente mensagens e status do número configurado em lote misto", async () => {
     const res = await POST(request({ entry: [{ changes: [change("222222222222222", "foreign"), change(TARGET, "allowed")] }] }));
     expect(res.status).toBe(200);

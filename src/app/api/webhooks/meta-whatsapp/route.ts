@@ -18,6 +18,7 @@ import { processarMensagemRecebida } from "@/lib/whatsapp-pre-atendimento";
 import { verificarAssinaturaMeta } from "@/lib/meta-webhook-signature";
 import { extrairMensagens, extrairStatuses } from "@/lib/meta-webhook-payload";
 import { registrarEntrada, avancarStatusPorWaMessageId } from "@/lib/whatsapp-mensagem";
+import { recordMetaWebhook } from '@/lib/meta-webhook-telemetry';
 
 function eventosDoNumero(body: unknown, phoneNumberId: string) {
   const entries = body && typeof body === "object" ? (body as Record<string, unknown>).entry : null;
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
 
   const assinatura = req.headers.get("x-hub-signature-256");
   if (!verificarAssinaturaMeta(rawBody, assinatura, appSecret)) {
+    recordMetaWebhook('signature_rejected');
     console.warn("[Webhook Meta] Assinatura inválida — payload descartado");
     return NextResponse.json({ error: "Assinatura inválida" }, { status: 401 });
   }
@@ -76,11 +78,14 @@ export async function POST(req: Request) {
   const phoneNumberId = (typeof rawPhoneId === "string" ? rawPhoneId.trim() : "") ||
     process.env.META_WHATSAPP_PHONE_NUMBER_ID?.trim() || "";
   if (!/^\d+$/.test(phoneNumberId)) {
+    recordMetaWebhook('number_missing');
     return NextResponse.json({ error: "Número Meta não configurado" }, { status: 503 });
   }
 
   try {
     const body = eventosDoNumero(JSON.parse(rawBody) as unknown, phoneNumberId);
+    const acceptedChanges = body.entry.reduce((count, entry) => count + entry.changes.length, 0);
+    let storedMessages = 0;
 
     // Callbacks de status: avançam o estado da mensagem já registrada.
     for (const s of extrairStatuses(body)) {
@@ -99,14 +104,17 @@ export async function POST(req: Request) {
         waMessageId: m.waMessageId,
         corpo: m.texto,
       });
+      if (nova) storedMessages++;
       // `nova === false` é reentrega da Meta: não responder duas vezes.
       if (nova && preAtendimentoAtivo) {
         void processarMensagemRecebida(m.telefone, m.texto, m.nome);
       }
     }
 
+    recordMetaWebhook('processed', acceptedChanges, storedMessages);
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
+    recordMetaWebhook('processing_failed');
     console.error("[Webhook Meta]", err);
     return NextResponse.json({ error: "Falha temporária ao registrar evento" }, { status: 503 });
   }
