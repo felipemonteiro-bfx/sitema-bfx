@@ -1,23 +1,12 @@
-﻿import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonCabecalho, SkeletonLinhas, SkeletonPainel } from "@/components/ui/skeleton";
 
 export default function Loading() {
   return (
     <div className="space-y-6">
-      <div>
-        <Skeleton className="h-7 w-48" />
-        <Skeleton className="mt-2 h-4 w-72" />
-      </div>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-28" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
-        </CardContent>
-      </Card>
+      <SkeletonCabecalho />
+      <SkeletonPainel tituloLargura="w-32">
+        <SkeletonLinhas linhas={8} colunas={2} />
+      </SkeletonPainel>
     </div>
   );
 }
