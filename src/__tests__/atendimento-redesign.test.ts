@@ -4,7 +4,7 @@ import path from 'node:path';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {describe,expect,it,vi} from 'vitest';
 vi.stubGlobal('React',React);
-vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()})}));
+vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()}),usePathname:()=>'/crm/atendimento',useSearchParams:()=>new URLSearchParams()}));
 vi.mock('@/app/(app)/crm/atendimento/actions',()=>({responderConversa:vi.fn(),controlarAutomatico:vi.fn()}));
 vi.mock('@/app/(app)/crm/atendimento/kanban-actions',()=>({salvarOrganizacaoConversa:vi.fn()}));
 import {statusTique,iniciais,horaCurta,rotuloDia,previaMensagem} from '@/app/(app)/crm/atendimento/status-mensagem';
@@ -72,12 +72,12 @@ describe('bolha',()=>{
  });
  it('mensagem do cliente não tem tique e fica à esquerda',()=>{
   const html=renderToStaticMarkup(React.createElement(Bolha,{m:{...base,direcao:'in',status:'recebido'}}));
-  expect(html).not.toContain('role="img"');expect(html).toContain('justify-start');expect(html).toContain('rounded-bl-sm');
+  expect(html).not.toContain('role="img"');expect(html).toContain('justify-start');expect(html).toContain('rounded-tl-none');
  });
  it('registro interno é pílula tracejada central com o resumo do quadro',()=>{
   const corpo=JSON.stringify({versao:1,etapa:'em_atendimento',responsavelId:3,responsavelNome:'Equipe',proximaAcao:'Ligar'});
   const html=renderToStaticMarkup(React.createElement(Bolha,{m:{...base,direcao:'sistema',origem:'kanban_controle',status:'controle',corpo}}));
-  expect(html).toContain('border-dashed');expect(html).toContain('justify-center');expect(html).toContain('Quadro atualizado: Em atendimento');expect(html).toContain('Registro interno');
+  expect(html).toContain('rounded-full');expect(html).toContain('justify-center');expect(html).toContain('Quadro atualizado: Em atendimento');expect(html).toContain('Registro interno');
  });
  it('a entrada animada respeita reduced-motion e usa a curva do sistema',()=>{
   const css=fs.readFileSync(path.join(RAIZ,'(app)/crm/atendimento/bolha.tsx'),'utf8');
@@ -123,15 +123,16 @@ describe('Reply',()=>{
   expect(fonte).toContain('Clicar no botão não envia a mensagem');
  });
  it('respostas prontas só preenchem o campo (onClick sem envio)',()=>{
-  const trecho=fonte.split('prontas.map')[1].split('</Button>')[0];
+  const trecho=fonte.split('function escolher')[1].split('function aoDigitar')[0];  // M4: respostas prontas vivem na lista do botão de raio e do "/"
   expect(trecho).toContain('setTexto(');expect(trecho).not.toContain('responderConversa');expect(trecho).not.toContain('requestSubmit');expect(trecho).not.toContain('submit(');
  });
  it('renderiza botão redondo de 48px, contador e aviso de tarifa',()=>{
   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
-  expect(html).toContain('aria-label="Enviar mensagem"');expect(html).toContain('size-12');expect(html).toContain('rounded-full');
-  expect(html).toContain('0/4096');expect(html).toContain('Templates com tarifa continuam bloqueados');
+  expect(html).toContain('aria-label="Enviar mensagem"');expect(html).toContain('size-11');expect(html).toContain('rounded-full');
+  expect(html).not.toContain('0/4096'); // M4: contador só perto do limite (> 3500)
+  expect(html).toContain('Templates com tarifa continuam bloqueados');
   expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
-  expect(html).toContain('Boas-vindas');
+  expect(fonte+ler('(app)/crm/atendimento/composer-regras.ts')).toContain('Boas-vindas');
  });
  it('com a equipe no comando oferece Retomar',()=>{
   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:false,estadoAutomatico:'Automático pausado pela equipe'}));

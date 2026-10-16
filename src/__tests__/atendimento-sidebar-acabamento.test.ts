@@ -5,7 +5,7 @@ import path from 'node:path';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {describe,expect,it,vi} from 'vitest';
 vi.stubGlobal('React',React);
-vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()}),usePathname:()=>'/crm'}));
+vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()}),usePathname:()=>'/crm',useSearchParams:()=>new URLSearchParams()}));
 vi.mock('@/app/(app)/crm/atendimento/actions',()=>({responderConversa:vi.fn(),controlarAutomatico:vi.fn()}));
 import {ConversaChat} from '@/app/(app)/crm/atendimento/conversa-chat';
 import {Reply} from '@/app/(app)/crm/atendimento/reply';
@@ -42,7 +42,7 @@ describe('item 3: rodapé do composer compacto',()=>{
  it('uma linha curta no rodapé, com contador',()=>{
   expect(aberto).toContain('Resposta de atendimento disponível · templates com tarifa bloqueados');
   expect(fechado).toContain('Aguarde nova mensagem do cliente · envio com tarifa bloqueado');
-  expect(aberto).toContain('0/4096');
+  expect(aberto).not.toContain('/4096'); // M4: contador só perto do limite
  });
  it('o texto longo vive no Popover do ícone de ajuda (K), sem sumir: fica no leitor de tela',()=>{
   // Antes era um <details> de uma linha; agora é um ícone de ajuda na faixa do assistente. O texto
@@ -60,7 +60,7 @@ describe('item 1 e 4: degrau de superfície',()=>{
  });
  it('contexto: blocos em poço e texto legal das vendas menor',()=>{
   const c=ler(ATEND+'contexto.tsx');
-  expect(c).toContain('bg-poco');
+  expect(c).toContain('border-divisoria'); // M5: seções com divisória, não poços
   expect(c).toContain('text-xs');
  });
 });

@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/page-header';
 import { identificarContato } from '@/lib/crm-whatsapp-identidade';
 import { variantesLocaisDeTelefone } from '@/lib/telefone-busca';
 import { ContextoCliente } from './contexto';
-import { MessageSquare, Users, Megaphone, Gift } from 'lucide-react';
+import { MessageSquare, Users, Megaphone, Gift, CircleDot, UserRound, ArrowRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { inicioDaPausa } from '@/lib/whatsapp-pausa';
 import {KanbanConversas,OrganizarConversa} from './kanban';
@@ -13,12 +13,14 @@ import { ConversaLista, AlternarVisao, BuscaConversas, urlAtendimento, type Item
 import { ConversaChat } from './conversa-chat';
 import { AbrirEmNovaJanela, ROTA_JANELA } from './abrir-em-nova-janela';
 import { ultimasMensagensPorTelefone } from '@/lib/whatsapp-ultimas';
+import { naoRespondidasPorTelefone } from '@/lib/whatsapp-nao-respondidas';
+import { PainelContato } from './painel-contato';
 import { horaCurta, previaMensagem } from './status-mensagem';
 
 const BASE_SISTEMA='/crm/atendimento';
 const hora=(d:Date)=>d.toLocaleString('pt-BR',{timeZone:'America/Manaus',dateStyle:'short',timeStyle:'short'});
 
-export type ParametrosAtendimento={telefone?:string;q?:string;visao?:string;etapa?:string};
+export type ParametrosAtendimento={telefone?:string;q?:string;visao?:string;etapa?:string;painel?:string};
 
 /** Selo de estado da integração (leitura do provedor configurado; nenhum segredo é lido). */
 export function SeloIntegracao({oficial}:{oficial:boolean}){
@@ -34,7 +36,10 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
   const base=janela?ROTA_JANELA:BASE_SISTEMA;
   const sp=await searchParams;const q=(sp.q||'').trim().slice(0,100);
   const visao=sp.visao==='lista'||(!sp.visao&&sp.telefone)?'lista':'kanban';
-  const etapaFiltro=ETAPAS_ATENDIMENTO.some(e=>e.id===sp.etapa)?String(sp.etapa):'todas';
+  const etapaFiltro=sp.etapa==='aguardando'||ETAPAS_ATENDIMENTO.some(e=>e.id===sp.etapa)?String(sp.etapa):'todas';
+  const painel=sp.painel==='0'||sp.painel==='1'?sp.painel:undefined;
+  // Celular: só mostra o chat se o telefone veio na URL (senão, a lista).
+  const telefoneExplicito=/^\d{10,15}$/.test(sp.telefone||'');
   const clientes=await prisma.cliente.findMany({where:{telefone:{not:null}},select:{id:true,nome:true,telefone:true,atendimentoHumanoAt:true}});
   const normalizar=(t:string)=>t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
   const buscaNome=clientes.filter(c=>normalizar(c.nome).includes(normalizar(q)));
@@ -48,6 +53,8 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
     // Só leitura, uma linha por telefone: a última mensagem real (entrada/saída) para a prévia da lista.
     ultimasMensagensPorTelefone(grupos),
   ]);
+  // Bolinha da lista: mensagens do cliente desde a última resposta da BFX (só nas conversas que aguardam).
+  const naoRespondidas=await naoRespondidasPorTelefone(ultimas.filter(u=>u.direcao==='in').map(u=>u.telefone));
   const pessoas=usuarios.map(u=>({id:u.id,nome:u.nomeExibicao||u.username}));
   const [mensagens,ultimaEntrada,cfg]=await Promise.all([
     telefone?prisma.whatsAppMensagem.findMany({where:{telefone,NOT:{direcao:'sistema',origem:ORIGEM_KANBAN}},orderBy:{criadoEm:'desc'},take:100}):Promise.resolve([]),
@@ -76,21 +83,24 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
   const nomeEtapa=(id:string)=>ETAPAS_ATENDIMENTO.find(e=>e.id===id)?.nome??id;
   const itens:ItemConversa[]=grupos.map(g=>{
     const c=cartoes.find(c=>c.telefone===g.telefone);const u=ultimas.find(u=>u.telefone===g.telefone);
-    return {telefone:g.telefone,nome:nome(g.telefone),hora:g._max.criadoEm?horaCurta(g._max.criadoEm,agora):'',previa:u?previaMensagem(u.direcao,u.corpo):'',aguardando:u?.direcao==='in',etapa:c?.estado.etapa??'novas',etapaNome:nomeEtapa(c?.estado.etapa??'novas'),responsavel:c?.estado.responsavelNome??'Não atribuído'};
+    return {telefone:g.telefone,nome:nome(g.telefone),hora:g._max.criadoEm?horaCurta(g._max.criadoEm,agora):'',previa:u?previaMensagem(u.direcao,u.corpo):'',aguardando:u?.direcao==='in',naoRespondidas:naoRespondidas.get(g.telefone)??0,tique:u?.direcao==='out'?u.status:null,etapa:c?.estado.etapa??'novas',etapaNome:nomeEtapa(c?.estado.etapa??'novas'),responsavel:c?.estado.responsavelNome??'Não atribuído'};
   });
-  const contagens:Record<string,number>={todas:itens.length,...Object.fromEntries(ETAPAS_ATENDIMENTO.map(e=>[e.id,itens.filter(i=>i.etapa===e.id).length]))};
-  const itensVisiveis=etapaFiltro==='todas'?itens:itens.filter(i=>i.etapa===etapaFiltro);
+  const contagens:Record<string,number>={todas:itens.length,aguardando:itens.filter(i=>i.aguardando).length,...Object.fromEntries(ETAPAS_ATENDIMENTO.map(e=>[e.id,itens.filter(i=>i.etapa===e.id).length]))};
+  const itensVisiveis=etapaFiltro==='todas'?itens:etapaFiltro==='aguardando'?itens.filter(i=>i.aguardando):itens.filter(i=>i.etapa===etapaFiltro);
   const fichaHref=telefone?`/crm/atendimento/ficha?telefone=${telefone}`:'';
   const oficial=cfg?.whatsappProvider==='meta_cloud';
-  // Altura da primeira linha em telas largas: o chat rola por dentro, a página não.
-  // (No sistema, abaixo de xl o contexto desce para uma segunda linha, de altura livre.)
-  const altura=janela?'lg:grid-rows-[minmax(32rem,calc(100dvh-5.5rem))]':'lg:grid-rows-[minmax(40rem,calc(100dvh-10rem))]';
-  const colunas=janela?'lg:grid-cols-[minmax(17rem,20rem)_minmax(0,1fr)_minmax(17rem,20rem)]':'lg:grid-cols-[minmax(15rem,17rem)_minmax(0,1fr)] xl:grid-cols-[minmax(15rem,16rem)_minmax(0,1fr)_minmax(16rem,17rem)]';
+  // A área da tela é um contêiner: as colunas respondem à largura DELA (a sidebar come espaço no sistema
+  // e não existe na janela), não à da viewport. < 48rem lista OU chat; >= 48rem lista + chat; >= 80rem + painel.
+  // Altura fixa da área visível: o log rola por dentro e o composer fica no pé, sem rolar a página.
+  // No celular, com uma conversa aberta, o cabeçalho da página some e o chat ocupa a tela (como o app do WhatsApp).
+  const chatCheio=!janela&&visao==='lista'&&telefoneExplicito;
+  const altura=janela?'h-[calc(100dvh-9.5rem)] min-h-[24rem]':chatCheio?'h-[calc(100dvh-7rem)] min-h-[24rem] md:h-[calc(100dvh-20rem)] min-[1280px]:h-[calc(100dvh-15.5rem)]':'h-[calc(100dvh-20rem)] min-h-[24rem] min-[1280px]:h-[calc(100dvh-15.5rem)]';
+  const hrefJanela=janela?undefined:urlAtendimento(ROTA_JANELA,{visao:'lista',telefone,q,etapa:etapaFiltro,painel});
   const areas=[{href:'/crm/atendimento',nome:'Conversas',Icon:MessageSquare},{href:'/crm',nome:'Clientes',Icon:Users},{href:'/crm/relacionamento',nome:'Relacionamento',Icon:Users},{href:'/crm/campanhas',nome:'Campanhas',Icon:Megaphone},{href:'/crm/fidelidade',nome:'Fidelidade',Icon:Gift}];
   const sobre=<details className="text-xs text-muted-foreground"><summary className="min-h-9 cursor-pointer py-2">Sobre este histórico</summary><p className="mb-2 leading-relaxed">Conversas registradas no Manager desde a integração. Mensagens de outros aplicativos podem não aparecer aqui. Grupos continuam no WhatsApp Web.</p></details>;
   // "Organizar atendimento": cartão de formulário compacto. O <details> do OrganizarConversa (kanban.tsx) fica
   // porque o refresh de 30s depende de [data-kanban-editor][open]; aqui só se estiliza o cabeçalho dele.
-  const organizar=cartaoSelecionado&&<div className="rounded-interno bg-poco p-3.5 text-sm [&_summary]:min-h-9 [&_summary]:text-sm [&>div]:mt-2.5 [&>div]:border-t [&>div]:border-divisoria [&>div]:pt-1.5"><h3 className="mb-2 text-sm font-semibold">Atendimento atual</h3><dl className="space-y-1.5 text-xs"><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Etapa</dt><dd className="font-medium">{nomeEtapa(cartaoSelecionado.estado.etapa)}</dd></div><div className="flex justify-between gap-3"><dt className="text-muted-foreground">Responsável</dt><dd className="font-medium">{cartaoSelecionado.estado.responsavelNome}</dd></div><div className="flex justify-between gap-3"><dt className="shrink-0 text-muted-foreground">Próxima ação</dt><dd className="whitespace-pre-wrap break-words text-right font-medium">{cartaoSelecionado.estado.proximaAcao}</dd></div></dl><OrganizarConversa key={cartaoSelecionado.telefone} cartao={cartaoSelecionado} pessoas={pessoas}/></div>;
+  const organizar=cartaoSelecionado&&<section aria-label="Atendimento" className="border-t border-divisoria px-4 py-4 text-sm [&_summary]:min-h-9 [&_summary]:text-sm [&>div]:mt-2.5 [&>div]:border-t [&>div]:border-divisoria [&>div]:pt-1.5"><h3 className="mb-3 text-xs font-medium text-muted-foreground">Atendimento</h3><dl className="flex flex-col gap-2.5 text-sm"><div className="flex items-center gap-3"><CircleDot className="size-4 shrink-0 text-muted-foreground" aria-hidden="true"/><dt className="flex-1 text-texto-secundario">Etapa</dt><dd className="font-medium">{nomeEtapa(cartaoSelecionado.estado.etapa)}</dd></div><div className="flex items-center gap-3"><UserRound className="size-4 shrink-0 text-muted-foreground" aria-hidden="true"/><dt className="flex-1 text-texto-secundario">Responsável</dt><dd className="font-medium">{cartaoSelecionado.estado.responsavelNome}</dd></div><div className="flex items-start gap-3"><ArrowRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true"/><dt className="shrink-0 text-texto-secundario">Próxima ação</dt><dd className="min-w-0 flex-1 whitespace-pre-wrap break-words text-right font-medium">{cartaoSelecionado.estado.proximaAcao}</dd></div></dl><OrganizarConversa key={cartaoSelecionado.telefone} cartao={cartaoSelecionado} pessoas={pessoas}/></section>;
 
   const navAreas=<nav aria-label="Áreas do CRM" className="flex flex-wrap gap-1 rounded-controle border border-divisoria bg-controle p-1">{areas.map(({href,nome,Icon})=><Link key={href} href={href} aria-current={href==='/crm/atendimento'?'page':undefined} className={`inline-flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm ${href==='/crm/atendimento'?'bg-controle-ativo font-semibold text-foreground':'text-muted-foreground hover:text-foreground'}`}><Icon className="size-4" aria-hidden="true"/>{nome}</Link>)}</nav>;
   const cabecalho=janela
@@ -101,7 +111,7 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
         <ThemeToggle/>
       </header>
     :<>
-        <PageHeader title="Atendimento WhatsApp" description="Conversas recebidas pela integração oficial do 8250. Horários de Manaus." breadcrumbs={[{label:'CRM',href:'/crm'},{label:'Atendimento'}]} selo={<SeloIntegracao oficial={oficial}/>} actions={<div className="flex flex-wrap items-center justify-end gap-2">{navAreas}<AbrirEmNovaJanela telefone={visao==="lista"?telefone:undefined} visao={visao} q={q} etapa={etapaFiltro}/></div>}/>
+        <PageHeader title="Atendimento WhatsApp" description="Conversas recebidas pela integração oficial do 8250. Horários de Manaus." breadcrumbs={[{label:'CRM',href:'/crm'},{label:'Atendimento'}]} selo={<SeloIntegracao oficial={oficial}/>} actions={<div className="flex flex-wrap items-center justify-end gap-2">{navAreas}{visao==='kanban'&&<AbrirEmNovaJanela visao={visao} q={q} etapa={etapaFiltro}/>}</div>}/>
       </>;
 
   const corpo=visao==='kanban'
@@ -110,17 +120,20 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
         <p className="text-xs text-muted-foreground">{grupos.length} conversa(s) exibida(s), até as 100 mais recentes. Contagens se referem a esta busca. Etapa do atendimento é independente da janela de envio.</p>
         <KanbanConversas cartoes={cartoes} pessoas={pessoas} busca={q} base={base}/>
       </div>
-    :<div className={`grid gap-3 ${colunas} ${altura} lg:items-stretch lg:[&>*]:min-h-0`}>
-        <ConversaLista itens={itensVisiveis} selecionado={telefone} base={base} busca={q} visao="lista" etapa={etapaFiltro} contagens={contagens}/>
+    :<div data-atendimento-raiz className={`@container ${altura}`}>
+        <div className="flex h-full gap-3">
+        <ConversaLista itens={itensVisiveis} selecionado={telefone} base={base} busca={q} visao="lista" etapa={etapaFiltro} contagens={contagens} painel={painel} telefoneExplicito={telefoneExplicito}/>
         {telefone
           ?<ConversaChat telefone={telefone} nome={nome(telefone)} aberta={aberta} semResposta={semResposta} estadoAutomatico={estadoAutomatico} fichaHref={fichaHref} novaAba={janela}
+              telefoneExplicito={telefoneExplicito} urlLista={urlAtendimento(base,{visao:'lista',q,etapa:etapaFiltro,painel})} hrefJanela={hrefJanela}
               mensagens={historicoExibido.map(m=>({id:m.id,criadoEm:m.criadoEm,corpo:m.corpo,direcao:m.direcao,origem:m.origem,status:m.status}))} agora={agora}/>
-          :<section aria-label="Conversa selecionada" className="order-1 flex min-h-64 items-center justify-center rounded-painel border border-painel-borda bg-card p-6 text-center dark:border-transparent text-muted-foreground lg:order-none">Aguardando mensagens recebidas pela integração.</section>}
-        {telefone&&<aside aria-label="Contexto do cliente" className={`order-3 flex min-w-0 flex-col gap-3.5 overflow-y-auto rounded-painel border border-painel-borda bg-card px-2 pb-2 pt-4 dark:border-transparent lg:order-none ${janela?'':'lg:col-span-2 xl:col-span-1'}`}>
-          <ContextoCliente clienteId={contato?.id??null} nome={nome(telefone)} fichaHref={fichaHref} novaAba={janela} organizar={organizar}/>
-        </aside>}
+          :<section aria-label="Conversa selecionada" className="hidden min-h-0 flex-1 items-center justify-center rounded-painel border border-painel-borda bg-card p-6 text-center text-muted-foreground @3xl:flex dark:border-transparent">Aguardando mensagens recebidas pela integração.</section>}
+        {telefone&&<PainelContato painel={painel}>
+          <ContextoCliente clienteId={contato?.id??null} nome={nome(telefone)} telefone={telefone} fichaHref={fichaHref} novaAba={janela} organizar={organizar}/>
+        </PainelContato>}
+        </div>
       </div>;
 
   if(janela)return <div className="flex min-h-dvh flex-col bg-background">{cabecalho}<main className="flex-1 space-y-3 p-3 lg:p-4">{corpo}{sobre}</main></div>;
-  return <div className="space-y-4">{cabecalho}{corpo}{sobre}</div>;
+  return <div className="space-y-4"><div className={chatCheio?'hidden md:block':undefined}>{cabecalho}</div>{corpo}<div className={chatCheio?'hidden md:block':undefined}>{sobre}</div></div>;
 }

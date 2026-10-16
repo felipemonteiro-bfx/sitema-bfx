@@ -47,10 +47,20 @@ export function rotuloDia(d: Date, agora: Date = new Date()): string {
   const dias = diasEntre(d, agora);
   if (dias === 0) return 'Hoje';
   if (dias === 1) return 'Ontem';
+  // Até 6 dias atrás: dia da semana abreviado ("seg"), como o separador do WhatsApp Web.
+  if (dias > 1 && dias < 7) return d.toLocaleDateString('pt-BR', { timeZone: FUSO, weekday: 'short' }).replace('.', '');
   return d.toLocaleDateString('pt-BR', { timeZone: FUSO, day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 export { chaveDia };
+
+/** Quantas mensagens do cliente chegaram depois da última resposta da BFX (só exibição). */
+export function contarNaoRespondidas(entradas: Date[], ultimaSaida: Date | null): number {
+  return entradas.filter(e => !ultimaSaida || e.getTime() > ultimaSaida.getTime()).length;
+}
+
+/** Número da bolinha da lista: acima de 99 vira "99+". */
+export const rotuloContagem = (n: number): string => (n > 99 ? '99+' : String(n));
 
 /** Prévia da última mensagem da conversa (saída leva "Você: "). */
 export function previaMensagem(direcao: string, corpo: string): string {

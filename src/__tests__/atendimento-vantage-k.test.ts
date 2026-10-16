@@ -5,7 +5,7 @@ import path from 'node:path';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {describe,expect,it,vi} from 'vitest';
 vi.stubGlobal('React',React);
-vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()})}));
+vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()}),usePathname:()=>'/crm/atendimento',useSearchParams:()=>new URLSearchParams()}));
 vi.mock('@/app/(app)/crm/atendimento/actions',()=>({responderConversa:vi.fn(),controlarAutomatico:vi.fn()}));
 import {ConversaLista,BuscaConversas} from '@/app/(app)/crm/atendimento/conversa-lista';
 import {Reply} from '@/app/(app)/crm/atendimento/reply';
@@ -37,7 +37,7 @@ describe('K3: lista de conversas',()=>{
   expect(html).toMatch(/title="[^"]*Até as 100 mais recentes/);
  });
  it('chips de etapa pequenos (h-8) e item com avatar de 44px',()=>{
-  expect(html).toContain('h-8');expect(html).toContain('size-11');
+  expect(html).toContain('h-8');expect(html).toContain('size-12'); // M1: avatar de 48px
   expect(html).not.toContain('h-10 shrink-0');
  });
 });
@@ -58,7 +58,7 @@ describe('K2: composer compacto',()=>{
   expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
  });
  it('chips de resposta pronta de 36px (h-9) e textarea sem min-h-12 gigante',()=>{
-  expect(html).toContain('h-9 shrink-0 rounded-full');
+  expect(html).toContain('rounded-full'); // M4: sem fileira de chips; botão de raio + pílula
   expect(html).not.toContain('h-10 shrink-0');
  });
 });
@@ -77,7 +77,7 @@ describe('K2: aviso de cliente aguardando é um ponto + texto curto',()=>{
 describe('K4: contexto do cliente',()=>{
  const html=renderToStaticMarkup(React.createElement(ResumoCliente,{nome:'Ana Souza',cadastro:5,empresa:'Prefeitura',etapa:'cliente',pontos:1000,fichaHref:'/f'}));
  it('avatar de 64px, valores em cards internos, texto legal fora do parágrafo (Tooltip/title)',()=>{
-  expect(html).toContain('size-16');expect(html).toContain('bg-card-elevated');
+  expect(html).toContain('size-20'); // M5: avatar grandeexpect(html).toContain('bg-card-elevated');
   expect(html).not.toMatch(/<p[^>]*>Não é saldo em dinheiro/);
   expect(html).toContain('Não é saldo em dinheiro');
  });
