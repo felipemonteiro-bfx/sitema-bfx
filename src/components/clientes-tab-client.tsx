@@ -210,7 +210,7 @@ export default function ClientesTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary">Novo Cliente</CardTitle>
+          <CardTitle>Novo Cliente</CardTitle>
         </CardHeader>
         <CardContent>
           {errorMsg && !sp.editCliente && (
@@ -221,7 +221,7 @@ export default function ClientesTabClient({
           <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label htmlFor="add-nome">Nome/Razao Social <span className="text-destructive">*</span></Label>
+                <Label htmlFor="add-nome" className="normal-case tracking-normal text-sm font-medium">Nome/Razao Social <span className="text-destructive">*</span></Label>
                 <Input
                   id="add-nome"
                   name="nome"
@@ -247,7 +247,7 @@ export default function ClientesTabClient({
                 )}
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-tipo">Tipo</Label>
+                <Label htmlFor="add-tipo" className="normal-case tracking-normal text-sm font-medium">Tipo</Label>
                 <FormSelect
                   id="add-tipo"
                   name="tipo"
@@ -259,31 +259,31 @@ export default function ClientesTabClient({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-doc">CPF/CNPJ</Label>
+                <Label htmlFor="add-doc" className="normal-case tracking-normal text-sm font-medium">CPF/CNPJ</Label>
                 <Input id="add-doc" name="doc" placeholder="CPF/CNPJ" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-4">
               <div className="space-y-1">
-                <Label htmlFor="add-matricula">Matricula</Label>
+                <Label htmlFor="add-matricula" className="normal-case tracking-normal text-sm font-medium">Matricula</Label>
                 <Input id="add-matricula" name="matricula" placeholder="Matricula" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-renda">Renda/Faturamento</Label>
+                <Label htmlFor="add-renda" className="normal-case tracking-normal text-sm font-medium">Renda/Faturamento</Label>
                 <CurrencyInput id="add-renda" name="renda" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-telefone">WhatsApp</Label>
+                <Label htmlFor="add-telefone" className="normal-case tracking-normal text-sm font-medium">WhatsApp</Label>
                 <MaskedInput id="add-telefone" name="telefone" mask="phone" />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-cep">CEP</Label>
+                <Label htmlFor="add-cep" className="normal-case tracking-normal text-sm font-medium">CEP</Label>
                 <MaskedInput id="add-cep" name="cep" mask="cep" />
               </div>
             </div>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
-                <Label htmlFor="add-empresa">Empresa/Vinculo</Label>
+                <Label htmlFor="add-empresa" className="normal-case tracking-normal text-sm font-medium">Empresa/Vinculo</Label>
                 <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId} />
                 <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === selectedEmpresaId)?.nome ?? ""} />
                 <FormSelect
@@ -296,7 +296,7 @@ export default function ClientesTabClient({
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="add-dataNascimento">Data de Nascimento</Label>
+                <Label htmlFor="add-dataNascimento" className="normal-case tracking-normal text-sm font-medium">Data de Nascimento</Label>
                 <DateInput id="add-dataNascimento" name="dataNascimento" />
               </div>
             </div>
@@ -309,7 +309,7 @@ export default function ClientesTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-primary">Clientes</CardTitle>
+          <CardTitle>Clientes</CardTitle>
           <div className="flex w-full flex-wrap items-center gap-2 sm:justify-end">
           <div className="w-full sm:w-44">
             <Label htmlFor="filtro-faixa-consignado" className="sr-only">
@@ -375,7 +375,7 @@ export default function ClientesTabClient({
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+            <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2">
               <span className="text-sm font-medium">
                 {selectedIds.size} selecionado(s)
                 {selecionadosForaDaPagina > 0 && (
@@ -420,7 +420,7 @@ export default function ClientesTabClient({
               </Button>
             </div>
           )}
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="overflow-x-auto rounded-interno bg-poco p-2">
           <Table>
             <TableHeader>
               <TableRow>
@@ -514,11 +514,11 @@ export default function ClientesTabClient({
               <input type="hidden" name="id" value={editingCliente.id} />
               <div className="grid gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-nome">Nome/Razao Social <span className="text-destructive">*</span></Label>
+                  <Label htmlFor="edit-nome" className="normal-case tracking-normal text-sm font-medium">Nome/Razao Social <span className="text-destructive">*</span></Label>
                   <Input id="edit-nome" name="nome" defaultValue={editingCliente.nome} placeholder="Nome/Razao Social" aria-required="true" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-tipo">Tipo</Label>
+                  <Label htmlFor="edit-tipo" className="normal-case tracking-normal text-sm font-medium">Tipo</Label>
                   <FormSelect
                     id="edit-tipo"
                     name="tipo"
@@ -530,31 +530,31 @@ export default function ClientesTabClient({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-doc">CPF/CNPJ</Label>
+                  <Label htmlFor="edit-doc" className="normal-case tracking-normal text-sm font-medium">CPF/CNPJ</Label>
                   <Input id="edit-doc" name="doc" defaultValue={editingCliente.cpf || editingCliente.cnpj || ""} placeholder="CPF/CNPJ" />
                 </div>
               </div>
               <div className="grid gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-matricula">Matricula</Label>
+                  <Label htmlFor="edit-matricula" className="normal-case tracking-normal text-sm font-medium">Matricula</Label>
                   <Input id="edit-matricula" name="matricula" defaultValue={editingCliente.matricula || ""} placeholder="Matricula" />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-renda">Renda/Faturamento</Label>
+                  <Label htmlFor="edit-renda" className="normal-case tracking-normal text-sm font-medium">Renda/Faturamento</Label>
                   <CurrencyInput id="edit-renda" name="renda" defaultValue={editingCliente.renda ?? 0} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-telefone">WhatsApp</Label>
+                  <Label htmlFor="edit-telefone" className="normal-case tracking-normal text-sm font-medium">WhatsApp</Label>
                   <MaskedInput id="edit-telefone" name="telefone" mask="phone" defaultValue={editingCliente.telefone || ""} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-cep">CEP</Label>
+                  <Label htmlFor="edit-cep" className="normal-case tracking-normal text-sm font-medium">CEP</Label>
                   <MaskedInput id="edit-cep" name="cep" mask="cep" defaultValue={editingCliente.cep || ""} />
                 </div>
               </div>
               <div className="grid gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="edit-empresa">Empresa/Vinculo</Label>
+                  <Label htmlFor="edit-empresa" className="normal-case tracking-normal text-sm font-medium">Empresa/Vinculo</Label>
                   <input type="hidden" name="empresaParceiraId" value={editSelectedEmpresaId} />
                   <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === editSelectedEmpresaId)?.nome ?? ""} />
                   <FormSelect
@@ -567,7 +567,7 @@ export default function ClientesTabClient({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="edit-dataNascimento">Data de Nascimento</Label>
+                  <Label htmlFor="edit-dataNascimento" className="normal-case tracking-normal text-sm font-medium">Data de Nascimento</Label>
                   <DateInput
                     id="edit-dataNascimento"
                     name="dataNascimento"

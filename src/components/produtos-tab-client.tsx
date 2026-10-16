@@ -180,7 +180,7 @@ export default function ProdutosTabClient({
     <>
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-primary">Produtos</CardTitle>
+          <CardTitle>Produtos</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -205,7 +205,7 @@ export default function ProdutosTabClient({
         </CardHeader>
         <CardContent>
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2 mt-2">
+        <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2 mt-2">
           <span className="text-sm font-medium">
                 {selectedIds.size} selecionado(s)
                 {selecionadosForaDaPagina > 0 && (
@@ -251,7 +251,7 @@ export default function ProdutosTabClient({
         </div>
       )}
 
-      <div className="overflow-x-auto -mx-6 px-6">
+      <div className="overflow-x-auto rounded-interno bg-poco p-2">
       <Table>
         <TableHeader>
           <TableRow>

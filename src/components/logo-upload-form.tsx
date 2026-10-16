@@ -69,7 +69,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-medium mb-2">Logo atual:</h3>
-        <div className="relative w-32 h-32 border rounded-md overflow-hidden p-2 bg-muted/30 flex items-center justify-center">
+        <div className="relative w-32 h-32 rounded-interno overflow-hidden p-2 bg-poco flex items-center justify-center">
           {displayUrl ? (
             <Image
               src={displayUrl}
@@ -89,7 +89,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
         </label>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <label className="cursor-pointer">
-            <span className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+            <span className="inline-flex h-11 items-center justify-center rounded-controle border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
               Escolher arquivo
             </span>
             {/* `<input>` cru de proposito — e a excecao ja documentada para

@@ -93,26 +93,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         breadcrumbs={[{ label: "Gestão de RH" }]}
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total de usuários</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{total}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Admins</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{admins}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Meta média</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold"><span className="valor-sensivel">{formatMoney(metaMedia)}</span></CardContent>
-        </Card>
-      </div>
+      <Card className="anim-entrada" style={{ "--i": 0 } as React.CSSProperties}>
+        <CardContent className="grid gap-4 p-5 md:grid-cols-3 md:p-6">
+          <div className="rounded-interno bg-card-elevated px-5 py-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Total de usuários</h3>
+            <div className="mt-2 font-mono text-2xl font-medium tabular-nums text-foreground">{total}</div>
+          </div>
+          <div className="rounded-interno bg-card-elevated px-5 py-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Admins</h3>
+            <div className="mt-2 font-mono text-2xl font-medium tabular-nums text-foreground">{admins}</div>
+          </div>
+          <div className="rounded-interno bg-card-elevated px-5 py-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Meta média</h3>
+            <div className="mt-2 font-mono text-2xl font-medium tabular-nums text-foreground"><span className="valor-sensivel">{formatMoney(metaMedia)}</span></div>
+          </div>
+        </CardContent>
+      </Card>
 
       <GestaoRhTabs
         defaultTab={initialTab}
@@ -126,6 +122,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardTitle>Equipe</CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <div className="rounded-interno bg-poco p-2">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -164,6 +161,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       )}
                     </TableBody>
                   </Table>
+                  </div>
                 </CardContent>
               </Card>
             ),
@@ -180,7 +178,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <form method="get" className="grid gap-2 md:grid-cols-[1fr_auto] items-end">
                     <input type="hidden" name="tab" value="detalhes" />
                     <div className="space-y-1">
-                      <Label htmlFor="rh-filter-user">Filtrar funcionário</Label>
+                      <Label htmlFor="rh-filter-user" className="normal-case tracking-normal text-sm font-medium">Filtrar funcionário</Label>
                       <FormSelect
                         name="user"
                         defaultValue={selectedUser ? String(selectedUser) : "all"}
@@ -205,19 +203,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <form
                         key={u.id}
                         action={updateMeta}
-                        className="grid gap-3 rounded-xl border border-muted bg-muted/20 p-4 md:grid-cols-6"
+                        className="grid gap-3 rounded-interno bg-card-elevated p-4 md:grid-cols-6"
                       >
                         <input type="hidden" name="id" value={u.id} />
                         <div className="space-y-1 md:col-span-2">
-                          <Label htmlFor={`rh-nome-${u.id}`}>Nome</Label>
+                          <Label htmlFor={`rh-nome-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Nome</Label>
                           <Input id={`rh-nome-${u.id}`} name="nome" defaultValue={u.nomeExibicao || ""} />
                         </div>
                         <div className="space-y-1 md:col-span-2">
-                          <Label htmlFor={`rh-login-${u.id}`}>Login</Label>
+                          <Label htmlFor={`rh-login-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Login</Label>
                           <Input id={`rh-login-${u.id}`} name="login" defaultValue={u.username} />
                         </div>
                         <div className="space-y-1">
-                          <Label>Role</Label>
+                          <Label className="normal-case tracking-normal text-sm font-medium">Role</Label>
                           <FormSelect
                             name="role"
                             defaultValue={u.role || "vendedor"}
@@ -228,11 +226,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor={`rh-meta-${u.id}`}>Meta</Label>
+                          <Label htmlFor={`rh-meta-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Meta</Label>
                           <Input id={`rh-meta-${u.id}`} name="meta" type="number" defaultValue={u.metaMensal || 0} />
                         </div>
                         <div className="space-y-1">
-                          <Label htmlFor={`rh-comissao-${u.id}`}>Comissão %</Label>
+                          <Label htmlFor={`rh-comissao-${u.id}`} className="normal-case tracking-normal text-sm font-medium">Comissão %</Label>
                           <Input
                             id={`rh-comissao-${u.id}`}
                             name="comissao"
@@ -240,7 +238,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             defaultValue={u.comissaoPct || 2}
                           />
                         </div>
-                        <div className="md:col-span-6 flex items-center justify-between gap-3 border-t pt-4">
+                        <div className="md:col-span-6 flex items-center justify-between gap-3 pt-4">
                           <div className="flex items-center gap-2">
                             <DeleteUserButton
                               userId={u.id}
@@ -250,7 +248,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             />
                             <ResetSenhaDialog userId={u.id} userName={u.nomeExibicao || u.username} />
                           </div>
-                          <button className={cn(buttonVariants(), "bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
+                          <button className={cn(buttonVariants(), "bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar alterações</button>
                         </div>
                       </form>
                     ))
@@ -270,15 +268,15 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardContent>
                   <form action={addUser} className="grid gap-3 md:grid-cols-3">
                     <div className="space-y-1">
-                      <Label htmlFor="novo-nome">Nome completo</Label>
+                      <Label htmlFor="novo-nome" className="normal-case tracking-normal text-sm font-medium">Nome completo</Label>
                       <Input id="novo-nome" name="nome" placeholder="Nome Completo" aria-required="true" />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="novo-login">Login</Label>
+                      <Label htmlFor="novo-login" className="normal-case tracking-normal text-sm font-medium">Login</Label>
                       <Input id="novo-login" name="login" placeholder="Login" aria-required="true" />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="novo-senha">Senha</Label>
+                      <Label htmlFor="novo-senha" className="normal-case tracking-normal text-sm font-medium">Senha</Label>
                       <Input id="novo-senha" name="senha" placeholder="Senha" type="password" aria-required="true" />
                     </div>
                     <FormSelect
