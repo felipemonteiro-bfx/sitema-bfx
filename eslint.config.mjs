@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { RAW_COLOR_PATTERN_SOURCE } from "./scripts/design-tokens/raw-color-scan.mjs";
+import { plugin as shadcn } from "@shadcn/lint";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -115,6 +116,21 @@ const eslintConfig = defineConfig([
   ...(exceptionRawColorFiles.length > 0
     ? [{ files: exceptionRawColorFiles, rules: { "bfx/no-raw-color": "off" } }]
     : []),
+  // @shadcn/lint (agent-first linter do design system Tailwind v4). Descobre os
+  // componentes pelo components.json e o tema pelo globals.css. Regras em
+  // "warn" para medir a divida antes de virar "error" (ver design-system/VANTAGE-PADROES.md).
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: { shadcn },
+    rules: {
+      "shadcn/no-unknown-classes": "warn",
+      "shadcn/no-raw-colors": "warn",
+      "shadcn/no-arbitrary-values": "warn",
+      "shadcn/no-inline-styles": "warn",
+      "shadcn/require-static-classes": "warn",
+      "shadcn/no-restyle": "warn",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

@@ -15,8 +15,8 @@
     "escala:check": "node scripts/design-tokens/escala-scan.mjs src --check",
     "escala:baseline": "node scripts/design-tokens/escala-scan.mjs src --baseline",
     "jsx:check": "node scripts/design-tokens/jsx-sanidade.mjs src",
-  "ui:runtime": "node scripts/ui-runtime/rendered-ui-audit.mjs",
-  "ui:runtime:strict": "node scripts/ui-runtime/rendered-ui-audit.mjs --require-browser",
+    "ui:runtime": "node scripts/ui-runtime/rendered-ui-audit.mjs",
+    "ui:runtime:strict": "node scripts/ui-runtime/rendered-ui-audit.mjs --require-browser",
     "test": "vitest run --reporter=verbose",
     "test:watch": "vitest --reporter=verbose",
     "db:start": "docker compose up -d db",
@@ -85,6 +85,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@shadcn/lint": "0.2.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^26",
     "@types/papaparse": "^5.3.16",
