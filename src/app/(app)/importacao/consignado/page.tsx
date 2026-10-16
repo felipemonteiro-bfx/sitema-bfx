@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/guards";
 import { PageHeader } from "@/components/page-header";
+import { NavImportacao } from "../nav-importacao";
 import ImportacaoConsignadoClient from "@/components/importacao-consignado-client";
 import {
   analisarImportacaoConsignado,
@@ -16,6 +17,7 @@ export default async function Page() {
         title="Importação e-Consignado"
         description="Suba o xlsx Dataprev (ou CSV com o mesmo cabeçalho). A análise mostra o que será gravado antes de confirmar. Reenviar o mês atualiza contrato a contrato e não apaga o que saiu da planilha."
         breadcrumbs={[{ label: "Importação", href: "/importacao" }, { label: "e-Consignado" }]}
+        actions={<NavImportacao atual="/importacao/consignado" />}
       />
       <ImportacaoConsignadoClient
         analisarAction={analisarImportacaoConsignado}

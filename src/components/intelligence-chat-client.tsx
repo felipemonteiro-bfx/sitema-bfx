@@ -7,6 +7,7 @@ import { IntelligenceChatComposer } from "@/components/intelligence-chat-compose
 import { stripToolMarkup } from "@/lib/strip-tool-markup";
 import { colunasNumericas } from "@/lib/markdown-tabela";
 import { cn } from "@/lib/utils";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 function parseMarkdownTable(block: string): { headers: string[]; rows: string[][] } | null {
   const lines = block.trim().split("\n").filter((l) => l.trim());
@@ -29,46 +30,45 @@ function MarkdownTable({ block }: { block: string }) {
   // sistema alinha numero a direita com `tabular-nums` (auditoria 2026-08-11).
   const numericas = colunasNumericas(table.rows, table.headers.length);
 
+  // Poço do Vantage: a tabela vive num degrau rebaixado da bolha, com o `Table` da ui
+  // (cabeçalho muted em frase normal, linhas separadas pela divisória).
   return (
-    <div className="my-2 overflow-x-auto rounded-lg border">
-      <table className="w-full text-xs border-collapse">
-        <thead>
-          <tr className="border-b bg-muted/60">
+    <div className="my-2 rounded-interno bg-poco">
+      <Table>
+        <TableHeader>
+          <TableRow>
             {table.headers.map((h, i) => (
-              <th
+              <TableHead
                 key={i}
-                className={cn(
-                  "px-3 py-1.5 font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap",
-                  numericas.has(i) ? "text-right" : "text-left"
-                )}
+                className={cn("h-9 whitespace-nowrap px-3 text-xs", numericas.has(i) ? "text-right" : "text-left")}
               >
                 {h}
-              </th>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {table.rows.map((row, ri) => (
-            <tr key={ri} className={ri % 2 === 0 ? "bg-background" : "bg-muted/20"}>
+            <TableRow key={ri} className="hover:bg-transparent">
               {row.map((cell, ci) => (
                 // `text-muted-foreground` media 4.43:1 sobre a linha zebrada no
                 // tema claro, abaixo do minimo de 4.5. Celula de dado e conteudo
                 // primario: vai de `foreground`, e a distincao com o cabecalho
-                // continua sendo o `font-semibold` (achado 7).
-                <td
+                // continua sendo o tom do cabecalho (achado 7).
+                <TableCell
                   key={ci}
                   className={cn(
-                    "px-3 py-1.5 text-foreground border-t whitespace-nowrap",
+                    "whitespace-nowrap px-3 py-2 text-xs text-foreground",
                     numericas.has(ci) && "text-right tabular-nums font-medium"
                   )}
                 >
                   {cell}
-                </td>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -186,15 +186,15 @@ export function IntelligenceChatClient({
 
   return (
     <>
-      <div className="flex flex-1 flex-col-reverse gap-6 overflow-auto rounded-lg border bg-background p-3 sm:p-4">
+      <div className="flex flex-1 flex-col-reverse gap-6 overflow-auto rounded-interno bg-poco p-3 sm:p-4">
         {optimisticHistory.length === 0 ? (
           <div className="space-y-2 text-sm text-muted-foreground">
             <div>Sem mensagens ainda. Faça uma pergunta para começar.</div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-lg border bg-muted/40 p-3">
+              <div className="rounded-interno bg-card-elevated p-4">
                 Pergunte por cobranças prontas ou sugestões de abordagem.
               </div>
-              <div className="rounded-lg border bg-muted/40 p-3">
+              <div className="rounded-interno bg-card-elevated p-4">
                 Solicite um resumo de metas ou desempenho semanal.
               </div>
             </div>
@@ -209,7 +209,7 @@ export function IntelligenceChatClient({
                     `muted-foreground` (4.35:1) para `foreground` — mesma
                     correcao dos rotulos das bolhas (achado 9). */}
                 {m.provider && (
-                  <span className="rounded-full bg-muted px-2 py-0.5 uppercase tracking-wide text-foreground">
+                  <span className="rounded-full bg-muted px-2 py-0.5 font-mono text-foreground">
                     {m.provider}
                   </span>
                 )}
@@ -217,21 +217,21 @@ export function IntelligenceChatClient({
               </div>
               {/* Largura no mobile: com 92% sobravam 210px de leitura em 390px,
                   54% da tela (achado 6). Vai a 96% — nao a 100%: as duas bolhas
-                  contrastam entre si em so 1.20:1 (`bg-primary/10` vs
-                  `bg-muted/50`), entao o deslocamento lateral do `justify-*` e
+                  contrastam entre si em so 1.20:1 (tint da marca vs
+                  superficie neutra), entao o deslocamento lateral do `justify-*` e
                   parte de como se ve quem falou. Em 100% ele vira no-op e sobra
                   so o rotulo. O canto inferior assimetrico reforca a origem sem
                   custar largura. O limite de 75% volta no sm.
                   Os rotulos saem de `muted-foreground` — mediam 3.65:1 sobre o
                   tint da bolha do usuario e 4.45:1 na do assistente (achado 9). */}
               <div className="flex justify-end">
-                <div className="w-full max-w-[96%] rounded-2xl rounded-br-sm border bg-primary/10 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
+                <div className="w-full max-w-[96%] rounded-interno rounded-br-sm bg-marca-tint px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
                   <div className="text-xs font-semibold text-foreground">Você</div>
                   <div className="break-words">{m.prompt}</div>
                 </div>
               </div>
               <div className="flex justify-start">
-                <div className="w-full max-w-[96%] rounded-2xl rounded-bl-sm border bg-muted/50 px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
+                <div className="w-full max-w-[96%] rounded-interno rounded-bl-sm border border-divisoria bg-popover px-3 py-2 text-sm text-foreground sm:max-w-[75%] sm:px-4 sm:py-3">
                   <div className="text-xs font-semibold text-foreground">Assistente</div>
                   <div className="space-y-1 break-words text-sm">
                     <MarkdownContent text={m.response} />
@@ -242,7 +242,7 @@ export function IntelligenceChatClient({
                         <a
                           key={`${link.url}-${idx}`}
                           href={link.url}
-                          className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs font-medium text-foreground transition-colors duration-150 hover:bg-muted motion-reduce:transition-none"
+                          className="inline-flex items-center gap-2 rounded-full border border-divisoria bg-card px-3 py-1 text-xs font-medium text-foreground transition-colors duration-150 hover:bg-controle motion-reduce:transition-none"
                         >
                           {link.label}
                         </a>

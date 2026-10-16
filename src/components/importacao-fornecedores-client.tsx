@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Contador } from "@/components/importacao-ui";
 import {
   Table,
   TableBody,
@@ -117,7 +119,7 @@ export default function ImportacaoFornecedoresClient({
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>1. Selecionar Arquivo</CardTitle>
+          <CardTitle>1. Selecionar arquivo</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-3">
@@ -141,7 +143,7 @@ export default function ImportacaoFornecedoresClient({
             <span className="text-sm text-muted-foreground">
               {fileName ?? "Nenhum arquivo escolhido"}
             </span>
-            {analisando && <Loader2 className="h-5 w-5 animate-spin text-info-text" />}
+            {analisando && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
             Colunas: <strong>nome</strong> (obrigatório) e <strong>telefone</strong> (opcional).
@@ -151,14 +153,16 @@ export default function ImportacaoFornecedoresClient({
       </Card>
 
       {plano && (
-        <Card className="border-info bg-info-bg">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-primary">2. Análise — nada foi gravado ainda</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1.5">
+              <CardTitle>2. Análise</CardTitle>
+              <Badge variant="outline">Nada foi gravado ainda</Badge>
+            </div>
             <Button
               type="button"
               disabled={!podeConfirmar || confirmando}
               onClick={() => setConfirmOpen(true)}
-              className="bg-primary hover:bg-primary/90"
               leftIcon={
                 confirmando ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -175,7 +179,7 @@ export default function ImportacaoFornecedoresClient({
               <Contador label="A criar" valor={plano.resumo.criar} />
               <Contador label="A reativar" valor={plano.resumo.reativar} />
               <Contador label="Ignorados" valor={plano.resumo.ignorar} />
-              <Contador label="Com erro" valor={plano.resumo.erros} />
+              <Contador label="Com erro" valor={plano.resumo.erros} erro />
             </div>
 
             {plano.erros.length > 0 && (
@@ -183,10 +187,10 @@ export default function ImportacaoFornecedoresClient({
                 tabIndex={0}
                 role="region"
                 aria-label="Linhas com erro"
-                className="max-h-64 overflow-y-auto rounded-md border bg-card"
+                className="max-h-64 overflow-y-auto rounded-interno bg-poco"
               >
                 <Table>
-                  <TableHeader className="bg-muted">
+                  <TableHeader>
                     <TableRow>
                       <TableHead className="w-20">Linha</TableHead>
                       <TableHead>Motivo</TableHead>
@@ -196,7 +200,7 @@ export default function ImportacaoFornecedoresClient({
                   <TableBody>
                     {plano.erros.map((erro, i) => (
                       <TableRow key={i}>
-                        <TableCell>{erro.linha}</TableCell>
+                        <TableCell className="font-mono tabular-nums">{erro.linha}</TableCell>
                         <TableCell>{erro.motivo}</TableCell>
                         <TableCell className="font-mono text-xs">{erro.conteudo}</TableCell>
                       </TableRow>
@@ -210,30 +214,22 @@ export default function ImportacaoFornecedoresClient({
       )}
 
       {resultado && (
-        <Card className="border-success bg-success-bg">
-          <CardHeader>
-            <CardTitle className="text-success-text">Importação concluída</CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center gap-3 space-y-0">
+            <CardTitle>Importação concluída</CardTitle>
+            <Badge variant="success">Concluída</Badge>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Contador label="Criados" valor={resultado.criados} />
               <Contador label="Reativados" valor={resultado.reativados} />
               <Contador label="Ignorados" valor={resultado.ignorados} />
-              <Contador label="Com erro" valor={resultado.erros.length} />
+              <Contador label="Com erro" valor={resultado.erros.length} erro />
             </div>
           </CardContent>
         </Card>
       )}
     </div>
     </>
-  );
-}
-
-function Contador({ label, valor }: { label: string; valor: number }) {
-  return (
-    <div className="rounded-md border bg-muted/30 p-3 text-center">
-      <div className="text-2xl font-bold">{valor}</div>
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-    </div>
   );
 }

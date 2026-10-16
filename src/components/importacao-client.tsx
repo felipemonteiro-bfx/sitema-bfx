@@ -4,6 +4,8 @@ import { Fragment, useEffect, useMemo, useState, useRef } from 'react';
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
+import { RotuloCampo } from "@/components/rotulo-campo";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -223,7 +225,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>1. Selecionar Arquivo</CardTitle>
+          <CardTitle>1. Selecionar arquivo</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-3">
@@ -247,21 +249,21 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
             <span className="text-sm text-muted-foreground">
               {fileName ? fileName : "Nenhum arquivo escolhido"}
             </span>
-            {loading && <Loader2 className="h-5 w-5 animate-spin text-info-text" />}
+            {loading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">O sistema aceita ponto e vírgula (;) como separador padrão do Excel.</p>
 
           {empresasParceiras.length > 0 && (
-            <div className="mt-4 space-y-1 border-t border-border/60 pt-4">
-              <label htmlFor="importacao-empresa" className="text-sm font-medium">
+            <div className="mt-4 space-y-1.5 border-t border-divisoria pt-4">
+              <RotuloCampo htmlFor="importacao-empresa">
                 Empresa dos clientes <span className="text-error-text">*</span>
-              </label>
+              </RotuloCampo>
               <select
                 id="importacao-empresa"
                 value={empresaId}
                 onChange={(e) => setEmpresaId(e.target.value)}
                 disabled={loading || saving}
-                className="block h-10 w-full max-w-sm rounded-lg border-2 border-input bg-background px-3 text-sm disabled:opacity-50"
+                className="block h-11 w-full max-w-sm rounded-controle border border-input bg-background px-3 text-sm text-foreground disabled:opacity-50"
               >
                 <option value="">Selecione a empresa</option>
                 {empresasParceiras.map((e) => (
@@ -278,11 +280,11 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
       </Card>
 
       {data.length > 0 && (
-        <Card className="border-info bg-info-bg">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-primary">2. Validar e Editar Dados</CardTitle>
-              <p className="text-sm text-muted-foreground italic">Edite as células abaixo se necessário antes de confirmar.</p>
+              <CardTitle>2. Validar e editar dados</CardTitle>
+              <p className="mt-1.5 text-sm text-muted-foreground">Edite as células abaixo se necessário antes de confirmar.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -290,39 +292,38 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                 variant="outline"
                 onClick={sugerirComIA}
                 disabled={suggesting || saving}
-                className="border-warning text-warning-text hover:bg-warning-bg"
                 leftIcon={suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               >
                 Sugerir com IA
               </Button>
-              <Button onClick={finalizeImport} disabled={saving || invalidas.length > 0} className="bg-primary hover:bg-primary/90" leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
+              <Button onClick={finalizeImport} disabled={saving || invalidas.length > 0} leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
                 Subir {data.length} Vendas
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {invalidas.length > 0 && (
-              <div role="alert" className="rounded-md bg-error-bg px-3 py-2 text-sm text-error-text">
+              <Alert variant="error" showIcon>
                 {mensagemAvisoDaPrevia(invalidas)}
-              </div>
+              </Alert>
             )}
             {invalidas.length === 0 && jaTeveProblema && (
-              <div role="status" className="rounded-md bg-success-bg px-3 py-2 text-sm text-success-text">
+              <Alert variant="success" role="status" showIcon>
                 Nenhuma linha com problema de frete ou entrega.
-              </div>
+              </Alert>
             )}
-            <ScrollArea className="rounded-md border bg-white w-full">
+            <ScrollArea className="w-full rounded-interno bg-poco">
               <Table>
-                <TableHeader className="bg-muted">
+                <TableHeader>
                   <TableRow>
                     <TableHead className="w-32">Data</TableHead>
                     <TableHead>Vendedor</TableHead>
                     <TableHead className="min-w-[150px]">Cliente</TableHead>
                     <TableHead className="min-w-[150px]">Produto</TableHead>
                     <TableHead className="w-24 text-right">Valor</TableHead>
-                    <TableHead className="w-24 text-right text-info-text">Frete</TableHead>
-                    <TableHead className="w-24 text-right text-info-text">Envio</TableHead>
-                    <TableHead className="w-24 text-info-text">Entrega</TableHead>
+                    <TableHead className="w-24 text-right">Frete</TableHead>
+                    <TableHead className="w-24 text-right">Envio</TableHead>
+                    <TableHead className="w-24">Entrega</TableHead>
                     <TableHead className="w-20 text-right">Parc.</TableHead>
                     <TableHead className="w-16">Antec.</TableHead>
                     <TableHead className="w-10"></TableHead>
@@ -341,30 +342,30 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         <DateInput
                           value={row.dataVenda}
                           onChange={(v) => updateCell(row.id, 'dataVenda', v)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1"
+                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <input 
                           value={row.vendedor} 
                           onChange={(e) => updateCell(row.id, 'vendedor', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1"
+                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <input 
                           value={row.cliente} 
-                          placeholder="OBRIGATÓRIO"
+                          placeholder="Obrigatório"
                           onChange={(e) => updateCell(row.id, 'cliente', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.cliente ? 'bg-error-bg text-error-text' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1 ${!row.cliente ? 'bg-error-bg text-error-text' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <input 
                           value={row.produto} 
-                          placeholder="OBRIGATÓRIO"
+                          placeholder="Obrigatório"
                           onChange={(e) => updateCell(row.id, 'produto', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.produto ? 'bg-error-bg text-error-text' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1 ${!row.produto ? 'bg-error-bg text-error-text' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -372,33 +373,33 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                           type="number" 
                           value={row.valor} 
                           onChange={(e) => updateCell(row.id, 'valor', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1 font-semibold"
+                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1 font-semibold"
                         />
                       </TableCell>
-                      <TableCell className={`p-1${destaque.includes("frete") ? "" : " bg-info-bg"}`}>
+                      <TableCell className="p-1">
                         <input
                           type="number"
                           aria-label="Frete cobrado"
                           value={row.frete}
                           onChange={(e) => updateCell(row.id, 'frete', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1${ruim("frete")}`}
+                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1${ruim("frete")}`}
                         />
                       </TableCell>
-                      <TableCell className={`p-1${destaque.includes("envio") ? "" : " bg-info-bg"}`}>
+                      <TableCell className="p-1">
                         <input
                           type="number"
                           aria-label="Custo de envio"
                           value={row.envio}
                           onChange={(e) => updateCell(row.id, 'envio', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1${ruim("envio")}`}
+                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1${ruim("envio")}`}
                         />
                       </TableCell>
-                      <TableCell className={`p-1${destaque.includes("entrega") ? "" : " bg-info-bg"}`}>
+                      <TableCell className="p-1">
                         <select
                           aria-label="Entrega"
                           value={row.entrega}
                           onChange={(e) => updateCell(row.id, 'entrega', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1${ruim("entrega")}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1${ruim("entrega")}`}
                         >
                           <option value="">—</option>
                           <option value="S">Sim</option>
@@ -410,7 +411,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                           type="number" 
                           value={row.parcelas} 
                           onChange={(e) => updateCell(row.id, 'parcelas', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1"
+                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">

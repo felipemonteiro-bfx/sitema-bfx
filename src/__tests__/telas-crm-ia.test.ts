@@ -284,7 +284,8 @@ describe("achado 6 — /inteligencia em 390px", () => {
 describe("achado 7 — corpo da tabela markdown no tema claro", () => {
   it("a celula de dado usa text-foreground, nao muted-foreground", () => {
     const fonte = ler("src/components/intelligence-chat-client.tsx");
-    const celula = fonte.split("<td")[1]?.split(">")[0] ?? "";
+    // H5: a tabela markdown passou a usar o `TableCell` da ui (poço do Vantage), no lugar do <td> cru.
+    const celula = fonte.split("<TableCell")[1]?.split("</TableCell>")[0] ?? "";
     expect(celula.includes("text-muted-foreground")).toBe(false);
     expect(celula.includes("text-foreground")).toBe(true);
   });

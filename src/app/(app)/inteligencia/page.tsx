@@ -23,7 +23,7 @@ async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
 
 /**
  * So deixa passar provedor conhecido. A coluna e um TEXT livre e o rotulo vai
- * para a tela em `uppercase`: valor inesperado vira desconhecido (pilula some),
+ * para a tela como etiqueta: valor inesperado vira desconhecido (pilula some),
  * que e o mesmo tratamento das linhas anteriores a coluna.
  */
 function normalizarProvider(valor: string | null | undefined): string | null {
@@ -210,7 +210,7 @@ export default async function Page({
           <form action={clearAi}>
             <button
               type="submit"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full text-xs cursor-pointer")}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer")}
             >
               Limpar conversa
             </button>
@@ -218,7 +218,7 @@ export default async function Page({
         }
       />
 
-      <Card className="h-full">
+      <Card className="anim-entrada h-full">
         <CardContent className="flex h-[60vh] min-h-[420px] flex-col gap-4 p-4 sm:p-6 sm:h-[68vh] lg:h-[72vh]">
           <IntelligenceChatClient
             history={history}

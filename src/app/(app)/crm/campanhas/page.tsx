@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
+import { RotuloCampo } from "@/components/rotulo-campo";
+import { NavAreasCrm } from "../nav-areas-crm";
 import { FormSelect } from "@/components/form-select";
 import { requireAdmin } from "@/lib/guards";
 import { prisma } from "@/lib/db";
@@ -70,30 +73,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         title="Campanhas de WhatsApp"
         description="Dispare mensagens para um segmento de clientes. Use {nome} para personalizar."
         breadcrumbs={[{ label: "CRM", href: "/crm" }, { label: "Campanhas" }]}
+        actions={<NavAreasCrm atual="/crm/campanhas" />}
       />
 
       {sp.erro && (
-        <div className="rounded-lg border border-error/30 bg-error-bg p-3 text-sm text-error-text">
+        <Alert variant="error" showIcon>
           Preencha o nome da campanha e escolha um template antes de criar.
-        </div>
+        </Alert>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary text-base">Nova campanha</CardTitle>
+          <CardTitle>Nova campanha</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={criarCampanha} className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <label htmlFor="nome" className="text-xs font-medium text-muted-foreground">Nome da campanha</label>
+              <div className="space-y-1.5">
+                <RotuloCampo htmlFor="nome">Nome da campanha</RotuloCampo>
                 <Input id="nome" name="nome" required />
               </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <div className="space-y-1">
-                <label htmlFor="estagio" className="text-xs font-medium text-muted-foreground">Estágio</label>
+              <div className="space-y-1.5">
+                <RotuloCampo htmlFor="estagio">Estágio</RotuloCampo>
                 <FormSelect
                   id="estagio"
                   name="estagio"
@@ -105,8 +109,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   ]}
                 />
               </div>
-              <div className="space-y-1">
-                <label htmlFor="empresa" className="text-xs font-medium text-muted-foreground">Empresa</label>
+              <div className="space-y-1.5">
+                <RotuloCampo htmlFor="empresa">Empresa</RotuloCampo>
                 <FormSelect
                   id="empresa"
                   name="empresa"
@@ -118,8 +122,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   ]}
                 />
               </div>
-              <div className="space-y-1">
-                <label htmlFor="tag" className="text-xs font-medium text-muted-foreground">Tag</label>
+              <div className="space-y-1.5">
+                <RotuloCampo htmlFor="tag">Tag</RotuloCampo>
                 <FormSelect
                   id="tag"
                   name="tag"
@@ -131,8 +135,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   ]}
                 />
               </div>
-              <div className="space-y-1">
-                <label htmlFor="comprou" className="text-xs font-medium text-muted-foreground">Comprou?</label>
+              <div className="space-y-1.5">
+                <RotuloCampo htmlFor="comprou">Comprou?</RotuloCampo>
                 <FormSelect
                   id="comprou"
                   name="comprou"
@@ -145,8 +149,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   ]}
                 />
               </div>
-              <div className="space-y-1">
-                <label htmlFor="nivel" className="text-xs font-medium text-muted-foreground">Nível</label>
+              <div className="space-y-1.5">
+                <RotuloCampo htmlFor="nivel">Nível</RotuloCampo>
                 <FormSelect
                   id="nivel"
                   name="nivel"
@@ -160,10 +164,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               </div>
             </div>
 
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-muted-foreground">
-                Template — use <code>{"{nome}"}</code> ou <code>{"{primeiroNome}"}</code> nas variáveis
-              </span>
+            <div className="space-y-1.5">
+              <RotuloCampo asChild>
+                <span>
+                  Template — use <code>{"{nome}"}</code> ou <code>{"{primeiroNome}"}</code> nas variáveis
+                </span>
+              </RotuloCampo>
               <CampanhaTemplatePicker
                 templates={templates}
                 onAtualizar={async () => {
@@ -173,10 +179,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
               />
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="agendadaPara" className="text-xs font-medium text-muted-foreground">
-                Agendar para (opcional) — se vazio, fica em rascunho
-              </label>
+            <div className="space-y-1.5">
+              <RotuloCampo htmlFor="agendadaPara">Agendar para (opcional) — se vazio, fica em rascunho</RotuloCampo>
               <Input
                 id="agendadaPara"
                 name="agendadaPara"
@@ -193,13 +197,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
       {campanhas.length === 0 ? (
         <EmptyState variant="inbox" title="Nenhuma campanha ainda" description="Crie uma campanha acima e dispare para o segmento escolhido." />
       ) : (
-        <div className="space-y-3">
-          {campanhas.map((c) => (
-            <Card key={c.id}>
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+        <Card className="p-5 anim-entrada">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Campanhas</h2>
+            <p className="text-sm text-muted-foreground">{campanhas.length} campanha(s), da mais recente para a mais antiga.</p>
+          </div>
+          <div className="space-y-3">
+            {campanhas.map((c) => (
+              <article key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-interno bg-card-elevated p-4">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{c.nome}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-foreground">{c.nome}</span>
                     {statusBadge(c.status)}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
@@ -208,8 +216,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   </div>
                   <div className="mt-1 line-clamp-2 max-w-xl text-sm text-muted-foreground">{c.mensagem}</div>
                   {!c.templateNome && (
-                    <p className="mt-1 text-xs text-warning-text">
-                      Campanha anterior à migração para a Cloud API — somente leitura. Recrie escolhendo um template.
+                    <p className="mt-2">
+                      <Badge variant="warning" size="sm">Somente leitura</Badge>{" "}
+                      <span className="text-xs text-muted-foreground">
+                        Campanha anterior à migração para a Cloud API. Recrie escolhendo um template.
+                      </span>
                     </p>
                   )}
                 </div>
@@ -226,10 +237,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     deleteAction={excluirCampanha}
                   />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        </Card>
       )}
     </div>
   );

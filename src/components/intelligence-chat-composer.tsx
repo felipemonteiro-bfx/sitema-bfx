@@ -126,7 +126,7 @@ export function IntelligenceChatComposer({
     >
       <button ref={submitRef} type="submit" className="hidden" aria-hidden="true" />
 
-      <div className="flex items-center gap-2 rounded-2xl border border-border/60 bg-background/80 px-3 py-2 shadow-sm dark:shadow-[var(--shadow-sm)]">
+      <div className="flex items-center gap-2 rounded-interno border border-divisoria bg-controle px-3 py-2 focus-within:border-primary">
 
         {/* Estado: gravando */}
         {recording ? (
@@ -162,12 +162,12 @@ export function IntelligenceChatComposer({
             <Button
               type="button"
               size="icon"
-              className="h-10 w-10 shrink-0 rounded-full bg-destructive text-white hover:bg-destructive/90"
+              className="h-10 w-10 shrink-0 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={stopRecording}
               aria-label="Parar e transcrever"
               title="Parar e transcrever"
             >
-              <Square className="h-4 w-4 fill-white" />
+              <Square className="h-4 w-4 fill-current" />
             </Button>
           </>
         ) : (
@@ -187,14 +187,14 @@ export function IntelligenceChatComposer({
               <div
                 id="guia-rapida"
                 role="tooltip"
-                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-72 -translate-x-1/2 rounded-md border bg-popover p-3 text-xs text-popover-foreground opacity-0 shadow-md dark:shadow-[var(--shadow-md)] transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none"
+                className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-3 w-72 -translate-x-1/2 rounded-interno border border-divisoria bg-popover p-3 text-xs text-popover-foreground opacity-0 transition-opacity duration-150 group-hover:opacity-100 motion-reduce:transition-none"
               >
                 <div className="space-y-2 text-muted-foreground">
                   <div>Gere mensagens de cobrança com tom profissional.</div>
                   <div>Peça resumos semanais de desempenho.</div>
                   <div>Solicite planos para bater metas mensais.</div>
                   <div>Compare vendedores e recomende ações.</div>
-                  <div className="rounded-md border bg-muted/30 p-2 text-xs">
+                  <div className="rounded-controle bg-poco p-2 text-xs">
                     Dica: use perguntas com contexto e período para respostas mais precisas.
                   </div>
                 </div>
@@ -206,7 +206,7 @@ export function IntelligenceChatComposer({
                 name="provider"
                 options={providers}
                 defaultValue={providers[0]?.value ?? "openai"}
-                className="h-10 w-full rounded-full border border-border/60 bg-muted/40 text-xs sm:w-auto sm:min-w-[110px]"
+                className="h-10 w-full rounded-full border border-divisoria bg-poco text-xs sm:w-auto sm:min-w-[110px]"
                 searchable={false}
               />
             )}
@@ -216,7 +216,7 @@ export function IntelligenceChatComposer({
               value={prompt}
               onChange={(event) => setPrompt(event.target.value)}
               onKeyDown={handleKeyDown}
-              className="min-h-[44px] max-h-32 w-full flex-1 resize-none rounded-2xl border border-transparent bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:border-border focus-visible:bg-background focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-[44px] max-h-32 w-full flex-1 resize-none rounded-controle border border-transparent bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:border-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
             />
 
             {/* Botão direito: Send (com texto) ou Mic (vazio) */}
