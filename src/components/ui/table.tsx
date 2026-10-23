@@ -38,11 +38,18 @@ interface TableProps
   extends React.HTMLAttributes<HTMLTableElement>,
     VariantProps<typeof tableVariants> {
   stickyHeader?: boolean
+  /** Nome acessível da região de rolagem; habilita foco e navegação pelas setas. */
+  scrollLabel?: string
 }
 
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
-  ({ className, variant, tamanho, mono, separado, stickyHeader, ...props }, ref) => (
-    <div className="relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-interno">
+  ({ className, variant, tamanho, mono, separado, stickyHeader, scrollLabel, ...props }, ref) => (
+    <div
+      className={cn("relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-interno", scrollLabel && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card")}
+      role={scrollLabel ? "region" : undefined}
+      aria-label={scrollLabel}
+      tabIndex={scrollLabel ? 0 : undefined}
+    >
       <table
         ref={ref}
         className={cn(tableVariants({ variant, tamanho, mono, separado }), stickyHeader && "[&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10", className)}
@@ -170,6 +177,7 @@ const tableHeadVariants = cva("", {
     tom: { default: "", foreground: "text-foreground" },
     peso: { default: "", forte: "font-semibold" },
     fundo: { default: "", card: "bg-card" },
+    separador: { true: "border-l border-divisoria", false: "" },
     /** Coluna em destaque (cabeçalho da coluna que o lucro considera). */
     destaque: { default: "", topo: "rounded-t-interno bg-card-elevated font-semibold" },
     /** Cabeçalho clicável de ordenação. */
@@ -187,7 +195,7 @@ interface TableHeadProps
 }
 
 const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
-  ({ className, sortable, sortDirection, onSort, tamanho, tom, peso, fundo, destaque, interativo, children, ...props }, ref) => {
+  ({ className, sortable, sortDirection, onSort, tamanho, tom, peso, fundo, separador, destaque, interativo, children, ...props }, ref) => {
     const SortIcon = sortDirection === "asc" 
       ? ArrowUp 
       : sortDirection === "desc" 
@@ -201,7 +209,7 @@ const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(
           "h-11 px-3 text-left align-middle text-xs font-medium text-muted-foreground",
           "[&:has([role=checkbox])]:pr-0",
           sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
-          tableHeadVariants({ tamanho, tom, peso, fundo, destaque, interativo }),
+          tableHeadVariants({ tamanho, tom, peso, fundo, separador, destaque, interativo }),
           className
         )}
         onClick={sortable ? onSort : undefined}
@@ -244,6 +252,7 @@ const tableCellVariants = cva("", {
     mono: { true: "font-mono tabular-nums", false: "" },
     truncar: { true: "truncate", false: "" },
     fundo: { default: "", card: "bg-card", elevado: "bg-card-elevated" },
+    separador: { true: "border-l border-divisoria", false: "" },
     /** Coluna em destaque: `meio` no corpo, `base` na última linha (fecha o raio). */
     destaque: {
       default: "",
@@ -262,7 +271,7 @@ interface TableCellProps
 }
 
 const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
-  ({ className, highlight, numeric, tom, peso, tamanho, mono, truncar, fundo, destaque, ...props }, ref) => {
+  ({ className, highlight, numeric, tom, peso, tamanho, mono, truncar, fundo, separador, destaque, ...props }, ref) => {
     // Celula destacada e TEXTO sobre a superficie da tabela (card), nao
     // preenchimento: usa a variante `-text`. Com o token de preenchimento o
     // tema claro media 2.97 / 2.06 / 4.04 / 4.13; com `-text`, 5.18 / 5.23 /
@@ -281,7 +290,7 @@ const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(
           "p-3 align-middle",
           "[&:has([role=checkbox])]:pr-0",
           numeric && "tabular-nums text-right font-mono",
-          tableCellVariants({ tom, peso, tamanho, mono, truncar, fundo, destaque }),
+          tableCellVariants({ tom, peso, tamanho, mono, truncar, fundo, separador, destaque }),
           highlight && highlightClasses[highlight],
           className
         )}

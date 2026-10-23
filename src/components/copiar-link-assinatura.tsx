@@ -5,7 +5,7 @@ import { Check, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export function CopiarLinkAssinatura({ token, className }: { token: string; className?: string }) {
+export function CopiarLinkAssinatura({ token, className, somenteIcone = false }: { token: string; className?: string; somenteIcone?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   const url = `${typeof window !== "undefined" ? window.location.origin : ""}/assinatura/${token}`;
@@ -31,13 +31,16 @@ export function CopiarLinkAssinatura({ token, className }: { token: string; clas
   return (
     <Button
       type="button"
-      variant="tintAviso"
-      size="sm"
+      variant={somenteIcone ? "ghost" : "tintAviso"}
+      size={somenteIcone ? "icon" : "sm"}
       onClick={handleCopy}
       title={copied ? 'Link copiado!' : 'Copiar link de assinatura'}
-      className={cn("h-auto gap-1", className)}
+      aria-label={somenteIcone ? (copied ? 'Link copiado!' : 'Copiar link de assinatura') : undefined}
+      className={cn(somenteIcone ? "shrink-0" : "h-auto gap-1", className)}
     >
-      {copied ? (
+      {somenteIcone ? (
+        copied ? <Check className="size-4" aria-hidden="true" /> : <Link2 className="size-4" aria-hidden="true" />
+      ) : copied ? (
         <>
           <Check className="h-3 w-3" />
           Copiado!
