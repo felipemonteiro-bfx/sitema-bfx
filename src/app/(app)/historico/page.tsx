@@ -2,13 +2,14 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { HistoricoBuscaFuzzy } from "@/components/historico-busca-fuzzy";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
-import { CheckCircle2, Download, Plus } from "lucide-react";
+import { ArrowLeftRight, CheckCircle2, Download, Pencil, Plus } from "lucide-react";
+import { HistoricoAcoesMenu } from "@/components/historico-acoes-menu";
 import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
 import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
@@ -478,40 +479,61 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             searchParams={sp}
             gerarBoletoAction={gerarBoletoAsaas}
           />
-          <div className="hidden md:block">
-          <Table>
-            <TableHeader>
+          <div className="hidden space-y-3 md:block">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-base font-semibold text-foreground">Vendas</h2>
+            {vendas.length > 0 && <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              <ArrowLeftRight className="size-4 shrink-0" aria-hidden="true" />
+              Role para ver todas as colunas
+            </p>}
+          </div>
+          {vendas.length === 0 ? (
+            <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o período de busca." />
+          ) : (
+          <>
+          <Table className="table-fixed" aria-label="Histórico de vendas" scrollLabel="Colunas de vendas. Use as setas para rolar a tabela.">
+            <colgroup>
+              <col className="w-28" />
+              <col className="w-52" />
+              <col className="w-52" />
+              <col className="w-36" />
+              <col className="w-52" />
+              <col className="w-32" />
+              <col className="w-24" />
+              <col className="w-16" />
+              <col className="w-36" />
+              <col className="w-32" />
+            </colgroup>
+            <TableHeader fundo="poco">
               <TableRow>
-                <TableHead>Venda</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Vendedor</TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead className="text-center">Qtd</TableHead>
-                <TableHead className="text-right">Valor Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Custo</TableHead>
-                <TableHead className="text-right">Margem</TableHead>
-                <TableHead className="text-center">Nota</TableHead>
-                <TableHead>Pagamento</TableHead>
-                <TableHead fundo="card" className="sticky right-0"><span className="sr-only">Ações</span></TableHead>
+                <TableHead scope="col">Venda / Data</TableHead>
+                <TableHead scope="col">Cliente / Vendedor</TableHead>
+                <TableHead scope="col">Produto / Qtd</TableHead>
+                <TableHead scope="col" className="text-right">Valor Total</TableHead>
+                <TableHead scope="col">Status</TableHead>
+                <TableHead scope="col" className="text-right">Custo</TableHead>
+                <TableHead scope="col" className="text-right">Margem</TableHead>
+                <TableHead scope="col" className="text-center">Nota</TableHead>
+                <TableHead scope="col">Pagamento</TableHead>
+                <TableHead scope="col" fundo="card" separador className="sticky right-0 z-10 text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vendas.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={13}>
-                    <EmptyState variant="search" size="sm" title="Nenhuma venda encontrada" description="Ajuste os filtros ou o período de busca." />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                vendas.map((v) => (
+              {vendas.map((v) => (
                   <TableRow key={v.id}>
-                    <TableCell tom="muted" mono className="min-h-11">#{v.id}</TableCell>
-                    <TableCell tom="muted" mono>{formatDateBR(v.dataVenda)}</TableCell>
-                    <TableCell peso="medio">{v.cliente?.nome || "N/D"}</TableCell>
-                    <TableCell>{v.vendedor}</TableCell>
-                    <TableCell className="max-w-62.5">
+                    <TableCell>
+                      <div className="space-y-1">
+                        <span className="font-medium tabular-nums">#{v.id}</span>
+                        <span className="block whitespace-nowrap text-xs tabular-nums text-muted-foreground">{formatDateBR(v.dataVenda)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <span className="block font-medium leading-snug">{v.cliente?.nome || "N/D"}</span>
+                        <span className="block truncate text-xs text-muted-foreground" title={v.vendedor || undefined}>Vendedor: {v.vendedor || "N/D"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       {v.itens && v.itens.length > 1 ? (
                         <details className="cursor-pointer">
                           <summary className="truncate text-sm">
@@ -531,12 +553,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           {produtosTexto(v)}
                         </span>
                       )}
+                      <span className="mt-1 block text-xs text-muted-foreground">Qtd: <span className="tabular-nums">{quantidadeTotal(v)}</span></span>
                     </TableCell>
-                    <TableCell mono className="text-center">{quantidadeTotal(v)}</TableCell>
-                    <TableCell numeric className="valor-sensivel valor-sensivel-fim">
+                    <TableCell numeric peso="medio" className="whitespace-nowrap valor-sensivel valor-sensivel-fim">
                       {formatBRL(valorTotalVenda(v))}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       <StatusAssinatura
                         estado={estadoAssinatura({
                           status: v.status,
@@ -545,14 +567,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         })}
                       />
                     </TableCell>
-                    <TableCell numeric className="valor-sensivel valor-sensivel-fim">
-                      {custoTotalVenda(v) != null ? formatBRL(custoTotalVenda(v)!) : <span className="text-muted-foreground opacity-30">—</span>}
+                    <TableCell numeric className="whitespace-nowrap valor-sensivel valor-sensivel-fim">
+                      {custoTotalVenda(v) != null ? formatBRL(custoTotalVenda(v)!) : <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                       {(() => {
                         const m = margemVenda(v);
-                        if (m == null) return <span className="text-muted-foreground opacity-30">—</span>;
-                        return <span className={m > 0 ? "text-success-text" : m === 0 ? "text-warning-text" : "text-destructive"}>{m.toFixed(1)}%</span>;
+                        if (m == null) return <span className="text-muted-foreground">—</span>;
+                        return <span className={m < 0 ? "text-error-text" : undefined}>{m.toFixed(1)}%</span>;
                       })()}
                     </TableCell>
                     <TableCell className="text-center">
@@ -561,7 +583,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           <CheckCircle2 className="h-4 w-4 text-success-text" aria-hidden="true" />
                         </span>
                       ) : (
-                        <span className="text-muted-foreground opacity-30">—</span>
+                        <span className="text-muted-foreground" aria-label="Sem nota">—</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -600,15 +622,18 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         );
                       })()}
                     </TableCell>
-                    <TableCell fundo="card" className="sticky right-0">
-                      <div className="flex flex-wrap items-center gap-2 justify-end">
+                    <TableCell fundo="card" separador className="sticky right-0 z-10">
+                      <div className="flex items-center justify-center gap-1">
                         <Link
                           href={buildUrl({ edit: v.id.toString() })}
-                          className={buttonVariants({ variant: "outline", size: "sm" })}
+                          className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "shrink-0")}
+                          title="Editar venda"
+                          aria-label={`Editar venda ${v.id}`}
                         >
-                          Editar
+                          <Pencil className="size-4" aria-hidden="true" />
                         </Link>
                         {v.assinatura?.assinaturaStatus === 'assinado' ? (
+                          <HistoricoAcoesMenu vendaId={v.id}>
                           <a
                             href={`/api/assinatura/documento?vendaId=${v.id}`}
                             download={`recibo-assinado-${v.id}.pdf`}
@@ -616,9 +641,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           >
                             Baixar Assinado
                           </a>
-                        ) : v.assinaturaToken ? (
-                          <CopiarLinkAssinatura token={v.assinaturaToken} />
-                        ) : null}
                         {(() => {
                           const termoEmail = obterEstadoTermoAssinado(
                             v.assinatura?.assinaturaStatus,
@@ -626,7 +648,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           );
 
                           return termoEmail.mostrarReenvio && (
-                          <div className="flex flex-col items-end gap-1">
+                          <div className="flex flex-col items-stretch gap-2">
                             <VerTermoAssinadoLink vendaId={v.id} />
                             <EnviarEmailEmpresaButton
                               vendaId={v.id}
@@ -639,30 +661,31 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           </div>
                           );
                         })()}
+                          </HistoricoAcoesMenu>
+                        ) : v.assinaturaToken ? (
+                          <CopiarLinkAssinatura token={v.assinaturaToken} somenteIcone />
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+              ))}
             </TableBody>
-            {vendas.length > 0 && (
-              <TableFooter>
-                <TableRow>
-                  <TableCell peso="forte" colSpan={6} className="text-right">
-                    Totais ({totalVendas} {totalVendas === 1 ? "venda" : "vendas"})
-                  </TableCell>
-                  <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">
-                    {formatBRL(totaisFiltro.valor)}
-                  </TableCell>
-                  <TableCell />
-                  <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">
-                    {totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : <span className="text-muted-foreground opacity-30">—</span>}
-                  </TableCell>
-                  <TableCell colSpan={4} />
-                </TableRow>
-              </TableFooter>
-            )}
           </Table>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-interno bg-poco px-4 py-3">
+            <p className="mr-auto text-sm font-medium">Totais ({totalVendas} {totalVendas === 1 ? "venda" : "vendas"})</p>
+            <dl className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <div className="flex items-baseline gap-2">
+                <dt className="text-xs text-muted-foreground">Valor total</dt>
+                <dd className="whitespace-nowrap text-sm font-semibold tabular-nums valor-sensivel">{formatBRL(totaisFiltro.valor)}</dd>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <dt className="text-xs text-muted-foreground">Custo</dt>
+                <dd className="whitespace-nowrap text-sm font-semibold tabular-nums valor-sensivel">{totaisFiltro.custo > 0 ? formatBRL(totaisFiltro.custo) : "—"}</dd>
+              </div>
+            </dl>
+          </div>
+          </>
+          )}
           </div>
 
           {/* Footer com totais — versão mobile */}
