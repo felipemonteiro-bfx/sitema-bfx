@@ -9,6 +9,7 @@ vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()}),usePathname:()
 vi.mock('@/app/(app)/crm/atendimento/actions',()=>({responderConversa:vi.fn(),controlarAutomatico:vi.fn()}));
 import {ConversaLista,BuscaConversas} from '@/app/(app)/crm/atendimento/conversa-lista';
 import {Reply} from '@/app/(app)/crm/atendimento/reply';
+import {QuemResponde} from '@/app/(app)/crm/atendimento/quem-responde';
 import {ConversaChat} from '@/app/(app)/crm/atendimento/conversa-chat';
 import {ResumoCliente} from '@/app/(app)/crm/atendimento/resumo-cliente';
 
@@ -45,17 +46,17 @@ describe('K3: lista de conversas',()=>{
 describe('K2: composer compacto',()=>{
  const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
  const fonte=ler('reply.tsx');
- it('"Como funciona o automático" é gatilho de Popover (ícone de ajuda), não <details>',()=>{
-  expect(html).not.toContain('<details');
-  expect(fonte).toContain('PopoverTrigger');expect(fonte).toContain('PopoverContent');
-  expect(html).toMatch(/<button[^>]*aria-label="Como funciona o automático"/);
-  expect(fonte).toContain('Clicar no botão não envia a mensagem');
+ it('"Como funciona o automático" é item do menu de quem responde e abre um diálogo, não <details>',()=>{
+  const quem=ler('quem-responde.tsx');
+  const q=renderToStaticMarkup(React.createElement(QuemResponde,{telefone:'5592900000001',aberta:true,estadoAutomatico:'x'}));
+  expect(html).not.toContain('<details');expect(q).not.toContain('<details');
+  expect(quem).toContain('DialogContent');expect(quem).toContain('Como funciona o automático');
+  expect(quem).toContain('Clicar no botão não envia a mensagem');
  });
- it('os dois botões de controle usam size="sm" e continuam sempre visíveis',()=>{
-  const assumir=fonte.split('Assumir conversa')[0].split('<Button').pop()!;
-  const retomar=fonte.split('Retomar automático')[0].split('<Button').pop()!;
-  expect(assumir).toContain('size="sm"');expect(retomar).toContain('size="sm"');
-  expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
+ it('o seletor de quem responde usa size="sm" e as duas opções ficam no menu',()=>{
+  const quem=ler('quem-responde.tsx');
+  expect(quem.split('<Button')[1]).toContain('size="sm"');
+  expect(quem).toContain('Equipe responde');expect(quem).toContain('Automático responde');
  });
  it('chips de resposta pronta de 36px (h-9) e textarea sem min-h-12 gigante',()=>{
   expect(html).toContain('rounded-full'); // M4: sem fileira de chips; botão de raio + pílula

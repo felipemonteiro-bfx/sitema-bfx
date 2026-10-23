@@ -13,11 +13,14 @@
 import { prisma } from "@/lib/db";
 import { EvolutionProvider } from "@/lib/providers/whatsapp-evolution";
 import { MetaProvider } from "@/lib/providers/whatsapp-meta";
+import type { TipoMidia } from "@/lib/whatsapp-midia-politica";
 
 export type WhatsAppSendResult = {
   ok: boolean;
   messageId?: string;
   error?: string;
+  /** Código de erro da Meta (ex.: 131053), quando houver. */
+  codigo?: number;
   provider: string;
 };
 
@@ -27,6 +30,29 @@ export type WhatsAppDocument = {
   filename: string;
   mimetype: string;
   caption?: string;
+};
+
+/** Mídia já enviada à Meta (`/media`), pronta para ir numa mensagem. */
+export type WhatsAppMedia = {
+  tipo: TipoMidia;
+  /** Id devolvido pelo upload (válido por 30 dias), nunca o id de entrada do webhook. */
+  mediaId: string;
+  /** Só imagem, vídeo e documento aceitam legenda. */
+  legenda?: string;
+  /** Só documento; vira `filename` (sanitizado). */
+  nomeArquivo?: string;
+  /** Só áudio: mensagem de voz (OGG/Opus mono). Vai como `voice: true`; AAC/M4A segue como áudio comum. */
+  voz?: boolean;
+  /** wa_message_id da mensagem citada: vai em `context.message_id`. */
+  respondeAWaId?: string;
+};
+
+/** Opções de envio de texto. */
+export type WhatsAppTextOpcoes = {
+  /** wa_message_id da mensagem citada: vai em `context.message_id`. Só o Meta usa. */
+  respondeAWaId?: string;
+  /** Prévia do link no celular do cliente. Padrão `true`; `false` = "enviar sem prévia". Só o Meta usa. */
+  previewUrl?: boolean;
 };
 
 export type WhatsAppTemplate = {
@@ -39,11 +65,14 @@ export type WhatsAppTemplate = {
 };
 
 export interface WhatsAppProvider {
+  readonly freeServiceOnly?: boolean;
   readonly name: "evolution" | "meta_cloud";
-  sendText(numeroE164: string, texto: string): Promise<WhatsAppSendResult>;
+  sendText(numeroE164: string, texto: string, opcoes?: WhatsAppTextOpcoes): Promise<WhatsAppSendResult>;
   sendButtons?(numeroE164:string,texto:string,botoes:{id:string;title:string}[]):Promise<WhatsAppSendResult>;
   sendDocument(numeroE164: string, doc: WhatsAppDocument): Promise<WhatsAppSendResult>;
   sendTemplate(numeroE164: string, tpl: WhatsAppTemplate): Promise<WhatsAppSendResult>;
+  /** Só o Meta implementa; no Evolution a mídia não é suportada. */
+  sendMedia?(numeroE164: string, media: WhatsAppMedia): Promise<WhatsAppSendResult>;
 }
 
 export type ResolvedProviders = {
@@ -76,7 +105,7 @@ function buildMeta(cfg: ConfigLike, enabled: boolean): MetaProvider | null {
   const apiVersion =
     str(cfg?.metaWhatsappApiVersion) || str(process.env.META_WHATSAPP_API_VERSION) || "v21.0";
   if (!enabled || !token || !phoneNumberId) return null;
-  return new MetaProvider({ token, phoneNumberId, apiVersion, freeServiceOnly: true });
+  return new MetaProvider({ token, phoneNumberId, apiVersion, freeServiceOnly: process.env.META_WHATSAPP_ALLOW_PAID_TEMPLATES !== "1" });
 }
 
 /**

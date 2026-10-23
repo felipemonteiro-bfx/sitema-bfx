@@ -1,3 +1,4 @@
+import { RelatoriosNav } from '@/components/relatorios-nav';
 import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -100,6 +101,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Bus
         description="Tudo o que o sistema mandou para o RH das empresas: para quem foi, quem estava em cópia e o que foi anexado."
         breadcrumbs={[{ label: "Relatórios", href: "/relatorios" }, { label: "E-mails enviados" }]}
       />
+      <RelatoriosNav atual="emails" />
 
       <Card className="p-2">
         <CardContent className="space-y-4 p-4 pb-2">

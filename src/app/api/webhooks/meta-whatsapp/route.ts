@@ -12,13 +12,14 @@
  * Confirma apenas eventos processados. Falha de persistência retorna 503 para
  * permitir reentrega; eventos de outros números não entram no CRM.
  */
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/db";
-import { processarMensagemRecebida } from "@/lib/whatsapp-pre-atendimento";
+import { disponibilidadeIa, respostasAutoLigadas, vaiParaIa } from "@/lib/whatsapp-respostas-auto";
 import { processarAtendimentoGratuito } from '@/lib/whatsapp-atendimento-gratuito';
 import { verificarAssinaturaMeta } from "@/lib/meta-webhook-signature";
 import { extrairMensagens, extrairStatuses } from "@/lib/meta-webhook-payload";
-import { registrarEntrada, avancarStatusPorWaMessageId } from "@/lib/whatsapp-mensagem";
+import { registrarEntradaDetalhada, avancarStatusPorWaMessageId } from "@/lib/whatsapp-mensagem";
+import { processarMidia } from "@/lib/whatsapp-midia-download";
 import { recordMetaWebhook } from '@/lib/meta-webhook-telemetry';
 
 function eventosDoNumero(body: unknown, phoneNumberId: string) {
@@ -98,24 +99,62 @@ export async function POST(req: Request) {
 
     // Mensagens recebidas: persistidas SEMPRE — alimentam a janela de 24h e o
     // histórico, independentemente de o pré-atendimento estar ligado.
-    const preAtendimentoAtivo = cfg?.whatsappPreAtendimento === 1;
+    const respostasLigadas = respostasAutoLigadas(cfg);
+    // Com o assistente de IA ligado o modelo pode levar segundos: a Meta recebe o 200 primeiro e o
+    // atendimento roda depois (a entrada já está gravada; reentrega cai em `nova === false`).
+    const iaDisponivel = respostasLigadas && disponibilidadeIa(cfg, process.env).disponivel;
+    const midiasParaBaixar: string[] = [];
+    const paraDepois: { telefone: string; texto: string; nome?: string }[] = [];
     for (const m of extrairMensagens(body)) {
-      const nova = await registrarEntrada({
+      const { nova, midiaId } = await registrarEntradaDetalhada({
         telefone: m.telefone,
         waMessageId: m.waMessageId,
+        respondeAWaId: m.respondeAWaId,
         corpo: m.texto,
+        tipo: m.tipo,
+        midia: m.midia,
       });
       if (nova) storedMessages++;
-      if (nova && cfg?.whatsappPreAtendimento === 2) {
-        // Aguarda o processamento; nenhuma IA externa ou resposta a evento antigo.
+      // Mídia só abre a janela de 24 h e aparece para o atendente: nunca aciona IA nem resposta automática.
+      // O corte é pelo tipo, não pelo prefixo `[` do corpo (o termo "foto" acharia produto no catálogo).
+      if (m.tipo !== "texto") {
+        // Só mídia NOVA agenda o download; reentrega e mídia já salva/indisponível não reagendam.
+        // O id vem do próprio registro (não reconsulta por waMessageId, que pode faltar).
+        if (nova && m.midia && midiaId) midiasParaBaixar.push(midiaId);
+        continue;
+      }
+      // Só o que de fato vai para a IA é adiado; saudação, menu, ATENDENTE, SAIR e PARAR seguem no request.
+      if (nova && iaDisponivel && vaiParaIa(m.texto)) {
+        paraDepois.push({ telefone: m.telefone, texto: m.texto, nome: m.nome });
+      } else if (nova && respostasLigadas) {
+        // Sem modelo de IA: aguarda o atendimento por regras no próprio request (sem resposta a evento antigo).
         await processarAtendimentoGratuito(m.telefone, m.texto).catch(() => {
           console.warn('[Webhook Meta] Atendimento gratuito indisponível; entrada preservada');
         });
       }
       // `nova === false` é reentrega da Meta: não responder duas vezes.
-      if (nova && preAtendimentoAtivo) {
-        void processarMensagemRecebida(m.telefone, m.texto, m.nome);
-      }
+    }
+
+    if (midiasParaBaixar.length) {
+      after(async () => {
+        // Em série e depois do 200: a Meta não espera o download; falha não derruba nada.
+        for (const id of midiasParaBaixar) {
+          await processarMidia(id).catch(() => {
+            console.warn('[Webhook Meta] Download de mídia falhou; será retomado ao abrir a conversa');
+          });
+        }
+      });
+    }
+
+    if (paraDepois.length) {
+      after(async () => {
+        // Em série: duas mensagens do mesmo lote não disputam o mesmo cliente ao mesmo tempo.
+        for (const p of paraDepois) {
+          await processarAtendimentoGratuito(p.telefone, p.texto, p.nome).catch(() => {
+            console.warn('[Webhook Meta] Atendimento com IA indisponível; entrada preservada');
+          });
+        }
+      });
     }
 
     recordMetaWebhook('processed', acceptedChanges, storedMessages);

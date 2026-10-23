@@ -242,6 +242,14 @@ describe("parcela antecipada na Prudent, vista pelo cliente (2026-09-16)", () =>
     expect(where.OR).toEqual([{ paga: false }, { origemPagamento: "prudent" }]);
   });
 
+  it("meu_limite ignora parcela de venda cancelada ou estornada", async () => {
+    const token = await assinar(TELEFONE_TOKEN);
+    await rpc("tools/call", { name: "meu_limite", arguments: {} }, token);
+    const where = dbMock.parcelaVencimento.findMany.mock.calls[0][0].where;
+    expect(where.venda.clienteId).toBe(DONO.id);
+    expect(where.venda.status).toEqual({ notIn: ["cancelada", "estornada"] });
+  });
+
   it("minhas_parcelas: Prudent a vencer em aberto; Prudent vencida descontada; Asaas paga; aberta vencida em atraso", async () => {
     dbMock.parcelaVencimento.findMany.mockResolvedValue([
       { numeroParcela: 1, dataVencimento: passado, valorParcela: 100, paga: true, origemPagamento: "prudent", venda },

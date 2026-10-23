@@ -16,7 +16,7 @@ export async function salvarOrganizacaoConversa(input:{telefone:string;etapa:str
    if(!conversa)return {ok:false,message:'Conversa não encontrada. Atualize a página.'};
    const atual=await tx.whatsAppMensagem.findFirst({where:{telefone:input.telefone,direcao:'sistema',origem:ORIGEM_KANBAN},orderBy:[{criadoEm:'desc'},{id:'desc'}],select:{id:true}});
    if((atual?.id??0)!==input.revisao)return {ok:false,message:'Outra pessoa atualizou este cartão. Atualize a página e confira os dados antes de salvar novamente.'};
-   const registro=await tx.whatsAppMensagem.create({data:{telefone:input.telefone,direcao:'sistema',origem:ORIGEM_KANBAN,status:'controle',corpo:JSON.stringify({versao:1,etapa:input.etapa,responsavelId:responsavel?.id??null,responsavelNome:(responsavel?.nomeExibicao||responsavel?.username||'Não atribuído').slice(0,160),proximaAcao:input.proximaAcao.trim()})},select:{id:true}});
+   const registro=await tx.whatsAppMensagem.create({data:{telefone:input.telefone,direcao:'sistema',origem:ORIGEM_KANBAN,status:'controle',corpo:JSON.stringify({versao:1,etapa:input.etapa,responsavelId:responsavel?.id??null,responsavelNome:(responsavel?.nomeExibicao||responsavel?.username||'Sem responsável').slice(0,160),proximaAcao:input.proximaAcao.trim()})},select:{id:true}});
    return {ok:true,revisao:registro.id,message:'Cartão salvo. Etapa, responsável e próxima ação foram atualizados; nenhuma mensagem foi enviada.'};
   });
   if(resultado.ok)revalidatePath('/crm/atendimento');

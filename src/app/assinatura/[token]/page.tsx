@@ -151,7 +151,7 @@ export default function AssinaturaPage() {
             className={`flex min-h-15 w-full items-center justify-center rounded-controle border-2 border-dashed transition-colors ${
               signatureDataUrl
                 ? 'border-border bg-white'
-                : 'border-primary bg-marca-tint active:bg-accent'
+                : 'border-primary bg-marca-tint active:bg-controle'
             }`}
           >
             {signatureDataUrl ? (

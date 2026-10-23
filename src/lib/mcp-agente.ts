@@ -1,6 +1,7 @@
 import { jwtVerify } from "jose";
 import { prisma } from "@/lib/db";
 import { buscarProdutos } from "@/lib/busca-produtos";
+import { FILTRO_VENDA_VALIDA } from "@/lib/venda-utils";
 import { FILTRO_PARCELA_COMPROMETIDA } from "@/lib/baixa-parcelas";
 import { boletosDoCliente, parcelasDoCliente } from "@/lib/cliente-financeiro";
 
@@ -361,7 +362,8 @@ export async function executarTool(
       hoje.setHours(0, 0, 0, 0);
       const emAberto = await prisma.parcelaVencimento.findMany({
         where: {
-          venda: { clienteId: escopo.clienteId },
+          // Venda cancelada/estornada não compromete a renda de ninguém.
+          venda: { clienteId: escopo.clienteId, ...FILTRO_VENDA_VALIDA },
           // Parcela quitada pela Prudent ainda é descontada em folha: compromete a renda.
           ...FILTRO_PARCELA_COMPROMETIDA,
           dataVencimento: { gte: hoje },

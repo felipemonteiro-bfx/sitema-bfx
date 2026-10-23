@@ -117,6 +117,8 @@
   --color-divisoria: var(--divisoria);
   --color-marca-tint: var(--marca-tint);
   --color-marca-tint-texto: var(--marca-tint-texto);
+  --color-arquivo-pdf: var(--arquivo-pdf);
+  --color-arquivo-pdf-texto: var(--arquivo-pdf-texto);
   --color-texto-secundario: var(--texto-secundario);
   --color-hachura-traco: var(--hachura-traco);
   --color-hachura-fundo: var(--hachura-fundo);
@@ -373,6 +375,10 @@
   --marca-tint: oklch(0.948 0.028 143.7); /* #E3F3E2 */
   --marca-tint-texto: oklch(0.468 0.153 142.6); /* #0C6E0B */
 
+  /* Icone de tipo de arquivo (PDF), como no WhatsApp: branco sobre vermelho fechado, igual nos dois temas. */
+  --arquivo-pdf: oklch(0.528 0.196 22.6); /* #C9303D */
+  --arquivo-pdf-texto: oklch(0.985 0 0);
+
   --texto-secundario: oklch(0.368 0.010 156.7); /* #3B413D — entre --foreground e --muted-foreground */
 
   /* Grafico. Hachurado = custo variavel; neutro = barras que nao sao a corrente;
@@ -561,6 +567,10 @@
 
   --marca-tint: oklch(0.281 0.051 147.6); /* #16301A */
   --marca-tint-texto: oklch(0.760 0.159 142.6); /* #6FCA69 */
+
+  /* Icone de tipo de arquivo (PDF), como no WhatsApp: branco sobre vermelho fechado, igual nos dois temas. */
+  --arquivo-pdf: oklch(0.528 0.196 22.6); /* #C9303D */
+  --arquivo-pdf-texto: oklch(0.985 0 0);
 
   --texto-secundario: oklch(0.847 0.007 160.0); /* #C9CECB */
 
@@ -1138,13 +1148,17 @@
    FOCUS VISIBLE IMPROVEMENTS
    ======================================== */
 
-:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
+/* Em @layer base: é o padrão, mas componentes que controlam o próprio foco (outline-none, anel da
+   pílula em volta do campo) precisam vencer. Sem camada, esta regra passava por cima das utilitárias. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 
-:focus:not(:focus-visible) {
-  outline: none;
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
 /* ========================================
@@ -1275,11 +1289,6 @@
 }
 
 /* Popover com a largura do elemento ancorado (painel de atalhos do atendimento sobre a barra do composer). */
-/* Detalhes de uma linha acompanham a largura visível da tabela, não a soma das colunas. */
-@utility tabela-detalhes-visiveis {
-  inline-size: 100cqw;
-}
-
 @utility popover-ancora {
   width: var(--radix-popover-trigger-width);
   max-width: calc(100vw - 2rem);
@@ -1333,4 +1342,9 @@
   transition-property: background-color, color;
   transition-timing-function: var(--default-transition-timing-function);
   transition-duration: var(--default-transition-duration);
+}
+
+/* Detalhes ocupam apenas a largura visível do histórico. */
+@utility tabela-detalhes-visiveis {
+  inline-size: 100cqw;
 }

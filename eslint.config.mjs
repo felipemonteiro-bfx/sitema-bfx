@@ -178,6 +178,7 @@ const eslintConfig = defineConfig([
     "node_modules/**",
     "test-results/**",
     "src/generated/**",
+    "public/ort/**",
     "prisma/*.js",
     "scripts/**",
   ]),

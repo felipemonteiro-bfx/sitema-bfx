@@ -12,5 +12,5 @@ export const dynamic = "force-dynamic";
 export default async function JanelaLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const session = await getSession();
   if (!session) redirect("/login");
-  return <div className="min-h-dvh bg-background text-foreground">{children}</div>;
+  return <div className="h-dvh overflow-hidden bg-background text-foreground">{children}</div>;
 }

@@ -181,7 +181,7 @@ const tableHeadVariants = cva("", {
     /** Coluna em destaque (cabeçalho da coluna que o lucro considera). */
     destaque: { default: "", topo: "rounded-t-interno bg-card-elevated font-semibold" },
     /** Cabeçalho clicável de ordenação. */
-    interativo: { true: "cursor-pointer select-none transition-colors hover:bg-accent/50", false: "" },
+    interativo: { true: "cursor-pointer select-none transition-colors hover:bg-controle/50", false: "" },
   },
   defaultVariants: { tamanho: "default", tom: "default", peso: "default", fundo: "default", destaque: "default", interativo: false },
 })

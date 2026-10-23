@@ -71,11 +71,11 @@ describe("MetaProvider", () => {
     expect(body).toMatchObject({ messaging_product: "whatsapp", to: "5592999999999", type: "text" });
   });
 
-  it("sendText: erro da API (data.error) retorna ok=false com mensagem", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({ error: { message: "Invalid token" } })));
+  it("sendText: erro da API (data.error) retorna ok=false com mensagem curta mapeada", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse({ error: { message: "Invalid token", code: 190 } })));
     const r = await provider.sendText("5592999999999", "oi");
     expect(r.ok).toBe(false);
-    expect(r.error).toBe("Invalid token");
+    expect(r.error).toBe("Token da Meta inválido ou expirado.");
   });
 
   it("sendTemplate: monta components de header (documento) e body", async () => {

@@ -6,6 +6,8 @@
  * `/api/webhooks/meta-whatsapp` (entradas e callbacks de status).
  */
 import { prisma } from "@/lib/db";
+import { nomeSeguro } from "@/lib/whatsapp-midia-politica";
+import type { MidiaMeta, TipoMensagem } from "@/lib/meta-webhook-payload";
 
 export type OrigemMensagem =
   | "cron"
@@ -41,8 +43,31 @@ export type RegistroEntrada = {
   telefone: string;
   clienteId?: number | null;
   waMessageId?: string | null;
+  /** wa_message_id da mensagem que o cliente citou ao responder. */
+  respondeAWaId?: string | null;
   corpo: string;
+  /** Padrão `texto`. Qualquer outro valor exige `midia`. */
+  tipo?: TipoMensagem;
+  midia?: MidiaMeta;
 };
+
+/** sha256 desconhecido (payload sem valor válido): a coluna é NOT NULL com CHECK de 64 hex. */
+const SHA256_DESCONHECIDO = "0".repeat(64);
+
+/** Campos da linha `WhatsAppMidia` inicial (`pendente`) a partir do que o webhook trouxe. */
+function dadosMidia(tipo: TipoMensagem, m: MidiaMeta) {
+  return {
+    tipo: tipo === "texto" ? "documento" : tipo,
+    metaMediaId: m.mediaId,
+    mime: m.mime ?? "application/octet-stream",
+    sha256: m.sha256 ?? SHA256_DESCONHECIDO,
+    nomeExibicao: m.nomeArquivo ? nomeSeguro(m.nomeArquivo) : null,
+    legenda: m.legenda ?? null,
+    voz: m.voz ?? false,
+    animada: m.animada ?? false,
+    status: "pendente",
+  };
+}
 
 /** Há mensagem recebida deste número nas últimas 24h? */
 export async function dentroDaJanela24h(telefone: string): Promise<boolean> {
@@ -90,27 +115,51 @@ export async function marcarFalha(id: number, erroMsg: string, erroCodigo?: numb
  * Registra uma mensagem recebida. Idempotente por `waMessageId`: reentrega da
  * Meta não duplica o registro nem faz a IA responder duas vezes.
  * Devolve true se a mensagem é nova (deve ser processada).
+ *
+ * Mensagem e mídia vão numa única escrita aninhada (uma transação). Duplicado só
+ * é sucesso de verdade se a linha de mídia existe: se a mensagem existe sem ela
+ * (falha antiga), a mídia que faltou é criada, ainda devolvendo false.
  */
-export async function registrarEntrada(input: RegistroEntrada): Promise<boolean> {
+export async function registrarEntradaDetalhada(
+  input: RegistroEntrada,
+): Promise<{ nova: boolean; midiaId: string | null }> {
+  const tipo = input.tipo ?? "texto";
   if (input.waMessageId) {
     const existente = await prisma.whatsAppMensagem.findUnique({
       where: { waMessageId: input.waMessageId },
-      select: { id: true },
+      select: { id: true, midia: { select: { id: true } } },
     });
-    if (existente) return false;
+    if (existente) {
+      if (input.midia && !existente.midia) {
+        await prisma.whatsAppMidia.create({
+          data: { mensagemId: existente.id, ...dadosMidia(tipo, input.midia) },
+        });
+      }
+      return { nova: false, midiaId: null };
+    }
   }
-  await prisma.whatsAppMensagem.create({
+  const criada = await prisma.whatsAppMensagem.create({
     data: {
       telefone: input.telefone,
       clienteId: input.clienteId ?? null,
       direcao: "in",
       origem: "pre_atendimento",
       waMessageId: input.waMessageId ?? null,
+      respondeAWaId: input.respondeAWaId ?? null,
       corpo: input.corpo,
+      tipo,
       status: "entregue",
+      ...(input.midia ? { midia: { create: dadosMidia(tipo, input.midia) } } : {}),
     },
+    select: { id: true, midia: { select: { id: true } } },
   });
-  return true;
+  // O id da mídia volta da própria escrita: quem agenda o download não precisa reconsultar por waMessageId.
+  return { nova: true, midiaId: criada.midia?.id ?? null };
+}
+
+/** Versão simples: só diz se a mensagem é nova. */
+export async function registrarEntrada(input: RegistroEntrada): Promise<boolean> {
+  return (await registrarEntradaDetalhada(input)).nova;
 }
 
 /**
@@ -150,7 +199,7 @@ export async function avancarStatusPorWaMessageId(
 export async function contarContatosUnicos24h(): Promise<number> {
   const desde = new Date(Date.now() - JANELA_MS);
   const linhas = await prisma.whatsAppMensagem.findMany({
-    where: { direcao: "out", criadoEm: { gte: desde }, status: { not: "falhou" } },
+    where: { direcao: "out", criadoEm: { gte: desde }, status: { notIn: ["falhou", "gerando"] } },
     select: { telefone: true },
   });
   return new Set(linhas.map((l) => l.telefone)).size;

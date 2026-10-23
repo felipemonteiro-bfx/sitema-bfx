@@ -54,17 +54,22 @@ interface SheetContentProps
     VariantProps<typeof sheetVariants> {
   /** `card`: gaveta que continua a casca (menu lateral); o padrao e o fundo de popover. */
   fundo?: "popover" | "card"
+  /**
+   * Painel que fica ao lado do conteudo, sem veu: a partir de `sm` nao escurece a tela e comeca abaixo
+   * de um cabecalho de 3.5rem (use com `modal={false}` no Sheet). No celular continua gaveta com veu.
+   */
+  ancorado?: boolean
 }
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", fundo = "popover", className, children, ...props }, ref) => (
+>(({ side = "right", fundo = "popover", ancorado = false, className, children, ...props }, ref) => (
   <SheetPortal>
-    <SheetOverlay />
+    <SheetOverlay className={ancorado ? "sm:hidden" : undefined} />
     <SheetPrimitive.Content
       ref={ref}
-      className={cn(sheetVariants({ side }), fundo === "card" && "bg-card text-foreground", className)}
+      className={cn(sheetVariants({ side }), fundo === "card" && "bg-card text-foreground", ancorado && "sm:top-14 sm:bottom-0 sm:h-auto sm:rounded-none sm:shadow-none", className)}
       {...props}
     >
       <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">

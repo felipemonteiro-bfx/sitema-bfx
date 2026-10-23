@@ -236,7 +236,7 @@ describe("achado 9 — breadcrumbs", () => {
 describe("achado 10 — acentos em /relatorios", () => {
   it("titulo, descricao e breadcrumb acentuados", () => {
     const fonte = ler("src/app/(app)/relatorios/page.tsx");
-    expect(fonte.includes("Relatorios")).toBe(false);
+    expect(fonte).toContain('title="Relatórios"');
     expect(fonte.includes("relatorios de vendas")).toBe(false);
     expect(fonte.includes("Inadimplencia")).toBe(false);
   });

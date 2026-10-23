@@ -26,15 +26,15 @@ function Calendar({
         month_caption: "flex items-center justify-center",
         caption_label: "text-sm font-medium capitalize",
         nav: "contents",
-        button_previous: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground",
-        button_next: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-accent hover:text-accent-foreground",
+        button_previous: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-controle hover:text-foreground",
+        button_next: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 inline-flex items-center justify-center rounded-md border border-input hover:bg-controle hover:text-foreground",
         month_grid: "col-span-3 w-full border-collapse",
         weekdays: "flex",
         weekday: "text-muted-foreground rounded-md w-9 font-normal text-xs capitalize",
         week: "flex w-full mt-2",
         day: "h-9 w-9 text-center text-sm p-0 relative",
         day_button: cn(
-          "h-9 w-9 p-0 font-normal rounded-md hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center"
+          "h-9 w-9 p-0 font-normal rounded-md hover:bg-controle hover:text-foreground inline-flex items-center justify-center"
         ),
         selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md",
         today: "bg-accent text-accent-foreground rounded-md",

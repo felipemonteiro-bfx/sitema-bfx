@@ -33,6 +33,20 @@ function getClient(): S3Client | null {
   });
 }
 
+/**
+ * Fábrica de cliente S3 configurável (endpoint e credencial explícitos).
+ * Usada por módulos com bucket e credencial próprios, como as mídias do WhatsApp.
+ * Não altera o comportamento do bucket `produtos` (getClient continua igual).
+ */
+export function criarClienteS3(cfg: { endpoint: string; accessKey: string; secretKey: string }): S3Client {
+  return new S3Client({
+    endpoint: cfg.endpoint,
+    region: "us-east-1",
+    credentials: { accessKeyId: cfg.accessKey, secretAccessKey: cfg.secretKey },
+    forcePathStyle: true,
+  });
+}
+
 export async function ensureBucket(client: S3Client): Promise<void> {
   try {
     await client.send(new HeadBucketCommand({ Bucket: bucket }));

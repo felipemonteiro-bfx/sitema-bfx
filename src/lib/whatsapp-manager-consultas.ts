@@ -2,16 +2,14 @@ import {prisma} from '@/lib/db';
 import {resolverEscopo} from '@/lib/mcp-agente';
 import {FILTRO_VENDA_VALIDA} from '@/lib/venda-utils';
 import {situacaoParaCliente} from '@/lib/baixa-parcelas';
+import {classificarAssunto} from '@/lib/whatsapp-assunto';
 
-const normalizar=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const data=(d:Date)=>d.toLocaleDateString('pt-BR',{timeZone:'America/Manaus'});
 const moeda=(n:number)=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 /** Consulta interna do mesmo Manager; identidade vem do webhook, nunca do texto.
  * Não usa o MCP administrativo, HTTP autenticado de usuário nem modelo externo. */
 export async function consultarRespostaManager(telefone:string,texto:string):Promise<string|null>{
- const t=normalizar(texto);
- const financeiro=/\b(paguei|pago|pagamento|pagamentos|comprovante|boleto|fatura|parcela|parcelas)\b/.test(t)||(/\bsaldo\b/.test(t)&&!/\b(estoque|produto|catalogo)\b/.test(t));
- const compras=/\b(pedido|pedidos|compras|historico|cadastro)\b/.test(t)||/\b(minha|minhas|meu|meus|ultima|ultimas)\s+compra/.test(t);
+ const {financeiro,compras}=classificarAssunto(texto);
  if(!financeiro&&!compras)return null;
  try{
   const r=await resolverEscopo(telefone);

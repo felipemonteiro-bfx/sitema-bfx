@@ -115,3 +115,28 @@ describe("enviarWhatsApp", () => {
     expect(mensagemMock.marcarFalha).toHaveBeenCalledWith(99, "provider_nao_configurado");
   });
 });
+
+describe('automação em atendimento gratuito', () => {
+  it('não cria uma falsa falha nem tenta template quando a janela está fechada', async () => {
+    mensagemMock.dentroDaJanela24h.mockResolvedValue(false);
+    providerMock.resolveWhatsAppProviders.mockResolvedValue({ primary: { name: 'meta_cloud', freeServiceOnly: true, sendText, sendTemplate }, fallback: null, providerName: 'meta_cloud' });
+    const { enviarWhatsAppDetalhado } = await import('@/lib/whatsapp');
+    expect(await enviarWhatsAppDetalhado({ telefone: '92999999999', origem: 'cron', template })).toEqual({ ok: false, mensagemId: null, motivo: 'janela_gratuita_indisponivel' });
+    expect(mensagemMock.registrarSaida).not.toHaveBeenCalled();
+    expect(sendTemplate).not.toHaveBeenCalled();
+  });
+  it('continua enviando texto gratuito quando existe mensagem recente do cliente', async () => {
+    mensagemMock.dentroDaJanela24h.mockResolvedValue(true);
+    providerMock.resolveWhatsAppProviders.mockResolvedValue({ primary: { name: 'meta_cloud', freeServiceOnly: true, sendText, sendTemplate }, fallback: null, providerName: 'meta_cloud' });
+    expect(await enviarWhatsApp({ telefone: '92999999999', origem: 'cron', template })).toBe(true);
+    expect(sendText).toHaveBeenCalledOnce();
+  });
+});
+
+vi.mock('@/lib/meta-templates', () => ({ listarTemplatesAprovados: vi.fn().mockResolvedValue([]) }));
+it('não tenta autorização em folha com template ainda não aprovado na conta', async () => {
+  mensagemMock.dentroDaJanela24h.mockResolvedValue(false);
+  await enviarWhatsApp({telefone:'92999999999',origem:'venda',template:{...template,name:'bfx_assinatura_folha'}});
+  expect(sendTemplate).not.toHaveBeenCalled();
+  expect(mensagemMock.marcarFalha).toHaveBeenCalledWith(99,'template_assinatura_nao_aprovado');
+});

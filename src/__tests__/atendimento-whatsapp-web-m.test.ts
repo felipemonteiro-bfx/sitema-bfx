@@ -134,7 +134,7 @@ describe('M5/M6: painel de dados e mobile',()=>{
 
 const itens=[
  {telefone:'5592900000001',nome:'Ana Souza',hora:'14:32',previa:'Tem a lavadora?',aguardando:true,naoRespondidas:3,tique:null,etapa:'em_atendimento',etapaNome:'Em atendimento',responsavel:'Jakeline'},
- {telefone:'5592900000002',nome:'Bruno Lima',hora:'ontem',previa:'Você: Combinado',aguardando:false,naoRespondidas:0,tique:'lido',etapa:'novas',etapaNome:'Novas',responsavel:'Não atribuído'},
+ {telefone:'5592900000002',nome:'Bruno Lima',hora:'ontem',previa:'Você: Combinado',aguardando:false,naoRespondidas:0,tique:'lido',etapa:'novas',etapaNome:'Novas',responsavel:'Sem responsável'},
 ];
 const propsLista={itens,selecionado:'5592900000001',base:'/crm/atendimento',busca:'',visao:'lista',etapa:'todas',contagens:{todas:2,aguardando:1,em_atendimento:1,novas:1},telefoneExplicito:true};
 
@@ -151,8 +151,8 @@ describe('M1: lista no estilo WhatsApp Web',()=>{
   expect(html).toContain('text-marca-tint-texto');
  });
  it('tique na prévia quando a última é da BFX',()=>{expect(html).toMatch(/aria-label="Lida"/);});
- it('filtro "Aguardando resposta" ao lado de Todas, e a busca em pílula',()=>{
-  expect(html).toContain('Aguardando resposta');expect(html).toContain('etapa=aguardando');
+ it('filtro "Sem resposta" ao lado de Todas, e a busca em pílula',()=>{
+  expect(html).toContain('Sem resposta');expect(html).toContain('etapa=aguardando');
   expect(html).toContain('rounded-full');
  });
  it('mobile: com telefone escolhido a lista some (<lg); sem, a lista aparece',()=>{
@@ -167,7 +167,7 @@ describe('M2: cabeçalho do chat',()=>{
  const html=renderToStaticMarkup(React.createElement(ConversaChat,base));
  it('subtítulo com telefone mono e estado da janela',()=>{
   // N3: o estado da janela saiu do subtítulo e virou pílula à direita (como no artboard).
-  expect(html).toContain('+5592900000001');expect(html).toContain('Janela aberta');
+  expect(html).toContain('+55 92 90000-0001');expect(html).toContain('Janela aberta');
   expect(renderToStaticMarkup(React.createElement(ConversaChat,{...base,aberta:false}))).toContain('Aguardando cliente');
  });
  it('ícones do cabeçalho são ghost icon com aria-label',()=>{
@@ -210,11 +210,12 @@ describe('M3: bolha',()=>{
 describe('M4: composer em uma barra',()=>{
  const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
  it('botão de respostas prontas, campo em pílula e enviar redondo',()=>{
-  expect(html).toMatch(/aria-label="Respostas prontas"/);
-  expect(html).toContain('rounded-full');expect(html).toMatch(/aria-label="Enviar mensagem"/);
+  expect(html).toMatch(/aria-label="Respostas prontas e atalhos"/);
+  // B13: campo vazio mostra o microfone no lugar do Enviar (que volta com texto).
+  expect(html).toContain('rounded-full');expect(html).toMatch(/aria-label="Gravar áudio"/);expect(ler('reply.tsx')).toContain('aria-label="Enviar mensagem"');
  });
- it('banner do assistente com os DOIS botões sempre visíveis',()=>{
-  expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
+ it('o composer não carrega mais a faixa do assistente (vive no cabeçalho)',()=>{
+  expect(html).not.toContain('Assumir conversa');expect(html).not.toContain('Retomar automático');
  });
  it('contador só aparece perto do limite',()=>{
   expect(html).not.toContain('/4096');
@@ -223,7 +224,7 @@ describe('M4: composer em uma barra',()=>{
  it('Enter/Shift+Enter e composição passam por acaoDaTecla; o aviso de tarifa continua no texto',()=>{
   const f=ler('reply.tsx');
   expect(f).toContain('acaoDaTecla');expect(f).toContain('onKeyDown');
-  expect(f).toContain('templates com tarifa');
+  expect(ler('quem-responde.tsx')).toContain('Templates com tarifa continuam bloqueados'); // o aviso de tarifa mora na ajuda do cabeçalho
  });
 });
 

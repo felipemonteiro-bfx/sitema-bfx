@@ -9,6 +9,7 @@ const prismaMock = {
     updateMany: vi.fn(),
     findMany: vi.fn(),
   },
+  whatsAppMidia: { create: vi.fn() },
 };
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
@@ -17,6 +18,7 @@ const {
   dentroDaJanela24h,
   registrarSaida,
   registrarEntrada,
+  registrarEntradaDetalhada,
   avancarStatusPorWaMessageId,
   contarContatosUnicos24h,
 } = await import("@/lib/whatsapp-mensagem");
@@ -93,6 +95,72 @@ describe("registrarEntrada", () => {
   });
 });
 
+describe("registrarEntrada com mídia", () => {
+  const midia = { mediaId: "123", mime: "image/jpeg", sha256: "a".repeat(64), legenda: "oi", nomeArquivo: "f.jpg", voz: false, animada: false };
+  const entrada = { telefone: "5592999999999", waMessageId: "wamid.M", corpo: "[Foto] oi", tipo: "imagem" as const, midia };
+
+  it("nova: grava mensagem (com tipo) e mídia pendente numa única escrita aninhada", async () => {
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue(null);
+    prismaMock.whatsAppMensagem.create.mockResolvedValue({ id: 9 });
+    expect(await registrarEntrada(entrada)).toBe(true);
+    const data = prismaMock.whatsAppMensagem.create.mock.calls[0]![0].data;
+    expect(data).toMatchObject({ tipo: "imagem", corpo: "[Foto] oi" });
+    expect(data.midia.create).toMatchObject({
+      tipo: "imagem", metaMediaId: "123", mime: "image/jpeg", sha256: "a".repeat(64),
+      legenda: "oi", nomeExibicao: "f.jpg", status: "pendente",
+    });
+    expect(prismaMock.whatsAppMidia.create).not.toHaveBeenCalled();
+  });
+
+  it("reentrega com a mídia já gravada não duplica nada e devolve false", async () => {
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue({ id: 9, midia: { id: "u" } });
+    expect(await registrarEntrada(entrada)).toBe(false);
+    expect(prismaMock.whatsAppMensagem.create).not.toHaveBeenCalled();
+    expect(prismaMock.whatsAppMidia.create).not.toHaveBeenCalled();
+  });
+
+  it("duplicado sem a linha de mídia cria a mídia que faltou", async () => {
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue({ id: 9, midia: null });
+    expect(await registrarEntrada(entrada)).toBe(false);
+    expect(prismaMock.whatsAppMensagem.create).not.toHaveBeenCalled();
+    expect(prismaMock.whatsAppMidia.create).toHaveBeenCalledTimes(1);
+    expect(prismaMock.whatsAppMidia.create.mock.calls[0]![0].data).toMatchObject({ mensagemId: 9, metaMediaId: "123", status: "pendente" });
+  });
+
+  it("sha256 ausente grava o marcador de zeros (coluna é NOT NULL com CHECK de 64 hex)", async () => {
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue(null);
+    prismaMock.whatsAppMensagem.create.mockResolvedValue({ id: 9 });
+    await registrarEntrada({ ...entrada, midia: { mediaId: "123" } });
+    const c = prismaMock.whatsAppMensagem.create.mock.calls[0]![0].data.midia.create;
+    expect(c.sha256).toBe("0".repeat(64));
+    expect(c.mime).toBe("application/octet-stream");
+  });
+
+  it("registrarEntradaDetalhada devolve o id da mídia criada junto da mensagem", async () => {
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue(null);
+    prismaMock.whatsAppMensagem.create.mockResolvedValue({ id: 9, midia: { id: "uuid-9" } });
+    expect(await registrarEntradaDetalhada(entrada)).toEqual({ nova: true, midiaId: "uuid-9" });
+    expect(prismaMock.whatsAppMensagem.create.mock.calls[0]![0].select).toMatchObject({ midia: { select: { id: true } } });
+  });
+
+  it("reentrega devolve nova=false sem id; duplicado sem mídia devolve o id da que faltava", async () => {
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue({ id: 9, midia: { id: "u" } });
+    expect(await registrarEntradaDetalhada(entrada)).toEqual({ nova: false, midiaId: null });
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue({ id: 9, midia: null });
+    prismaMock.whatsAppMidia.create.mockResolvedValue({ id: "uuid-novo" });
+    expect(await registrarEntradaDetalhada(entrada)).toEqual({ nova: false, midiaId: null });
+  });
+
+  it("texto continua sem mídia e com tipo texto", async () => {
+    prismaMock.whatsAppMensagem.findUnique.mockResolvedValue(null);
+    prismaMock.whatsAppMensagem.create.mockResolvedValue({ id: 1 });
+    await registrarEntrada({ telefone: "5592999999999", waMessageId: "w", corpo: "oi" });
+    const data = prismaMock.whatsAppMensagem.create.mock.calls[0]![0].data;
+    expect(data.tipo).toBe("texto");
+    expect(data.midia).toBeUndefined();
+  });
+});
+
 describe("avancarStatusPorWaMessageId", () => {
   it("avança de enviado para entregue", async () => {
     prismaMock.whatsAppMensagem.findFirst.mockResolvedValue({ id: 5, status: "enviado" });
@@ -136,5 +204,7 @@ describe("contarContatosUnicos24h", () => {
       { telefone: "5592222222222" },
     ]);
     expect(await contarContatosUnicos24h()).toBe(2);
+    // Linha "gerando" ainda não saiu: não conta como contato abordado.
+    expect(prismaMock.whatsAppMensagem.findMany.mock.calls.at(-1)![0].where.status).toEqual({ notIn: ["falhou", "gerando"] });
   });
 });

@@ -82,6 +82,7 @@ export async function GET(request?: Request) {
       outbound = { available: false, reason: "CONSULTA_DE_SAIDAS_INDISPONIVEL" };
     }
     return NextResponse.json({ provider: "meta_cloud", checkedAt: new Date().toISOString(),
+      paidTemplatesAllowed: process.env.META_WHATSAPP_ALLOW_PAID_TEMPLATES === "1",
       sendingEnabled: selected?.whatsappAutoEnabled !== undefined
         ? selected.whatsappAutoEnabled === 1 : process.env.WHATSAPP_AUTO_ENABLED !== "0",
       tokenCheck, reception, outbound, webhookTelemetry: metaWebhookTelemetry(),

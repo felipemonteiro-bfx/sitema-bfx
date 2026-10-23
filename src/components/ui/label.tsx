@@ -44,7 +44,7 @@ const labelVariants = cva(
         cartao:
           "flex min-h-11 cursor-pointer items-center gap-3 rounded-controle border px-3 py-2 font-normal leading-normal text-foreground hover:bg-muted",
         parcela:
-          "flex min-h-11 flex-col gap-1 rounded-controle border border-dashed border-divisoria px-3.5 py-3 text-base font-normal leading-normal text-foreground tabular-nums transition-colors data-[marcada=true]:border-solid data-[marcada=true]:border-primary data-[marcada=true]:bg-marca-tint data-[bloqueada=true]:cursor-not-allowed [&:not([data-bloqueada=true])]:cursor-pointer [&:not([data-bloqueada=true])]:hover:bg-accent/50",
+          "flex min-h-11 flex-col gap-1 rounded-controle border border-dashed border-divisoria px-3.5 py-3 text-base font-normal leading-normal text-foreground tabular-nums transition-colors data-[marcada=true]:border-solid data-[marcada=true]:border-primary data-[marcada=true]:bg-marca-tint data-[bloqueada=true]:cursor-not-allowed [&:not([data-bloqueada=true])]:cursor-pointer [&:not([data-bloqueada=true])]:hover:bg-controle",
       },
     },
     defaultVariants: {

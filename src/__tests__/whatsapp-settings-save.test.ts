@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ts from 'typescript';
+import { disponibilidadeIa, estadoRespostasAuto } from '@/lib/whatsapp-respostas-auto';
 
 // Exercise the real page action without importing unrelated page integrations.
 const page=readFileSync('src/app/(app)/configuracoes/page.tsx','utf8');
@@ -28,4 +29,23 @@ describe('confirmação de gravação WhatsApp',()=>{
  });
 });
 
-it('preserva modo gratuito por regras ao salvar, sem converter para IA',async()=>{const f=form();f.set('whatsappPreAtendimento','2');await expect(save(f)).rejects.toThrow('REDIRECT:/configuracoes?tab=whatsapp&saved=whatsapp');expect(db.update.mock.calls[0][0].data.whatsappPreAtendimento).toBe(2);});
+it('o Switch grava o mesmo campo: "on" vira 2 e ausente vira 0',async()=>{
+ const f=form();f.set('whatsappPreAtendimento','on');await expect(save(f)).rejects.toThrow('REDIRECT:/configuracoes?tab=whatsapp&saved=whatsapp');
+ expect(db.update.mock.calls[0][0].data.whatsappPreAtendimento).toBe(2);
+ await expect(save(form())).rejects.toThrow('REDIRECT');expect(db.update.mock.calls[1][0].data.whatsappPreAtendimento).toBe(0);
+});
+
+it('whatsappIaMcp deixou de ser gravado; sai a opção IA externa e entra o aviso do gateway',async()=>{
+ const f=form();f.set('whatsappIaMcp','on');await expect(save(f)).rejects.toThrow('REDIRECT');
+ expect(db.update.mock.calls[0][0].data).not.toHaveProperty('whatsappIaMcp');
+ expect(page).not.toContain('whatsappIaMcp');
+ expect(page).not.toContain('IA externa');
+ expect(page).not.toContain('desligue o gateway externo');
+ expect(page).toContain('Webhook do Evolution (só pausa por resposta humana)');
+ expect(page).toContain('Webhook da Meta');
+ expect(page).toContain('defaultChecked={cfg?.whatsappAutoEnabled === 1}');
+ expect(page).toContain('id="litellm-config"');
+ const ok=estadoRespostasAuto({ligado:true,masterLigado:true,provedor:'ok',ia:disponibilidadeIa({litellmUrl:'u',litellmKey:'k'},{MCP_AGENTE_SECRET:'x'.repeat(32)})});
+ expect(ok.aviso).toContain('gateway externo do mcp-bfx está desligado');
+ expect(page).not.toContain('Assistente de IA com MCP');
+});

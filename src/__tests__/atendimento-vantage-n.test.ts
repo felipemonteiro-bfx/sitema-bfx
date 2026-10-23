@@ -39,30 +39,24 @@ describe('N4: pausa do refresh só com alteração não salva',()=>{
  });
 });
 
-describe('N1: composer com chips de respostas prontas',()=>{
+describe('N1: respostas prontas saíram dos chips para o ⚡ e o "/"',()=>{
  const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
- it('fileira de chips com as 6 respostas, rolável',()=>{
-  expect(html).toMatch(/role="group"[^>]*aria-label="Respostas prontas"/);
-  for(const t of ['Boas-vindas','Pedir modelo','Pedido / entrega','Conferir pagamento','Atendimento humano','Encerrar'])expect(html).toContain(t);
-  expect(html).toContain('overflow-x-auto');
+ it('sem fileira de chips fixos',()=>{
+  expect(html).not.toMatch(/role="group"[^>]*aria-label="Respostas prontas"/);
+  for(const t of ['Boas-vindas','Pedir modelo','Pedido / entrega','Conferir pagamento','Atendimento humano','Encerrar'])expect(html).not.toContain(t);
  });
- // Atualizado na tarefa A3: o raio deixou de ser um "(em breve)" desabilitado e passou a abrir o painel de
- // atalhos (estoque, parcelas, boletos). O que continua valendo: ele NÃO abre as respostas prontas (chips e "/", D2).
- it('o raio abre os atalhos rápidos (não as respostas prontas)',()=>{
-  const raio=html.split('<button').find(b=>b.includes('aria-label="Atalhos rápidos"'))!;
+ it('o raio (⚡) abre as respostas prontas junto dos atalhos rápidos',()=>{
+  const raio=html.split('<button').find(b=>b.includes('aria-label="Respostas prontas e atalhos"'))!;
   expect(raio).toContain('aria-expanded="false"');
   expect(raio.split('</button>')[0]).not.toContain('disabled=""');
-  expect(html).not.toMatch(/<button[^>]*aria-label="Respostas prontas"/);
  });
 });
 
-describe('N2: faixa do assistente fina',()=>{
- const fonte=ler('reply.tsx');
- it('Assumir e Retomar em outline sm, ativo com destaque sutil (nunca preenchido)',()=>{
-  const assumir=fonte.split('Assumir conversa')[0].split('<Button').pop()!;
-  const retomar=fonte.split('Retomar automático')[0].split('<Button').pop()!;
-  expect(assumir).toContain('variant="outline"');expect(retomar).toContain('variant="outline"');
-  expect(assumir).not.toContain("'default'");expect(retomar).not.toContain("'default'");
+describe('N2: seletor de quem responde',()=>{
+ const fonte=ler('quem-responde.tsx');
+ it('pílula outline sm (nunca preenchida)',()=>{
+  const gatilho=fonte.split('<Button')[1].split('>')[0];
+  expect(gatilho).toContain('variant="outline"');expect(gatilho).toContain('forma="pill"');expect(gatilho).not.toContain("'default'");
  });
 });
 

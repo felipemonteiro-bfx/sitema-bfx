@@ -209,7 +209,7 @@ export function FormSelect({
                     aria-selected={opt.value === value}
                     tabIndex={-1}
                     className={cn(
-                      "relative flex w-full cursor-default select-none items-center gap-2 rounded-controle py-2 pl-2.5 pr-8 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                      "relative flex w-full cursor-default select-none items-center gap-2 rounded-controle py-2 pl-2.5 pr-8 text-sm outline-none transition-colors hover:bg-controle hover:text-foreground dark:hover:bg-controle-ativo",
                       opt.value === value && "bg-accent/50",
                       viaTeclado && indice === destaque && "bg-accent text-accent-foreground"
                     )}

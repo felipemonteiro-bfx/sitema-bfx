@@ -13,12 +13,13 @@ import { COLUNAS_VENDAS, COLUNAS_PADRAO, type ColunaKey } from "@/lib/relatorio-
 
 
 type Props = {
+  tipo?: "vendas" | "inadimplencia" | "margem";
   empresaOptions: string[];
   defaultFrom: string;
   defaultTo: string;
 };
 
-export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: Props) {
+export function ReportButtonsClient({ tipo = "vendas", empresaOptions, defaultFrom, defaultTo }: Props) {
   const [empresa, setEmpresa] = React.useState<string>("all");
   const [from, setFrom] = React.useState<string>(defaultFrom);
   const [to, setTo] = React.useState<string>(defaultTo);
@@ -30,23 +31,27 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
 
   const buildUrl = (endpoint: string) => {
     const params = new URLSearchParams();
-    if (empresa) params.set("empresa", empresa);
+    if (tipo === "vendas" && empresa) params.set("empresa", empresa);
     if (from) params.set("from", from);
     if (to) params.set("to", to);
-    if (colunas.length > 0) params.set("colunas", colunas.join(","));
+    if (tipo === "vendas" && colunas.length > 0) params.set("colunas", colunas.join(","));
     return `${endpoint}?${params.toString()}`;
   };
 
   const handleDownload = (type: "csv" | "pdf") => {
-    const endpoint = type === "csv" ? "/api/relatorios/vendas" : "/api/relatorios/vendas/pdf";
-    window.location.assign(buildUrl(endpoint));
+    const endpoint = tipo === "vendas"
+      ? (type === "csv" ? "/api/relatorios/vendas" : "/api/relatorios/vendas/pdf")
+      : `/api/relatorios/${tipo === "margem" ? "margem-produto" : "inadimplencia"}`;
+    window.location.assign(buildUrl(endpoint) + (tipo === "vendas" ? "" : `&format=${type}`));
   };
 
-  const semColunas = colunas.length === 0;
+  const semColunas = tipo === "vendas" && colunas.length === 0;
+  const periodoInvalido = !!from && !!to && from > to;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {tipo === "vendas" && (
         <div className="space-y-1.5">
           <Label htmlFor="rel-empresa">Empresa</Label>
           <FormSelect
@@ -60,6 +65,7 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
             ]}
           />
         </div>
+        )}
         <div className="space-y-1.5">
           <Label htmlFor="rel-from">Data inicial</Label>
           <DateInput id="rel-from" name="from" value={from} onChange={setFrom} />
@@ -68,6 +74,7 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
           <Label htmlFor="rel-to">Data final</Label>
           <DateInput id="rel-to" name="to" value={to} onChange={setTo} />
         </div>
+        {tipo === "vendas" && (
         <div className="space-y-1.5">
           <Label htmlFor="rel-colunas-trigger">Colunas</Label>
           <Popover>
@@ -123,8 +130,10 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
             </PopoverContent>
           </Popover>
         </div>
+        )}
       </div>
 
+      {periodoInvalido && <p role="alert" className="text-sm text-error-text">A data inicial deve ser anterior ou igual à data final.</p>}
       {semColunas && (
         <p className="text-sm text-muted-foreground">
           Escolha ao menos uma coluna para baixar o relatório.
@@ -136,7 +145,7 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
           type="button"
           onClick={() => handleDownload("csv")}
           leftIcon={<FileSpreadsheet className="h-4 w-4" />}
-          disabled={semColunas}
+          disabled={semColunas || periodoInvalido}
         >
           Baixar CSV (Excel)
         </Button>
@@ -146,10 +155,11 @@ export function ReportButtonsClient({ empresaOptions, defaultFrom, defaultTo }: 
           variant="outline"
           onClick={() => handleDownload("pdf")}
           leftIcon={<FileText className="h-4 w-4" />}
-          disabled={semColunas}
+          disabled={semColunas || periodoInvalido}
         >
           Baixar PDF
         </Button>
+        <Button type="button" variant="ghost" onClick={() => {setEmpresa("all"); setFrom(defaultFrom); setTo(defaultTo); setColunas(COLUNAS_PADRAO);}}>Redefinir filtros</Button>
       </div>
     </div>
   );
