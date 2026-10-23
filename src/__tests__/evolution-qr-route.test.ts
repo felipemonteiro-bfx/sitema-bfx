@@ -1,0 +1,10 @@
+import {beforeEach,expect,it,vi} from 'vitest';
+const m=vi.hoisted(()=>({admin:vi.fn(),state:vi.fn(),connect:vi.fn(),logout:vi.fn()}));
+vi.mock('@/lib/guards',()=>({requireAdmin:m.admin}));
+vi.mock('@/lib/evolution',()=>({getEvolutionConnectionState:m.state,connectEvolutionQR:m.connect,logoutInstance:m.logout}));
+import {GET,POST} from '@/app/api/whatsapp/evolution/route';
+beforeEach(()=>{vi.resetAllMocks();m.admin.mockResolvedValue(true);m.state.mockResolvedValue({state:'close'});m.connect.mockResolvedValue({state:'connecting',qrcode:'data:image/png;base64,test'});});
+it('consulta estado sem criar sessão nem regenerar QR',async()=>{expect(await(await GET()).json()).toMatchObject({state:'close'});expect(m.connect).not.toHaveBeenCalled();});
+it('cria QR somente por POST administrativo explícito',async()=>{const r=await POST(new Request('http://bfx.test/api/whatsapp/evolution',{method:'POST',body:JSON.stringify({action:'create'})}));expect((await r.json()).state).toBe('connecting');expect(m.connect).toHaveBeenCalledOnce();});
+it('nega acesso anônimo antes de consultar o servidor',async()=>{m.admin.mockResolvedValue(false);expect((await GET()).status).toBe(401);expect(m.state).not.toHaveBeenCalled();});
+it('rejeita ações desconhecidas sem criar instância',async()=>{expect((await POST(new Request('http://bfx.test/api/whatsapp/evolution',{method:'POST',body:JSON.stringify({action:'sendAll'})}))).status).toBe(400);expect(m.connect).not.toHaveBeenCalled();});

@@ -31,12 +31,13 @@ type Props = {
   janelaAte?: string | null;
   /** A integração oficial não está ativa: o composer mostra o aviso de envio. */
   envioIndisponivel?: boolean;
+  evolutionDisponivel?: boolean;
 };
 
 const AVISO_DETALHE = (estado: string) => estado.includes('Pausa') || estado.includes('pausado') ? 'A equipe assumiu ou o automático está pausado.' : 'Se o automático não respondeu, confira o assunto e use uma resposta pronta no ⚡. Retomar trata somente a última entrada recente sem resposta.';
 const AVISO_COMPLETO = (estado: string) => `Mensagem do cliente aguardando resposta · ${AVISO_DETALHE(estado)}`;
 
-export function ConversaChat({ telefone, nome, aberta, semResposta, estadoAutomatico, mensagens, fichaHref, novaAba = false, agora = new Date(), telefoneExplicito = true, urlLista = '/crm/atendimento?visao=lista', hrefJanela, retomaEm = null, janelaAte = null, envioIndisponivel = false }: Props) {
+export function ConversaChat({ telefone, nome, aberta, semResposta, estadoAutomatico, mensagens, fichaHref, novaAba = false, agora = new Date(), telefoneExplicito = true, urlLista = '/crm/atendimento?visao=lista', hrefJanela, retomaEm = null, janelaAte = null, evolutionDisponivel = false, envioIndisponivel = false }: Props) {
   // Na tela própria não há sidebar: a ficha (que vive no sistema) abre em outra aba.
   const abrir = novaAba ? { target: '_blank', rel: 'noopener' } : {};
   const dias = agruparMensagens(mensagens, agora);
@@ -66,7 +67,7 @@ export function ConversaChat({ telefone, nome, aberta, semResposta, estadoAutoma
     </header>
     <RespostaProvider key={`resposta-${telefone}`}>
     <FotosProvider key={`fotos-${telefone}`} itens={itensDaConversa(mensagens)} contato={{ nome, telefone }}>
-    <LogMensagens key={`log-${telefone}`} className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-poco bg-[radial-gradient(var(--grafico-trilha)_1px,transparent_1px)] [background-size:18px_18px] px-3 pb-4 @xl:px-6">
+    <LogMensagens key={`log-${telefone}`} className="flex min-h-0 flex-1 flex-col overscroll-contain overflow-y-auto bg-poco bg-[radial-gradient(var(--grafico-trilha)_1px,transparent_1px)] [background-size:18px_18px] px-3 pb-4 @xl:px-6">
       {dias.map(d => <section key={d.chave} aria-label={d.rotulo} className="flex flex-col">
         {/* Separador de data: pílula centralizada que fica fixa no topo enquanto o dia rola. */}
         <div className="sticky top-0 z-10 flex justify-center py-2"><span className="inline-flex h-7 items-center rounded-full bg-popover px-3 text-xs text-texto-secundario shadow-sm">{d.rotulo}</span></div>
@@ -76,7 +77,7 @@ export function ConversaChat({ telefone, nome, aberta, semResposta, estadoAutoma
     {/* Indicador mínimo (ponto + frase curta de 12px) logo acima do composer. O texto completo da regra
         continua no leitor de tela e no title; o role=status é o mesmo de antes. */}
     {semResposta && <p role="status" title={AVISO_COMPLETO(estadoAutomatico)} className="flex shrink-0 items-center gap-2 px-4 py-1.5 text-xs text-muted-foreground"><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-primary" /><span aria-hidden="true" className="font-medium text-foreground">Cliente aguardando resposta</span><span className="sr-only"><strong>Mensagem do cliente aguardando resposta</strong> · {AVISO_DETALHE(estadoAutomatico)}</span></p>}
-    <Reply key={`reply-${telefone}`} telefone={telefone} aberta={aberta} estadoAutomatico={estadoAutomatico} envioIndisponivel={envioIndisponivel} />
+    <Reply key={`reply-${telefone}`} telefone={telefone} aberta={aberta} estadoAutomatico={estadoAutomatico} envioIndisponivel={envioIndisponivel} textoEvolution={!aberta&&evolutionDisponivel} />
     </FotosProvider>
     </RespostaProvider>
   </section>;

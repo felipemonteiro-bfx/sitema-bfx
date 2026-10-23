@@ -21,6 +21,8 @@ export type WhatsAppSendResult = {
   error?: string;
   /** Código de erro da Meta (ex.: 131053), quando houver. */
   codigo?: number;
+  /** O pedido pode ter sido aceito: manter pendente, sem retry. */
+  incerto?: boolean;
   provider: string;
 };
 
@@ -66,6 +68,7 @@ export type WhatsAppTemplate = {
 
 export interface WhatsAppProvider {
   readonly freeServiceOnly?: boolean;
+  isConnected?(): Promise<boolean>;
   readonly name: "evolution" | "meta_cloud";
   sendText(numeroE164: string, texto: string, opcoes?: WhatsAppTextOpcoes): Promise<WhatsAppSendResult>;
   sendButtons?(numeroE164:string,texto:string,botoes:{id:string;title:string}[]):Promise<WhatsAppSendResult>;

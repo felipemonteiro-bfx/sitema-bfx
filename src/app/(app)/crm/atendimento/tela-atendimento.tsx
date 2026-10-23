@@ -1,3 +1,6 @@
+import { evolutionConectada } from '@/lib/whatsapp-evolution-janela';
+import { resolveWhatsAppProviders } from '@/lib/whatsapp-provider';
+import { AreaVisivel } from './area-visivel';
 import {disponibilidadeIa,respostasAutoLigadas,situacaoProvedor} from '@/lib/whatsapp-respostas-auto';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
@@ -74,7 +77,7 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
   const pessoas=usuarios.map(u=>({id:u.id,nome:u.nomeExibicao||u.username}));
   const [mensagens,ultimaEntrada,cfg]=await Promise.all([
     telefone?prisma.whatsAppMensagem.findMany({where:{telefone,status:{not:'gerando'},NOT:{direcao:'sistema',origem:ORIGEM_KANBAN}},orderBy:{criadoEm:'desc'},take:100,include:{midia:{select:{id:true,tipo:true,status:true,mime:true,tamanho:true,nomeExibicao:true,legenda:true,voz:true,animada:true,paginas:true,transcricao:true,onda:true}}}}).then(ms=>ms.map(m=>m.midia?{...m,midia:{...m.midia,nomeExibicao:m.midia.nomeExibicao?nomeSeguro(m.midia.nomeExibicao):null,onda:m.midia.onda?Array.from(m.midia.onda):null}}:m)):Promise.resolve([]),
-    telefone?prisma.whatsAppMensagem.findFirst({where:{telefone,direcao:'in'},orderBy:{criadoEm:'desc'},select:{criadoEm:true}}):Promise.resolve(null),
+    telefone?prisma.whatsAppMensagem.findFirst({where:{telefone,direcao:'in',OR:[{provedor:null},{provedor:'meta_cloud'}]},orderBy:{criadoEm:'desc'},select:{criadoEm:true}}):Promise.resolve(null),
     prisma.config.findFirst({select:{whatsappPreAtendimento:true,whatsappAutoEnabled:true,whatsappTakeoverMinutos:true,whatsappProvider:true,metaWhatsappToken:true,metaWhatsappPhoneNumberId:true,litellmUrl:true,litellmKey:true,litellmModel:true}}),
   ]);
   const citacoes=telefone?await resolverCitacoes(telefone,mensagens):new Map<string,ResumoCitado>();
@@ -112,14 +115,14 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
   const itensVisiveis=etapaFiltro==='todas'?itens:etapaFiltro==='aguardando'?itens.filter(i=>i.aguardando):itens.filter(i=>i.etapa===etapaFiltro);
   const fichaHref=telefone?`/crm/atendimento/ficha?telefone=${telefone}`:'';
   const oficial=cfg?.whatsappProvider==='meta_cloud';
+  const evolutionDisponivel=!!await evolutionConectada(await resolveWhatsAppProviders());
   // A área da tela é um contêiner: as colunas respondem à largura DELA (a sidebar come espaço no sistema
   // e não existe na janela), não à da viewport. < 48rem lista OU chat; >= 48rem lista + chat; >= 80rem + painel.
-  // Altura fixa da área visível: o log rola por dentro e o composer fica no pé, sem rolar a página.
-  // A área ocupa `h-dvh` e devolve o que fica acima dela (cabeçalho) com padding + margem negativa de mesmo valor
-  // (escala do Tailwind, sem valor arbitrário). No celular, com uma conversa aberta, o cabeçalho da página some.
+  // A lista mede o espaço real do shell; só lista e mensagens rolam, com o composer visível.
+  // No celular, com uma conversa aberta, o cabeçalho da página some.
   const chatCheio=!janela&&visao==='lista'&&telefoneExplicito;
   // Na janela a altura vem do flex (coluna h-dvh com overflow-hidden): sem compensação fixa do cabeçalho.
-  const altura=janela?'min-h-0 flex-1':chatCheio?'h-dvh -mb-28 pb-28 md:-mb-67 md:pb-67 xl:-mb-49 xl:pb-49':'h-dvh -mb-67 pb-67 xl:-mb-49 xl:pb-49';
+
   // Quadro na rota normal: o contêiner recorta o preenchimento negativo (`flow-root overflow-clip`), senão a caixa
   // h-dvh vaza do shell e a página rola além das listas. O 65 cobre cabeçalho + moldura do shell no xl.
   const alturaKanban='h-dvh -mb-67 pb-67 xl:-mb-65 xl:pb-65';
@@ -147,11 +150,11 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
         {!janela&&<div className="flex flex-none flex-wrap items-center justify-between gap-3"><AlternarVisao base={base} visao={visao} q={q} telefone={telefone}/><AbrirEmNovaJanela visao={visao} q={q} etapa={etapaFiltro}/></div>}
         <KanbanConversas cartoes={cartoes} pessoas={pessoas} busca={q} base={base}/>
       </div>
-    :<div data-atendimento-raiz className={`@container ${altura}`}>
-        <div className={`flex h-full gap-3 ${janela?'min-h-0':'min-h-96'}`}>
+    :<AreaVisivelLista janela={janela}>
+        <div className="flex h-full min-h-0 gap-3">
         <ConversaLista itens={itensVisiveis} selecionado={telefone} base={base} busca={q} visao="lista" etapa={etapaFiltro} contagens={contagens} painel={painel} telefoneExplicito={telefoneExplicito} semAlternar={janela}/>
         {telefone
-          ?<ConversaChat telefone={telefone} nome={nome(telefone)} aberta={aberta} semResposta={semResposta} estadoAutomatico={estadoAutomatico} retomaEm={retomaEm} janelaAte={janelaAte} envioIndisponivel={!oficial} fichaHref={fichaHref} novaAba={janela}
+          ?<ConversaChat telefone={telefone} nome={nome(telefone)} aberta={aberta} semResposta={semResposta} estadoAutomatico={estadoAutomatico} retomaEm={retomaEm} janelaAte={janelaAte} evolutionDisponivel={evolutionDisponivel} envioIndisponivel={!oficial&&!evolutionDisponivel} fichaHref={fichaHref} novaAba={janela}
               telefoneExplicito={telefoneExplicito} urlLista={urlAtendimento(base,{visao:'lista',q,etapa:etapaFiltro,painel})} hrefJanela={hrefJanela}
               mensagens={historicoExibido.map(m=>({id:m.id,criadoEm:m.criadoEm,corpo:m.corpo,direcao:m.direcao,origem:m.origem,status:m.status,erroMsg:(m as {erroMsg?:string|null}).erroMsg,...extraMidia(m),...extraCitacao(m,citacoes)}))} agora={agora}/>
           :<section aria-label="Conversa selecionada" className="hidden min-h-0 flex-1 items-center justify-center rounded-painel border border-painel-borda bg-card p-6 text-center text-muted-foreground @xl:flex dark:border-transparent">Aguardando mensagens recebidas pela integração.</section>}
@@ -159,8 +162,12 @@ export async function TelaAtendimento({searchParams,modo}:{searchParams:Promise<
           <ContextoCliente clienteId={contato?.id??null} nome={nome(telefone)} telefone={telefone} fichaHref={fichaHref} novaAba={janela} organizar={organizar}/>
         </PainelContato>}
         </div>
-      </div>;
+      </AreaVisivelLista>;
 
   if(janela)return <div className="flex h-dvh flex-col overflow-hidden bg-background">{cabecalho}<main className={`flex min-h-0 flex-1 flex-col overflow-hidden p-3 lg:p-4`}>{corpo}</main></div>;
   return <div className={visao==='kanban'?'flow-root space-y-4 overflow-clip':'space-y-4'}><div className={chatCheio?'hidden md:block':undefined}>{cabecalho}</div>{corpo}</div>;
+}
+
+function AreaVisivelLista({janela,children}:{janela:boolean;children:React.ReactNode}) {
+  return janela ? <div data-atendimento-raiz className="@container min-h-0 flex-1">{children}</div> : <AreaVisivel>{children}</AreaVisivel>;
 }

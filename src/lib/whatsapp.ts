@@ -1,3 +1,5 @@
+import { evolutionForaJanelaAtiva, evolutionConectada, documentoIndividualEvolution } from '@/lib/whatsapp-evolution-janela';
+import { reservarSaidaEvolution } from '@/lib/whatsapp-anti-spam';
 /**
  * Envio de mensagens WhatsApp.
  *
@@ -185,7 +187,24 @@ export async function enviarWhatsAppDetalhado(
   if (!numero) return { ok: false, mensagemId: null };
 
   const naJanela = await dentroDaJanela24h(numero);
-  const { primary } = await resolveWhatsAppProviders();
+  const canais = await resolveWhatsAppProviders();
+  const { primary } = canais;
+  if (!naJanela && evolutionForaJanelaAtiva()) {
+    if (!documentoIndividualEvolution(input.origem, input.template.name)) {
+      return { ok: false, mensagemId: null, motivo: "evolution_envio_nao_autorizado" };
+    }
+    const evo = await evolutionConectada(canais);
+    if (!evo) return { ok: false, mensagemId: null, motivo: "evolution_desconectada" };
+    const reserva = await reservarSaidaEvolution({ telefone: numero, clienteId: input.clienteId, origem: input.origem, corpo: input.template.fallbackText });
+    if (!reserva.ok) return { ok: false, mensagemId: reserva.id ?? null, motivo: reserva.motivo };
+    const resultado = await evo.sendText(numero, input.template.fallbackText, { previewUrl: false });
+    if (resultado.ok) {
+      await marcarEnviada(reserva.id, resultado.messageId);
+      return { ok: true, mensagemId: reserva.id };
+    }
+    if (!resultado.incerto) await marcarFalha(reserva.id, resultado.error || "evolution_recusou_envio");
+    return { ok: false, mensagemId: reserva.id, motivo: resultado.incerto ? "evolution_resultado_incerto" : "evolution_recusou_envio" };
+  }
   // Rotinas agendadas não podem iniciar conversa no modo gratuito. Isso é uma
   // restrição prevista, não uma tentativa que falhou no transporte.
   if (!naJanela && input.origem === "cron" && primary?.name === "meta_cloud" && primary.freeServiceOnly) {
@@ -200,6 +219,7 @@ export async function enviarWhatsAppDetalhado(
     origem: input.origem,
     templateNome: usaTemplate ? input.template.name : null,
     corpo,
+    provedor: primary?.name,
   });
 
   if (usaTemplate && !input.template.name) {

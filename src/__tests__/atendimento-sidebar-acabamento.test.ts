@@ -41,7 +41,7 @@ describe('item 3: rodapé do composer compacto',()=>{
  const aberto=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
  const fechado=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:false,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
  it('sem rodapé fixo: janela encerrada vai no placeholder; sem contador perto do limite',()=>{
-  expect(fechado).toContain('Janela encerrada: aguarde nova mensagem do cliente');
+  expect(fechado).toContain('Conecte pelo QR Code');
   expect(aberto).not.toContain('/4096'); // M4: contador só perto do limite
  });
  it('o texto longo vive na ajuda do seletor de quem responde, sem sumir: fica no leitor de tela',()=>{

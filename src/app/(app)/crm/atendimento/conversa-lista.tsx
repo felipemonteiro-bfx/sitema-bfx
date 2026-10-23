@@ -103,7 +103,7 @@ export function ConversaLista({ itens, selecionado, base, busca, visao, etapa, c
       })}
     </nav>
     {/* Linhas sem card: a divisória fina começa depois do avatar (inset), como no WhatsApp Web. */}
-    <ul className="flex min-h-24 flex-1 flex-col overflow-y-auto border-t border-divisoria">
+    <ul className="flex min-h-24 flex-1 flex-col overscroll-contain overflow-y-auto border-t border-divisoria">
       {itens.map(c => {
         const atual = c.telefone === selecionado;
         const n = c.naoRespondidas ?? 0;

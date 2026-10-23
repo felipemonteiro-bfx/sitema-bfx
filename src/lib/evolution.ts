@@ -9,27 +9,12 @@ type EvolutionConfig = {
 };
 
 async function getEvolutionConfig(): Promise<EvolutionConfig | null> {
-  const url = process.env.EVOLUTION_API_URL;
-  const key = process.env.EVOLUTION_API_KEY;
-  const instance = process.env.EVOLUTION_INSTANCE;
-
-  if (url && key) {
-    return { url: url.replace(/\/$/, ''), key, instance: instance || 'bfx' };
-  }
-
-  try {
-    const cfg = await prisma.config.findFirst();
-    if (cfg?.evolutionApiUrl && cfg?.evolutionApiKey) {
-      return {
-        url: cfg.evolutionApiUrl.replace(/\/$/, ''),
-        key: cfg.evolutionApiKey,
-        instance: cfg.evolutionInstance || 'bfx',
-      };
-    }
-  } catch {
-    // DB não disponível
-  }
-  return null;
+  let cfg;
+  try { cfg = await prisma.config.findFirst(); } catch { /* fallback de ambiente */ }
+  const url = cfg?.evolutionApiUrl?.trim() || process.env.EVOLUTION_API_URL?.trim();
+  const key = cfg?.evolutionApiKey?.trim() || process.env.EVOLUTION_API_KEY?.trim();
+  const instance = cfg?.evolutionInstance?.trim() || process.env.EVOLUTION_INSTANCE?.trim() || 'bfx';
+  return url && key ? {url:url.replace(/\/$/,''),key,instance} : null;
 }
 
 async function evolutionFetch(
@@ -40,6 +25,7 @@ async function evolutionFetch(
   const cfg = config ?? (await getEvolutionConfig());
   if (!cfg) throw new Error('Evolution API não configurada.');
   return fetch(`${cfg.url}${path}`, {
+    signal: AbortSignal.timeout(15000),
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -80,7 +66,7 @@ export async function getInstanceState(): Promise<{ state: InstanceState; qrcode
   }
 }
 
-export async function createInstance(): Promise<boolean> {
+export async function createInstance(qrcode = true): Promise<boolean> {
   const cfg = await getEvolutionConfig();
   if (!cfg) return false;
 
@@ -91,7 +77,11 @@ export async function createInstance(): Promise<boolean> {
         method: 'POST',
         body: JSON.stringify({
           instanceName: cfg.instance,
-          qrcode: true,
+          qrcode,
+          syncFullHistory: false,
+          groupsIgnore: true,
+          readMessages: false,
+          readStatus: false,
           integration: 'WHATSAPP-BAILEYS',
         }),
       },
@@ -143,4 +133,37 @@ export async function sendTextMessage(phone: string, text: string): Promise<bool
   } catch {
     return false;
   }
+}
+
+/** Consulta sem conectar: o polling nunca invalida o QR que o usuário está escaneando. */
+export async function getEvolutionConnectionState(): Promise<{state:InstanceState}> {
+  const cfg = await getEvolutionConfig();
+  if (!cfg) return {state:'unknown'};
+  try {
+    const r=await evolutionFetch(`/instance/connectionState/${encodeURIComponent(cfg.instance)}`,{},cfg);
+    if(!r.ok)return {state:'close'};
+    const data=await r.json(); const state=data.instance?.state??data.state;
+    return {state:state==='open'?'open':state==='connecting'?'connecting':'close'};
+  } catch {return {state:'unknown'};}
+}
+
+export async function connectEvolutionQR():Promise<{state:InstanceState;qrcode?:string;error?:string}> {
+ const cfg=await getEvolutionConfig();
+ if(!cfg)return {state:'unknown',error:'A conexão do servidor ainda não está configurada.'};
+ try {
+  const estado=await evolutionFetch(`/instance/connectionState/${encodeURIComponent(cfg.instance)}`,{},cfg);
+  if(estado.ok){const d=await estado.json();if((d.instance?.state??d.state)==='open')return {state:'open'};}
+  else if(estado.status!==404)return {state:'unknown',error:'Não foi possível acessar a conexão. Tente novamente.'};
+  else if(!await createInstance(false))return {state:'close',error:'Não foi possível preparar a conexão. Tente novamente.'};
+  const origin=process.env.NEXT_PUBLIC_APP_URL || 'https://bfx.softlive.dev';
+  const webhook=await evolutionFetch(`/webhook/set/${encodeURIComponent(cfg.instance)}`,{method:'POST',body:JSON.stringify({webhook:{enabled:true,url:new URL('/api/webhooks/evolution',origin).toString(),headers:{'x-evolution-apikey':process.env.EVOLUTION_WEBHOOK_SECRET||cfg.key},byEvents:false,base64:false,events:['MESSAGES_UPSERT','MESSAGES_UPDATE']}})},cfg);
+  if(!webhook.ok)return {state:'close',error:'Não foi possível preparar o recebimento das mensagens. Tente novamente.'};
+  const res=await evolutionFetch(`/instance/connect/${encodeURIComponent(cfg.instance)}`,{},cfg);
+  if(!res.ok)return {state:'close',error:'Não foi possível gerar o QR Code. Tente novamente.'};
+  const data=await res.json();const raw=data.qrcode?.base64??data.base64;
+  if(typeof raw!=='string'||!raw)return {state:'connecting',error:'O QR Code ainda não está disponível. Clique em Gerar QR Code novamente.'};
+  const qrcode=raw.startsWith('data:')?raw:`data:image/png;base64,${raw}`;
+  if(!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(qrcode)||qrcode.length>200000)return {state:'close',error:'O servidor retornou um QR Code inválido.'};
+  return {state:'connecting',qrcode};
+ }catch{return {state:'unknown',error:'O servidor de conexão não respondeu. Tente novamente.'};}
 }

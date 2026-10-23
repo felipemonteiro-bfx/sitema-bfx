@@ -193,7 +193,7 @@ describe('M3: bolha',()=>{
  });
  it('hora e tique dentro da bolha, no canto, com espaçador invisível no texto',()=>{
   const h=em('out',true);
-  expect(h).toContain('absolute');expect(h).toContain('aria-hidden="true"');expect(h).toMatch(/aria-label="Aceita pela Meta; entrega não confirmada"/);
+  expect(h).toContain('absolute');expect(h).toContain('aria-hidden="true"');expect(h).toMatch(/aria-label="Aceita pelo provedor; entrega não confirmada"/);
  });
  it('tique cinza duplo (entregue), verde duplo (lido), relógio (pendente) e erro com rótulo',()=>{
   expect(em('out',true,{status:'entregue'})).toContain('text-muted-foreground');

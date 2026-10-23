@@ -1,3 +1,4 @@
+import { EvolutionQRConnect } from '@/components/evolution-qr-connect';
 import { prisma } from "@/lib/db";
 import { requireAdmin, requireAdminOrThrow } from "@/lib/guards";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -552,11 +553,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                 <CardHeader>
                   <CardTitle>Conexão WhatsApp</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Confira o provedor selecionado e as pendências da conexão. Salve alterações abaixo antes de atualizar este cartão.
+                    Escaneie o QR Code para conectar o WhatsApp do celular. A conexão oficial da Meta continua separada.
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <WhatsAppConnect />
+                  <div className="space-y-6"><EvolutionQRConnect /><details className="border-t border-divisoria pt-4"><summary className="cursor-pointer text-sm font-medium">Configuração da Meta</summary><div className="pt-4"><WhatsAppConnect /></div></details></div>
                 </CardContent>
               </Card>
               <Card>
