@@ -24,7 +24,15 @@ export async function POST(req:Request){
     if(status)await avancarStatusPorWaMessageId(status.id,status.status);
    }else if(evento==='MESSAGES_UPSERT'){
     const m=mensagemNovaEvolution(data);if(!m)continue;
-    if(m.fromMe){if(m.humano)await marcarAtendimentoHumano(m.telefone);continue;}
+    if(m.fromMe){
+      // A API também pode emitir source=web. Reconhecer o aceite/eco pendente
+      // evita pausar o bot por causa de um documento automático do próprio BFX.
+      if(m.humano){
+        const propria=await prisma.whatsAppMensagem.findFirst({where:{telefone:m.telefone,direcao:'out',provedor:'evolution',OR:[{waMessageId:m.id},{status:'pendente',corpo:m.texto,criadoEm:{gte:new Date(Date.now()-30000)}}]},select:{id:true}});
+        if(!propria)await marcarAtendimentoHumano(m.telefone);
+      }
+      continue;
+    }
     // Não chama bot, não abre janela Meta e não importa histórico.
     await registrarEntrada({telefone:m.telefone,waMessageId:m.id,corpo:m.texto,provedor:'evolution'});
    }

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ config: vi.fn(), recebida: vi.fn(), humano: vi.fn(), entrada:vi.fn(), status:vi.fn() }));
-vi.mock('@/lib/db', () => ({ prisma: { config: { findFirst: mocks.config } } }));
+const mocks = vi.hoisted(() => ({ config: vi.fn(), recebida: vi.fn(), humano: vi.fn(), entrada:vi.fn(), status:vi.fn(), saida:vi.fn() }));
+vi.mock('@/lib/db', () => ({ prisma: { config: { findFirst: mocks.config },whatsAppMensagem:{findFirst:mocks.saida} } }));
 vi.mock('@/lib/whatsapp-pre-atendimento', () => ({ processarMensagemRecebida: mocks.recebida, marcarAtendimentoHumano: mocks.humano }));
 vi.mock('@/lib/whatsapp-mensagem',()=>({registrarEntrada:mocks.entrada,avancarStatusPorWaMessageId:mocks.status}));
 import { POST } from '@/app/api/webhooks/evolution/route';
@@ -42,4 +42,10 @@ it('ignora histórico antigo sem registrar ou pausar contatos',async()=>{
 });
 it('nega chave errada antes de ler eventos',async()=>{
  const res=await POST(new Request('https://bfx.test',{method:'POST',headers:{apikey:'errado'},body:JSON.stringify({instance:'bfx',event:'MESSAGES_UPSERT',data:entrada})}));expect(res.status).toBe(401);expect(mocks.entrada).not.toHaveBeenCalled();
+});
+
+it('eco de envio do próprio BFX não é confundido com resposta humana',async()=>{
+ mocks.saida.mockResolvedValue({id:77});
+ const res=await POST(req({...entrada,key:{...entrada.key,fromMe:true},source:'web'}));
+ expect(res.status).toBe(200);expect(mocks.humano).not.toHaveBeenCalled();
 });
