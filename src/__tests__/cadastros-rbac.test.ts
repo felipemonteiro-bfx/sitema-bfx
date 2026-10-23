@@ -22,6 +22,7 @@ const guardsMock = {
 
 vi.mock("@/lib/db", () => ({ prisma: dbMock }));
 vi.mock("@/lib/guards", () => guardsMock);
+vi.mock("@/lib/consignado-db",()=>({recalcularConsignadoSeguro:vi.fn(),recalcularConsignadoPendentes:vi.fn()}));
 vi.mock("@/lib/audit", () => ({ createAuditLog: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
@@ -104,4 +105,17 @@ describe("vendedor NAO pode mexer em fornecedor nem empresa", () => {
       expect(guardsMock.requireAdminOrThrow).toHaveBeenCalled();
     });
   }
+});
+
+
+describe("edição confirma sem redirect capturado como erro",()=>{
+ for(const nome of ["updateCliente","updateFornecedor","updateEmpresa"] as const){
+  it(`${nome} retorna normalmente após persistir`,async()=>{
+   const {redirect}=await import("next/navigation");
+   vi.mocked(redirect).mockImplementation(()=>{throw new Error("NEXT_REDIRECT");});
+   await expect(acoes[nome](formPreenchido())).resolves.toBeUndefined();
+   expect(redirect).not.toHaveBeenCalled();
+   vi.mocked(redirect).mockReset();
+  });
+ }
 });

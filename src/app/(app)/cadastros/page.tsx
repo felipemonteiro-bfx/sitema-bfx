@@ -99,9 +99,9 @@ export async function updateCliente(formData: FormData) {
     revalidarCliente();
   } catch (e) {
     const isUniqueError = e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
-    redirect(`/cadastros?tab=clientes&editCliente=${id}&error=${isUniqueError ? "nome_duplicado" : "salvar_falhou"}`);
+    throw new Error(isUniqueError ? "Já existe um cliente com esse nome. Confira o cadastro antes de salvar." : "Não foi possível confirmar a alteração do cliente. Confira os dados e tente novamente.");
   }
-  redirect("/cadastros?tab=clientes");
+  // O formulário confirma o sucesso e atualiza a lista sem redirecionamento.
 }
 
 async function bulkDeleteClientes(ids: number[]) {
@@ -255,7 +255,7 @@ export async function updateFornecedor(formData: FormData) {
   });
   await createAuditLog("fornecedor:update", { fornecedorId: id, nome });
   revalidarFornecedor();
-  redirect("/cadastros?tab=fornecedores");
+  // Retorno normal permite ao formulário confirmar a alteração.
 }
 
 export async function bulkDeleteFornecedores(ids: number[]) {
@@ -331,7 +331,7 @@ export async function updateEmpresa(formData: FormData) {
   });
   await createAuditLog("empresa:update", { empresaId: id, nome });
   revalidarEmpresa();
-  redirect("/cadastros?tab=empresas");
+  // Retorno normal permite ao formulário confirmar a alteração.
 }
 
 async function bulkDeleteEmpresas(ids: number[]) {

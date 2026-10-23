@@ -100,8 +100,8 @@ export default function ClientesTabClient({
   const [submittingUpdate, setSubmittingUpdate] = useState(false);
   const [similares, setSimilares] = useState<{ id: number; nome: string }[]>([]);
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<string>("");
-  const [editingCliente, setEditingCliente] = useState<ClienteListItem | null>(null);
-  const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<string>("");
+  const [editingCliente, setEditingCliente] = useState<ClienteListItem | null>(editClienteData??null);
+  const [editSelectedEmpresaId, setEditSelectedEmpresaId] = useState<string>(editClienteData?.empresaParceiraId?String(editClienteData.empresaParceiraId):"");
 
   const empresaOptions = [
     { value: "", label: "Nenhuma" },
@@ -149,9 +149,9 @@ export default function ClientesTabClient({
       await onUpdateAction(formData);
       toast.success("Cliente atualizado com sucesso!");
       setEditingCliente(null);
-      startTransition(() => { router.refresh(); });
-    } catch {
-      toast.error("Erro ao atualizar. Tente novamente.");
+      startTransition(() => { if(sp.editCliente) router.replace("/cadastros?tab=clientes"); else router.refresh(); });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao atualizar. Tente novamente.");
     } finally {
       setSubmittingUpdate(false);
     }

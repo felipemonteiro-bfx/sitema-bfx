@@ -1,0 +1,3 @@
+# Falha ao alterar cadastros
+Causa identificada: updateCliente/updateFornecedor/updateEmpresa encerram com redirect, enquanto formulários clientes capturam qualquer exceção e exibem erro. Redirect de sucesso também é exceção no Next. O link editCliente recebe dados mas o componente não os usa para abrir edição.
+Corrigir retorno normal após update bem-sucedido para confirmação do formulário, erro de cliente com mensagem explícita e dados mantidos. Preservar guardas e validações e não mudar dados reais para teste. Adicionar regressões de ação e link direto. Escopo: cadastros existentes, sem criação/exclusão.
