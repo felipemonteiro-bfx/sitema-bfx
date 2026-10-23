@@ -14,5 +14,6 @@ Dockerfile.dev
 README.md
 scripts/*
 !scripts/stamp-sw.mjs
+!scripts/copiar-ort.mjs
 streamlit
 prisma/*.db
