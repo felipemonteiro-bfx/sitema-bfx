@@ -45,7 +45,7 @@ interface TableProps
 const Table = React.forwardRef<HTMLTableElement, TableProps>(
   ({ className, variant, tamanho, mono, separado, stickyHeader, scrollLabel, ...props }, ref) => (
     <div
-      className={cn("relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-interno", scrollLabel && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card")}
+      className={cn("relative w-full overflow-auto custom-scrollbar table-scroll-touch rounded-interno", scrollLabel && "@container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card")}
       role={scrollLabel ? "region" : undefined}
       aria-label={scrollLabel}
       tabIndex={scrollLabel ? 0 : undefined}
