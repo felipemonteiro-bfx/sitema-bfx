@@ -28,7 +28,17 @@ export async function POST(req:Request){
       // A API também pode emitir source=web. Reconhecer o aceite/eco pendente
       // evita pausar o bot por causa de um documento automático do próprio BFX.
       if(m.humano){
-        const propria=await prisma.whatsAppMensagem.findFirst({where:{telefone:m.telefone,direcao:'out',provedor:'evolution',OR:[{waMessageId:m.id},{status:'pendente',corpo:m.texto,criadoEm:{gte:new Date(Date.now()-30000)}}]},select:{id:true}});
+        const whereId={telefone:m.telefone,direcao:'out',provedor:'evolution',waMessageId:m.id};
+        let propria=await prisma.whatsAppMensagem.findFirst({where:whereId,select:{id:true}});
+        if(!propria){
+          const pendente=await prisma.whatsAppMensagem.findFirst({where:{telefone:m.telefone,direcao:'out',provedor:'evolution',status:'pendente',corpo:m.texto,criadoEm:{gte:new Date(Date.now()-30000)}},select:{id:true}});
+          if(pendente){
+            // Dá tempo para o aceite gravar o ID. Corpo igual, sozinho, não
+            // prova eco: sem ID confirmado, tratar como resposta humana.
+            await new Promise(resolve=>setTimeout(resolve,250));
+            propria=await prisma.whatsAppMensagem.findFirst({where:whereId,select:{id:true}});
+          }
+        }
         if(!propria)await marcarAtendimentoHumano(m.telefone);
       }
       continue;

@@ -49,3 +49,9 @@ it('eco de envio do próprio BFX não é confundido com resposta humana',async()
  const res=await POST(req({...entrada,key:{...entrada.key,fromMe:true},source:'web'}));
  expect(res.status).toBe(200);expect(mocks.humano).not.toHaveBeenCalled();
 });
+
+it('texto humano igual a reserva pendente só é eco com ID confirmado',async()=>{
+ mocks.saida.mockImplementation(async(arg:{where:{waMessageId?:string;corpo?:string;OR?:unknown}})=>arg.where.waMessageId?null:{id:77});
+ await POST(req({...entrada,key:{...entrada.key,fromMe:true},source:'web'}));
+ expect(mocks.humano).toHaveBeenCalledWith('5592000000000');
+});
