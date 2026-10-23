@@ -67,3 +67,6 @@ whatsapp-qrcode.html
 # package-lock.json aqui recria a divergencia que fazia o CI validar um
 # conjunto de dependencia e a producao rodar outro.
 package-lock.json
+
+# Runtime WASM do Whisper (gerado por scripts/copiar-ort.mjs no predev/prebuild)
+public/ort/

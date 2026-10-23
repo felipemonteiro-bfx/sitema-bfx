@@ -13,6 +13,8 @@ import {ESTADO_KANBAN_INICIAL} from '@/lib/whatsapp-kanban';
 // O teste lê a FONTE (sem comentários) dos arquivos da fase.
 const ARQUIVOS=[
  'src/app/(app)/crm/atendimento/kanban.tsx',
+ 'src/app/(app)/crm/atendimento/kanban-cartao.tsx',
+ 'src/app/(app)/crm/atendimento/kanban-barra.tsx',
  'src/app/(app)/crm/atendimento/reply.tsx',
  'src/app/(app)/configuracoes/page.tsx',
  'src/components/empresas-tab-client.tsx',
@@ -65,7 +67,7 @@ describe('J1 - envio dos selects do kanban (mesmo FormData de antes)',()=>{
   const html=renderToStaticMarkup(React.createElement(OrganizarConversa,{pessoas:[{id:3,nome:'Equipe'}],cartao:{...base,estado:ESTADO_KANBAN_INICIAL}}));
   expect(html).toMatch(/<input type="hidden" name="responsavel" value=""/);
   expect(html).toContain(`name="etapa" value="${ESTADO_KANBAN_INICIAL.etapa}"`);
-  expect(html).toContain('Não atribuído');
+  expect(html).toContain('Sem responsável');
  });
  it('salvar sem alterar preserva o responsável atribuído',()=>{
   const html=renderToStaticMarkup(React.createElement(OrganizarConversa,{pessoas:[{id:3,nome:'Equipe'}],cartao:{...base,estado:{...ESTADO_KANBAN_INICIAL,responsavelId:3,responsavelNome:'Equipe'}}}));
@@ -79,12 +81,12 @@ describe('J1 - envio dos selects do kanban (mesmo FormData de antes)',()=>{
 });
 
 describe('J1 - configurações: respostas automáticas',()=>{
- it('FormSelect envia os mesmos valores 0/2/1',()=>{
+ it('Switch com esse name e sem o valor "1" do gateway antigo',()=>{
   const src=fonte('src/app/(app)/configuracoes/page.tsx');
-  const depois=src.split('name="whatsappPreAtendimento"')[1];
-  const bloco=depois.split('searchable')[0];
-  expect(bloco).toContain('value: "0"');
-  expect(bloco).toContain('value: "2"');
-  expect(bloco).toContain('value: "1"');
+  const comp=fonte('src/components/whatsapp-respostas-auto.tsx');
+  expect(src).toContain('name="whatsappPreAtendimento"');
+  expect(comp).toMatch(/<input[\s\S]*?type="hidden"[\s\S]*?name=\{name\}/);
+  expect(comp).not.toContain('value: "1"');
+  expect(src).not.toContain('value: "1", label');
  });
 });

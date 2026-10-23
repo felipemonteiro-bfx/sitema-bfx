@@ -17,6 +17,8 @@ import { FormSelect } from "@/components/form-select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { checkboxComoNumero } from "@/lib/form-values";
+import { WhatsappRespostasAuto } from "@/components/whatsapp-respostas-auto";
+import { disponibilidadeIa, estadoRespostasAuto, respostasAutoLigadas, situacaoProvedor } from "@/lib/whatsapp-respostas-auto";
 import { PageHeader } from "@/components/page-header";
 import { SettingsSaveButton } from "@/components/settings-save-button";
 import { WebhookAsaasCard } from "@/components/webhook-asaas-card";
@@ -155,7 +157,8 @@ async function saveWhatsApp(formData: FormData) {
   const autoNPS = checkboxComoNumero(formData.get("whatsappAutoNPS"));
   const autoBoasVindas = checkboxComoNumero(formData.get("whatsappAutoBoasVindas"));
   const autoAgradecimento = checkboxComoNumero(formData.get("whatsappAutoAgradecimento"));
-  const preAtendimento = formData.get("whatsappPreAtendimento") === "2" ? 2 : checkboxComoNumero(formData.get("whatsappPreAtendimento"));
+  // Switch único de respostas automáticas: ligado = 2, desligado = 0 (o valor 1, gateway antigo, saiu).
+  const preAtendimento = checkboxComoNumero(formData.get("whatsappPreAtendimento")) === 1 ? 2 : 0;
   const diasInativo = Math.max(30, Math.min(365, Number(formData.get("whatsappDiasInativo") || 60) || 60));
   const takeoverMinutos = Math.max(5, Math.min(480, Number(formData.get("whatsappTakeoverMinutos") || 60) || 60));
   // Provider oficial (Meta Cloud API) — token so e sobrescrito se informado (padrao Asaas).
@@ -480,7 +483,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                           searchable={false}
                         />
                       </div>
-                      <div className="rounded-interno bg-poco p-4 space-y-3">
+                      <div id="litellm-config" className="rounded-interno bg-poco p-4 space-y-3 scroll-mt-24">
                         <p className="text-xs font-semibold text-muted-foreground">Configuração LiteLLM</p>
                         <div className="space-y-1">
                           <Label htmlFor="litellmUrl">URL da API</Label>
@@ -698,7 +701,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <Checkbox
                         id="whatsappAutoEnabled"
                         name="whatsappAutoEnabled"
-                        defaultChecked={cfg?.whatsappAutoEnabled !== 0}
+                        defaultChecked={cfg?.whatsappAutoEnabled === 1}
                       />
                       <Label variant="foreground" htmlFor="whatsappAutoEnabled">
                         Envios automáticos ativados (master)
@@ -816,49 +819,44 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-1 rounded-interno bg-poco p-4">
+                    <div className="space-y-4 rounded-interno bg-card-elevated p-4">
+                      <WhatsappRespostasAuto
+                        name="whatsappPreAtendimento"
+                        defaultLigado={respostasAutoLigadas(cfg)}
+                        estadoSeLigado={estadoRespostasAuto({
+                          ligado: true,
+                          masterLigado: cfg?.whatsappAutoEnabled === 1,
+                          provedor: situacaoProvedor(cfg, process.env),
+                          ia: disponibilidadeIa(cfg, process.env),
+                        })}
+                      />
                       <div className="flex items-center gap-2">
-                        <FormSelect
-                          id="whatsappPreAtendimento"
-                          name="whatsappPreAtendimento"
-                          defaultValue={String((cfg as Record<string, unknown>)?.whatsappPreAtendimento || 0)}
-                          options={[
-                            { value: "0", label: "Desligado" },
-                            { value: "2", label: "Gratuito — respostas por regras" },
-                            { value: "1", label: "IA externa — pode gerar custo" },
-                          ]}
-                          searchable={false}
-                          className="min-w-64"
-                        />
-                        <Label variant="foreground" htmlFor="whatsappPreAtendimento">
-                          Respostas automáticas
+                        <Label variant="opcao" htmlFor="whatsappTakeoverMinutos">
+                          Pausar por
                         </Label>
-                      </div>
-                      <div className="flex items-center gap-2 pl-6">
                         <Input
                           type="number"
                           inputSize="sm"
                           id="whatsappTakeoverMinutos"
+                          aria-describedby="whatsappTakeoverMinutos-ajuda"
                           name="whatsappTakeoverMinutos"
                           min={5}
                           max={480}
                           defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappTakeoverMinutos) || 60)}
                           className="w-16"
                         />
-                        <Label variant="opcao" htmlFor="whatsappTakeoverMinutos">
-                          minutos de pausa após atendente assumir (padrão: 60)
-                        </Label>
+                        <span id="whatsappTakeoverMinutos-ajuda" className="text-sm text-foreground">
+                          min depois que alguém da equipe responde (padrão: 60)
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground pl-6">
-                        O modo gratuito orienta sobre orçamento, pedido e pagamento, sem consultar IA paga.
-                        Não confirma preços ou quitação. ATENDENTE ou resposta humana pausa o automático.
-                        No modo Meta, use o webhook oficial abaixo:
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        {situacaoProvedor(cfg, process.env) === "nao_meta" ? "Webhook do Evolution (só pausa por resposta humana)" : "Webhook da Meta"}
                       </p>
-                      <div className="pl-6 flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
                           {(() => {
                             const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://seu-dominio.com";
-                            return `${base}/api/webhooks/${cfg?.whatsappProvider === 'meta_cloud' ? 'meta-whatsapp' : 'evolution'}`;
+                            return `${base}/api/webhooks/${situacaoProvedor(cfg, process.env) === 'nao_meta' ? 'evolution' : 'meta-whatsapp'}`;
                           })()}
                         </code>
                         <span className="text-xs text-muted-foreground">

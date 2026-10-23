@@ -117,9 +117,11 @@ describe("os formularios nativos continuam enviando o valor", () => {
     // submetido — e o Server Action grava 0 para sempre, em silencio.
     const page = ler("src/app/(app)/configuracoes/page.tsx");
     const blocos = page.split("<Checkbox").slice(1);
-    // Pré-atendimento agora é um seletor 0/1/2, não um checkbox.
+    // Respostas automáticas é um Switch (liga/desliga), não um checkbox; whatsappIaMcp saiu.
     expect(blocos).toHaveLength(12);
-    expect(page).toMatch(/<FormSelect[\s\S]*?name="whatsappPreAtendimento"/);
+    // A página passa o name; o Switch do componente cliente o recebe por prop.
+    expect(page).toContain('name="whatsappPreAtendimento"');
+    expect(ler("src/components/whatsapp-respostas-auto.tsx")).toMatch(/<input[\s\S]*?type="hidden"[\s\S]*?name=\{name\}/);
     for (const bloco of blocos) {
       expect(bloco.split("/>")[0].includes("name=")).toBe(true);
     }

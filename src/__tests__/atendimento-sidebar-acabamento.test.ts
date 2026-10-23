@@ -9,6 +9,7 @@ vi.mock('next/navigation',()=>({useRouter:()=>({refresh:vi.fn()}),usePathname:()
 vi.mock('@/app/(app)/crm/atendimento/actions',()=>({responderConversa:vi.fn(),controlarAutomatico:vi.fn()}));
 import {ConversaChat} from '@/app/(app)/crm/atendimento/conversa-chat';
 import {Reply} from '@/app/(app)/crm/atendimento/reply';
+import {QuemResponde} from '@/app/(app)/crm/atendimento/quem-responde';
 import {AlertasHoje} from '@/components/alertas-hoje';
 import {BuscaRapidaGatilho} from '@/components/busca-rapida';
 
@@ -39,18 +40,15 @@ describe('item 2: aviso de mensagem aguardando é discreto',()=>{
 describe('item 3: rodapé do composer compacto',()=>{
  const aberto=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
  const fechado=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:false,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
- it('uma linha curta no rodapé, com contador',()=>{
-  expect(aberto).toContain('Resposta de atendimento disponível · templates com tarifa bloqueados');
-  expect(fechado).toContain('Aguarde nova mensagem do cliente · envio com tarifa bloqueado');
+ it('sem rodapé fixo: janela encerrada vai no placeholder; sem contador perto do limite',()=>{
+  expect(fechado).toContain('Janela encerrada: aguarde nova mensagem do cliente');
   expect(aberto).not.toContain('/4096'); // M4: contador só perto do limite
  });
- it('o texto longo vive no Popover do ícone de ajuda (K), sem sumir: fica no leitor de tela',()=>{
-  // Antes era um <details> de uma linha; agora é um ícone de ajuda na faixa do assistente. O texto
-  // continua no DOM (sr-only, ligado ao gatilho por aria-describedby) e abre visível no Popover.
-  expect(aberto).toContain('aria-label="Como funciona o automático"');
-  expect(aberto).toContain('aria-describedby="ajuda-automatico"');
-  for(const t of ['Janela aberta. Templates com tarifa continuam bloqueados','Clicar no botão não envia a mensagem'])expect(aberto).toContain(t);
-  expect(fechado).toContain('Janela encerrada. Envio com tarifa bloqueado');
+ it('o texto longo vive na ajuda do seletor de quem responde, sem sumir: fica no leitor de tela',()=>{
+  const q=(aberta:boolean)=>renderToStaticMarkup(React.createElement(QuemResponde,{telefone:'5592900000001',aberta,estadoAutomatico:'x'}));
+  expect(q(true)).toContain('aria-describedby="ajuda-automatico"');
+  for(const t of ['Janela aberta. Templates com tarifa continuam bloqueados','Clicar no botão não envia a mensagem'])expect(q(true)).toContain(t);
+  expect(q(false)).toContain('Janela encerrada. Envio com tarifa bloqueado');
  });
 });
 

@@ -9,6 +9,23 @@ const nextConfig: NextConfig = {
       { protocol: "http", hostname: "*", port: "", pathname: "/**" },
     ],
   },
+  // Transcrição no navegador (transformers.js + ONNX Runtime Web): os pacotes de nó nunca entram no bundle do cliente
+  // e ficam fora do bundle do servidor.
+  serverExternalPackages: ["sharp", "onnxruntime-node"],
+  // Produção (`yarn build`) usa Turbopack: os mesmos aliases, só para o navegador.
+  turbopack: {
+    resolveAlias: {
+      sharp: { browser: "./src/lib/modulo-vazio.ts" },
+      "onnxruntime-node": { browser: "./src/lib/modulo-vazio.ts" },
+    },
+  },
+  // Dev local roda com --webpack.
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = { ...config.resolve.alias, "sharp$": false, "onnxruntime-node$": false };
+    }
+    return config;
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",

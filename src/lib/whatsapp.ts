@@ -180,11 +180,17 @@ export type EnvioWhatsApp = {
  */
 export async function enviarWhatsAppDetalhado(
   input: EnvioWhatsApp
-): Promise<{ ok: boolean; mensagemId: number | null }> {
+): Promise<{ ok: boolean; mensagemId: number | null; motivo?: string }> {
   const numero = normalizarTelefone(input.telefone);
   if (!numero) return { ok: false, mensagemId: null };
 
   const naJanela = await dentroDaJanela24h(numero);
+  const { primary } = await resolveWhatsAppProviders();
+  // Rotinas agendadas não podem iniciar conversa no modo gratuito. Isso é uma
+  // restrição prevista, não uma tentativa que falhou no transporte.
+  if (!naJanela && input.origem === "cron" && primary?.name === "meta_cloud" && primary.freeServiceOnly) {
+    return { ok: false, mensagemId: null, motivo: "janela_gratuita_indisponivel" };
+  }
   const usaTemplate = !naJanela;
   const corpo = input.template.fallbackText;
 
@@ -201,12 +207,19 @@ export async function enviarWhatsAppDetalhado(
     return { ok: false, mensagemId };
   }
 
-  const { primary } = await resolveWhatsAppProviders();
   if (!primary) {
     await marcarFalha(mensagemId, "provider_nao_configurado");
     return { ok: false, mensagemId };
   }
 
+  if (usaTemplate && primary.name === "meta_cloud" && input.template.name === "bfx_assinatura_folha") {
+    const { listarTemplatesAprovados } = await import("@/lib/meta-templates");
+    const aprovados = await listarTemplatesAprovados();
+    if (!aprovados.some(t => t.nome === input.template.name && t.idioma === input.template.language && t.variaveis === input.template.bodyParams.length)) {
+      await marcarFalha(mensagemId, "template_assinatura_nao_aprovado");
+      return { ok: false, mensagemId };
+    }
+  }
   const resultado = usaTemplate
     ? await primary.sendTemplate(numero, input.template)
     : await primary.sendText(numero, corpo);

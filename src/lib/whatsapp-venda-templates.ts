@@ -13,9 +13,8 @@ export function montarMensagensDocumentosVenda(input: {
   const mensagens: WhatsAppTemplate[] = [];
   if (input.autoRecibo) {
     if (input.assinaturaUrl) {
-      // Não há template aprovado para assinatura. O fluxo de envio limita
-      // texto livre à janela de atendimento; fora dela registra a pendência.
-      mensagens.push(comFallback("", [], `Olá! Segue o link para assinar sua autorização de desconto em folha: ${input.assinaturaUrl}`));
+      // Template próprio da autorização; não confundir com recibo de pagamento.
+      mensagens.push(comFallback(TEMPLATES.assinaturaFolha, [input.nome, input.assinaturaUrl], `Olá! Segue o link para assinar sua autorização de desconto em folha: ${input.assinaturaUrl}`));
     } else if (input.reciboUrl) {
       mensagens.push(comFallback(TEMPLATES.recibo, [input.nome, input.reciboUrl], `Olá! Segue seu recibo de venda: ${input.reciboUrl}`));
     }

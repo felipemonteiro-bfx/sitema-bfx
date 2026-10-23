@@ -2,10 +2,11 @@ import { describe, it, expect } from "vitest";
 import { TEMPLATES, comFallback } from "@/lib/whatsapp-templates";
 
 describe("TEMPLATES", () => {
-  it("cobre os 10 templates transacionais", () => {
+  it("cobre os 11 templates transacionais", () => {
     expect(Object.keys(TEMPLATES).sort()).toEqual(
       [
         "agradecimento",
+        "assinaturaFolha",
         "aniversario",
         "boasVindas",
         "boleto",

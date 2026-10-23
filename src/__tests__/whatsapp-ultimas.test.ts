@@ -23,6 +23,11 @@ describe('ultimasMensagensPorTelefone', () => {
       { telefone: '5592900000002', criadoEm: t2 },
     ]);
   });
+  it('ignora linhas "gerando" (resposta ainda não enviada) na prévia', async () => {
+    findMany.mockResolvedValueOnce([]);
+    await ultimasMensagensPorTelefone([{ telefone: '5592900000001', _max: { criadoEm: t1 } }]);
+    expect(findMany.mock.calls.at(-1)![0].where.status).toEqual({ not: 'gerando' });
+  });
   it('em empate de criadoEm no mesmo telefone fica a de maior id', async () => {
     findMany.mockResolvedValueOnce([
       { id: 5, telefone: 'a', direcao: 'in', corpo: 'velha', criadoEm: t1 },

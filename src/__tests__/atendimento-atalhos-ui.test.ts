@@ -35,7 +35,7 @@ describe('regras puras dos atalhos',()=>{
 
 describe('raio do composer',()=>{
  const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592999990001',aberta:true,estadoAutomatico:'Automático'}));
- const raio=html.split('<button').find(b=>b.includes('aria-label="Atalhos rápidos"'))!;
+ const raio=html.split('<button').find(b=>b.includes('aria-label="Respostas prontas e atalhos"'))!;
  it('é um botão habilitado, fechado, com aria-expanded',()=>{
   expect(raio).toBeTruthy();
   expect(raio).toContain('aria-expanded="false"');
@@ -44,7 +44,7 @@ describe('raio do composer',()=>{
  });
  it('com a janela encerrada o raio fica desabilitado (o campo também está)',()=>{
   const h=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592999990001',aberta:false,estadoAutomatico:'x'}));
-  expect(h.split('<button').find(b=>b.includes('aria-label="Atalhos rápidos"'))!.split('</button>')[0]).toContain('disabled=""');
+  expect(h.split('<button').find(b=>b.includes('aria-label="Respostas prontas e atalhos"'))!.split('</button>')[0]).toContain('disabled=""');
  });
 });
 

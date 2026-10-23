@@ -11,9 +11,10 @@ describe("documentos da venda nos templates aprovados", () => {
     const mensagens = montarMensagensDocumentosVenda({ nome: "Ana", autoRecibo: true, autoBoleto: true, reciboUrl: "https://bfx.test/recibo", boletoUrl: "https://bfx.test/boleto" });
     expect(mensagens.map(m => [m.name, m.bodyParams])).toEqual([["bfx_recibo", ["Ana", "https://bfx.test/recibo"]], ["bfx_boleto", ["Ana", "https://bfx.test/boleto"]]]);
   });
-  it("não chama assinatura de comprovante e não inventa template aprovado", () => {
+  it("usa template próprio para autorização de desconto em folha", () => {
     const [mensagem] = montarMensagensDocumentosVenda({ nome: "Ana", autoRecibo: true, autoBoleto: false, assinaturaUrl: "https://bfx.test/assinatura" });
-    expect(mensagem.name).toBe("");
+    expect(mensagem.name).toBe("bfx_assinatura_folha");
+    expect(mensagem.bodyParams).toEqual(["Ana", "https://bfx.test/assinatura"]);
     expect(mensagem.fallbackText).toContain("autorização de desconto em folha");
   });
   it("não envia documentos com flags desligadas ou sem link", () => {

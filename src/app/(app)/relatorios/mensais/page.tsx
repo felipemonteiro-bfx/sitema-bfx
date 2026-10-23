@@ -1,3 +1,4 @@
+import { RelatoriosNav } from '@/components/relatorios-nav';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
@@ -72,6 +73,7 @@ export default async function Page() {
         description="Histórico de envios do relatório mensal de vendas às empresas parceiras."
         breadcrumbs={[{ label: "Relatórios", href: "/relatorios" }, { label: "Mensais" }]}
       />
+      <RelatoriosNav atual="mensais" />
 
       <Card>
         <CardHeader>

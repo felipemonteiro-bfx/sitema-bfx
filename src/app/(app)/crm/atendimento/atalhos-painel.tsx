@@ -10,6 +10,7 @@ import { formatBRL } from '@/lib/utils';
 import { dataDiaMes, textoEstoque, textoResumoParcelas, textoSegundaVia } from '@/lib/atendimento-atalhos-texto';
 import type { ItemEstoque } from '@/lib/atendimento-atalhos';
 import { boletosDoContato, buscarEstoqueAtalho, parcelasDoContato } from './atalhos-actions';
+import { filtrarProntas } from './composer-regras';
 import { DEBOUNCE_MS, ROTULO_SITUACAO, contarVencidas, proximoVencimento, termoBuscavel } from './atalhos-regras';
 
 /**
@@ -36,6 +37,26 @@ function Aviso({ children, erro }: { children: React.ReactNode; erro?: boolean }
 
 function Carregando() {
   return <div role="status" aria-label="Carregando" className="flex flex-col gap-2 rounded-controle bg-card-elevated p-3 [&>*]:h-9 [&>*:nth-child(2)]:w-4/5"><Skeleton /><Skeleton /><Skeleton /></div>;
+}
+
+/* ---------- Respostas prontas ---------- */
+
+type ProntaItem = { titulo: string; texto: string; atalho?: string };
+
+function AbaProntas({ prontas, onInserir }: { prontas: readonly ProntaItem[]; onInserir: (texto: string) => void }) {
+  const [termo, setTermo] = useState('');
+  const itens = filtrarProntas(prontas, termo.replace(/^\//, ''));
+  return <div className="flex flex-col gap-2.5">
+    <Input aria-label="Buscar resposta pronta" placeholder="Buscar resposta pronta (ex.: pagamento)" autoComplete="off" leftIcon={<Search className="size-4" aria-hidden="true" />} value={termo} onChange={(e) => setTermo(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }} />
+    {itens.length === 0 ? <Aviso>Nenhuma resposta pronta com esse termo.</Aviso> : <ul aria-label="Respostas prontas" className={`${LISTA} max-h-72 overflow-y-auto`}>
+      {itens.map((p) => <li key={p.titulo} className="[&>button]:h-auto [&>button]:w-full [&>button]:flex-col [&>button]:items-stretch [&>button]:gap-0.5 [&>button]:px-2.5 [&>button]:py-2.5 [&>button]:text-left [&>button]:font-normal">
+        <Button type="button" variant="ghost" onClick={() => onInserir(p.texto)}>
+          <span className="flex items-center justify-between gap-3"><span className="text-sm font-semibold">{p.titulo}</span>{p.atalho && <span className="font-mono text-xs text-texto-secundario">/{p.atalho}</span>}</span>
+          <span className="line-clamp-2 whitespace-normal text-xs text-texto-secundario">{p.texto}</span>
+        </Button>
+      </li>)}
+    </ul>}
+  </div>;
 }
 
 /* ---------- Estoque ---------- */
@@ -173,14 +194,16 @@ function AbaContato<R extends { ok: boolean }>({ telefone, consultar, render }: 
 
 /* ---------- Painel ---------- */
 
-export function PainelAtalhos({ telefone, onInserir }: { telefone: string; onInserir: (texto: string) => void }) {
-  return <Tabs defaultValue="estoque">
+export function PainelAtalhos({ telefone, onInserir, prontas = [] }: { telefone: string; onInserir: (texto: string) => void; prontas?: readonly ProntaItem[] }) {
+  const abas = [...(prontas.length ? [['prontas', 'Respostas prontas']] : []), ['estoque', 'Estoque'], ['parcelas', 'Parcelas'], ['boletos', 'Boletos']];
+  return <Tabs defaultValue={abas[0][0]}>
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pb-1">
       <TabsList aria-label="Atalho">
-        {[['estoque', 'Estoque'], ['parcelas', 'Parcelas'], ['boletos', 'Boletos']].map(([v, n]) => <TabsTrigger key={v} value={v}>{n}</TabsTrigger>)}
+        {abas.map(([v, n]) => <TabsTrigger key={v} value={v}>{n}</TabsTrigger>)}
       </TabsList>
       <span className="text-xs text-texto-secundario">Clicar só preenche o campo · Esc fecha</span>
     </div>
+    {prontas.length > 0 && <TabsContent value="prontas"><AbaProntas prontas={prontas} onInserir={onInserir} /></TabsContent>}
     <TabsContent value="estoque"><AbaEstoque onInserir={onInserir} /></TabsContent>
     <TabsContent value="parcelas"><AbaContato telefone={telefone} consultar={parcelasDoContato} render={(d) => <ParcelasView dados={d} onInserir={onInserir} />} /></TabsContent>
     <TabsContent value="boletos"><AbaContato telefone={telefone} consultar={boletosDoContato} render={(d) => <BoletosView dados={d} onInserir={onInserir} />} /></TabsContent>

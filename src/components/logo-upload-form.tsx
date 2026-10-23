@@ -90,7 +90,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
         </Label>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <Label variant="foreground" htmlFor="logo-upload" className="cursor-pointer">
-            <span className="inline-flex h-11 items-center justify-center rounded-controle border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+            <span className="inline-flex h-11 items-center justify-center rounded-controle border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-controle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
               Escolher arquivo
             </span>
             {/* `<input>` cru de proposito — excecao legitima, ja documentada para

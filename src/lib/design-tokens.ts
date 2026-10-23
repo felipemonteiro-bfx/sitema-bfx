@@ -92,10 +92,10 @@ export const colors = {
   destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 
   /** Botão outline */
-  outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+  outline: 'border border-input bg-background hover:bg-controle hover:text-foreground',
 
   /** Botão ghost */
-  ghost: 'hover:bg-accent hover:text-accent-foreground',
+  ghost: 'hover:bg-controle hover:text-foreground',
 
   /** Link */
   link: 'text-primary underline-offset-4 hover:underline',
@@ -283,7 +283,7 @@ export const cards = {
   glass: `${backgrounds.card} ${borders.default} ${effects.cardShadow} ${effects.backdropBlur} rounded-2xl p-6`,
 
   /** Card interativo (clicável) */
-  interactive: `${backgrounds.card} ${borders.default} ${effects.cardShadow} rounded-2xl p-6 cursor-pointer hover:bg-accent/50 ${effects.transition}`,
+  interactive: `${backgrounds.card} ${borders.default} ${effects.cardShadow} rounded-2xl p-6 cursor-pointer hover:bg-controle ${effects.transition}`,
 } as const;
 
 // ============================================================================

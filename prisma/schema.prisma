@@ -318,8 +318,9 @@ model Config {
   whatsappAutoBoasVindas   Int?    @default(0) @map("whatsapp_auto_boas_vindas")   // Boas-vindas cliente novo
   whatsappAutoAgradecimento Int?   @default(0) @map("whatsapp_auto_agradecimento") // Agradecimento 1 dia após venda
   whatsappDiasInativo      Int?    @default(60) @map("whatsapp_dias_inativo")      // Dias sem compra para reativação
-  whatsappPreAtendimento   Int?    @default(0) @map("whatsapp_pre_atendimento")    // 1=IA pré-atende quem manda msg no WhatsApp
+  whatsappPreAtendimento   Int?    @default(0) @map("whatsapp_pre_atendimento")    // respostas automáticas: 0=desligado, 2=ligado (1 = gateway antigo, tratado como ligado)
   whatsappTakeoverMinutos  Int?    @default(60) @map("whatsapp_takeover_minutos")
+  whatsappIaMcp            Boolean @default(false) @map("whatsapp_ia_mcp")                    // OBSOLETO (17/10/2026): não é mais lido nem gravado; a IA depende só do modelo LiteLLM + MCP_AGENTE_SECRET
   aiProvider               String? @map("ai_provider")                            // gemini | openai | litellm
   litellmUrl               String? @map("litellm_url")
   litellmKey               String? @map("litellm_key")
@@ -905,18 +906,58 @@ model WhatsAppMensagem {
   origem       String                                  // cron | campanha | venda | boleto | relatorio | pre_atendimento | manual
   templateNome String?  @map("template_nome")          // null quando texto livre
   corpo        String
+  tipo         String   @default("texto")              // texto | audio | imagem | video | figurinha | documento
   status       String   @default("pendente")           // pendente | enviado | entregue | lido | falhou
   erroCodigo   Int?     @map("erro_codigo")
   erroMsg      String?  @map("erro_msg")
+  /// wa_message_id da mensagem CITADA (resposta com citação). Sem FK: a citada pode nem estar no banco.
+  respondeAWaId String? @map("responde_a_wa_id")
   criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
 
   envios       CampanhaEnvio[]
+  midia        WhatsAppMidia?
 
   @@index([clienteId, criadoEm])
   @@index([status, criadoEm])
   @@index([telefone, direcao, criadoEm])
   @@map("whatsapp_mensagens")
+}
+
+/// Mídia (áudio, foto, vídeo, figurinha, documento) de uma mensagem do atendimento. O arquivo mora no
+/// bucket PRIVADO `whatsapp-midias` (nunca no `produtos`, que é de leitura pública); aqui fica só a
+/// chave opaca. `status` é a máquina do download e é independente do `status` da mensagem.
+model WhatsAppMidia {
+  id            String           @id @default(uuid())
+  mensagemId    Int              @unique @map("mensagem_id")
+  mensagem      WhatsAppMensagem @relation(fields: [mensagemId], references: [id], onDelete: Cascade)
+  tipo          String                                   // audio | imagem | video | figurinha | documento
+  metaMediaId   String           @map("meta_media_id")   // id de ENTRADA (webhook): vale 7 dias
+  uploadMediaId String?          @map("upload_media_id") // id de UPLOAD (saída): vale 30 dias
+  uploadEm      DateTime?        @map("upload_em")
+  mime          String
+  sha256        String                                   // hex minúsculo, 64 caracteres
+  tamanho       Int?
+  paginas       Int?                                     // só PDF: contagem de páginas (melhor esforço)
+  nomeExibicao  String?          @map("nome_exibicao")   // só exibição, nunca vira caminho
+  legenda       String?
+  voz           Boolean          @default(false)
+  animada       Boolean          @default(false)
+  chaveStorage  String?          @map("chave_storage")   // midias/aaaa/mm/<uuid>
+  status        String           @default("pendente")    // pendente | baixando | salva | falhou | indisponivel
+  tentativas    Int              @default(0)
+  erro          String?
+  // Só áudio. Transcrição feita no navegador (Whisper em WASM): dado NÃO confiável, nunca vai para WhatsAppMensagem.corpo.
+  transcricao        String?   @db.Text
+  transcricaoEm      DateTime? @map("transcricao_em")
+  transcricaoAutorId Int?      @map("transcricao_autor_id")
+  transcricaoModelo  String?   @map("transcricao_modelo")
+  onda               Bytes?                                  // só áudio: 40 picos (0-31) calculados no navegador
+  criadoEm      DateTime         @default(now()) @map("criado_em")
+  atualizadoEm  DateTime         @updatedAt @map("atualizado_em")
+
+  @@index([status, atualizadoEm])
+  @@map("whatsapp_midias")
 }
 
 /// Histórico de todo e-mail enviado pelo sistema (termo, consolidado semanal, relatório mensal, aviso

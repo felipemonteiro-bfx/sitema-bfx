@@ -11,6 +11,7 @@ import {statusTique,iniciais,horaCurta,rotuloDia,previaMensagem} from '@/app/(ap
 import {Bolha} from '@/app/(app)/crm/atendimento/bolha';
 import {ConversaLista} from '@/app/(app)/crm/atendimento/conversa-lista';
 import {Reply} from '@/app/(app)/crm/atendimento/reply';
+import {QuemResponde} from '@/app/(app)/crm/atendimento/quem-responde';
 import {AbrirEmNovaJanela} from '@/app/(app)/crm/atendimento/abrir-em-nova-janela';
 import {ESTADO_KANBAN_INICIAL} from '@/lib/whatsapp-kanban';
 
@@ -88,7 +89,7 @@ describe('bolha',()=>{
 describe('lista de conversas',()=>{
  const itens=[
   {telefone:'5592900000001',nome:'Ana Souza',hora:'14:32',previa:'Tem a lavadora?',aguardando:true,etapa:'em_atendimento',etapaNome:'Em atendimento',responsavel:'Jakeline'},
-  {telefone:'5592900000002',nome:'Bruno',hora:'ontem',previa:'Você: Obrigado',aguardando:false,etapa:'concluidas',etapaNome:'Concluídas',responsavel:'Não atribuído'},
+  {telefone:'5592900000002',nome:'Bruno',hora:'ontem',previa:'Você: Obrigado',aguardando:false,etapa:'concluidas',etapaNome:'Concluídas',responsavel:'Sem responsável'},
  ];
  const props={itens,selecionado:'5592900000001',base:'/crm/atendimento',busca:'ana',visao:'lista',etapa:'todas',contagens:{todas:2,novas:0,em_atendimento:1,aguardando_cliente:0,aguardando_fornecedor:0,concluidas:1}};
  it('chips por etapa são links que filtram pela URL, com contagem',()=>{
@@ -98,7 +99,7 @@ describe('lista de conversas',()=>{
  });
  it('linha mostra prévia, etapa · responsável e marca aguardando resposta',()=>{
   const html=renderToStaticMarkup(React.createElement(ConversaLista,props));
-  expect(html).toContain('Tem a lavadora?');expect(html).toContain('Em atendimento · Jakeline');expect(html).toContain('aria-label="Aguardando resposta"');
+  expect(html).toContain('Tem a lavadora?');expect(html).toContain('Em atendimento · Jakeline');expect(html).toContain('aria-label="Sem resposta"');
   expect(html).toContain('aria-current="page"');
  });
  it('na tela própria os links ficam na rota da janela',()=>{
@@ -118,9 +119,10 @@ describe('lista de conversas',()=>{
 describe('Reply',()=>{
  const fonte=ler('(app)/crm/atendimento/reply.tsx');
  it('mantém as duas actions e o envio só no submit',()=>{
-  expect(fonte).toContain('responderConversa');expect(fonte).toContain('controlarAutomatico');
+  const quem=ler('(app)/crm/atendimento/quem-responde.tsx');
+  expect(fonte).toContain('responderConversa');expect(quem).toContain('controlarAutomatico'); // o controle mora no cabeçalho (QuemResponde)
   expect(fonte.split('responderConversa(').length-1).toBe(1); // única chamada: onSubmit
-  expect(fonte).toContain('Clicar no botão não envia a mensagem');
+  expect(quem).toContain('Clicar no botão não envia a mensagem');
  });
  it('respostas prontas só preenchem o campo (onClick sem envio)',()=>{
   const trecho=fonte.split('function escolher')[1].split('function aoDigitar')[0];  // M4: respostas prontas vivem na lista do botão de raio e do "/"
@@ -129,25 +131,27 @@ describe('Reply',()=>{
  it('renderiza botão redondo de 48px, contador e aviso de tarifa',()=>{
   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:'Automático gratuito disponível para assuntos previstos'}));
   // N: botão de envio de 48px (size-12) como no artboard; a classe vai no invólucro porque o Button não aceita classes (@shadcn/lint).
-  expect(html).toContain('aria-label="Enviar mensagem"');expect(html).toContain('size-12');expect(html).toContain('rounded-full');
+  // B13: com o campo vazio o botão redondo (48px) é o microfone; o Enviar redondo aparece com texto e continua no código.
+  expect(html).toContain('aria-label="Gravar áudio"');expect(fonte).toContain('aria-label="Enviar mensagem"');expect(html).toContain('size-12');expect(html).toContain('rounded-full');
   expect(html).not.toContain('0/4096'); // M4: contador só perto do limite (> 3500)
-  expect(html).toContain('Templates com tarifa continuam bloqueados');
-  expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
   expect(fonte+ler('(app)/crm/atendimento/composer-regras.ts')).toContain('Boas-vindas');
  });
- it('com a equipe no comando oferece Retomar',()=>{
-  const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:false,estadoAutomatico:'Automático pausado pela equipe'}));
-  expect(html).toContain('A equipe está no comando');expect(html).toContain('Retomar automático');expect(html).toContain('Janela encerrada');
+ it('com a equipe no comando o seletor do cabeçalho mostra Equipe responde',()=>{
+  const html=renderToStaticMarkup(React.createElement(QuemResponde,{telefone:'5592900000001',aberta:false,estadoAutomatico:'Automático pausado pela equipe'}));
+  expect(html).toContain('Equipe responde');expect(html).toContain('Janela encerrada');
  });
 });
 
-describe('Reply: as duas ações de controle existem em todos os estados',()=>{
+describe('QuemResponde: as duas ações de controle existem em todos os estados',()=>{
  // Regressão da revisão do PR #43: um botão só (por regex no texto) escondia ações legítimas.
+ // Agora o menu tem as duas opções sempre (Equipe responde = Assumir; Automático responde = Retomar).
  const estados=['Automático gratuito disponível para assuntos previstos','Automático pausado pela equipe','Pausa temporária até 14:00','Automático desligado','Cliente pediu para parar'];
  for(const estado of estados){
-  it(`estado "${estado}" oferece Assumir conversa e Retomar automático`,()=>{
-   const html=renderToStaticMarkup(React.createElement(Reply,{telefone:'5592900000001',aberta:true,estadoAutomatico:estado}));
-   expect(html).toContain('Assumir conversa');expect(html).toContain('Retomar automático');
+  it(`estado "${estado}" renderiza o seletor e o menu oferece as duas opções`,()=>{
+   const html=renderToStaticMarkup(React.createElement(QuemResponde,{telefone:'5592900000001',aberta:true,estadoAutomatico:estado}));
+   expect(html).toMatch(/Equipe responde|Automático responde/);
+   const f=ler('(app)/crm/atendimento/quem-responde.tsx');
+   expect(f).toContain('Equipe responde');expect(f).toContain('Automático responde');
   });
  }
 });
@@ -174,10 +178,16 @@ describe('tela própria em nova janela',()=>{
  });
  it('kanban recebe a base da rota e continua com arrastar e Organizar atendimento',()=>{
   const k=ler('(app)/crm/atendimento/kanban.tsx');
-  expect(k).toContain('onDragStart');expect(k).toContain('onDrop');expect(k).toContain('salvarOrganizacaoConversa');expect(k).toContain('Organizar atendimento');expect(k).toContain('base');
+  expect(k).toContain('onDragStart');expect(k).toContain('onDrop');expect(k).toContain('salvarOrganizacaoConversa');expect(k).toContain('OrganizarConversa');expect(ler('(app)/crm/atendimento/organizar-conversa.tsx')).toContain('Organizar atendimento');expect(k).toContain('base');
  });
 });
 
 describe('pedido original intacto',()=>{
  it('cartão inicial do kanban continua o mesmo',()=>{expect(ESTADO_KANBAN_INICIAL.etapa).toBe('novas');});
+});
+
+it('a tela do atendimento não lê linhas "gerando" (grupos e mensagens)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const fonte = readFileSync('src/app/(app)/crm/atendimento/tela-atendimento.tsx', 'utf8');
+  expect(fonte.split("status:{not:'gerando'}").length - 1).toBeGreaterThanOrEqual(2);
 });

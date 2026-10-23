@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useId, useState, type ReactNode } from "react";
+import { createContext, useContext, useId, useState, type MouseEvent, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,11 +13,21 @@ const ProdutosContext = createContext<Expansao | null>(null);
 export function HistoricoLinhaVenda({ vendaId, itens, children }: { vendaId: number; itens: Item[]; children: ReactNode }) {
   const [aberta, setAberta] = useState(false);
   const detalhesId = `produtos-${useId()}`;
+  const expansivel = itens.length > 1;
+  const alternar = () => setAberta((atual) => !atual);
+
+  function clicarLinha(evento: MouseEvent<HTMLTableRowElement>) {
+    const alvo = evento.target;
+    if (evento.defaultPrevented || !(alvo instanceof Element) || !evento.currentTarget.contains(alvo)) return;
+    if (alvo.closest("a, button, input, select, textarea, label, summary, [role='button'], [role='link'], [contenteditable='true']")) return;
+    if (window.getSelection()?.toString()) return;
+    alternar();
+  }
 
   return (
-    <ProdutosContext.Provider value={{ aberta, alternar: () => setAberta((atual) => !atual), detalhesId, vendaId, quantidade: itens.length }}>
-      <TableRow>{children}</TableRow>
-      {itens.length > 1 && (
+    <ProdutosContext.Provider value={{ aberta, alternar, detalhesId, vendaId, quantidade: itens.length }}>
+      <TableRow clicavel={expansivel} onClick={expansivel ? clicarLinha : undefined}>{children}</TableRow>
+      {expansivel && (
         <TableRow id={detalhesId} hidden={!aberta} semHover>
           <TableCell colSpan={10} fundo="elevado" className="p-0">
             <div className="tabela-detalhes-visiveis sticky left-0 space-y-3 p-4" role="region" aria-label={`Produtos da venda ${vendaId}`}>

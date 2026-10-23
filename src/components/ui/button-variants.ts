@@ -50,24 +50,27 @@ export const buttonVariants = cva(
         info:
           "bg-info text-info-foreground hover:bg-info/90 active:scale-[0.98]",
         outline:
-          "border border-input bg-controle text-foreground hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-[0.98] transition-all",
+          "border border-input bg-controle text-foreground hover:bg-controle-ativo hover:text-foreground hover:border-accent/60 hover:[&_svg]:text-foreground aria-expanded:bg-controle-ativo aria-expanded:border-accent/60 data-[state=open]:bg-controle-ativo active:scale-[0.98] transition-all",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-[0.98]",
         // Ação de marca em tint (atalhos do atendimento): borda e texto `marca-tint-texto`
         // (5.60:1 sobre o tint), preenchimento OPACO. Nunca preenchido de verde cheio.
         tint:
           "border border-marca-tint-texto/30 bg-marca-tint text-marca-tint-texto hover:brightness-95",
-        ghost: "hover:bg-accent hover:text-accent-foreground active:scale-[0.98]",
+        // `ghost`: hover e estado aberto no cinza de controle (Vantage). Nunca no accent verde: os icones
+        // destes botoes sao `text-muted-foreground` e ficariam cinza sobre verde (~1,5:1). No hover o
+        // icone acompanha o texto em `foreground`.
+        ghost: "hover:bg-controle hover:text-foreground hover:[&_svg]:text-foreground aria-expanded:bg-controle aria-expanded:text-foreground aria-expanded:[&_svg]:text-foreground data-[state=open]:bg-controle data-[state=open]:text-foreground active:scale-[0.98]",
         // --- Variantes que as telas repetiam por `className` (o lint barra cor no
         // chamador, design-system/lint-policy.mjs). Nome pelo PAPEL, nao pela cor.
         // `discreto`: acao secundaria em texto muted que acende no hover.
-        discreto: "text-muted-foreground hover:bg-accent hover:text-foreground active:scale-[0.98]",
+        discreto: "text-muted-foreground hover:bg-controle hover:text-foreground active:scale-[0.98]",
         // `discretoPlano`: igual, sem fundo no hover (ex.: "x" de limpar dentro do campo).
         discretoPlano: "text-muted-foreground hover:bg-transparent hover:text-foreground",
         // `discretoErro`: muted que vira vermelho no hover (excluir, remover).
-        discretoErro: "text-muted-foreground hover:bg-accent hover:text-error-text active:scale-[0.98]",
+        discretoErro: "text-muted-foreground hover:bg-controle hover:text-error-text active:scale-[0.98]",
         // `sutilErro`: acao destrutiva sem preenchimento (texto de erro, fundo so no hover).
-        sutilErro: "text-error-text hover:bg-accent hover:text-error-text active:scale-[0.98]",
+        sutilErro: "text-error-text hover:bg-controle hover:text-error-text active:scale-[0.98]",
         // `outlineErro`: contorno neutro com texto de erro; no hover vira tint de erro.
         outlineErro:
           "border border-divisoria bg-transparent text-error-text transition-colors hover:border-error hover:bg-error-bg hover:text-error-text",
@@ -93,19 +96,28 @@ export const buttonVariants = cva(
         // `linha`: linha de lista clicavel (resultado de busca, item de menu): largura
         // total, texto a esquerda, sem raio e sem escala no clique.
         linha:
-          "h-auto w-full justify-start whitespace-normal rounded-none px-3 py-2 text-left font-normal hover:bg-accent hover:text-accent-foreground active:scale-100",
+          "h-auto w-full justify-start whitespace-normal rounded-none px-3 py-2 text-left font-normal hover:bg-controle hover:text-foreground active:scale-100",
         // `linhaAcao`: ultima linha da lista com a acao (ex.: "Cadastrar ...").
         linhaAcao:
-          "h-auto w-full justify-start whitespace-normal rounded-none border-t border-border px-3 py-2 text-left font-medium text-primary hover:bg-accent hover:text-primary active:scale-100",
+          "h-auto w-full justify-start whitespace-normal rounded-none border-t border-border px-3 py-2 text-left font-medium text-primary hover:bg-controle hover:text-primary active:scale-100",
         // `linhaDivisoria`: linha de lista com filete embaixo (some na ultima).
         linhaDivisoria:
-          "h-auto w-full flex-col items-stretch justify-start whitespace-normal rounded-none border-b border-border px-3 py-2.5 text-left font-normal last:border-b-0 hover:bg-accent hover:text-accent-foreground active:scale-100",
+          "h-auto w-full flex-col items-stretch justify-start whitespace-normal rounded-none border-b border-border px-3 py-2.5 text-left font-normal last:border-b-0 hover:bg-controle hover:text-foreground active:scale-100",
         // `linhaCompacta`: opcao de sugestao em popover (texto pequeno, raio medio).
         linhaCompacta:
-          "h-auto w-full justify-start whitespace-normal rounded-md px-2 py-1.5 text-left text-xs font-normal hover:bg-accent hover:text-accent-foreground active:scale-100",
+          "h-auto w-full justify-start whitespace-normal rounded-md px-2 py-1.5 text-left text-xs font-normal hover:bg-controle hover:text-foreground active:scale-100",
         // `bloco`: o botao e um bloco de conteudo (item de notificacao, quadro de assinatura).
         bloco:
           "h-auto w-full flex-col justify-start whitespace-normal rounded-none p-0 text-left font-normal hover:bg-transparent active:scale-100",
+        // `cartao`: o botao e o cartao inteiro do quadro kanban (conteudo empilhado, a
+        // esquerda, quebra de linha liberada). O article em volta e quem arrasta.
+        cartao:
+          "w-full flex-col items-stretch justify-start gap-1.5 whitespace-normal rounded-md border border-divisoria bg-card-elevated text-left font-normal text-foreground shadow-sm hover:bg-secondary hover:text-foreground active:scale-100 data-[ativo=true]:ring-2 data-[ativo=true]:ring-inset data-[ativo=true]:ring-primary dark:border-transparent",
+        // `revelar`: acao discreta que so aparece no hover/foco do bloco pai (`group`), como a
+        // setinha de menu das bolhas do WhatsApp (grupo `msg`); continua visivel com o menu aberto e some no toque,
+        // onde vale segurar o dedo (o botao segue no layout, e a ancora do menu, mas nao recebe toque).
+        revelar:
+          "rounded-full bg-secondary text-secondary-foreground opacity-0 shadow-sm transition-opacity hover:bg-secondary/80 group-hover:opacity-100 group-hover/msg:opacity-100 group-focus-within/msg:opacity-100 focus-visible:opacity-100 pointer-coarse:pointer-events-none pointer-coarse:opacity-0 pointer-coarse:data-[state=open]:opacity-0 data-[state=open]:opacity-100 motion-reduce:transition-none",
         link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
       },
       // Alvo de toque de 44px (WCAG 2.5.5 / UX-02). `default`, `lg` e `icon`
@@ -123,6 +135,8 @@ export const buttonVariants = cva(
         xs: "relative h-7 px-2 text-xs after:absolute after:left-1/2 after:top-1/2 after:min-h-11 after:min-w-full after:-translate-x-1/2 after:-translate-y-1/2",
         iconXs: "h-7 w-7",
         iconMini: "h-6 w-6",
+        // `cartao`: altura livre e respiro de cartao (par da variante `cartao`).
+        cartao: "h-auto px-2.5 pb-2 pt-2.5",
         inline: "h-auto p-0",
         inlineXs: "h-auto p-0 text-xs",
         // Celula de mes do seletor de intervalo; `data-hoje=true` marca o mes atual.

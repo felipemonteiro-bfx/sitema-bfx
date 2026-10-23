@@ -7,9 +7,10 @@ const COR_TIQUE = { neutro: 'text-muted-foreground', marca: 'text-marca-tint-tex
  * Tique de status da mensagem da BFX: 1 (enviado), 2 cinza (entregue), 2 verde-marca (lido),
  * relógio (pendente/gerando) e erro com rótulo. O texto acessível é o mesmo de sempre.
  */
-export function Tique({ status }: { status: string }) {
+export function Tique({ status, sobreFoto = false }: { status: string; sobreFoto?: boolean }) {
   const t = statusTique(status);
-  const cor = COR_TIQUE[t.tom];
+  // Sobre a foto o fundo é sempre o degradê escuro: branco (lida) ou branco a 70% (demais); o erro mantém a cor própria.
+  const cor = sobreFoto && t.tom !== 'erro' ? (t.tom === 'marca' ? 'text-white' : 'text-white/70') : COR_TIQUE[t.tom];
   if (t.tique === 'erro') {
     return <span className={`inline-flex items-center gap-1 font-medium ${cor}`}><AlertCircle role="img" aria-label={t.rotulo} className="size-3.5" />Falhou</span>;
   }
