@@ -20,6 +20,7 @@ import { emailsCopia } from "@/lib/email-copia";
 import { linkHistoricoEmails, registrarEnvio, type OrigemEmail, type RegistroEnvio } from "@/lib/email-historico";
 import { TERMO_EMAIL_STATUS_VALUES, type TermoEmailStatus } from "@/lib/termo-email-status";
 import { agruparVendasPorSemana, type VendaSemanal } from "@/lib/relatorio-semanal";
+import { avisarAdmins } from "@/lib/avisar-admins";
 
 export { TERMO_EMAIL_STATUS_VALUES };
 export type { TermoEmailStatus };
@@ -433,15 +434,7 @@ async function criarNotificacaoVenda(
   link: string,
   vendedorId?: number | null,
 ) {
-  // Always notify admin (id=1)
-  const creates = [{ mensagem, link, usuarioId: 1 }];
-
-  // Also notify the vendedor if different from admin
-  if (vendedorId && vendedorId !== 1) {
-    creates.push({ mensagem, link, usuarioId: vendedorId });
-  }
-
-  await prisma.notificacao.createMany({ data: creates });
+  await avisarAdmins([{ mensagem, link }], vendedorId ? [vendedorId] : []);
 }
 
 type VendaForEmail = {
@@ -681,22 +674,16 @@ export async function sendWeeklyReport(
       html,
       ...(empresaId ? { registro: { tipo: "semanal" as const, empresaId } } : {}),
     });
-    await prisma.notificacao.create({
-      data: {
-        mensagem: `Relatório semanal enviado por email para ${empresaNome} (${vendas.length} vendas, ${formatBRL(totalGeral)})`,
-        link: linkHistoricoEmails(empresaId),
-        usuarioId: 1,
-      },
-    });
+    await avisarAdmins([{
+      mensagem: `Relatório semanal enviado por email para ${empresaNome} (${vendas.length} vendas, ${formatBRL(totalGeral)})`,
+      link: linkHistoricoEmails(empresaId),
+    }]);
   } catch (err) {
     console.error(`[email] Falha ao enviar relatório semanal para ${empresaNome}:`, err);
-    await prisma.notificacao.create({
-      data: {
-        mensagem: `Falha ao enviar relatório semanal por email para ${empresaNome}`,
-        link: linkHistoricoEmails(empresaId),
-        usuarioId: 1,
-      },
-    });
+    await avisarAdmins([{
+      mensagem: `Falha ao enviar relatório semanal por email para ${empresaNome}`,
+      link: linkHistoricoEmails(empresaId),
+    }]);
     throw err;
   }
 }

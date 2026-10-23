@@ -57,6 +57,18 @@ describe("enviarEmailEmpresa no histórico", () => {
 
     await expect(enviarEmailEmpresa(42)).resolves.toEqual({ success: false, error });
   });
+
+  it("orienta a conferir o e-mail RH quando o SMTP rejeita o destinatário", async () => {
+    mocks.enviarTermoAssinadoAoRh.mockResolvedValue({
+      status: "falhou",
+      error: "SMTP RCPT TO failed: 550 recipient rejected",
+    });
+
+    await expect(enviarEmailEmpresa(42)).resolves.toEqual({
+      success: false,
+      error: "O servidor de e-mail recusou o endereço do RH. Confira o cadastro da empresa.",
+    });
+  });
 });
 
 describe("histórico — reenvio do termo", () => {

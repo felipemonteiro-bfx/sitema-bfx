@@ -7,7 +7,8 @@ const mocks = vi.hoisted(() => ({
     empresaVinculo: { findMany: vi.fn() },
     venda: { findMany: vi.fn() },
     relatorioEnvioLog: { findUnique: vi.fn(), upsert: vi.fn() },
-    notificacao: { create: vi.fn() },
+    usuario: { findMany: vi.fn() },
+    notificacao: { create: vi.fn(), createMany: vi.fn(), findFirst: vi.fn() },
   },
   sendEmail: vi.fn(),
   gerarPlanilhaAntecipacao: vi.fn(),
@@ -68,6 +69,8 @@ function configurarEmpresa(emailRh: string | null = "rh@empresa.test") {
   dbMock.relatorioEnvioLog.findUnique.mockResolvedValue(null);
   dbMock.relatorioEnvioLog.upsert.mockResolvedValue({});
   dbMock.notificacao.create.mockResolvedValue({});
+  dbMock.usuario.findMany.mockResolvedValue([{ id: 42 }]);
+  dbMock.notificacao.createMany.mockResolvedValue({ count: 1 });
   gerarPlanilhaAntecipacao.mockReturnValue(Buffer.from("antecipacao"));
   gerarPlanilhaModeloOficial.mockReturnValue(Buffer.from("oficial"));
   sendEmail.mockResolvedValue(undefined);
@@ -123,6 +126,31 @@ describe("processarRelatorioMensal", () => {
     ]);
   });
 
+  it("mantém o relatório como enviado quando a notificação interna falha depois do SMTP", async () => {
+    dbMock.venda.findMany.mockResolvedValue([venda()]);
+    dbMock.notificacao.create.mockRejectedValue(new Error("Foreign key constraint violated"));
+    dbMock.notificacao.createMany.mockRejectedValue(new Error("Foreign key constraint violated"));
+
+    const resultado = await processarRelatorioMensal({
+      periodo: "2026-09",
+      inicio: INICIO_SETEMBRO,
+      fim: FIM_DIA_22_SETEMBRO,
+    });
+
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    expect(dbMock.notificacao.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ usuarioId: 42, link: "/relatorios/emails?empresa=7" })],
+    });
+    expect(resultado.resultados).toEqual([
+      expect.objectContaining({ empresaId: 7, status: "enviado" }),
+    ]);
+    expect(dbMock.relatorioEnvioLog.upsert).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({ status: "enviado", erro: null }),
+      })
+    );
+  });
+
   it("manda o relatorio com copia para o emailCopia da empresa canonica", async () => {
     dbMock.empresaParceira.findMany.mockResolvedValue([
       { id: 7, nome: "Empresa Prime", emailRh: "rh@empresa.test", emailCopia: "fin@prudent.test" },
@@ -136,7 +164,9 @@ describe("processarRelatorioMensal", () => {
     );
     expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: "rh@empresa.test", cc: ["fin@prudent.test"] }));
     expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({ registro: { tipo: "mensal", empresaId: 7, origem: "automatico" } }));
-    expect(dbMock.notificacao.create).toHaveBeenCalledWith({ data: expect.objectContaining({ link: "/relatorios/emails?empresa=7" }) });
+    expect(dbMock.notificacao.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ usuarioId: 42, link: "/relatorios/emails?empresa=7" })],
+    });
     expect(dbMock.relatorioEnvioLog.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ create: expect.objectContaining({ destinatarios: "rh@empresa.test, fin@prudent.test" }) })
     );
