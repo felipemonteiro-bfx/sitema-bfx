@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Copy, Check, QrCode } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,14 +38,14 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
   return (
     <div className="flex flex-col items-center gap-1">
       {isAssinado ? (
-        <span className="text-xs text-success-text font-medium">Assinado</span>
+        <Badge variant="success" size="sm">Assinado</Badge>
       ) : (
         <>
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
-              size="sm"
-              className="h-7 text-xs"
+              size="xs"
+
               onClick={handleCopy}
               leftIcon={copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
             >
@@ -53,8 +54,8 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
             {showQr && (
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
+                size="iconXs"
+
                 onClick={() => setQrVisible((v) => !v)}
                 title="Mostrar QR Code"
               >
@@ -63,7 +64,7 @@ export function LinkAssinaturaButton({ token, status, label = "Copiar link", sho
             )}
           </div>
           {showQr && qrVisible && (
-            <div className="mt-2 rounded-lg border border-border bg-card p-2">
+            <div className="mt-2 rounded-interno border border-painel-borda bg-card p-2">
               <Image src={qrUrl} alt="QR Code" width={120} height={120} unoptimized className="rounded" />
               <p className="text-xs text-muted-foreground mt-1 text-center">Cliente escaneia para assinar</p>
             </div>

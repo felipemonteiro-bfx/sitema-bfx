@@ -1,32 +1,129 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageSquare, Send, UserRound, Bot, RotateCw, PackageSearch, CreditCard, Truck, Check, ChevronDown } from 'lucide-react';
+import { Send, UserRound, Bot, RotateCw, CircleHelp, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { responderConversa, controlarAutomatico } from './actions';
-const prontas=[
- {titulo:'Boas-vindas',icone:MessageSquare,texto:'Olá! Seja bem-vindo à BFX. Como posso ajudar você hoje?'},
- {titulo:'Pedir modelo',icone:PackageSearch,texto:'Qual produto, modelo e quantidade você procura? Vou conferir o estoque e as condições disponíveis.'},
- {titulo:'Pedido / entrega',icone:Truck,texto:'Pode informar o número do pedido e o que precisa verificar sobre a entrega ou o pós-venda?'},
- {titulo:'Conferir pagamento',icone:CreditCard,texto:'Recebemos sua mensagem sobre pagamento. Vamos conferir o comprovante e a baixa no sistema antes de confirmar a quitação.'},
- {titulo:'Atendimento humano',icone:UserRound,texto:'Olá! Sou da equipe BFX e vou continuar seu atendimento por aqui.'},
- {titulo:'Encerrar atendimento',icone:Check,texto:'Obrigado pelo contato com a BFX! Se precisar de mais alguma coisa, estamos à disposição.'},
-];
+import { edicaoPendente } from './refresh-regras';
+import { PainelAtalhos } from './atalhos-painel';
+import { decidirInsercao } from './atalhos-regras';
+import { PRONTAS, acaoDaTecla, filtrarProntas, termoDeBarra, type Pronta } from './composer-regras';
+
+/** Contador de caracteres só aparece perto do limite de 4096. */
+const LIMITE_AVISO = 3500;
+
+/** Destaque sutil do botão do estado atual (borda e texto verdes; nunca preenchido). Aplicado no invólucro: o Button não aceita classes. */
+const DESTAQUE_ATIVO = '[&>button]:border-marca-tint-texto/40 [&>button]:text-marca-tint-texto';
+
+/** Raio ativo (painel aberto): tint de marca como no artboard. Aplicado no invólucro: o Button não aceita classes. */
+const RAIO_ABERTO = '[&>button]:border [&>button]:border-marca-tint-texto/40 [&>button]:bg-marca-tint [&>button]:text-marca-tint-texto';
+
+/** Celular: o painel vira Sheet de baixo (abaixo de 640px). No servidor assume desktop. */
+const MQ_CELULAR = '(max-width: 639px)';
+function useCelular() {
+  return useSyncExternalStore(
+    (cb) => { const m = window.matchMedia(MQ_CELULAR); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb); },
+    () => window.matchMedia(MQ_CELULAR).matches,
+    () => false,
+  );
+}
+
+/** Lista de respostas prontas aberta pelo "/". Escolher SÓ preenche o campo; nunca envia. */
+function ListaProntas({ itens, indice, onEscolher }: { itens: readonly Pronta[]; indice: number; onEscolher: (p: Pronta) => void }) {
+  if (!itens.length) return <p className="px-3 py-2 text-sm text-muted-foreground">Nenhuma resposta pronta com esse termo.</p>;
+  return <ul role="listbox" aria-label="Respostas prontas" className="flex max-h-64 flex-col overflow-y-auto">
+    {itens.map((p, i) => <li key={p.titulo} role="option" aria-selected={i === indice} className="aria-selected:[&>button]:bg-controle [&>button]:h-auto [&>button]:w-full [&>button]:flex-col [&>button]:items-start [&>button]:gap-0.5 [&>button]:px-3 [&>button]:py-2 [&>button]:text-left [&>button]:font-normal">
+      <Button type="button" variant="ghost" onClick={() => onEscolher(p)}>
+        <span className="text-sm font-semibold">{p.titulo}</span>
+        <span className="line-clamp-2 whitespace-normal text-xs text-texto-secundario">{p.texto}</span>
+      </Button>
+    </li>)}
+  </ul>;
+}
+
 export function Reply({telefone,aberta,estadoAutomatico}:{telefone:string;aberta:boolean;estadoAutomatico:string}) {
  const router=useRouter();const [texto,setTexto]=useState('');const [busy,setBusy]=useState(false);const [notice,setNotice]=useState('');const sending=useRef(false);const campo=useRef<HTMLTextAreaElement>(null);
- useEffect(()=>{const timer=setInterval(()=>{if(!sending.current&&!document.querySelector('[data-kanban-editor][open]'))router.refresh();},30000);return()=>clearInterval(timer);},[router]);
+ const [indice,setIndice]=useState(0);const [barraFechada,setBarraFechada]=useState(false);
+ // Atalhos rápidos: painel aberto, texto aguardando confirmação de substituição e se o fechamento veio de uma inserção.
+ const [atalhosAberto,setAtalhosAberto]=useState(false);const [pendente,setPendente]=useState<string|null>(null);const inseriu=useRef(false);const raio=useRef<HTMLButtonElement>(null);const celular=useCelular();
+ useEffect(()=>{const timer=setInterval(()=>{if(!sending.current&&!edicaoPendente(document))router.refresh();},30000);return()=>clearInterval(timer);},[router]);
  async function controle(retomar:boolean){if(sending.current)return;sending.current=true;setBusy(true);try{const r=await controlarAutomatico(telefone,retomar);setNotice(r.message);router.refresh();}catch{setNotice('Não foi possível confirmar a mudança. Atualize antes de repetir.');}finally{sending.current=false;setBusy(false);}}
+ // Envio único (botão e Enter): mesmas guardas de sempre — janela aberta, texto não vazio e anti-duplo-envio.
+ async function enviar(){if(sending.current||!aberta||busy||!texto.trim())return;sending.current=true;setBusy(true);try{const result=await responderConversa(telefone,texto);setNotice(result.message);if(result.ok)setTexto('');router.refresh();}catch{setNotice('Não foi possível confirmar o envio. Confira o histórico antes de repetir.');}finally{sending.current=false;setBusy(false);}}
+ // "/" no início do campo abre a lista e filtra pelo que vem depois dela.
+ const termo=termoDeBarra(texto);
+ const filtradasBarra=termo===null?[]:filtrarProntas(PRONTAS,termo);
+ const barraAberta=termo!==null&&!barraFechada&&filtradasBarra.length>0&&aberta;
+ function escolher(p:Pronta){setTexto(p.texto);setIndice(0);setBarraFechada(false);campo.current?.focus();}
+ // Inserir SÓ preenche o campo (nunca envia). Com texto no campo, pergunta antes de substituir.
+ function inserir(novo:string){if(decidirInsercao(texto,novo)==='confirmar'){setPendente(novo);return;}aplicarInsercao(novo);}
+ function aplicarInsercao(novo:string){inseriu.current=true;setTexto(novo);setIndice(0);setBarraFechada(false);setPendente(null);setAtalhosAberto(false);}
+ // Ao fechar: foco no campo se inseriu; senão volta ao raio.
+ function aoFecharFoco(e:Event){e.preventDefault();(inseriu.current?campo.current:raio.current)?.focus();inseriu.current=false;}
+ function aoDigitar(v:string){setTexto(v);setIndice(0);setBarraFechada(false);}
+ function aoTeclar(e:React.KeyboardEvent<HTMLTextAreaElement>){
+  if(barraAberta){
+   if(e.key==='ArrowDown'){e.preventDefault();setIndice(i=>(i+1)%filtradasBarra.length);return;}
+   if(e.key==='ArrowUp'){e.preventDefault();setIndice(i=>(i-1+filtradasBarra.length)%filtradasBarra.length);return;}
+   if(e.key==='Escape'){e.preventDefault();setBarraFechada(true);return;}
+   if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();escolher(filtradasBarra[Math.min(indice,filtradasBarra.length-1)]);return;}
+  }
+  if(acaoDaTecla({key:e.key,shiftKey:e.shiftKey,isComposing:e.nativeEvent.isComposing,keyCode:e.keyCode})==='enviar'){e.preventDefault();void enviar();}
+ }
  const pausado=/pausa|parar|desligado/i.test(estadoAutomatico);
- return <form className="space-y-5 border-t pt-5" onSubmit={async e=>{e.preventDefault();if(sending.current)return;sending.current=true;setBusy(true);try{const result=await responderConversa(telefone,texto);setNotice(result.message);if(result.ok)setTexto('');router.refresh();}catch{setNotice('Não foi possível confirmar o envio. Confira o histórico antes de repetir.');}finally{sending.current=false;setBusy(false);}}}>
-  <div className="flex flex-col gap-4 rounded-xl bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-   <div className="flex items-start gap-3"><Bot className="mt-1 size-5 shrink-0 text-primary"/><div><strong className="block text-sm">{pausado?'A equipe está no comando':'Assistente automático'}</strong><p className="mt-1 text-sm text-muted-foreground">{estadoAutomatico}</p></div></div>
-   <div className="flex shrink-0 flex-wrap gap-2"><Button type="button" variant={pausado?'outline':'default'} disabled={busy} onClick={()=>controle(false)}><UserRound className="mr-2 size-4"/>Assumir conversa</Button><Button type="button" variant={pausado?'default':'outline'} disabled={busy} onClick={()=>controle(true)}><Bot className="mr-2 size-4"/>Retomar automático</Button></div>
+ // Regra de uso do automático: mora no Popover do ícone de ajuda (e fica no leitor de tela via aria-describedby).
+ const ajuda=<><p>{aberta?'Janela aberta. Templates com tarifa continuam bloqueados.':'Janela encerrada. Envio com tarifa bloqueado.'} Escolha, ajuste o texto e envie. Clicar no botão não envia a mensagem. Enter envia; Shift+Enter quebra a linha; &quot;/&quot; abre as respostas prontas.</p><p className="mt-2">Ao assumir, as respostas automáticas ficam pausadas. Retomar pode atender a última entrada de até 30 minutos ainda sem resposta. Respostas já registradas não são repetidas. Mensagens enviadas por outros aplicativos podem não aparecer aqui.</p></>;
+ return <form className="shrink-0 border-t border-divisoria" onSubmit={e=>{e.preventDefault();void enviar();}}>
+  {/* Faixa fina do assistente (como no artboard): estado + as DUAS ações sempre visíveis; o botão do estado atual ganha borda e texto verdes. */}
+  <div role="status" className={`mx-3 mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-controle py-2 pl-3 pr-2 ${pausado?'bg-marca-tint':'bg-card-elevated'}`}>
+   {pausado?<UserRound className="size-4 shrink-0 text-marca-tint-texto" aria-hidden="true"/>:<Bot className="size-4 shrink-0 text-texto-secundario" aria-hidden="true"/>}
+   <span title={estadoAutomatico} className="min-w-40 flex-1 truncate text-sm"><strong className="font-semibold">{pausado?'A equipe está no comando':'Assistente automático'}</strong> <span className="text-texto-secundario max-sm:sr-only">· {estadoAutomatico}</span>
+    {!aberta&&<span className="block truncate text-xs text-texto-secundario">Aguarde nova mensagem do cliente · envio com tarifa bloqueado</span>}
+    {aberta&&<span className="sr-only"> · Resposta de atendimento disponível · templates com tarifa bloqueados</span>}</span>
+   <div className="flex flex-wrap items-center gap-1.5">
+    <span className={pausado?DESTAQUE_ATIVO:undefined}><Button type="button" variant="outline" size="sm" aria-pressed={pausado} disabled={busy} onClick={()=>controle(false)}><UserRound className="size-4" aria-hidden="true"/>Assumir conversa</Button></span>
+    <span className={pausado?undefined:DESTAQUE_ATIVO}><Button type="button" variant="outline" size="sm" aria-pressed={!pausado} disabled={busy} onClick={()=>controle(true)}><Bot className="size-4" aria-hidden="true"/>Retomar automático</Button></span>
+    <Button type="button" variant="ghost" size="iconSm" aria-label="Atualizar conversa" title="Atualizar conversa" onClick={()=>router.refresh()}><RotateCw className="size-4 text-muted-foreground" aria-hidden="true"/></Button>
+    <Popover>
+     <PopoverTrigger asChild><Button type="button" variant="ghost" size="iconSm" aria-label="Como funciona o automático" aria-describedby="ajuda-automatico" title="Como funciona o automático"><CircleHelp className="size-4 text-muted-foreground" aria-hidden="true"/></Button></PopoverTrigger>
+     <PopoverContent align="end" aria-label="Como funciona o automático"><div className="text-xs leading-relaxed">{ajuda}</div></PopoverContent>
+    </Popover>
+   </div>
   </div>
-  <div><h3 className="font-semibold">Respostas prontas</h3><p className="mt-1 text-sm text-muted-foreground">Escolha, ajuste o texto e envie. Clicar no botão não envia a mensagem.</p><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">{prontas.map(p=><Button key={p.titulo} type="button" variant="outline" className="h-auto min-h-11 justify-start whitespace-normal px-3 py-3 text-left" disabled={!aberta||busy} onClick={()=>{setTexto(p.texto);campo.current?.focus();}}><p.icone className="mr-2 size-4 shrink-0 text-primary"/>{p.titulo}</Button>)}</div></div>
-  <div className="overflow-hidden rounded-xl border bg-background"><label htmlFor="resposta-whatsapp" className="block px-4 pt-4 text-sm font-semibold">Sua mensagem</label><Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" className="min-h-28 resize-y border-0 shadow-none focus-visible:ring-0" placeholder="Escreva ou escolha uma resposta pronta acima…" maxLength={4096} value={texto} onChange={e=>setTexto(e.target.value)} disabled={!aberta||busy}/><div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 p-3"><span className="text-xs text-muted-foreground">{aberta?'Resposta de atendimento disponível':'Aguarde nova mensagem do cliente'} · {texto.length}/4096</span><Button type="submit" disabled={!aberta||busy||!texto.trim()}><Send className="mr-2 size-4"/>{busy?'Enviando…':'Enviar mensagem'}</Button></div></div>
-  <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-muted-foreground">{aberta?'Janela aberta. Templates com tarifa continuam bloqueados.':'Janela encerrada. Envio com tarifa bloqueado.'}</p><Button type="button" size="sm" variant="ghost" onClick={()=>router.refresh()}><RotateCw className="mr-2 size-4"/>Atualizar conversa</Button></div>
-  {notice&&<p role="status" className="rounded-lg border bg-muted p-3 text-sm font-medium">{notice}</p>}
-  <details className="text-xs text-muted-foreground"><summary className="flex cursor-pointer items-center gap-1">Como funciona o automático<ChevronDown className="size-3"/></summary><p className="mt-2 max-w-prose leading-relaxed">Ao assumir, as respostas automáticas ficam pausadas. Retomar pode atender a última entrada de até 30 minutos ainda sem resposta. Respostas já registradas não são repetidas. Mensagens enviadas por outros aplicativos podem não aparecer aqui.</p></details>
+  <div id="ajuda-automatico" className="sr-only">{ajuda}</div>
+  {/* Respostas prontas em chips roláveis: clicar SÓ preenche o campo (nunca envia). Também abrem com "/". */}
+  <div role="group" aria-label="Respostas prontas" className="flex gap-1.5 overflow-x-auto px-3 pb-0.5 pt-2.5 [&>button]:shrink-0 [&>button]:rounded-full [&>button]:font-normal [&>button]:text-texto-secundario">
+   {PRONTAS.map(p=><Button key={p.titulo} type="button" variant="outline" size="sm" title={p.texto} disabled={!aberta||busy} onClick={()=>escolher(p)}>{p.titulo}</Button>)}
+  </div>
+  {/* Barra de escrita: raio dos atalhos rápidos, campo em pílula e enviar redondo. */}
+  <Popover open={atalhosAberto&&!celular} onOpenChange={setAtalhosAberto} modal>
+  <PopoverAnchor asChild><div className="relative flex items-end gap-2 px-3 py-2.5">
+    <span className={`shrink-0 [&>button]:rounded-full ${atalhosAberto?RAIO_ABERTO:''}`}>
+     <PopoverTrigger asChild><Button ref={raio} type="button" variant="ghost" size="icon" aria-label="Atalhos rápidos" title="Atalhos rápidos" aria-expanded={atalhosAberto} disabled={!aberta||busy}><Zap className={`size-5 ${atalhosAberto?'':'text-muted-foreground'}`} aria-hidden="true"/></Button></PopoverTrigger>
+    </span>
+    <PopoverContent side="top" align="center" sideOffset={-6} aria-label="Atalhos rápidos" onCloseAutoFocus={aoFecharFoco} largura="ancora"><PainelAtalhos telefone={telefone} onInserir={inserir}/></PopoverContent>
+   <Sheet open={atalhosAberto&&celular} onOpenChange={setAtalhosAberto}>
+    <SheetContent side="bottom" onCloseAutoFocus={aoFecharFoco}><div className="sr-only"><SheetHeader><SheetTitle>Atalhos rápidos</SheetTitle><SheetDescription>Estoque, parcelas e boletos. Inserir só preenche o campo de mensagem.</SheetDescription></SheetHeader></div><div className="max-h-96 overflow-y-auto"><PainelAtalhos telefone={telefone} onInserir={inserir}/></div></SheetContent>
+   </Sheet>
+   <AlertDialog open={pendente!==null} onOpenChange={o=>{if(!o)setPendente(null);}}>
+    <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Substituir o texto atual?</AlertDialogTitle><AlertDialogDescription>O campo já tem uma mensagem. Ao substituir, o que você escreveu é trocado pelo texto do atalho. Nada é enviado.</AlertDialogDescription></AlertDialogHeader>
+     <AlertDialogFooter><AlertDialogCancel>Manter o meu texto</AlertDialogCancel><AlertDialogAction onClick={()=>{if(pendente!==null)aplicarInsercao(pendente);}}>Substituir</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+   </AlertDialog>
+   {barraAberta&&<div className="absolute bottom-full left-3 z-20 mb-1 w-96 max-w-full rounded-painel border border-painel-borda bg-popover p-2 shadow-md"><ListaProntas itens={filtradasBarra} indice={indice} onEscolher={escolher}/></div>}
+   {/* Campo como no artboard (borda e fundo do Textarea); o invólucro só ajusta a altura mínima e tira o puxador de redimensionar. */}
+   <div className="min-w-0 flex-1 [&_textarea]:max-h-36 [&_textarea]:min-h-12 [&_textarea]:resize-none">
+    <span className="sr-only"><Label htmlFor="resposta-whatsapp">Sua mensagem</Label></span>
+    <Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" rows={1} autoResize placeholder="Escreva uma mensagem" maxLength={4096} value={texto} onChange={e=>aoDigitar(e.target.value)} onKeyDown={aoTeclar} disabled={!aberta||busy}/>
+   </div>
+   <span className="shrink-0 [&>button]:size-12 [&>button]:rounded-full"><Button type="submit" size="icon" aria-label="Enviar mensagem" aria-busy={busy} disabled={!aberta||busy||!texto.trim()}><Send className="size-5" aria-hidden="true"/></Button></span>
+  </div></PopoverAnchor>
+  </Popover>
+  {texto.length>LIMITE_AVISO&&<p className="-mt-1.5 px-5 pb-2 text-right font-mono text-xs text-muted-foreground">{texto.length}/4096</p>}
+  {notice&&<p role="status" className="mx-3 mb-3 rounded-controle border border-divisoria bg-controle p-3 text-sm font-medium">{notice}</p>}
  </form>;
 }

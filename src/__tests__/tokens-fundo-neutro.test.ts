@@ -90,7 +90,14 @@ describe("tokens de fundo neutro do tema claro (UXP-05, D-01)", () => {
     );
   });
 
-  it("bloco .dark mantem a declaracao original de fundo (croma 0.02, matiz 250)", () => {
-    expect(css.includes("--background: oklch(0.10 0.02 250)")).toBe(true);
+  // Redesign Vantage (2026-10-16): D-01 (croma 0 no CLARO) segue de pe e e
+  // exatamente o que os testes acima guardam. O que mudou e o ESCURO: a pagina
+  // deixou o azul-marinho OLED (croma 0.02, matiz 250) pelo neutro esverdeado de
+  // croma baixissimo dos artboards aprovados (#070807). Decisao: o claro fica
+  // em croma 0 (oklch(L 0 0)) e o artboard cede o verde de 0.003 — imperceptivel;
+  // o escuro segue o artboard.
+  it("bloco .dark usa a pagina esverdeada de croma baixissimo (#070807), sem o azul 250", () => {
+    expect(css.includes("--background: oklch(0.132 0.003 145.4)")).toBe(true);
+    expect(css.includes("--background: oklch(0.10 0.02 250)")).toBe(false);
   });
 });

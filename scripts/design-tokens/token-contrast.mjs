@@ -492,7 +492,42 @@ export const TOKEN_PAIRS = [
   { foreground: "warning-text", background: "warning-bg", min: TEXT_MIN, label: "texto de alerta em tint" },
   { foreground: "info-text", background: "info-bg", min: TEXT_MIN, label: "texto de informacao em tint" },
   { foreground: "error-text", background: "error-bg", min: TEXT_MIN, label: "texto de erro em tint" },
+  // --- Redesign Vantage (2026-10-16) ----------------------------------------
+  // Tokens novos do contrato de superficies. Token sem par nao e policiado.
+  //
+  // ATENCAO: `--primary` (#0F7F0E no claro) como TEXTO fecha 5.17:1 no painel e
+  // 4.72:1 no poco, mas so 4.43:1 sobre `--background` (#ECEEEC) e 4.45:1 sobre
+  // `--marca-tint`. Por isso NAO ha par primary/background nem primary/marca-tint:
+  // `text-primary` nao vai sobre a pagina nem sobre o tint no tema claro — la o
+  // texto verde e `--marca-tint-texto` (par logo abaixo, 5.59:1).
+  { foreground: "texto-secundario", background: "card", min: TEXT_MIN, label: "texto de 2o nivel no painel" },
+  { foreground: "texto-secundario", background: "poco", min: TEXT_MIN, label: "texto de 2o nivel no poco" },
+  { foreground: "texto-secundario", background: "card-elevated", min: TEXT_MIN, label: "texto de 2o nivel no card interno" },
+  { foreground: "marca-tint-texto", background: "marca-tint", min: TEXT_MIN, label: "texto verde do selo no tint da marca" },
+  { foreground: "primary", background: "card", min: TEXT_MIN, label: "texto verde no painel" },
+  { foreground: "primary", background: "poco", min: NON_TEXT_MIN, label: "verde (barra, indicador) no poco" },
+  { foreground: "foreground", background: "shell", min: TEXT_MIN, label: "texto na casca" },
+  { foreground: "foreground", background: "poco", min: TEXT_MIN, label: "texto no poco" },
+  { foreground: "foreground", background: "controle", min: TEXT_MIN, label: "texto no controle" },
+  { foreground: "foreground", background: "controle-ativo", min: TEXT_MIN, label: "texto no controle selecionado" },
+  { foreground: "muted-foreground", background: "shell", min: TEXT_MIN, label: "texto secundario na casca" },
+  { foreground: "muted-foreground", background: "poco", min: TEXT_MIN, label: "texto secundario no poco" },
+  { foreground: "muted-foreground", background: "controle", min: TEXT_MIN, label: "texto secundario no controle" },
+  { foreground: "muted-foreground", background: "controle-ativo", min: TEXT_MIN, label: "texto secundario no controle selecionado" },
+  { foreground: "grafico-neutro", background: "poco", min: NON_TEXT_MIN, label: "barra neutra no poco" },
+  { foreground: "hachura-traco", background: "poco", min: NON_TEXT_MIN, label: "traco da hachura no poco" },
+  // O vidro tem alfa (par seria SKIP); o par real e o do piso OPACO, que e o que
+  // o navegador sem backdrop-filter pinta.
+  { foreground: "foreground", background: "vidro-piso", min: TEXT_MIN, label: "texto no tooltip (piso opaco do vidro)" },
+  { foreground: "muted-foreground", background: "vidro-piso", min: TEXT_MIN, label: "texto secundario no tooltip (piso opaco do vidro)" },
+  // Previa de recibo: folha branca fixa nos dois temas, texto em tons de cinza.
+  { foreground: "papel-texto", background: "papel", min: TEXT_MIN, label: "texto da previa de recibo" },
+  { foreground: "papel-texto-forte", background: "papel", min: TEXT_MIN, label: "texto forte da previa de recibo" },
+  { foreground: "papel-texto-medio", background: "papel", min: TEXT_MIN, label: "texto medio da previa de recibo" },
+  { foreground: "papel-texto-fraco", background: "papel", min: TEXT_MIN, label: "texto fraco da previa de recibo" },
+  { foreground: "papel-traco", background: "papel", min: 1.5, label: "linha de assinatura da previa de recibo (decorativa)" },
   { foreground: "ring", background: "background", min: NON_TEXT_MIN, label: "indicador de foco (UI-06)" },
+  { foreground: "ring", background: "card", min: NON_TEXT_MIN, label: "indicador de foco no painel" },
   { foreground: "border", background: "background", min: NON_TEXT_MIN, label: "borda sobre fundo" },
   { foreground: "border", background: "card", min: NON_TEXT_MIN, label: "borda sobre card" },
 ];

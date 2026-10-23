@@ -195,7 +195,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
         })}
       </ol>
 
-      <dl className="flex flex-wrap gap-x-9 gap-y-3 rounded-xl border bg-card px-4 py-3 text-sm">
+      <dl className="flex flex-wrap gap-x-9 gap-y-3 rounded-painel border border-painel-borda bg-card px-5 py-4 text-sm">
         <div>
           <dt className="text-xs text-muted-foreground">Competência</dt>
           <dd className="mt-0.5 font-semibold">vencimentos de {d.competencia.slice(5)}/{d.competencia.slice(0, 4)}</dd>
@@ -248,10 +248,10 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
         </Alert>
       )}
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden p-2 pt-5">
         <section aria-labelledby="fechamento-linhas">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-5 pt-4">
-            <h2 id="fechamento-linhas" className="text-base font-semibold">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 pb-4">
+            <h2 id="fechamento-linhas" className="text-lg font-semibold text-foreground">
               No demonstrativo · {plural(d.linhas.length, "parcela", "parcelas")}
             </h2>
             {d.fonteLinhas === "versao" && (
@@ -270,21 +270,21 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
               }
             />
           ) : (
-            <div className="px-2 pb-2 pt-2">
+            <div className="rounded-interno bg-poco">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="pl-3">Colaborador</TableHead>
+                    <TableHead className="pl-4">Colaborador</TableHead>
                     <TableHead className="hidden sm:table-cell">Parcela</TableHead>
                     <TableHead className="hidden md:table-cell">Vencimento</TableHead>
                     <TableHead className="hidden md:table-cell">Prudent</TableHead>
-                    <TableHead className="pr-3 text-right">Valor</TableHead>
+                    <TableHead className="pr-4 text-right">Valor</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {d.linhas.map((l) => (
                     <TableRow key={l.chave}>
-                      <TableCell className="pl-3">
+                      <TableCell className="pl-4">
                         {l.colaborador}
                         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground md:hidden">
                           <span className="font-semibold tabular-nums text-foreground sm:hidden">{l.identificador}</span>
@@ -292,14 +292,14 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                           <SeloPrudent antecipada={l.antecipada} loteId={l.loteId} />
                         </span>
                       </TableCell>
-                      <TableCell className="hidden whitespace-nowrap align-top font-semibold tabular-nums sm:table-cell md:align-middle">
+                      <TableCell peso="forte" mono className="hidden whitespace-nowrap align-top sm:table-cell md:align-middle">
                         {l.identificador}
                       </TableCell>
-                      <TableCell className="hidden tabular-nums md:table-cell">{ddmm(l.vencimento)}</TableCell>
+                      <TableCell mono className="hidden md:table-cell">{ddmm(l.vencimento)}</TableCell>
                       <TableCell className="hidden md:table-cell">
                         <SeloPrudent antecipada={l.antecipada} loteId={l.loteId} />
                       </TableCell>
-                      <TableCell className="whitespace-nowrap pr-3 text-right align-top tabular-nums md:align-middle">
+                      <TableCell numeric className="whitespace-nowrap pr-4 align-top md:align-middle">
                         <span className="valor-sensivel">{formatBRL(l.valor)}</span>
                       </TableCell>
                     </TableRow>
@@ -312,38 +312,37 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
       </Card>
 
       <div className="grid items-start gap-5 lg:grid-cols-12">
-        <section
-          aria-labelledby="fechamento-fora"
-          className="flex flex-col gap-3 rounded-xl border border-warning/50 bg-warning-bg px-5 py-4 dark:bg-warning/10 lg:col-span-7"
-        >
+        <Card className="lg:col-span-7">
+        <section aria-labelledby="fechamento-fora" className="flex flex-col gap-3 p-5">
           <div className="flex items-center gap-2">
-            <AlertCircle aria-hidden="true" className="h-4 w-4 text-warning-text" />
-            <h2 id="fechamento-fora" className="text-base font-semibold text-warning-text">
+            <AlertCircle aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
+            <h2 id="fechamento-fora" className="text-lg font-semibold text-foreground">
               Fora do demonstrativo · {d.bloqueadas.length}
             </h2>
           </div>
           {d.bloqueadas.length === 0 ? (
-            <p className="text-sm text-warning-text">Todas as parcelas do mês desta empresa estão no demonstrativo.</p>
+            <p className="text-sm text-muted-foreground">Todas as parcelas do mês desta empresa estão no demonstrativo.</p>
           ) : (
             <ul className="flex flex-col gap-2 text-sm tabular-nums">
               {d.bloqueadas.map((b) => (
                 <li key={b.parcelaId} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                  <span className="min-w-24 font-semibold text-foreground">{b.identificador}</span>
+                  <span className="min-w-24 font-medium text-foreground">{b.identificador}</span>
                   <span className="order-last w-full text-warning-text sm:order-none sm:w-auto sm:flex-1">{b.rotulo}</span>
                   <span className="valor-sensivel ml-auto text-foreground">{formatBRL(b.valor)}</span>
                 </li>
               ))}
             </ul>
           )}
-          <p className="text-xs leading-relaxed text-warning-text">
+          <p className="rounded-interno bg-poco p-4 text-sm leading-relaxed text-muted-foreground">
             Nenhuma parcela é cobrada duas vezes: a que a Prudent ainda cobra da empresa não entra no Pix.
           </p>
         </section>
+        </Card>
 
         <div className="flex flex-col gap-5 lg:col-span-5">
           <Card className="p-5">
             <section aria-labelledby="fechamento-total" className="flex flex-col gap-3">
-              <h2 id="fechamento-total" className="text-base font-semibold">
+              <h2 id="fechamento-total" className="text-lg font-semibold text-foreground">
                 Valor do Pix
               </h2>
               <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-2 text-sm tabular-nums">
@@ -359,7 +358,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                 </dd>
               </dl>
               {d.ajustes.length > 0 && (
-                <ul className="flex flex-col gap-1.5 rounded-lg bg-muted/40 p-3 text-sm">
+                <ul className="flex flex-col gap-1.5 rounded-interno bg-poco p-3 text-sm">
                   {d.ajustes.map((a, i) => (
                     <li key={a.id ?? `v${i}`} className="flex items-start gap-2">
                       <span className="flex-1">{a.justificativa}</span>
@@ -367,8 +366,8 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                       {editavel && a.id != null && (
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className="-my-1 h-7 w-7"
+                          size="iconXs"
+                          className="-my-1"
                           aria-label={`Remover ajuste: ${a.justificativa}`}
                           disabled={pendente}
                           onClick={() => {
@@ -387,7 +386,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
                 <span className="font-semibold">
                   {d.status === "pago" ? "Valor final · pago" : `A pagar em ${ddmm(d.vencimentoPix)}`}
                 </span>
-                <span className="text-3xl font-bold tabular-nums text-success-text">
+                <span className="font-mono text-3xl font-medium tabular-nums text-foreground">
                   <span className="valor-sensivel">{formatBRL(d.totalFinal)}</span>
                 </span>
               </div>
@@ -404,7 +403,7 @@ export default function FechamentoDetalheClient({ d }: { d: DetalheFechamento })
           {d.versoes.length > 0 && (
             <Card className="p-5">
               <section aria-labelledby="fechamento-versoes" id="historico" className="flex flex-col gap-3">
-                <h2 id="fechamento-versoes" className="text-base font-semibold">
+                <h2 id="fechamento-versoes" className="text-lg font-semibold text-foreground">
                   Versões
                 </h2>
                 <ul className="flex flex-col divide-y text-sm">
@@ -595,7 +594,7 @@ function SeloPrudent({ antecipada, loteId }: { antecipada: boolean; loteId: numb
       {loteId != null ? `lote ${loteId} · boleto à BFX` : "boleto à BFX"}
     </Badge>
   ) : (
-    <Badge variant="outline" className="whitespace-nowrap text-muted-foreground">
+    <Badge variant="discreto" className="whitespace-nowrap">
       fica com a BFX
     </Badge>
   );

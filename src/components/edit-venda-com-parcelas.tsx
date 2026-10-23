@@ -1,5 +1,6 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { useState, useCallback } from "react";
 import { EditVendaItens } from "@/components/edit-venda-itens-client";
 import { EditParcelasSection } from "@/components/edit-parcelas-section";
@@ -100,8 +101,9 @@ export function EditVendaComParcelas({
       <FormSecaoTitulo>Pagamento e parcelas</FormSecaoTitulo>
 
       <div className="space-y-1">
-        <label className="text-xs font-medium text-muted-foreground">Parcelas</label>
+        <Label size="sm" htmlFor="edit-parcelas">Parcelas</Label>
         <Input
+          id="edit-parcelas"
           name="parcelas"
           type="number"
           min={1}
@@ -119,7 +121,7 @@ export function EditVendaComParcelas({
           escolhida={dataDesconto.bloqueio ? dataDesconto.gravada : escolhidaEfetiva}
           onEscolhidaChange={escolherDataDesconto}
           bloqueio={dataDesconto.bloqueio}
-          labelClassName="text-xs font-medium text-muted-foreground"
+          labelSize="sm"
           avisoClassName="md:col-span-3"
         />
       )}

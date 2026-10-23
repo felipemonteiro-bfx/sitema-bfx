@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Check, ChevronDown, FileSpreadsheet, ImageIcon, Loader2, X } from "lucide-react";
+import { Check, ChevronDown, CircleDollarSign, FileSpreadsheet, ImageIcon, Info, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DateInput } from "@/components/ui/date-input";
@@ -115,33 +115,19 @@ interface Props {
 const ESPERA_CALCULO_MS = 200;
 
 function StatusBadge({ status }: { status: Venda['status'] }) {
-  if (status === 'antecipado') {
-    return (
-      <Badge className="bg-success text-success-foreground border-0 font-semibold text-xs">
-        Antecipado
-      </Badge>
-    );
-  }
+  if (status === 'antecipado') return <Badge variant="success">Antecipado</Badge>;
   if (status === 'parcialmente_antecipado') {
+    // Sem variante própria no Badge: ponto na cor do estado parcial, selo neutro.
     return (
-      <Badge className="bg-status-partial text-status-partial-foreground border-0 font-semibold text-xs">
+      <Badge variant="outline" className="gap-1.5">
+        <span aria-hidden className="size-2 rounded-full bg-status-partial" />
         Parcial
       </Badge>
     );
   }
-  if (status === 'em_andamento') {
-    return (
-      <Badge className="bg-info text-info-foreground border-0 font-semibold text-xs">
-        Em andamento
-      </Badge>
-    );
-  }
+  if (status === 'em_andamento') return <Badge variant="info">Em andamento</Badge>;
   // "A antecipar" (antes "Pendente"): mesma palavra do resumo e das parcelas.
-  return (
-    <Badge className="bg-warning text-warning-foreground border-0 font-semibold text-xs">
-      A antecipar
-    </Badge>
-  );
+  return <Badge variant="warning">A antecipar</Badge>;
 }
 
 export default function AntecipacaoClient({
@@ -442,7 +428,7 @@ export default function AntecipacaoClient({
     { value: "antecipado", label: "Antecipado", indicador: "bg-success", hint: n(contagens.porStatus.antecipado) },
   ];
   const temFiltro = filtroEmpresa !== "todas" || filtroStatus !== "todas" || periodoInicio !== "" || periodoFim !== "" || Boolean(filtroComprador);
-  const rotuloFiltro = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+  const rotuloFiltro = "text-sm font-medium text-muted-foreground";
 
   const totalSelecionado = calculo?.valorBruto ?? 0;
   const parcelasSelecionadas = calculo?.parcelas ?? 0;
@@ -453,7 +439,7 @@ export default function AntecipacaoClient({
       {/* Filtros: uma coluna no celular (controles com alvo de 44px); em linha a partir de sm. */}
       <div className="mb-4 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end">
         <div className="flex flex-col gap-1 sm:w-56">
-          <label htmlFor="filtro-empresa" className={rotuloFiltro}>Empresa</label>
+          <Label htmlFor="filtro-empresa">Empresa</Label>
           <FormSelect
             id="filtro-empresa"
             name="_filtroEmpresa"
@@ -465,7 +451,7 @@ export default function AntecipacaoClient({
           />
         </div>
         <div className="flex flex-col gap-1 sm:w-64">
-          <label htmlFor="filtro-status" className={rotuloFiltro}>Status</label>
+          <Label htmlFor="filtro-status">Status</Label>
           <FormSelect
             id="filtro-status"
             name="_filtroStatus"
@@ -479,7 +465,7 @@ export default function AntecipacaoClient({
         <div className="flex flex-col gap-1">
           {/* O filtro e pelo mes do VENCIMENTO, que o sistema poe no mes seguinte ao
               desconto em folha. O seletor grava MM/AAAA, o formato que parsePeriodoMesAno le. */}
-          <label htmlFor="filtro-vencimento" className={rotuloFiltro}>Vencimento</label>
+          <Label htmlFor="filtro-vencimento">Vencimento</Label>
           <IntervaloMesesPicker
             id="filtro-vencimento"
             inicio={periodoInicio}
@@ -495,10 +481,9 @@ export default function AntecipacaoClient({
         {filtroComprador && (
           <div className="flex flex-col gap-1">
             <span className={rotuloFiltro}>Comprador</span>
-            {/* Par info-bg/info-text, policiado pela catraca de contraste: o
-                text-primary sobre bg-primary/10 da pilula de empresa mede 4.39:1. */}
-            <div className="flex h-11 items-center gap-1 rounded-md bg-info-bg pl-3 pr-1 text-sm font-semibold text-info-text sm:h-10">
-              <span className="truncate sm:max-w-[220px]" title={filtroComprador.nome}>{filtroComprador.nome}</span>
+            {/* Chip de marca: par marca-tint/marca-tint-texto, policiado pela catraca de contraste. */}
+            <div className="flex h-11 items-center gap-1 rounded-controle bg-marca-tint pl-3 pr-1 text-sm font-medium text-marca-tint-texto sm:h-10">
+              <span className="truncate sm:max-w-55" title={filtroComprador.nome}>{filtroComprador.nome}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -515,9 +500,9 @@ export default function AntecipacaoClient({
         {temFiltro && (
           <Button
             type="button"
-            variant="ghost"
+            variant="discreto"
             size="sm"
-            className="h-11 justify-self-start text-muted-foreground hover:text-foreground sm:h-10"
+            className="h-11 justify-self-start sm:h-10"
             onClick={() => { setFiltroEmpresa("todas"); setFiltroStatus("todas"); setPeriodoInicio(""); setPeriodoFim(""); setFiltroComprador(null); }}
           >
             Limpar filtros
@@ -530,7 +515,7 @@ export default function AntecipacaoClient({
           div de rolagem que o <Table> cria em volta da <table>. */}
       <div className={TABELA_COM_ROLAGEM}>
       <Table>
-        <TableHeader sticky>
+        <TableHeader fundo="poco" sticky>
           <TableRow>
             <TableHead className="w-10">
               <Checkbox
@@ -561,7 +546,7 @@ export default function AntecipacaoClient({
         <TableBody>
           {vendasFiltradas.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+              <TableCell tom="muted" colSpan={9} className="text-center py-8">
                 Nenhuma venda encontrada com os filtros aplicados.
               </TableCell>
             </TableRow>
@@ -576,17 +561,11 @@ export default function AntecipacaoClient({
               return (
                 <Fragment key={v.id}>
                 <TableRow
-                  className={`transition-all duration-200 ${
-                    isTotalmenteAntecipado
-                      ? 'bg-success-bg opacity-70 cursor-default'
-                      : v.status === 'parcialmente_antecipado'
-                      ? 'bg-status-partial/10 cursor-pointer hover:bg-status-partial/15'
-                      : v.status === 'em_andamento'
-                      ? 'bg-info-bg cursor-pointer hover:bg-info/15'
-                      : isSelected
-                      ? 'bg-warning-bg cursor-pointer'
-                      : 'cursor-pointer hover:bg-accent/50'
-                  }`}
+                  // O estado da venda mora no Badge da coluna Status; a linha só marca
+                  // o que não dá para marcar (já antecipada) e o que está selecionado.
+                  clicavel
+                  inativa={isTotalmenteAntecipado}
+                  isSelected={isSelected && !isTotalmenteAntecipado}
                   onClick={() => !isProcessing && toggleSelect(v.id, isTotalmenteAntecipado)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -596,8 +575,8 @@ export default function AntecipacaoClient({
                       disabled={isProcessing || isTotalmenteAntecipado}
                     />
                   </TableCell>
-                  <TableCell className="font-medium text-foreground">{formatDateBR(v.dataVenda)}</TableCell>
-                  <TableCell className="text-foreground text-sm max-w-[180px] md:max-w-[150px]">
+                  <TableCell tom="foreground" peso="medio">{formatDateBR(v.dataVenda)}</TableCell>
+                  <TableCell tom="foreground" tamanho="sm" className="max-w-45 md:max-w-37.5">
                     <span className="block truncate">{v.clienteNome || '—'}</span>
                     {/* No celular Empresa e Produto deixam de ser colunas e vem aqui,
                         com o popover de produtos ainda ao alcance do toque. */}
@@ -610,16 +589,14 @@ export default function AntecipacaoClient({
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden text-foreground md:table-cell">
+                  <TableCell tom="foreground" className="hidden md:table-cell">
                     {v.empresaConveniada ? (
-                      <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                        {v.empresaConveniada}
-                      </span>
+                      <Badge variant="marca">{v.empresaConveniada}</Badge>
                     ) : (
                       <span className="text-muted-foreground text-xs">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="hidden font-semibold text-foreground max-w-[250px] md:table-cell">
+                  <TableCell tom="foreground" peso="forte" className="hidden max-w-62.5 md:table-cell">
                     {variosProdutos ? (
                       // Hover abre, clique fixa, sair sem clicar fecha — e o clique
                       // nunca seleciona a venda (ver use-popover-hover.ts).
@@ -633,7 +610,7 @@ export default function AntecipacaoClient({
                   <TableCell>
                     <StatusBadge status={v.status} />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums font-bold text-foreground valor-sensivel valor-sensivel-fim">{formatBRL(v.valorVenda || 0)}</TableCell>
+                  <TableCell tom="foreground" peso="medio" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(v.valorVenda || 0)}</TableCell>
                   <TableCell className="text-right">
                     {/* "total / antecipadas / a antecipar / vencidas", contados no
                         servidor; a legenda fica no "?" do cabecalho da coluna. */}
@@ -662,8 +639,8 @@ export default function AntecipacaoClient({
                   </TableCell>
                 </TableRow>
                 {expandida && temParcelaAberta && (
-                  <TableRow id={`parcelas-lote-${v.id}`} className="hover:bg-transparent">
-                    <TableCell colSpan={9} className="bg-muted/30 px-4 py-4">
+                  <TableRow semHover id={`parcelas-lote-${v.id}`}>
+                    <TableCell fundo="elevado" colSpan={9} className="px-4 py-4">
                       <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                         <span className="text-sm font-bold text-foreground">
                           V{v.id} · {v.clienteNome || '—'}
@@ -695,23 +672,21 @@ export default function AntecipacaoClient({
       </Table>
       </div>
 
-      {/* Degrau de destaque (D-03): esta e a card principal da tela — total
-          selecionado + CTA de antecipar. A card de vencimentos abaixo e
-          secundaria e fica no degrau de repouso, para nao ter dois
-          "flutuantes" na mesma superficie sem dialogo nem menu. */}
-      <Card className="mt-6 overflow-hidden border-2 border-primary/20 shadow-lg dark:shadow-[var(--shadow-lg)]" aria-busy={calculando}>
+      {/* Painel do total selecionado + CTA de antecipar: a ação principal da tela. O estado
+          (cálculo, avisos) mora em texto e nos cartões internos neutros, nunca em tint de contêiner. */}
+      <Card className="mt-6 overflow-hidden p-2" aria-busy={calculando}>
         {/* Linha 1: Total + Métricas — tudo vindo do servidor (calcularSelecaoAction). */}
-        <div className="p-4 sm:p-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
           {/* Total selecionado */}
-          <div className="flex-shrink-0 min-w-[140px]">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Total a Antecipar
+          <div className="min-w-35 flex-shrink-0">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+              Total a antecipar
               {calculando && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-label="Calculando" />}
             </div>
-            <div className="text-3xl sm:text-4xl font-bold text-foreground tabular-nums leading-none mt-0.5 valor-sensivel">
+            <div className="mt-1 font-mono text-3xl font-medium leading-none tracking-tight text-foreground tabular-nums valor-sensivel sm:text-4xl">
               {formatBRL(totalSelecionado)}
             </div>
-            <div className="text-xs text-muted-foreground mt-1.5">
+            <div className="mt-2 text-xs text-muted-foreground">
               {selectedIds.length} {selectedIds.length === 1 ? 'venda selecionada' : 'vendas selecionadas'}
               {parcelasSelecionadas > 0 && (
                 <> · {parcelasSelecionadas} {parcelasSelecionadas === 1 ? 'parcela' : 'parcelas'}</>
@@ -740,47 +715,41 @@ export default function AntecipacaoClient({
             )}
           </div>
 
-          {/* Separador vertical (só desktop) */}
-          <div className="hidden sm:block w-px self-stretch bg-border" />
-
-          {/* 3 métricas em grid compacto */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 flex-1">
-            <div className="rounded-lg bg-info-bg border border-info px-3 py-2.5">
-              <div className="text-xs font-bold uppercase tracking-wider text-info-text">Prazo médio</div>
-              <div className="text-xl font-bold text-info-text tabular-nums leading-tight">
-                {(calculo?.prazoMedioDias ?? 0).toFixed(1)}<span className="text-xs font-semibold ml-0.5">d</span>
+          {/* 3 métricas: cartões internos neutros, o rótulo diz o que é. */}
+          <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="rounded-interno bg-card-elevated px-3 py-3">
+              <div className="text-sm font-medium text-muted-foreground">Prazo médio</div>
+              <div className="font-mono text-xl font-medium leading-tight text-foreground tabular-nums">
+                {(calculo?.prazoMedioDias ?? 0).toFixed(1)}<span className="ml-0.5 text-xs text-muted-foreground">d</span>
               </div>
-              <div className="text-xs text-info-text font-medium mt-0.5">D+1</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">D+1</div>
             </div>
-            <div className="rounded-lg bg-warning-bg border border-warning px-3 py-2.5">
-              <div className="text-xs font-bold uppercase tracking-wider text-warning-text">Taxa total</div>
-              <div className="text-xl font-bold text-warning-text tabular-nums leading-tight">
-                {(calculo?.taxaPercent ?? 0).toFixed(2)}<span className="text-xs font-semibold ml-0.5">%</span>
+            <div className="rounded-interno bg-card-elevated px-3 py-3">
+              <div className="text-sm font-medium text-muted-foreground">Taxa total</div>
+              <div className="font-mono text-xl font-medium leading-tight text-foreground tabular-nums">
+                {(calculo?.taxaPercent ?? 0).toFixed(2)}<span className="ml-0.5 text-xs text-muted-foreground">%</span>
               </div>
-              <div className="text-xs text-warning-text font-medium mt-0.5">Smart</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">Smart</div>
             </div>
-            <div className="rounded-lg bg-success-bg border border-success px-3 py-2.5">
-              <div className="text-xs font-bold uppercase tracking-wider text-success-text">Líquido</div>
-              <div className="text-base sm:text-lg font-bold text-success-text tabular-nums leading-tight truncate valor-sensivel">
+            <div className="col-span-2 min-w-0 rounded-interno bg-card-elevated px-3 py-3 sm:col-span-1">
+              <div className="text-sm font-medium text-muted-foreground">Líquido</div>
+              <div className="truncate font-mono text-lg font-medium leading-tight text-foreground tabular-nums valor-sensivel">
                 {formatBRL(calculo?.valorLiquido ?? 0)}
               </div>
-              <div className="text-xs text-success-text font-medium mt-0.5">estimado</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">estimado</div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-border" />
-
         {/* Linha 2: Ações */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex flex-col gap-2 px-4 pb-3 sm:flex-row sm:items-center sm:gap-3">
           {/* Secundárias */}
-          <div className="flex gap-2 sm:flex-shrink-0">
+          <div className="flex flex-wrap gap-2 sm:flex-shrink-0">
             <Button
               type="button"
               disabled={selectedIds.length === 0 || isProcessing}
               variant="outline"
-              size="sm"
-              className="flex-1 sm:flex-none h-10 px-4 text-sm font-semibold gap-2 cursor-pointer"
+              className="h-10 flex-1 cursor-pointer gap-2 sm:flex-none"
               onClick={handleGerarPlanilha}
             >
               <FileSpreadsheet className="h-4 w-4" />
@@ -790,8 +759,7 @@ export default function AntecipacaoClient({
               type="button"
               disabled={selectedIds.length === 0 || isProcessing}
               variant="outline"
-              size="sm"
-              className="flex-1 sm:flex-none h-10 px-4 text-sm font-semibold gap-2 cursor-pointer"
+              className="h-10 flex-1 cursor-pointer gap-2 sm:flex-none"
               onClick={handleGerarRelatorioVisual}
             >
               <ImageIcon className="h-4 w-4" />
@@ -803,8 +771,7 @@ export default function AntecipacaoClient({
               type="button"
               disabled={selectedIds.length === 0 || isProcessing || registrando}
               variant="outline"
-              size="sm"
-              className="flex-1 sm:flex-none h-10 px-4 text-sm font-semibold gap-2 cursor-pointer"
+              className="h-10 flex-1 cursor-pointer gap-2 sm:flex-none"
               onClick={() => {
                 setDataRegistro(hoje);
                 setRegistroAberto(true);
@@ -818,7 +785,8 @@ export default function AntecipacaoClient({
           {/* CTA principal — espera o cálculo do servidor para não antecipar no escuro. */}
           <Button
             disabled={selectedIds.length === 0 || isProcessing || calculando}
-            className="w-full sm:w-auto sm:ml-auto h-11 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-bold bg-success hover:bg-success/90 active:bg-success/80 text-success-foreground shadow-md dark:shadow-[var(--shadow-md)] hover:shadow-success/30 transition-all gap-2 cursor-pointer"
+            size="lg"
+            className="h-11 w-full cursor-pointer gap-2 sm:ml-auto sm:h-12 sm:w-auto"
           >
             {isProcessing ? (
               <>
@@ -831,45 +799,32 @@ export default function AntecipacaoClient({
           </Button>
         </div>
 
-        {/* Rodapé informativo */}
-        <div className="px-4 sm:px-6 pb-3 flex items-center gap-2 text-xs text-muted-foreground border-t border-border/50 pt-2.5">
-          <span className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-info-bg text-xs font-bold text-info-text">i</span>
+        {/* Rodapé informativo: nota neutra. */}
+        <div className="mx-2 mb-2 flex items-center gap-2 rounded-interno bg-poco px-4 py-2.5 text-xs text-muted-foreground">
+          <Info className="h-4 w-4 shrink-0" aria-hidden="true" />
           Taxa Smart: {TAXA_MENSAL_PADRAO.toFixed(2)}% a.m. · Juros simples &lt; 30 dias · Compostos a partir de 30 dias.
         </div>
       </Card>
 
-      {/* Degrau de repouso (D-03), colapsado de lg para md: card
-          secundaria (vencimentos por empresa) na mesma tela da card
-          principal acima — a escala e um degrau por nivel, nunca dois
-          "flutuantes" na mesma superficie. */}
+      {/* Vencimentos por empresa no mês: painel secundário, cartões internos neutros. */}
       {Object.keys(vencimentosPorEmpresa).length > 0 && (
-        <Card className="mt-6 border-2 border-warning/20 bg-gradient-to-br from-card to-card-elevated p-6 shadow-md dark:shadow-[var(--shadow-md)]">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="h-8 w-8 rounded-lg bg-warning/10 flex items-center justify-center">
-              <svg className="h-5 w-5 text-warning-text" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Valores a Vencer no Mês por Empresa</h3>
+        <Card className="mt-6 p-2 pt-5">
+          <div className="mb-4 flex items-center gap-2 px-4">
+            <h3 className="text-lg font-semibold text-foreground">Valores a vencer no mês por empresa</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {Object.entries(vencimentosPorEmpresa)
               .sort((a, b) => b[1] - a[1])
               .map(([empresa, valor]) => (
-                <div
-                  key={empresa}
-                  // Sem sombra (D-03): chip tem borda propria e vive dentro
-                  // do Card — mesmo plano.
-                  className="group relative overflow-hidden rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-warning/50"
-                >
-                  <div className="text-xs font-medium text-muted-foreground truncate">{empresa}</div>
-                  <div className="text-lg font-bold text-warning-text tabular-nums valor-sensivel">{formatBRL(valor)}</div>
+                <div key={empresa} className="rounded-interno bg-card-elevated px-4 py-3">
+                  <div className="truncate text-sm font-medium text-muted-foreground">{empresa}</div>
+                  <div className="font-mono text-lg font-medium text-foreground tabular-nums valor-sensivel">{formatBRL(valor)}</div>
                 </div>
               ))}
           </div>
-          <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+          <div className="mx-2 mt-2 flex items-center justify-between rounded-interno bg-poco px-4 py-3">
             <span className="text-sm font-medium text-muted-foreground">Total a vencer no mês</span>
-            <span className="text-xl font-bold text-warning-text tabular-nums valor-sensivel valor-sensivel-fim">
+            <span className="font-mono text-xl font-medium text-foreground tabular-nums valor-sensivel valor-sensivel-fim">
               {formatBRL(Object.values(vencimentosPorEmpresa).reduce((sum, v) => sum + v, 0))}
             </span>
           </div>
@@ -918,15 +873,11 @@ export default function AntecipacaoClient({
           (fase 16, achado 8). O card saiu da page.tsx quando o resumo por
           comprador passou a dividir o filtro "Ver na fila" com a fila. */}
       {/* tabIndex -1: recebe o foco do "Ver na fila" sem entrar na ordem do Tab. */}
-      <Card id="fila-antecipacao" tabIndex={-1} className="border-primary/20 scroll-mt-4 focus:outline-none">
-        <CardHeader className="pb-4">
+      <Card id="fila-antecipacao" tabIndex={-1} className="scroll-mt-4 p-2 pt-5">
+        <CardHeader className="p-0 px-4 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
+          <CardTitle variant="secao" className="flex items-center gap-2">
+            <CircleDollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             Vendas — Antecipação
           </CardTitle>
           <div className="flex flex-wrap gap-2">
@@ -937,7 +888,7 @@ export default function AntecipacaoClient({
           </div>
           </div>
         </CardHeader>
-        <CardContent>{fila}</CardContent>
+        <CardContent className="p-0 px-2 pb-2">{fila}</CardContent>
       </Card>
     </div>
   );

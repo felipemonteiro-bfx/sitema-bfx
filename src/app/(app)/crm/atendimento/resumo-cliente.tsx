@@ -1,13 +1,34 @@
-import {UserRound,Building2,Gift} from 'lucide-react';
+import Link from 'next/link';
+import {Info,Star,BadgePercent} from 'lucide-react';
 import {formatBRL} from '@/lib/utils';
 import {valorEmReais} from '@/lib/fidelidade';
+import {Button} from '@/components/ui/button';
+import {Popover,PopoverContent,PopoverTrigger} from '@/components/ui/popover';
+import {iniciais} from './status-mensagem';
 
-export function ResumoCliente({nome,cadastro,empresa,etapa,pontos}:{nome:string;cadastro:number;empresa:string|null;etapa:string|null;pontos:number}){
- return <section aria-label="Identificação do cliente" className="overflow-hidden rounded-xl border border-primary/30 bg-background">
-  <header className="flex items-start gap-3 border-b border-primary/20 bg-primary/10 p-5 sm:p-6">
-   <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"><UserRound className="size-6"/></div>
-   <div className="min-w-0"><h3 className="break-words text-xl font-bold leading-snug sm:text-2xl">{nome}</h3><p className="mt-2 text-sm text-muted-foreground">Cadastro #{cadastro} · {etapa||'Etapa não informada'}</p><p className="mt-3 flex items-start gap-2 text-sm font-semibold"><Building2 className="mt-0.5 size-4 shrink-0"/><span className="break-words">{empresa||'Empresa não informada'}</span></p></div>
-  </header>
-  <section aria-label="Benefícios de fidelidade" className="p-5 sm:p-6"><h4 className="mb-4 flex items-center gap-2 text-sm font-semibold"><Gift className="size-4 text-primary"/>Benefícios de fidelidade</h4><dl className="grid gap-4 sm:grid-cols-2"><div><dt className="text-sm text-muted-foreground">Pontos registrados</dt><dd className="mt-1 text-2xl font-bold tabular-nums">{pontos.toLocaleString('pt-BR')}</dd></div><div className="border-t pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><dt className="text-sm text-muted-foreground">Equivalente em desconto</dt><dd className="mt-1 text-2xl font-bold tabular-nums text-primary">{formatBRL(valorEmReais(pontos))}</dd></div></dl><p className="mt-4 text-xs leading-relaxed text-muted-foreground">Não é saldo em dinheiro. Resgate sujeito às regras de fidelidade; nenhum desconto foi aplicado.</p></section>
- </section>;
+/** Aviso legal dos pontos: vive no Popover do ícone de info e no leitor de tela, não num parágrafo. */
+const NOTA_PONTOS='Não é saldo em dinheiro. Resgate sujeito às regras de fidelidade; nenhum desconto foi aplicado.';
+
+export function ResumoCliente({nome,cadastro,empresa,etapa,pontos,fichaHref,telefone,novaAba=false}:{nome:string;cadastro:number;empresa:string|null;etapa:string|null;pontos:number;fichaHref?:string;telefone?:string;novaAba?:boolean}){
+ return <>
+  <section aria-label="Identificação do cliente" className="flex flex-col items-center gap-2 px-4 pb-5 pt-5 text-center">
+   <span aria-hidden="true" className="flex size-16 items-center justify-center rounded-full bg-marca-tint font-display text-xl font-semibold text-marca-tint-texto">{iniciais(nome)}</span>
+   <h3 className="break-words text-lg font-semibold leading-snug">{nome}</h3>
+   {telefone&&<p className="font-mono text-sm text-texto-secundario">+{telefone}</p>}
+   <p className="break-words text-xs text-muted-foreground">Cadastro #{cadastro} · {empresa||'Empresa não informada'}<span className="sr-only"> · Etapa: {etapa||'Etapa não informada'}</span></p>
+   {fichaHref&&<Link href={fichaHref} {...(novaAba?{target:'_blank',rel:'noopener'}:{})} className="inline-flex min-h-8 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline">Ver ficha do cliente</Link>}
+  </section>
+  <section aria-label="Benefícios de fidelidade" className="relative flex flex-col gap-2.5 border-t border-divisoria px-4 py-4">
+   <h4 className="pr-8 text-xs font-medium text-muted-foreground">Fidelidade</h4>
+   <dl className="grid grid-cols-2 gap-1.5">
+    <div className="rounded-interno bg-card-elevated p-3"><dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><Star className="size-3.5 shrink-0" aria-hidden="true"/><span aria-hidden="true">Pontos</span><span className="sr-only">Pontos registrados</span></dt><dd className="mt-1 font-mono text-lg tabular-nums">{pontos.toLocaleString('pt-BR')}</dd></div>
+    <div className="rounded-interno bg-card-elevated p-3"><dt className="flex items-center gap-1.5 text-xs text-muted-foreground"><BadgePercent className="size-3.5 shrink-0" aria-hidden="true"/><span aria-hidden="true">Em desconto</span><span className="sr-only">Equivalente em desconto</span></dt><dd className="valor-sensivel mt-1 font-mono text-lg tabular-nums text-marca-tint-texto">{formatBRL(valorEmReais(pontos))}</dd></div>
+   </dl>
+   <Popover>
+    <div className="absolute right-3 top-2"><PopoverTrigger asChild><Button type="button" variant="ghost" size="iconSm" aria-label="Sobre os pontos de fidelidade" aria-describedby="nota-pontos" title={NOTA_PONTOS}><Info className="size-3.5 text-muted-foreground" aria-hidden="true"/></Button></PopoverTrigger></div>
+    <PopoverContent align="end"><p className="text-xs leading-relaxed">{NOTA_PONTOS}</p></PopoverContent>
+   </Popover>
+   <span id="nota-pontos" className="sr-only">{NOTA_PONTOS}</span>
+  </section>
+ </>;
 }

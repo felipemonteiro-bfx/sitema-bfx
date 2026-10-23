@@ -30,10 +30,16 @@ const alertVariants = cva(
         true: "animate-fade-in-up",
         false: "",
       },
+      // `sm`: aviso de rodape de formulario (text-xs).
+      size: {
+        default: "",
+        sm: "text-xs",
+      },
     },
     defaultVariants: {
       variant: "default",
       animated: false,
+      size: "default",
     },
   }
 )
@@ -56,14 +62,14 @@ interface AlertProps
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
-  ({ className, variant, animated, showIcon = false, dismissible = false, onDismiss, children, ...props }, ref) => {
+  ({ className, variant, animated, size, showIcon = false, dismissible = false, onDismiss, children, ...props }, ref) => {
     const Icon = variant ? variantIcons[variant] : null;
     
     return (
       <div
         ref={ref}
         role="alert"
-        className={cn(alertVariants({ variant, animated }), className)}
+        className={cn(alertVariants({ variant, animated, size }), className)}
         {...props}
       >
         {showIcon && Icon && (

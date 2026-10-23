@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { NavAreasCrm } from "../nav-areas-crm";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
@@ -52,6 +54,7 @@ export default async function Page() {
           </>
         }
         breadcrumbs={[{ label: "CRM", href: "/crm" }, { label: "Fidelidade" }]}
+        actions={<NavAreasCrm atual="/crm/fidelidade" />}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -61,13 +64,13 @@ export default async function Page() {
             interno, que e onde ela pertence. */}
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle className="text-primary text-base">Saldo de pontos por cliente</CardTitle>
+            <CardTitle>Saldo de pontos por cliente</CardTitle>
           </CardHeader>
           <CardContent>
             {clientes.length === 0 ? (
               <EmptyState variant="clients" size="sm" title="Nenhum cliente com pontos" description="Os pontos são creditados automaticamente a cada venda." />
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-interno bg-poco">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -81,8 +84,8 @@ export default async function Page() {
                     {clientes.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell>{c.nome}</TableCell>
-                        <TableCell className="text-right font-medium">{c.pontos ?? 0}</TableCell>
-                        <TableCell className="valor-sensivel valor-sensivel-fim text-right text-success-text">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
+                        <TableCell peso="medio" numeric>{c.pontos ?? 0}</TableCell>
+                        <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(valorEmReais(c.pontos ?? 0))}</TableCell>
                         <TableCell>
                           <form action={resgatarPontosCliente} className="flex items-center gap-1">
                             <input type="hidden" name="clienteId" value={c.id} />
@@ -92,7 +95,8 @@ export default async function Page() {
                               min={1}
                               max={c.pontos ?? 0}
                               placeholder="pts"
-                              className="h-8 w-20 px-2 text-xs"
+                              inputSize="sm"
+                              className="w-20"
                             />
                             <Button type="submit" variant="outline" size="sm">Resgatar</Button>
                           </form>
@@ -108,24 +112,24 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary text-base">Movimentações recentes</CardTitle>
+            <CardTitle>Movimentações recentes</CardTitle>
           </CardHeader>
           <CardContent>
             {extrato.length === 0 ? (
               <p className="text-sm text-muted-foreground">Sem movimentações ainda.</p>
             ) : (
-              <ul className="space-y-2 text-sm">
+              <ul className="rounded-interno bg-poco px-4 py-1 text-sm">
                 {extrato.map((t) => (
-                  <li key={t.id} className="flex items-center justify-between gap-2 border-b pb-2 last:border-0">
+                  <li key={t.id} className="flex items-center justify-between gap-2 border-b border-divisoria py-3 last:border-0">
                     <div className="min-w-0">
                       <div className="truncate font-medium">{t.cliente?.nome ?? `#${t.clienteId}`}</div>
                       <div className="text-xs text-muted-foreground">
                         {t.descricao ?? t.tipo} · {formatDataHora(t.criadoEm)}
                       </div>
                     </div>
-                    <span className={t.pontos >= 0 ? "text-success-text font-medium" : "text-destructive font-medium"}>
+                    <Badge numerico variant={t.pontos >= 0 ? "success" : "error"}>
                       {t.pontos >= 0 ? "+" : ""}{t.pontos}
-                    </span>
+                    </Badge>
                   </li>
                 ))}
               </ul>

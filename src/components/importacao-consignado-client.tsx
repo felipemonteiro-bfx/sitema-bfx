@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Contador } from "@/components/importacao-ui";
 import {
   Table,
   TableBody,
@@ -29,15 +31,6 @@ import type {
   ResultadoAnaliseConsignado,
   ResultadoCommitConsignado,
 } from "@/app/(app)/importacao/consignado/actions";
-
-function Contador({ label, valor }: { label: string; valor: number }) {
-  return (
-    <div className="rounded-md border bg-card px-3 py-2">
-      <div className="text-xs font-bold uppercase text-muted-foreground">{label}</div>
-      <div className="text-xl font-bold tabular-nums">{valor}</div>
-    </div>
-  );
-}
 
 type Analisar = (formData: FormData) => Promise<ResultadoAnaliseConsignado | { erro: string }>;
 type Confirmar = (formData: FormData) => Promise<ResultadoCommitConsignado | { erro: string }>;
@@ -167,7 +160,7 @@ export default function ImportacaoConsignadoClient({
               <span role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
                 {analisando && (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin text-info-text" aria-hidden />
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden />
                     Analisando…
                   </>
                 )}
@@ -188,9 +181,12 @@ export default function ImportacaoConsignadoClient({
         </Card>
 
         {plano && (
-          <Card className="border-info bg-info-bg">
+          <Card>
             <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-primary">2. Análise — nada foi gravado ainda</CardTitle>
+              <div className="space-y-1.5">
+                <CardTitle>2. Análise</CardTitle>
+                <Badge variant="outline">Nada foi gravado ainda</Badge>
+              </div>
               <Button
                 type="button"
                 disabled={!podeConfirmar || confirmando}
@@ -214,15 +210,17 @@ export default function ImportacaoConsignadoClient({
                 <Contador label="Leads" valor={plano.resumo.leadsCriar} />
               </div>
               {avisos.length > 0 && (
-                <div className="rounded-md border border-warning/30 bg-warning-bg p-3">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-warning-text">
-                    <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-                    Avisos ({avisos.length}) — não impedem a importação
+                <div className="rounded-interno bg-poco p-4">
+                  <div className="mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                    Avisos
+                    <Badge variant="warning" size="sm">{avisos.length}</Badge>
+                    <span className="font-normal text-muted-foreground">não impedem a importação</span>
                   </div>
                   <ul
                     tabIndex={0}
                     aria-label="Avisos da análise"
-                    className="max-h-48 space-y-1 overflow-y-auto text-xs text-warning-text"
+                    className="max-h-48 space-y-1 overflow-y-auto text-xs text-muted-foreground"
                   >
                     {avisos.map((aviso, i) => (
                       <li key={i}>{descreverAvisoConsignado(aviso)}</li>
@@ -241,7 +239,7 @@ export default function ImportacaoConsignadoClient({
                     tabIndex={0}
                     role="region"
                     aria-label="Linhas recusadas"
-                    className="max-h-64 overflow-y-auto rounded-md border bg-card"
+                    className="max-h-64 overflow-y-auto rounded-interno bg-poco"
                   >
                     <Table>
                       <TableHeader>
@@ -254,9 +252,9 @@ export default function ImportacaoConsignadoClient({
                       <TableBody>
                         {plano.erros.map((erro, i) => (
                           <TableRow key={i}>
-                            <TableCell>{erro.linha}</TableCell>
+                            <TableCell mono>{erro.linha}</TableCell>
                             <TableCell>{descreverMotivoConsignado(erro.motivo)}</TableCell>
-                            <TableCell className="font-mono text-xs">{erro.conteudo}</TableCell>
+                            <TableCell tamanho="xs" mono>{erro.conteudo}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -269,9 +267,10 @@ export default function ImportacaoConsignadoClient({
         )}
 
         {resultado && (
-          <Card className="border-success bg-success-bg">
-            <CardHeader>
-              <CardTitle className="text-success-text">Importação concluída</CardTitle>
+          <Card>
+            <CardHeader className="flex flex-row flex-wrap items-center gap-3 space-y-0">
+              <CardTitle>Importação concluída</CardTitle>
+              <Badge variant="success">Concluída</Badge>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

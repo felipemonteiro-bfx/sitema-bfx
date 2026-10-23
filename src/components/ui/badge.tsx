@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
@@ -18,6 +18,11 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: 
           "text-foreground border-border hover:bg-muted",
+        // Selo de marca do Vantage: tint verde OPACO + texto `marca-tint-texto`
+        // (5.60:1 no claro, 7.02:1 no escuro). Nunca `text-primary` sobre o
+        // tint: no claro fica em 4.45:1.
+        marca:
+          "border-transparent bg-marca-tint text-marca-tint-texto",
         // Tint OPACO no tema claro (`bg-<sem>-bg`), nao o composto
         // `bg-<sem>/10`. O composto da propria matiz escurece o tom, e o quanto
         // ele escurece depende do que estiver EMBAIXO: sobre `--card` o badge
@@ -41,8 +46,19 @@ const badgeVariants = cva(
           "border-transparent bg-error text-error-foreground hover:bg-error/90",
         infoSolid:
           "border-transparent bg-info text-info-foreground hover:bg-info/90",
+        // Selo neutro do Vantage (sem estoque, a vencer, não emitido): o `secondary`
+        // do tema claro é escuro demais para um estado sem urgência.
+        neutro:
+          "border-transparent bg-controle-ativo text-texto-secundario",
         ghost:
           "border-transparent bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+        // `discreto`: contorno neutro com texto muted (anotacao ao lado de um titulo).
+        discreto: "border-border bg-transparent font-medium text-muted-foreground",
+      },
+      // Numero ou codigo: Geist Mono tabular.
+      numerico: {
+        true: "font-mono tabular-nums",
+        false: "",
       },
       size: {
         default: "px-2.5 py-0.5 text-xs",
@@ -58,6 +74,7 @@ const badgeVariants = cva(
       variant: "default",
       size: "default",
       animated: false,
+      numerico: false,
     },
   }
 )
@@ -66,9 +83,9 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
-function Badge({ className, variant, size, animated, ...props }: BadgeProps) {
+function Badge({ className, variant, size, animated, numerico, ...props }: BadgeProps) {
   return (
-    <div className={cn(badgeVariants({ variant, size, animated }), className)} {...props} />
+    <div className={cn(badgeVariants({ variant, size, animated, numerico }), className)} {...props} />
   )
 }
 

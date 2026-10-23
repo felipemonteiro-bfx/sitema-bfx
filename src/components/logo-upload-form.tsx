@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { logoSrcParaBrowser } from "@/lib/storage-policy";
 import { useRouter } from "next/navigation";
 
@@ -69,7 +70,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-medium mb-2">Logo atual:</h3>
-        <div className="relative w-32 h-32 border rounded-md overflow-hidden p-2 bg-muted/30 flex items-center justify-center">
+        <div className="relative w-32 h-32 rounded-interno overflow-hidden p-2 bg-poco flex items-center justify-center">
           {displayUrl ? (
             <Image
               src={displayUrl}
@@ -84,15 +85,15 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
         </div>
       </div>
       <div>
-        <label htmlFor="logo-upload" className="block text-sm font-medium text-foreground">
+        <Label variant="foreground" htmlFor="logo-upload" className="block">
           Carregar nova logo
-        </label>
+        </Label>
         <div className="mt-1 flex flex-wrap items-center gap-2">
-          <label className="cursor-pointer">
-            <span className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+          <Label variant="foreground" htmlFor="logo-upload" className="cursor-pointer">
+            <span className="inline-flex h-11 items-center justify-center rounded-controle border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
               Escolher arquivo
             </span>
-            {/* `<input>` cru de proposito — e a excecao ja documentada para
+            {/* `<input>` cru de proposito — excecao legitima, ja documentada para
                 `type="file"`. Com `<Input>` o `sr-only` NAO escondia: a base do
                 componente traz `w-full h-10`, e o tailwind-merge nao trata
                 `sr-only` como conflitante com `w-*`/`h-*`, entao o `width:1px`
@@ -106,7 +107,7 @@ export function LogoUploadForm({ currentLogoPath }: { currentLogoPath?: string }
               onChange={handleFileChange}
               className="sr-only"
             />
-          </label>
+          </Label>
           <span className="text-sm text-muted-foreground">
             {file ? file.name : "Nenhum arquivo selecionado"}
           </span>

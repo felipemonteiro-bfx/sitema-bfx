@@ -183,6 +183,17 @@ O `space-y-3` (12px) fica como exceção da densidade das tabelas; não introduz
 
 ---
 
+## 6.1 Redesign Vantage (2026-10-16)
+
+A paleta de neutros mudou de slate azulado (matiz 250/260) para **neutros esverdeados de croma
+baixíssimo** no escuro e **croma 0** no claro; o verde da marca (`--primary`) não mudou. Há agora
+degraus de superfície nomeados (página → casca → painel → card interno/poço), raios por degrau
+(24/20/14/12 px), números em Geist Mono (`.tabular-nums`), título de página em `--foreground` e
+um vocabulário de movimento por tokens. O contrato completo, com valores e contrastes, está em
+`DE-PARA-CORES.md` seção 4.2; a fonte da verdade visual são os artboards aprovados e a spec
+`docs/superpowers/specs/2026-10-16-redesign-vantage-design.md`. Substitui o que as seções 1–4
+dizem sobre fundo azulado, título verde e gradiente no `body`.
+
 ## 7. Divergências abertas
 
 Medidas em 2026-08-11, **não corrigidas** — cada uma é uma varredura de risco próprio:

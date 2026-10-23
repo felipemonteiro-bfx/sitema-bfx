@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { reenviarRelatorioMensal, gerarRelatoriosMensais } from "./actions";
 export const dynamic = "force-dynamic";
 
 type StatusRel = string;
+
 
 function statusBadge(status: StatusRel) {
   switch (status) {
@@ -73,14 +75,14 @@ export default async function Page() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary">Gerar / enviar agora</CardTitle>
+          <CardTitle variant="secao">Gerar / enviar agora</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={gerarRelatoriosMensais} className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1">
-              <label htmlFor="periodo" className="text-xs font-medium text-muted-foreground">
+            <div className="space-y-1.5">
+              <Label htmlFor="periodo">
                 Período (mês)
-              </label>
+              </Label>
               <Input
                 id="periodo"
                 name="periodo"
@@ -90,7 +92,7 @@ export default async function Page() {
               />
             </div>
             <Button type="submit">Gerar e enviar</Button>
-            <p className="w-full text-xs text-muted-foreground">
+            <p className="w-full text-sm text-muted-foreground">
               Envia o relatório do mês escolhido para todas as empresas que ainda não receberam. Use
               &quot;Reenviar&quot; abaixo para forçar o reenvio de uma empresa específica.
             </p>
@@ -109,17 +111,17 @@ export default async function Page() {
           {[...porPeriodo.entries()].map(([periodo, itens]) => {
             const totalPeriodo = itens.reduce((s, i) => s + i.valorTotal, 0);
             return (
-              <Card key={periodo}>
-                <CardHeader className="flex-row items-center justify-between gap-2">
-                  <CardTitle className="text-primary">{periodoLabel(periodo)}</CardTitle>
-                  <span className="valor-sensivel text-sm tabular-nums text-muted-foreground">{formatBRL(totalPeriodo)}</span>
+              <Card key={periodo} className="p-2 pt-5">
+                <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 p-0 px-4 pb-4">
+                  <CardTitle variant="secao">{periodoLabel(periodo)}</CardTitle>
+                  <span className="valor-sensivel text-sm font-mono text-muted-foreground">{formatBRL(totalPeriodo)}</span>
                 </CardHeader>
-                <CardContent>
+                <CardContent variant="poco" className="p-0">
                   {/* Desktop: tabela */}
                   <div className="hidden overflow-x-auto md:block">
                     <Table>
                       <TableHeader>
-                        <TableRow>
+                        <TableRow semHover>
                           <TableHead>Empresa</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead className="text-right">Vendas</TableHead>
@@ -130,12 +132,12 @@ export default async function Page() {
                       </TableHeader>
                       <TableBody>
                         {itens.map((log) => (
-                          <TableRow key={log.id}>
+                          <TableRow semHover key={log.id}>
                             <TableCell>{log.empresa?.nome ?? `#${log.empresaId}`}</TableCell>
                             <TableCell>{statusBadge(log.status)}</TableCell>
-                            <TableCell className="text-right tabular-nums">{log.totalVendas}</TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(log.valorTotal)}</TableCell>
-                            <TableCell className="tabular-nums text-muted-foreground">{formatDataHora(log.enviadoEm)}</TableCell>
+                            <TableCell numeric>{log.totalVendas}</TableCell>
+                            <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(log.valorTotal)}</TableCell>
+                            <TableCell tom="muted" mono>{formatDataHora(log.enviadoEm)}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap items-center gap-2">
                                 <a
@@ -166,14 +168,14 @@ export default async function Page() {
                   </div>
 
                   {/* Mobile: cards */}
-                  <div className="space-y-3 md:hidden">
+                  <div className="space-y-2 p-2 md:hidden">
                     {itens.map((log) => (
-                      <div key={log.id} className="rounded-lg border p-3">
+                      <div key={log.id} className="rounded-interno bg-card-elevated p-4">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium">{log.empresa?.nome ?? `#${log.empresaId}`}</span>
                           {statusBadge(log.status)}
                         </div>
-                        <div className="mt-1 text-xs tabular-nums text-muted-foreground">
+                        <div className="mt-1 text-xs font-mono text-muted-foreground">
                           {log.totalVendas} vendas · <span className="valor-sensivel">{formatBRL(log.valorTotal)}</span> · {formatDataHora(log.enviadoEm)}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-2">

@@ -5,7 +5,10 @@ import { requireAdmin } from "@/lib/guards";
 import { gerarBoletoAsaas } from "@/lib/boleto-actions";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { formatBRL, cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardStats } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { KpiCard } from "@/components/kpi-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
 import {
@@ -48,28 +51,28 @@ function BoletoTable({
   return (
     <Table>
       <TableHeader>
-        <TableRow className="bg-muted/30">
+        <TableRow>
           <TableHead>Descrição</TableHead>
           <TableHead>Vencimento</TableHead>
           <TableHead className="text-right">Valor</TableHead>
-          <TableHead className="w-[100px]"></TableHead>
+          <TableHead className="w-25"></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+            <TableCell tom="muted" colSpan={4} className="text-center py-10">
               {emptyMessage}
             </TableCell>
           </TableRow>
         ) : (
           items.map((p) => (
             <TableRow key={p.id}>
-              <TableCell className="font-medium max-w-[220px] truncate">
+              <TableCell peso="medio" truncar className="max-w-55">
                 {p.description || `Cobrança ${p.id.slice(-8)}`}
               </TableCell>
-              <TableCell className="tabular-nums">{formatDateBr(p.dueDate)}</TableCell>
-              <TableCell className="text-right font-semibold tabular-nums valor-sensivel valor-sensivel-fim">
+              <TableCell mono>{formatDateBr(p.dueDate)}</TableCell>
+              <TableCell peso="medio" numeric className="valor-sensivel valor-sensivel-fim">
                 {formatBRL(p.value)}
               </TableCell>
               <TableCell>
@@ -153,14 +156,12 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
           description="Boletos emitidos pelo Asaas"
           breadcrumbs={[{ label: "Boletos" }]}
         />
-        <Card className="border-warning/30 bg-warning/5">
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertTriangle className="h-12 w-12 text-warning-text mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Asaas não configurado</h3>
-            <p className="text-sm text-muted-foreground max-w-md">
-              Configure em Configurações → Asaas para visualizar os boletos.
-            </p>
-          </CardContent>
+        <Card>
+          <EmptyState
+            icon={AlertTriangle}
+            title="Asaas não configurado"
+            description="Configure em Configurações → Asaas para visualizar os boletos."
+          />
         </Card>
       </div>
     );
@@ -265,23 +266,23 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
       />
 
       {asaasApiError && (
-        <Card className="border-warning/30 bg-warning/5">
-          <CardContent className="flex items-center gap-3 py-4">
-            <AlertTriangle className="h-5 w-5 text-warning-text shrink-0" />
-            <div>
-              <p className="text-sm font-medium">Erro ao buscar boletos</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{asaasApiError}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <Alert variant="warning" showIcon>
+          <div>
+            <p className="text-sm font-medium">Erro ao buscar boletos</p>
+            <p className="mt-0.5 text-xs">{asaasApiError}</p>
+          </div>
+        </Alert>
       )}
 
-      {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <CardStats title="Vencidos (todo atraso)" value={formatBRL(totalVencidos)} description={resumoCartao(filteredVencidos)} icon={AlertTriangle} color="error" />
-        <CardStats title="A vencer" value={formatBRL(totalAVencer)} description={resumoCartao(filteredAVencer)} icon={Clock} color="warning" />
-        <CardStats title="Pagos" value={formatBRL(totalPagos)} description={resumoCartao(filteredPagos)} icon={CheckCircle2} color="success" />
-      </div>
+      {/* Indicadores num painel só (padrão Vantage): cartões internos neutros, o rótulo diz o que é. */}
+      <section
+        aria-label="Resumo dos boletos"
+        className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-2 rounded-painel border border-painel-borda bg-card p-2"
+      >
+        <KpiCard ordem={0} rotulo="Vencidos (todo atraso)" valor={formatBRL(totalVencidos)} rodape={resumoCartao(filteredVencidos)} />
+        <KpiCard ordem={1} rotulo="A vencer" valor={formatBRL(totalAVencer)} rodape={resumoCartao(filteredAVencer)} />
+        <KpiCard ordem={2} rotulo="Pagos" valor={formatBRL(totalPagos)} rodape={resumoCartao(filteredPagos)} />
+      </section>
 
       <BoletosFiltros
         // Nova chave a cada filtro: voltar/avançar no navegador remonta com a busca certa.
@@ -300,16 +301,16 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             value: "avencer",
             label: `A vencer${filteredAVencer.length > 0 ? ` (${filteredAVencer.length})` : ""}`,
             content: (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Clock className="h-5 w-5 text-warning-text" />
+              <Card className="p-2 pt-5">
+                <CardHeader className="p-0 px-4 pb-4">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     A vencer
                     <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="rounded-lg border overflow-hidden">
+                <CardContent className="space-y-3 p-0 px-2 pb-2">
+                  <div className="overflow-hidden rounded-interno bg-poco">
                     <BoletoTable items={paginatedAVencer} emptyMessage="Nenhum boleto a vencer com esses filtros." />
                   </div>
                   <Pagination page={page} total={filteredAVencer.length} baseUrl={baseUrl("avencer")} />
@@ -321,16 +322,16 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             value: "vencidos",
             label: `Vencidos${filteredVencidos.length > 0 ? ` (${filteredVencidos.length})` : ""}`,
             content: (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
+              <Card className="p-2 pt-5">
+                <CardHeader className="p-0 px-4 pb-4">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Vencidos
                     <span className="text-xs font-normal text-muted-foreground">· todo atraso{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="rounded-lg border overflow-hidden">
+                <CardContent className="space-y-3 p-0 px-2 pb-2">
+                  <div className="overflow-hidden rounded-interno bg-poco">
                     <BoletoTable items={paginatedVencidos} emptyMessage="Nenhum boleto vencido com esses filtros." />
                   </div>
                   <Pagination page={page} total={filteredVencidos.length} baseUrl={baseUrl("vencidos")} />
@@ -342,16 +343,16 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             value: "pagos",
             label: `Pagos${filteredPagos.length > 0 ? ` (${filteredPagos.length})` : ""}`,
             content: (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <CheckCircle2 className="h-5 w-5 text-success-text" />
+              <Card className="p-2 pt-5">
+                <CardHeader className="p-0 px-4 pb-4">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Pagos
                     <span className="text-xs font-normal text-muted-foreground">· {resumoPeriodo}{filtro.empresa ? ` · ${filtro.empresa}` : ""}{q ? ` · "${q}"` : ""}</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="rounded-lg border overflow-hidden">
+                <CardContent className="space-y-3 p-0 px-2 pb-2">
+                  <div className="overflow-hidden rounded-interno bg-poco">
                     <BoletoTable items={paginatedPagos} emptyMessage="Nenhum boleto pago com esses filtros." linkLabel="Ver comprovante" />
                   </div>
                   <Pagination page={page} total={filteredPagos.length} baseUrl={baseUrl("pagos")} />
@@ -363,19 +364,19 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
             value: "gerar",
             label: `Gerar${vendasPendentes.length > 0 ? ` (${vendasPendentes.length})` : ""}`,
             content: (
-              <Card className="border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <FileText className="h-5 w-5 text-primary" />
+              <Card className="p-2 pt-5">
+                <CardHeader className="p-0 px-4 pb-4">
+                  <CardTitle variant="secao" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                     Gerar boleto manualmente
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Vendas com opção boleto sem boleto gerado ainda.
                   </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0 px-2 pb-2">
                   {vendasPendentes.length === 0 ? (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4 rounded-lg border border-dashed border-border bg-muted/30 px-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-interno bg-poco p-4">
                       <p className="text-sm text-muted-foreground">
                         Nenhuma venda pendente de boleto.
                       </p>
@@ -385,15 +386,15 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className="rounded-lg border overflow-hidden">
+                      <div className="overflow-hidden rounded-interno bg-poco">
                         <Table>
                           <TableHeader>
-                            <TableRow className="bg-muted/30">
+                            <TableRow>
                               <TableHead>Data</TableHead>
                               <TableHead>Cliente</TableHead>
                               <TableHead>Produto</TableHead>
                               <TableHead className="text-right">Valor</TableHead>
-                              <TableHead className="w-[130px]"></TableHead>
+                              <TableHead className="w-32.5"></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -401,8 +402,8 @@ export default async function BoletosPage({ searchParams }: { searchParams: Prom
                               <TableRow key={v.id}>
                                 <TableCell>{formatDateBr(v.dataVenda.toISOString().slice(0, 10))}</TableCell>
                                 <TableCell>{v.cliente?.nome ?? "—"}</TableCell>
-                                <TableCell className="max-w-[180px] truncate">{v.produtoNome ?? "—"}</TableCell>
-                                <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
+                                <TableCell truncar className="max-w-45">{v.produtoNome ?? "—"}</TableCell>
+                                <TableCell peso="medio" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(valorTotalVenda(v))}</TableCell>
                                 <TableCell>
                                   <GerarBoletoButton
                                     vendaId={v.id}

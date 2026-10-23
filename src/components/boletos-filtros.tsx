@@ -80,7 +80,7 @@ export function BoletosFiltros({ tab, filtro, empresas, resumoPeriodo }: Props) 
         <PopoverContent align="start" className="w-72 space-y-3">
           <RadioGroup value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoBoletos)} aria-label="Período" className="gap-1">
             {PERIODOS_BOLETOS.map((p) => (
-              <Label key={p} htmlFor={`periodo-${p}`} className="flex min-h-9 cursor-pointer items-center gap-3 rounded-md px-2 font-normal hover:bg-muted">
+              <Label key={p} htmlFor={`periodo-${p}`} variant="linha">
                 <RadioGroupItem id={`periodo-${p}`} value={p} />
                 {ROTULO_PERIODO_BOLETOS[p]}
               </Label>
@@ -89,11 +89,11 @@ export function BoletosFiltros({ tab, filtro, empresas, resumoPeriodo }: Props) 
           {periodo === "pers" && (
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label htmlFor="periodo-de" className="text-xs text-muted-foreground">De</Label>
+                <Label size="sm" htmlFor="periodo-de">De</Label>
                 <DateInput id="periodo-de" value={de} onChange={setDe} />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="periodo-ate" className="text-xs text-muted-foreground">Até</Label>
+                <Label size="sm" htmlFor="periodo-ate">Até</Label>
                 <DateInput id="periodo-ate" value={ate} onChange={setAte} />
               </div>
             </div>

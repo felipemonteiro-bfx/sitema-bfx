@@ -8,7 +8,6 @@ import VendaRapidaFormV2 from "@/components/venda-rapida-form-v2";
 import { ShoppingCart, CheckCircle2 } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
-import { Separator } from "@/components/ui/separator";
 import { criarVendaV2 } from "./actions";
 import { signReciboId } from "@/lib/recibo-url";
 
@@ -46,33 +45,31 @@ export default async function Page() {
   const totalUltima = ultima ? valorTotalVenda(ultima) : 0;
 
   return (
-    <div className="space-y-8 max-w-[1400px] mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <PageHeader
-          title="Terminal de Vendas"
-          description="PDV Inteligente BFX Intelligence"
-          breadcrumbs={[{ label: "Venda Rápida" }]}
-        />
+    <div className="space-y-8 max-w-350 mx-auto">
+      <PageHeader
+        title="Terminal de vendas"
+        description="PDV inteligente BFX Intelligence"
+        breadcrumbs={[{ label: "Vendas & Operações" }, { label: "Venda Rápida" }]}
+      />
 
-        {ultima && (
-          <div className="flex items-center gap-3 bg-card p-2 rounded-2xl shadow-sm dark:shadow-[var(--shadow-sm)] border border-border pr-4">
-            {/* O composto de 20% da propria matiz escurece o fundo e trava o
-                texto: mesmo com `--success-text` daria 4.22:1. Sobre o tint
-                OPACO o mesmo token da 4.75:1. Regra do design system: acima de
-                /10, use `bg-*-bg`, nao o composto. */}
-            <div className="h-10 w-10 rounded-xl bg-success-bg flex items-center justify-center text-success-text">
-              <CheckCircle2 className="h-6 w-6" />
+      {ultima && (
+        // Última venda: painel neutro com os atalhos (recibo, assinatura, WhatsApp).
+        // Sem chip colorido: o estado "feita" não precisa de cor.
+        <Card className="anim-entrada" style={{ "--i": 0 } as React.CSSProperties}>
+          <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-3 p-4 pt-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <div>
+                <div className="text-sm font-medium text-muted-foreground">Última venda</div>
+                <div className="text-lg font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(totalUltima)}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-xs font-bold uppercase text-muted-foreground leading-none mb-1">Última Venda</div>
-              <div className="text-sm font-bold text-foreground leading-none valor-sensivel">{formatBRL(totalUltima)}</div>
-            </div>
-            <Separator orientation="vertical" className="h-8 mx-2" />
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
               <ReciboDownloadLink
                 vendaId={ultima.id}
                 tipo={ultima.descontoEmFolha ? "autorizacao" : "venda"}
-                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-8 text-xs font-bold uppercase tracking-wider cursor-pointer")}
+                variant="outline"
+                size="sm"
                 label={ultima.descontoEmFolha ? "Autorização" : "Recibo"}
               />
               {ultima.descontoEmFolha && ultima.assinaturaToken && (
@@ -91,14 +88,14 @@ export default async function Page() {
                 )}`}
                 target="_blank"
                 rel="noreferrer"
-                className={cn(buttonVariants({ variant: "success", size: "sm" }), "h-8 text-xs font-bold uppercase tracking-wider cursor-pointer")}
+                className={cn(buttonVariants({ variant: "success", size: "sm" }), "cursor-pointer")}
               >
                 WhatsApp
               </a>
             </div>
-          </div>
-        )}
-      </div>
+          </CardContent>
+        </Card>
+      )}
 
       <VendaRapidaFormV2
         vendedorOptions={vendedorOptions}
@@ -109,9 +106,9 @@ export default async function Page() {
       />
 
       {!ultima && (
-        <Card className="border-dashed border-2 bg-muted/20">
+        <Card>
           <CardContent className="py-10 flex flex-col items-center justify-center text-center">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4 text-muted-foreground">
+            <div className="h-12 w-12 rounded-full bg-poco flex items-center justify-center mb-4 text-muted-foreground">
               <ShoppingCart className="h-6 w-6" />
             </div>
             <p className="text-muted-foreground font-medium">Nenhuma venda registrada hoje.</p>

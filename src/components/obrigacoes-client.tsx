@@ -84,13 +84,13 @@ export type LinhaBoleto = {
   }[];
 };
 
-const VARIANTE: Record<TomSituacao, "warning" | "error" | "info" | "success" | "outline"> = {
+const VARIANTE: Record<TomSituacao, "warning" | "error" | "info" | "success" | "outline" | "discreto"> = {
   warning: "warning",
   neutro: "outline",
   error: "error",
   info: "info",
   success: "success",
-  muted: "outline",
+  muted: "discreto",
 };
 
 const ddmm = (s: string) => s.slice(5).split("-").reverse().join("/");
@@ -143,19 +143,19 @@ export default function ObrigacoesClient({ linhas, hoje }: { linhas: LinhaBoleto
         />
       );
     }
-    if (lista.length === 0) return <p className="px-5 py-8 text-center text-sm text-muted-foreground">{vazio}</p>;
+    if (lista.length === 0) return <p className="px-4 py-8 text-center text-sm text-muted-foreground">{vazio}</p>;
     return <TabelaBoletos linhas={lista} onAcao={setDialogo} />;
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden p-2 pt-5">
       <section aria-labelledby="obrigacoes-boletos">
-        <div className="flex flex-wrap items-center gap-3 px-5 pt-4">
-          <h2 id="obrigacoes-boletos" className="text-base font-semibold">
+        <div className="flex flex-wrap items-center gap-3 px-4 pb-4">
+          <h2 id="obrigacoes-boletos" className="text-lg font-semibold text-foreground">
             Boletos Prudent
           </h2>
         </div>
-        <div className="px-5 pb-2 pt-3">
+        <div className="px-0 pb-0">
           <QueryTabs
             param="aba"
             defaultTab="a_pagar"
@@ -204,18 +204,18 @@ export default function ObrigacoesClient({ linhas, hoje }: { linhas: LinhaBoleto
 
 function TabelaBoletos({ linhas, onAcao }: { linhas: LinhaBoleto[]; onAcao: (d: Dialogo) => void }) {
   return (
-    <div className="-mx-5 overflow-x-auto">
+    <div className="overflow-x-auto rounded-interno bg-poco">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="pl-5">Vence</TableHead>
+            <TableHead className="pl-4">Vence</TableHead>
             <TableHead>Empresa</TableHead>
             <TableHead>Lote</TableHead>
             <TableHead className="text-right">Parcelas</TableHead>
             <TableHead className="text-right">Esperado</TableHead>
             <TableHead className="text-right">No boleto</TableHead>
             <TableHead>Situação</TableHead>
-            <TableHead className="pr-5 text-right">
+            <TableHead className="pr-4 text-right">
               <span className="sr-only">Ação</span>
             </TableHead>
           </TableRow>
@@ -242,15 +242,15 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
   const temMenu = (daBfx(l) && (l.pdfArquivoId != null || podeSubstituir || pagamentosVivos.length > 0)) || podeCancelar;
 
   return (
-    <TableRow className={vivo(l) ? undefined : "text-muted-foreground"}>
-      <TableCell className="pl-5 font-semibold tabular-nums">{ddmm(l.vence)}</TableCell>
+    <TableRow apagada={!vivo(l)}>
+      <TableCell peso="forte" mono className="pl-4">{ddmm(l.vence)}</TableCell>
       <TableCell>{l.empresa}</TableCell>
-      <TableCell className="tabular-nums">#{l.loteId}</TableCell>
-      <TableCell className="text-right tabular-nums">{l.parcelas}</TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell mono>#{l.loteId}</TableCell>
+      <TableCell numeric>{l.parcelas}</TableCell>
+      <TableCell numeric>
         <span className="valor-sensivel">{formatBRL(l.esperado)}</span>
       </TableCell>
-      <TableCell className={`text-right tabular-nums ${l.diverge ? "font-semibold text-error-text" : ""}`}>
+      <TableCell numeric peso={l.diverge ? "forte" : undefined} tom={l.diverge ? "erro" : undefined}>
         {l.noBoleto != null ? (
           <span className="valor-sensivel" title={l.divergenciaJustificativa ?? undefined}>
             {formatBRL(l.noBoleto)}
@@ -262,7 +262,7 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
       <TableCell>
         <Badge
           variant={VARIANTE[l.situacao.tom]}
-          className={`whitespace-nowrap ${l.situacao.tom === "muted" ? "text-muted-foreground" : ""}`}
+          className="whitespace-nowrap"
         >
           {l.situacao.rotulo}
         </Badge>
@@ -270,7 +270,7 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
           <span className="ml-2 text-xs text-muted-foreground">substitui #{l.substituiId}</span>
         )}
       </TableCell>
-      <TableCell className="pr-5">
+      <TableCell className="pr-4">
         <div className="flex items-center justify-end gap-2">
           {daBfx(l) && podeAnexar && (
             <Button variant="outline" size="sm" onClick={() => onAcao({ tipo: "anexar", linha: l })}>
@@ -323,7 +323,7 @@ function LinhaTabela({ linha: l, onAcao }: { linha: LinhaBoleto; onAcao: (d: Dia
                   <>
                     {(l.pdfArquivoId != null || podeSubstituir) && daBfx(l) && <DropdownMenuSeparator />}
                     <DropdownMenuItem
-                      className="text-error-text focus:text-error-text"
+                      variant="destructive"
                       onSelect={() => onAcao({ tipo: "cancelar", linha: l })}
                     >
                       Cancelar boleto
@@ -402,7 +402,7 @@ function DialogoDocumento({ linha, substituir, onClose }: { linha: LinhaBoleto; 
         <form onSubmit={enviar} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="boleto-pdf">PDF do boleto</Label>
-            <Input id="boleto-pdf" type="file" name="pdf" accept="application/pdf,.pdf" className="h-10 px-2 pt-1.5" />
+            <Input id="boleto-pdf" type="file" name="pdf" accept="application/pdf,.pdf" className="h-10" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="boleto-linha">Linha digitável ou código de barras</Label>
@@ -551,7 +551,7 @@ function DialogoPagamento({ linha, hoje, onClose }: { linha: LinhaBoleto; hoje: 
               type="file"
               name="comprovante"
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              className="h-10 px-2 pt-1.5"
+              className="h-10"
             />
           </div>
           <DialogFooter>
@@ -669,10 +669,10 @@ function DialogoCancelar({ linha, onClose }: { linha: LinhaBoleto; onClose: () =
         </div>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pendente}>Voltar</AlertDialogCancel>
-          <AlertDialogAction
+          <AlertDialogAction variant="destructive"
             onClick={confirmar}
             disabled={pendente || !motivoOk}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+
           >
             {pendente ? "Cancelando…" : "Cancelar boleto"}
           </AlertDialogAction>

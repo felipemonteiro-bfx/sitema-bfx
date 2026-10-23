@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { History, FileSpreadsheet, ImageIcon, Check, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { History, FileSpreadsheet, ImageIcon, Check, Info, Loader2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DateInput } from '@/components/ui/date-input';
 import { Label } from '@/components/ui/label';
 import { CurrencyInput } from '@/components/currency-input';
@@ -65,11 +66,11 @@ interface Props {
   hoje: string;
 }
 
-/** Cor do selo por status, nos tokens do design system. */
-const ESTILO_STATUS: Record<string, string> = {
-  [STATUS_LOTE.emAndamento]: 'bg-info-bg text-info-text',
-  [STATUS_LOTE.concluido]: 'bg-success-bg text-success-text',
-  [STATUS_LOTE.cancelado]: 'bg-muted text-muted-foreground',
+/** Variante do Badge por status do lote: o estado mora no selo, não no card. */
+const VARIANTE_STATUS: Record<string, 'info' | 'success' | 'outline'> = {
+  [STATUS_LOTE.emAndamento]: 'info',
+  [STATUS_LOTE.concluido]: 'success',
+  [STATUS_LOTE.cancelado]: 'outline',
 };
 
 export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: Props) {
@@ -189,27 +190,25 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
   };
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <History className="h-5 w-5 text-primary" />
-          </div>
+    <Card className="p-2 pt-5">
+      <CardHeader className="p-0 px-4 pb-4">
+        <CardTitle variant="secao" className="flex items-center gap-2">
+          <History className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           Histórico de Antecipações
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent variant="poco" className="p-4">
         {vazio ? (
           <p className="text-center text-muted-foreground py-8 text-sm">Nenhuma antecipação realizada ainda.</p>
         ) : (
           <div className="space-y-3">
             {batchesPagina.map((b) => (
-              <details key={b.chave ?? b.id} className="group rounded-xl border border-border bg-card transition-all hover:border-primary/30">
+              <details key={b.chave ?? b.id} className="group rounded-interno bg-card">
                 <summary className="flex cursor-pointer list-none flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">#{b.id}</span>
+                    <span className="font-mono text-xs font-medium text-muted-foreground">#{b.id}</span>
                     <span className="text-xs text-muted-foreground">{formatData(b.criadaEm)}</span>
                   </div>
                   {b.periodoDescricao && (
@@ -217,9 +216,9 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                   )}
                   <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
                     <span>{b.quantidadeVendas} {b.quantidadeVendas === 1 ? 'venda' : 'vendas'}</span>
-                    <span className="font-bold text-success-text text-sm valor-sensivel">{formatBRL(b.valorTotal)}</span>
+                    <span className="font-mono text-sm font-medium text-foreground valor-sensivel">{formatBRL(b.valorTotal)}</span>
                   </div>
-                  <span className="text-xs font-semibold text-info-text">
+                  <span className="text-xs text-muted-foreground">
                     Empresa: {[...new Set(b.vendas.map((v) => v.empresa || 'Sem empresa'))].join(', ') || 'não identificada'}
                   </span>
                   {b.concluidaEm && b.status === STATUS_LOTE.concluido && (
@@ -230,15 +229,15 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                   )}
                 </div>
                 <div className="flex gap-2 flex-wrap items-center">
-                  <span className={`rounded-lg px-2.5 py-1 text-xs font-bold ${ESTILO_STATUS[b.status] ?? 'bg-muted text-muted-foreground'}`}>
+                  <Badge variant={VARIANTE_STATUS[b.status] ?? 'outline'}>
                     {ROTULO_STATUS_LOTE[b.status as keyof typeof ROTULO_STATUS_LOTE] ?? b.status}
-                  </span>
+                  </Badge>
                   {b.status === STATUS_LOTE.emAndamento && (
                     <>
                       <Button
                         type="button"
                         size="sm"
-                        className="gap-1.5 text-xs"
+                        className="gap-1.5"
                         onClick={(e) => {
                           e.preventDefault();
                           setDataRetorno(hoje);
@@ -253,9 +252,9 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                       </Button>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="outlineErro"
                         size="sm"
-                        className="gap-1.5 text-xs border-error text-error-text"
+                        className="gap-1.5"
                         onClick={(e) => { e.preventDefault(); setCancelando(b); }}
                       >
                         <X className="h-3.5 w-3.5" />
@@ -263,27 +262,27 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                       </Button>
                     </>
                   )}
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => { e.preventDefault(); handleExcel(b); }}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={(e) => { e.preventDefault(); handleExcel(b); }}>
                     <FileSpreadsheet className="h-3.5 w-3.5" />
                     Planilha
                   </Button>
-                  <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs" onClick={(e) => { e.preventDefault(); handleRelatorio(b); }}>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={(e) => { e.preventDefault(); handleRelatorio(b); }}>
                     <ImageIcon className="h-3.5 w-3.5" />
                     Relatório Visual
                   </Button>
                 </div>
                 </summary>
-                <div className="border-t border-border bg-muted/20 px-4 pb-4 pt-3">
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Detalhamento do lote</div>
+                <div className="border-t border-divisoria px-4 pb-4 pt-3">
+                  <div className="mb-2 text-sm font-medium text-muted-foreground">Detalhamento do lote</div>
                   <div className="space-y-2">
                     {b.vendas.length === 0 ? (
                       <p className="text-xs text-muted-foreground">Não foi possível localizar as vendas deste lote.</p>
                     ) : b.vendas.map((v) => (
-                      <div key={v.id} className="grid gap-1 rounded-lg border border-border bg-card px-3 py-2 text-xs sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3">
-                        <span className="font-bold text-muted-foreground">Venda #{v.id}</span>
+                      <div key={v.id} className="grid gap-1 rounded-controle bg-poco px-3 py-2 text-xs sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center sm:gap-3">
+                        <span className="font-medium text-muted-foreground">Venda #{v.id}</span>
                         <span className="min-w-0 truncate text-foreground" title={v.produtos}>{v.clienteNome || 'Cliente sem nome'} · {v.produtos}</span>
                         <span className="text-muted-foreground">{v.parcelas} {v.parcelas === 1 ? 'parcela' : 'parcelas'}</span>
-                        <span className="font-bold tabular-nums text-success-text valor-sensivel">{formatBRL(v.valorTotal)}</span>
+                        <span className="font-medium tabular-nums text-foreground valor-sensivel">{formatBRL(v.valorTotal)}</span>
                       </div>
                     ))}
                   </div>
@@ -331,7 +330,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
             {semLote.length > 0 && (
               <div className="pt-2">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <span className="text-sm font-medium text-muted-foreground">
                     Antecipadas sem lote
                   </span>
                   <span className="text-xs text-muted-foreground">
@@ -346,7 +345,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                 </p>
                 <div className="space-y-2">
                   {semLotePagina.map((g) => (
-                    <div key={g.data} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div key={g.data} className="flex flex-col gap-2 rounded-interno bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-sm font-semibold text-foreground">{formatarDataPura(g.data)}</span>
                         <span className="text-xs text-muted-foreground">
@@ -356,7 +355,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                       </div>
                       <div className="flex gap-3 text-xs text-muted-foreground">
                         <span>{g.quantidadeVendas} {g.quantidadeVendas === 1 ? "venda" : "vendas"}</span>
-                        <span className="font-bold text-success-text text-sm tabular-nums valor-sensivel">{formatBRL(g.valorTotal)}</span>
+                        <span className="text-sm font-medium tabular-nums text-foreground valor-sensivel">{formatBRL(g.valorTotal)}</span>
                       </div>
                     </div>
                   ))}
@@ -442,7 +441,7 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
           {concluindo?.valorLiquidoSolicitado != null &&
             valorDepositado > 0 &&
             Math.abs(valorDepositado - concluindo.valorLiquidoSolicitado) > 1 && (
-              <p role="status" className="rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+              <p role="status" className="rounded-interno bg-warning-bg px-3 py-2 text-sm text-warning-text">
                 O depósito difere do líquido solicitado em{' '}
                 <span className="font-semibold tabular-nums valor-sensivel">
                   {formatBRL(Math.abs(valorDepositado - concluindo.valorLiquidoSolicitado))}
@@ -450,7 +449,8 @@ export default function HistoricoAntecipacoes({ batches, semLote = [], hoje }: P
                 . Confira antes de concluir.
               </p>
             )}
-          <p className="rounded-lg bg-info-bg px-3 py-2 text-sm text-info-text">
+          <p className="flex items-start gap-2 rounded-interno bg-poco p-4 text-sm text-muted-foreground">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             Recebeu só uma parte? Conclua o lote e depois desfaça a baixa das parcelas que não vieram, na ficha da venda.
           </p>
           <DialogFooter>

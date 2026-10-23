@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { formatCurrencyBR, parseCurrencyBR, valorInicialMoeda } from "@/lib/masks";
 
 export interface CurrencyInputProps extends Omit<React.ComponentProps<typeof Input>, "value" | "defaultValue" | "onChange" | "type"> {
@@ -72,7 +73,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={props.placeholder ?? "0,00"}
-          className={(props.className ?? "") + " pl-10"}
+          className={cn("pl-10", props.className)}
           inputMode="decimal"
         />
       </div>

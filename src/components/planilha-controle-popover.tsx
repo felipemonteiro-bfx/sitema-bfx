@@ -1,5 +1,6 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
@@ -104,13 +105,13 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
   // Uma opcao por empresa sem diferenciar maiusculas: e assim que o arquivo agrupa os blocos.
   const empresasUnicas = [...new Map(empresas.map((e) => [e.trim().toUpperCase(), e.trim()])).values()];
   const opcoesEmpresa = [{ value: "todas", label: "Todas as empresas" }, ...empresasUnicas.map((e) => ({ value: e, label: e }))];
-  const rotulo = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+  const rotulo = "text-sm font-medium text-muted-foreground";
   const semParcelas = resumo !== null && resumo.parcelas === 0;
 
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-11 gap-2 font-semibold sm:h-10">
+        <Button type="button" variant="outline" className="h-11 gap-2 sm:h-10">
           <Download className="h-4 w-4 text-primary" />
           Baixar planilha de controle
         </Button>
@@ -123,9 +124,9 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
         </p>
 
         <div className="mt-3.5 flex flex-col gap-1">
-          <label htmlFor="planilha-controle-meses" className={rotulo}>
+          <Label htmlFor="planilha-controle-meses">
             Meses de desconto
-          </label>
+          </Label>
           <IntervaloMesesPicker
             id="planilha-controle-meses"
             inicio={inicio}
@@ -139,9 +140,9 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
         </div>
 
         <div className="mt-2.5 flex flex-col gap-1">
-          <label htmlFor="planilha-controle-empresa" className={rotulo}>
+          <Label htmlFor="planilha-controle-empresa">
             Empresa
-          </label>
+          </Label>
           <FormSelect
             id="planilha-controle-empresa"
             name="_planilhaEmpresa"
@@ -159,13 +160,13 @@ export function PlanilhaControlePopover({ empresas, hoje }: { empresas: string[]
             checked={incluirPassados}
             onCheckedChange={(valor) => setIncluirPassados(valor === true)}
           />
-          <label htmlFor="planilha-controle-passados" className="text-sm">
+          <Label variant="foreground" htmlFor="planilha-controle-passados">
             Incluir meses que já passaram
-          </label>
+          </Label>
         </div>
 
         <div
-          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-lg bg-info-bg px-3 py-2 text-sm font-semibold tabular-nums text-info-text"
+          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-interno bg-poco px-3 py-2 text-sm font-medium tabular-nums text-foreground"
           aria-live="polite"
         >
           {contando ? (

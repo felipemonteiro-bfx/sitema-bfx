@@ -74,8 +74,8 @@ export function DeleteUserButton({ userId, userName, userRole, deleteAction }: P
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          <AlertDialogAction variant="destructive"
+
             onClick={handleConfirm}
           >
             Remover

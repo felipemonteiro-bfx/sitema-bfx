@@ -792,8 +792,13 @@ export async function enviarEmailEmpresa(vendaId: number): Promise<{ success: bo
         return { success: false, error: "Empresa sem e-mail de RH" };
       case "erro_dados":
         return { success: false, error: "Termo assinado não encontrado" };
-      case "falhou":
+      case "falhou": {
+        const erro = resultado.error ?? "";
+        if (/smtp rcpt to failed/i.test(erro) && /\b550\b/.test(erro)) {
+          return { success: false, error: "O servidor de e-mail recusou o endereço do RH. Confira o cadastro da empresa." };
+        }
         return { success: false, error: "Falha ao enviar termo" };
+      }
     }
   } catch (err) {
     console.error("[enviarEmailEmpresa] Erro:", err);

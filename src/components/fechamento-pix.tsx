@@ -258,11 +258,10 @@ function CobrancaAtiva({ cobranca }: { cobranca: NonNullable<PixDetalhe["cobranc
       </div>
       {cobranca.copiaECola ? (
         <div className="flex gap-2">
-          <Input
+          <Input mono
             readOnly
             value={cobranca.copiaECola}
             aria-label="Pix copia e cola"
-            className="font-mono text-xs"
             onFocus={(e) => e.currentTarget.select()}
           />
           <Button variant="outline" onClick={copiar} leftIcon={copiado ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}>
@@ -359,7 +358,7 @@ function DialogoRecebimento({ aberto, fechamentoId, onClose }: { aberto: boolean
               type="file"
               name="comprovante"
               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-              className="h-10 px-2 pt-1.5"
+              className="h-10"
             />
             <p className="text-xs text-muted-foreground">PDF, PNG ou JPG, até 10 MB. Anexar não confirma o recebimento.</p>
           </div>
@@ -389,7 +388,7 @@ export function ConciliacaoFechamento({ c }: { c: ConciliacaoDetalhe }) {
       <section aria-labelledby="fechamento-conciliacao" className="flex flex-col gap-3">
         <div className="flex items-start gap-2">
           <Scale className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <h2 id="fechamento-conciliacao" className="min-w-0 flex-1 text-base font-semibold">
+          <h2 id="fechamento-conciliacao" className="min-w-0 flex-1 text-lg font-semibold text-foreground">
             Conciliação com os boletos Prudent
           </h2>
           {c.concluido ? (
@@ -419,7 +418,7 @@ export function ConciliacaoFechamento({ c }: { c: ConciliacaoDetalhe }) {
         {c.divergencias.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhuma divergência entre os boletos e o demonstrativo.</p>
         ) : (
-          <ul className="flex flex-col gap-1.5 rounded-lg border border-error/50 bg-error-bg p-3 text-sm text-error-text dark:bg-error/10">
+          <ul role="alert" className="flex flex-col gap-1.5 rounded-interno border border-error/50 bg-error-bg p-3 text-sm text-error-text dark:bg-error/10">
             {c.divergencias.map((d) => (
               <li key={d.chave}>{d.texto}</li>
             ))}

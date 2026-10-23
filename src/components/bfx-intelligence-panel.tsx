@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { formatBRL, cn } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 import {
   Sparkles,
   ShoppingBag,
@@ -86,12 +86,13 @@ const tipoIcons = {
   novo: Star,
 };
 
-const tipoBadgeColors = {
-  recompra: "bg-info-bg text-info-text",
-  upgrade: "bg-info-bg text-info-text",
-  complementar: "bg-success-bg text-success-text",
-  novo: "bg-warning-bg text-warning-text",
-};
+// Variante de Badge por tipo de sugestão: o estado vai no Badge, não no contêiner.
+const tipoBadgeVariant = {
+  recompra: "info",
+  upgrade: "info",
+  complementar: "success",
+  novo: "warning",
+} as const;
 
 export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProduto }: Props) {
   const [perfil, setPerfil] = useState<PerfilCliente | null>(null);
@@ -149,9 +150,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
   if (loadingPerfil) {
     return (
-      <Card className="border-2 border-dashed border-info bg-info-bg">
+      <Card>
         <CardContent className="py-8 flex flex-col items-center justify-center">
-          <Loader2 className="h-8 w-8 text-info-text animate-spin mb-3" />
+          <Loader2 className="h-8 w-8 text-muted-foreground animate-spin mb-3" aria-hidden="true" />
           <p className="text-sm text-muted-foreground">Analisando perfil do cliente...</p>
         </CardContent>
       </Card>
@@ -160,10 +161,10 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
   if (error) {
     return (
-      <Card className="border-2 border-dashed border-error bg-error-bg">
+      <Card>
         <CardContent className="py-6 flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-error-text" />
-          <p className="text-sm text-error-text">{error}</p>
+          <AlertCircle className="h-5 w-5 shrink-0 text-error-text" aria-hidden="true" />
+          <p className="text-sm text-foreground">{error}</p>
         </CardContent>
       </Card>
     );
@@ -178,27 +179,27 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
   return (
     <div className="space-y-4">
-      <Card className="overflow-hidden border-2 border-info bg-info-bg">
-        <CardHeader className="pb-3 bg-info text-info-foreground">
+      <Card>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-base font-bold">
-              <Sparkles className="h-5 w-5" />
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               BFX Intelligence
             </div>
-            <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+            <Badge variant="secondary">
               {perfil.metricas.totalCompras} compra{perfil.metricas.totalCompras !== 1 ? "s" : ""}
             </Badge>
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="pt-4 space-y-4">
+        <CardContent className="space-y-4">
           {/* Sem sombra (D-03): bloco tem borda propria e vive dentro do
               Card (que tem a sua) — mesmo plano. */}
           {perfil.ultimaVenda && (
-            <div className="bg-white dark:bg-card rounded-xl p-4 border border-info">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-info-text mb-2">
-                <Clock className="h-3.5 w-3.5" />
-                Última Compra
+            <div className="bg-card-elevated rounded-interno p-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
+                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                Última compra
               </div>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -211,7 +212,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-info-text valor-sensivel valor-sensivel-fim">
+                  <div className="text-lg font-semibold tabular-nums text-foreground valor-sensivel valor-sensivel-fim">
                     {formatBRL(perfil.ultimaVenda.valorTotal)}
                   </div>
                 </div>
@@ -220,33 +221,29 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
           )}
 
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
-              <TrendingUp className="h-4 w-4 mx-auto text-info-text mb-1" />
-              <div className="text-xs font-bold uppercase text-muted-foreground">Ticket Médio</div>
-              <div className="text-sm font-bold text-foreground valor-sensivel">{formatBRL(perfil.metricas.ticketMedio)}</div>
+            <div className="bg-card-elevated rounded-interno p-4 text-center">
+              <TrendingUp className="h-4 w-4 mx-auto text-muted-foreground mb-1" aria-hidden="true" />
+              <div className="text-sm font-medium text-muted-foreground">Ticket médio</div>
+              <div className="text-sm font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(perfil.metricas.ticketMedio)}</div>
             </div>
-            <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
-              <DollarSign className="h-4 w-4 mx-auto text-success-text mb-1" />
-              <div className="text-xs font-bold uppercase text-muted-foreground">Renda</div>
-              <div className="text-sm font-bold text-foreground valor-sensivel">
+            <div className="bg-card-elevated rounded-interno p-4 text-center">
+              <DollarSign className="h-4 w-4 mx-auto text-muted-foreground mb-1" aria-hidden="true" />
+              <div className="text-sm font-medium text-muted-foreground">Renda</div>
+              <div className="text-sm font-semibold tabular-nums text-foreground valor-sensivel">
                 {perfil.cliente.renda ? formatBRL(perfil.cliente.renda) : "N/I"}
               </div>
             </div>
-            <div className="bg-white dark:bg-card rounded-xl p-3 border border-info text-center">
-              <Target className="h-4 w-4 mx-auto text-info-text mb-1" />
-              <div className="text-xs font-bold uppercase text-muted-foreground">Capacidade</div>
-              <div className="text-sm font-bold text-foreground valor-sensivel">{formatBRL(perfil.metricas.capacidadeCompra)}</div>
+            <div className="bg-card-elevated rounded-interno p-4 text-center">
+              <Target className="h-4 w-4 mx-auto text-muted-foreground mb-1" aria-hidden="true" />
+              <div className="text-sm font-medium text-muted-foreground">Capacidade</div>
+              <div className="text-sm font-semibold tabular-nums text-foreground valor-sensivel">{formatBRL(perfil.metricas.capacidadeCompra)}</div>
             </div>
           </div>
 
           {perfil.categoriasFavoritas.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {perfil.categoriasFavoritas.map((cat) => (
-                <Badge
-                  key={cat}
-                  variant="secondary"
-                  className="text-xs bg-info-bg text-info-text border-0"
-                >
+                <Badge key={cat} variant="secondary">
                   {cat}
                 </Badge>
               ))}
@@ -255,25 +252,25 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
           {perfil.sugestoesProativas.length > 0 && (
             <>
-              <Separator className="bg-info-bg" />
+              <Separator />
 
               <div>
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-info-text mb-3">
-                  <Zap className="h-3.5 w-3.5" />
-                  Sugestões para este Cliente
+                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-3">
+                  <Zap className="h-3.5 w-3.5" aria-hidden="true" />
+                  Sugestões para este cliente
                 </div>
 
                 <div className="space-y-2">
                   {perfil.sugestoesProativas.map((sugestao) => {
                     const Icon = tipoIcons[sugestao.tipo] || Star;
-                    const badgeColor = tipoBadgeColors[sugestao.tipo] || tipoBadgeColors.novo;
+                    const badgeVariant = tipoBadgeVariant[sugestao.tipo] || tipoBadgeVariant.novo;
 
                     return (
                       <div
                         key={sugestao.id}
                         // Sem sombra (D-03): linha da lista tem borda propria
                         // e vive dentro do Card — mesmo plano.
-                        className="flex items-center gap-3 p-3 bg-white dark:bg-card rounded-xl border border-info transition-all group cursor-pointer"
+                        className="flex items-center gap-3 p-4 bg-card-elevated rounded-interno transition-colors hover:bg-poco group cursor-pointer"
                         onClick={() =>
                           onAddProduto({
                             id: sugestao.id,
@@ -282,31 +279,31 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           })
                         }
                       >
-                        <div className="h-10 w-10 rounded-lg bg-info text-info-foreground flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                          <Icon className="h-5 w-5" />
+                        <div className="h-10 w-10 rounded-controle bg-poco text-muted-foreground flex items-center justify-center flex-shrink-0">
+                          <Icon className="h-5 w-5" aria-hidden="true" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <Badge className={cn("text-xs h-5 border-0", badgeColor)}>
+                            <Badge variant={badgeVariant} size="sm">
                               {sugestao.tipo === "recompra" && "Recompra"}
                               {sugestao.tipo === "upgrade" && "Upgrade"}
                               {sugestao.tipo === "complementar" && "Complementar"}
                               {sugestao.tipo === "novo" && "Novidade"}
                             </Badge>
                           </div>
-                          <div className="text-sm font-semibold text-foreground truncate group-hover:text-info-text transition-colors">
+                          <div className="text-sm font-semibold text-foreground truncate transition-colors">
                             {sugestao.nome}
                           </div>
                           <div className="text-xs text-muted-foreground">{sugestao.motivo}</div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-sm font-bold text-info-text valor-sensivel valor-sensivel-fim">
+                          <div className="text-sm font-semibold tabular-nums text-foreground valor-sensivel valor-sensivel-fim">
                             {formatBRL(sugestao.valorVenda)}
                           </div>
                           <Button
-                            size="sm"
+                            size="xs"
                             variant="ghost"
-                            className="h-6 px-2 text-xs text-info-text hover:bg-info-bg"
+
                             onClick={(e) => {
                               e.stopPropagation();
                               onAddProduto({
@@ -331,27 +328,27 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
       </Card>
 
       {produtoSelecionado && (
-        <Card className="overflow-hidden border-2 border-info bg-info-bg">
+        <Card>
           <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="flex items-center gap-2 text-sm font-bold text-info-text">
-              <Package className="h-4 w-4" />
-              Aumentar Ticket - {produtoSelecionado.nome}
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              Aumentar ticket - {produtoSelecionado.nome}
             </CardTitle>
           </CardHeader>
 
           <CardContent className="pt-2 pb-4 px-4">
             {loadingSugestoes ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-5 w-5 text-info-text animate-spin" />
+                <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" aria-hidden="true" />
                 <span className="text-sm text-muted-foreground ml-2">Buscando sugestões...</span>
               </div>
             ) : sugestoesProduto ? (
               <div className="space-y-3">
                 {sugestoesProduto.upsell && sugestoesProduto.upsell.length > 0 && (
                   <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-info-text mb-2 flex items-center gap-1">
-                      <ArrowUpRight className="h-3 w-3" />
-                      Upsell - Versão Superior
+                    <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                      <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
+                      Upsell - versão superior
                     </div>
                     <div className="space-y-2">
                       {sugestoesProduto.upsell.slice(0, 2).map((item) => (
@@ -359,7 +356,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           key={item.id}
                           // Sem sombra (D-03): item tem borda propria e vive
                           // dentro do Card — mesmo plano.
-                          className="flex items-center justify-between p-2.5 bg-white dark:bg-card rounded-lg border border-info transition-all cursor-pointer group"
+                          className="flex items-center justify-between p-4 bg-card-elevated rounded-interno transition-colors hover:bg-poco cursor-pointer group"
                           onClick={() =>
                             onAddProduto({
                               id: item.id,
@@ -369,18 +366,18 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           }
                         >
                           <div className="flex-1 min-w-0">
-                            <div className="text-xs font-semibold text-foreground truncate group-hover:text-info-text">
+                            <div className="text-xs font-semibold text-foreground truncate">
                               {item.nome}
                             </div>
                             <div className="text-xs text-muted-foreground">{item.label}</div>
                           </div>
                           <div className="flex items-center gap-2">
                             {item.diferenca && item.diferenca > 0 && (
-                              <Badge className="text-xs bg-info-bg text-info-text border-0 valor-sensivel">
+                              <Badge variant="secondary" className="valor-sensivel">
                                 +{formatBRL(item.diferenca)}
                               </Badge>
                             )}
-                            <span className="text-sm font-bold text-info-text valor-sensivel">
+                            <span className="text-sm font-semibold tabular-nums text-foreground valor-sensivel">
                               {formatBRL(item.valorVenda)}
                             </span>
                           </div>
@@ -392,9 +389,9 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
 
                 {sugestoesProduto.crossSell && sugestoesProduto.crossSell.length > 0 && (
                   <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-success-text mb-2 flex items-center gap-1">
-                      <Plus className="h-3 w-3" />
-                      Cross-sell - Complemente a Venda
+                    <div className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                      <Plus className="h-3 w-3" aria-hidden="true" />
+                      Cross-sell - complemente a venda
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {sugestoesProduto.crossSell.slice(0, 4).map((item) => (
@@ -402,7 +399,7 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                           key={item.id}
                           // Sem sombra (D-03): item tem borda propria e vive
                           // dentro do Card — mesmo plano.
-                          className="p-2.5 bg-white dark:bg-card rounded-lg border border-success transition-all cursor-pointer group"
+                          className="p-4 bg-card-elevated rounded-interno transition-colors hover:bg-poco cursor-pointer group"
                           onClick={() =>
                             onAddProduto({
                               id: item.id,
@@ -411,14 +408,14 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                             })
                           }
                         >
-                          <div className="text-xs font-semibold text-foreground truncate group-hover:text-success-text">
+                          <div className="text-xs font-semibold text-foreground truncate">
                             {item.nome}
                           </div>
                           <div className="flex items-center justify-between mt-1">
                             <span className="text-xs text-muted-foreground truncate flex-1">
                               {item.label}
                             </span>
-                            <span className="text-xs font-bold text-success-text ml-2 valor-sensivel">
+                            <span className="text-xs font-semibold tabular-nums text-foreground ml-2 valor-sensivel">
                               {formatBRL(item.valorVenda)}
                             </span>
                           </div>
@@ -429,13 +426,13 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                 )}
 
                 {sugestoesProduto.bundle && (
-                  <div className="bg-warning-bg rounded-xl p-3 border border-warning">
+                  <div className="bg-card-elevated rounded-interno p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-bold uppercase tracking-wider text-warning-text flex items-center gap-1">
-                        <ShoppingBag className="h-3 w-3" />
+                      <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                        <ShoppingBag className="h-3 w-3" aria-hidden="true" />
                         {sugestoesProduto.bundle.label}
                       </div>
-                      <Badge className="text-xs bg-warning text-warning-foreground border-0">
+                      <Badge variant="warning" size="sm">
                         Economize <span className="valor-sensivel">{formatBRL(sugestoesProduto.bundle.economiaBundle)}</span>
                       </Badge>
                     </div>
@@ -448,12 +445,11 @@ export function BFXIntelligencePanel({ clienteId, produtoSelecionado, onAddProdu
                       ))}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-warning-text valor-sensivel">
+                      <span className="text-lg font-semibold tabular-nums text-foreground valor-sensivel">
                         {formatBRL(sugestoesProduto.bundle.valorTotal)}
                       </span>
                       <Button
                         size="sm"
-                        className="bg-warning hover:bg-warning/90 text-warning-foreground"
                         onClick={() => {
                           sugestoesProduto.bundle?.produtos.forEach((p) => {
                             onAddProduto({

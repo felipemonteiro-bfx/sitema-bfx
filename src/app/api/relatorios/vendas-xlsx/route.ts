@@ -6,6 +6,8 @@ import { getSession } from "@/lib/session";
 import { resolveVendedorScope } from "@/lib/vendedor-scope";
 import { resolverPeriodo } from "@/lib/periodo-data";
 import { escaparXml } from "@/lib/xml";
+import { fuzzyFindVendaIds } from "@/lib/db-search";
+import { whereAssinatura } from "@/lib/historico-filtros";
 
 function formatDateBR(date: Date): string {
   const d = new Date(date);
@@ -92,12 +94,19 @@ export async function GET(request: NextRequest) {
   const clienteId = searchParams.get("cliente") || undefined;
   const produto = searchParams.get("produto") || undefined;
   const formaPagamentoFilter = searchParams.get("formaPagamento") || undefined;
+  const assinatura = searchParams.get("assinatura") || undefined;
+  const queryBusca = (searchParams.get("q") || "").trim();
 
   // Mesmo periodo em UTC da tela de historico: o parse local que existia aqui
   // repetia o deslocamento de um dia, entao a planilha divergia da listagem.
   const { inicio: start, fimExclusivo: end } = resolverPeriodo(fromStr, toStr);
 
+  // Mesma busca por texto da página do Histórico (limite 200), para a planilha bater com a tela.
+  const fuzzyVendaIds = queryBusca ? await fuzzyFindVendaIds(queryBusca, 200) : null;
+  const filtroAssinatura = whereAssinatura(assinatura);
+
   const where = {
+    ...(fuzzyVendaIds !== null ? { id: { in: fuzzyVendaIds } } : {}),
     dataVenda: { gte: start, lt: end },
     vendedor: vendedor && vendedor !== "all" ? vendedor : undefined,
     ...(produto && produto !== "all"
@@ -110,6 +119,8 @@ export async function GET(request: NextRequest) {
       : {}),
     clienteId: clienteId && clienteId !== "all" ? Number(clienteId) : undefined,
     formaPagamento: formaPagamentoFilter && formaPagamentoFilter !== "all" ? formaPagamentoFilter : undefined,
+    // AND evita colidir com o OR do filtro de produto.
+    ...(filtroAssinatura ? { AND: [filtroAssinatura] } : {}),
   };
 
   try {

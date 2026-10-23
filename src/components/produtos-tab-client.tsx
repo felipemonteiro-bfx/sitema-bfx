@@ -180,7 +180,7 @@ export default function ProdutosTabClient({
     <>
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-primary">Produtos</CardTitle>
+          <CardTitle>Produtos</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -192,11 +192,11 @@ export default function ProdutosTabClient({
             {table.search && (
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
+                variant="discretoPlano"
+                size="iconMini"
                 onClick={clearSearch}
                 aria-label="Limpar busca"
-                className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+                className="absolute right-2 top-1/2 -translate-y-1/2"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -205,7 +205,7 @@ export default function ProdutosTabClient({
         </CardHeader>
         <CardContent>
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2 mt-2">
+        <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2 mt-2">
           <span className="text-sm font-medium">
                 {selectedIds.size} selecionado(s)
                 {selecionadosForaDaPagina > 0 && (
@@ -235,8 +235,8 @@ export default function ProdutosTabClient({
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                <AlertDialogAction variant="destructive"
+
                   disabled={bulkDeleting}
                   onClick={handleBulkDelete}
                 >
@@ -251,7 +251,7 @@ export default function ProdutosTabClient({
         </div>
       )}
 
-      <div className="overflow-x-auto -mx-6 px-6">
+      <div className="overflow-x-auto rounded-interno bg-poco p-2">
       <Table>
         <TableHeader>
           <TableRow>
@@ -262,14 +262,14 @@ export default function ProdutosTabClient({
                 onCheckedChange={handleSelectAll}
               />
             </TableHead>
-            <SortableHeader label="Foto" field="_foto" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
+            <SortableHeader label="Foto" field="_foto" currentDir="asc" onSort={() => {}} estatico className="w-20" />
             <SortableHeader label="Nome" field="nome" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Categoria" field="categoria" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Marca/Fornecedor" field="marca" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="NCM" field="ncm" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Data Compra" field="dataCompra" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} />
             <SortableHeader label="Valor" field="valorVenda" currentField={sortField as string} currentDir={sortDir} onSort={(f) => table.toggleSort(f as keyof ProdutoListItem)} className="text-right" />
-            <TableHead className="w-[100px]"></TableHead>
+            <TableHead className="w-25"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -306,9 +306,9 @@ export default function ProdutosTabClient({
                     </div>
                   )}
                 </TableCell>
-                <TableCell className="font-medium">{p.nome}</TableCell>
+                <TableCell peso="medio">{p.nome}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary" className="font-normal">{p.categoria || "N/A"}</Badge>
+                  <Badge variant="secondary">{p.categoria || "N/A"}</Badge>
                 </TableCell>
                 <TableCell>
                   <div className="text-xs font-semibold">{p.marca}</div>
@@ -316,22 +316,22 @@ export default function ProdutosTabClient({
                     {p.fornecedor?.nome || "Sem fornecedor"}
                   </div>
                 </TableCell>
-                <TableCell className="font-mono text-xs">{p.ncm}</TableCell>
-                <TableCell className="text-xs text-muted-foreground tabular-nums">
+                <TableCell tamanho="xs" mono>{p.ncm}</TableCell>
+                <TableCell tom="muted" tamanho="xs" mono>
                   {p.dataCompra
                     ? new Date(p.dataCompra).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                     : "—"}
                 </TableCell>
-                <TableCell className="text-right tabular-nums font-semibold valor-sensivel valor-sensivel-fim">{formatBRL(p.valorVenda || 0)}</TableCell>
+                <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(p.valorVenda || 0)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="discretoErro"
                           size="iconSm"
-                          className="text-muted-foreground hover:text-destructive"
+
                           title="Excluir"
                           aria-label={`Excluir ${p.nome}`}
                         >
@@ -347,8 +347,8 @@ export default function ProdutosTabClient({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          <AlertDialogAction variant="destructive"
+
                             disabled={deleting === p.id}
                             onClick={async () => {
                               setDeleting(p.id);
@@ -377,9 +377,9 @@ export default function ProdutosTabClient({
                     </AlertDialog>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="discreto"
                       size="iconSm"
-                      className="text-muted-foreground hover:text-foreground"
+
                       title="Editar"
                       aria-label={`Editar ${p.nome}`}
                       onClick={() => handleOpenProduto(p.id)}

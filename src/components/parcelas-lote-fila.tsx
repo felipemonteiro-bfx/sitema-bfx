@@ -5,9 +5,10 @@
 // exclusão, que o card de seleção, o CSV e o lote recebem. Parcela ainda não confirmada pelo RH
 // aparece travada. A tela só mostra: quem decide o que entra é o servidor.
 
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { cn, formatBRL } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 import { formatarDataPura } from "@/lib/data-pura";
 import { algumMesNoIntervalo } from "@/lib/periodo-meses";
 import type { ParcelasDaVenda } from "@/lib/antecipacao-compradores";
@@ -65,16 +66,12 @@ export function ParcelasLoteFila({
         const marcada = !travada && vendaSelecionada && !excluidas.includes(p.id as number);
         const inputId = `parcela-lote-${vendaId}-${p.numero}`;
         return (
-          <label
+          <Label
             key={p.id ?? p.numero}
             htmlFor={inputId}
-            className={cn(
-              "flex min-h-11 flex-col gap-1 rounded-lg px-3.5 py-3 tabular-nums transition-colors",
-              marcada
-                ? "border-2 border-primary bg-success-bg"
-                : "border border-dashed border-border",
-              travada || !vendaSelecionada || desabilitado ? "cursor-not-allowed" : "cursor-pointer hover:bg-accent/50"
-            )}
+            variant="parcela"
+            data-marcada={marcada}
+            data-bloqueada={travada || !vendaSelecionada || desabilitado}
           >
             <span className="flex items-center gap-2 font-bold text-foreground">
               <Checkbox
@@ -86,8 +83,8 @@ export function ParcelasLoteFila({
               {p.numero} de {total}
               {p.confirmacao === "legado" && (
                 <Badge
-                  variant="outline"
-                  className="ml-auto text-xs font-medium text-muted-foreground"
+                  variant="discreto"
+                  className="ml-auto"
                   title="Legado — sem confirmação do RH"
                 >
                   legado
@@ -110,7 +107,7 @@ export function ParcelasLoteFila({
                 "fica com a BFX"
               )}
             </span>
-          </label>
+          </Label>
         );
       })}
     </fieldset>

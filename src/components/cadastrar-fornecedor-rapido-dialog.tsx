@@ -82,7 +82,7 @@ export function CadastrarFornecedorRapidoDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Label size="sm">
               Nome do fornecedor *
             </Label>
             <Input

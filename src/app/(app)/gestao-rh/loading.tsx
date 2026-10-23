@@ -1,23 +1,29 @@
-﻿import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Skeleton,
+  SkeletonCabecalho,
+  SkeletonComAbas,
+  SkeletonLinhas,
+  SkeletonPainel,
+  SkeletonRegiao,
+} from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
+// Gestão de RH: painel com 3 indicadores, abas (Metas e comissões, Detalhes, Contratar) coladas no
+// painel "Equipe".
 export default function Loading() {
   return (
-    <div className="space-y-6">
-      <div>
-        <Skeleton className="h-7 w-52" />
-        <Skeleton className="mt-2 h-4 w-64" />
-      </div>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-24" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
-        </CardContent>
+    <SkeletonRegiao>
+      <SkeletonCabecalho tituloLargura="w-72" />
+      <Card className="grid gap-4 p-6 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-[92px] rounded-interno" />
+        ))}
       </Card>
-    </div>
+      <SkeletonComAbas itens={3}>
+        <SkeletonPainel tituloLargura="w-24" className="min-h-[311px] lg:min-h-[293px]">
+          <SkeletonLinhas linhas={3} colunas={5} compacta />
+        </SkeletonPainel>
+      </SkeletonComAbas>
+    </SkeletonRegiao>
   );
 }

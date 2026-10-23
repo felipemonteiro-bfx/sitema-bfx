@@ -143,7 +143,7 @@ export function CadastrarProdutoRapidoDialog({
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Nome */}
           <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Label size="sm">
               Nome do produto *
             </Label>
             <Input
@@ -158,13 +158,13 @@ export function CadastrarProdutoRapidoDialog({
           {/* Valor + Custo */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label size="sm">
                 Valor de venda
               </Label>
               <CurrencyInput value={valorVenda} onChange={setValorVenda} />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label size="sm">
                 Custo
               </Label>
               <CurrencyInput value={custoPadrao} onChange={setCustoPadrao} />
@@ -174,7 +174,7 @@ export function CadastrarProdutoRapidoDialog({
           {/* Estoque + Fornecedor */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label size="sm">
                 Estoque inicial
               </Label>
               <Input
@@ -186,16 +186,17 @@ export function CadastrarProdutoRapidoDialog({
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <Label size="sm">
                   Fornecedor
                 </Label>
-                <button
+                <Button size="inlineXs"
                   type="button"
+                  variant="link"
                   onClick={() => setFornecedorDialogOpen(true)}
-                  className="text-xs font-medium text-primary hover:underline"
+
                 >
                   + Novo fornecedor
-                </button>
+                </Button>
               </div>
               <FormSelect
                 name="fornecedorId"
@@ -210,7 +211,7 @@ export function CadastrarProdutoRapidoDialog({
           {/* Marca + Categoria */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label size="sm">
                 Marca
               </Label>
               <Input
@@ -220,7 +221,7 @@ export function CadastrarProdutoRapidoDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label size="sm">
                 Categoria
               </Label>
               <Input
@@ -241,7 +242,7 @@ export function CadastrarProdutoRapidoDialog({
           {/* NCM + Data de Compra */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label size="sm">
                 NCM
               </Label>
               <Input
@@ -252,7 +253,7 @@ export function CadastrarProdutoRapidoDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label size="sm">
                 Data de compra
               </Label>
               <DateInput
@@ -272,17 +273,18 @@ export function CadastrarProdutoRapidoDialog({
               </div>
               <div className="max-h-32 space-y-1 overflow-y-auto pr-1">
                 {ncmSuggestions.map((item) => (
-                  <button
+                  <Button
                     key={item.codigo}
                     type="button"
-                    className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors hover:bg-muted"
+                    variant="linhaCompacta"
+                    className="items-start gap-2"
                     onClick={() => setNcm(item.codigo)}
                   >
                     <span className="rounded bg-background px-2 py-0.5 font-semibold text-foreground shrink-0">
                       {item.codigo}
                     </span>
                     <span className="text-muted-foreground">{item.descricao}</span>
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>

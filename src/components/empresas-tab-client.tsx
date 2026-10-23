@@ -4,7 +4,6 @@ import { useState, startTransition, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -70,12 +69,12 @@ interface Props {
 function CamposRhEmails({ prefixo, empresa }: { prefixo: string; empresa?: EmpresaListItem | null }) {
   const campo = (nome: string) => `${prefixo}-empresa-${nome}`;
   return (
-    <fieldset className="grid gap-3 rounded-xl border p-4">
+    <fieldset className="grid gap-3 rounded-interno bg-card-elevated p-4">
       <legend className="px-1.5 text-sm font-semibold text-muted-foreground">RH e e-mails</legend>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor={campo("rh")}>Responsável RH</Label>
-          <Input id={campo("rh")} name="rh" defaultValue={empresa?.responsavelRh || ""} placeholder="Responsável RH" className="uppercase" />
+          <Input caixaAlta id={campo("rh")} name="rh" defaultValue={empresa?.responsavelRh || ""} placeholder="Responsável RH" />
         </div>
         <div className="space-y-1">
           <Label htmlFor={campo("tel")}>Telefone RH</Label>
@@ -249,14 +248,14 @@ export default function EmpresasTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary">Nova Empresa</CardTitle>
+          <CardTitle>Nova Empresa</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={handleAdd} className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <Label htmlFor="add-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
-                <Input id="add-empresa-nome" name="nome" placeholder="Empresa" aria-required="true" className="uppercase" />
+                <Input caixaAlta id="add-empresa-nome" name="nome" placeholder="Empresa" aria-required="true" />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="add-empresa-cnpj">CNPJ</Label>
@@ -285,7 +284,7 @@ export default function EmpresasTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-2">
-          <CardTitle className="text-primary">Empresas Parceiras</CardTitle>
+          <CardTitle>Empresas Parceiras</CardTitle>
           <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -296,7 +295,7 @@ export default function EmpresasTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 rounded-md text-muted-foreground shadow-none hover:bg-muted hover:text-foreground hover:shadow-none">
+              <Button type="button" variant="discreto" size="iconXs" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-1 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4" />
               </Button>
             )}
@@ -304,7 +303,7 @@ export default function EmpresasTabClient({
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+            <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2">
               <span className="text-sm font-medium">
                 {selectedIds.size === 1 ? "1 selecionada" : `${selectedIds.size} selecionadas`}
                 {selecionadosForaDaPagina > 0 && (
@@ -334,8 +333,8 @@ export default function EmpresasTabClient({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    <AlertDialogAction variant="destructive"
+
                       disabled={bulkDeleting}
                       onClick={handleBulkDelete}
                     >
@@ -349,7 +348,7 @@ export default function EmpresasTabClient({
               </Button>
             </div>
           )}
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="overflow-x-auto rounded-interno bg-poco p-2">
           <Table>
             <TableHeader>
               <TableRow>
@@ -364,9 +363,9 @@ export default function EmpresasTabClient({
                 <SortableHeader label="CNPJ" field="cnpj" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="RH" field="responsavelRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
                 <SortableHeader label="Contato" field="emailRh" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof EmpresaListItem)} />
-                <TableHead className="text-xs text-center">Clientes</TableHead>
-                <TableHead className="text-xs">Vinculadas</TableHead>
-                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
+                <TableHead className="text-center">Clientes</TableHead>
+                <TableHead>Vinculadas</TableHead>
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} estatico className="w-20" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -386,8 +385,8 @@ export default function EmpresasTabClient({
                         onCheckedChange={(checked) => handleSelectOne(e.id, checked)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{e.nome}</TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{e.cnpj || "—"}</TableCell>
+                    <TableCell peso="medio">{e.nome}</TableCell>
+                    <TableCell tom="muted" tamanho="xs" mono>{e.cnpj || "—"}</TableCell>
                     <TableCell>{e.responsavelRh || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell>
                       {!e.telefoneRh && !e.emailRh && !e.emailCopia && <span className="text-muted-foreground">—</span>}
@@ -404,7 +403,7 @@ export default function EmpresasTabClient({
                         {e._count?.clientes ?? 0}
                       </span>
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell tamanho="xs">
                       {(e.vinculos || []).length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {(e.vinculos || []).map((v) => (
@@ -420,25 +419,28 @@ export default function EmpresasTabClient({
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {onVincularAction && (
-                          <button
+                          <Button size="xs"
                             type="button"
+                            variant="discreto"
                             onClick={() => openVinculos(e)}
-                            className={cn(buttonVariants({ variant: "ghost" }), "h-8 px-2 py-0 text-muted-foreground hover:text-foreground text-xs")}
+
                             title="Gerenciar vínculos"
                             aria-label={`Vínculos de ${e.nome}`}
                           >
                             Vincular
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           type="button"
+                          variant="discreto"
+                          size="iconSm"
                           onClick={() => setEditingEmpresa(e)}
-                          className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
+
                           title="Editar"
                           aria-label={`Editar ${e.nome}`}
                         >
                           <Pencil className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -459,10 +461,11 @@ export default function EmpresasTabClient({
           </SheetHeader>
           {editingEmpresa && (
             <form action={handleUpdate} className="grid gap-4 mt-4">
+              {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
               <input type="hidden" name="id" value={editingEmpresa.id} />
               <div className="space-y-1">
                 <Label htmlFor="edit-empresa-nome">Empresa <span className="text-destructive">*</span></Label>
-                <Input id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" className="uppercase" />
+                <Input caixaAlta id="edit-empresa-nome" name="nome" defaultValue={editingEmpresa.nome} placeholder="Empresa" aria-required="true" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
@@ -517,14 +520,15 @@ export default function EmpresasTabClient({
                 // neste bloco (cada vinculo e independente), logo nao existe
                 // estado indeterminado a tratar — o `toggleVinculo` ignora o
                 // valor recebido e alterna a partir do Set.
-                <label key={e.id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm hover:bg-muted">
+                <Label variant="cartao" key={e.id} htmlFor={`vinculo-${e.id}`}>
                   <Checkbox
+                    id={`vinculo-${e.id}`}
                     checked={vinculacaoIds.has(e.id)}
                     onCheckedChange={() => toggleVinculo(e.id)}
                     aria-label={`Vincular ${e.nome}`}
                   />
                   {e.nome}
-                </label>
+                </Label>
               ))}
           </div>
           <div className="mt-auto flex items-center justify-end gap-2 pt-6">

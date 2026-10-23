@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { montarEmpresaOptions } from "@/lib/empresa-options";
 import { formatarDataPura, hojeDataPura, inicioDoMesDataPura } from "@/lib/data-pura";
 
+
 export default async function Page() {
   const ok = await requireAdmin();
   if (!ok) return <div className="p-6 text-sm text-muted-foreground">Acesso restrito a administradores.</div>;
@@ -40,7 +41,7 @@ export default async function Page() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-primary">Relatório de vendas</CardTitle>
+            <CardTitle variant="secao">Relatório de vendas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <ReportButtonsClient
@@ -49,10 +50,10 @@ export default async function Page() {
               defaultTo={today}
             />
 
-            <div className="flex flex-wrap gap-2 border-t pt-4">
-              <div className="mb-1 w-full">
-                <h3 className="text-sm font-semibold">PDF do mês atual, por empresa</h3>
-                <p className="text-xs text-muted-foreground">
+            <div className="flex flex-wrap gap-2 rounded-interno bg-poco p-4">
+              <div className="mb-2 w-full">
+                <h3 className="text-sm font-semibold text-foreground">PDF do mês atual, por empresa</h3>
+                <p className="text-sm text-muted-foreground">
                   Vendas de {formatDateBR(monthStartStr)} a {formatDateBR(today)}, sem precisar usar os filtros acima.
                 </p>
               </div>
@@ -79,13 +80,13 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary">Outros relatórios</CardTitle>
+            <CardTitle variant="secao">Outros relatórios</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-1.5">
+          <CardContent className="space-y-2">
+            <div className="space-y-3 rounded-interno bg-card-elevated p-4">
               <div>
-                <h3 className="text-sm font-medium">Inadimplência</h3>
-                <p className="text-xs text-muted-foreground">Parcelas vencidas e não pagas até hoje.</p>
+                <h3 className="text-sm font-semibold text-foreground">Inadimplência</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Parcelas vencidas e não pagas até hoje.</p>
               </div>
               <div className="flex gap-2">
                 <a
@@ -104,10 +105,10 @@ export default async function Page() {
                 </a>
               </div>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-3 rounded-interno bg-card-elevated p-4">
               <div>
-                <h3 className="text-sm font-medium">Margem por produto</h3>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="text-sm font-semibold text-foreground">Margem por produto</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Vendas de {formatDateBR(monthStartStr)} a {formatDateBR(today)}.
                 </p>
               </div>
@@ -133,7 +134,7 @@ export default async function Page() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary">Atalhos</CardTitle>
+            <CardTitle variant="secao">Atalhos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <a

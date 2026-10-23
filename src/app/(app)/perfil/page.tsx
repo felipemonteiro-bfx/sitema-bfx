@@ -64,7 +64,7 @@ export default async function Page() {
         {/* Dados Pessoais */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-primary">Dados pessoais</CardTitle>
+            <CardTitle>Dados pessoais</CardTitle>
           </CardHeader>
           <CardContent>
             <form action={savePerfil} className="grid gap-3 md:grid-cols-2">
@@ -85,7 +85,7 @@ export default async function Page() {
                 <Label htmlFor="perfil-endereco">Endereço</Label>
                 <Input id="perfil-endereco" name="endereco" defaultValue={user.endereco || ""} placeholder="Endereço" />
               </div>
-              <button className={cn(buttonVariants(), "md:col-span-2 bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
+              <button className={cn(buttonVariants(), "md:col-span-2 bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar alterações</button>
             </form>
           </CardContent>
         </Card>
@@ -94,7 +94,7 @@ export default async function Page() {
             (D-03): erro em um nao descarta a edicao do outro. */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-primary">Alterar senha</CardTitle>
+            <CardTitle>Alterar senha</CardTitle>
           </CardHeader>
           <CardContent>
             <PerfilSenhaForm />
@@ -104,22 +104,22 @@ export default async function Page() {
         {/* Resumo de Comissões */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-primary">Suas Comissões</CardTitle>
+            <CardTitle>Suas Comissões</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Acumulado</p>
-              <div className="valor-sensivel text-2xl font-bold text-primary">{formatBRL(totalComissao)}</div>
+            <div className="rounded-interno bg-card-elevated p-4">
+              <p className="text-sm font-medium text-muted-foreground">Total acumulado</p>
+              <div className="valor-sensivel tabular-nums text-2xl font-semibold text-foreground">{formatBRL(totalComissao)}</div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Sua Taxa</p>
-              <div className="text-lg font-semibold text-primary">{pct}%</div>
+            <div className="rounded-interno bg-card-elevated p-4">
+              <p className="text-sm font-medium text-muted-foreground">Sua taxa</p>
+              <div className="tabular-nums text-lg font-semibold text-foreground">{pct}%</div>
             </div>
             <Link 
               href="/comissoes"
               className={cn(buttonVariants({ variant: "outline" }), "w-full")}
             >
-              Ver Detalhes Completo
+              Ver detalhes completos
             </Link>
           </CardContent>
         </Card>

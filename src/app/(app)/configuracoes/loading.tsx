@@ -1,23 +1,26 @@
-﻿import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Skeleton,
+  SkeletonBotao,
+  SkeletonCabecalho,
+  SkeletonComAbas,
+  SkeletonPainel,
+  SkeletonRegiao,
+} from "@/components/ui/skeleton";
 
+// Configurações: abas (Mural, Recibo, Asaas, IA, WhatsApp, E-mail, Uber) coladas no painel da aba ativa.
 export default function Loading() {
   return (
-    <div className="space-y-6">
-      <div>
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="mt-2 h-4 w-64" />
-      </div>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-36" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+    <SkeletonRegiao>
+      <SkeletonCabecalho tituloLargura="w-60" />
+      <SkeletonComAbas itens={7}>
+        <SkeletonPainel plano tituloLargura="w-56" className="min-h-[304px] lg:min-h-[284px]">
+          <div className="space-y-4">
+            <Skeleton className="h-4 w-80 max-w-full" />
+            <Skeleton className="h-20 rounded-controle" />
+            <SkeletonBotao className="w-36" />
+          </div>
+        </SkeletonPainel>
+      </SkeletonComAbas>
+    </SkeletonRegiao>
   );
 }

@@ -43,6 +43,7 @@ export function ChatPromptInput({
       value={value}
       onChange={onChange}
       onKeyDown={onKeyDown}
+      nu
       className={className}
     />
   );

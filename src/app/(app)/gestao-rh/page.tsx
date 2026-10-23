@@ -93,26 +93,22 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         breadcrumbs={[{ label: "Gestão de RH" }]}
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total de usuários</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{total}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Admins</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{admins}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Meta média</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold"><span className="valor-sensivel">{formatMoney(metaMedia)}</span></CardContent>
-        </Card>
-      </div>
+      <Card className="anim-entrada" style={{ "--i": 0 } as React.CSSProperties}>
+        <CardContent className="grid gap-4 p-5 md:grid-cols-3 md:p-6">
+          <div className="rounded-interno bg-card-elevated px-5 py-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Total de usuários</h3>
+            <div className="mt-2 font-mono text-2xl font-medium tabular-nums text-foreground">{total}</div>
+          </div>
+          <div className="rounded-interno bg-card-elevated px-5 py-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Admins</h3>
+            <div className="mt-2 font-mono text-2xl font-medium tabular-nums text-foreground">{admins}</div>
+          </div>
+          <div className="rounded-interno bg-card-elevated px-5 py-4">
+            <h3 className="text-sm font-medium text-muted-foreground">Meta média</h3>
+            <div className="mt-2 font-mono text-2xl font-medium tabular-nums text-foreground"><span className="valor-sensivel">{formatMoney(metaMedia)}</span></div>
+          </div>
+        </CardContent>
+      </Card>
 
       <GestaoRhTabs
         defaultTab={initialTab}
@@ -126,6 +122,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                   <CardTitle>Equipe</CardTitle>
                 </CardHeader>
                 <CardContent>
+                  <div className="rounded-interno bg-poco p-2">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -139,7 +136,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     <TableBody>
                       {users.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center text-muted-foreground">
+                          <TableCell tom="muted" colSpan={5} className="text-center">
                             Sem dados.
                           </TableCell>
                         </TableRow>
@@ -155,15 +152,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                                 {u.role}
                               </Badge>
                             </TableCell>
-                            <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">
+                            <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                               {formatMoney(u.metaMensal || 0)}
                             </TableCell>
-                            <TableCell className="text-right tabular-nums">{u.comissaoPct}</TableCell>
+                            <TableCell numeric>{u.comissaoPct}</TableCell>
                           </TableRow>
                         ))
                       )}
                     </TableBody>
                   </Table>
+                  </div>
                 </CardContent>
               </Card>
             ),
@@ -205,7 +203,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                       <form
                         key={u.id}
                         action={updateMeta}
-                        className="grid gap-3 rounded-xl border border-muted bg-muted/20 p-4 md:grid-cols-6"
+                        className="grid gap-3 rounded-interno bg-card-elevated p-4 md:grid-cols-6"
                       >
                         <input type="hidden" name="id" value={u.id} />
                         <div className="space-y-1 md:col-span-2">
@@ -240,7 +238,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             defaultValue={u.comissaoPct || 2}
                           />
                         </div>
-                        <div className="md:col-span-6 flex items-center justify-between gap-3 border-t pt-4">
+                        <div className="md:col-span-6 flex items-center justify-between gap-3 pt-4">
                           <div className="flex items-center gap-2">
                             <DeleteUserButton
                               userId={u.id}
@@ -250,7 +248,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                             />
                             <ResetSenhaDialog userId={u.id} userName={u.nomeExibicao || u.username} />
                           </div>
-                          <button className={cn(buttonVariants(), "bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar Alterações</button>
+                          <button className={cn(buttonVariants(), "bg-primary hover:bg-primary/90 cursor-pointer")}>Salvar alterações</button>
                         </div>
                       </form>
                     ))

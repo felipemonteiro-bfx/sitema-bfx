@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { PageHeader } from "@/components/page-header";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { KpiCard } from "@/components/kpi-card";
+import { TICK_EIXO, TooltipGrafico, currency } from "@/components/finance-charts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
 
 interface Props {
   vendedores: string[];
@@ -66,15 +69,6 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
     label: v === "all" ? "Todos os Vendedores" : v,
   }));
 
-  // Cores usando variáveis CSS para compatibilidade com temas
-  const COLORS = [
-    'hsl(var(--primary))',
-    'hsl(var(--primary) / 0.8)',
-    'hsl(var(--primary) / 0.6)',
-    'hsl(var(--primary) / 0.4)',
-    'hsl(var(--primary) / 0.25)',
-  ];
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -86,11 +80,11 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
       {/* Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg text-primary">Filtros</CardTitle>
+          <CardTitle variant="secao">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Vendedor</Label>
               <FormSelect
                 name="vendedorFiltro"
@@ -101,11 +95,11 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
                 searchPlaceholder="Pesquisar vendedor..."
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Data Início</Label>
               <DateInput value={dataInicio} onChange={(v) => setDataInicio(v)} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Data Fim</Label>
               <DateInput value={dataFim} onChange={(v) => setDataFim(v)} />
             </div>
@@ -113,41 +107,34 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
         </CardContent>
       </Card>
 
-      {/* Cards de Resumo */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Comissões</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="valor-sensivel text-2xl font-bold text-success-text tabular-nums">{formatBRL(totalComissoes)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Vendas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary tabular-nums">{details.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Média por Vendedor</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="valor-sensivel text-2xl font-bold tabular-nums">{formatBRL(commissions.length > 0 ? totalComissoes / commissions.length : 0)}</div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Indicadores: um painel, cartões internos em grade que quebra sozinha. */}
+      <section
+        aria-label="Resumo das comissões"
+        className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-2 rounded-painel border border-painel-borda bg-card p-2"
+      >
+        <KpiCard ordem={0} rotulo="Total de comissões" valor={formatBRL(totalComissoes)} rodape="soma do período filtrado" />
+        <KpiCard
+          ordem={1}
+          rotulo="Total de vendas"
+          valor={String(details.length)}
+          valorSensivel={false}
+          rodape="vendas com comissão"
+        />
+        <KpiCard
+          ordem={2}
+          rotulo="Média por vendedor"
+          valor={formatBRL(commissions.length > 0 ? totalComissoes / commissions.length : 0)}
+          rodape={`${commissions.length} ${commissions.length === 1 ? "vendedor" : "vendedores"}`}
+        />
+      </section>
 
-      {/* Gráfico de Comissões */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-primary">Comissões por Vendedor</CardTitle>
+      {/* Gráfico de Comissões: poço rebaixado, barras em verde da marca, eixos em mono. */}
+      <Card className="p-2 pt-5">
+        <CardHeader className="p-0 px-4 pb-4">
+          <CardTitle variant="secao">Comissões por vendedor</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px] min-h-[300px] w-full">
+        <CardContent variant="poco" className="px-2 pb-3 pt-5 sm:px-4">
+          <div className="h-75 min-h-75 w-full">
             {loading ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">Carregando gráfico...</div>
             ) : commissions.length === 0 ? (
@@ -155,26 +142,12 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
             ) : (
               <div className="bloco-sensivel h-full w-full">
                 <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
-                  <BarChart data={commissions}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="vendedor" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `R$ ${value}`}
-                    />
-                    <Tooltip
-                      cursor={{fill: 'hsl(var(--muted))'}}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: any) => [formatBRL(Number(value)), 'Comissão']}
-                    />
-                    <Bar dataKey="valorComissao" radius={[4, 4, 0, 0]}>
-                      {commissions.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Bar>
+                  <BarChart data={commissions} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="2 6" stroke="var(--grafico-trilha)" />
+                    <XAxis dataKey="vendedor" tick={TICK_EIXO} tickLine={false} axisLine={false} />
+                    <YAxis tick={TICK_EIXO} tickLine={false} axisLine={false} width={84} tickFormatter={(value) => currency(Number(value))} />
+                    <Tooltip content={<TooltipGrafico />} cursor={{ fill: "var(--grafico-trilha)", opacity: 0.45 }} />
+                    <Bar dataKey="valorComissao" name="Comissão" fill="var(--primary)" radius={[4, 4, 0, 0]} maxBarSize={48} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -184,52 +157,55 @@ export default function CommissionsDashboardClient({ vendedores: vendedoresFromD
       </Card>
 
       {/* Tabela de Detalhes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-primary">Detalhes das Comissões</CardTitle>
+      <Card className="p-2 pt-5">
+        <CardHeader className="flex-row items-center justify-between space-y-0 p-0 px-4 pb-4">
+          <CardTitle variant="secao">Detalhes das comissões</CardTitle>
+          {!loading && (
+            <span className="text-sm text-muted-foreground">
+              {details.length} {details.length === 1 ? "venda" : "vendas"}
+            </span>
+          )}
         </CardHeader>
-        <CardContent>
+        <CardContent variant="poco" className="p-0">
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">Carregando dados...</div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader className="bg-muted">
-                  <TableRow>
-                    <TableHead className="font-semibold">Data</TableHead>
-                    <TableHead className="font-semibold">Vendedor</TableHead>
-                    <TableHead className="font-semibold">Cliente</TableHead>
-                    <TableHead className="font-semibold">Produto</TableHead>
-                    <TableHead className="text-right font-semibold">Venda</TableHead>
-                    <TableHead className="text-right font-semibold">Lucro</TableHead>
-                    <TableHead className="text-right font-semibold">Comissão (%)</TableHead>
-                    <TableHead className="text-right font-bold">Valor Comissão</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow semHover>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Vendedor</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Produto</TableHead>
+                  <TableHead className="text-right">Venda</TableHead>
+                  <TableHead className="text-right">Lucro</TableHead>
+                  <TableHead className="text-right">Comissão (%)</TableHead>
+                  <TableHead className="text-right">Valor comissão</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {details.length === 0 ? (
+                  <TableRow semHover>
+                    <TableCell tom="muted" colSpan={8} className="text-center py-8">
+                      Nenhum registro encontrado para os filtros selecionados.
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {details.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                        Nenhum registro encontrado para os filtros selecionados.
-                      </TableCell>
+                ) : (
+                  details.map((d) => (
+                    <TableRow semHover key={d.vendaId}>
+                      <TableCell mono>{new Date(d.data).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell>{d.vendedor}</TableCell>
+                      <TableCell truncar className="max-w-37.5">{d.cliente}</TableCell>
+                      <TableCell truncar className="max-w-37.5">{d.produto}</TableCell>
+                      <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(d.valorVenda)}</TableCell>
+                      <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(d.lucroLiquido)}</TableCell>
+                      <TableCell numeric>{d.percentualComissao}%</TableCell>
+                      <TableCell peso="forte" numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(d.valorComissao)}</TableCell>
                     </TableRow>
-                  ) : (
-                    details.map((d) => (
-                      <TableRow key={d.vendaId}>
-                        <TableCell>{new Date(d.data).toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell>{d.vendedor}</TableCell>
-                        <TableCell className="max-w-[150px] truncate">{d.cliente}</TableCell>
-                        <TableCell className="max-w-[150px] truncate">{d.produto}</TableCell>
-                        <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(d.valorVenda)}</TableCell>
-                        <TableCell className="valor-sensivel valor-sensivel-fim text-right tabular-nums">{formatBRL(d.lucroLiquido)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{d.percentualComissao}%</TableCell>
-                        <TableCell className="valor-sensivel valor-sensivel-fim text-right font-semibold text-success-text tabular-nums">{formatBRL(d.valorComissao)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

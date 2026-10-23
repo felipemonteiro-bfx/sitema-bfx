@@ -102,16 +102,85 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-brilho-topo-a: var(--brilho-topo-a);
-  --color-brilho-topo-b: var(--brilho-topo-b);
+
+  /* --- Redesign Vantage (2026-10-16) — contrato de tokens da spec, secao 3 ---
+     Cada token de cor tem tres pontos: valor em `:root`, valor em `.dark` e a
+     chave aqui. Faltando um, a utilitaria (`bg-shell`, `border-painel-borda`,
+     `text-texto-secundario`...) nao chega a tela. O quarto ponto sao os pares
+     em `TOKEN_PAIRS` (token-contrast.mjs). */
+  --color-shell: var(--shell);
+  --color-shell-borda: var(--shell-borda);
+  --color-painel-borda: var(--painel-borda);
+  --color-poco: var(--poco);
+  --color-controle: var(--controle);
+  --color-controle-ativo: var(--controle-ativo);
+  --color-divisoria: var(--divisoria);
+  --color-marca-tint: var(--marca-tint);
+  --color-marca-tint-texto: var(--marca-tint-texto);
+  --color-texto-secundario: var(--texto-secundario);
+  --color-hachura-traco: var(--hachura-traco);
+  --color-hachura-fundo: var(--hachura-fundo);
+  --color-grafico-neutro: var(--grafico-neutro);
+  --color-grafico-trilha: var(--grafico-trilha);
+  --color-grafico-inativo: var(--grafico-inativo);
+  --color-vidro: var(--vidro);
+  --color-vidro-borda: var(--vidro-borda);
+  --color-vidro-piso: var(--vidro-piso);
+  --color-papel: var(--papel);
+  --color-papel-texto: var(--papel-texto);
+  --color-papel-texto-forte: var(--papel-texto-forte);
+  --color-papel-texto-medio: var(--papel-texto-medio);
+  --color-papel-texto-fraco: var(--papel-texto-fraco);
+  --color-papel-linha: var(--papel-linha);
+  --color-papel-traco: var(--papel-traco);
+
+  /* Raios por degrau de superficie: `rounded-shell`, `rounded-painel`,
+     `rounded-interno`, `rounded-controle`. Nao variam com o tema. */
+  --radius-shell: 24px;
+  --radius-painel: 20px;
+  --radius-interno: 14px;
+  --radius-controle: 12px;
+
+  /* Familias: `font-sans` (Manrope), `font-display` (Space Grotesk, titulos) e
+     `font-mono` (Geist Mono, numeros — `.tabular-nums` usa esta). As variaveis
+     `--font-*` internas vem do `next/font` em `layout.tsx`. */
+  --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+
+  /* Unicos tamanhos FLUIDOS permitidos (`text-titulo`, `text-kpi`). Os demais
+     seguem a escala fixa do Tailwind; `escala:check` barra `text-[13px]` e afins,
+     e fluido so entra aqui, por token, com piso legivel a 360px. */
+  --text-titulo: clamp(1.5rem, 1.1rem + 1.6vw, 2rem);
+  --text-titulo--line-height: 1.15;
+  --text-kpi: clamp(1.75rem, 1.25rem + 1.8vw, 2.5rem);
+  --text-kpi--line-height: 1.1;
+  /* Entrelinha do titulo grande da tela de login (`leading-hero`). */
+  --leading-hero: 1.08;
+  /* Sombras de elevacao do TEMA ESCURO: o `--shadow-*` de :root/.dark ja troca
+     por tema; estas chaves o expoem como utilitaria (`dark:shadow-elevacao-md`)
+     sem classe arbitraria `shadow-[var(--shadow-md)]`. */
+  --shadow-elevacao-sm: var(--shadow-sm);
+  --shadow-elevacao-md: var(--shadow-md);
+  --shadow-elevacao-lg: var(--shadow-lg);
 }
 
 :root {
   --radius: 0.625rem;
 
   /* Core Colors - Light Mode */
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Neutros do tema claro em CROMA 0 (preserva `tokens-fundo-neutro`): o verde
+     de croma 0.003 dos artboards (#ECEEEC, #F7F8F7...) e imperceptivel, mas o
+     croma 0 da o mesmo degrau de luminosidade sem tom.
+     Mapa por SIGNIFICADO (degraus da casca):
+       --background = a PAGINA (fora da casca)   #ECEEEC
+       --shell      = a CASCA (`main`)           #F7F8F7
+       --card       = o PAINEL                   #FFFFFF
+       --card-elevated = card interno            #F7F8F7
+       --poco       = poco (area rebaixada)      #F3F5F3
+     Texto: --foreground 16.60:1 no poco · --texto-secundario 9.54:1 · --muted-foreground 5.63:1. */
+  --background: oklch(0.947 0 0); /* #EDEDED — pagina; muted-foreground 5.1:1 */
+  --foreground: oklch(0.197 0.005 145.4); /* #141614 */
 
   /* Primary — verde da marca BFX (o verde do "X" da logo, #048A05).
      A logo medida da oklch(0.549 0.185 142.6). Esse valor exato reprova como
@@ -125,7 +194,7 @@
   --primary-hover: oklch(0.46 0.156 142.6); /* verde BFX escurecido para hover */
 
   /* Secondary */
-  --secondary: oklch(0.185 0.02 250); /* #1E293B slate-800 */
+  --secondary: oklch(0.248 0.006 156.8); /* #1F2220 — neutro esverdeado (era slate azulado) */
   --secondary-foreground: oklch(0.985 0 0);
 
   /* Accent/CTA - Green for positive actions */
@@ -206,22 +275,22 @@
   --destructive-foreground: oklch(0.985 0 0);
 
   /* Surfaces */
-  --card: oklch(0.995 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --card-elevated: oklch(0.96 0.008 250); /* degrau acima de --card, perceptível sem virar cinza sujo (D-06) */
-  --popover: oklch(0.995 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --muted: oklch(0.97 0 0);
+  --card: oklch(1 0 0); /* #FFFFFF — painel */
+  --card-foreground: oklch(0.197 0.005 145.4);
+  --card-elevated: oklch(0.978 0.002 145.6); /* #F7F8F7 — card interno: degrau abaixo do painel branco (D-06) */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.197 0.005 145.4);
+  --muted: oklch(0.962 0.003 145.5); /* #F1F3F1 — hover de linha, trilho de aba */
   /* L ajustado de 0.556 p/ 0.545: as abas inativas ficam sobre `bg-muted/60`
      (rgb ~247), onde 0.556 dava 4.43:1 — abaixo do minimo de 4.5 (fase 16,
      achado 12). Em 0.545: 4.62:1 sobre o tablist, 4.74:1 sobre `--background`
      (era 4.54) e 4.87:1 sobre `--card` (era 4.66). — UI-05 */
-  --muted-foreground: oklch(0.535 0 0);
+  --muted-foreground: oklch(0.492 0.012 154.8); /* #5C635E — 6.17:1 no painel · 5.63:1 no poco · 5.23:1 no controle */
 
   /* Borders & Inputs */
   --border: oklch(0.62 0 0); /* L ajustado de 0.922 p/ 3:1 min. (era 1.21:1 fundo / 1.24:1 card) — UI-05 */
   --input: oklch(0.62 0 0);
-  --ring: oklch(0.60 0 0); /* L ajustado de 0.708 p/ 3:1 min. de foco (era 2.48:1) — UI-06 */
+  --ring: oklch(0.52 0.177 142.6); /* verde da marca (= --primary): 5.14:1 no painel, 4.39:1 na pagina — UI-06 */
 
   /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
@@ -252,19 +321,19 @@
      NOVO, barra do item ativo) e por isso escurece no claro; quando ele serve
      de PREENCHIMENTO (badge de contagem) quem vai por cima e
      `--sidebar-primary-foreground`, que INVERTE entre os temas. */
-  --sidebar: oklch(0.965 0.006 260); /* degrau sutil abaixo de --card (1.08:1) */
-  --sidebar-foreground: oklch(0.205 0.015 260); /* 16.28:1 */
+  --sidebar: oklch(1 0 0); /* = --card (painel #FFFFFF); o redesign tirou o degrau cinza */
+  --sidebar-foreground: oklch(0.197 0.005 145.4); /* #141614 — 18.19:1 */
   /* Accent da sidebar em verde BFX (era vermelho/rosa, hue 25 — sem relacao com
      a logo e destoando do primario). Croma 0.17 e o teto do gamut sRGB nesta
      luminosidade: acima disso o navegador corta e exibe outra cor. */
-  --sidebar-primary: oklch(0.50 0.17 142.6); /* verde BFX — 5.06:1 como texto na sidebar */
+  --sidebar-primary: oklch(0.468 0.153 142.6); /* #0C6E0B (= --marca-tint-texto) — 6.5:1 na sidebar, 5.59:1 no tint */
   --sidebar-primary-foreground: oklch(0.995 0 0); /* 5.52:1 sobre --sidebar-primary */
-  --sidebar-primary-bg: oklch(0.94 0.05 142.6); /* tint OPACO da marca — 4.77:1 (D-06) */
-  --sidebar-accent: oklch(0.915 0.012 260); /* hover/ativo — 13.94:1 com accent-foreground */
-  --sidebar-accent-foreground: oklch(0.205 0.015 260);
-  --sidebar-border: oklch(0.80 0.015 260); /* separador decorativo, ver nota abaixo */
-  --sidebar-ring: oklch(0.50 0.22 25); /* 5.77:1 */
-  --sidebar-muted: oklch(0.47 0.015 260); /* rotulo inativo — 6.20:1 sidebar / 5.30:1 accent */
+  --sidebar-primary-bg: oklch(0.948 0.028 143.7); /* = --marca-tint, tint OPACO da marca (D-06) */
+  --sidebar-accent: oklch(0.962 0.003 145.5); /* #F1F3F1 hover/ativo — 16.9:1 com accent-foreground */
+  --sidebar-accent-foreground: oklch(0.197 0.005 145.4);
+  --sidebar-border: oklch(0.931 0.005 145.5); /* = --divisoria; separador decorativo, FORA dos pares de 3:1 */
+  --sidebar-ring: oklch(0.52 0.177 142.6); /* verde da marca — 5.17:1 (era vermelho, sem relacao com a marca) */
+  --sidebar-muted: oklch(0.492 0.012 154.8); /* #5C635E — rotulo inativo: 6.17:1 sidebar / 5.4:1 accent */
 
   /* Spacing Tokens */
   --space-1: 0.25rem;
@@ -283,16 +352,87 @@
   --card-padding: var(--space-6);
   --input-height: 2.5rem;
 
-  /* Brilho do fundo da pagina — os dois gradientes radiais do `body`. Tema
-     claro: amarelo/dourado sutil no topo esquerdo e azul sutil no topo direito. */
-  --brilho-topo-a: oklch(0.98 0.06 90 / 60%);
-  --brilho-topo-b: oklch(0.9 0.04 250 / 55%);
+  /* ===== Redesign Vantage — tokens novos (tema claro) =====
+     Contraste medido por token-contrast.mjs (razao WCAG):
+       --texto-secundario   9.82:1 vs shell · 10.45 card · 9.54 poco · 9.82 card-elevated
+       --marca-tint-texto   5.60:1 vs --marca-tint
+       --primary            5.14:1 vs card · 4.69 vs poco
+       --grafico-neutro     3.68:1 vs poco · --hachura-traco 3.40:1 vs poco */
+
+  /* Superficies em degraus: pagina (--background) -> casca -> painel (--card) -> poco */
+  --shell: oklch(0.978 0.002 145.6); /* #F7F8F7 — a casca (`main`) */
+  --shell-borda: oklch(0.916 0.005 145.5); /* #E1E4E1 — contorno da casca (decorativo) */
+  --painel-borda: oklch(0.931 0.005 145.5); /* #E6E9E6 — contorno do painel (decorativo) */
+  --poco: oklch(0.968 0.003 145.5); /* #F3F5F3 — area rebaixada dentro do painel */
+  --controle: oklch(0.943 0.005 145.5); /* #EAEDEA — trilho do segmentado, campo de busca */
+  --controle-ativo: oklch(1 0 0); /* #FFFFFF — item selecionado do segmentado */
+  --divisoria: oklch(0.931 0.005 145.5); /* #E6E9E6 — linha decorativa; FORA dos pares de 3:1 (como --sidebar-border) */
+
+  /* Marca. --marca-tint e o fundo opaco do selo/chip verde; o texto vai em
+     --marca-tint-texto (nunca em --primary, que no claro nao fecha 4.5 sobre o tint). */
+  --marca-tint: oklch(0.948 0.028 143.7); /* #E3F3E2 */
+  --marca-tint-texto: oklch(0.468 0.153 142.6); /* #0C6E0B */
+
+  --texto-secundario: oklch(0.368 0.010 156.7); /* #3B413D — entre --foreground e --muted-foreground */
+
+  /* Grafico. Hachurado = custo variavel; neutro = barras que nao sao a corrente;
+     trilha = pontilhado de fundo; inativo = barras apagadas (decorativo). */
+  --hachura-traco: oklch(0.613 0.013 141.2); /* #80867F — 3.40:1 no poco (artboard #8E948F dava 2.83) */
+  --hachura-fundo: oklch(0.968 0.003 145.5); /* #F3F5F3 */
+  --grafico-neutro: oklch(0.593 0.010 150.6); /* #7A807B — 3.68:1 no poco (artboard #C5CAC6 dava 1.5) */
+  --grafico-trilha: oklch(0.875 0.007 145.5); /* #D3D7D3 — decorativo */
+  --grafico-inativo: oklch(0.834 0.008 151.9); /* #C5CAC6 — decorativo */
+
+  /* Vidro (tooltip do grafico, popover flutuante): translucido sobre quem tem
+     backdrop-filter; sem ele, o bloco de fallback logo apos o `.dark` poe o opaco.
+     O alfa faz a catraca marcar o par como SKIP — por isso o piso opaco existe. */
+  --vidro: oklch(1 0 0 / 92%);
+  --vidro-borda: oklch(0.916 0.005 145.5); /* #E1E4E1 */
+  --vidro-piso: oklch(1 0 0); /* #FFFFFF — versao OPACA do vidro (fallback e par de contraste: 18.19:1 com --foreground) */
+
+  /* Papel: a previa de recibo simula uma folha impressa e fica clara nos DOIS temas
+     (por isso o mesmo valor em :root e .dark). Antes eram hex crus em classe arbitraria. */
+  --papel: oklch(1 0 0); /* #FFFFFF */
+  --papel-texto: oklch(0.278 0.033 256.848); /* #1F2937 */
+  --papel-texto-forte: oklch(0.21 0.034 264.665); /* #111827 */
+  --papel-texto-medio: oklch(0.446 0.03 256.802); /* #4B5563 */
+  --papel-texto-fraco: oklch(0.551 0.027 264.364); /* #6B7280 — 4.83:1 no papel */
+  --papel-linha: oklch(0.967 0.003 264.542); /* #F3F4F6 — filete decorativo */
+  --papel-traco: oklch(0.707 0.022 261.325); /* #9CA3AF — linha de assinatura */
+
+  /* Raios e fontes (mesmo valor do @theme; aqui para o CSS puro usar var()) */
+  --radius-shell: 24px;
+  --radius-painel: 20px;
+  --radius-interno: 14px;
+  --radius-controle: 12px;
+  --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+
+  /* Movimento. Espelhado em `src/lib/motion.ts`. So transform/opacity/filter. */
+  --mov-curva: cubic-bezier(.22,1,.36,1);
+  --mov-entrada: 320ms; /* translateY 8px + opacity */
+  --mov-stagger: 40ms; /* atraso por item (--i) */
+  --mov-barra: 480ms; /* scaleY das barras */
+  --mov-stagger-barra: 30ms;
+  --mov-hover: 160ms; /* demais barras a opacity .45 */
+  --mov-dica: 140ms; /* tooltip sobe 4px */
+  --mov-segmentado: 220ms;
+  --mov-nav: 120ms;
 }
 
 .dark {
   /* Core Colors - Dark Mode OLED Enhanced */
-  --background: oklch(0.10 0.02 250); /* Mais escuro para OLED puro */
-  --foreground: oklch(0.985 0 0); /* #F8FAFC slate-50 */
+  /* Neutros esverdeados de croma baixissimo (0.003-0.009), hue ~145-165, dos
+     artboards. Mapa por SIGNIFICADO (degraus da casca):
+       --background = PAGINA        #070807
+       --shell      = CASCA         #0B0C0B
+       --card       = PAINEL        #111312
+       --card-elevated = card interno #161917
+       --poco       = poco          #0F1110
+     Texto: --foreground 16.41:1 no poco · --texto-secundario 11.89:1 · --muted-foreground 7.20:1. */
+  --background: oklch(0.132 0.003 145.4); /* #070807 — pagina */
+  --foreground: oklch(0.950 0.003 165.1); /* #EDEFEE */
 
   /* Primary — mesmo verde da marca, clareado para o tema escuro. O verde da
      logo (L=0.549) como texto sobre o fundo escuro daria 3.6:1 e reprovaria;
@@ -300,33 +440,33 @@
      O croma cai para 0.16 porque acima disso o verde claro sai do gamut sRGB
      e o navegador o corta, mudando a cor de fato exibida. */
   --primary: oklch(0.76 0.16 142.6); /* #6FCA69 — verde BFX no escuro */
-  --primary-foreground: oklch(0.145 0.02 250); /* slate-900 — 9.4:1 sobre o verde */
+  --primary-foreground: oklch(0.199 0.035 145.6); /* #0B1A0C — texto do botao verde, 7.4:1 sobre o verde */
   --primary-hover: oklch(0.82 0.15 142.6); /* clareia no hover, padrao do tema escuro */
 
   /* Secondary - Ligeiramente mais claro para contraste */
-  --secondary: oklch(0.22 0.02 250); /* slate-800 mais visível */
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.280 0.008 153.4); /* #262A27 (= --controle-ativo) */
+  --secondary-foreground: oklch(0.950 0.003 165.1);
 
   /* Accent/CTA - Green mais brilhante para dark mode */
   --accent: oklch(0.70 0.20 145); /* #34D399 green-400 mais vibrante */
-  --accent-foreground: oklch(0.10 0.02 250); /* Texto escuro no accent */
+  --accent-foreground: oklch(0.14 0.01 150); /* texto escuro neutro esverdeado no accent */
   --accent-hover: oklch(0.75 0.22 145);
 
   /* Semantic Colors - Dark mode otimizado WCAG AAA */
   --success: oklch(0.70 0.20 145); /* #34D399 green-400 */
-  --success-foreground: oklch(0.10 0.02 250);
+  --success-foreground: oklch(0.14 0.01 150);
   --success-bg: oklch(0.25 0.10 145 / 20%); /* Background sutil */
 
   --warning: oklch(0.80 0.17 85); /* #FCD34D yellow-300 mais brilhante */
-  --warning-foreground: oklch(0.10 0.02 250);
+  --warning-foreground: oklch(0.14 0.01 150);
   --warning-bg: oklch(0.30 0.10 85 / 20%);
 
   --error: oklch(0.70 0.24 25); /* #F87171 red-400 */
-  --error-foreground: oklch(0.10 0.02 250);
+  --error-foreground: oklch(0.14 0.01 150);
   --error-bg: oklch(0.25 0.12 25 / 20%);
 
   --info: oklch(0.68 0.20 240); /* #60A5FA blue-400 */
-  --info-foreground: oklch(0.10 0.02 250);
+  --info-foreground: oklch(0.14 0.01 150);
   --info-bg: oklch(0.25 0.10 240 / 20%);
 
   /* Variante de TEXTO — no escuro o tom de preenchimento ja aprova como texto
@@ -340,27 +480,27 @@
   --error-text: oklch(0.70 0.24 25);
 
   --status-partial: oklch(0.72 0.20 300); /* purple-400 mais vibrante, dark mode */
-  --status-partial-foreground: oklch(0.10 0.02 250); /* texto escuro: 7.19:1 sobre status-partial dark — UI-05 */
+  --status-partial-foreground: oklch(0.14 0.01 150); /* texto escuro neutro — UI-05 */
 
   /* Destructive */
   --destructive: oklch(0.70 0.24 25);
-  --destructive-foreground: oklch(0.10 0.02 250); /* texto escuro, igual --error-foreground: 6.09:1 vs branco (3.23:1) — UI-05 */
+  --destructive-foreground: oklch(0.14 0.01 150); /* texto escuro, igual --error-foreground — UI-05 */
 
   /* Surfaces - Hierarquia clara com elevação */
-  --card: oklch(0.17 0.02 250); /* surface-primary - mais claro */
-  --card-foreground: oklch(0.985 0 0);
-  --card-elevated: oklch(0.20 0.02 250); /* Para cards com hover */
+  --card: oklch(0.184 0.004 164.6); /* #111312 — painel */
+  --card-foreground: oklch(0.950 0.003 165.1);
+  --card-elevated: oklch(0.209 0.006 156.7); /* #161917 — card interno */
 
-  --popover: oklch(0.22 0.02 250); /* surface-secondary - mais elevado */
-  --popover-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.227 0.006 156.7); /* #1A1D1B — mais elevado que o painel */
+  --popover-foreground: oklch(0.950 0.003 165.1);
 
-  --muted: oklch(0.27 0.02 250); /* surface-elevated - bem visível */
-  --muted-foreground: oklch(0.75 0 0); /* Texto mais claro */
+  --muted: oklch(0.244 0.006 156.8); /* #1E211F — hover de linha, trilho de aba */
+  --muted-foreground: oklch(0.703 0.009 157.0); /* #9BA19D — 7.09:1 no painel · 7.20:1 no poco · 5.53:1 no controle-ativo */
 
   /* Borders & Inputs - WCAG 3:1 mínimo p/ elemento não-textual (UI-05) */
-  --border: oklch(0.52 0.02 250); /* L ajustado de 0.35 p/ 3:1 min. (era 1.83:1 fundo / 1.70:1 card) */
-  --input: oklch(0.52 0.02 250); /* Mesmo que border */
-  --ring: oklch(0.65 0.18 145); /* Ring verde accent */
+  --border: oklch(0.52 0.008 155); /* 3:1 min. contra fundo, card e sidebar (decisao aprovada: campos mantem borda visivel) */
+  --input: oklch(0.52 0.008 155); /* Mesmo que border */
+  --ring: oklch(0.76 0.16 142.6); /* verde da marca (= --primary): 9.17:1 no painel — UI-06 */
 
   /* Charts - Dark mode palette vibrante */
   --chart-1: oklch(0.55 0.25 264); /* Purple vibrante */
@@ -394,21 +534,66 @@
      como `bg-[var(--sidebar-primary)]/20`, um composto que a catraca nao
      consegue medir. O valor abaixo reproduz o composto atual em cor OPACA
      (rgb 66,28,25 vs 59,28,35 do composto), agora mensuravel: 4.53:1. */
-  --sidebar: oklch(0.17 0.02 260);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.184 0.004 164.6); /* = --card (painel #111312) */
+  --sidebar-foreground: oklch(0.950 0.003 165.1);
   --sidebar-primary: oklch(0.76 0.16 142.6); /* verde BFX no escuro — 9.42:1 na sidebar */
-  --sidebar-primary-foreground: oklch(0.145 0.02 260); /* texto ESCURO: 9.75:1 sobre o verde */
-  --sidebar-primary-bg: oklch(0.28 0.06 142.6); /* tint OPACO — 7.05:1 */
-  --sidebar-accent: oklch(0.28 0.02 260);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.32 0.02 260);
-  --sidebar-ring: oklch(0.68 0.22 25);
-  --sidebar-muted: oklch(0.65 0 0);
+  --sidebar-primary-foreground: oklch(0.199 0.035 145.6); /* #0B1A0C — texto ESCURO sobre o verde */
+  --sidebar-primary-bg: oklch(0.281 0.051 147.6); /* = --marca-tint, tint OPACO — 7.02:1 */
+  --sidebar-accent: oklch(0.244 0.006 156.8); /* #1E211F hover/ativo */
+  --sidebar-accent-foreground: oklch(0.950 0.003 165.1);
+  --sidebar-border: oklch(0.248 0.006 156.8); /* = --divisoria; decorativo, FORA dos pares de 3:1 */
+  --sidebar-ring: oklch(0.76 0.16 142.6); /* verde da marca (era vermelho) */
+  --sidebar-muted: oklch(0.703 0.009 157.0); /* #9BA19D */
 
-  /* Brilho do fundo da pagina — tema escuro: tons mais opacos e sutis que o
-     claro, mesma origem que o `.dark body` derivava antes de virar token. */
-  --brilho-topo-a: oklch(0.25 0.08 260 / 25%);
-  --brilho-topo-b: oklch(0.20 0.06 210 / 20%);
+  /* ===== Redesign Vantage — tokens novos (tema escuro) =====
+     Contraste medido por token-contrast.mjs (razao WCAG):
+       --texto-secundario   12.29:1 vs shell · 11.70 card · 11.89 poco · 11.11 card-elevated
+       --marca-tint-texto   7.02:1 vs --marca-tint
+       --primary            9.17:1 vs card · 9.32 vs poco
+       --grafico-neutro     3.96:1 vs poco · --hachura-traco 3.13:1 vs poco */
+  --shell: oklch(0.153 0.003 145.4); /* #0B0C0B */
+  --shell-borda: oklch(0.227 0.006 156.7); /* #1A1D1B */
+  --painel-borda: oklch(0.248 0.006 156.8); /* #1F2220 */
+  --poco: oklch(0.175 0.004 164.6); /* #0F1110 */
+  --controle: oklch(0.193 0.004 164.6); /* #131514 */
+  --controle-ativo: oklch(0.280 0.008 153.4); /* #262A27 */
+  --divisoria: oklch(0.248 0.006 156.8); /* #1F2220 — decorativa, FORA dos pares de 3:1 */
+
+  --marca-tint: oklch(0.281 0.051 147.6); /* #16301A */
+  --marca-tint-texto: oklch(0.760 0.159 142.6); /* #6FCA69 */
+
+  --texto-secundario: oklch(0.847 0.007 160.0); /* #C9CECB */
+
+  --hachura-traco: oklch(0.496 0.011 150.5); /* #5E645F — 3.13:1 no poco (artboard #5A5F5B dava 2.91) */
+  --hachura-fundo: oklch(0.244 0.006 156.8); /* #1E211F */
+  --grafico-neutro: oklch(0.552 0.011 150.6); /* #6E746F — 3.96:1 no poco */
+  --grafico-trilha: oklch(0.293 0.006 156.9); /* #2A2D2B — decorativo */
+  --grafico-inativo: oklch(0.359 0.007 153.5); /* #3A3E3B — decorativo */
+
+  --vidro: oklch(0.235 0.006 156.8 / 92%); /* #1C1F1D a 92% */
+  --vidro-borda: oklch(0.316 0.008 153.5); /* #2F3330 */
+  --vidro-piso: oklch(0.235 0.006 156.8); /* #1C1F1D — versao OPACA do vidro (fallback e par de contraste: 14.39:1 com --foreground) */
+
+  /* Papel: a previa de recibo simula uma folha impressa e fica clara nos DOIS temas
+     (por isso o mesmo valor em :root e .dark). Antes eram hex crus em classe arbitraria. */
+  --papel: oklch(1 0 0); /* #FFFFFF */
+  --papel-texto: oklch(0.278 0.033 256.848); /* #1F2937 */
+  --papel-texto-forte: oklch(0.21 0.034 264.665); /* #111827 */
+  --papel-texto-medio: oklch(0.446 0.03 256.802); /* #4B5563 */
+  --papel-texto-fraco: oklch(0.551 0.027 264.364); /* #6B7280 — 4.83:1 no papel */
+  --papel-linha: oklch(0.967 0.003 264.542); /* #F3F4F6 — filete decorativo */
+  --papel-traco: oklch(0.707 0.022 261.325); /* #9CA3AF — linha de assinatura */
+}
+
+/* Piso opaco do vidro: onde o navegador nao suporta `backdrop-filter`, o
+   tooltip nao pode ficar translucido sobre as barras (ilegivel). Fica fora de
+   `:root`/`.dark` de nivel 1 de proposito: a catraca de contraste le so os
+   blocos de nivel 1 e o alfa marcaria o par como SKIP de qualquer jeito. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root,
+  .dark {
+    --vidro: var(--vidro-piso);
+  }
 }
 
 @layer base {
@@ -431,18 +616,14 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
-    background-image:
-      radial-gradient(1200px 600px at 10% -10%, var(--brilho-topo-a), transparent),
-      radial-gradient(900px 500px at 90% -20%, var(--brilho-topo-b), transparent);
-    background-attachment: fixed;
+    font-family: var(--font-sans);
   }
 
   h1,
   h2,
   h3,
   h4 {
-    font-family: var(--font-space-grotesk), var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: var(--font-display);
   }
 }
 
@@ -693,9 +874,9 @@
 .stagger-8 { animation-delay: 400ms; }
 
 /* Animation fill modes */
-.fill-forwards { animation-fill-mode: forwards; }
-.fill-backwards { animation-fill-mode: backwards; }
-.fill-both { animation-fill-mode: both; }
+.anim-fill-forwards { animation-fill-mode: forwards; }
+.anim-fill-backwards { animation-fill-mode: backwards; }
+.anim-fill-both { animation-fill-mode: both; }
 
 /* ========================================
    INTERACTION UTILITY CLASSES
@@ -823,10 +1004,11 @@
    `text-primary` solido: duas linguagens de titulo na mesma tela. Como e CSS
    puro e nao classe Tailwind, a catraca de cor crua nunca o viu, e ele
    sobreviveu a troca da paleta da marca.
-   Agora e o verde BFX solido, o mesmo dos titulos de Card. `color` herda o
-   token, entao acompanha os dois temas sozinho. */
+   Redesign Vantage: o titulo passa a `--foreground`. O verde fica para o que
+   e marca de fato (selo, acao, indicador); titulo verde sobre a pagina cinza do
+   tema claro nao fecha 4.5:1 (`text-primary` 4.43:1 sobre `--background`). */
 .page-title {
-  color: var(--primary);
+  color: var(--foreground);
 }
 
 /* ========================================
@@ -939,6 +1121,7 @@
    ======================================== */
 
 .tabular-nums {
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
@@ -976,6 +1159,71 @@
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================
+   MOVIMENTO DO REDESIGN (tokens --mov-*)
+   ========================================
+   Tres animacoes de entrada, todas so transform/opacity. O atraso por item vem
+   de `--i` (style="--i: 3"); sem `--i` o atraso e 0. `both` mantem o primeiro
+   quadro escondido durante o atraso e o ultimo ao fim — e e por isso que, com
+   `animation: none` (reduced-motion), o elemento aparece direto no estado final:
+   o estado base de cada classe e o VISIVEL. Espelhado em `src/lib/motion.ts`. */
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes crescer-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes dica {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-entrada {
+  animation: entrar var(--mov-entrada) var(--mov-curva) both;
+  animation-delay: calc(var(--i, 0) * var(--mov-stagger));
+}
+
+.anim-barra {
+  transform-origin: bottom;
+  animation: crescer-y var(--mov-barra) var(--mov-curva) both;
+  animation-delay: calc(var(--i, 0) * var(--mov-stagger-barra));
+}
+
+.anim-dica {
+  animation: dica var(--mov-dica) ease-out both;
+  animation-delay: calc(var(--i, 0) * var(--mov-stagger));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-entrada,
+  .anim-barra,
+  .anim-dica {
+    animation: none;
+    transition: none;
   }
 }
 
@@ -1024,4 +1272,60 @@
     -webkit-user-select: none;
     pointer-events: none;
   }
+}
+
+/* Popover com a largura do elemento ancorado (painel de atalhos do atendimento sobre a barra do composer). */
+@utility popover-ancora {
+  width: var(--radix-popover-trigger-width);
+  max-width: calc(100vw - 2rem);
+}
+
+/* Respiro de area segura (notch / barra de gestos) das barras fixas da assinatura. */
+@utility pb-area-segura {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+@utility py-area-segura-topo {
+  padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+  padding-bottom: 0.75rem;
+}
+
+/* ========================================
+   FUNDOS DE GRAFICO (utilitarias nomeadas)
+   ========================================
+   Hachura, trilha e grade de pontos dos graficos, por token. Antes eram strings
+   `repeating-linear-gradient(...)` repetidas em 6 arquivos (style inline ou classe
+   arbitraria); agora cada uma tem um nome e muda num lugar so. */
+@utility bg-hachura {
+  background-image: repeating-linear-gradient(135deg, var(--hachura-traco) 0 2px, var(--hachura-fundo) 2px 6px);
+}
+@utility bg-hachura-fina {
+  background-image: repeating-linear-gradient(135deg, var(--muted-foreground) 0 2px, var(--poco) 2px 5px);
+}
+@utility bg-hachura-trilha {
+  background-image: repeating-linear-gradient(135deg, var(--grafico-inativo) 0 2px, transparent 2px 5px);
+}
+@utility bg-grade-pontos {
+  background-image: radial-gradient(var(--grafico-trilha) 1px, transparent 1px);
+  background-size: 16px 16px;
+  background-position: 0 6px;
+}
+@utility bg-grade-pontos-fina {
+  background-image: radial-gradient(var(--hachura-fundo) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+/* Fio da cor do poco entre o custo (hachura) e o topo verde da coluna. */
+@utility fio-poco {
+  box-shadow: 0 2px 0 0 var(--poco);
+}
+
+/* Atraso por item vindo de `--atraso` (ms), p.ex. linhas de tabela que entram em sequencia. */
+@utility anim-atraso {
+  animation-delay: var(--atraso, 0ms);
+}
+
+/* Transicao so de fundo e cor do texto (a `transition-colors` do Tailwind tambem anima borda, fill e stroke). */
+@utility transition-fundo-texto {
+  transition-property: background-color, color;
+  transition-timing-function: var(--default-transition-timing-function);
+  transition-duration: var(--default-transition-duration);
 }

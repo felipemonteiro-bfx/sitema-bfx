@@ -50,7 +50,7 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
               <span className="sr-only">depois desta venda:</span>
               <span
                 className={cn(
-                  "text-xl font-extrabold valor-sensivel",
+                  "text-xl font-semibold valor-sensivel",
                   limite.depois < 0 ? "text-error-text" : "text-foreground"
                 )}
               >
@@ -66,12 +66,12 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
                   className="flex h-2.5 overflow-hidden rounded-full bg-muted"
                 >
                   <span
-                    className="bg-muted-foreground"
-                    style={{ width: `${larguraBarra(barraLimite.comprometido, barraLimite.teto)}%` }}
+                    className="w-(--w) bg-muted-foreground"
+                    style={{ "--w": `${larguraBarra(barraLimite.comprometido, barraLimite.teto)}%` } as React.CSSProperties}
                   />
                   <span
-                    className={limite.depois < 0 ? "bg-error" : "bg-success"}
-                    style={{ width: `${larguraBarra(valorParcela, barraLimite.teto)}%` }}
+                    className={limite.depois < 0 ? "w-(--w) bg-error" : "w-(--w) bg-success"}
+                    style={{ "--w": `${larguraBarra(valorParcela, barraLimite.teto)}%` } as React.CSSProperties}
                   />
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -138,17 +138,17 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
         </div>
 
         {antecipavel && semParcelas && (
-          <p className="flex items-center gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
-            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <p className="flex items-center gap-2 rounded-interno bg-poco p-4 text-sm text-muted-foreground">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-warning-text" aria-hidden="true" />
             Informe as datas das parcelas para simular a antecipação.
           </p>
         )}
 
         {/* `border-separate`: em `collapse` o navegador ignora o raio das células, e a coluna em
             destaque perderia os cantos. Com isso a linha divisória sai das células, não do <tr>. */}
-        <Table className="border-separate border-spacing-0 tabular-nums">
-          <TableHeader className="[&_tr]:bg-transparent dark:[&_tr]:bg-transparent">
-            <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
+        <Table mono separado>
+          <TableHeader>
+            <TableRow semHover>
               <TableHead scope="col">
                 <span className="sr-only">Cenário</span>
               </TableHead>
@@ -156,49 +156,50 @@ export function ResumoVendaPanel({ simulacao, barraLimite, taxaNotaPct, comissao
                 <TableHead
                   key={c.chave}
                   scope="col"
-                  className={cn(
-                    "text-right text-sm normal-case tracking-normal text-foreground",
-                    destaque(c) && "rounded-t-lg bg-success-bg font-bold text-success-text"
-                  )}
+                  tamanho="sm"
+                  tom="foreground"
+                  destaque={destaque(c) ? "topo" : undefined}
+                  className="text-right"
                 >
                   {c.rotulo}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody className="[&_td]:border-t [&_th]:border-t">
+          <TableBody linhasNasCelulas>
             {(
               [
                 { rotulo: "Taxa Prudent", campo: "taxa" },
                 { rotulo: "Dinheiro já", campo: "dinheiroJa" },
               ] as const
             ).map((linha) => (
-              <TableRow key={linha.campo} className="hover:bg-transparent dark:hover:bg-transparent">
-                <TableHead scope="row" className="text-sm font-medium normal-case tracking-normal">
+              <TableRow semHover key={linha.campo}>
+                <TableHead tamanho="sm" scope="row">
                   {linha.rotulo}
                 </TableHead>
                 {cenarios.map((c) => (
                   <TableCell
                     key={c.chave}
-                    className={cn("text-right valor-sensivel", destaque(c) && "bg-success-bg text-success-text")}
+                    destaque={destaque(c) ? "meio" : undefined}
+                    className="text-right valor-sensivel"
                   >
                     {formatBRL(c[linha.campo])}
                   </TableCell>
                 ))}
               </TableRow>
             ))}
-            <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-              <TableHead scope="row" className="text-sm font-bold normal-case tracking-normal text-foreground">
+            <TableRow semHover>
+              <TableHead tamanho="sm" tom="foreground" peso="forte" scope="row">
                 Lucro estimado
               </TableHead>
               {cenarios.map((c) => (
                 <TableCell
                   key={c.chave}
-                  className={cn(
-                    "text-right text-base font-extrabold valor-sensivel",
-                    destaque(c) && "rounded-b-lg bg-success-bg",
-                    c.lucro < 0 ? "text-error-text" : destaque(c) ? "text-success-text" : "text-foreground"
-                  )}
+                  tamanho="base"
+                  peso="forte"
+                  tom={c.lucro < 0 ? "erro" : "foreground"}
+                  destaque={destaque(c) ? "base" : undefined}
+                  className="text-right valor-sensivel"
                 >
                   {formatBRL(c.lucro)}
                 </TableCell>

@@ -4,7 +4,6 @@ import { useState, startTransition, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -139,7 +138,7 @@ export default function FornecedoresTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary">Novo Fornecedor</CardTitle>
+          <CardTitle>Novo Fornecedor</CardTitle>
         </CardHeader>
         <CardContent>
           <form action={handleAdd} className="grid gap-4 [&_input]:uppercase">
@@ -162,7 +161,7 @@ export default function FornecedoresTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-primary">Fornecedores Cadastrados</CardTitle>
+          <CardTitle>Fornecedores Cadastrados</CardTitle>
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -172,7 +171,7 @@ export default function FornecedoresTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none">
+              <Button type="button" variant="discretoPlano" size="iconMini" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2">
                 <Trash2 className="h-3 w-3" />
               </Button>
             )}
@@ -180,7 +179,7 @@ export default function FornecedoresTabClient({
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+            <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2">
               <span className="text-sm font-medium">
                 {selectedIds.size} selecionado(s)
                 {selecionadosForaDaPagina > 0 && (
@@ -212,8 +211,8 @@ export default function FornecedoresTabClient({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    <AlertDialogAction variant="destructive"
+
                       disabled={bulkDeleting}
                       onClick={handleBulkDelete}
                     >
@@ -227,7 +226,7 @@ export default function FornecedoresTabClient({
               </Button>
             </div>
           )}
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="overflow-x-auto rounded-interno bg-poco p-2">
           <Table>
             <TableHeader>
               <TableRow>
@@ -240,7 +239,7 @@ export default function FornecedoresTabClient({
                 </TableHead>
                 <SortableHeader label="Nome" field="nome" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
                 <SortableHeader label="Telefone" field="telefone" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof FornecedorListItem)} />
-                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} className="w-[80px] cursor-default hover:bg-transparent" />
+                <SortableHeader label="" field="_" currentDir="asc" onSort={() => {}} estatico className="w-20" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -260,18 +259,20 @@ export default function FornecedoresTabClient({
                         onCheckedChange={(checked) => handleSelectOne(f.id, checked)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{f.nome}</TableCell>
+                    <TableCell peso="medio">{f.nome}</TableCell>
                     <TableCell>{f.telefone}</TableCell>
                     <TableCell>
-                      <button
+                      <Button
                         type="button"
+                        variant="discreto"
+                        size="iconSm"
                         onClick={() => setEditingFornecedor(f)}
-                        className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
+
                         title="Editar"
                         aria-label={`Editar ${f.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -291,6 +292,7 @@ export default function FornecedoresTabClient({
           </SheetHeader>
           {editingFornecedor && (
             <form action={handleUpdate} className="grid gap-4 mt-4 [&_input]:uppercase">
+              {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
               <input type="hidden" name="id" value={editingFornecedor.id} />
               <div className="grid gap-3">
                 <div className="space-y-1">

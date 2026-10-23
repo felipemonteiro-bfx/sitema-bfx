@@ -247,15 +247,12 @@ describe("achado 5 — FormSelect e botao desalinhados no /crm", () => {
   it("os selects da tabela do /crm tem a altura e o raio de size=sm", () => {
     const fonte = ler("src/app/(app)/crm/page.tsx");
     const tabela = fonte.split("<TableBody>").pop() ?? "";
-    const classes = tabela
-      .split("className=\"h-")
-      .slice(1)
-      .map((s) => s.split('"')[0]);
-    expect(classes.length, "selects na tabela").toBeGreaterThanOrEqual(2);
-    for (const c of classes) {
-      expect(c.startsWith("9 "), `altura h-${c}`).toBe(true);
-      expect(c.includes("rounded-md"), `raio em h-${c}`).toBe(true);
-    }
+    // Altura e raio de size=sm vem de `aparencia="compacto"` do FormSelect (h-9 rounded-md na variante seletor).
+    const usos = tabela.split("aparencia=\"compacto\"").length - 1;
+    expect(usos, "selects compactos na tabela").toBeGreaterThanOrEqual(2);
+    const variantes = ler("src/components/ui/button-variants.ts");
+    expect(variantes.includes("data-[tamanho=compacto]:h-9")).toBe(true);
+    expect(variantes.includes("data-[tamanho=compacto]:rounded-md")).toBe(true);
   });
 });
 
@@ -284,9 +281,11 @@ describe("achado 6 — /inteligencia em 390px", () => {
 describe("achado 7 — corpo da tabela markdown no tema claro", () => {
   it("a celula de dado usa text-foreground, nao muted-foreground", () => {
     const fonte = ler("src/components/intelligence-chat-client.tsx");
-    const celula = fonte.split("<td")[1]?.split(">")[0] ?? "";
+    // H5: a tabela markdown passou a usar o `TableCell` da ui (poço do Vantage), no lugar do <td> cru.
+    const celula = fonte.split("<TableCell")[1]?.split("</TableCell>")[0] ?? "";
+    // Tom por prop do TableCell (tom="foreground" = text-foreground); o className nao leva cor.
     expect(celula.includes("text-muted-foreground")).toBe(false);
-    expect(celula.includes("text-foreground")).toBe(true);
+    expect(celula.includes('tom="foreground"')).toBe(true);
   });
 });
 

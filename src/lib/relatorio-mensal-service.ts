@@ -10,6 +10,7 @@
  */
 import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
+import { avisarAdmins } from "@/lib/avisar-admins";
 import { linkHistoricoEmails, type OrigemEmail } from "@/lib/email-historico";
 import { emailsCopia } from "@/lib/email-copia";
 import { formatBRL } from "@/lib/utils";
@@ -208,13 +209,10 @@ async function processarGrupo(
       totalVendas: dados.totalVendas,
       valorTotal: dados.valorTotal,
     });
-    await prisma.notificacao.create({
-      data: {
-        mensagem: `Relatório mensal (${periodoLabel(periodo)}) enviado para ${empresaNome}: ${dados.totalVendas} vendas, ${formatBRL(dados.valorTotal)}`,
-        link: linkHistoricoEmails(empresaId),
-        usuarioId: 1,
-      },
-    });
+    await avisarAdmins([{
+      mensagem: `Relatório mensal (${periodoLabel(periodo)}) enviado para ${empresaNome}: ${dados.totalVendas} vendas, ${formatBRL(dados.valorTotal)}`,
+      link: linkHistoricoEmails(empresaId),
+    }]);
 
     return { ...baseResult, status: "enviado", totalVendas: dados.totalVendas, valorTotal: dados.valorTotal };
   } catch (err) {

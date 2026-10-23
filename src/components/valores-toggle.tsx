@@ -11,7 +11,6 @@ import * as React from "react"
 import { Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import {
   CHAVE_DISCRETO,
   aplicarNoDocumento,
@@ -57,7 +56,7 @@ export function ValoresToggle() {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant={oculto ? "controleAtivo" : "controle"}
       size="icon"
       // `size="icon"` exige nome acessivel (skill shadcn-bfx). O nome e' FIXO e o estado vai
       // no `aria-pressed`: nome que muda junto com o estado faz o leitor anunciar
@@ -67,10 +66,7 @@ export function ValoresToggle() {
       aria-pressed={oculto}
       title={rotulo}
       onClick={alternar}
-      className={cn(
-        "relative h-9 w-9 min-h-[44px] min-w-[44px] rounded-full touch-manipulation lg:h-9 lg:w-9 lg:min-h-0 lg:min-w-0",
-        oculto && "border-primary bg-success-bg text-success-text"
-      )}
+      className="relative touch-manipulation"
     >
       {oculto ? (
         <EyeOff className="h-[1.2rem] w-[1.2rem]" />

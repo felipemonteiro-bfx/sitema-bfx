@@ -1,10 +1,6 @@
-"use client";
-
-import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Users } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, formatBRL } from "@/lib/utils";
+import { formatBRL } from "@/lib/utils";
 
 export type MesClientes = {
   mes: string;
@@ -19,33 +15,18 @@ export type MesClientes = {
   variacao: { diferenca: number; percentual: number | null; base: string } | null;
 };
 
+// Hachura dos recorrentes: tokens, a mesma do gráfico de evolução do Início.
 function Legenda() {
   return (
-    <div className="flex gap-4 text-sm text-muted-foreground">
-      <span className="inline-flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-sm bg-chart-novos" aria-hidden="true" />
+    <div className="flex gap-5 text-sm text-texto-secundario">
+      <span className="flex items-center gap-2">
+        <span className="size-3 rounded-sm bg-primary" aria-hidden="true" />
         Novos
       </span>
-      <span className="inline-flex items-center gap-1.5">
-        <span className="h-2.5 w-2.5 rounded-sm bg-chart-recorrentes" aria-hidden="true" />
+      <span className="flex items-center gap-2">
+        <span className="size-3 rounded-sm bg-hachura" aria-hidden="true" />
         Recorrentes
       </span>
-    </div>
-  );
-}
-
-function Dica({ active, payload }: { active?: boolean; payload?: { payload: MesClientes }[] }) {
-  if (!active || !payload?.length) return null;
-  const m = payload[0].payload;
-  return (
-    <div className="min-w-[200px] rounded-xl border border-border/60 bg-card px-4 py-3 shadow-lg dark:shadow-[var(--shadow-lg)]">
-      <div className="mb-2 text-sm font-semibold">{m.mesLongo}</div>
-      <div className="space-y-1 text-xs">
-        <div className="flex justify-between gap-6"><span className="text-muted-foreground">Clientes</span><span className="font-semibold tabular-nums">{m.total}</span></div>
-        <div className="flex justify-between gap-6"><span className="text-muted-foreground">Novos</span><span className="tabular-nums">{m.novos}</span></div>
-        <div className="flex justify-between gap-6"><span className="text-muted-foreground">Recorrentes</span><span className="tabular-nums">{m.recorrentes}</span></div>
-        <div className="flex justify-between gap-6"><span className="text-muted-foreground">Vendas</span><span className="tabular-nums">{m.vendas}</span></div>
-      </div>
     </div>
   );
 }
@@ -61,39 +42,55 @@ function textoVariacao(v: MesClientes["variacao"]): string {
 export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
   const resumo = meses.map((m) => `${m.mesLongo}: ${m.total} clientes (${m.novos} novos)`).join("; ");
   const atual = meses.at(-1);
+  // 15% de folga no teto: o número de cada coluna mora acima da barra.
+  const teto = Math.max(1, ...meses.map((m) => m.total)) / 0.85;
 
   return (
-    <Card animated>
-      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0">
+    <section aria-labelledby="clientes-mes-titulo" className="rounded-painel border border-border bg-card p-2">
+      <div className="flex flex-wrap items-start justify-between gap-4 px-5 pb-5 pt-4">
         <div className="space-y-1">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <h2 id="clientes-mes-titulo" className="flex items-center gap-2 text-lg font-semibold">
             <Users className="h-4 w-4 text-primary" aria-hidden="true" />
             Clientes que compraram, mês a mês
-          </CardTitle>
-          <CardDescription>
+          </h2>
+          <p className="text-sm text-muted-foreground">
             Cada cliente conta uma vez por mês, mesmo com várias compras. Novo = primeira compra na BFX.
-          </CardDescription>
+          </p>
         </div>
         <Legenda />
-      </CardHeader>
-      <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-        <div className="h-72" role="img" aria-label={`Gráfico de clientes por mês. ${resumo}`}>
-          <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
-            <BarChart data={meses} margin={{ left: 0, right: 8, top: 24, bottom: 4 }} barCategoryGap="28%">
-              <CartesianGrid vertical={false} stroke="var(--border)" opacity={0.35} />
-              <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} width={32} />
-              <Tooltip content={<Dica />} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
-              <Bar dataKey="novos" stackId="c" fill="var(--color-chart-novos)" stroke="var(--card)" strokeWidth={2} isAnimationActive={false} />
-              <Bar dataKey="recorrentes" stackId="c" fill="var(--color-chart-recorrentes)" stroke="var(--card)" strokeWidth={2} radius={[4, 4, 0, 0]} isAnimationActive={false}>
-                <LabelList dataKey="total" position="top" style={{ fontSize: 12, fontWeight: 700, fill: "var(--foreground)" }} />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+      </div>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 rounded-interno bg-poco p-4 sm:p-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div>
+          <div role="img" aria-label={`Gráfico de clientes por mês. ${resumo}`} className="flex h-64 items-stretch gap-2 sm:gap-4">
+            {meses.map((m, i) => (
+              <div key={m.mesLongo} className="flex min-w-0 flex-1 flex-col items-center justify-end">
+                <span className="mb-1 font-mono text-sm font-medium">{m.total}</span>
+                <div className="flex h-(--h) w-[64%] max-w-14 flex-col-reverse" style={{ "--h": `${(m.total / teto) * 100}%` } as React.CSSProperties}>
+                  <span
+                    className="anim-barra block h-(--h) rounded-sm bg-hachura"
+                    style={{ "--h": `${m.total > 0 ? (m.recorrentes / m.total) * 100 : 0}%`, "--i": i } as React.CSSProperties}
+                  />
+                  {m.novos > 0 && (
+                    <span
+                      className="anim-barra fio-poco block h-(--h) min-h-1 rounded-sm bg-primary"
+                      style={{ "--h": `${(m.novos / m.total) * 100}%`, "--i": i } as React.CSSProperties}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div aria-hidden="true" className="mt-3 flex gap-2 font-mono text-xs text-muted-foreground sm:gap-4">
+            {meses.map((m) => (
+              <span key={m.mesLongo} className="min-w-0 flex-1 text-center">
+                {m.mes}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Table className="text-sm">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Mês</TableHead>
@@ -107,25 +104,20 @@ export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
               {[...meses].reverse().map((m) => (
                 <TableRow key={m.mesLongo}>
                   <TableCell>{m.mesLongo}</TableCell>
-                  <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">
+                  <TableCell numeric className="valor-sensivel valor-sensivel-fim">
                     {m.faturamento === undefined ? "—" : formatBRL(m.faturamento)}
                   </TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">
+                  <TableCell peso="forte" numeric>
                     {m.total}
                     <span className="block text-xs font-normal text-muted-foreground">{m.novos} {m.novos === 1 ? "novo" : "novos"}</span>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground valor-sensivel valor-sensivel-fim">
+                  <TableCell tom="muted" numeric className="valor-sensivel valor-sensivel-fim">
                     {m.faturamento === undefined || m.total === 0 ? "—" : formatBRL(m.faturamento / m.total)}
                   </TableCell>
                   <TableCell
-                    className={cn(
-                      "text-right font-semibold tabular-nums",
-                      !m.variacao || m.variacao.diferenca === 0
-                        ? "text-muted-foreground"
-                        : m.variacao.diferenca > 0
-                          ? "text-success-text"
-                          : "text-error-text"
-                    )}
+                    numeric
+                    peso="forte"
+                    tom={!m.variacao || m.variacao.diferenca === 0 ? "muted" : m.variacao.diferenca > 0 ? "sucesso" : "erro"}
                   >
                     {textoVariacao(m.variacao)}
                   </TableCell>
@@ -139,7 +131,7 @@ export function ClientesMesAMes({ meses }: { meses: MesClientes[] }) {
             </p>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }

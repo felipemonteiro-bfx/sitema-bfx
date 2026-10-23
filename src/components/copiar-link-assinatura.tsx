@@ -31,11 +31,11 @@ export function CopiarLinkAssinatura({ token, className }: { token: string; clas
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="tintAviso"
       size="sm"
       onClick={handleCopy}
       title={copied ? 'Link copiado!' : 'Copiar link de assinatura'}
-      className={cn("h-auto gap-1 rounded border-warning bg-warning-bg px-2 py-1 text-xs text-warning-text shadow-none hover:bg-warning-bg/70 hover:text-warning-text hover:shadow-none", className)}
+      className={cn("h-auto gap-1", className)}
     >
       {copied ? (
         <>

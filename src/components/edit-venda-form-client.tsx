@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
@@ -16,7 +18,7 @@ import { DeleteVendaButton } from "@/components/delete-venda-button";
 import { GerarBoletoButton } from "@/components/gerar-boleto-button";
 import { formatBRL, cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle2, ExternalLink, Plus } from "lucide-react";
+import { CheckCircle2, ExternalLink, Plus } from "lucide-react";
 import { LinkAssinaturaButton } from "@/components/link-assinatura-button";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
 
@@ -184,11 +186,11 @@ export function EditVendaFormClient({
         <form onSubmit={handleSubmit} encType="multipart/form-data" className="grid gap-4 md:grid-cols-3">
           <input type="hidden" name="id" value={editVenda.id} />
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Data da venda</Label>
+            <Label size="sm">Data da venda</Label>
             <DateInput name="data" defaultValue={editVenda.dataVenda.toISOString().slice(0, 10)} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Vendedor</Label>
+            <Label size="sm">Vendedor</Label>
             <FormSelect
               name="vendedor"
               defaultValue={editVenda.vendedor || ""}
@@ -208,7 +210,7 @@ export function EditVendaFormClient({
           {/* Produtos - span full width */}
           <div className="md:col-span-3 space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-medium text-muted-foreground">Produtos da venda</Label>
+              <Label size="sm">Produtos da venda</Label>
               <Button type="button" variant="outline" size="sm" onClick={addProduto} leftIcon={<Plus className="h-4 w-4" />}>
                 Adicionar produto
               </Button>
@@ -228,15 +230,15 @@ export function EditVendaFormClient({
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Frete ao cliente</Label>
+            <Label size="sm">Frete ao cliente</Label>
             <CurrencyInput value={frete} onChange={setFrete} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Custo de envio</Label>
+            <Label size="sm">Custo de envio</Label>
             <CurrencyInput value={envio} onChange={setEnvio} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="edit-entrega" className="text-xs font-medium text-muted-foreground">Entrega ou retirada</Label>
+            <Label size="sm" htmlFor="edit-entrega">Entrega ou retirada</Label>
             <FormSelect
               id="edit-entrega"
               name="entrega"
@@ -250,21 +252,21 @@ export function EditVendaFormClient({
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Desconto (R$)</Label>
+            <Label size="sm">Desconto (R$)</Label>
             <CurrencyInput value={descontoValor} onChange={setDescontoValor} />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Parcelas</Label>
+            <Label size="sm">Parcelas</Label>
             <Input name="parcelas" type="number" min={1} defaultValue={editVenda.parcelas || 1} />
           </div>
 
           <div className="md:col-span-3 space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Comprovante Assinado (PDF, JPEG ou PNG)</Label>
+            <Label size="sm">Comprovante Assinado (PDF, JPEG ou PNG)</Label>
             <div className="flex flex-col gap-2">
-              <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10 px-2 pt-1.5" />
+              <Input type="file" name="comprovante" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" className="h-10" />
               {editVenda.assinatura?.assinaturaStatus === "assinado" ? (
-                <div className="flex flex-wrap items-center gap-2 text-xs text-success-text bg-success/10 px-2 py-1.5 rounded-md border border-success/20">
-                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground bg-poco px-3 py-2 rounded-interno">
+                  <Badge variant="success"><CheckCircle2 className="h-3 w-3 shrink-0" />Assinado</Badge>
                   <span>Comprovante assinado.</span>
                   <a href={`/api/comprovante?vendaId=${editVenda.id}`} target="_blank" rel="noopener noreferrer" className="font-bold underline flex items-center gap-1 hover:underline">
                     Ver <ExternalLink className="h-3 w-3" />
@@ -286,53 +288,52 @@ export function EditVendaFormClient({
                   />
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-xs text-warning-text bg-warning-bg px-2 py-1.5 rounded-md border border-warning">
-                  <AlertCircle className="h-3 w-3" />
+                <Alert variant="warning" showIcon size="sm">
                   <strong>Atenção:</strong> Vendedor ainda não subiu o PDF assinado.
-                </div>
+                </Alert>
               )}
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
+          <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
               name="temNota"
               id="edit-temNota"
               defaultChecked={editVenda.temNota}
             />
-            <label htmlFor="edit-temNota" className="text-xs font-medium leading-none cursor-pointer text-foreground">
+            <Label variant="foreground" size="sm" htmlFor="edit-temNota" className="cursor-pointer">
               Com Nota Fiscal
-            </label>
+            </Label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
+          <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
               name="descontoEmFolha"
               id="edit-descontoEmFolha"
               defaultChecked={editVenda.descontoEmFolha ?? false}
             />
-            <label htmlFor="edit-descontoEmFolha" className="text-xs font-medium leading-none cursor-pointer text-foreground">
+            <Label variant="foreground" size="sm" htmlFor="edit-descontoEmFolha" className="cursor-pointer">
               Desconto em folha
-            </label>
+            </Label>
           </div>
-          <div className="flex items-center space-x-2 border rounded-md h-10 px-3 self-end bg-card">
+          <div className="flex items-center space-x-2 rounded-controle h-10 px-3 self-end bg-poco">
             <Checkbox
               name="boleto"
               id="edit-boleto"
               defaultChecked={editVenda.boleto ?? false}
             />
-            <label htmlFor="edit-boleto" className="text-xs font-medium leading-none cursor-pointer text-foreground">
+            <Label variant="foreground" size="sm" htmlFor="edit-boleto" className="cursor-pointer">
               Boleto
-            </label>
+            </Label>
           </div>
           <p className="text-xs text-muted-foreground md:col-span-3">Apenas uma das opções: desconto em folha ou boleto.</p>
 
           <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground">Taxa da Nota (%)</Label>
+            <Label size="sm">Taxa da Nota (%)</Label>
             <Input name="taxaNota" type="number" step="0.01" defaultValue={editVenda.taxaNota || 5.97} />
           </div>
 
           {/* Resumo */}
-          <div className="md:col-span-3 p-4 rounded-lg bg-muted/50 space-y-2">
+          <div className="md:col-span-3 p-4 rounded-interno bg-poco space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Subtotal produtos</span>
               <span className="font-semibold valor-sensivel">{formatBRL(subtotalProdutos)}</span>
@@ -344,7 +345,7 @@ export function EditVendaFormClient({
             {descontoValor > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Desconto</span>
-                <span className="font-semibold text-destructive valor-sensivel">-{formatBRL(descontoValor)}</span>
+                <span className="font-semibold text-error-text valor-sensivel">-{formatBRL(descontoValor)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm font-bold border-t pt-2">
@@ -366,7 +367,6 @@ export function EditVendaFormClient({
               <ReciboDownloadLink
                 vendaId={editVenda.id}
                 tipo={editVenda.descontoEmFolha ? "autorizacao" : "venda"}
-                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
                 label={editVenda.descontoEmFolha ? "Autorização" : "Recibo de Venda"}
               />
               {editVenda.boletoUrl ? (

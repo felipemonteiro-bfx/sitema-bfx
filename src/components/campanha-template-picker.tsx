@@ -11,6 +11,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/form-select";
+import { Alert } from "@/components/ui/alert";
+import { RotuloCampo } from "@/components/rotulo-campo";
 import type { TemplateAprovado } from "@/lib/meta-templates";
 
 type Props = {
@@ -58,30 +60,31 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
 
   if (lista.length === 0) {
     return (
-      <div className="rounded-md border border-warning bg-warning-bg p-3 text-sm">
+      <Alert variant="warning" showIcon>
         <p>
           Nenhum template aprovado na Meta. Aprove um template no WhatsApp Manager
           antes de criar campanhas.
         </p>
-        <Button
+        <Button size="inline"
           type="button"
           variant="link"
           onClick={atualizar}
           disabled={atualizando}
-          className="mt-2 h-auto p-0"
+          className="mt-2"
         >
           {atualizando ? "Atualizando..." : "Atualizar lista"}
         </Button>
-      </div>
+      </Alert>
     );
   }
 
   return (
     <div className="space-y-3">
       <div className="flex items-end gap-2">
-        <label className="flex-1">
-          <span className="mb-1 block text-sm font-medium">Template</span>
+        <div className="flex-1 space-y-1.5">
+          <RotuloCampo htmlFor="templateNome">Template</RotuloCampo>
           <FormSelect
+            id="templateNome"
             name="templateNome"
             value={nome}
             onValueChange={escolher}
@@ -91,7 +94,7 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
               label: `${t.nome} — ${t.categoria}`,
             }))}
           />
-        </label>
+        </div>
         <Button
           type="button"
           variant="outline"
@@ -104,7 +107,7 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
 
       {selecionado && selecionado.variaveis > 0 && (
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium">Variáveis</legend>
+          <legend className="text-sm font-medium text-muted-foreground">Variáveis</legend>
           {valores.map((v, i) => (
             <Input
               key={i}
@@ -123,8 +126,8 @@ export function CampanhaTemplatePicker({ templates, onAtualizar }: Props) {
       )}
 
       {selecionado && (
-        <div className="rounded-md bg-muted p-3 text-sm">
-          <p className="mb-1 font-medium">Prévia</p>
+        <div className="rounded-interno bg-poco p-4 text-sm">
+          <p className="mb-1 font-medium text-muted-foreground">Prévia</p>
           <p className="whitespace-pre-wrap">
             {renderPreview(selecionado.corpo, valores)}
           </p>

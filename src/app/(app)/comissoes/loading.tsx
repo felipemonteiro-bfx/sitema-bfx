@@ -1,35 +1,28 @@
-﻿import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  SkeletonCabecalho,
+  SkeletonCampos,
+  SkeletonGrafico,
+  SkeletonKpis,
+  SkeletonLinhas,
+  SkeletonPainel,
+  SkeletonRegiao,
+} from "@/components/ui/skeleton";
 
+// Comissões: filtros (vendedor + período), 3 KPIs, gráfico por vendedor e o detalhamento.
 export default function Loading() {
   return (
-    <div className="space-y-6">
-      <div>
-        <Skeleton className="h-7 w-40" />
-        <Skeleton className="mt-2 h-4 w-56" />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {Array.from({ length: 2 }).map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-4 w-28" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-7 w-32" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-24" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-4 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+    <SkeletonRegiao>
+      <SkeletonCabecalho tituloLargura="w-80" tituloLinhas={2} />
+      <SkeletonPainel plano tituloLargura="w-24" className="min-h-[171px]">
+        <SkeletonCampos campos={3} colunas="md:grid-cols-3" />
+      </SkeletonPainel>
+      <SkeletonKpis quantidade={3} />
+      <SkeletonPainel tituloLargura="w-56" className="min-h-[405px]">
+        <SkeletonGrafico altura="h-72" />
+      </SkeletonPainel>
+      <SkeletonPainel tituloLargura="w-52" className="min-h-[161px]">
+        <SkeletonLinhas linhas={1} colunas={4} />
+      </SkeletonPainel>
+    </SkeletonRegiao>
   );
 }

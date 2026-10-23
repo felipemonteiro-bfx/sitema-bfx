@@ -135,9 +135,9 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
         // leria cada palavra como um id.
         const tituloId = `aguardando-rh-grupo-${indice}`;
         return (
-          <Card key={g.chave} role="region" className="overflow-hidden" aria-labelledby={tituloId}>
-            <div className="px-5 py-4">
-              <h2 id={tituloId} className="text-base font-bold text-foreground">
+          <Card key={g.chave} role="region" className="overflow-hidden p-2 pt-5" aria-labelledby={tituloId}>
+            <div className="px-4 pb-4">
+              <h2 id={tituloId} className="text-lg font-semibold text-foreground">
                 {g.empresa}
               </h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
@@ -152,7 +152,7 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
             <div
               role="toolbar"
               aria-label={`Ações da seleção — ${g.empresa}`}
-              className="flex flex-wrap items-center gap-3 border-y border-border bg-muted/40 px-5 py-2.5"
+              className="mb-2 flex flex-wrap items-center gap-3 rounded-interno bg-poco px-4 py-2.5"
             >
               <span className="text-sm font-semibold tabular-nums text-foreground" aria-live="polite">
                 {sel.length === 0 ? (
@@ -167,8 +167,8 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
               <div className="ml-auto flex gap-2">
                 <Button
                   type="button"
-                  variant="outline"
-                  className="border-destructive/60 text-error-text hover:bg-error-bg hover:text-error-text"
+                  variant="outlineErro"
+
                   disabled={sel.length === 0 || salvando}
                   onClick={() => {
                     setMotivo('');
@@ -188,10 +188,11 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
               </div>
             </div>
 
+            <div className="rounded-interno bg-poco">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10 pl-5">
+                  <TableHead className="w-10 pl-4">
                     <Checkbox
                       checked={todos ? true : sel.length > 0 ? 'indeterminate' : false}
                       onCheckedChange={() => alternarGrupo(g)}
@@ -203,7 +204,7 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
                   <TableHead>Colaborador</TableHead>
                   <TableHead className="hidden sm:table-cell">Matrícula</TableHead>
                   <TableHead>Vencimento</TableHead>
-                  <TableHead className="pr-5 text-right">Valor</TableHead>
+                  <TableHead className="pr-4 text-right">Valor</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -216,7 +217,7 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
                       className="cursor-pointer"
                       onClick={() => !salvando && alternar(t.id)}
                     >
-                      <TableCell className="pl-5" onClick={(e) => e.stopPropagation()}>
+                      <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={marcado}
                           onCheckedChange={() => alternar(t.id)}
@@ -224,13 +225,13 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
                           aria-label={`Selecionar ${t.titulo}`}
                         />
                       </TableCell>
-                      <TableCell className="font-semibold tabular-nums text-foreground">{t.titulo}</TableCell>
-                      <TableCell className="max-w-[220px] text-foreground">
+                      <TableCell tom="foreground" peso="forte" mono>{t.titulo}</TableCell>
+                      <TableCell tom="foreground" className="max-w-55">
                         <span className="block truncate">{t.colaborador || '—'}</span>
                       </TableCell>
-                      <TableCell className="hidden tabular-nums text-muted-foreground sm:table-cell">{t.matricula || '—'}</TableCell>
-                      <TableCell className="tabular-nums text-foreground">{formatarDataPura(t.vencimento)}</TableCell>
-                      <TableCell className="pr-5 text-right tabular-nums text-foreground valor-sensivel valor-sensivel-fim">
+                      <TableCell tom="muted" mono className="hidden sm:table-cell">{t.matricula || '—'}</TableCell>
+                      <TableCell tom="foreground" mono>{formatarDataPura(t.vencimento)}</TableCell>
+                      <TableCell tom="foreground" numeric className="pr-4 valor-sensivel valor-sensivel-fim">
                         {formatBRL(t.valor)}
                       </TableCell>
                     </TableRow>
@@ -238,6 +239,7 @@ export default function AguardandoRhClient({ grupos }: { grupos: GrupoAguardando
                 })}
               </TableBody>
             </Table>
+            </div>
           </Card>
         );
       })}

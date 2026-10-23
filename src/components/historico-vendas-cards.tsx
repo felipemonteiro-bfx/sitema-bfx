@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatBRL, cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { StatusAssinatura, estadoAssinatura } from "@/components/status-assinatura";
 import { ReciboDownloadLink } from "@/components/recibo-download-link";
 import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { VerTermoAssinadoLink } from "@/components/ver-termo-assinado-link";
@@ -25,6 +27,7 @@ type SearchParams = {
   produto?: string;
   cliente?: string;
   formaPagamento?: string;
+  assinatura?: string;
   page?: string;
 };
 
@@ -55,6 +58,7 @@ type Venda = {
   boletoUrl: string | null;
   cliente: { nome: string } | null;
   custoProduto?: number | null;
+  status?: string | null;
   assinaturaToken?: string | null;
   assinatura?: { assinaturaStatus: string | null } | null;
   itens?: { produtoNome: string; custoProduto: number; quantidade: number; subtotal: number }[];
@@ -110,6 +114,7 @@ function VendaCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <p className="font-medium text-foreground truncate">
+                <span className="mr-2 font-mono text-xs tabular-nums text-muted-foreground">#{venda.id}</span>
                 {venda.cliente?.nome || "N/D"}
               </p>
               <p className="text-sm text-muted-foreground truncate" title={
@@ -121,18 +126,20 @@ function VendaCard({
                   ? venda.itens.map((i) => `${i.produtoNome}${i.quantidade > 1 ? ` (${i.quantidade}x)` : ""}`).join(", ")
                   : venda.produtoNome || "—"}
               </p>
-              <p className="text-sm tabular-nums font-semibold text-primary mt-1 valor-sensivel">
+              <p className="font-mono text-sm tabular-nums font-semibold text-foreground mt-1 valor-sensivel">
                 {formatBRL(valorTotal)}
               </p>
             </div>
             <div className="flex flex-col items-end gap-1 shrink-0">
-              <span className="text-xs text-muted-foreground">
+              <span className="font-mono text-xs tabular-nums text-muted-foreground">
                 {formatDateBR(venda.dataVenda)}
               </span>
-              <button
+              <Button
                 type="button"
+                variant="discretoPlano"
+                size="icon"
                 onClick={() => setExpanded(!expanded)}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground touch-manipulation min-h-[44px] min-w-[44px] -m-2 p-2 justify-end"
+                className="-m-2 justify-end touch-manipulation"
                 aria-expanded={expanded}
                 aria-label={expanded ? "Recolher detalhes" : "Ver detalhes"}
               >
@@ -141,7 +148,7 @@ function VendaCard({
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -151,17 +158,17 @@ function VendaCard({
                 <span>Vendedor</span>
                 <span className="text-foreground">{venda.vendedor || "—"}</span>
                 <span>Qtd</span>
-                <span className="text-foreground tabular-nums">
+                <span className="text-foreground font-mono tabular-nums">
                   {venda.itens && venda.itens.length > 0
                     ? venda.itens.reduce((s, i) => s + i.quantidade, 0)
                     : venda.quantidade || 1}
                 </span>
                 <span>Custo</span>
-                <span className="text-foreground tabular-nums valor-sensivel">
+                <span className="text-foreground font-mono tabular-nums valor-sensivel">
                   {custoTotalVenda(venda) != null ? formatBRL(custoTotalVenda(venda)!) : "—"}
                 </span>
                 <span>Margem</span>
-                <span className={`text-foreground tabular-nums valor-sensivel ${(() => {
+                <span className={`text-foreground font-mono tabular-nums valor-sensivel ${(() => {
                   const m = margemVenda(venda);
                   if (m == null) return "opacity-50";
                   return m > 0 ? "text-success-text" : m === 0 ? "text-warning-text" : "text-destructive";
@@ -214,7 +221,7 @@ function VendaCard({
                               <input type="hidden" name="vendaId" value={venda.id} />
                               <button
                                 type="submit"
-                                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs touch-manipulation min-h-[36px]")}
+                                className={cn(buttonVariants({ variant: "outline", size: "sm" }), "text-xs touch-manipulation min-h-9")}
                               >
                                 Gerar boleto
                               </button>
@@ -225,15 +232,23 @@ function VendaCard({
                     );
                   })()}
                 </span>
-                <span>Assinado</span>
+                <span>Status</span>
                 <span className="text-foreground">
-                  {venda.assinatura?.assinaturaStatus === "assinado" ? (
-                    <a href={`/api/comprovante?vendaId=${venda.id}`} target="_blank" rel="noopener noreferrer">
-                      <CheckCircle2 className="h-4 w-4 text-success-text" />
-                    </a>
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-warning-text" />
-                  )}
+                  {(() => {
+                    const estado = estadoAssinatura({
+                      status: venda.status,
+                      assinaturaStatus: venda.assinatura?.assinaturaStatus,
+                      assinaturaToken: venda.assinaturaToken,
+                    });
+                    const status = <StatusAssinatura estado={estado} />;
+                    return estado === "assinada" ? (
+                      <a href={`/api/comprovante?vendaId=${venda.id}`} target="_blank" rel="noopener noreferrer">
+                        {status}
+                      </a>
+                    ) : (
+                      status
+                    );
+                  })()}
                 </span>
               </div>
             </div>
@@ -242,20 +257,22 @@ function VendaCard({
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
             <Link
               href={buildUrl({ edit: venda.id.toString() }) + "#editar-venda"}
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-[44px]")}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "touch-manipulation min-h-11")}
             >
               Editar
             </Link>
             <ReciboDownloadLink
               vendaId={venda.id}
               tipo={venda.descontoEmFolha ? "autorizacao" : "venda"}
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "touch-manipulation min-h-[44px]")}
+              variant="ghost"
+              size="sm"
+              className="min-h-11 touch-manipulation"
               label={venda.descontoEmFolha ? "Autorização" : "PDF"}
             />
             {venda.assinatura?.assinaturaStatus === "assinado" ? (
-              <VerTermoAssinadoLink vendaId={venda.id} className="touch-manipulation min-h-[44px]" />
+              <VerTermoAssinadoLink vendaId={venda.id} className="touch-manipulation min-h-11" />
             ) : venda.assinaturaToken ? (
-              <CopiarLinkAssinatura token={venda.assinaturaToken} className="min-h-[44px] touch-manipulation" />
+              <CopiarLinkAssinatura token={venda.assinaturaToken} className="min-h-11 touch-manipulation" />
             ) : null}
           </div>
         </div>

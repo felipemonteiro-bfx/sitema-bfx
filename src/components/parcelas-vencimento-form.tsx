@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "lucide-react";
+import { CalendarDays, Info } from "lucide-react";
 import { formatBRL } from "@/lib/utils";
 import { DateInput } from "@/components/ui/date-input";
 import { dataParaHidden, parseDataISO } from "@/lib/data-input";
@@ -81,10 +81,10 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
   if (numeroParcelas <= 1) return null;
 
   return (
-    <Card variant="elevated" className="border-info/20">
+    <Card variant="elevated">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Calendar className="h-4 w-4 text-info-text" />
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
           Datas de Vencimento das Parcelas
         </CardTitle>
       </CardHeader>
@@ -93,19 +93,19 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
           {parcelas.map((parcela, index) => (
             <div
               key={parcela.numeroParcela}
-              className="p-3 rounded-lg border border-border bg-muted/30 space-y-2 transition-all hover:border-info/40 hover:bg-muted/50"
+              className="p-4 rounded-interno bg-poco space-y-2"
             >
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <Label variant="forte">
                   {parcela.numeroParcela}ª Parcela
                 </Label>
-                <div className="text-sm font-bold text-foreground valor-sensivel">
+                <div className="text-sm font-semibold tabular-nums text-foreground valor-sensivel">
                   {formatBRL(parcela.valorParcela)}
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Vencimento</Label>
+                <Label size="sm">Vencimento</Label>
                 <DateInput
                   value={parcela.dataVencimento}
                   onChange={(v) => handleDataChange(index, v)}
@@ -114,13 +114,13 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Valor (ajustar se necessário)</Label>
+                <Label size="sm">Valor (ajustar se necessário)</Label>
                 <Input
                   type="number"
                   step="0.01"
                   value={parcela.valorParcela}
                   onChange={(e) => handleValorChange(index, Number(e.target.value))}
-                  className="h-8 text-sm"
+                  className="h-8"
                 />
               </div>
             </div>
@@ -135,11 +135,14 @@ export function ParcelasVencimentoForm({ numeroParcelas, valorTotal, parcelas, o
             </span>
           </div>
           {Math.abs(parcelas.reduce((sum, p) => sum + p.valorParcela, 0) - valorTotal) > 0.01 && (
-            <div className="mt-2 p-2 rounded-lg bg-warning-bg border border-warning/30 text-xs text-warning-text">
-              {/* Sem máscara: o aviso existe para o usuário acertar os valores que está
-                  digitando — escondido, ele não diz por quanto divergiu. */}
-              ⚠️ Atenção: A soma das parcelas ({formatBRL(parcelas.reduce((sum, p) => sum + p.valorParcela, 0))})
-              difere do valor total ({formatBRL(valorTotal)})
+            <div className="mt-2 flex items-start gap-2 rounded-interno bg-poco p-4 text-sm text-muted-foreground">
+              <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>
+                {/* Sem máscara: o aviso existe para o usuário acertar os valores que está
+                    digitando — escondido, ele não diz por quanto divergiu. */}
+                Atenção: a soma das parcelas ({formatBRL(parcelas.reduce((sum, p) => sum + p.valorParcela, 0))})
+                difere do valor total ({formatBRL(valorTotal)})
+              </span>
             </div>
           )}
         </div>

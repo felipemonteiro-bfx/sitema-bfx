@@ -43,7 +43,7 @@ interface Props {
 function IconeAnexo({ contentType }: { contentType: string }) {
   const Icone = contentType === "application/pdf" ? FileText : contentType.includes("spreadsheet") ? FileSpreadsheet : Paperclip;
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-bg text-success-text">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-controle bg-poco text-muted-foreground">
       <Icone className="h-5 w-5" aria-hidden="true" />
     </div>
   );
@@ -56,7 +56,7 @@ function Anexo({ envioId, anexo }: { envioId: number; anexo: AnexoDetalhe }) {
   const previaId = `previa-${anexo.id}`;
 
   return (
-    <li className="space-y-3 rounded-xl border bg-card p-3">
+    <li className="space-y-3 rounded-interno bg-card-elevated p-4">
       <div className="flex items-center gap-3">
         <IconeAnexo contentType={anexo.contentType} />
         <div className="min-w-0 flex-1">
@@ -85,13 +85,13 @@ function Anexo({ envioId, anexo }: { envioId: number; anexo: AnexoDetalhe }) {
             Aba {anexo.previa.aba} · {anexo.previa.totalLinhas} linhas
             {anexo.previa.totalLinhas > anexo.previa.linhas.length && ` · mostrando as ${anexo.previa.linhas.length} primeiras`}
           </div>
-          <div className="max-h-72 overflow-auto rounded-lg border">
-            <Table className="text-xs">
+          <div className="max-h-72 overflow-auto rounded-interno bg-poco">
+            <Table tamanho="xs">
               <TableBody>
                 {anexo.previa.linhas.map((linha, i) => (
                   <TableRow key={i}>
                     {linha.map((celula, j) => (
-                      <TableCell key={j} className="whitespace-nowrap px-2 py-1.5 tabular-nums">{celula}</TableCell>
+                      <TableCell mono key={j} className="whitespace-nowrap px-2 py-1.5">{celula}</TableCell>
                     ))}
                   </TableRow>
                 ))}
@@ -123,13 +123,13 @@ export function EmailEnvioDetalhe({ fecharHref, envio, anexos }: Props) {
             <Badge variant="outline">{envio.tipo}</Badge>
             {envio.status === "enviado" ? <Badge variant="success">Enviado</Badge> : <Badge variant="error">Falhou</Badge>}
           </div>
-          <SheetTitle className="text-lg leading-snug">{envio.assunto}</SheetTitle>
+          <SheetTitle>{envio.assunto}</SheetTitle>
           <SheetDescription>{envio.empresa ?? "Sem empresa"}</SheetDescription>
         </SheetHeader>
 
         <dl className="grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
           <dt className="text-muted-foreground">Enviado em</dt>
-          <dd className="tabular-nums">{envio.enviadoEm}</dd>
+          <dd className="font-mono">{envio.enviadoEm}</dd>
           <dt className="text-muted-foreground">De</dt>
           <dd className="break-words">{envio.remetente || "—"}</dd>
           <dt className="text-muted-foreground">Para</dt>
@@ -147,7 +147,7 @@ export function EmailEnvioDetalhe({ fecharHref, envio, anexos }: Props) {
         </dl>
 
         <section className="space-y-2">
-          <h3 className="text-sm font-semibold">Anexos ({anexos.length})</h3>
+          <h3 className="text-sm font-semibold text-foreground">Anexos ({anexos.length})</h3>
           {anexos.length === 0 ? (
             <p className="text-sm text-muted-foreground">Este e-mail não teve anexos.</p>
           ) : (
@@ -160,12 +160,12 @@ export function EmailEnvioDetalhe({ fecharHref, envio, anexos }: Props) {
         </section>
 
         <section className="space-y-2">
-          <h3 className="text-sm font-semibold">Corpo do e-mail</h3>
+          <h3 className="text-sm font-semibold text-foreground">Corpo do e-mail</h3>
           <iframe
             title={`Corpo do e-mail: ${envio.assunto}`}
             sandbox=""
             srcDoc={envio.corpoHtml}
-            className="h-[28rem] w-full rounded-xl border bg-background"
+            className="h-[28rem] w-full rounded-interno bg-background"
           />
           <p className="text-xs text-muted-foreground">Como o RH recebeu.</p>
         </section>

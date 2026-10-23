@@ -114,8 +114,8 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
       </div>
 
       {ordenadas.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border">
-          <Table className="tabular-nums">
+        <div className="overflow-x-auto rounded-interno bg-poco p-2">
+          <Table mono>
             <TableHeader>
               <TableRow>
                 <TableHead>Vigência</TableHead>
@@ -131,8 +131,8 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
             </TableHeader>
             <TableBody>
               {ordenadas.map((r) => (
-                <TableRow key={r.id} aria-current={editando?.id === r.id ? "true" : undefined} className={editando?.id === r.id ? "bg-muted/50" : undefined}>
-                  <TableCell className="whitespace-nowrap font-semibold">
+                <TableRow key={r.id} aria-current={editando?.id === r.id ? "true" : undefined} isSelected={editando?.id === r.id}>
+                  <TableCell peso="forte" className="whitespace-nowrap">
                     {brDe(r.vigenteDe)} → {r.vigenteAte ? brDe(r.vigenteAte) : "em aberto"}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">dia {r.diaCorte}</TableCell>
@@ -164,10 +164,11 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
         </div>
       )}
 
-      <form key={versaoForm} action={handleSalvar} aria-labelledby={campo("form-titulo")} className="grid gap-4 rounded-xl border p-4">
+      <form key={versaoForm} action={handleSalvar} aria-labelledby={campo("form-titulo")} className="grid gap-4 rounded-interno bg-card-elevated p-4">
         <h4 id={campo("form-titulo")} className="text-sm font-semibold text-foreground">
           {inicial ? `Editar regra de ${brDe(inicial.vigenteDe)}` : "Nova regra"}
         </h4>
+        {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
         <input type="hidden" name="empresaParceiraId" value={empresaParceiraId} />
         {inicial && <input type="hidden" name="id" value={inicial.id} />}
 
@@ -212,7 +213,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
         <div className="flex items-start gap-3 border-t pt-4">
           <Checkbox id={campo("bfx")} name="cobrancaViaBfx" defaultChecked={inicial?.cobrancaViaBfx ?? false} aria-describedby={campo("bfx-ajuda")} className="mt-0.5" />
           <div className="grid gap-1 text-sm">
-            <Label htmlFor={campo("bfx")} className="font-semibold">Cobrança via BFX</Label>
+            <Label htmlFor={campo("bfx")} variant="forte">Cobrança via BFX</Label>
             <p id={campo("bfx-ajuda")} className="text-muted-foreground">
               A empresa paga um Pix por mês e a BFX quita os boletos da Prudent. Só ligue depois da confirmação formal da Prudent.
             </p>
@@ -230,7 +231,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
             <>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button type="button" variant="ghost" className="mr-auto text-destructive hover:text-destructive" disabled={excluindo}>
+                  <Button type="button" variant="sutilErro" className="mr-auto" disabled={excluindo}>
                     Excluir regra
                   </Button>
                 </AlertDialogTrigger>
@@ -244,7 +245,7 @@ export function RegrasEmpresaSection({ empresaParceiraId, regras }: { empresaPar
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={excluindo} onClick={handleExcluir}>
+                    <AlertDialogAction variant="destructive" disabled={excluindo} onClick={handleExcluir}>
                       {excluindo ? "Excluindo..." : "Excluir"}
                     </AlertDialogAction>
                   </AlertDialogFooter>

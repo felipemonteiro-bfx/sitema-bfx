@@ -83,12 +83,12 @@ export function LitellmModelSelect({
   }, [fetchModels, urlInputId, keyInputId]);
 
   const reloadButton = (
-    <Button
+    <Button size="inlineXs"
       type="button"
-      variant="link"
+      variant="discretoPlano"
       onClick={fetchModels}
       disabled={loading}
-      className="h-auto gap-1.5 p-0 text-xs text-muted-foreground no-underline hover:text-foreground hover:underline"
+      className="gap-1.5"
     >
       <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
       Recarregar lista

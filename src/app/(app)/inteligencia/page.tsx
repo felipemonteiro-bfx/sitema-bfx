@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { prisma } from "@/lib/db";
+import { perguntaInicial } from "@/lib/pergunta-inicial";
 
 async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
   try {
@@ -22,7 +23,7 @@ async function getAiProvider(): Promise<"gemini" | "openai" | "litellm"> {
 
 /**
  * So deixa passar provedor conhecido. A coluna e um TEXT livre e o rotulo vai
- * para a tela em `uppercase`: valor inesperado vira desconhecido (pilula some),
+ * para a tela como etiqueta: valor inesperado vira desconhecido (pilula some),
  * que e o mesmo tratamento das linhas anteriores a coluna.
  */
 function normalizarProvider(valor: string | null | undefined): string | null {
@@ -166,7 +167,13 @@ async function getContextHistory(sessaoId: string) {
   return history;
 }
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ pergunta?: string | string[] }>;
+}) {
+  // `?pergunta=` só pré-preenche o campo (limitado a 500 chars); não envia.
+  const { pergunta } = await searchParams;
   const formId = "intelligence-chat-form";
   const session = await getSession();
   const dbRows = session ? await getDisplayHistory(session.username) : [];
@@ -203,7 +210,7 @@ export default async function Page() {
           <form action={clearAi}>
             <button
               type="submit"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full text-xs cursor-pointer")}
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer")}
             >
               Limpar conversa
             </button>
@@ -211,13 +218,14 @@ export default async function Page() {
         }
       />
 
-      <Card className="h-full">
-        <CardContent className="flex h-[60vh] min-h-[420px] flex-col gap-4 p-4 sm:p-6 sm:h-[68vh] lg:h-[72vh]">
+      <Card className="anim-entrada h-full">
+        <CardContent className="flex h-[60vh] min-h-105 flex-col gap-4 p-4 sm:p-6 sm:h-[68vh] lg:h-[72vh]">
           <IntelligenceChatClient
             history={history}
             action={askAi}
             formId={formId}
             currentProvider={providerAtual}
+            initialPrompt={perguntaInicial(pergunta)}
           />
         </CardContent>
       </Card>

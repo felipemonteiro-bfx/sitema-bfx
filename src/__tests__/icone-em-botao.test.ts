@@ -33,7 +33,7 @@ describe("D1 — badge do sino nao vaza do botao", () => {
   });
 
   it("separa o badge do glifo do sino com anel na cor da superficie", () => {
-    expect(fonte.includes("ring-2 ring-sidebar")).toBe(true);
+    expect(fonte.includes("ring-2 ring-controle")).toBe(true);
   });
 
   it("nao intercepta clique do gatilho do popover", () => {
@@ -47,7 +47,7 @@ describe("D2 — classe de tamanho no proprio <svg> vence o padrao da base", () 
   it("o padrao size-4 da base passa a ser condicional", () => {
     expect(variants.includes("[&_svg]:size-4")).toBe(false);
     expect(
-      variants.includes("[&_svg:not([class*='size-']):not([class*=' h-']):not([class^='h-'])]:size-4")
+      variants.includes("[&_svg:not([class*='size-']):not([class*='_h-']):not([class^='h-'])]:size-4")
     ).toBe(true);
   });
 
@@ -72,7 +72,10 @@ describe("D2 — classe de tamanho no proprio <svg> vence o padrao da base", () 
   });
 
   it("expoe uma size real de 32px para acao em tabela, em vez de remendo por call site", () => {
-    expect(variants.includes('iconSm: "h-8 w-8"')).toBe(true);
+    // E1 (redesign): o iconSm continua 32x32 visuais, mas ganhou `relative` e o
+    // `after:` de 44px de area de toque — por isso o literal ja nao e so "h-8 w-8".
+    expect(variants.includes('iconSm: "relative h-8 w-8')).toBe(true);
+    expect(variants.includes("after:min-w-11")).toBe(true);
   });
 
   it("os botoes de acao de /cadastros usam a size nova, sem o py-2 herdado da default", () => {
@@ -169,7 +172,8 @@ describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", ()
   for (const [arquivo, descricao] of casos) {
     it(`${descricao} nao deixa o texto quebrar ao lado do icone`, () => {
       const fonte = ler(arquivo);
-      expect(fonte.includes("whitespace-nowrap")).toBe(true);
+      // J3: o 404 passou a usar `buttonVariants`, que já traz `whitespace-nowrap` na base.
+      expect(fonte.includes("whitespace-nowrap") || fonte.includes("buttonVariants")).toBe(true);
     });
   }
 
@@ -196,27 +200,33 @@ describe("D6 — icone e texto no mesmo controle nao quebram em duas linhas", ()
     expect(ler("src/components/ui/button.tsx").includes('<span className="inline-flex shrink-0 items-center justify-center">{leftIcon}</span>')).toBe(true);
   });
 
-  it("a pilula do ponto de equilibrio nao quebra e o ponto nao some", () => {
+  it("a pilula do ponto de equilibrio nao quebra", () => {
     // Aqui o "icone" e um <span> redondo de 6px, nao um <svg> — e o unico dos
     // casos que a regra (e) do gate NAO ve (ela exige um <svg>). Corrigido no
     // fonte e travado aqui.
     const fonte = ler("src/app/(app)/financeiro/page.tsx");
-    expect(fonte.includes("inline-flex items-center gap-1 whitespace-nowrap rounded-full")).toBe(true);
-    expect(fonte.includes('"h-1.5 w-1.5 shrink-0 rounded-full"')).toBe(true);
+    // H3 (Vantage): a pilula virou <Badge> (inline-flex, rounded-full) e o ponto de cor
+    // saiu — o estado vai so no tint do Badge. Resta travar que o texto nao quebra.
+    expect(fonte.includes('<Badge')).toBe(true);
+    expect(fonte.includes('className="whitespace-nowrap"')).toBe(true);
   });
 
-  it("o unico whitespace-normal do projeto continua sendo o item do sino, que e flex-col de proposito", () => {
+  it("whitespace-normal so existe nas variantes de bloco/linha do Button, que quebram linha de proposito", () => {
+    // O lint barra tipografia/whitespace no className das telas: o item do sino (flex-col)
+    // usa `variant="bloco"` e a regra mora em button-variants.ts.
     const comWhitespaceNormal = [
       "src/components/notification-bell.tsx",
       "src/components/ui/button.tsx",
       "src/components/ui/tabs.tsx",
       "src/components/sortable-header.tsx",
     ].filter((f) => ler(f).includes("whitespace-normal"));
-    expect(comWhitespaceNormal).toEqual(["src/components/notification-bell.tsx"]);
+    expect(comWhitespaceNormal).toEqual([]);
 
     const sino = ler("src/components/notification-bell.tsx");
-    const linha = sino.split("\n").find((l) => l.includes("whitespace-normal")) || "";
-    expect(linha.includes("flex-col")).toBe(true);
+    expect(sino.includes('variant="bloco"')).toBe(true);
+    const variants = ler("src/components/ui/button-variants.ts");
+    const bloco = variants.split("\n").find((l) => l.includes("h-auto w-full flex-col") && l.includes("whitespace-normal")) || "";
+    expect(bloco.includes("flex-col")).toBe(true);
   });
 });
 

@@ -19,9 +19,9 @@ export function ThemeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant="controle"
           size="icon"
-          className="relative h-9 w-9 min-h-[44px] min-w-[44px] rounded-full touch-manipulation lg:h-9 lg:w-9 lg:min-h-0 lg:min-w-0"
+          className="relative size-11 min-h-11 min-w-11 shrink-0 touch-manipulation"
         >
           <span className="relative inline-flex h-5 w-5 items-center justify-center">
             <Sun className="absolute h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

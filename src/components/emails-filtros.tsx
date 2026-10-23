@@ -30,8 +30,8 @@ export function EmailsFiltros({ empresas, empresa, tipo, mes, total }: Props) {
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1">
-        <Label htmlFor="filtro-empresa" className="text-xs text-muted-foreground">Empresa</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="filtro-empresa">Empresa</Label>
         <Select value={empresa || TODAS} onValueChange={(v) => aplicar("empresa", v)}>
           <SelectTrigger id="filtro-empresa" className="w-56">
             <SelectValue />
@@ -44,8 +44,8 @@ export function EmailsFiltros({ empresas, empresa, tipo, mes, total }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="filtro-tipo" className="text-xs text-muted-foreground">Tipo</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="filtro-tipo">Tipo</Label>
         <Select value={tipo || TODAS} onValueChange={(v) => aplicar("tipo", v)}>
           <SelectTrigger id="filtro-tipo" className="w-52">
             <SelectValue />
@@ -58,11 +58,11 @@ export function EmailsFiltros({ empresas, empresa, tipo, mes, total }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1">
-        <Label htmlFor="filtro-mes" className="text-xs text-muted-foreground">Mês</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="filtro-mes">Mês</Label>
         <Input id="filtro-mes" type="month" value={mes} onChange={(e) => aplicar("mes", e.target.value)} className="w-44" />
       </div>
-      <span className="ml-auto text-sm tabular-nums text-muted-foreground" aria-live="polite">
+      <span className="ml-auto text-sm font-mono text-muted-foreground" aria-live="polite">
         {total === 1 ? "1 e-mail" : `${total} e-mails`}
       </span>
     </div>

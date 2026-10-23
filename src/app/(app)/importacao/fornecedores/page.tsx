@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import ImportacaoFornecedoresClient from "@/components/importacao-fornecedores-client";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
+import { NavImportacao } from "../nav-importacao";
 import { analisarImportacaoFornecedores, confirmarImportacaoFornecedores } from "./actions";
 
 export default async function Page() {
@@ -19,16 +20,16 @@ export default async function Page() {
         description="Suba um CSV com nome (obrigatório) e telefone (opcional). A análise mostra o que vai acontecer antes de qualquer gravação. Rodar o mesmo arquivo duas vezes não duplica nenhum fornecedor."
         breadcrumbs={[{ label: "Importação", href: "/importacao" }, { label: "Fornecedores" }]}
         actions={
-          <a
-            href={csvHref}
-            download="modelo-fornecedores.csv"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "border-primary text-primary hover:bg-primary/5 cursor-pointer"
-            )}
-          >
-            Baixar Modelo
-          </a>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <NavImportacao atual="/importacao/fornecedores" />
+            <a
+              href={csvHref}
+              download="modelo-fornecedores.csv"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "cursor-pointer")}
+            >
+              Baixar modelo
+            </a>
+          </div>
         }
       />
       <ImportacaoFornecedoresClient

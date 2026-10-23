@@ -1,5 +1,6 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Download, Loader2, UserSearch } from "lucide-react";
@@ -100,13 +101,13 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
   };
 
   const opcoesEmpresa = empresasUnicas.map((e) => ({ value: e, label: e }));
-  const rotulo = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+  const rotulo = "text-sm font-medium text-muted-foreground";
   const semDesconto = resumo !== null && resumo.compradores === 0;
 
   return (
     <Popover open={aberto} onOpenChange={setAberto}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="h-11 gap-2 font-semibold sm:h-10">
+        <Button type="button" variant="outline" className="h-11 gap-2 sm:h-10">
           <Download className="h-4 w-4 text-primary" />
           Baixar planilha da folha
         </Button>
@@ -119,9 +120,9 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         </p>
 
         <div className="mt-3.5 flex flex-col gap-1">
-          <label htmlFor="planilha-folha-competencia" className={rotulo}>
+          <Label htmlFor="planilha-folha-competencia">
             Competência
-          </label>
+          </Label>
           <IntervaloMesesPicker
             id="planilha-folha-competencia"
             inicio={competencia}
@@ -135,9 +136,9 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         </div>
 
         <div className="mt-2.5 flex flex-col gap-1">
-          <label htmlFor="planilha-folha-empresa" className={rotulo}>
+          <Label htmlFor="planilha-folha-empresa">
             Empresa
-          </label>
+          </Label>
           <FormSelect
             id="planilha-folha-empresa"
             name="_planilhaFolhaEmpresa"
@@ -151,7 +152,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         </div>
 
         <div
-          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-lg bg-info-bg px-3 py-2 text-sm font-semibold tabular-nums text-info-text"
+          className="mt-3.5 flex min-h-10 items-center gap-2 rounded-interno bg-poco px-3 py-2 text-sm font-medium tabular-nums text-foreground"
           aria-live="polite"
         >
           {contando ? (
@@ -177,7 +178,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         </div>
 
         {!contando && !erro && resumo && resumo.matriculasRepetidas.length > 0 && (
-          <div role="status" className="mt-2 flex items-start gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          <div role="status" className="mt-2 flex items-start gap-2 rounded-interno bg-warning-bg px-3 py-2 text-sm text-warning-text">
             <UserSearch className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <div>
               <p>
@@ -201,7 +202,7 @@ export function PlanilhaFolhaPopover({ empresas, hoje }: { empresas: string[]; h
         )}
 
         {!contando && !erro && resumo && resumo.semMatricula > 0 && (
-          <div role="status" className="mt-2 flex items-start gap-2 rounded-lg bg-warning-bg px-3 py-2 text-sm text-warning-text">
+          <div role="status" className="mt-2 flex items-start gap-2 rounded-interno bg-warning-bg px-3 py-2 text-sm text-warning-text">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <p>
               <span className="font-bold">{resumo.semMatricula.toLocaleString("pt-BR")} sem matrícula.</span> Saem no

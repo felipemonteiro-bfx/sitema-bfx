@@ -129,7 +129,7 @@ export function CadastrarClienteRapidoDialog({
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Nome */}
           <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Label>
               Nome do cliente *
             </Label>
             <Input
@@ -143,9 +143,9 @@ export function CadastrarClienteRapidoDialog({
 
           {/* Aviso de nome parecido (D-05) — informativo, nunca bloqueia o cadastro */}
           {similares.length > 0 && (
-            <div className="rounded-lg border border-warning/40 bg-warning/10 p-2">
-              <div className="flex items-center gap-2 text-xs font-medium text-warning-text">
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+            <div className="rounded-interno bg-poco p-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning-text" aria-hidden="true" />
                 Ja existe cliente com nome parecido — confira antes de cadastrar
               </div>
               <ul className="mt-1 list-disc space-y-0.5 pl-6 text-xs text-muted-foreground">
@@ -159,7 +159,7 @@ export function CadastrarClienteRapidoDialog({
           {/* Telefone + CPF */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <Label>
                 Telefone
               </Label>
               <Input
@@ -169,8 +169,8 @@ export function CadastrarClienteRapidoDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                CPF <span className="normal-case font-normal">(so p/ boleto)</span>
+              <Label>
+                CPF <span className="font-normal">(so p/ boleto)</span>
               </Label>
               <Input
                 value={cpf}
@@ -182,7 +182,7 @@ export function CadastrarClienteRapidoDialog({
 
           {/* Empresa parceira */}
           <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Label>
               Empresa parceira
             </Label>
             <FormSelect

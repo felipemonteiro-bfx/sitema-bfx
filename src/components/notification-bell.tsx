@@ -5,7 +5,6 @@ import { Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 type Notificacao = {
   id: number;
@@ -97,12 +96,12 @@ export function NotificationBell() {
       <PopoverTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="controle"
           size="icon"
-          className="relative h-9 w-9 rounded-xl border border-sidebar-border bg-sidebar text-[var(--sidebar-muted)] shadow-none hover:bg-sidebar-accent hover:text-[var(--sidebar-accent-foreground)] hover:shadow-none"
+          className="relative size-11 min-h-11 min-w-11 touch-manipulation"
           aria-label={`Notificações${unreadCount > 0 ? ` (${unreadCount} não lidas)` : ''}`}
         >
-          <Bell className="h-4 w-4" />
+          <Bell className="h-4.5 w-4.5" aria-hidden="true" />
           {/* Ancorado DENTRO da caixa do botao. Com o deslocamento negativo que
               havia aqui, o badge de 16x16 saia 3px para cima e 3px para a
               direita de um botao de 36x36 — medido `clientWidth` 34 contra
@@ -117,7 +116,7 @@ export function NotificationBell() {
               a fonte (`h-4 min-w-4` + `text-xs`), senao o numero nao caberia.
               Mesmo par usado no contador da navegacao lateral. */}
           {unreadCount > 0 && (
-            <span className="pointer-events-none absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 text-xs font-bold leading-none text-error-foreground ring-2 ring-sidebar">
+            <span className="pointer-events-none absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-xs font-bold leading-none text-primary-foreground ring-2 ring-controle">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -127,11 +126,11 @@ export function NotificationBell() {
         <div className="flex items-center justify-between border-b px-4 py-3">
           <span className="text-sm font-semibold text-foreground">Notificações</span>
           {unreadCount > 0 && (
-            <Button
+            <Button size="inlineXs"
               type="button"
-              variant="ghost"
+              variant="discretoPlano"
               onClick={markAllRead}
-              className="h-auto shrink-0 p-0 text-xs font-normal text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none"
+              className="shrink-0"
             >
               Marcar todas como lidas
             </Button>
@@ -159,12 +158,9 @@ export function NotificationBell() {
                 ) : (
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="bloco"
                     onClick={() => markOneRead(n.id)}
-                    className={cn(
-                      "h-auto w-full flex-col items-start justify-start gap-0 whitespace-normal rounded-none p-0 text-left font-normal shadow-none",
-                      "hover:bg-transparent hover:shadow-none active:scale-100"
-                    )}
+                    className="items-start"
                   >
                     <p className="text-sm text-foreground">{n.mensagem}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">

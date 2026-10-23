@@ -10,7 +10,7 @@ const inputVariants = cva(
   // Sem sombra (D-03): campo tem border-2 propria e vive dentro de um card ou
   // formulario, no mesmo plano do conteudo — nao e um plano acima, entao a
   // sombra e decorativa.
-  "flex h-10 w-full rounded-lg border-2 bg-background px-3 py-2 text-sm text-foreground transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:text-foreground dark:border-input",
+  "flex h-11 w-full rounded-controle border bg-controle px-3 py-2 text-sm text-foreground transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       state: {
@@ -18,16 +18,33 @@ const inputVariants = cva(
         error: "border-error/60 bg-error/5 hover:border-error focus-visible:outline-none focus-visible:border-error focus-visible:ring-2 focus-visible:ring-error/20",
         success: "border-success/60 bg-success/5 hover:border-success focus-visible:outline-none focus-visible:border-success focus-visible:ring-2 focus-visible:ring-success/20",
         warning: "border-warning/60 bg-warning/5 hover:border-warning focus-visible:outline-none focus-visible:border-warning focus-visible:ring-2 focus-visible:ring-warning/20",
+        // `leitura`: valor exibido para copiar (URL de webhook, token): fundo muted, nao editavel.
+        leitura: "border-input bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+        // `nu`: campo de busca embutido em outro controle (lista de combobox): sem moldura,
+        // a moldura e do contêiner.
+        nu: "h-auto border-0 bg-transparent p-0 text-sm shadow-none outline-none focus-visible:border-0 focus-visible:ring-0 focus-visible:ring-offset-0 hover:border-0",
+      },
+      // Dado digitado que o sistema grava em caixa-alta (cadastros): o campo ja mostra como fica.
+      caixaAlta: {
+        true: "uppercase",
+        false: "",
+      },
+      // Codigo, token, chave: fonte mono.
+      mono: {
+        true: "font-mono",
+        false: "",
       },
       inputSize: {
         sm: "h-8 px-2 text-xs",
-        default: "h-10 px-3 text-sm",
+        default: "h-11 px-3 text-sm",
         lg: "h-12 px-4 text-base",
       },
     },
     defaultVariants: {
       state: "default",
       inputSize: "default",
+      caixaAlta: false,
+      mono: false,
     },
   }
 )
@@ -48,6 +65,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     type, 
     state,
     inputSize,
+    caixaAlta,
+    mono,
     leftIcon,
     rightIcon,
     showStateIcon = false,
@@ -84,7 +103,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             value={value}
             className={cn(
-              inputVariants({ state, inputSize }),
+              inputVariants({ state, inputSize, caixaAlta, mono }),
               leftIcon && "pl-10",
               (rightIcon || StateIcon || showClearButton) && "pr-10",
               className
@@ -120,7 +139,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         value={value}
-        className={cn(inputVariants({ state, inputSize }), className)}
+        className={cn(inputVariants({ state, inputSize, caixaAlta, mono }), className)}
         ref={ref}
         {...props}
       />

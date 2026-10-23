@@ -1,31 +1,32 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Skeleton,
+  SkeletonBotao,
+  SkeletonCabecalho,
+  SkeletonPainel,
+  SkeletonRegiao,
+  SkeletonVazio,
+} from "@/components/ui/skeleton";
 
+// Relatórios mensais: "Gerar / enviar agora" (mês + botão + nota) e o histórico de envios.
 export default function Loading() {
   return (
-    <div className="space-y-6">
-      <div>
-        <Skeleton className="h-7 w-64" />
-        <Skeleton className="mt-2 h-4 w-80" />
-      </div>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-10 w-64" />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-32" />
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+    <SkeletonRegiao>
+      <SkeletonCabecalho tituloLargura="w-96" tituloLinhas={2} />
+      <SkeletonPainel plano tituloLargura="w-48" className="min-h-[337px] lg:min-h-[221px]">
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <div className="flex h-5 items-center">
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Skeleton className="h-11 w-44 rounded-controle" />
+              <SkeletonBotao className="w-36" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-full max-w-3xl" />
+        </div>
+      </SkeletonPainel>
+      <SkeletonVazio />
+    </SkeletonRegiao>
   );
 }

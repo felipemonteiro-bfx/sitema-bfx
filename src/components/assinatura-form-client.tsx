@@ -116,7 +116,7 @@ export function AssinaturaFormClient({ token, clienteNome }: Props) {
         <p className="mb-2 text-sm font-medium text-foreground">Visualize o documento</p>
         <iframe
           src={`/api/assinatura/${token}/recibo`}
-          className="h-[400px] w-full rounded-lg border border-border bg-white"
+          className="h-100 w-full rounded-lg border border-border bg-white"
           title="Recibo e Autorização"
         />
       </div>
@@ -130,8 +130,7 @@ export function AssinaturaFormClient({ token, clienteNome }: Props) {
             ref={canvasRef}
             width={450}
             height={120}
-            className="w-full max-w-[450px] cursor-crosshair touch-none rounded border border-border bg-white"
-            style={{ maxHeight: 120 }}
+            className="w-full max-w-112.5 max-h-30 cursor-crosshair touch-none rounded border border-border bg-white"
             onMouseDown={startDrawing}
             onMouseMove={draw}
             onMouseUp={stopDrawing}

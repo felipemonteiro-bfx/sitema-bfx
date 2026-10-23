@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { Button, type ButtonProps } from "@/components/ui/button";
 
 type ReciboDownloadLinkProps = {
   vendaId: number;
   tipo?: "venda" | "autorizacao";
+  /** Aparência do botão. Padrão: texto discreto (link). Telas de ação usam `outline`/`ghost` + `sm`. */
+  variant?: ButtonProps["variant"];
+  size?: ButtonProps["size"];
+  /** Só layout (margem, largura, altura mínima). */
   className?: string;
   children?: React.ReactNode;
   /** Label do botão (default: "PDF" ou "Recibo" conforme tipo) */
@@ -19,6 +23,8 @@ type ReciboDownloadLinkProps = {
 export function ReciboDownloadLink({
   vendaId,
   tipo = "venda",
+  variant = "discretoPlano",
+  size = "inlineXs",
   className,
   children,
   label = tipo === "autorizacao" ? "Autorização" : "PDF",
@@ -73,15 +79,17 @@ export function ReciboDownloadLink({
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant={variant}
+        size={size}
         onClick={handleClick}
         disabled={loading}
-        className={cn(className)}
+        className={className}
         title={`Baixar recibo em PDF${tipo === "autorizacao" ? " (Autorização)" : ""}`}
       >
         {loading ? "Baixando..." : children ?? label}
-      </button>
+      </Button>
       {error && (
         <span className="text-xs text-destructive" role="alert">
           {error}

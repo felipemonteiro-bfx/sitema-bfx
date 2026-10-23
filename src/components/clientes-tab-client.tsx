@@ -4,7 +4,6 @@ import { useState, startTransition, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button-variants";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -210,7 +209,7 @@ export default function ClientesTabClient({
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-primary">Novo Cliente</CardTitle>
+          <CardTitle>Novo Cliente</CardTitle>
         </CardHeader>
         <CardContent>
           {errorMsg && !sp.editCliente && (
@@ -284,6 +283,7 @@ export default function ClientesTabClient({
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-1">
                 <Label htmlFor="add-empresa">Empresa/Vinculo</Label>
+                {/* Exceção legítima: <input hidden> leva o valor do estado ao FormData; não tem pegada visual. */}
                 <input type="hidden" name="empresaParceiraId" value={selectedEmpresaId} />
                 <input type="hidden" name="empresa" value={empresasParceiras.find(e => String(e.id) === selectedEmpresaId)?.nome ?? ""} />
                 <FormSelect
@@ -309,7 +309,7 @@ export default function ClientesTabClient({
 
       <Card className="mt-4">
         <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-primary">Clientes</CardTitle>
+          <CardTitle>Clientes</CardTitle>
           <div className="flex w-full flex-wrap items-center gap-2 sm:justify-end">
           <div className="w-full sm:w-44">
             <Label htmlFor="filtro-faixa-consignado" className="sr-only">
@@ -366,7 +366,7 @@ export default function ClientesTabClient({
               className={cn("pl-9 h-9", table.search && "pr-8")}
             />
             {table.search && (
-              <Button type="button" variant="ghost" size="icon" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 h-5 w-5 -translate-y-1/2 rounded-sm text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground hover:shadow-none">
+              <Button type="button" variant="discretoPlano" size="iconMini" onClick={() => table.setSearch("")} aria-label="Limpar busca" className="absolute right-2 top-1/2 -translate-y-1/2">
                 <Trash2 className="h-3 w-3" />
               </Button>
             )}
@@ -375,7 +375,7 @@ export default function ClientesTabClient({
         </CardHeader>
         <CardContent>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 mb-2">
+            <div className="flex items-center gap-3 rounded-interno bg-poco px-4 py-2 mb-2">
               <span className="text-sm font-medium">
                 {selectedIds.size} selecionado(s)
                 {selecionadosForaDaPagina > 0 && (
@@ -405,8 +405,8 @@ export default function ClientesTabClient({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    <AlertDialogAction variant="destructive"
+
                       disabled={bulkDeleting}
                       onClick={handleBulkDelete}
                     >
@@ -420,7 +420,7 @@ export default function ClientesTabClient({
               </Button>
             </div>
           )}
-          <div className="overflow-x-auto -mx-6 px-6">
+          <div className="overflow-x-auto rounded-interno bg-poco p-2">
           <Table>
             <TableHeader>
               <TableRow>
@@ -436,7 +436,7 @@ export default function ClientesTabClient({
                 <SortableHeader label="Telefone" field="telefone" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} />
                 <SortableHeader label="Renda" field="renda" currentField={table.sortField as string} currentDir={table.sortDir} onSort={(f) => table.toggleSort(f as keyof ClienteListItem)} className="text-right" />
                 <TableHead>Consignado</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
+                <TableHead className="w-20"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -456,10 +456,10 @@ export default function ClientesTabClient({
                         onCheckedChange={(checked) => handleSelectOne(c.id, checked)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{c.nome}</TableCell>
+                    <TableCell peso="medio">{c.nome}</TableCell>
                     <TableCell className="valor-sensivel">{c.cpf || c.cnpj}</TableCell>
                     <TableCell className="valor-sensivel">{c.telefone}</TableCell>
-                    <TableCell className="text-right tabular-nums valor-sensivel valor-sensivel-fim">{formatBRL(c.renda || 0)}</TableCell>
+                    <TableCell numeric className="valor-sensivel valor-sensivel-fim">{formatBRL(c.renda || 0)}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="tabular-nums text-sm valor-sensivel">
@@ -477,15 +477,17 @@ export default function ClientesTabClient({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <button
+                      <Button
                         type="button"
+                        variant="discreto"
+                        size="iconSm"
                         onClick={() => openEditSheet(c)}
-                        className={cn(buttonVariants({ variant: "ghost", size: "iconSm" }), "text-muted-foreground hover:text-foreground")}
+
                         title="Editar"
                         aria-label={`Editar ${c.nome}`}
                       >
                         <Pencil className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

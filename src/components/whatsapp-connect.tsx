@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Loader2, RefreshCw, LogOut, Wifi, WifiOff } from 'lucide-react';
 
@@ -110,12 +111,21 @@ export function WhatsAppConnect() {
     ] as const;
     return (
       <div className="space-y-4">
-        <p className="text-sm font-semibold">Meta Cloud API — conexão ainda não comprovada</p>
-        <ul className="space-y-2 text-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold text-foreground">Meta Cloud API</p>
+          <Badge variant="outline">Conexão ainda não comprovada</Badge>
+        </div>
+        <ul className="space-y-2 rounded-interno bg-poco p-4 text-sm">
           {checks.map(([label, configured]) => (
-            <li key={label}><strong>{label}:</strong> {configured ? 'Configurado' : 'Pendente'}</li>
+            <li key={label} className="flex flex-wrap items-center justify-between gap-2">
+              <strong className="font-medium">{label}:</strong>
+              <Badge variant={configured ? 'success' : 'warning'}>{configured ? 'Configurado' : 'Pendente'}</Badge>
+            </li>
           ))}
-          <li><strong>Envios automáticos:</strong> {status.meta?.sendingEnabled ? 'Habilitados na configuração' : 'Desligados'}</li>
+          <li className="flex flex-wrap items-center justify-between gap-2">
+            <strong className="font-medium">Envios automáticos:</strong>
+            <Badge variant={status.meta?.sendingEnabled ? 'success' : 'outline'}>{status.meta?.sendingEnabled ? 'Habilitados na configuração' : 'Desligados'}</Badge>
+          </li>
         </ul>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Estes indicadores conferem apenas a configuração salva. A liberação do número, a assinatura do webhook e a entrega de mensagens precisam ser confirmadas na Meta. Esta conexão não utiliza o QR Code da Evolution.
@@ -134,21 +144,15 @@ export function WhatsAppConnect() {
       <div className="flex items-center gap-2">
         {status.state === 'open' ? (
           <>
-            <span className="flex h-2.5 w-2.5 rounded-full bg-success" />
-            <span className="text-sm font-medium text-success-text">Conectado</span>
-            <CheckCircle2 className="h-4 w-4 text-success-text" />
+            <Badge variant="success"><CheckCircle2 className="h-3.5 w-3.5" />Conectado</Badge>
           </>
         ) : status.state === 'connecting' ? (
           <>
-            <span className="flex h-2.5 w-2.5 rounded-full bg-warning animate-pulse" />
-            <span className="text-sm font-medium text-warning-text">Aguardando QR Code</span>
-            <Wifi className="h-4 w-4 text-warning-text" />
+            <Badge variant="warning"><Wifi className="h-3.5 w-3.5" />Aguardando QR Code</Badge>
           </>
         ) : (
           <>
-            <span className="flex h-2.5 w-2.5 rounded-full bg-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Desconectado</span>
-            <WifiOff className="h-4 w-4 text-muted-foreground" />
+            <Badge variant="outline"><WifiOff className="h-3.5 w-3.5" />Desconectado</Badge>
           </>
         )}
       </div>
@@ -159,7 +163,7 @@ export function WhatsAppConnect() {
           <p className="text-sm text-muted-foreground">
             Abra o WhatsApp no celular → Dispositivos conectados → Conectar dispositivo → escaneie o QR abaixo:
           </p>
-          <div className="inline-block rounded-lg border border-border p-3 bg-white">
+          <div className="inline-block rounded-interno p-3 bg-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={status.qrcode}
@@ -204,11 +208,11 @@ export function WhatsAppConnect() {
         {status.state === 'open' && (
           <Button
             type="button"
-            variant="outline"
+            variant="outlineErro"
             size="sm"
             onClick={handleLogout}
             disabled={actionLoading}
-            className="gap-2 text-destructive hover:text-destructive/80"
+            className="gap-2"
           >
             {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
             Desconectar

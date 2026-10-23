@@ -1,23 +1,31 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  SkeletonAbas,
+  SkeletonBotao,
+  SkeletonCabecalho,
+  SkeletonCampos,
+  SkeletonPainel,
+  SkeletonRegiao,
+  SkeletonVazio,
+} from "@/components/ui/skeleton";
 
+// CRM > Campanhas: áreas do CRM, "Nova campanha" (nome, 5 filtros, template, agendamento) e a lista.
 export default function Loading() {
   return (
-    <div className="space-y-6">
-      <div>
-        <Skeleton className="h-7 w-56" />
-        <Skeleton className="mt-2 h-4 w-96" />
+    <SkeletonRegiao>
+      <SkeletonCabecalho tituloLargura="w-72" />
+      <div className="-mt-2">
+        <SkeletonAbas itens={5} compacto />
       </div>
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-5 w-40" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    </div>
+      <SkeletonPainel plano tituloLargura="w-40" className="min-h-[930px] lg:min-h-[502px]">
+        <div className="space-y-4">
+          <SkeletonCampos campos={1} colunas="md:max-w-md" />
+          <SkeletonCampos campos={5} colunas="lg:grid-cols-5" />
+          <SkeletonCampos campos={1} colunas="grid-cols-1" />
+          <SkeletonCampos campos={1} colunas="md:max-w-xs" />
+          <SkeletonBotao className="w-40" />
+        </div>
+      </SkeletonPainel>
+      <SkeletonVazio className="py-20" />
+    </SkeletonRegiao>
   );
 }

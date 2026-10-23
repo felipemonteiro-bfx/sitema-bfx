@@ -4,9 +4,12 @@ import { Fragment, useEffect, useMemo, useState, useRef } from 'react';
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
+import { RotuloCampo } from "@/components/rotulo-campo";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +31,9 @@ import {
   mensagemAvisoDaPrevia,
   normalizarCelulasDaPrevia,
 } from "@/lib/validations/importacao";
+
+// Valor-sentinela da opção vazia dos Selects: o Radix proíbe SelectItem com value="".
+const SEM_VALOR = "__vazio__";
 
 interface RowData {
   id: string;
@@ -223,7 +229,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>1. Selecionar Arquivo</CardTitle>
+          <CardTitle>1. Selecionar arquivo</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-3">
@@ -247,27 +253,32 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
             <span className="text-sm text-muted-foreground">
               {fileName ? fileName : "Nenhum arquivo escolhido"}
             </span>
-            {loading && <Loader2 className="h-5 w-5 animate-spin text-info-text" />}
+            {loading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">O sistema aceita ponto e vírgula (;) como separador padrão do Excel.</p>
 
           {empresasParceiras.length > 0 && (
-            <div className="mt-4 space-y-1 border-t border-border/60 pt-4">
-              <label htmlFor="importacao-empresa" className="text-sm font-medium">
+            <div className="mt-4 space-y-1.5 border-t border-divisoria pt-4">
+              <RotuloCampo htmlFor="importacao-empresa">
                 Empresa dos clientes <span className="text-error-text">*</span>
-              </label>
-              <select
-                id="importacao-empresa"
-                value={empresaId}
-                onChange={(e) => setEmpresaId(e.target.value)}
+              </RotuloCampo>
+              {/* O Radix não aceita SelectItem com value="": a opção "nenhuma" usa um
+                  valor-sentinela e o onValueChange o traduz de volta para "". */}
+              <Select
+                value={empresaId === "" ? SEM_VALOR : empresaId}
+                onValueChange={(v) => setEmpresaId(v === SEM_VALOR ? "" : v)}
                 disabled={loading || saving}
-                className="block h-10 w-full max-w-sm rounded-lg border-2 border-input bg-background px-3 text-sm disabled:opacity-50"
               >
-                <option value="">Selecione a empresa</option>
-                {empresasParceiras.map((e) => (
-                  <option key={e.id} value={String(e.id)}>{e.nome}</option>
-                ))}
-              </select>
+                <SelectTrigger id="importacao-empresa" className="max-w-sm">
+                  <SelectValue placeholder="Selecione a empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={SEM_VALOR}>Selecione a empresa</SelectItem>
+                  {empresasParceiras.map((e) => (
+                    <SelectItem key={e.id} value={String(e.id)}>{e.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 Aplicada aos clientes criados nesta importação. Clientes que já existem sem empresa
                 também são vinculados; quem já tem empresa não é alterado.
@@ -278,11 +289,11 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
       </Card>
 
       {data.length > 0 && (
-        <Card className="border-info bg-info-bg">
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-primary">2. Validar e Editar Dados</CardTitle>
-              <p className="text-sm text-muted-foreground italic">Edite as células abaixo se necessário antes de confirmar.</p>
+              <CardTitle>2. Validar e editar dados</CardTitle>
+              <p className="mt-1.5 text-sm text-muted-foreground">Edite as células abaixo se necessário antes de confirmar.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -290,39 +301,39 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                 variant="outline"
                 onClick={sugerirComIA}
                 disabled={suggesting || saving}
-                className="border-warning text-warning-text hover:bg-warning-bg"
                 leftIcon={suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               >
                 Sugerir com IA
               </Button>
-              <Button onClick={finalizeImport} disabled={saving || invalidas.length > 0} className="bg-primary hover:bg-primary/90" leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
+              <Button onClick={finalizeImport} disabled={saving || invalidas.length > 0} leftIcon={saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
                 Subir {data.length} Vendas
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
             {invalidas.length > 0 && (
-              <div role="alert" className="rounded-md bg-error-bg px-3 py-2 text-sm text-error-text">
+              <Alert variant="error" showIcon>
                 {mensagemAvisoDaPrevia(invalidas)}
-              </div>
+              </Alert>
             )}
             {invalidas.length === 0 && jaTeveProblema && (
-              <div role="status" className="rounded-md bg-success-bg px-3 py-2 text-sm text-success-text">
+              <Alert variant="success" role="status" showIcon>
                 Nenhuma linha com problema de frete ou entrega.
-              </div>
+              </Alert>
             )}
-            <ScrollArea className="rounded-md border bg-white w-full">
+            <div className="overflow-hidden rounded-interno bg-poco">
+            <ScrollArea className="w-full">
               <Table>
-                <TableHeader className="bg-muted">
+                <TableHeader>
                   <TableRow>
                     <TableHead className="w-32">Data</TableHead>
                     <TableHead>Vendedor</TableHead>
-                    <TableHead className="min-w-[150px]">Cliente</TableHead>
-                    <TableHead className="min-w-[150px]">Produto</TableHead>
+                    <TableHead className="min-w-37.5">Cliente</TableHead>
+                    <TableHead className="min-w-37.5">Produto</TableHead>
                     <TableHead className="w-24 text-right">Valor</TableHead>
-                    <TableHead className="w-24 text-right text-info-text">Frete</TableHead>
-                    <TableHead className="w-24 text-right text-info-text">Envio</TableHead>
-                    <TableHead className="w-24 text-info-text">Entrega</TableHead>
+                    <TableHead className="w-24 text-right">Frete</TableHead>
+                    <TableHead className="w-24 text-right">Envio</TableHead>
+                    <TableHead className="w-24">Entrega</TableHead>
                     <TableHead className="w-20 text-right">Parc.</TableHead>
                     <TableHead className="w-16">Antec.</TableHead>
                     <TableHead className="w-10"></TableHead>
@@ -341,30 +352,35 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                         <DateInput
                           value={row.dataVenda}
                           onChange={(v) => updateCell(row.id, 'dataVenda', v)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1"
+                          variant="celula"
+                          className="w-full"
                         />
                       </TableCell>
+                      {/* EXCEÇÃO LEGÍTIMA (skill shadcn-bfx): as células de texto e número
+                          abaixo são <input> crus de propósito. Um <Input> de 44px dentro de
+                          uma célula de grade densa e editável é pior que o campo sem borda
+                          (`border-none bg-transparent text-xs p-1`) que já está aqui. */}
                       <TableCell className="p-1">
                         <input 
                           value={row.vendedor} 
                           onChange={(e) => updateCell(row.id, 'vendedor', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1"
+                          className="w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <input 
                           value={row.cliente} 
-                          placeholder="OBRIGATÓRIO"
+                          placeholder="Obrigatório"
                           onChange={(e) => updateCell(row.id, 'cliente', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.cliente ? 'bg-error-bg text-error-text' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1 ${!row.cliente ? 'bg-error-bg text-error-text' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
                         <input 
                           value={row.produto} 
-                          placeholder="OBRIGATÓRIO"
+                          placeholder="Obrigatório"
                           onChange={(e) => updateCell(row.id, 'produto', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1 ${!row.produto ? 'bg-error-bg text-error-text' : ''}`}
+                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1 ${!row.produto ? 'bg-error-bg text-error-text' : ''}`}
                         />
                       </TableCell>
                       <TableCell className="p-1">
@@ -372,45 +388,53 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                           type="number" 
                           value={row.valor} 
                           onChange={(e) => updateCell(row.id, 'valor', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1 font-semibold"
+                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1 font-semibold"
                         />
                       </TableCell>
-                      <TableCell className={`p-1${destaque.includes("frete") ? "" : " bg-info-bg"}`}>
+                      <TableCell className="p-1">
                         <input
                           type="number"
                           aria-label="Frete cobrado"
                           value={row.frete}
                           onChange={(e) => updateCell(row.id, 'frete', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1${ruim("frete")}`}
+                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1${ruim("frete")}`}
                         />
                       </TableCell>
-                      <TableCell className={`p-1${destaque.includes("envio") ? "" : " bg-info-bg"}`}>
+                      <TableCell className="p-1">
                         <input
                           type="number"
                           aria-label="Custo de envio"
                           value={row.envio}
                           onChange={(e) => updateCell(row.id, 'envio', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1${ruim("envio")}`}
+                          className={`w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1${ruim("envio")}`}
                         />
                       </TableCell>
-                      <TableCell className={`p-1${destaque.includes("entrega") ? "" : " bg-info-bg"}`}>
-                        <select
-                          aria-label="Entrega"
-                          value={row.entrega}
-                          onChange={(e) => updateCell(row.id, 'entrega', e.target.value)}
-                          className={`w-full border-none bg-transparent text-xs focus:ring-1 focus:ring-info rounded p-1${ruim("entrega")}`}
+                      <TableCell className="p-1">
+                        <Select
+                          value={row.entrega === "" ? SEM_VALOR : row.entrega}
+                          onValueChange={(v) => updateCell(row.id, 'entrega', v === SEM_VALOR ? "" : v)}
                         >
-                          <option value="">—</option>
-                          <option value="S">Sim</option>
-                          <option value="N">Não</option>
-                        </select>
+                          <SelectTrigger
+                            aria-label="Entrega"
+                            variant="celula"
+                            state={destaque.includes("entrega") ? "error" : "default"}
+                            className="w-full"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={SEM_VALOR}>—</SelectItem>
+                            <SelectItem value="S">Sim</SelectItem>
+                            <SelectItem value="N">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="p-1">
                         <input 
                           type="number" 
                           value={row.parcelas} 
                           onChange={(e) => updateCell(row.id, 'parcelas', e.target.value)}
-                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus:ring-info rounded p-1"
+                          className="w-full border-none bg-transparent text-xs text-right focus:ring-1 focus-visible:ring-1 focus-visible:ring-ring rounded p-1"
                         />
                       </TableCell>
                       <TableCell className="p-1 text-center">
@@ -430,11 +454,11 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                       <TableCell className="p-1 text-center">
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="icon"
+                          variant="sutilErro"
+                          size="iconMini"
                           aria-label="Remover linha"
                           onClick={() => removeRow(row.id)}
-                          className="h-6 w-6 text-error-text shadow-none hover:bg-transparent hover:text-error-text hover:shadow-none"
+
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -442,7 +466,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                     </TableRow>
                     {motivo && (
                       <TableRow>
-                        <TableCell colSpan={11} className="px-2.5 pb-1.5 pt-0 text-xs text-error-text">
+                        <TableCell tom="erro" tamanho="xs" colSpan={11} className="px-2.5 pb-1.5 pt-0">
                           Linha {index + 1}: {motivo}.
                         </TableCell>
                       </TableRow>
@@ -453,6 +477,7 @@ export default function ImportacaoClient({ empresasParceiras = [] }: Props) {
                 </TableBody>
               </Table>
             </ScrollArea>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,10 @@ type FormSelectProps = {
   onValueChange?: (val: string) => void;
   placeholder?: string;
   className?: string;
+  /** `compacto`: seletor de tabela/filtro (36px, texto pequeno); `pilula`: seletor arredondado do compositor. */
+  aparencia?: "default" | "compacto" | "pilula";
+  /** `error`: campo invalido (borda de erro). */
+  state?: "default" | "error";
   searchable?: boolean;
   searchPlaceholder?: string;
   formId?: string;
@@ -38,6 +43,8 @@ export function FormSelect({
   onValueChange,
   placeholder = "Selecione",
   className,
+  aparencia = "default",
+  state = "default",
   searchable = true,
   searchPlaceholder = "Pesquisar...",
   formId,
@@ -127,30 +134,30 @@ export function FormSelect({
       <input type="hidden" name={name} value={value} form={formId} />
       <Popover open={open} onOpenChange={aoAbrir}>
         <PopoverTrigger asChild>
-          <button
+          <Button
             type="button"
+            variant="seletor"
+            data-vazio={!value}
+            data-erro={state === "error"}
+            data-tamanho={aparencia}
             role="combobox"
             aria-expanded={open}
             aria-controls={listaId}
             id={id}
-            className={cn(
-              // Sem sombra (D-03): trigger tem border-2 propria e vive no
-              // mesmo plano do card/formulario — nao e um plano acima.
-              "flex h-10 w-full items-center justify-between whitespace-nowrap rounded-lg border-2 border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background transition-all duration-200 hover:border-accent/50 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card dark:border-input",
-              !value && "text-muted-foreground",
-              className
-            )}
+            // Igual ao Select da ui (Vantage): a pele inteira vem da variante `seletor`.
+            className={className}
           >
             <span className="flex min-w-0 items-center gap-2">
               {selected?.indicador && <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", selected.indicador)} />}
               <span className="line-clamp-1">{selected?.label ?? placeholder}</span>
             </span>
-            <ChevronDown className="h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
-          </button>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Button>
         </PopoverTrigger>
         <PopoverContent
+          compacto
           className={cn(
-            "w-[var(--radix-popover-trigger-width)] rounded-xl border bg-popover p-2",
+            "w-[var(--radix-popover-trigger-width)] p-2",
             opcoesRicas && "min-w-56"
           )}
           onKeyDown={aoTeclar}
@@ -161,7 +168,7 @@ export function FormSelect({
           }}
         >
           {searchable && (
-            <div className="mb-2 flex items-center gap-2 border-b border-border/60 pb-2">
+            <div className="mb-2 flex items-center gap-2 border-b border-divisoria pb-2">
               <Search className="h-4 w-4 text-muted-foreground" />
               <Input
                 ref={buscaRef}
@@ -173,7 +180,8 @@ export function FormSelect({
                 placeholder={searchPlaceholder}
                 aria-controls={listaId}
                 aria-activedescendant={destaqueValido ? idOpcao(destaque) : undefined}
-                className="h-7 border-0 bg-transparent p-0 text-sm shadow-none outline-none placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
+                state="nu"
+                className="h-7"
               />
             </div>
           )}
@@ -189,6 +197,8 @@ export function FormSelect({
               <div className="px-2.5 py-3 text-sm text-muted-foreground">Nenhum resultado.</div>
             ) : (
               <div className="space-y-0.5">
+                {/* exceção shadcn: os <button role="option"> abaixo são itens de listbox, não botões
+                    de ação — equivalem ao SelectItem da ui; Button imporia altura, nowrap e foco. */}
                 {filtered.map((opt, indice) => (
                   <button
                     key={opt.value}
@@ -199,7 +209,7 @@ export function FormSelect({
                     aria-selected={opt.value === value}
                     tabIndex={-1}
                     className={cn(
-                      "relative flex w-full cursor-default select-none items-center gap-2 rounded-md py-2 pl-2.5 pr-8 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
+                      "relative flex w-full cursor-default select-none items-center gap-2 rounded-controle py-2 pl-2.5 pr-8 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
                       opt.value === value && "bg-accent/50",
                       viaTeclado && indice === destaque && "bg-accent text-accent-foreground"
                     )}
@@ -212,7 +222,7 @@ export function FormSelect({
                     {opt.indicador && <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", opt.indicador)} />}
                     <span className="truncate">{opt.label}</span>
                     {opt.hint && (
-                      <span className="ml-auto shrink-0 pl-2 text-xs tabular-nums opacity-70">{opt.hint}</span>
+                      <span className="ml-auto shrink-0 pl-2 text-xs tabular-nums">{opt.hint}</span>
                     )}
                     {opt.value === value && (
                       <span className="absolute right-2 inline-flex h-4 w-4 items-center justify-center">
