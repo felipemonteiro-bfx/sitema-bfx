@@ -41,11 +41,21 @@ it('whatsappIaMcp deixou de ser gravado; sai a opção IA externa e entra o avis
  expect(page).not.toContain('whatsappIaMcp');
  expect(page).not.toContain('IA externa');
  expect(page).not.toContain('desligue o gateway externo');
- expect(page).toContain('Webhook do Evolution (só pausa por resposta humana)');
+ expect(page).toContain('Webhook do WhatsApp conectado');
  expect(page).toContain('Webhook da Meta');
  expect(page).toContain('defaultChecked={cfg?.whatsappAutoEnabled === 1}');
  expect(page).toContain('id="litellm-config"');
  const ok=estadoRespostasAuto({ligado:true,masterLigado:true,provedor:'ok',ia:disponibilidadeIa({litellmUrl:'u',litellmKey:'k'},{MCP_AGENTE_SECRET:'x'.repeat(32)})});
  expect(ok.aviso).toContain('gateway externo do mcp-bfx está desligado');
  expect(page).not.toContain('Assistente de IA com MCP');
+});
+
+it('preserva a chave Evolution salva quando o campo é deixado em branco',async()=>{
+ db.findFirst.mockResolvedValue({id:1,evolutionApiKey:'chave-existente'});
+ await expect(save(form())).rejects.toThrow('REDIRECT:/configuracoes?tab=whatsapp&saved=whatsapp');
+ expect(db.update.mock.calls[0][0].data).not.toHaveProperty('evolutionApiKey');
+});
+it('substitui a chave Evolution somente quando uma nova chave é informada',async()=>{
+ const f=form();f.set('evolutionApiKey','  chave-nova  ');await expect(save(f)).rejects.toThrow('REDIRECT');
+ expect(db.update.mock.calls[0][0].data.evolutionApiKey).toBe('chave-nova');
 });

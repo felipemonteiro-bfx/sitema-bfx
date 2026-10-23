@@ -176,7 +176,7 @@ async function saveWhatsApp(formData: FormData) {
   const fallbackEvolution = checkboxComoNumero(formData.get("whatsappFallbackEvolution"));
   const data = {
     evolutionApiUrl: url || null,
-    evolutionApiKey: key || null,
+    ...(key ? { evolutionApiKey: key } : {}),
     evolutionInstance: instance,
     whatsappAutoEnabled: enabled,
     whatsappAutoRecibo: autoRecibo,
@@ -347,8 +347,341 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
         </div>
       )}
       <QueryTabs
-        defaultTab={sp.tab || "mural"}
+        defaultTab={sp.tab || "whatsapp"}
         tabs={[
+          {
+            value: "whatsapp",
+            label: "WhatsApp",
+            content: (
+              <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conectar WhatsApp</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Gere o código e escaneie pelo WhatsApp do celular. Aguarde o estado Conectado para começar a usar.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6"><EvolutionQRConnect /><details className="border-t border-divisoria pt-4"><summary className="cursor-pointer text-sm font-medium">Configuração da Meta</summary><div className="pt-4"><WhatsAppConnect /></div></details></div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Preferências de envio</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Controle as permissões e as respostas automáticas. A conexão por QR funciona sem salvar este formulário.
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <form action={saveWhatsApp} className="space-y-4">
+                    {/* Provider oficial (Meta Cloud API) — sem risco de ban do numero */}
+                    {/* Agrupamento neutro (card interno), sem tint de estado: o agrupamento vem do titulo
+                        "Provider de envio" e do degrau de superficie. */}
+                    <details className="rounded-interno border border-divisoria p-4">
+                      <summary className="cursor-pointer text-sm font-semibold">Conexão avançada e credenciais</summary>
+                      <p className="mt-2 text-sm text-muted-foreground">O QR Code já usa o servidor configurado. Abra esta seção para trocar o provedor ou atualizar as credenciais.</p>
+                      <div className="mt-4 space-y-4">
+                    <div className="space-y-3 rounded-interno bg-card-elevated p-4">
+                      <div className="text-sm font-semibold text-foreground">Provider de envio</div>
+                      <div className="space-y-1">
+                        <Label htmlFor="whatsappProvider">Qual API usar</Label>
+                        <FormSelect
+                          id="whatsappProvider"
+                          name="whatsappProvider"
+                          defaultValue={String((cfg as Record<string, unknown>)?.whatsappProvider ?? "evolution")}
+                          searchable={false}
+                          className="max-w-xs"
+                          options={[
+                            { value: "evolution", label: "Evolution API (não-oficial)" },
+                            { value: "meta_cloud", label: "Meta WhatsApp Cloud API (oficial)" },
+                          ]}
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappToken">Meta — Token permanente</Label>
+                          <Input
+                            id="metaWhatsappToken"
+                            name="metaWhatsappToken"
+                            type="password"
+                            placeholder={(cfg as Record<string, unknown>)?.metaWhatsappToken ? "•••••••• (salvo)" : "System User token"}
+                          />
+                          {Boolean((cfg as Record<string, unknown>)?.metaWhatsappToken) && <p className="text-xs font-medium text-success-text">Token permanente salvo. Deixe vazio para manter.</p>}
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappPhoneNumberId">Meta — Phone Number ID</Label>
+                          <Input
+                            id="metaWhatsappPhoneNumberId"
+                            name="metaWhatsappPhoneNumberId"
+                            placeholder="123456789012345"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappPhoneNumberId ?? "")}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappBusinessId">Meta — Business Account ID</Label>
+                          <Input
+                            id="metaWhatsappBusinessId"
+                            name="metaWhatsappBusinessId"
+                            placeholder="opcional"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappBusinessId ?? "")}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="metaWhatsappApiVersion">Meta — Versão da API</Label>
+                          <Input
+                            id="metaWhatsappApiVersion"
+                            name="metaWhatsappApiVersion"
+                            placeholder="v21.0"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappApiVersion ?? "v21.0")}
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label htmlFor="metaAppSecret">Meta — Chave secreta do aplicativo</Label>
+                          <Input
+                            id="metaAppSecret"
+                            name="metaAppSecret"
+                            type="password"
+                            autoComplete="new-password"
+                            placeholder={(cfg as Record<string, unknown>)?.metaAppSecret ? "•••••••• (salvo; deixe vazio para manter)" : "Chave do aplicativo para validar os eventos recebidos"}
+                          />
+                          <p className="text-xs text-muted-foreground">A chave salva não é exibida. Informe-a somente nesta tela administrativa.</p>
+                          {Boolean((cfg as Record<string, unknown>)?.metaAppSecret) && <p className="text-sm font-medium text-success-text">Chave secreta salva. Deixe vazio para manter a chave atual.</p>}
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label htmlFor="metaWebhookVerifyToken">Meta — Verify token do webhook</Label>
+                          <Input
+                            id="metaWebhookVerifyToken"
+                            name="metaWebhookVerifyToken"
+                            placeholder="token de verificação do webhook"
+                            defaultValue={String((cfg as Record<string, unknown>)?.metaWebhookVerifyToken ?? "")}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="whatsappFallbackEvolution"
+                          name="whatsappFallbackEvolution"
+                          defaultChecked={(cfg as Record<string, unknown>)?.whatsappFallbackEvolution !== 0}
+                        />
+                        <Label variant="opcao" htmlFor="whatsappFallbackEvolution">
+                          Usar o WhatsApp conectado por QR fora da janela da Meta
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Webhook do Meta: aponte para <code>…/api/webhooks/meta-whatsapp</code>. Mensagens
+                        automáticas (lembrete, cobrança, etc.) exigem templates aprovados no Meta.
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="evolutionApiUrl">URL da Evolution API</Label>
+                      <Input
+                        id="evolutionApiUrl"
+                        name="evolutionApiUrl"
+                        placeholder="https://sua-evolution.exemplo.com"
+                        defaultValue={cfg?.evolutionApiUrl ?? ""}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="evolutionApiKey">API Key</Label>
+                      <Input
+                        id="evolutionApiKey"
+                        name="evolutionApiKey"
+                        type="password"
+                        placeholder={cfg?.evolutionApiKey || process.env.EVOLUTION_API_KEY ? "•••••••• (salva; deixe vazio para manter)" : "Chave da Evolution API"}
+                      />
+                      {(cfg?.evolutionApiKey || process.env.EVOLUTION_API_KEY) && (
+                        <div className="text-xs text-muted-foreground">Chave configurada. Deixe em branco para manter a atual.</div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="evolutionInstance">Nome da instância</Label>
+                      <Input
+                        id="evolutionInstance"
+                        name="evolutionInstance"
+                        placeholder="bfx"
+                        defaultValue={cfg?.evolutionInstance ?? "bfx"}
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        Nome da instância criada na Evolution API (ex.: bfx).
+                      </div>
+                    </div>
+                      </div>
+                    </details>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="whatsappAutoEnabled"
+                        name="whatsappAutoEnabled"
+                        defaultChecked={cfg?.whatsappAutoEnabled === 1}
+                      />
+                      <Label variant="foreground" htmlFor="whatsappAutoEnabled">
+                        Permitir envios pelo sistema
+                      </Label>
+                    </div>
+                    <details className="space-y-3 rounded-interno bg-poco p-4">
+                      <summary className="cursor-pointer text-sm font-semibold">Documentos e automações</summary>
+                      <p className="text-sm text-muted-foreground">O QR atende mensagens individuais e documentos da venda, com limite por contato. Lembretes, pesquisas e agradecimentos automáticos dependem da janela oficial aberta.</p>
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoRecibo"
+                            name="whatsappAutoRecibo"
+                            defaultChecked={cfg?.whatsappAutoRecibo !== 0}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoRecibo">
+                            Recibo ou link de assinatura após venda
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoBoleto"
+                            name="whatsappAutoBoleto"
+                            defaultChecked={cfg?.whatsappAutoBoleto !== 0}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoBoleto">
+                            Link do boleto ao gerar (manual ou venda)
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoLembrete"
+                            name="whatsappAutoLembrete"
+                            defaultChecked={cfg?.whatsappAutoLembrete !== 0}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoLembrete">
+                            Lembrete de parcelas (boleto, 1–2 dias antes)
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoInadimplencia"
+                            name="whatsappAutoInadimplencia"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoInadimplencia === 1}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoInadimplencia">
+                            Parcela vencida (lembrete inadimplência)
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoReativacao"
+                            name="whatsappAutoReativacao"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoReativacao === 1}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoReativacao">
+                            Reativação clientes inativos
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            inputSize="sm"
+                            id="whatsappDiasInativo"
+                            name="whatsappDiasInativo"
+                            min={30}
+                            max={365}
+                            defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappDiasInativo) || 60)}
+                            className="w-16"
+                          />
+                          <Label variant="opcao" htmlFor="whatsappDiasInativo">
+                            dias sem compra para reativação
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoAniversario"
+                            name="whatsappAutoAniversario"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAniversario === 1}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoAniversario">
+                            Parabéns no aniversário
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoBoasVindas"
+                            name="whatsappAutoBoasVindas"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoBoasVindas === 1}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoBoasVindas">
+                            Boas-vindas cliente novo
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoAgradecimento"
+                            name="whatsappAutoAgradecimento"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAgradecimento === 1}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoAgradecimento">
+                            Agradecimento pós-venda (1 dia depois)
+                          </Label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="whatsappAutoNPS"
+                            name="whatsappAutoNPS"
+                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoNPS === 1}
+                          />
+                          <Label variant="opcao" htmlFor="whatsappAutoNPS">
+                            Pesquisa satisfação (7 dias após compra)
+                          </Label>
+                        </div>
+                      </div>
+                    </details>
+                    <details className="space-y-4 rounded-interno bg-card-elevated p-4">
+                      <summary className="cursor-pointer text-sm font-semibold">Respostas automáticas e pausas</summary>
+                      <WhatsappRespostasAuto
+                        name="whatsappPreAtendimento"
+                        defaultLigado={respostasAutoLigadas(cfg)}
+                        estadoSeLigado={estadoRespostasAuto({
+                          ligado: true,
+                          masterLigado: cfg?.whatsappAutoEnabled === 1,
+                          provedor: situacaoProvedor(cfg, process.env),
+                          ia: disponibilidadeIa(cfg, process.env),
+                        })}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Label variant="opcao" htmlFor="whatsappTakeoverMinutos">
+                          Pausar por
+                        </Label>
+                        <Input
+                          type="number"
+                          inputSize="sm"
+                          id="whatsappTakeoverMinutos"
+                          aria-describedby="whatsappTakeoverMinutos-ajuda"
+                          name="whatsappTakeoverMinutos"
+                          min={5}
+                          max={480}
+                          defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappTakeoverMinutos) || 60)}
+                          className="w-16"
+                        />
+                        <span id="whatsappTakeoverMinutos-ajuda" className="text-sm text-foreground">
+                          min depois que alguém da equipe responde (padrão: 60)
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-muted-foreground">
+                        {situacaoProvedor(cfg, process.env) === "nao_meta" ? "Webhook do WhatsApp conectado" : "Webhook da Meta"}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
+                          {(() => {
+                            const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://seu-dominio.com";
+                            return `${base}/api/webhooks/${situacaoProvedor(cfg, process.env) === 'nao_meta' ? 'evolution' : 'meta-whatsapp'}`;
+                          })()}
+                        </code>
+                        <span className="text-xs text-muted-foreground">
+                          (defina NEXT_PUBLIC_APP_URL no .env)
+                        </span>
+                      </div>
+                    </details>
+                    <SettingsSaveButton />
+                  </form>
+                </CardContent>
+              </Card>
+              </div>
+            ),
+          },
           {
             value: "mural",
             label: "Mural",
@@ -541,338 +874,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </form>
                   </CardContent>
                 </Card>
-              </div>
-            ),
-          },
-          {
-            value: "whatsapp",
-            label: "WhatsApp",
-            content: (
-              <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Conexão WhatsApp</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Escaneie o QR Code para conectar o WhatsApp do celular. A conexão oficial da Meta continua separada.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6"><EvolutionQRConnect /><details className="border-t border-divisoria pt-4"><summary className="cursor-pointer text-sm font-medium">Configuração da Meta</summary><div className="pt-4"><WhatsAppConnect /></div></details></div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Integração WhatsApp</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Configure o provedor para recibos, links de assinatura, boletos e lembretes
-                    de parcelas. Tarifas e limites dependem do serviço selecionado.
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <form action={saveWhatsApp} className="space-y-4">
-                    {/* Provider oficial (Meta Cloud API) — sem risco de ban do numero */}
-                    {/* Agrupamento neutro (card interno), sem tint de estado: o agrupamento vem do titulo
-                        "Provider de envio" e do degrau de superficie. */}
-                    <div className="space-y-3 rounded-interno bg-card-elevated p-4">
-                      <div className="text-sm font-semibold text-foreground">Provider de envio</div>
-                      <div className="space-y-1">
-                        <Label htmlFor="whatsappProvider">Qual API usar</Label>
-                        <FormSelect
-                          id="whatsappProvider"
-                          name="whatsappProvider"
-                          defaultValue={String((cfg as Record<string, unknown>)?.whatsappProvider ?? "evolution")}
-                          searchable={false}
-                          className="max-w-xs"
-                          options={[
-                            { value: "evolution", label: "Evolution API (não-oficial)" },
-                            { value: "meta_cloud", label: "Meta WhatsApp Cloud API (oficial)" },
-                          ]}
-                        />
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappToken">Meta — Token permanente</Label>
-                          <Input
-                            id="metaWhatsappToken"
-                            name="metaWhatsappToken"
-                            type="password"
-                            placeholder={(cfg as Record<string, unknown>)?.metaWhatsappToken ? "•••••••• (salvo)" : "System User token"}
-                          />
-                          {Boolean((cfg as Record<string, unknown>)?.metaWhatsappToken) && <p className="text-xs font-medium text-success-text">Token permanente salvo. Deixe vazio para manter.</p>}
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappPhoneNumberId">Meta — Phone Number ID</Label>
-                          <Input
-                            id="metaWhatsappPhoneNumberId"
-                            name="metaWhatsappPhoneNumberId"
-                            placeholder="123456789012345"
-                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappPhoneNumberId ?? "")}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappBusinessId">Meta — Business Account ID</Label>
-                          <Input
-                            id="metaWhatsappBusinessId"
-                            name="metaWhatsappBusinessId"
-                            placeholder="opcional"
-                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappBusinessId ?? "")}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="metaWhatsappApiVersion">Meta — Versão da API</Label>
-                          <Input
-                            id="metaWhatsappApiVersion"
-                            name="metaWhatsappApiVersion"
-                            placeholder="v21.0"
-                            defaultValue={String((cfg as Record<string, unknown>)?.metaWhatsappApiVersion ?? "v21.0")}
-                          />
-                        </div>
-                        <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="metaAppSecret">Meta — Chave secreta do aplicativo</Label>
-                          <Input
-                            id="metaAppSecret"
-                            name="metaAppSecret"
-                            type="password"
-                            autoComplete="new-password"
-                            placeholder={(cfg as Record<string, unknown>)?.metaAppSecret ? "•••••••• (salvo; deixe vazio para manter)" : "Chave do aplicativo para validar os eventos recebidos"}
-                          />
-                          <p className="text-xs text-muted-foreground">A chave salva não é exibida. Informe-a somente nesta tela administrativa.</p>
-                          {Boolean((cfg as Record<string, unknown>)?.metaAppSecret) && <p className="text-sm font-medium text-success-text">Chave secreta salva. Deixe vazio para manter a chave atual.</p>}
-                        </div>
-                        <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="metaWebhookVerifyToken">Meta — Verify token do webhook</Label>
-                          <Input
-                            id="metaWebhookVerifyToken"
-                            name="metaWebhookVerifyToken"
-                            placeholder="token de verificação do webhook"
-                            defaultValue={String((cfg as Record<string, unknown>)?.metaWebhookVerifyToken ?? "")}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="whatsappFallbackEvolution"
-                          name="whatsappFallbackEvolution"
-                          defaultChecked={(cfg as Record<string, unknown>)?.whatsappFallbackEvolution !== 0}
-                        />
-                        <Label variant="opcao" htmlFor="whatsappFallbackEvolution">
-                          Usar Evolution como fallback se o Meta falhar (durante a transição)
-                        </Label>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Webhook do Meta: aponte para <code>…/api/webhooks/meta-whatsapp</code>. Mensagens
-                        automáticas (lembrete, cobrança, etc.) exigem templates aprovados no Meta.
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label htmlFor="evolutionApiUrl">URL da Evolution API</Label>
-                      <Input
-                        id="evolutionApiUrl"
-                        name="evolutionApiUrl"
-                        placeholder="https://sua-evolution.exemplo.com"
-                        defaultValue={cfg?.evolutionApiUrl ?? ""}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="evolutionApiKey">API Key</Label>
-                      <Input
-                        id="evolutionApiKey"
-                        name="evolutionApiKey"
-                        type="password"
-                        placeholder={cfg?.evolutionApiKey ? "•••••••• (salva)" : "Chave da Evolution API"}
-                      />
-                      {cfg?.evolutionApiKey && (
-                        <div className="text-xs text-muted-foreground">Chave salva.</div>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="evolutionInstance">Nome da instância</Label>
-                      <Input
-                        id="evolutionInstance"
-                        name="evolutionInstance"
-                        placeholder="bfx"
-                        defaultValue={cfg?.evolutionInstance ?? "bfx"}
-                      />
-                      <div className="text-xs text-muted-foreground">
-                        Nome da instância criada na Evolution API (ex.: bfx).
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id="whatsappAutoEnabled"
-                        name="whatsappAutoEnabled"
-                        defaultChecked={cfg?.whatsappAutoEnabled === 1}
-                      />
-                      <Label variant="foreground" htmlFor="whatsappAutoEnabled">
-                        Envios automáticos ativados (master)
-                      </Label>
-                    </div>
-                    <div className="space-y-3 rounded-interno bg-poco p-4">
-                      <p className="text-xs font-semibold text-muted-foreground">
-                        O que enviar automaticamente
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoRecibo"
-                            name="whatsappAutoRecibo"
-                            defaultChecked={cfg?.whatsappAutoRecibo !== 0}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoRecibo">
-                            Recibo ou link de assinatura após venda
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoBoleto"
-                            name="whatsappAutoBoleto"
-                            defaultChecked={cfg?.whatsappAutoBoleto !== 0}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoBoleto">
-                            Link do boleto ao gerar (manual ou venda)
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoLembrete"
-                            name="whatsappAutoLembrete"
-                            defaultChecked={cfg?.whatsappAutoLembrete !== 0}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoLembrete">
-                            Lembrete de parcelas (boleto, 1–2 dias antes)
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoInadimplencia"
-                            name="whatsappAutoInadimplencia"
-                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoInadimplencia === 1}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoInadimplencia">
-                            Parcela vencida (lembrete inadimplência)
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoReativacao"
-                            name="whatsappAutoReativacao"
-                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoReativacao === 1}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoReativacao">
-                            Reativação clientes inativos
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            inputSize="sm"
-                            id="whatsappDiasInativo"
-                            name="whatsappDiasInativo"
-                            min={30}
-                            max={365}
-                            defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappDiasInativo) || 60)}
-                            className="w-16"
-                          />
-                          <Label variant="opcao" htmlFor="whatsappDiasInativo">
-                            dias sem compra para reativação
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoAniversario"
-                            name="whatsappAutoAniversario"
-                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAniversario === 1}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoAniversario">
-                            Parabéns no aniversário
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoBoasVindas"
-                            name="whatsappAutoBoasVindas"
-                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoBoasVindas === 1}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoBoasVindas">
-                            Boas-vindas cliente novo
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoAgradecimento"
-                            name="whatsappAutoAgradecimento"
-                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoAgradecimento === 1}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoAgradecimento">
-                            Agradecimento pós-venda (1 dia depois)
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            id="whatsappAutoNPS"
-                            name="whatsappAutoNPS"
-                            defaultChecked={(cfg as Record<string, unknown>)?.whatsappAutoNPS === 1}
-                          />
-                          <Label variant="opcao" htmlFor="whatsappAutoNPS">
-                            Pesquisa satisfação (7 dias após compra)
-                          </Label>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-4 rounded-interno bg-card-elevated p-4">
-                      <WhatsappRespostasAuto
-                        name="whatsappPreAtendimento"
-                        defaultLigado={respostasAutoLigadas(cfg)}
-                        estadoSeLigado={estadoRespostasAuto({
-                          ligado: true,
-                          masterLigado: cfg?.whatsappAutoEnabled === 1,
-                          provedor: situacaoProvedor(cfg, process.env),
-                          ia: disponibilidadeIa(cfg, process.env),
-                        })}
-                      />
-                      <div className="flex items-center gap-2">
-                        <Label variant="opcao" htmlFor="whatsappTakeoverMinutos">
-                          Pausar por
-                        </Label>
-                        <Input
-                          type="number"
-                          inputSize="sm"
-                          id="whatsappTakeoverMinutos"
-                          aria-describedby="whatsappTakeoverMinutos-ajuda"
-                          name="whatsappTakeoverMinutos"
-                          min={5}
-                          max={480}
-                          defaultValue={String(Number((cfg as Record<string, unknown>)?.whatsappTakeoverMinutos) || 60)}
-                          className="w-16"
-                        />
-                        <span id="whatsappTakeoverMinutos-ajuda" className="text-sm text-foreground">
-                          min depois que alguém da equipe responde (padrão: 60)
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold text-muted-foreground">
-                        {situacaoProvedor(cfg, process.env) === "nao_meta" ? "Webhook do Evolution (só pausa por resposta humana)" : "Webhook da Meta"}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
-                          {(() => {
-                            const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://seu-dominio.com";
-                            return `${base}/api/webhooks/${situacaoProvedor(cfg, process.env) === 'nao_meta' ? 'evolution' : 'meta-whatsapp'}`;
-                          })()}
-                        </code>
-                        <span className="text-xs text-muted-foreground">
-                          (defina NEXT_PUBLIC_APP_URL no .env)
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Alternativa: use variáveis de ambiente EVOLUTION_API_URL, EVOLUTION_API_KEY e
-                      EVOLUTION_INSTANCE.
-                    </p>
-                    <SettingsSaveButton />
-                  </form>
-                </CardContent>
-              </Card>
               </div>
             ),
           },
