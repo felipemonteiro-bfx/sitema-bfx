@@ -1275,6 +1275,11 @@
 }
 
 /* Popover com a largura do elemento ancorado (painel de atalhos do atendimento sobre a barra do composer). */
+/* Detalhes de uma linha acompanham a largura visível da tabela, não a soma das colunas. */
+@utility tabela-detalhes-visiveis {
+  inline-size: 100cqw;
+}
+
 @utility popover-ancora {
   width: var(--radix-popover-trigger-width);
   max-width: calc(100vw - 2rem);

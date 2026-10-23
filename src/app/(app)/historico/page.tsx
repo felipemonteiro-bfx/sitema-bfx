@@ -10,6 +10,7 @@ import { FormSelect } from "@/components/form-select";
 import { DateInput } from "@/components/ui/date-input";
 import { ArrowLeftRight, CheckCircle2, Download, Pencil, Plus } from "lucide-react";
 import { HistoricoAcoesMenu } from "@/components/historico-acoes-menu";
+import { HistoricoLinhaVenda, HistoricoProdutosToggle } from "@/components/historico-produtos-expansiveis";
 import { CopiarLinkAssinatura } from "@/components/copiar-link-assinatura";
 import { HistoricoVendasCards } from "@/components/historico-vendas-cards";
 import { HistoricoFiltroSheet } from "@/components/historico-filtro-sheet";
@@ -520,7 +521,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
             </TableHeader>
             <TableBody>
               {vendas.map((v) => (
-                  <TableRow key={v.id}>
+                  <HistoricoLinhaVenda key={v.id} vendaId={v.id} itens={(v.itens ?? []).map(({ produtoNome, quantidade, subtotal }) => ({ produtoNome, quantidade, subtotal }))}>
                     <TableCell>
                       <div className="space-y-1">
                         <span className="font-medium tabular-nums">#{v.id}</span>
@@ -535,19 +536,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                     </TableCell>
                     <TableCell>
                       {v.itens && v.itens.length > 1 ? (
-                        <details className="cursor-pointer">
-                          <summary className="truncate text-sm">
-                            {v.itens.length} produtos
-                          </summary>
-                          <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
-                            {v.itens.map((item, idx) => (
-                              <li key={idx} className="flex justify-between gap-2">
-                                <span className="truncate">{item.produtoNome} ({item.quantidade}x)</span>
-                                <span className="tabular-nums shrink-0 valor-sensivel">{formatBRL(item.subtotal)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </details>
+                        <HistoricoProdutosToggle />
                       ) : (
                         <span className="block truncate" title={produtosTexto(v)}>
                           {produtosTexto(v)}
@@ -667,7 +656,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
                         ) : null}
                       </div>
                     </TableCell>
-                  </TableRow>
+                  </HistoricoLinhaVenda>
               ))}
             </TableBody>
           </Table>
