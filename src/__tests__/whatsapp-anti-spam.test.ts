@@ -1,0 +1,10 @@
+import {beforeEach,expect,it,vi} from 'vitest';
+const m=vi.hoisted(()=>({find:vi.fn(),count:vi.fn(),create:vi.fn(),lock:vi.fn()}));
+vi.mock('@/lib/db',()=>({prisma:{$transaction:async(cb:(tx:object)=>unknown)=>cb({$executeRaw:m.lock,whatsAppMensagem:{findFirst:m.find,count:m.count,create:m.create}})}}));
+import {reservarSaidaEvolution} from '@/lib/whatsapp-anti-spam';
+const input={telefone:'5592000000000',origem:'venda' as const,corpo:'Documento individual'};
+beforeEach(()=>{vi.resetAllMocks();m.find.mockResolvedValue(null);m.count.mockResolvedValue(0);m.create.mockResolvedValue({id:1});});
+it('reserva documento antes do envio e identifica o canal',async()=>{expect(await reservarSaidaEvolution(input)).toEqual({ok:true,id:1});expect(m.lock).toHaveBeenCalledOnce();expect(m.create).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({provedor:'evolution',status:'pendente',telefone:input.telefone})}));});
+it('um registro pendente ou incerto impede duplicata',async()=>{m.find.mockResolvedValueOnce({id:1});expect(await reservarSaidaEvolution(input)).toMatchObject({ok:false,motivo:'mensagem_duplicada'});expect(m.create).not.toHaveBeenCalled();});
+it('três documentos no contato impedem nova reserva, sem afetar outros números',async()=>{m.count.mockResolvedValue(3);expect(await reservarSaidaEvolution(input)).toMatchObject({ok:false,motivo:'limite_por_contato'});expect(m.count.mock.calls[0][0].where.telefone).toBe(input.telefone);expect(m.create).not.toHaveBeenCalled();});
+it('SAIR/PARAR impede documentos automáticos até VOLTAR',async()=>{m.find.mockResolvedValueOnce(null).mockResolvedValueOnce({corpo:'SAIR'});expect(await reservarSaidaEvolution(input)).toMatchObject({ok:false,motivo:'cliente_pediu_parar'});expect(m.create).not.toHaveBeenCalled();});

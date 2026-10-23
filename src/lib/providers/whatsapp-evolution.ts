@@ -9,6 +9,7 @@ import type {
   WhatsAppSendResult,
   WhatsAppDocument,
   WhatsAppTemplate,
+  WhatsAppTextOpcoes,
 } from "@/lib/whatsapp-provider";
 
 export type EvolutionConfig = {
@@ -22,23 +23,33 @@ export class EvolutionProvider implements WhatsAppProvider {
 
   constructor(private readonly cfg: EvolutionConfig) {}
 
-  async sendText(numeroE164: string, texto: string): Promise<WhatsAppSendResult> {
-    const url = `${this.cfg.baseUrl}/message/sendText/${this.cfg.instance}`;
+  async isConnected(): Promise<boolean> {
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", apikey: this.cfg.apiKey },
-        body: JSON.stringify({ number: numeroE164, text: texto, linkPreview: true }),
+      const res = await fetch(`${this.cfg.baseUrl}/instance/connectionState/${encodeURIComponent(this.cfg.instance)}`, {headers:{apikey:this.cfg.apiKey},cache:'no-store',signal:AbortSignal.timeout(5000)});
+      if (!res.ok) return false;
+      const data = await res.json();
+      return (data.instance?.state ?? data.state) === 'open';
+    } catch { return false; }
+  }
+
+  async sendText(numeroE164: string, texto: string, opcoes?: WhatsAppTextOpcoes): Promise<WhatsAppSendResult> {
+    try {
+      const res = await fetch(`${this.cfg.baseUrl}/message/sendText/${encodeURIComponent(this.cfg.instance)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: this.cfg.apiKey },
+        body: JSON.stringify({ number: numeroE164, text: texto, linkPreview: opcoes?.previewUrl ?? true }),
+        signal: AbortSignal.timeout(15000),
       });
       if (!res.ok) {
-        const body = await res.text();
-        console.error("[WhatsApp/evolution] Erro sendText:", res.status, body);
-        return { ok: false, error: `HTTP ${res.status}`, provider: this.name };
+        console.error('[WhatsApp/evolution] HTTP', res.status);
+        return {ok:false,error:`Evolution recusou o envio (HTTP ${res.status}).`,incerto:res.status>=500,provider:this.name};
       }
-      return { ok: true, provider: this.name };
-    } catch (err) {
-      console.error("[WhatsApp/evolution] Erro sendText:", err);
-      return { ok: false, error: String(err), provider: this.name };
+      const data = await res.json().catch(() => null);
+      const id = data?.key?.id;
+      if (typeof id !== 'string' || !id) return {ok:false,incerto:true,error:'Aceite da Evolution sem identificador; confira o histórico antes de repetir.',provider:this.name};
+      return {ok:true,messageId:`evolution:${id}`,provider:this.name};
+    } catch {
+      console.error('[WhatsApp/evolution] Resultado de envio incerto');
+      return {ok:false,incerto:true,error:'Não foi possível confirmar o envio pela Evolution.',provider:this.name};
     }
   }
 

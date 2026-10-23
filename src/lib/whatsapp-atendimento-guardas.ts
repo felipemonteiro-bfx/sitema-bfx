@@ -1,3 +1,4 @@
+import { evolutionConectada } from '@/lib/whatsapp-evolution-janela';
 /**
  * Guardas compartilhadas pelo envio manual do atendimento (texto e mídia):
  * janela de 24 h, provedor oficial e serialização por destinatário.
@@ -19,9 +20,15 @@ export type CanalManual = { ok: true; primary: WhatsAppProvider } | { ok: false;
 export const telefoneValido = (telefone: string): boolean => /^\d{10,15}$/.test(telefone);
 
 /** Janela de 24 h aberta e provedor primário = Meta oficial. */
-export async function verificarCanalManual(telefone: string): Promise<CanalManual> {
-  if (!(await dentroDaJanela24h(telefone))) return { ok: false, message: MSG_JANELA };
-  const { primary } = await resolveWhatsAppProviders();
+export async function verificarCanalManual(telefone: string, tipo: 'texto' | 'midia' = 'midia'): Promise<CanalManual> {
+  const aberta = await dentroDaJanela24h(telefone);
+  if (!aberta && tipo === 'midia') return {ok:false,message:MSG_JANELA};
+  const canais = await resolveWhatsAppProviders();
+  if (!aberta && tipo === 'texto') {
+    const evo = await evolutionConectada(canais);
+    return evo ? {ok:true,primary:evo} : {ok:false,message:'Conecte o WhatsApp por QR Code nas Configurações para enviar esta mensagem.'};
+  }
+  const { primary } = canais;
   if (!primary || primary.name !== "meta_cloud") return { ok: false, message: MSG_PROVEDOR };
   return { ok: true, primary };
 }

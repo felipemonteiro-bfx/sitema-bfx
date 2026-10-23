@@ -21,7 +21,7 @@ const ler=(rel:string)=>fs.readFileSync(path.join(RAIZ,rel),'utf8');
 describe('mapeamento de status para tique',()=>{
  it('pendente e enviado mostram um tique cinza',()=>{
   expect(statusTique('pendente')).toMatchObject({tique:'um',tom:'neutro',rotulo:'Pendente de confirmação'});
-  expect(statusTique('enviado')).toMatchObject({tique:'um',tom:'neutro',rotulo:'Aceita pela Meta; entrega não confirmada'});
+  expect(statusTique('enviado')).toMatchObject({tique:'um',tom:'neutro',rotulo:'Aceita pelo provedor; entrega não confirmada'});
  });
  it('entregue são dois tiques cinza e lido dois tiques verdes',()=>{
   expect(statusTique('entregue')).toMatchObject({tique:'dois',tom:'neutro',rotulo:'Entregue'});

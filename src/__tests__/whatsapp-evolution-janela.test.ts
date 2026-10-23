@@ -1,0 +1,17 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+const mocks=vi.hoisted(()=>({janela:vi.fn(),resolve:vi.fn(),reservar:vi.fn(),enviada:vi.fn(),falha:vi.fn(),registrar:vi.fn()}));
+vi.mock('@/lib/db',()=>({prisma:{config:{findFirst:vi.fn()}}}));
+vi.mock('@/lib/whatsapp-provider',()=>({resolveWhatsAppProviders:mocks.resolve}));
+vi.mock('@/lib/whatsapp-mensagem',()=>({dentroDaJanela24h:mocks.janela,registrarSaida:mocks.registrar,marcarEnviada:mocks.enviada,marcarFalha:mocks.falha}));
+vi.mock('@/lib/whatsapp-anti-spam',()=>({reservarSaidaEvolution:mocks.reservar}));
+import { enviarWhatsAppDetalhado } from '@/lib/whatsapp';
+const meta={name:'meta_cloud',sendText:vi.fn(),sendTemplate:vi.fn()};
+const evo={name:'evolution',isConnected:vi.fn(),sendText:vi.fn(),sendTemplate:vi.fn()};
+const input={telefone:'92999999999',origem:'venda' as const,template:{name:'bfx_assinatura_folha',language:'pt_BR',bodyParams:['Cliente','https://bfx.test/assinatura/exemplo'],fallbackText:'Seu link de assinatura: https://bfx.test/assinatura/exemplo'}};
+beforeEach(()=>{vi.clearAllMocks();vi.stubEnv('WHATSAPP_EVOLUTION_OUTSIDE_WINDOW','1');mocks.janela.mockResolvedValue(false);mocks.resolve.mockResolvedValue({primary:meta,fallback:evo,providerName:'meta_cloud'});evo.isConnected.mockResolvedValue(true);evo.sendText.mockResolvedValue({ok:true,messageId:'evolution:123',provider:'evolution'});mocks.reservar.mockResolvedValue({ok:true,id:99});mocks.registrar.mockResolvedValue(98);meta.sendText.mockResolvedValue({ok:true,messageId:'wamid.1'});});
+it('envia assinatura uma única vez pelo QR fora da janela, sem consultar template Meta',async()=>{expect((await enviarWhatsAppDetalhado(input)).ok).toBe(true);expect(evo.sendText).toHaveBeenCalledWith('5592999999999',input.template.fallbackText,{previewUrl:false});expect(meta.sendTemplate).not.toHaveBeenCalled();expect(mocks.enviada).toHaveBeenCalledWith(99,'evolution:123');});
+it('mantém Meta quando há janela aberta',async()=>{mocks.janela.mockResolvedValue(true);await enviarWhatsAppDetalhado(input);expect(meta.sendText).toHaveBeenCalledOnce();expect(evo.sendText).not.toHaveBeenCalled();});
+it('não varre nem encaminha campanhas, NPS ou boas-vindas pelo QR',async()=>{for(const x of [{...input,origem:'campanha' as const},{...input,origem:'cron' as const},{...input,template:{...input.template,name:'bfx_boas_vindas'}}]){await enviarWhatsAppDetalhado(x);}expect(evo.sendText).not.toHaveBeenCalled();expect(meta.sendTemplate).not.toHaveBeenCalled();expect(mocks.reservar).not.toHaveBeenCalled();});
+it('sem QR conectado não tenta Meta como segundo canal',async()=>{evo.isConnected.mockResolvedValue(false);expect((await enviarWhatsAppDetalhado(input)).ok).toBe(false);expect(meta.sendTemplate).not.toHaveBeenCalled();expect(evo.sendText).not.toHaveBeenCalled();});
+it('reserva duplicada não faz HTTP',async()=>{mocks.reservar.mockResolvedValue({ok:false,motivo:'mensagem_duplicada'});expect((await enviarWhatsAppDetalhado(input)).ok).toBe(false);expect(evo.sendText).not.toHaveBeenCalled();});
+it('timeout mantém pendente e não tenta outro canal',async()=>{evo.sendText.mockResolvedValue({ok:false,incerto:true,error:'timeout',provider:'evolution'});expect((await enviarWhatsAppDetalhado(input)).ok).toBe(false);expect(mocks.falha).not.toHaveBeenCalled();expect(meta.sendTemplate).not.toHaveBeenCalled();});

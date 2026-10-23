@@ -1,4 +1,5 @@
 'use server';
+import { reservarSaidaEvolution } from '@/lib/whatsapp-anti-spam';
 import { requireAdmin } from '@/lib/guards';
 import { prisma } from '@/lib/db';
 import { marcarEnviada, marcarFalha } from '@/lib/whatsapp-mensagem';
@@ -22,27 +23,31 @@ export async function responderConversa(telefone:string, texto:string, respondeA
   if (!await requireAdmin()) return {ok:false,message:MSG_ACESSO_RESTRITO};
   const corpo=texto.trim();
   if (!telefoneValido(telefone)||!corpo||corpo.length>4096) return {ok:false,message:'Confira o contato e escreva uma mensagem de até 4.096 caracteres.'};
-  const canal=await verificarCanalManual(telefone);
+  const canal=await verificarCanalManual(telefone,'texto');
   if (!canal.ok) return {ok:false,message:canal.message};
   const {primary}=canal;
   const citadaWaId=Number.isInteger(respondeA)&&(respondeA as number)>0?await waIdDaCitada(telefone,respondeA as number):null;
+  if (primary.name==='evolution' && citadaWaId) return {ok:false,message:'Remova a citação para enviar pelo WhatsApp conectado.'};
   // Serializa a reserva por destinatário; uma segunda requisição encontra o
   // registro pendente e não envia novamente, inclusive após resultado incerto.
-  const registro=await prisma.$transaction(async tx=>{
+  const reservaEvolution=primary.name==='evolution'?await reservarSaidaEvolution({telefone,corpo,origem:'manual'}):null;
+  if(reservaEvolution&&!reservaEvolution.ok)return {ok:false,message:reservaEvolution.motivo==='aguarde_entre_envios'?'Aguarde alguns segundos antes de enviar outra mensagem.':'Esta mensagem já foi registrada. Confira o histórico antes de repetir.'};
+  const registro=reservaEvolution?.ok?{id:reservaEvolution.id}:await prisma.$transaction(async tx=>{
     await travarTelefone(tx,telefone);
     const repetida=await tx.whatsAppMensagem.findFirst({where:{telefone,direcao:'out',status:{not:'falhou'},corpo,...predicadoCitacao(citadaWaId),criadoEm:{gte:new Date(Date.now()-JANELA_DEDUPE_MS)}},select:{id:true}});
     if (repetida) return null;
-    return tx.whatsAppMensagem.create({data:{telefone,direcao:'out',origem:'manual',corpo,status:'pendente',...(citadaWaId?{respondeAWaId:citadaWaId}:{})},select:{id:true}});
+    return tx.whatsAppMensagem.create({data:{telefone,direcao:'out',origem:'manual',corpo,status:'pendente',provedor:'meta_cloud',...(citadaWaId?{respondeAWaId:citadaWaId}:{})},select:{id:true}});
   });
   if (!registro) return {ok:false,message:'Esta mensagem já foi registrada recentemente. Confira o histórico antes de repetir.'};
   try {
-    const result=await primary.sendText(telefone,corpo,citadaWaId||!comPrevia?{...(citadaWaId?{respondeAWaId:citadaWaId}:{}),...(!comPrevia?{previewUrl:false}:{})}:undefined);
+    const result=await primary.sendText(telefone,corpo,primary.name==='evolution'?{previewUrl:false}:citadaWaId||!comPrevia?{...(citadaWaId?{respondeAWaId:citadaWaId}:{}),...(!comPrevia?{previewUrl:false}:{})}:undefined);
     if (!result.ok) {
+      if(result.incerto)return {ok:false,message:'Não foi possível confirmar o envio. A mensagem ficou pendente; confira o histórico antes de repetir.'};
       await marcarFalha(registro.id,'Resposta não aceita pelo provedor; confira a conexão e a janela de atendimento.');
       return {ok:false,message:'A mensagem não foi aceita. Confira o histórico e a conexão antes de tentar novamente.'};
     }
     await marcarEnviada(registro.id,result.messageId);
-    return {ok:true,message:'Mensagem aceita pela Meta. A entrega será atualizada quando houver confirmação.'};
+    return {ok:true,message:primary.name==='evolution'?'Mensagem aceita pelo WhatsApp conectado. O aceite não confirma a entrega.':'Mensagem aceita pela Meta. A entrega será atualizada quando houver confirmação.'};
   } catch {
     // Resultado incerto: manter pendente, sem nova tentativa automática.
     return {ok:false,message:'Não foi possível confirmar o resultado. A mensagem ficou pendente; confira o histórico antes de reenviar.'};

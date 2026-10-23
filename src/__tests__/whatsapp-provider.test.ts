@@ -18,7 +18,7 @@ describe("EvolutionProvider", () => {
   });
 
   it("sendText: POST no endpoint sendText com apikey e linkPreview", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(okResponse());
+    const fetchMock = vi.fn().mockResolvedValue(okResponse({key:{id:"TEST"},status:"PENDING"}));
     vi.stubGlobal("fetch", fetchMock);
 
     const r = await provider.sendText("5592999999999", "oi");
@@ -38,7 +38,7 @@ describe("EvolutionProvider", () => {
   });
 
   it("sendTemplate: cai para sendText usando fallbackText", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(okResponse());
+    const fetchMock = vi.fn().mockResolvedValue(okResponse({key:{id:"TEST"},status:"PENDING"}));
     vi.stubGlobal("fetch", fetchMock);
     const r = await provider.sendTemplate("5592999999999", {
       name: "lembrete",

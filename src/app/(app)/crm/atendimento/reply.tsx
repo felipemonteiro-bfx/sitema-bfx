@@ -57,7 +57,8 @@ function ListaProntas({ itens, indice, onEscolher }: { itens: readonly Pronta[];
   </>;
 }
 
-export function Reply({telefone,aberta,envioIndisponivel=false}:{telefone:string;aberta:boolean;estadoAutomatico?:string;envioIndisponivel?:boolean}) {
+export function Reply({telefone,aberta,envioIndisponivel=false,textoEvolution=false}:{telefone:string;aberta:boolean;estadoAutomatico?:string;envioIndisponivel?:boolean;textoEvolution?:boolean}) {
+ const podeTexto=aberta||textoEvolution;
  const router=useRouter();const [texto,setTexto]=useState('');const [busy,setBusy]=useState(false);const [notice,setNotice]=useState('');const sending=useRef(false);const campo=useRef<HTMLTextAreaElement>(null);
  // Mensagem que está sendo respondida (citação): vem do botão Responder da bolha.
  const {citando,cancelarResposta}=useResposta();
@@ -74,7 +75,7 @@ export function Reply({telefone,aberta,envioIndisponivel=false}:{telefone:string
  useEffect(()=>{if(gravando){voltarAoCampo.current=true;return;}if(!voltarAoCampo.current||busy)return;voltarAoCampo.current=false;const a=document.activeElement;if(!a||a===document.body)campo.current?.focus();},[gravando,busy]);
  useEffect(()=>{const timer=setInterval(()=>{if(!sending.current&&!edicaoPendente(document))router.refresh();},30000);return()=>clearInterval(timer);},[router]);
  // Envio único (botão e Enter): mesmas guardas de sempre — janela aberta, texto não vazio e anti-duplo-envio.
- async function enviar(){if(sending.current||!aberta||busy||!texto.trim())return;sending.current=true;setBusy(true);try{const result=await responderConversa(telefone,texto,citando?.resumo.id,enviarComPrevia(texto,semPrevia));setNotice(result.message);if(result.ok){setTexto('');setSemPrevia(null);cancelarResposta();}router.refresh();}catch{setNotice('Não foi possível confirmar o envio. Confira o histórico antes de repetir.');}finally{sending.current=false;setBusy(false);}}
+ async function enviar(){if(sending.current||!podeTexto||busy||!texto.trim())return;sending.current=true;setBusy(true);try{const result=await responderConversa(telefone,texto,citando?.resumo.id,enviarComPrevia(texto,semPrevia));setNotice(result.message);if(result.ok){setTexto('');setSemPrevia(null);cancelarResposta();}router.refresh();}catch{setNotice('Não foi possível confirmar o envio. Confira o histórico antes de repetir.');}finally{sending.current=false;setBusy(false);}}
  // Envio de mídia (anexo e áudio): mesmas guardas do texto (janela, anti-duplo-envio); mostra o retorno da action.
  async function enviarArquivo(tipo:TipoMidia,arquivo:File,leg?:string){if(sending.current||!aberta||busy)return{ok:false,message:'Aguarde o envio em andamento.'};sending.current=true;setBusy(true);try{const fd=new FormData();fd.set('telefone',telefone);fd.set('tipo',tipo);fd.set('arquivo',arquivo);if(leg?.trim())fd.set('legenda',leg.trim());if(citando)fd.set('respondeA',String(citando.resumo.id));const r=await enviarMidiaConversa(fd);setNotice(r.message);if(r.ok)cancelarResposta();router.refresh();return r;}catch{const m='Não foi possível confirmar o envio. Confira o histórico antes de repetir.';setNotice(m);return{ok:false,message:m};}finally{sending.current=false;setBusy(false);}}
  function aoAnexar(opcao:NomeOpcaoAnexo,arquivo:File){const tipo=tipoDoAnexo(opcao,arquivo);const v=validarAnexo(tipo,arquivo);if(!v.ok){setNotice(v.message);return;}setNotice('');setLegenda('');setAnexo({arquivo,tipo});}
@@ -82,7 +83,7 @@ export function Reply({telefone,aberta,envioIndisponivel=false}:{telefone:string
  // "/" no início do campo abre a lista e filtra pelo que vem depois dela.
  const termo=termoDeBarra(texto);
  const filtradasBarra=termo===null?[]:filtrarProntas(PRONTAS,termo);
- const barraAberta=termo!==null&&!barraFechada&&filtradasBarra.length>0&&aberta;
+ const barraAberta=termo!==null&&!barraFechada&&filtradasBarra.length>0&&podeTexto;
  function escolher(p:Pronta){setTexto(p.texto);setIndice(0);setBarraFechada(false);campo.current?.focus();}
  // Inserir SÓ preenche o campo (nunca envia). Com texto no campo, pergunta antes de substituir.
  function inserir(novo:string){if(decidirInsercao(texto,novo)==='confirmar'){setPendente(novo);return;}aplicarInsercao(novo);}
@@ -108,6 +109,8 @@ export function Reply({telefone,aberta,envioIndisponivel=false}:{telefone:string
    <span className="min-w-0 flex-1"><strong className="font-semibold">{aviso.titulo}</strong> {aviso.texto}</span>
    <Link href={aviso.href} className="font-semibold underline underline-offset-4 hover:no-underline">{aviso.acao}</Link>
   </div>}
+  {!aberta&&!textoEvolution&&<p className="px-4 pt-2 text-xs text-muted-foreground">Para enviar uma mensagem individual agora, <Link href="/configuracoes?tab=whatsapp#evolution-qr" className="font-medium underline underline-offset-4">conecte o WhatsApp por QR Code</Link>.</p>}
+  {textoEvolution&&<p className="px-4 pt-2 text-xs text-muted-foreground">Envio individual pelo WhatsApp conectado. Anexos ficam disponíveis quando a janela oficial estiver aberta.</p>}
   {aberta&&urlPrevia&&semPrevia!==urlPrevia&&<PreviaComposer url={urlPrevia} onRemover={()=>setSemPrevia(urlPrevia)}/>}
   {anexo&&<AnexoPrevia arquivo={anexo.arquivo} tipo={anexo.tipo} legenda={legenda} enviando={busy} onLegenda={setLegenda} onEnviar={()=>void enviarAnexo()} onCancelar={()=>{setAnexo(null);setLegenda('');}}/>}
   {/* Faixa "Respondendo a": a mesma linha de resumo da citação, com X. ESC (no campo ou na faixa) cancela. */}
@@ -124,7 +127,7 @@ export function Reply({telefone,aberta,envioIndisponivel=false}:{telefone:string
   <PopoverAnchor asChild><div className="relative flex items-end gap-2 px-3 py-2.5">
     {ctl.anexar&&<AnexarMenu desabilitado={!aberta||busy} onEscolher={aoAnexar}/>}
     {ctl.atalhos&&<span className={`shrink-0 [&>button]:rounded-full ${atalhosAberto?RAIO_ABERTO:''}`}>
-     <PopoverTrigger asChild><Button ref={raio} type="button" variant="ghost" size="icon" aria-label="Respostas prontas e atalhos" title="Respostas prontas e atalhos (ou digite /)" aria-expanded={atalhosAberto} disabled={!aberta||busy}><Zap className={`size-5 ${atalhosAberto?'':'text-muted-foreground'}`} aria-hidden="true"/></Button></PopoverTrigger>
+     <PopoverTrigger asChild><Button ref={raio} type="button" variant="ghost" size="icon" aria-label="Respostas prontas e atalhos" title="Respostas prontas e atalhos (ou digite /)" aria-expanded={atalhosAberto} disabled={!podeTexto||busy}><Zap className={`size-5 ${atalhosAberto?'':'text-muted-foreground'}`} aria-hidden="true"/></Button></PopoverTrigger>
     </span>}
     <PopoverContent side="top" align="center" sideOffset={-6} aria-label="Respostas prontas e atalhos" onCloseAutoFocus={aoFecharFoco} largura="ancora"><PainelAtalhos telefone={telefone} onInserir={inserir} prontas={PRONTAS}/></PopoverContent>
    <Sheet open={atalhosAberto&&celular} onOpenChange={setAtalhosAberto}>
@@ -138,12 +141,12 @@ export function Reply({telefone,aberta,envioIndisponivel=false}:{telefone:string
    {/* Campo como no artboard (borda e fundo do Textarea); o invólucro só ajusta a altura mínima e tira o puxador de redimensionar. */}
    {ctl.campo&&<div className="min-w-0 flex-1 [&_textarea]:max-h-36 [&_textarea]:min-h-12 [&_textarea]:resize-none">
     <span className="sr-only"><Label htmlFor="resposta-whatsapp">Sua mensagem</Label></span>
-    <Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" rows={1} autoResize placeholder={!aberta?"Janela encerrada: aguarde nova mensagem do cliente":celular?"Escreva uma mensagem":"Escreva uma mensagem ou digite / para respostas prontas"} maxLength={4096} value={texto} onChange={e=>aoDigitar(e.target.value)} onKeyDown={aoTeclar} disabled={!aberta||busy}/>
+    <Textarea ref={campo} id="resposta-whatsapp" aria-label="Sua resposta" rows={1} autoResize placeholder={!podeTexto?"Conecte pelo QR Code":celular?"Escreva uma mensagem":"Escreva uma mensagem ou digite / para respostas prontas"} maxLength={4096} value={texto} onChange={e=>aoDigitar(e.target.value)} onKeyDown={aoTeclar} disabled={!podeTexto||busy}/>
    </div>}
    {/* Campo vazio: o botão redondo é o microfone; com texto volta a ser Enviar. */}
    {botaoPrincipal(texto)==='microfone'
     ?<GravadorAudio desabilitado={!aberta||busy} onEnviar={f=>enviarArquivo('audio',f)} onFase={setGravando}/>
-    :<span className="shrink-0 [&>button]:size-12 [&>button]:rounded-full"><Button type="submit" size="icon" aria-label="Enviar mensagem" aria-busy={busy} disabled={!aberta||busy||!texto.trim()}><Send className="size-5" aria-hidden="true"/></Button></span>}
+    :<span className="shrink-0 [&>button]:size-12 [&>button]:rounded-full"><Button type="submit" size="icon" aria-label="Enviar mensagem" aria-busy={busy} disabled={!podeTexto||busy||!texto.trim()}><Send className="size-5" aria-hidden="true"/></Button></span>}
   </div></PopoverAnchor>
   </Popover>
   {texto.length>LIMITE_AVISO&&<p className="-mt-1.5 px-5 pb-2 text-right font-mono text-xs text-muted-foreground">{texto.length}/4096</p>}

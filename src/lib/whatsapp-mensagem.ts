@@ -32,6 +32,7 @@ const ORDEM: Record<StatusMensagem, number> = {
 const JANELA_MS = 24 * 60 * 60 * 1000;
 
 export type RegistroSaida = {
+  provedor?: "meta_cloud" | "evolution";
   telefone: string;
   clienteId?: number | null;
   origem: OrigemMensagem;
@@ -40,6 +41,7 @@ export type RegistroSaida = {
 };
 
 export type RegistroEntrada = {
+  provedor?: "meta_cloud" | "evolution";
   telefone: string;
   clienteId?: number | null;
   waMessageId?: string | null;
@@ -73,7 +75,7 @@ function dadosMidia(tipo: TipoMensagem, m: MidiaMeta) {
 export async function dentroDaJanela24h(telefone: string): Promise<boolean> {
   const desde = new Date(Date.now() - JANELA_MS);
   const ultima = await prisma.whatsAppMensagem.findFirst({
-    where: { telefone, direcao: "in", criadoEm: { gte: desde } },
+    where: { telefone, direcao: "in", criadoEm: { gte: desde }, OR: [{ provedor: null }, { provedor: "meta_cloud" }] },
     select: { id: true },
     orderBy: { criadoEm: "desc" },
   });
@@ -85,6 +87,7 @@ export async function registrarSaida(input: RegistroSaida): Promise<number> {
   const msg = await prisma.whatsAppMensagem.create({
     data: {
       telefone: input.telefone,
+      ...(input.provedor ? {provedor:input.provedor} : {}),
       clienteId: input.clienteId ?? null,
       direcao: "out",
       origem: input.origem,
@@ -141,6 +144,7 @@ export async function registrarEntradaDetalhada(
   const criada = await prisma.whatsAppMensagem.create({
     data: {
       telefone: input.telefone,
+      ...(input.provedor ? {provedor:input.provedor} : {}),
       clienteId: input.clienteId ?? null,
       direcao: "in",
       origem: "pre_atendimento",
@@ -199,7 +203,7 @@ export async function avancarStatusPorWaMessageId(
 export async function contarContatosUnicos24h(): Promise<number> {
   const desde = new Date(Date.now() - JANELA_MS);
   const linhas = await prisma.whatsAppMensagem.findMany({
-    where: { direcao: "out", criadoEm: { gte: desde }, status: { notIn: ["falhou", "gerando"] } },
+    where: { OR: [{ provedor: null }, { provedor: "meta_cloud" }], direcao: "out", criadoEm: { gte: desde }, status: { notIn: ["falhou", "gerando"] } },
     select: { telefone: true },
   });
   return new Set(linhas.map((l) => l.telefone)).size;

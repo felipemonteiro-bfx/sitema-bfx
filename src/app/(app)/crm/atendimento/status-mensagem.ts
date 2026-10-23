@@ -14,7 +14,7 @@ export type TiqueMensagem = { tique: 'um' | 'dois' | 'erro'; tom: 'neutro' | 'ma
 export function statusTique(status: string): TiqueMensagem {
   switch (status) {
     case 'pendente': return { tique: 'um', tom: 'neutro', rotulo: 'Pendente de confirmação' };
-    case 'enviado': return { tique: 'um', tom: 'neutro', rotulo: 'Aceita pela Meta; entrega não confirmada' };
+    case 'enviado': return { tique: 'um', tom: 'neutro', rotulo: 'Aceita pelo provedor; entrega não confirmada' };
     case 'entregue': return { tique: 'dois', tom: 'neutro', rotulo: 'Entregue' };
     case 'lido': return { tique: 'dois', tom: 'marca', rotulo: 'Lida' };
     case 'falhou': return { tique: 'erro', tom: 'erro', rotulo: 'Falhou' };

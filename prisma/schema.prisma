@@ -902,6 +902,7 @@ model WhatsAppMensagem {
   clienteId    Int?     @map("cliente_id")
   telefone     String
   direcao      String                                  // in | out
+  provedor     String?
   waMessageId  String?  @unique @map("wa_message_id")  // id da Meta (wamid.*)
   origem       String                                  // cron | campanha | venda | boleto | relatorio | pre_atendimento | manual
   templateNome String?  @map("template_nome")          // null quando texto livre
@@ -921,6 +922,7 @@ model WhatsAppMensagem {
   @@index([clienteId, criadoEm])
   @@index([status, criadoEm])
   @@index([telefone, direcao, criadoEm])
+  @@index([provedor, telefone, criadoEm])
   @@map("whatsapp_mensagens")
 }
 
